@@ -27,7 +27,7 @@ class Bootstrap {
             .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: 1)
             .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 16)
             .childChannelOption(ChannelOptions.recvAllocator, value: AdaptiveRecvByteBufferAllocator())
-            .bind(host: "localhost", port: 8080)
+            .bind(host: "localhost", port: Environment[int: "PORT"] ?? 8000)
             .map { channel in
                 self.channel = channel
             }
