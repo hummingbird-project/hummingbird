@@ -1,3 +1,4 @@
+import Foundation
 import Lifecycle
 import LifecycleNIOCompat
 import Logging
@@ -10,12 +11,16 @@ public class Application {
     let bootstrap: Bootstrap
     public var middlewares: MiddlewareGroup
     public var router: BasicRouter
+    public var encoder: EncoderProtocol
+    public var decoder: DecoderProtocol
 
     public init() {
         self.lifecycle = ServiceLifecycle()
         self.logger = Logger(label: "HB")
         self.middlewares = MiddlewareGroup()
         self.router = BasicRouter()
+        self.encoder = NullEncoder()
+        self.decoder = NullDecoder()
 
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         lifecycle.registerShutdown(

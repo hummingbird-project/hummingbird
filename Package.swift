@@ -19,6 +19,7 @@ let package = Package(
     targets: [
         .target(name: "test-framework", dependencies: [
             .byName(name: "HummingBird"),
+            .byName(name: "HBJSON"),
         ]),
         .target(name: "HummingBird", dependencies: [
             .product(name: "Backtrace", package: "swift-backtrace"),
@@ -27,6 +28,10 @@ let package = Package(
             .product(name: "Logging", package: "swift-log"),
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
+        ]),
+        .target(name: "HBJSON", dependencies: [
+            .byName(name: "HummingBird"),
+            .product(name: "NIOFoundationCompat", package: "swift-nio"),
         ]),
         .testTarget(name: "HummingBirdTests", dependencies: ["HummingBird"]),
     ]

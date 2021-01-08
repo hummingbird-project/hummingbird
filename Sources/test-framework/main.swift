@@ -1,3 +1,5 @@
+import Foundation
+import HBJSON
 import HummingBird
 import NIO
 import NIOHTTP1
@@ -20,8 +22,13 @@ struct TestMiddleware: Middleware {
         }
     }
 }
+struct User: Codable {
+    let name: String
+    let age: Int
+}
 
 let app = Application()
+app.encoder = JSONEncoder()
 
 app.middlewares.add(ErrorMiddleware())
 
@@ -33,6 +40,10 @@ app.router.get("/") { request -> EventLoopFuture<ByteBuffer> in
 app.router.get("/hello") { request -> EventLoopFuture<ByteBuffer> in
     let response = request.allocator.buffer(string: "Hello")
     return request.eventLoop.makeSucceededFuture(response)
+}
+
+app.router.get("/user") { request -> EventLoopFuture<User> in
+    return request.eventLoop.makeSucceededFuture(.init(name: "Adam", age: 42))
 }
 
 let group = app.router.group()

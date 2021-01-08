@@ -14,4 +14,3 @@ extension ByteBuffer: ResponseEncodable {
         Response(status: .ok, headers: [:], body: self)
     }
 }
-
