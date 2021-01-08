@@ -60,7 +60,12 @@ final class HTTPHandler: ChannelInboundHandler {
             }
             state = .idle
         default:
-            break
+            // shouldnt get here so just write bad request out
+            context.write(self.wrapOutboundOut(
+                            .head(.init(version: .init(major: 1, minor: 1), status: .badRequest ))),
+                          promise: nil)
+            context.write(self.wrapOutboundOut(.end(HTTPHeaders())), promise: nil)
+            state = .idle
         }
     }
 

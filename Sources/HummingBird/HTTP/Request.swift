@@ -6,6 +6,7 @@ public struct Request {
     public let method: HTTPMethod
     public let headers: HTTPHeaders
     public let body: ByteBuffer?
+    public let application: Application
     public let eventLoop: EventLoop
     public let allocator: ByteBufferAllocator
 }
