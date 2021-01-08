@@ -7,8 +7,7 @@ class URITests: XCTestCase {
     }
 
     func testScheme() {
-        testURI("https://hummingbird.co.uk", \.scheme, "https")
-        testURI("file:///Users/John.Doe/", \.scheme, "file")
+        testURI("https://hummingbird.co.uk", \.scheme, .https)
         testURI("/hello", \.scheme, nil)
     }
 

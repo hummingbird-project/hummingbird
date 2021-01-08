@@ -1,9 +1,37 @@
 import CURLParser
 
 public struct URI: CustomStringConvertible, ExpressibleByStringLiteral {
+
+    public struct Scheme: RawRepresentable, Equatable {
+        private enum _Scheme: Substring {
+            case http
+            case https
+            case unix
+            case http_unix = "http+unix"
+            case https_unix = "https+unix"
+        }
+        private let value: _Scheme
+
+        private init(value: _Scheme) {
+            self.value = value
+        }
+        public init?(rawValue: Substring) {
+            guard let value = _Scheme(rawValue: rawValue) else { return nil }
+            self.value = value
+        }
+
+        public var rawValue: Substring { return value.rawValue }
+
+        public static var http: Self { return .init(value: .http) }
+        public static var https: Self { return .init(value: .https) }
+        public static var unix: Self { return .init(value: .unix) }
+        public static var http_unix: Self { return .init(value: .http_unix) }
+        public static var https_unix: Self { return .init(value: .https_unix) }
+    }
+
     public let string: String
 
-    public let scheme: Substring?
+    public let scheme: Scheme?
     public let host: Substring?
     public let port: Int?
     public let path: Substring
@@ -28,7 +56,11 @@ public struct URI: CustomStringConvertible, ExpressibleByStringLiteral {
         urlparser_parse(string, string.utf8.count, 0, &url)
 
         self.string = string
-        self.scheme = Self.substring(from: url.field_data.0, with: string)
+        if let scheme = Self.substring(from: url.field_data.0, with: string) {
+            self.scheme = Scheme(rawValue: scheme)
+        } else {
+            self.scheme = nil
+        }
         self.host = Self.substring(from: url.field_data.1, with: string)
         if let port = Self.substring(from: url.field_data.2, with: string) {
             self.port = Int(port)

@@ -35,6 +35,7 @@ let package = Package(
             .product(name: "NIOHTTP1", package: "swift-nio"),
         ]),
         .target(name: "HBHTTPClient", dependencies: [
+            .byName(name: "HummingBird"),
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
             .product(name: "NIOSSL", package: "swift-nio-ssl"),
@@ -43,6 +44,8 @@ let package = Package(
             .byName(name: "HummingBird"),
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
         ]),
+        // test targets
         .testTarget(name: "HummingBirdTests", dependencies: ["HummingBird"]),
+        .testTarget(name: "HBHTTPClientTests", dependencies: ["HBHTTPClient"]),
     ]
 )
