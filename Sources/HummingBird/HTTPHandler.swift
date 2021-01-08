@@ -58,6 +58,7 @@ final class HTTPHandler: ChannelInboundHandler {
                     context.write(self.wrapOutboundOut(.end(HTTPHeaders())), promise: nil)
                 }
             }
+            state = .idle
         default:
             break
         }
