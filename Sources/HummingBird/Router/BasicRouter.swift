@@ -18,7 +18,7 @@ public class BasicRouter: Router {
     }
     
     public func apply(to request: Request) -> EventLoopFuture<Response> {
-        if let routesForPath = routes[request.path.path] {
+        if let routesForPath = routes[request.uri.path] {
             if let route = routesForPath[request.method.rawValue] {
                 return route.apply(to: request)
             }

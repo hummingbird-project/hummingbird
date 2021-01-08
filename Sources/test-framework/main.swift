@@ -43,7 +43,7 @@ app.router.get("/hello") { request -> EventLoopFuture<ByteBuffer> in
 }
 
 app.router.get("/user") { request -> EventLoopFuture<User> in
-    let name = request.path.queryParameters["name"] ?? "Unknown"
+    let name = request.uri.queryParameters["name"] ?? "Unknown"
     return request.eventLoop.makeSucceededFuture(.init(name: String(name), age: 42))
 }
 

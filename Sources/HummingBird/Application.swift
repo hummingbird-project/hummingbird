@@ -34,7 +34,7 @@ public class Application {
                 let responder = self.middlewares.constructResponder(finalResponder: self.router)
                 let httpHandler = HTTPHandler { request, context in
                     let request = Request(
-                        path: URI(request.head.uri),
+                        uri: URI(request.head.uri),
                         method: request.head.method,
                         headers: request.head.headers,
                         body: request.body,
