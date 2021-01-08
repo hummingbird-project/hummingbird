@@ -1,4 +1,3 @@
-import Foundation
 import Lifecycle
 import LifecycleNIOCompat
 import Logging
@@ -9,8 +8,8 @@ public class Application {
     let eventLoopGroup: EventLoopGroup
     let logger: Logger
     let bootstrap: Bootstrap
-    public var middlewares: MiddlewareGroup
-    public var router: BasicRouter
+    public let middlewares: MiddlewareGroup
+    public let router: BasicRouter
     public var encoder: EncoderProtocol
     public var decoder: DecoderProtocol
 
@@ -35,7 +34,7 @@ public class Application {
                 let responder = self.middlewares.constructResponder(finalResponder: self.router)
                 let httpHandler = HTTPHandler { request, context in
                     let request = Request(
-                        path: request.head.uri,
+                        path: URI(request.head.uri),
                         method: request.head.method,
                         headers: request.head.headers,
                         body: request.body,

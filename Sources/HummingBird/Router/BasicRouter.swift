@@ -2,22 +2,23 @@ import NIO
 import NIOHTTP1
 
 public class BasicRouter: Router {
-    var routes: [String: [String: Responder]]
+    var routes: [Substring: [String: Responder]]
     
     init() {
         routes = [:]
     }
     
     public func add(_ path: String, method: HTTPMethod, responder: Responder) {
-        if routes[path] != nil {
-            routes[path]?[method.rawValue] = responder
+        let substring = path[...]
+        if routes[substring] != nil {
+            routes[substring]?[method.rawValue] = responder
         } else {
-            routes[path] = [method.rawValue: responder]
+            routes[substring] = [method.rawValue: responder]
         }
     }
     
     public func apply(to request: Request) -> EventLoopFuture<Response> {
-        if let routesForPath = routes[request.path] {
+        if let routesForPath = routes[request.path.path] {
             if let route = routesForPath[request.method.rawValue] {
                 return route.apply(to: request)
             }
