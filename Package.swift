@@ -45,7 +45,7 @@ let package = Package(
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
         ]),
         // test targets
-        .testTarget(name: "HummingBirdTests", dependencies: ["HummingBird"]),
+        .testTarget(name: "HummingBirdTests", dependencies: ["HummingBird", "HBHTTPClient"]),
         .testTarget(name: "HBHTTPClientTests", dependencies: ["HBHTTPClient"]),
     ]
 )
