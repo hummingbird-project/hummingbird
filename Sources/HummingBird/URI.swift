@@ -9,10 +9,21 @@ public struct URI: CustomStringConvertible, ExpressibleByStringLiteral {
     public let path: Substring
     public let query: Substring?
     public let fragment: Substring?
+    public var queryParameters: [Substring: Substring] {
+        guard let query = query else { return [:] }
+        let queries = query.split(separator: "&")
+        let queryKeyValues = queries.map { value -> (key: Substring, value: Substring) in
+            if let equals = value.firstIndex(of: "=") {
+                return (key: value[..<equals], value: value[value.index(after: equals)...])
+            }
+            return (key: value, value: "")
+        }
+        return [Substring: Substring].init(queryKeyValues) { lhs,_ in lhs }
+    }
 
     public var description: String { string }
 
-    init(_ string: String) {
+    public init(_ string: String) {
         var url = urlparser_url()
         urlparser_parse(string, string.utf8.count, 0, &url)
 

@@ -43,7 +43,8 @@ app.router.get("/hello") { request -> EventLoopFuture<ByteBuffer> in
 }
 
 app.router.get("/user") { request -> EventLoopFuture<User> in
-    return request.eventLoop.makeSucceededFuture(.init(name: "Adam", age: 42))
+    let name = request.path.queryParameters["name"] ?? "Unknown"
+    return request.eventLoop.makeSucceededFuture(.init(name: String(name), age: 42))
 }
 
 let group = app.router.group()
