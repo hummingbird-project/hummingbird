@@ -1,5 +1,9 @@
 import NIOHTTP1
 
-struct HTTPError: Error {
-    let error: HTTPResponseStatus
+public struct HTTPError: Error {
+    public let error: HTTPResponseStatus
+
+    public init(_ error: HTTPResponseStatus) {
+        self.error = error
+    }
 }
