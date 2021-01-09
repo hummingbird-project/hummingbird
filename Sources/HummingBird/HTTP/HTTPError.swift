@@ -1,9 +1,9 @@
 import NIOHTTP1
 
 public struct HTTPError: Error {
-    public let error: HTTPResponseStatus
+    public let status: HTTPResponseStatus
 
-    public init(_ error: HTTPResponseStatus) {
-        self.error = error
+    public init(_ status: HTTPResponseStatus) {
+        self.status = status
     }
 }

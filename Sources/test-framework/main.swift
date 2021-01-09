@@ -1,4 +1,5 @@
 import Foundation
+import HBFileMiddleware
 import HBJSON
 import HBXML
 import HummingBird
@@ -9,31 +10,6 @@ struct ErrorMiddleware: Middleware {
     func apply(to request: Request, next: Responder) -> EventLoopFuture<Response> {
         return next.apply(to: request).flatMapErrorThrowing { error in
             Response(status: .badRequest, headers: [:], body: .byteBuffer(request.allocator.buffer(string: "ERROR!")))
-        }
-    }
-}
-
-struct StreamMiddleware: Middleware {
-    func apply(to request: Request, next: Responder) -> EventLoopFuture<Response> {
-        return next.apply(to: request).map { response in
-            if case .byteBuffer(let buffer) = response.body {
-                class StreamBuffer: ResponseBodyStreamer {
-                    init(buffer: ByteBuffer) {
-                        self.buffer = buffer
-                    }
-                    func read(on eventLoop: EventLoop) -> EventLoopFuture<ResponseBody.StreamResult> {
-                        guard done == false else { return eventLoop.makeSucceededFuture(.end)}
-                        done = true
-                        return eventLoop.makeSucceededFuture(.byteBuffer(buffer))
-                    }
-                    
-                    var done: Bool = false
-                    let buffer: ByteBuffer
-                }
-                return Response(status: response.status, headers: response.headers, body: .stream(StreamBuffer(buffer: buffer)))
-            } else {
-                return response
-            }
         }
     }
 }
@@ -59,7 +35,7 @@ app.encoder = JSONEncoder()
 app.decoder = JSONDecoder()
 
 app.middlewares.add(ErrorMiddleware())
-app.middlewares.add(StreamMiddleware())
+app.middlewares.add(FileMiddleware(app: app))
 
 app.router.get("/") { request -> EventLoopFuture<ByteBuffer> in
     let response = request.allocator.buffer(string: "This is a test")

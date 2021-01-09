@@ -9,6 +9,7 @@ let package = Package(
     products: [
         .executable(name: "test-framework", targets: ["test-framework"]),
         .library(name: "HummingBird", targets: ["HummingBird"]),
+        .library(name: "HBFileMiddleware", targets: ["HBFileMiddleware"]),
         .library(name: "HBHTTPClient", targets: ["HBHTTPClient"]),
         .library(name: "HBJSON", targets: ["HBJSON"]),
         .library(name: "HBURLEncodedForm", targets: ["HBURLEncodedForm"]),
@@ -25,6 +26,7 @@ let package = Package(
     targets: [
         .target(name: "test-framework", dependencies: [
             .byName(name: "HummingBird"),
+            .byName(name: "HBFileMiddleware"),
             .byName(name: "HBJSON"),
             .byName(name: "HBXML"),
         ]),
@@ -37,6 +39,10 @@ let package = Package(
             .product(name: "Logging", package: "swift-log"),
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
+        ]),
+        .target(name: "HBFileMiddleware", dependencies: [
+            .byName(name: "HummingBird"),
+            .product(name: "NIO", package: "swift-nio"),
         ]),
         .target(name: "HBHTTPClient", dependencies: [
             .byName(name: "HummingBird"),

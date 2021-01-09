@@ -4,14 +4,16 @@ import Logging
 import NIO
 
 public class Application {
-    let lifecycle: ServiceLifecycle
-    let eventLoopGroup: EventLoopGroup
-    let logger: Logger
-    let bootstrap: Bootstrap
+    public let lifecycle: ServiceLifecycle
+    public let eventLoopGroup: EventLoopGroup
+    public let threadPool: NIOThreadPool
+    public let logger: Logger
     public let middlewares: MiddlewareGroup
     public let router: BasicRouter
     public var encoder: EncoderProtocol
     public var decoder: DecoderProtocol
+
+    let bootstrap: Bootstrap
 
     public init() {
         self.lifecycle = ServiceLifecycle()
@@ -24,7 +26,14 @@ public class Application {
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         lifecycle.registerShutdown(
             label: "EventLoopGroup",
-            .sync(eventLoopGroup.syncShutdownGracefully)
+            .sync(self.eventLoopGroup.syncShutdownGracefully)
+        )
+
+        self.threadPool = NIOThreadPool(numberOfThreads: 2)
+        self.threadPool.start()
+        lifecycle.registerShutdown(
+            label: "NIOThreadPool",
+            .sync(self.threadPool.syncShutdownGracefully)
         )
 
         self.bootstrap = Bootstrap()
