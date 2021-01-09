@@ -6,6 +6,10 @@ public struct FileMiddleware: Middleware {
     let fileIO: NonBlockingFileIO
 
     public init(_ rootFolder: String = "public/", app: Application) {
+        var rootFolder = rootFolder
+        if rootFolder.last != "/" {
+            rootFolder += "/"
+        }
         self.rootFolder = rootFolder
         self.fileIO = .init(threadPool: app.threadPool)
     }
