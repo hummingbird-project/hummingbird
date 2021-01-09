@@ -11,6 +11,7 @@ let package = Package(
         .library(name: "HummingBird", targets: ["HummingBird"]),
         .library(name: "HBHTTPClient", targets: ["HBHTTPClient"]),
         .library(name: "HBJSON", targets: ["HBJSON"]),
+        .library(name: "HBURLEncodedForm", targets: ["HBURLEncodedForm"]),
         .library(name: "HBXML", targets: ["HBXML"]),
     ],
     dependencies: [
@@ -44,6 +45,10 @@ let package = Package(
             .product(name: "NIOSSL", package: "swift-nio-ssl"),
         ]),
         .target(name: "HBJSON", dependencies: [
+            .byName(name: "HummingBird"),
+            .product(name: "NIOFoundationCompat", package: "swift-nio"),
+        ]),
+        .target(name: "HBURLEncodedForm", dependencies: [
             .byName(name: "HummingBird"),
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
         ]),
