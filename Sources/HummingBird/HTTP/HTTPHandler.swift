@@ -67,7 +67,12 @@ final class HTTPHandler: ChannelInboundHandler {
                           promise: nil)
             context.write(self.wrapOutboundOut(.end(HTTPHeaders())), promise: nil)
         case .success(let value):
-            let head = HTTPResponseHead(version: .init(major: 1, minor: 1), status: value.status, headers: value.headers)
+            // add content-length header
+            var headers = value.headers
+            if case .byteBuffer(let buffer) = value.body {
+                headers.replaceOrAdd(name: "content-length", value: buffer.readableBytes.description)
+            }
+            let head = HTTPResponseHead(version: .init(major: 1, minor: 1), status: value.status, headers: headers)
             context.write(self.wrapOutboundOut(.head(head)), promise: nil)
             switch value.body {
             case .byteBuffer(let buffer):
