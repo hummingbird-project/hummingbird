@@ -19,11 +19,13 @@ final class HTTPHandler: ChannelInboundHandler {
 
     /// handler state
     var state: State
+    var keepAlive: Bool
     var process: (Request, ChannelHandlerContext) -> EventLoopFuture<Response>
 
     init(_ process: @escaping (Request, ChannelHandlerContext) -> EventLoopFuture<Response>) {
         self.state = .idle
         self.process = process
+        self.keepAlive = false
     }
 
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
@@ -31,6 +33,7 @@ final class HTTPHandler: ChannelInboundHandler {
         switch (part, state) {
         case (.head(let head), .idle):
             state = .head(head)
+            keepAlive = head.isKeepAlive
         case (.body(let part), .head(let head)):
             state = .body(head, part)
         case (.body(var part), .body(let head, var buffer)):
@@ -71,19 +74,31 @@ final class HTTPHandler: ChannelInboundHandler {
             switch value.body {
             case .byteBuffer(let buffer):
                 context.write(self.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: nil)
-                context.write(self.wrapOutboundOut(.end(HTTPHeaders())), promise: nil)
+                self.completeResponse(context, trailers: nil, promise: nil)
             case .stream(let streamer):
                 streamer.write(on: context.eventLoop) { buffer in
                     context.write(self.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: nil)
                 }
                 .whenComplete { result in
-                    context.write(self.wrapOutboundOut(.end(HTTPHeaders())), promise: nil)
+                    // not sure what do write when result is an error
+                    self.completeResponse(context, trailers: nil, promise: nil)
                 }
                 break
             case .empty:
-                context.write(self.wrapOutboundOut(.end(HTTPHeaders())), promise: nil)
+                self.completeResponse(context, trailers: nil, promise: nil)
             }
         }
+    }
+
+    func completeResponse(_ context: ChannelHandlerContext, trailers: HTTPHeaders?, promise: EventLoopPromise<Void>?) {
+        self.state = .idle
+
+        let promise = self.keepAlive ? promise : (promise ?? context.eventLoop.makePromise())
+        if !self.keepAlive {
+            promise!.futureResult.whenComplete { result in context.close(promise: nil) }
+        }
+
+        context.writeAndFlush(self.wrapOutboundOut(.end(trailers)), promise: promise)
     }
 
     func channelReadComplete(context: ChannelHandlerContext) {
