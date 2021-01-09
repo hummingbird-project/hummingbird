@@ -17,11 +17,6 @@ final class HTTPHandler: ChannelInboundHandler {
         let context: ChannelHandlerContext
     }
 
-    struct Response {
-        let head: HTTPResponseHead
-        let body: ByteBuffer?
-    }
-
     /// handler state
     var state: State
     var process: (Request, ChannelHandlerContext) -> EventLoopFuture<Response>
@@ -71,11 +66,23 @@ final class HTTPHandler: ChannelInboundHandler {
                           promise: nil)
             context.write(self.wrapOutboundOut(.end(HTTPHeaders())), promise: nil)
         case .success(let value):
-            context.write(self.wrapOutboundOut(.head(value.head)), promise: nil)
-            if let body = value.body {
-                context.write(self.wrapOutboundOut(.body(.byteBuffer(body))), promise: nil)
+            let head = HTTPResponseHead(version: .init(major: 1, minor: 1), status: value.status, headers: value.headers)
+            context.write(self.wrapOutboundOut(.head(head)), promise: nil)
+            switch value.body {
+            case .byteBuffer(let buffer):
+                context.write(self.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: nil)
+                context.write(self.wrapOutboundOut(.end(HTTPHeaders())), promise: nil)
+            case .stream(let streamer):
+                streamer.write(on: context.eventLoop) { buffer in
+                    context.write(self.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: nil)
+                }
+                .whenComplete { result in
+                    context.write(self.wrapOutboundOut(.end(HTTPHeaders())), promise: nil)
+                }
+                break
+            case .empty:
+                context.write(self.wrapOutboundOut(.end(HTTPHeaders())), promise: nil)
             }
-            context.write(self.wrapOutboundOut(.end(HTTPHeaders())), promise: nil)
         }
     }
 

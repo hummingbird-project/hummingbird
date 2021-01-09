@@ -11,6 +11,6 @@ extension Response : ResponseEncodable {
 
 extension ByteBuffer: ResponseEncodable {
     public var response: Response {
-        Response(status: .ok, headers: [:], body: self)
+        Response(status: .ok, headers: [:], body: .byteBuffer(self))
     }
 }

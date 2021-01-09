@@ -42,12 +42,7 @@ public class Application {
                         eventLoop: context.eventLoop,
                         allocator: context.channel.allocator
                     )
-                    return responder.apply(to: request).map { response in
-                        return HTTPHandler.Response(
-                            head: .init(version: .init(major: 1, minor: 1), status: response.status, headers: response.headers),
-                            body: response.body
-                        )
-                    }
+                    return responder.apply(to: request)
                 }
                 return self.bootstrap.start(group: self.eventLoopGroup, childHandlers: [httpHandler])
             }),

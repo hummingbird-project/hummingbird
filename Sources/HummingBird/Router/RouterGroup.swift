@@ -37,7 +37,7 @@ public struct RouterGroup {
             closure(request).flatMapThrowing { response in
                 var buffer = request.allocator.buffer(capacity: 0)
                 try request.application.encoder.encode(response, to: &buffer)
-                return Response(status: .ok, headers: [:], body: buffer)
+                return Response(status: .ok, headers: [:], body: .byteBuffer(buffer))
             }
         })
         router.add(path, method: method, responder: middlewares.constructResponder(finalResponder: responder))

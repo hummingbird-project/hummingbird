@@ -28,7 +28,7 @@ extension Router {
             closure(request).flatMapThrowing { response in
                 var buffer = request.allocator.buffer(capacity: 0)
                 try request.application.encoder.encode(response, to: &buffer)
-                return Response(status: .ok, headers: [:], body: buffer)
+                return Response(status: .ok, headers: [:], body: .byteBuffer(buffer))
             }
         })
         add(path, method: method, responder: responder)
