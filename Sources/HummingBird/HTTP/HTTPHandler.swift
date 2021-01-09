@@ -44,28 +44,38 @@ final class HTTPHandler: ChannelInboundHandler {
         case (.end, .head(let head)):
             let request = Request(head: head, body: nil, context: context)
             process(request, context).whenComplete { result in
-                switch result {
-                case .failure:
-                    context.write(self.wrapOutboundOut(
-                                    .head(.init(version: .init(major: 1, minor: 1), status: .internalServerError ))),
-                                  promise: nil)
-                    context.write(self.wrapOutboundOut(.end(HTTPHeaders())), promise: nil)
-                case .success(let value):
-                    context.write(self.wrapOutboundOut(.head(value.head)), promise: nil)
-                    if let body = value.body {
-                        context.write(self.wrapOutboundOut(.body(.byteBuffer(body))), promise: nil)
-                    }
-                    context.write(self.wrapOutboundOut(.end(HTTPHeaders())), promise: nil)
-                }
+                self.processResult(result, context: context)
+            }
+            state = .idle
+        case (.end, .body(let head, let body)):
+            let request = Request(head: head, body: body, context: context)
+            process(request, context).whenComplete { result in
+                self.processResult(result, context: context)
             }
             state = .idle
         default:
             // shouldnt get here so just write bad request out
             context.write(self.wrapOutboundOut(
-                            .head(.init(version: .init(major: 1, minor: 1), status: .badRequest ))),
+                            .head(.init(version: .init(major: 1, minor: 1), status: .badRequest))),
                           promise: nil)
             context.write(self.wrapOutboundOut(.end(HTTPHeaders())), promise: nil)
             state = .idle
+        }
+    }
+    
+    func processResult(_ result: Result<Response, Error>, context: ChannelHandlerContext) {
+        switch result {
+        case .failure:
+            context.write(self.wrapOutboundOut(
+                            .head(.init(version: .init(major: 1, minor: 1), status: .internalServerError))),
+                          promise: nil)
+            context.write(self.wrapOutboundOut(.end(HTTPHeaders())), promise: nil)
+        case .success(let value):
+            context.write(self.wrapOutboundOut(.head(value.head)), promise: nil)
+            if let body = value.body {
+                context.write(self.wrapOutboundOut(.body(.byteBuffer(body))), promise: nil)
+            }
+            context.write(self.wrapOutboundOut(.end(HTTPHeaders())), promise: nil)
         }
     }
 

@@ -44,7 +44,7 @@ public class Application {
                     )
                     return responder.apply(to: request).map { response in
                         return HTTPHandler.Response(
-                            head: .init(version: .init(major: 1, minor: 1), status: .ok, headers: response.headers),
+                            head: .init(version: .init(major: 1, minor: 1), status: response.status, headers: response.headers),
                             body: response.body
                         )
                     }

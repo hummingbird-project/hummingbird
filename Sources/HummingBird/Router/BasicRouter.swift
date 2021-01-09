@@ -23,6 +23,6 @@ public class BasicRouter: Router {
                 return route.apply(to: request)
             }
         }
-        return request.eventLoop.makeFailedFuture(HTTPError(error: .notFound))
+        return request.eventLoop.makeFailedFuture(HTTPError(.notFound))
     }
 }
