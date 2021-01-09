@@ -44,13 +44,11 @@ final class HTTPHandler: ChannelInboundHandler {
             process(request, context).whenComplete { result in
                 self.processResult(result, context: context)
             }
-            state = .idle
         case (.end, .body(let head, let body)):
             let request = Request(head: head, body: body, context: context)
             process(request, context).whenComplete { result in
                 self.processResult(result, context: context)
             }
-            state = .idle
         default:
             // shouldnt get here so just write bad request out
             context.write(self.wrapOutboundOut(
@@ -80,10 +78,14 @@ final class HTTPHandler: ChannelInboundHandler {
                     context.write(self.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: nil)
                 }
                 .whenComplete { result in
-                    // not sure what do write when result is an error
-                    self.completeResponse(context, trailers: nil, promise: nil)
+                    switch result {
+                    case .failure:
+                        // not sure what do write when result is an error, just closing channel for the moment
+                        context.close(promise: nil)
+                    case .success:
+                        self.completeResponse(context, trailers: nil, promise: nil)
+                    }
                 }
-                break
             case .empty:
                 self.completeResponse(context, trailers: nil, promise: nil)
             }
@@ -95,7 +97,9 @@ final class HTTPHandler: ChannelInboundHandler {
 
         let promise = self.keepAlive ? promise : (promise ?? context.eventLoop.makePromise())
         if !self.keepAlive {
-            promise!.futureResult.whenComplete { result in context.close(promise: nil) }
+            promise!.futureResult.whenComplete { result in
+                context.close(promise: nil)
+            }
         }
 
         context.writeAndFlush(self.wrapOutboundOut(.end(trailers)), promise: promise)

@@ -20,15 +20,56 @@ public struct FileMiddleware: Middleware {
             
             let path = rootFolder + request.uri.path
             return fileIO.openFile(path: path, eventLoop: request.eventLoop).flatMap { handle, region in
-                fileIO.read(fileHandle: handle, byteCount: region.readableBytes, allocator: request.allocator, eventLoop: request.eventLoop).map { buffer in
-                    return Response(status: .ok, headers: [:], body: .byteBuffer(buffer))
-                }.flatMapErrorThrowing { error in
-                    try handle.close()
-                    throw error
-                }.flatMapThrowing { rt in
-                    try handle.close()
-                    return rt
+                let futureResponse: EventLoopFuture<Response>
+                if region.readableBytes > 32 * 1024 {
+                    futureResponse = streamFile(for: request, handle: handle, region: region)
+                } else {
+                    futureResponse = loadFile(for: request, handle: handle, region: region)
                 }
+                return futureResponse
+            }
+        }
+    }
+    
+    public func loadFile(for request: Request, handle: NIOFileHandle, region: FileRegion) -> EventLoopFuture<Response> {
+        return fileIO.read(fileHandle: handle, byteCount: region.readableBytes, allocator: request.allocator, eventLoop: request.eventLoop).map { buffer in
+            return Response(status: .ok, headers: [:], body: .byteBuffer(buffer))
+        }
+        .always { _ in
+            try? handle.close()
+        }
+    }
+
+    public func streamFile(for request: Request, handle: NIOFileHandle, region: FileRegion) -> EventLoopFuture<Response> {
+        let fileStreamer = FileStreamer(handle: handle, fileSize: region.readableBytes, fileIO: self.fileIO, allocator: request.allocator)
+        let response = Response(status: .ok, headers: [:], body: .stream(fileStreamer))
+        return request.eventLoop.makeSucceededFuture(response)
+    }
+    
+    // class used to stream files
+    class FileStreamer: ResponseBodyStreamer {
+        static let chunkSize = 32*1024
+        var handle: NIOFileHandle
+        var bytesLeft: Int
+        var fileIO: NonBlockingFileIO
+        var allocator: ByteBufferAllocator
+        
+        init(handle: NIOFileHandle, fileSize: Int, fileIO: NonBlockingFileIO, allocator: ByteBufferAllocator) {
+            self.handle = handle
+            self.bytesLeft = fileSize
+            self.fileIO = fileIO
+            self.allocator = allocator
+        }
+        
+        func read(on eventLoop: EventLoop) -> EventLoopFuture<ResponseBody.StreamResult> {
+            let bytesToRead = min(Self.chunkSize, self.bytesLeft)
+            if bytesToRead > 0 {
+                bytesLeft -= bytesToRead
+                return fileIO.read(fileHandle: handle, byteCount: bytesToRead, allocator: allocator, eventLoop: eventLoop)
+                    .map { .byteBuffer($0) }
+            } else {
+                try? handle.close()
+                return eventLoop.makeSucceededFuture(.end)
             }
         }
     }
