@@ -1,5 +1,6 @@
 import Foundation
 import HBJSON
+import HBXML
 import HummingBird
 import NIO
 import NIOHTTP1
@@ -28,7 +29,7 @@ struct User: Codable {
 }
 
 let app = Application()
-app.encoder = JSONEncoder()
+app.encoder = XMLEncoder()
 
 app.middlewares.add(ErrorMiddleware())
 

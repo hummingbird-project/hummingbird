@@ -11,6 +11,7 @@ let package = Package(
         .library(name: "HummingBird", targets: ["HummingBird"]),
         .library(name: "HBHTTPClient", targets: ["HBHTTPClient"]),
         .library(name: "HBJSON", targets: ["HBJSON"]),
+        .library(name: "HBXML", targets: ["HBXML"]),
     ],
     dependencies: [
         .package(url: "https://github.com/swift-server/swift-backtrace.git", from: "1.1.1"),
@@ -18,11 +19,13 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.16.1"),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.8.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "1.0.0-alpha.6"),
+        .package(url: "https://github.com/MaxDesiatov/XMLCoder.git", from: "0.11.1"),
     ],
     targets: [
         .target(name: "test-framework", dependencies: [
             .byName(name: "HummingBird"),
             .byName(name: "HBJSON"),
+            .byName(name: "HBXML"),
         ]),
         .target(name: "CURLParser", dependencies: []),
         .target(name: "HummingBird", dependencies: [
@@ -43,6 +46,11 @@ let package = Package(
         .target(name: "HBJSON", dependencies: [
             .byName(name: "HummingBird"),
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
+        ]),
+        .target(name: "HBXML", dependencies: [
+            .byName(name: "HummingBird"),
+            .product(name: "NIOFoundationCompat", package: "swift-nio"),
+            .product(name: "XMLCoder", package: "XMLCoder")
         ]),
         // test targets
         .testTarget(name: "HummingBirdTests", dependencies: ["HummingBird", "HBHTTPClient"]),
