@@ -24,19 +24,16 @@ public class Application {
         self.decoder = NullDecoder()
 
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-        lifecycle.registerShutdown(
-            label: "EventLoopGroup",
-            .sync(self.eventLoopGroup.syncShutdownGracefully)
-        )
-
         self.threadPool = NIOThreadPool(numberOfThreads: 2)
         self.threadPool.start()
-        lifecycle.registerShutdown(
-            label: "NIOThreadPool",
-            .sync(self.threadPool.syncShutdownGracefully)
-        )
 
         self.bootstrap = Bootstrap()
+
+        lifecycle.registerShutdown(
+            label: "Application",
+            .sync(self.shutdown)
+        )
+
         self.lifecycle.register(
             label: "ServerBootstrap",
             start: .eventLoopFuture({
@@ -68,5 +65,10 @@ public class Application {
             }
         }
         lifecycle.wait()
+    }
+    
+    public func shutdown() throws {
+        try self.threadPool.syncShutdownGracefully()
+        try self.eventLoopGroup.syncShutdownGracefully()
     }
 }
