@@ -12,6 +12,7 @@ struct ErrorMiddleware: Middleware {
         }
     }
 }
+
 struct TestMiddleware: Middleware {
     func apply(to request: Request, next: Responder) -> EventLoopFuture<Response> {
         return next.apply(to: request).map { response in
@@ -29,7 +30,8 @@ struct User: Codable {
 }
 
 let app = Application()
-app.encoder = XMLEncoder()
+app.encoder = JSONEncoder()
+app.decoder = JSONDecoder()
 
 app.middlewares.add(ErrorMiddleware())
 
@@ -46,6 +48,11 @@ app.router.get("/hello") { request -> EventLoopFuture<ByteBuffer> in
 app.router.get("/user") { request -> EventLoopFuture<User> in
     let name = request.uri.queryParameters["name"] ?? "Unknown"
     return request.eventLoop.makeSucceededFuture(.init(name: String(name), age: 42))
+}
+
+app.router.put("/user") { request -> EventLoopFuture<String> in
+    guard let user = try? request.decode(as: User.self) else { return request.eventLoop.makeFailedFuture(HTTPError(.badRequest)) }
+    return request.eventLoop.makeSucceededFuture("ok")
 }
 
 let group = app.router.group()

@@ -9,4 +9,11 @@ public struct Request {
     public let application: Application
     public let eventLoop: EventLoop
     public let allocator: ByteBufferAllocator
+
+    public func decode<Type: Codable>(as type: Type.Type) throws -> Type {
+        guard var buffer = self.body else {
+            throw HTTPError(.badRequest)
+        }
+        return try application.decoder.decode(type, from: &buffer)
+    }
 }
