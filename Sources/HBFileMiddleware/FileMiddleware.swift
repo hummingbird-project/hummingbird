@@ -17,20 +17,32 @@ public struct FileMiddleware: Middleware {
     public func apply(to request: Request, next: Responder) -> EventLoopFuture<Response> {
         // if next responder returns a 404 then check if file exists
         return next.apply(to: request).flatMapError { error in
-            guard request.method == .GET else { return request.eventLoop.makeFailedFuture(error) }
             guard let httpError = error as? HTTPError, httpError.status == .notFound else {
                 return request.eventLoop.makeFailedFuture(error)
             }
             
             let path = rootFolder + request.uri.path
-            return fileIO.openFile(path: path, eventLoop: request.eventLoop).flatMap { handle, region in
-                let futureResponse: EventLoopFuture<Response>
-                if region.readableBytes > 32 * 1024 {
-                    futureResponse = streamFile(for: request, handle: handle, region: region)
-                } else {
-                    futureResponse = loadFile(for: request, handle: handle, region: region)
+
+            switch request.method {
+            case .GET:
+                return fileIO.openFile(path: path, eventLoop: request.eventLoop).flatMap { handle, region in
+                    let futureResponse: EventLoopFuture<Response>
+                    if region.readableBytes > 32 * 1024 {
+                        futureResponse = streamFile(for: request, handle: handle, region: region)
+                    } else {
+                        futureResponse = loadFile(for: request, handle: handle, region: region)
+                    }
+                    return futureResponse
                 }
-                return futureResponse
+            case .HEAD:
+                return fileIO.openFile(path: path, eventLoop: request.eventLoop).flatMap { handle, region in
+                    let headers: HTTPHeaders = ["content-length": region.readableBytes.description]
+                    let response = Response(status: .ok, headers: headers, body: .empty)
+                    try? handle.close()
+                    return request.eventLoop.makeSucceededFuture(response)
+                }
+            default:
+                return request.eventLoop.makeFailedFuture(error)
             }
         }
     }
