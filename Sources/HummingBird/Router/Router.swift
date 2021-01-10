@@ -1,8 +1,8 @@
 import NIO
 import NIOHTTP1
 
-public protocol Router: Responder {
-    func add(_ path: String, method: HTTPMethod, responder: Responder)
+public protocol Router: RequestResponder {
+    func add(_ path: String, method: HTTPMethod, responder: RequestResponder)
 }
 
 extension Router {

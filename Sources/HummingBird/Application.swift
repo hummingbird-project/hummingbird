@@ -59,7 +59,7 @@ public class Application {
         try self.eventLoopGroup.syncShutdownGracefully()
     }
     
-    func constructResponder() -> Responder {
+    func constructResponder() -> RequestResponder {
         return self.middlewares.constructResponder(finalResponder: self.router)
     }
 }

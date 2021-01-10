@@ -4,7 +4,7 @@ final class ServerHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPInHandler.Request
     typealias OutboundOut = Response
     
-    let responder: Responder
+    let responder: RequestResponder
     let application: Application
     
     init(application: Application) {

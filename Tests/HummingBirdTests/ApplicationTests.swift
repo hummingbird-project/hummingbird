@@ -130,7 +130,7 @@ final class ApplicationTests: XCTestCase {
 
     func testMiddleware() {
         struct TestMiddleware: Middleware {
-            func apply(to request: Request, next: Responder) -> EventLoopFuture<Response> {
+            func apply(to request: Request, next: RequestResponder) -> EventLoopFuture<Response> {
                 return next.apply(to: request).map { response in
                     var response = response
                     response.headers.replaceOrAdd(name: "middleware", value: "TestMiddleware")
@@ -153,7 +153,7 @@ final class ApplicationTests: XCTestCase {
 
     func testGroupMiddleware() {
         struct TestMiddleware: Middleware {
-            func apply(to request: Request, next: Responder) -> EventLoopFuture<Response> {
+            func apply(to request: Request, next: RequestResponder) -> EventLoopFuture<Response> {
                 return next.apply(to: request).map { response in
                     var response = response
                     response.headers.replaceOrAdd(name: "middleware", value: "TestMiddleware")
