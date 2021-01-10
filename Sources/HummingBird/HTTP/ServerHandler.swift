@@ -9,7 +9,8 @@ final class ServerHandler: ChannelInboundHandler {
     
     init(application: Application) {
         self.application = application
-        self.responder = application.constructResponder()
+        // application responder has been set for sure
+        self.responder = application.responder!
     }
     
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {

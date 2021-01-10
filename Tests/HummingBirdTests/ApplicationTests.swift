@@ -21,17 +21,19 @@ final class ApplicationTests: XCTestCase {
             let buffer = request.allocator.buffer(string: "GET: Hello")
             return request.eventLoop.makeSucceededFuture(buffer)
         }
-        app.router.post("/hello") { request -> EventLoopFuture<ByteBuffer> in
-            let buffer = request.allocator.buffer(string: "POST: Hello")
-            return request.eventLoop.makeSucceededFuture(buffer)
+        app.router.get("/accepted") { request -> HTTPResponseStatus in
+            return .accepted
+        }
+        app.router.post("/hello") { request in
+            return request.allocator.buffer(string: "POST: Hello")
         }
         app.router.get("/query") { request -> EventLoopFuture<ByteBuffer> in
             let buffer = request.allocator.buffer(string: request.uri.query.map { String($0) } ?? "")
             return request.eventLoop.makeSucceededFuture(buffer)
         }
-        app.router.post("/echo-body") { request -> EventLoopFuture<Response> in
+        app.router.post("/echo-body") { request -> Response in
             let body: ResponseBody = request.body.map { .byteBuffer($0) } ?? .empty
-            return request.eventLoop.makeSucceededFuture(.init(status: .ok, headers: [:], body: body))
+            return .init(status: .ok, headers: [:], body: body)
         }
         app.router.post("/echo-body-streaming") { request -> EventLoopFuture<Response> in
             let body: ResponseBody
@@ -89,6 +91,13 @@ final class ApplicationTests: XCTestCase {
             let string = body.readString(length: body.readableBytes)
             XCTAssertEqual(response.status, .ok)
             XCTAssertEqual(string, "GET: Hello")
+        }
+    }
+
+    func testHTTPStatusRoute() {
+        let request = HTTPClient.Request(uri: "http://localhost:8000/accepted", method: .GET, headers: [:])
+        testRequest(request) { response in
+            XCTAssertEqual(response.status, .accepted)
         }
     }
 

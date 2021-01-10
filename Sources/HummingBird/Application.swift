@@ -14,6 +14,7 @@ public class Application {
     public var decoder: DecoderProtocol
 
     let server: Server
+    var responder: RequestResponder?
 
     public init() {
         self.lifecycle = ServiceLifecycle()
@@ -37,6 +38,7 @@ public class Application {
         self.lifecycle.register(
             label: "ServerBootstrap",
             start: .eventLoopFuture({
+                self.responder = self.constructResponder()
                 return self.server.start(application: self)
             }),
             shutdown: .eventLoopFuture({ self.server.shutdown(group: self.eventLoopGroup) })
