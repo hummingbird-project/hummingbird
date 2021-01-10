@@ -33,6 +33,8 @@ public struct FileMiddleware: Middleware {
                         futureResponse = loadFile(for: request, handle: handle, region: region)
                     }
                     return futureResponse
+                }.flatMapErrorThrowing { _ in
+                    throw error
                 }
             case .HEAD:
                 return fileIO.openFile(path: path, eventLoop: request.eventLoop).flatMap { handle, region in
@@ -40,6 +42,8 @@ public struct FileMiddleware: Middleware {
                     let response = Response(status: .ok, headers: headers, body: .empty)
                     try? handle.close()
                     return request.eventLoop.makeSucceededFuture(response)
+                }.flatMapErrorThrowing { _ in
+                    throw error
                 }
             default:
                 return request.eventLoop.makeFailedFuture(error)
