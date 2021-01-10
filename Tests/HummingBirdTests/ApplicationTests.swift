@@ -29,6 +29,24 @@ final class ApplicationTests: XCTestCase {
             let buffer = request.allocator.buffer(string: request.uri.queryParameters["test"].map { String($0) } ?? "")
             return request.eventLoop.makeSucceededFuture(buffer)
         }
+        app.router.post("/echo-body") { request -> EventLoopFuture<Response> in
+            let body: ResponseBody = request.body.map { .byteBuffer($0) } ?? .empty
+            return request.eventLoop.makeSucceededFuture(.init(status: .ok, headers: [:], body: body))
+        }
+        app.router.post("/echo-body-streaming") { request -> EventLoopFuture<Response> in
+            let body: ResponseBody
+            if var requestBody = request.body {
+                body = .streamCallback { eventLoop in
+                    let bytesToDownload = min(32*1024, requestBody.readableBytes)
+                    guard bytesToDownload > 0 else { return eventLoop.makeSucceededFuture(.end) }
+                    let buffer = requestBody.readSlice(length: bytesToDownload)!
+                    return eventLoop.makeSucceededFuture(.byteBuffer(buffer))
+                }
+            } else {
+                body = .empty
+            }
+            return request.eventLoop.makeSucceededFuture(.init(status: .ok, headers: [:], body: body))
+        }
         return app
     }
 
@@ -37,7 +55,13 @@ final class ApplicationTests: XCTestCase {
         app.lifecycle.wait()
     }
 
-    func testGetRoute() {
+    func randomBuffer(size: Int) -> ByteBuffer {
+        var data = [UInt8](repeating: 0, count: size)
+        data = data.map { _ in UInt8.random(in: 0...255) }
+        return ByteBufferAllocator().buffer(bytes: data)
+    }
+
+    func testRequest(_ request: HTTPClient.Request, test: @escaping (HTTPClient.Response) throws -> ()) {
         let app = createApp()
         defer { shutdownApp(app) }
         DispatchQueue.global().async {
@@ -46,71 +70,63 @@ final class ApplicationTests: XCTestCase {
 
         let client = HTTPClient(eventLoopGroupProvider: .createNew)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let request = HTTPClient.Request(uri: "http://localhost:8000/hello", method: .GET, headers: [:])
         let response = client.execute(request)
             .flatMapThrowing { response in
-                guard var body = response.body else { throw ApplicationTestError.noBody }
-                let string = body.readString(length: body.readableBytes)
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(string, "GET: Hello")
+                try test(response)
             }
         XCTAssertNoThrow(try response.wait())
+    }
+
+    func testGetRoute() {
+        let request = HTTPClient.Request(uri: "http://localhost:8000/hello", method: .GET, headers: [:])
+        testRequest(request) { response in
+            guard var body = response.body else { throw ApplicationTestError.noBody }
+            let string = body.readString(length: body.readableBytes)
+            XCTAssertEqual(response.status, .ok)
+            XCTAssertEqual(string, "GET: Hello")
+        }
     }
 
     func testPostRoute() {
-        let app = createApp()
-        defer { shutdownApp(app) }
-        DispatchQueue.global().async {
-            app.serve()
-        }
-
-        let client = HTTPClient(eventLoopGroupProvider: .createNew)
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let request = HTTPClient.Request(uri: "http://localhost:8000/hello", method: .POST, headers: [:])
-        let response = client.execute(request)
-            .flatMapThrowing { response in
-                guard var body = response.body else { throw ApplicationTestError.noBody }
-                let string = body.readString(length: body.readableBytes)
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(string, "POST: Hello")
-            }
-        XCTAssertNoThrow(try response.wait())
+        testRequest(request) { response in
+            guard var body = response.body else { throw ApplicationTestError.noBody }
+            let string = body.readString(length: body.readableBytes)
+            XCTAssertEqual(response.status, .ok)
+            XCTAssertEqual(string, "POST: Hello")
+        }
     }
 
     func testQueryRoute() {
-        let app = createApp()
-        defer { shutdownApp(app) }
-        DispatchQueue.global().async {
-            app.serve()
-        }
-
-        let client = HTTPClient(eventLoopGroupProvider: .createNew)
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let request = HTTPClient.Request(uri: "http://localhost:8000/query?test=test%20data", method: .GET, headers: [:])
-        let response = client.execute(request)
-            .flatMapThrowing { response in
-                guard var body = response.body else { throw ApplicationTestError.noBody }
-                let string = body.readString(length: body.readableBytes)
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(string, "test%20data")
-            }
-        XCTAssertNoThrow(try response.wait())
+        testRequest(request) { response in
+            guard var body = response.body else { throw ApplicationTestError.noBody }
+            let string = body.readString(length: body.readableBytes)
+            XCTAssertEqual(response.status, .ok)
+            XCTAssertEqual(string, "test%20data")
+        }
     }
 
     func testWrongMethodRoute() {
-        let app = createApp()
-        defer { shutdownApp(app) }
-        DispatchQueue.global().async {
-            app.serve()
-        }
-
-        let client = HTTPClient(eventLoopGroupProvider: .createNew)
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let request = HTTPClient.Request(uri: "http://localhost:8000/hello2", method: .GET, headers: [:])
-        let response = client.execute(request)
-            .flatMapThrowing { response in
-                XCTAssertEqual(response.status, .notFound)
-            }
-        XCTAssertNoThrow(try response.wait())
+        testRequest(request) { response in
+            XCTAssertEqual(response.status, .notFound)
+        }
+    }
+
+    func testResponseBody() {
+        let buffer = randomBuffer(size: 140000)
+        let request = HTTPClient.Request(uri: "http://localhost:8000/echo-body", method: .POST, headers: [:], body: buffer)
+        testRequest(request) { response in
+            XCTAssertEqual(response.body, buffer)
+        }
+    }
+
+    func testResponseBodyStreaming() {
+        let buffer = randomBuffer(size: 140000)
+        let request = HTTPClient.Request(uri: "http://localhost:8000/echo-body-streaming", method: .POST, headers: [:], body: buffer)
+        testRequest(request) { response in
+            XCTAssertEqual(response.body, buffer)
+        }
     }
 }
