@@ -4,18 +4,24 @@ import NIOHTTP1
 
 class Bootstrap {
     var channel: Channel?
-
+    
     init() {}
 
-    func start(group: EventLoopGroup, childHandlers: [ChannelHandler]) -> EventLoopFuture<Void> {
+    func start(application: Application) -> EventLoopFuture<Void> {
         func childChannelInitializer(channel: Channel) -> EventLoopFuture<Void> {
             return channel.pipeline.configureHTTPServerPipeline(withErrorHandling: true)
                 .flatMap {
-                    channel.pipeline.addHandlers(childHandlers)
+                    let childHandlers: [ChannelHandler] = [
+                        BackPressureHandler(),
+                        HTTPInHandler(),
+                        HTTPOutHandler(),
+                        ServerHandler(application: application),
+                    ]
+                    return channel.pipeline.addHandlers(childHandlers)
                 }
         }
 
-        return ServerBootstrap(group: group)
+        return ServerBootstrap(group: application.eventLoopGroup)
             // Specify backlog and enable SO_REUSEADDR for the server itself
             .serverChannelOption(ChannelOptions.backlog, value: 256)
             .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: 1)

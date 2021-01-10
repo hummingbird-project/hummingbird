@@ -25,6 +25,7 @@ final class HTTPInHandler: ChannelInboundHandler {
 
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let part = self.unwrapInboundIn(data)
+    
         switch (part, self.state) {
         case (.head(let head), .idle):
             state = .head(head)
@@ -42,8 +43,6 @@ final class HTTPInHandler: ChannelInboundHandler {
             context.fireChannelRead(self.wrapInboundOut(request))
             state = .idle
         default:
-            print(part)
-            print(state)
             assert(false)
             context.close(promise: nil)
             break
@@ -68,6 +67,7 @@ final class HTTPInHandler: ChannelInboundHandler {
                 context.close(promise: nil)
             }
         default:
+            print("Unhandled event \(event as? ChannelEvent)")
             context.fireUserInboundEventTriggered(event)
         }
     }

@@ -37,13 +37,7 @@ public class Application {
         self.lifecycle.register(
             label: "ServerBootstrap",
             start: .eventLoopFuture({
-                let handlers: [ChannelHandler] = [
-                    BackPressureHandler(),
-                    HTTPInHandler(),
-                    HTTPOutHandler(),
-                    ServerHandler(application: self),
-                ]
-                return self.bootstrap.start(group: self.eventLoopGroup, childHandlers: handlers)
+                return self.bootstrap.start(application: self)
             }),
             shutdown: .eventLoopFuture({ self.bootstrap.shutdown(group: self.eventLoopGroup) })
         )
