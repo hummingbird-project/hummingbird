@@ -37,20 +37,13 @@ public class Application {
         self.lifecycle.register(
             label: "ServerBootstrap",
             start: .eventLoopFuture({
-                let responder = self.middlewares.constructResponder(finalResponder: self.router)
-                let httpHandler = HTTPHandler { request, context in
-                    let request = Request(
-                        uri: URI(request.head.uri),
-                        method: request.head.method,
-                        headers: request.head.headers,
-                        body: request.body,
-                        application: self,
-                        eventLoop: context.eventLoop,
-                        allocator: context.channel.allocator
-                    )
-                    return responder.apply(to: request)
-                }
-                return self.bootstrap.start(group: self.eventLoopGroup, childHandlers: [httpHandler])
+                let handlers: [ChannelHandler] = [
+                    BackPressureHandler(),
+                    HTTPInHandler(),
+                    HTTPOutHandler(),
+                    ServerHandler(application: self),
+                ]
+                return self.bootstrap.start(group: self.eventLoopGroup, childHandlers: handlers)
             }),
             shutdown: .eventLoopFuture({ self.bootstrap.shutdown(group: self.eventLoopGroup) })
         )
@@ -70,5 +63,9 @@ public class Application {
     public func shutdown() throws {
         try self.threadPool.syncShutdownGracefully()
         try self.eventLoopGroup.syncShutdownGracefully()
+    }
+    
+    func constructResponder() -> Responder {
+        return self.middlewares.constructResponder(finalResponder: self.router)
     }
 }

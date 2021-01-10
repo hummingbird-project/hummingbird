@@ -6,14 +6,6 @@ import HummingBird
 import NIO
 import NIOHTTP1
 
-struct ErrorMiddleware: Middleware {
-    func apply(to request: Request, next: Responder) -> EventLoopFuture<Response> {
-        return next.apply(to: request).flatMapErrorThrowing { error in
-            Response(status: .badRequest, headers: [:], body: .byteBuffer(request.allocator.buffer(string: "ERROR!")))
-        }
-    }
-}
-
 struct TestMiddleware: Middleware {
     func apply(to request: Request, next: Responder) -> EventLoopFuture<Response> {
         return next.apply(to: request).map { response in
@@ -25,6 +17,12 @@ struct TestMiddleware: Middleware {
         }
     }
 }
+struct DebugMiddleware: Middleware {
+    func apply(to request: Request, next: Responder) -> EventLoopFuture<Response> {
+        print("\(request.method): \(request.uri)")
+        return next.apply(to: request)
+    }
+}
 struct User: Codable {
     let name: String
     let age: Int
@@ -34,7 +32,7 @@ let app = Application()
 app.encoder = JSONEncoder()
 app.decoder = JSONDecoder()
 
-app.middlewares.add(ErrorMiddleware())
+app.middlewares.add(DebugMiddleware())
 app.middlewares.add(FileMiddleware(app: app))
 
 app.router.get("/") { request -> EventLoopFuture<ByteBuffer> in
