@@ -10,7 +10,7 @@ struct MiddlewareResponder: RequestResponder {
     let middleware: Middleware
     let next: RequestResponder
 
-    func apply(to request: Request) -> EventLoopFuture<Response> {
+    func respond(to request: Request) -> EventLoopFuture<Response> {
         return middleware.apply(to:request, next: next)
     }
 }

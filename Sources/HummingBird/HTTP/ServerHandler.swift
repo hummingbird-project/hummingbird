@@ -24,7 +24,7 @@ final class ServerHandler: ChannelInboundHandler {
             eventLoop: context.eventLoop,
             allocator: context.channel.allocator
         )
-        responder.apply(to: request).whenComplete { result in
+        responder.respond(to: request).whenComplete { result in
             switch result {
             case .failure(let error):
                 let status: HTTPResponseStatus

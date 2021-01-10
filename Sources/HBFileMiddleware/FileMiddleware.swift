@@ -16,7 +16,7 @@ public struct FileMiddleware: Middleware {
     
     public func apply(to request: Request, next: RequestResponder) -> EventLoopFuture<Response> {
         // if next responder returns a 404 then check if file exists
-        return next.apply(to: request).flatMapError { error in
+        return next.respond(to: request).flatMapError { error in
             guard let httpError = error as? HTTPError, httpError.status == .notFound else {
                 return request.eventLoop.makeFailedFuture(error)
             }

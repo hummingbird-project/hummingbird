@@ -17,10 +17,10 @@ public class BasicRouter: Router {
         }
     }
     
-    public func apply(to request: Request) -> EventLoopFuture<Response> {
+    public func respond(to request: Request) -> EventLoopFuture<Response> {
         if let routesForPath = routes[request.uri.path] {
             if let route = routesForPath[request.method.rawValue] {
-                return route.apply(to: request)
+                return route.respond(to: request)
             }
         }
         return request.eventLoop.makeFailedFuture(HTTPError(.notFound))

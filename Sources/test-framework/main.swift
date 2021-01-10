@@ -8,7 +8,7 @@ import NIOHTTP1
 
 struct TestMiddleware: Middleware {
     func apply(to request: Request, next: RequestResponder) -> EventLoopFuture<Response> {
-        return next.apply(to: request).map { response in
+        return next.respond(to: request).map { response in
             if case .byteBuffer(var buffer) = response.body {
                 buffer.writeString("\ntest\n")
                 return Response(status: .ok, headers: response.headers, body: .byteBuffer(buffer))
@@ -20,7 +20,7 @@ struct TestMiddleware: Middleware {
 struct DebugMiddleware: Middleware {
     func apply(to request: Request, next: RequestResponder) -> EventLoopFuture<Response> {
         print("\(request.method): \(request.uri)")
-        return next.apply(to: request)
+        return next.respond(to: request)
     }
 }
 struct User: Codable {
