@@ -2,7 +2,7 @@ import LifecycleNIOCompat
 import NIO
 import NIOHTTP1
 
-class Bootstrap {
+class Server {
     var channel: Channel?
     
     init() {}

@@ -13,7 +13,7 @@ public class Application {
     public var encoder: EncoderProtocol
     public var decoder: DecoderProtocol
 
-    let bootstrap: Bootstrap
+    let server: Server
 
     public init() {
         self.lifecycle = ServiceLifecycle()
@@ -27,7 +27,7 @@ public class Application {
         self.threadPool = NIOThreadPool(numberOfThreads: 2)
         self.threadPool.start()
 
-        self.bootstrap = Bootstrap()
+        self.server = Server()
 
         lifecycle.registerShutdown(
             label: "Application",
@@ -37,9 +37,9 @@ public class Application {
         self.lifecycle.register(
             label: "ServerBootstrap",
             start: .eventLoopFuture({
-                return self.bootstrap.start(application: self)
+                return self.server.start(application: self)
             }),
-            shutdown: .eventLoopFuture({ self.bootstrap.shutdown(group: self.eventLoopGroup) })
+            shutdown: .eventLoopFuture({ self.server.shutdown(group: self.eventLoopGroup) })
         )
     }
 
