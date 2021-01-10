@@ -2,9 +2,9 @@ import NIO
 import NIOHTTP1
 
 public struct Response {
-    public let status: HTTPResponseStatus
-    public let headers: HTTPHeaders
-    public let body: ResponseBody
+    public var status: HTTPResponseStatus
+    public var headers: HTTPHeaders
+    public var body: ResponseBody
 
     public init(status: HTTPResponseStatus, headers: HTTPHeaders, body: ResponseBody) {
         self.status = status

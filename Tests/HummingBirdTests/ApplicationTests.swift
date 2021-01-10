@@ -26,7 +26,7 @@ final class ApplicationTests: XCTestCase {
             return request.eventLoop.makeSucceededFuture(buffer)
         }
         app.router.get("/query") { request -> EventLoopFuture<ByteBuffer> in
-            let buffer = request.allocator.buffer(string: request.uri.queryParameters["test"].map { String($0) } ?? "")
+            let buffer = request.allocator.buffer(string: request.uri.query.map { String($0) } ?? "")
             return request.eventLoop.makeSucceededFuture(buffer)
         }
         app.router.post("/echo-body") { request -> EventLoopFuture<Response> in
@@ -61,12 +61,17 @@ final class ApplicationTests: XCTestCase {
         return ByteBufferAllocator().buffer(bytes: data)
     }
 
-    func testRequest(_ request: HTTPClient.Request, test: @escaping (HTTPClient.Response) throws -> ()) {
-        let app = createApp()
-        defer { shutdownApp(app) }
-        DispatchQueue.global().async {
-            app.serve()
+    func testRequest(_ request: HTTPClient.Request, app: Application? = nil, test: @escaping (HTTPClient.Response) throws -> ()) {
+        let localApp: Application
+        if let app = app {
+            localApp = app
+        } else {
+            localApp = createApp()
+            DispatchQueue.global().async {
+                localApp.serve()
+            }
         }
+        defer { if app == nil { shutdownApp(localApp) } }
 
         let client = HTTPClient(eventLoopGroupProvider: .createNew)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
@@ -103,14 +108,7 @@ final class ApplicationTests: XCTestCase {
             guard var body = response.body else { throw ApplicationTestError.noBody }
             let string = body.readString(length: body.readableBytes)
             XCTAssertEqual(response.status, .ok)
-            XCTAssertEqual(string, "test%20data")
-        }
-    }
-
-    func testWrongMethodRoute() {
-        let request = HTTPClient.Request(uri: "http://localhost:8000/hello2", method: .GET, headers: [:])
-        testRequest(request) { response in
-            XCTAssertEqual(response.status, .notFound)
+            XCTAssertEqual(string, "test=test%20data")
         }
     }
 
@@ -127,6 +125,64 @@ final class ApplicationTests: XCTestCase {
         let request = HTTPClient.Request(uri: "http://localhost:8000/echo-body-streaming", method: .POST, headers: [:], body: buffer)
         testRequest(request) { response in
             XCTAssertEqual(response.body, buffer)
+        }
+    }
+
+    func testMiddleware() {
+        struct TestMiddleware: Middleware {
+            func apply(to request: Request, next: Responder) -> EventLoopFuture<Response> {
+                return next.apply(to: request).map { response in
+                    var response = response
+                    response.headers.replaceOrAdd(name: "middleware", value: "TestMiddleware")
+                    return response
+                }
+            }
+        }
+        let app = createApp()
+        defer { shutdownApp(app) }
+        DispatchQueue.global().async {
+            app.serve()
+        }
+
+        app.middlewares.add(TestMiddleware())
+        let request = HTTPClient.Request(uri: "http://localhost:8000/hello", method: .GET, headers: [:])
+        testRequest(request, app: app) { response in
+            XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
+        }
+    }
+
+    func testGroupMiddleware() {
+        struct TestMiddleware: Middleware {
+            func apply(to request: Request, next: Responder) -> EventLoopFuture<Response> {
+                return next.apply(to: request).map { response in
+                    var response = response
+                    response.headers.replaceOrAdd(name: "middleware", value: "TestMiddleware")
+                    return response
+                }
+            }
+        }
+        let app = createApp()
+        DispatchQueue.global().async {
+            app.serve()
+        }
+        defer { shutdownApp(app) }
+
+        let group = app.router.group()
+            .add(middleware: TestMiddleware())
+        group.get("/group") { request in
+            return request.eventLoop.makeSucceededFuture(request.allocator.buffer(string: "hello"))
+        }
+        app.router.get("/not-group") { request in
+            return request.eventLoop.makeSucceededFuture(request.allocator.buffer(string: "hello"))
+        }
+
+        let request = HTTPClient.Request(uri: "http://localhost:8000/group", method: .GET, headers: [:])
+        testRequest(request, app: app) { response in
+            XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
+        }
+        let request2 = HTTPClient.Request(uri: "http://localhost:8000/not-group", method: .GET, headers: [:])
+        testRequest(request2, app: app) { response in
+            XCTAssertEqual(response.headers["middleware"].first, nil)
         }
     }
 }
