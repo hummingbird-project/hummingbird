@@ -1,18 +1,23 @@
 import LifecycleNIOCompat
 import NIO
+import NIOExtras
 import NIOHTTP1
 
 class Server {
     var channel: Channel?
-    
-    init() {}
+    let eventLoopGroup: EventLoopGroup
+    let quiesce: ServerQuiescingHelper
+
+    init(group: EventLoopGroup) {
+        self.eventLoopGroup = group
+        self.quiesce = ServerQuiescingHelper(group: self.eventLoopGroup)
+    }
 
     func start(application: Application) -> EventLoopFuture<Void> {
         func childChannelInitializer(channel: Channel) -> EventLoopFuture<Void> {
             return channel.pipeline.configureHTTPServerPipeline(withErrorHandling: true)
                 .flatMap {
-                    let childHandlers: [ChannelHandler] = [
-                        BackPressureHandler(),
+                    let childHandlers: [ChannelHandler] = application.additionalChildHandlers + [
                         HTTPInHandler(),
                         HTTPOutHandler(),
                         ServerHandler(application: application),
@@ -21,11 +26,13 @@ class Server {
                 }
         }
 
-        return ServerBootstrap(group: application.eventLoopGroup)
+        return ServerBootstrap(group: self.eventLoopGroup)
             // Specify backlog and enable SO_REUSEADDR for the server itself
             .serverChannelOption(ChannelOptions.backlog, value: 256)
             .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: 1)
-
+            .serverChannelInitializer { channel in
+                channel.pipeline.addHandler(self.quiesce.makeServerChannelHandler(channel: channel))
+            }
             // Set the handlers that are applied to the accepted Channels
             .childChannelInitializer(childChannelInitializer)
 
@@ -40,13 +47,9 @@ class Server {
             }
     }
 
-    func shutdown(group: EventLoopGroup) -> EventLoopFuture<Void> {
-        let promise = group.next().makePromise(of: Void.self)
-        if let channel = self.channel {
-            channel.close(promise: promise)
-        } else {
-            return group.next().makeSucceededFuture(())
-        }
+    func shutdown() -> EventLoopFuture<Void> {
+        let promise = eventLoopGroup.next().makePromise(of: Void.self)
+        quiesce.initiateShutdown(promise: promise)
         return promise.futureResult
     }
 }

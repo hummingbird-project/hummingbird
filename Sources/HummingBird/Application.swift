@@ -9,10 +9,11 @@ open class Application {
     public let eventLoopGroup: EventLoopGroup
     public let threadPool: NIOThreadPool
     public let middlewares: MiddlewareGroup
-    public let router: BasicRouter
+    public var router: BasicRouter
     public var logger: Logger
     public var encoder: EncoderProtocol
     public var decoder: DecoderProtocol
+    public var additionalChildHandlers: [ChannelHandler]
 
     let server: Server
     var responder: RequestResponder?
@@ -25,12 +26,13 @@ open class Application {
         self.router = BasicRouter()
         self.encoder = NullEncoder()
         self.decoder = NullDecoder()
+        self.additionalChildHandlers = []
 
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         self.threadPool = NIOThreadPool(numberOfThreads: 2)
         self.threadPool.start()
 
-        self.server = Server()
+        self.server = Server(group: self.eventLoopGroup)
 
         lifecycle.registerShutdown(
             label: "Application",
@@ -43,7 +45,7 @@ open class Application {
                 self.responder = self.constructResponder()
                 return self.server.start(application: self)
             }),
-            shutdown: .eventLoopFuture({ self.server.shutdown(group: self.eventLoopGroup) })
+            shutdown: .eventLoopFuture(self.server.shutdown)
         )
     }
 
@@ -57,13 +59,22 @@ open class Application {
         }
         lifecycle.wait()
     }
-    
-    public func shutdown() throws {
-        try self.threadPool.syncShutdownGracefully()
-        try self.eventLoopGroup.syncShutdownGracefully()
+
+    public func syncShutdown() {
+        lifecycle.shutdown()
+        lifecycle.wait()
     }
-    
+
+    public func shutdown() {
+        lifecycle.shutdown()
+    }
+
     func constructResponder() -> RequestResponder {
         return self.middlewares.constructResponder(finalResponder: self.router)
+    }
+
+    func shutdownEventLoopGroup() throws {
+        try self.threadPool.syncShutdownGracefully()
+        try self.eventLoopGroup.syncShutdownGracefully()
     }
 }
