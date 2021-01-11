@@ -12,7 +12,7 @@ public protocol DecoderProtocol {
 
 struct NullEncoder: EncoderProtocol {
     func encode<T: Encodable>(_ value: T, to: inout ByteBuffer) throws {
-        preconditionFailure("Application.encoder has not been set")
+        to.writeString("\(value)")
     }
 }
 
