@@ -52,25 +52,6 @@ final class HTTPInHandler: ChannelInboundHandler {
    func channelReadComplete(context: ChannelHandlerContext) {
         context.flush()
     }
-
-    func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
-        switch event {
-        case let evt as ChannelEvent where evt == ChannelEvent.inputClosed:
-            // The remote peer half-closed the channel. At this time, any
-            // outstanding response will now get the channel closed, and
-            // if we are idle or waiting for a request body to finish we
-            // will close the channel immediately.
-            switch self.state {
-           // case .sendingResponse:
-             //   self.keepAlive = false
-            default:
-                context.close(promise: nil)
-            }
-        default:
-            print("Unhandled event \(event as? ChannelEvent)")
-            context.fireUserInboundEventTriggered(event)
-        }
-    }
 }
 
 

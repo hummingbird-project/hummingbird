@@ -33,6 +33,7 @@ class Server {
             .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: 1)
             .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 16)
             .childChannelOption(ChannelOptions.recvAllocator, value: AdaptiveRecvByteBufferAllocator())
+            .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
             .bind(host: "localhost", port: application.configuration.port)
             .map { channel in
                 self.channel = channel
