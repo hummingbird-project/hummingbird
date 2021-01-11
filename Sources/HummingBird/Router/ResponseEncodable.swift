@@ -1,60 +1,40 @@
 import NIO
 import NIOHTTP1
 
-/// Object that can be encoded into a `Response`
-public protocol ResponseEncodable {
-    var response: Response { get }
-}
-
-extension Response : ResponseEncodable {
-    public var response: Response { self }
-}
-
-extension ByteBuffer: ResponseEncodable {
-    public var response: Response {
-        Response(status: .ok, headers: [:], body: .byteBuffer(self))
-    }
-}
-
-/*extension String: ResponseEncodable {
-    public var response: Response {
-        Response(status: .ok, headers: [:], body: .byteBuffer(self))
-    }
-}*/
-
-extension HTTPResponseStatus: ResponseEncodable {
-    public var response: Response {
-        Response(status: self, headers: [:], body: .empty)
-    }
-}
-
 /// Object that can be encoded into a `EventLoopFuture<Response>`
 public protocol ResponseFutureEncodable {
     func responseFuture(from request: Request) -> EventLoopFuture<Response>
 }
 
-extension Response : ResponseFutureEncodable {
+/// Object that can be encoded into a `Response`
+public protocol ResponseEncodable: ResponseFutureEncodable {
+    func response(from request: Request) -> Response
+}
+
+extension ResponseEncodable {
     public func responseFuture(from request: Request) -> EventLoopFuture<Response> {
-        request.eventLoop.makeSucceededFuture(self)
+        request.eventLoop.makeSucceededFuture(response(from: request))
     }
 }
 
-extension ByteBuffer: ResponseFutureEncodable {
-    public func responseFuture(from request: Request) -> EventLoopFuture<Response> {
-        let response = Response(status: .ok, headers: [:], body: .byteBuffer(self))
-        return request.eventLoop.makeSucceededFuture(response)
+extension Response : ResponseEncodable {
+    public func response(from request: Request) -> Response { self }
+}
+
+extension ByteBuffer: ResponseEncodable {
+    public func response(from request: Request) -> Response {
+        Response(status: .ok, headers: [:], body: .byteBuffer(self))
     }
 }
 
-extension HTTPResponseStatus: ResponseFutureEncodable {
-    public func responseFuture(from request: Request) -> EventLoopFuture<Response> {
-        let response = Response(status: self, headers: [:], body: .empty)
-        return request.eventLoop.makeSucceededFuture(response)
+extension HTTPResponseStatus: ResponseEncodable {
+    public func response(from request: Request) -> Response {
+        Response(status: self, headers: [:], body: .empty)
     }
 }
 
 extension EventLoopFuture: ResponseFutureEncodable where Value: ResponseEncodable {
     public func responseFuture(from request: Request) -> EventLoopFuture<Response> {
-        return self.map { $0.response }
+        return self.map { $0.response(from: request) }
     }
 }
