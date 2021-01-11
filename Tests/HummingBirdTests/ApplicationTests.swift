@@ -1,5 +1,5 @@
 import XCTest
-import HBHTTPClient
+import AsyncHTTPClient
 @testable import HummingBird
 
 enum ApplicationTestError: Error {
@@ -24,7 +24,7 @@ final class ApplicationTests: XCTestCase {
         app.router.get("/accepted") { request -> HTTPResponseStatus in
             return .accepted
         }
-        app.router.post("/hello") { request in
+        app.router.post("/hello") { request -> ByteBuffer in
             return request.allocator.buffer(string: "POST: Hello")
         }
         app.router.get("/query") { request -> EventLoopFuture<ByteBuffer> in
@@ -77,7 +77,7 @@ final class ApplicationTests: XCTestCase {
 
         let client = HTTPClient(eventLoopGroupProvider: .createNew)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let response = client.execute(request)
+        let response = client.execute(request: request)
             .flatMapThrowing { response in
                 try test(response)
             }
@@ -85,7 +85,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testGetRoute() {
-        let request = HTTPClient.Request(uri: "http://localhost:8000/hello", method: .GET, headers: [:])
+        let request = try! HTTPClient.Request(url: "http://localhost:8000/hello", method: .GET, headers: [:])
         testRequest(request) { response in
             guard var body = response.body else { throw ApplicationTestError.noBody }
             let string = body.readString(length: body.readableBytes)
@@ -95,14 +95,14 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testHTTPStatusRoute() {
-        let request = HTTPClient.Request(uri: "http://localhost:8000/accepted", method: .GET, headers: [:])
+        let request = try! HTTPClient.Request(url: "http://localhost:8000/accepted", method: .GET, headers: [:])
         testRequest(request) { response in
             XCTAssertEqual(response.status, .accepted)
         }
     }
 
     func testPostRoute() {
-        let request = HTTPClient.Request(uri: "http://localhost:8000/hello", method: .POST, headers: [:])
+        let request = try! HTTPClient.Request(url: "http://localhost:8000/hello", method: .POST, headers: [:])
         testRequest(request) { response in
             guard var body = response.body else { throw ApplicationTestError.noBody }
             let string = body.readString(length: body.readableBytes)
@@ -112,7 +112,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testQueryRoute() {
-        let request = HTTPClient.Request(uri: "http://localhost:8000/query?test=test%20data", method: .GET, headers: [:])
+        let request = try! HTTPClient.Request(url: "http://localhost:8000/query?test=test%20data", method: .GET, headers: [:])
         testRequest(request) { response in
             guard var body = response.body else { throw ApplicationTestError.noBody }
             let string = body.readString(length: body.readableBytes)
@@ -123,7 +123,7 @@ final class ApplicationTests: XCTestCase {
 
     func testResponseBody() {
         let buffer = randomBuffer(size: 140000)
-        let request = HTTPClient.Request(uri: "http://localhost:8000/echo-body", method: .POST, headers: [:], body: buffer)
+        let request = try! HTTPClient.Request(url: "http://localhost:8000/echo-body", method: .POST, headers: [:], body: .byteBuffer(buffer))
         testRequest(request) { response in
             XCTAssertEqual(response.body, buffer)
         }
@@ -131,7 +131,7 @@ final class ApplicationTests: XCTestCase {
 
     func testResponseBodyStreaming() {
         let buffer = randomBuffer(size: 140000)
-        let request = HTTPClient.Request(uri: "http://localhost:8000/echo-body-streaming", method: .POST, headers: [:], body: buffer)
+        let request = try! HTTPClient.Request(url: "http://localhost:8000/echo-body-streaming", method: .POST, headers: [:], body: .byteBuffer(buffer))
         testRequest(request) { response in
             XCTAssertEqual(response.body, buffer)
         }
@@ -154,7 +154,7 @@ final class ApplicationTests: XCTestCase {
         }
 
         app.middlewares.add(TestMiddleware())
-        let request = HTTPClient.Request(uri: "http://localhost:8000/hello", method: .GET, headers: [:])
+        let request = try! HTTPClient.Request(url: "http://localhost:8000/hello", method: .GET, headers: [:])
         testRequest(request, app: app) { response in
             XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
         }
@@ -185,11 +185,11 @@ final class ApplicationTests: XCTestCase {
             return request.eventLoop.makeSucceededFuture(request.allocator.buffer(string: "hello"))
         }
 
-        let request = HTTPClient.Request(uri: "http://localhost:8000/group", method: .GET, headers: [:])
+        let request = try! HTTPClient.Request(url: "http://localhost:8000/group", method: .GET, headers: [:])
         testRequest(request, app: app) { response in
             XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
         }
-        let request2 = HTTPClient.Request(uri: "http://localhost:8000/not-group", method: .GET, headers: [:])
+        let request2 = try! HTTPClient.Request(url: "http://localhost:8000/not-group", method: .GET, headers: [:])
         testRequest(request2, app: app) { response in
             XCTAssertEqual(response.headers["middleware"].first, nil)
         }

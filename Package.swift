@@ -21,6 +21,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.16.1"),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.8.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "1.0.0-alpha.6"),
+        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.2.0"),
         .package(url: "https://github.com/MaxDesiatov/XMLCoder.git", from: "0.11.1"),
     ],
     targets: [
@@ -64,7 +65,7 @@ let package = Package(
             .product(name: "XMLCoder", package: "XMLCoder")
         ]),
         // test targets
-        .testTarget(name: "HummingBirdTests", dependencies: ["HummingBird", "HBHTTPClient"]),
+        .testTarget(name: "HummingBirdTests", dependencies: ["HummingBird", "HBHTTPClient", .product(name: "AsyncHTTPClient", package: "async-http-client")]),
         .testTarget(name: "HBHTTPClientTests", dependencies: ["HBHTTPClient"]),
     ]
 )

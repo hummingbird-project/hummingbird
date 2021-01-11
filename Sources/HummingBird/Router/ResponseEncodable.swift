@@ -16,6 +16,12 @@ extension ByteBuffer: ResponseEncodable {
     }
 }
 
+/*extension String: ResponseEncodable {
+    public var response: Response {
+        Response(status: .ok, headers: [:], body: .byteBuffer(self))
+    }
+}*/
+
 extension HTTPResponseStatus: ResponseEncodable {
     public var response: Response {
         Response(status: self, headers: [:], body: .empty)
