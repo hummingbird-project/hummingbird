@@ -32,6 +32,8 @@ let app = Application()
 app.encoder = JSONEncoder()
 app.decoder = JSONDecoder()
 
+app.logger.logLevel = .debug
+
 app.middlewares.add(DebugMiddleware())
 app.middlewares.add(FileMiddleware(app: app))
 

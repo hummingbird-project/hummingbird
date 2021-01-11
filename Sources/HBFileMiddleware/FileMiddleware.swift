@@ -5,10 +5,10 @@ public struct FileMiddleware: Middleware {
     let rootFolder: String
     let fileIO: NonBlockingFileIO
 
-    public init(_ rootFolder: String = "public/", app: Application) {
+    public init(_ rootFolder: String = "public", app: Application) {
         var rootFolder = rootFolder
-        if rootFolder.last != "/" {
-            rootFolder += "/"
+        if rootFolder.last == "/" {
+            rootFolder = String(rootFolder.dropLast())
         }
         self.rootFolder = rootFolder
         self.fileIO = .init(threadPool: app.threadPool)
@@ -26,6 +26,7 @@ public struct FileMiddleware: Middleware {
             switch request.method {
             case .GET:
                 return fileIO.openFile(path: path, eventLoop: request.eventLoop).flatMap { handle, region in
+                    request.logger.debug("[FileMiddleware] GET", metadata: ["file": .string(path)])
                     let futureResponse: EventLoopFuture<Response>
                     if region.readableBytes > 32 * 1024 {
                         futureResponse = streamFile(for: request, handle: handle, region: region)
@@ -38,6 +39,7 @@ public struct FileMiddleware: Middleware {
                 }
             case .HEAD:
                 return fileIO.openFile(path: path, eventLoop: request.eventLoop).flatMap { handle, region in
+                    request.logger.debug("[FileMiddleware] HEAD", metadata: ["file": .string(path)])
                     let headers: HTTPHeaders = ["content-length": region.readableBytes.description]
                     let response = Response(status: .ok, headers: headers, body: .empty)
                     try? handle.close()
