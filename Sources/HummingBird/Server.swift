@@ -33,7 +33,7 @@ class Server {
             .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: 1)
             .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 16)
             .childChannelOption(ChannelOptions.recvAllocator, value: AdaptiveRecvByteBufferAllocator())
-            .bind(host: "localhost", port: Environment[int: "PORT"] ?? 8000)
+            .bind(host: "localhost", port: application.configuration.port)
             .map { channel in
                 self.channel = channel
             }

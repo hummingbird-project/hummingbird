@@ -4,6 +4,7 @@ import Logging
 import NIO
 
 public class Application {
+    public let configuration: Configuration
     public let lifecycle: ServiceLifecycle
     public let eventLoopGroup: EventLoopGroup
     public let threadPool: NIOThreadPool
@@ -16,7 +17,8 @@ public class Application {
     let server: Server
     var responder: RequestResponder?
 
-    public init() {
+    public init(configuration: Configuration = Configuration()) {
+        self.configuration = configuration
         self.lifecycle = ServiceLifecycle()
         self.logger = Logger(label: "HB")
         self.middlewares = MiddlewareGroup()
