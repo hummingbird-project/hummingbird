@@ -2,7 +2,7 @@ import Logging
 import NIO
 import NIOHTTP1
 
-final class ServerHandler: ChannelInboundHandler {
+final class HTTPServerHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPInHandler.Request
     typealias OutboundOut = Response
     

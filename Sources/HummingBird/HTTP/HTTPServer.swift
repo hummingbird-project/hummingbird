@@ -1,10 +1,8 @@
-import LifecycleNIOCompat
 import NIO
 import NIOExtras
 import NIOHTTP1
 
-class Server {
-    var channel: Channel?
+struct HTTPServer {
     let eventLoopGroup: EventLoopGroup
     let quiesce: ServerQuiescingHelper
 
@@ -20,7 +18,7 @@ class Server {
                     let childHandlers: [ChannelHandler] = application.additionalChildHandlers + [
                         HTTPInHandler(),
                         HTTPOutHandler(),
-                        ServerHandler(application: application),
+                        HTTPServerHandler(application: application),
                     ]
                     return channel.pipeline.addHandlers(childHandlers)
                 }
@@ -42,9 +40,7 @@ class Server {
             .childChannelOption(ChannelOptions.recvAllocator, value: AdaptiveRecvByteBufferAllocator())
             .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
             .bind(host: "localhost", port: application.configuration.port)
-            .map { channel in
-                self.channel = channel
-            }
+            .map { _ in }
     }
 
     func shutdown() -> EventLoopFuture<Void> {

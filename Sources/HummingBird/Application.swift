@@ -15,7 +15,7 @@ open class Application {
     public var decoder: DecoderProtocol
     public var additionalChildHandlers: [ChannelHandler]
 
-    let server: Server
+    let server: HTTPServer
     var responder: RequestResponder?
 
     public init(configuration: Configuration = Configuration()) {
@@ -32,7 +32,7 @@ open class Application {
         self.threadPool = NIOThreadPool(numberOfThreads: 2)
         self.threadPool.start()
 
-        self.server = Server(group: self.eventLoopGroup)
+        self.server = HTTPServer(group: self.eventLoopGroup)
 
         lifecycle.registerShutdown(
             label: "Application",
