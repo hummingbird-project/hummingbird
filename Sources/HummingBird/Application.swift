@@ -3,14 +3,14 @@ import LifecycleNIOCompat
 import Logging
 import NIO
 
-public class Application {
+open class Application {
     public let configuration: Configuration
     public let lifecycle: ServiceLifecycle
     public let eventLoopGroup: EventLoopGroup
     public let threadPool: NIOThreadPool
-    public let logger: Logger
     public let middlewares: MiddlewareGroup
     public let router: BasicRouter
+    public var logger: Logger
     public var encoder: EncoderProtocol
     public var decoder: DecoderProtocol
 

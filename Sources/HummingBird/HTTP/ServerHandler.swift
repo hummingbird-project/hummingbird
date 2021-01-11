@@ -1,4 +1,6 @@
+import Logging
 import NIO
+import NIOConcurrencyHelpers
 
 final class ServerHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPInHandler.Request
@@ -6,7 +8,8 @@ final class ServerHandler: ChannelInboundHandler {
     
     let responder: RequestResponder
     let application: Application
-    
+    static let globalRequestID = NIOAtomic<Int>.makeAtomic(value: 0)
+
     init(application: Application) {
         self.application = application
         // application responder has been set for sure
@@ -20,6 +23,7 @@ final class ServerHandler: ChannelInboundHandler {
             method: rawRequest.head.method,
             headers: rawRequest.head.headers,
             body: rawRequest.body,
+            logger: loggerWithRequestId(application.logger),
             application: application,
             eventLoop: context.eventLoop,
             allocator: context.channel.allocator
@@ -49,5 +53,10 @@ final class ServerHandler: ChannelInboundHandler {
             }
         }
     }
+    
+    func loggerWithRequestId(_ logger: Logger) -> Logger {
+        var logger = logger
+        logger[metadataKey: "id"] = .string(Self.globalRequestID.add(1).description)
+        return logger
+    }
 }
-
