@@ -1,5 +1,6 @@
 import Logging
 import NIO
+import NIOHTTP1
 
 final class ServerHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPInHandler.Request
@@ -18,7 +19,7 @@ final class ServerHandler: ChannelInboundHandler {
         self.responseInProgress = false
         self.closeAfterResponseWritten = false
     }
-    
+
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let rawRequest = unwrapInboundIn(data)
         let request = Request(
@@ -34,6 +35,7 @@ final class ServerHandler: ChannelInboundHandler {
         self.responseInProgress = true
 
         responder.respond(to: request).whenComplete { result in
+            let keepAlive = rawRequest.head.isKeepAlive && self.closeAfterResponseWritten == false
             switch result {
             case .failure(let error):
                 let status: HTTPResponseStatus
@@ -43,17 +45,20 @@ final class ServerHandler: ChannelInboundHandler {
                 default:
                     status = .internalServerError
                 }
-                let response = Response(status: status, headers: [:], body: .byteBuffer(request.allocator.buffer(string: "ERROR!")))
-                self.writeResponse(context: context, response: response, keepAlive: rawRequest.head.isKeepAlive)
-            case .success(let response):
-                self.writeResponse(context: context, response: response, keepAlive: rawRequest.head.isKeepAlive)
+                var headers: HTTPHeaders = [:]
+                headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
+                let response = Response(status: status, headers: headers, body: .byteBuffer(request.allocator.buffer(string: "ERROR!")))
+                self.writeResponse(context: context, response: response, keepAlive: keepAlive)
+            case .success(var response):
+                response.headers.replaceOrAdd(name: "connection", value: rawRequest.head.isKeepAlive ? "keep-alive" : "close")
+                self.writeResponse(context: context, response: response, keepAlive: keepAlive)
             }
         }
     }
     
     func writeResponse(context: ChannelHandlerContext, response: Response, keepAlive: Bool) {
         context.writeAndFlush(self.wrapOutboundOut(response)).whenComplete { _ in
-            if keepAlive == false || self.closeAfterResponseWritten == true {
+            if keepAlive == false {
                 context.close(promise: nil)
                 self.closeAfterResponseWritten = false
             }
