@@ -9,14 +9,14 @@ final class HTTPServerHandler: ChannelInboundHandler {
     let responder: RequestResponder
     let application: Application
 
-    var responseInProgress: Bool
+    var responsesInProgress: Int
     var closeAfterResponseWritten: Bool
 
     init(application: Application) {
         self.application = application
         // application responder has been set for sure
         self.responder = application.responder!
-        self.responseInProgress = false
+        self.responsesInProgress = 0
         self.closeAfterResponseWritten = false
     }
 
@@ -32,7 +32,7 @@ final class HTTPServerHandler: ChannelInboundHandler {
             allocator: context.channel.allocator
         )
 
-        self.responseInProgress = true
+        self.responsesInProgress += 1
 
         responder.respond(to: request).whenComplete { result in
             let keepAlive = rawRequest.head.isKeepAlive && self.closeAfterResponseWritten == false
@@ -62,7 +62,7 @@ final class HTTPServerHandler: ChannelInboundHandler {
                 context.close(promise: nil)
                 self.closeAfterResponseWritten = false
             }
-            self.responseInProgress = false
+            self.responsesInProgress -= 1
         }
     }
 
@@ -73,7 +73,7 @@ final class HTTPServerHandler: ChannelInboundHandler {
             // outstanding response will be written before the channel is
             // closed, and if we are idle or waiting for a request body to
             // finish wewill close the channel immediately.
-            if responseInProgress {
+            if responsesInProgress > 1 {
                 self.closeAfterResponseWritten = true
             } else {
                 context.close(promise: nil)
