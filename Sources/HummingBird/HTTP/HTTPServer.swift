@@ -2,20 +2,34 @@ import NIO
 import NIOExtras
 import NIOHTTP1
 
-struct HTTPServer {
+public struct HTTPServer {
     let eventLoopGroup: EventLoopGroup
+    let configuration: Configuration
     let quiesce: ServerQuiescingHelper
+    var additionalChildHandlers: [ ()->ChannelHandler ]
 
-    init(group: EventLoopGroup) {
+    struct Configuration {
+        let port: Int
+        let host: String
+    }
+
+    init(group: EventLoopGroup, configuration: Configuration) {
         self.eventLoopGroup = group
+        self.configuration = configuration
         self.quiesce = ServerQuiescingHelper(group: self.eventLoopGroup)
+        self.additionalChildHandlers = []
+    }
+
+    /// Append to list of `ChannelHandler`s to be added to server child channels
+    public mutating func addChildChannelHandler(_ handler: @autoclosure @escaping ()->ChannelHandler) {
+        additionalChildHandlers.append(handler)
     }
 
     func start(application: Application) -> EventLoopFuture<Void> {
         func childChannelInitializer(channel: Channel) -> EventLoopFuture<Void> {
             return channel.pipeline.configureHTTPServerPipeline(withErrorHandling: true)
                 .flatMap {
-                    let childHandlers: [ChannelHandler] = application.additionalChildHandlers + [
+                    let childHandlers: [ChannelHandler] = additionalChildHandlers.map { $0() } + [
                         HTTPInHandler(),
                         HTTPOutHandler(),
                         HTTPServerHandler(application: application),
@@ -39,8 +53,12 @@ struct HTTPServer {
             .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 16)
             .childChannelOption(ChannelOptions.recvAllocator, value: AdaptiveRecvByteBufferAllocator())
             .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
-            .bind(host: "localhost", port: application.configuration.port)
+            .bind(host: configuration.host, port: configuration.port)
             .map { _ in }
+            .flatMapErrorThrowing { error in
+                quiesce.initiateShutdown(promise: nil)
+                throw error
+            }
     }
 
     func shutdown() -> EventLoopFuture<Void> {

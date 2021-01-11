@@ -9,7 +9,7 @@ public enum ResponseBody {
     /// Empty body
     case empty
 
-    static func streamCallback(_ closure: @escaping (EventLoop) -> EventLoopFuture<ResponseBody.StreamResult>) -> Self {
+    public static func streamCallback(_ closure: @escaping (EventLoop) -> EventLoopFuture<ResponseBody.StreamResult>) -> Self {
         .stream(ResponseBodyStreamerCallback(closure: closure))
     }
     /// response body streamer result. Either a ByteBuffer or the end of the stream

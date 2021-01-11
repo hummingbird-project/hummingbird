@@ -1,7 +1,7 @@
 import XCTest
 import AsyncHTTPClient
 import NIOExtras
-@testable import HummingBird
+import HummingBird
 
 enum ApplicationTestError: Error {
     case noBody
@@ -75,10 +75,11 @@ final class ApplicationTests: XCTestCase {
         let localApp: Application
         if let app = app {
             localApp = app
-            localApp.additionalChildHandlers = [DebugInboundEventsHandler()]
         } else {
             localApp = createApp(["port": Int.random(in: 10000...15000).description])
-            localApp.additionalChildHandlers = [DebugInboundEventsHandler()]
+            #if DEBUG
+            localApp.server.addChildChannelHandler(DebugInboundEventsHandler())
+            #endif
             DispatchQueue.global().async {
                 localApp.serve()
             }
@@ -226,7 +227,6 @@ final class ApplicationTests: XCTestCase {
 
     func testOrdering() {
         let app = createApp(["port": Int.random(in: 10000...15000).description])
-        //app.additionalChildHandlers = [DebugInboundEventsHandler()]
         DispatchQueue.global().async {
             app.serve()
         }
@@ -248,5 +248,12 @@ final class ApplicationTests: XCTestCase {
             }
         }
         XCTAssertNoThrow(try future.wait())
+    }
+}
+
+extension Application {
+    public func syncShutdown() {
+        lifecycle.shutdown()
+        lifecycle.wait()
     }
 }
