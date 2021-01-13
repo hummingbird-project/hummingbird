@@ -97,7 +97,7 @@ extension Application {
     @discardableResult public func addHTTP(_ configuration: HTTPServer.Configuration) -> HTTPServer {
         let server = HTTPServer(
             group: self.eventLoopGroup,
-            configuration: .init(port: configuration.port, host: configuration.host)
+            configuration: configuration
         )
         self.addServer(server, named: "HTTP")
         return server

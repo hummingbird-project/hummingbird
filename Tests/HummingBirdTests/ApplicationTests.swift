@@ -78,8 +78,8 @@ final class ApplicationTests: XCTestCase {
             localApp = app
             httpServer = app.http!
         } else {
-            localApp = self.createApp(.init(port: Int.random(in: 10000...15000), host: "localhost"))
-            httpServer = localApp.servers["HTTP"] as! HTTPServer
+            localApp = self.createApp(.init(host: "localhost", port: Int.random(in: 10000...15000)))
+            httpServer = localApp.http!
             #if DEBUG
             httpServer.addChildChannelHandler(DebugInboundEventsHandler(), position: .last)
             #endif
@@ -173,13 +173,13 @@ final class ApplicationTests: XCTestCase {
                 }
             }
         }
-        let app = self.createApp(.init(port: Int.random(in: 10000...15000), host: "localhost"))
+        let app = self.createApp(.init(host: "localhost", port: Int.random(in: 10000...15000)))
         defer { app.shutdown() }
+        app.middlewares.add(TestMiddleware())
         DispatchQueue.global().async {
             app.serve()
         }
 
-        app.middlewares.add(TestMiddleware())
         let request = try! HTTPClient.Request(url: "http://localhost:*/hello", method: .GET, headers: [:])
         self.testRequest(request, app: app) { response in
             XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
@@ -196,12 +196,7 @@ final class ApplicationTests: XCTestCase {
                 }
             }
         }
-        let app = self.createApp(.init(port: Int.random(in: 10000...15000), host: "localhost"))
-        DispatchQueue.global().async {
-            app.serve()
-        }
-        defer { app.shutdown() }
-
+        let app = self.createApp(.init(host: "localhost", port: Int.random(in: 10000...15000)))
         let group = app.router.group()
             .add(middleware: TestMiddleware())
         group.get("/group") { request in
@@ -210,6 +205,11 @@ final class ApplicationTests: XCTestCase {
         app.router.get("/not-group") { request in
             return request.eventLoop.makeSucceededFuture(request.allocator.buffer(string: "hello"))
         }
+
+        DispatchQueue.global().async {
+            app.serve()
+        }
+        defer { app.shutdown() }
 
         let request = try! HTTPClient.Request(url: "http://localhost:*/group", method: .GET, headers: [:])
         self.testRequest(request, app: app) { response in
@@ -229,7 +229,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testOrdering() {
-        let app = self.createApp(.init(port: Int.random(in: 10000...15000), host: "localhost"))
+        let app = self.createApp(.init(host: "localhost", port: Int.random(in: 10000...15000)))
         let httpServer = app.servers["HTTP"] as! HTTPServer
 
         DispatchQueue.global().async {

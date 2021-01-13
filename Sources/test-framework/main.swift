@@ -31,7 +31,7 @@ struct User: Codable {
 }
 
 let app = Application()
-app.addHTTP(.init(port: 8000, host: "localhost"))
+app.addHTTP(.init(host: "localhost", port: 8000))
 app.encoder = XMLEncoder()
 app.decoder = XMLDecoder()
 

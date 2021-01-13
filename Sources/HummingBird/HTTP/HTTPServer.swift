@@ -12,9 +12,9 @@ public class HTTPServer: Server {
         public let port: Int
         public let host: String
 
-        public init(port: Int, host: String) {
-            self.port = port
+        public init(host: String, port: Int) {
             self.host = host
+            self.port = port
         }
     }
 
