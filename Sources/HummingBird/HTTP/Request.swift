@@ -4,14 +4,24 @@ import NIOConcurrencyHelpers
 import NIOHTTP1
 
 public struct Request {
-    public let uri: URI
-    public let method: HTTPMethod
-    public let headers: HTTPHeaders
-    public let body: ByteBuffer?
-    public let logger: Logger
-    public let application: Application
-    public let eventLoop: EventLoop
-    public let allocator: ByteBufferAllocator
+    /// URI path
+    public var uri: URI
+    /// Request HTTP method
+    public var method: HTTPMethod
+    /// Request HTTP headers
+    public var headers: HTTPHeaders
+    /// Body of HTTP request
+    public var body: ByteBuffer?
+    /// Logger to use
+    public var logger: Logger
+    /// reference to application
+    public var application: Application
+    /// EventLoop request is running on
+    public var eventLoop: EventLoop
+    /// ByteBuffer allocator used by request
+    public var allocator: ByteBufferAllocator
+    /// additional storage
+    public var storage: Storage
 
     internal init(
         uri: URI,
@@ -30,6 +40,7 @@ public struct Request {
         self.application = application
         self.eventLoop = eventLoop
         self.allocator = allocator
+        self.storage = Storage()
     }
 
     public func decode<Type: Codable>(as type: Type.Type) throws -> Type {

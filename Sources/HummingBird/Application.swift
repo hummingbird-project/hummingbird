@@ -17,6 +17,8 @@ open class Application {
     public var router: Router
     /// servers
     public var servers: [String: Server]
+    /// storage
+    public var storage: Storage
     /// Logger
     public var logger: Logger
     /// Encoder used by router
@@ -33,6 +35,7 @@ open class Application {
         self.middlewares = MiddlewareGroup()
         self.router = BasicRouter()
         self.servers = [:]
+        self.storage = Storage()
         self.encoder = NullEncoder()
         self.decoder = NullDecoder()
 
