@@ -36,7 +36,7 @@ public struct Request {
         guard var buffer = self.body else {
             throw HTTPError(.badRequest)
         }
-        return try application.decoder.decode(type, from: &buffer)
+        return try self.application.decoder.decode(type, from: &buffer)
     }
 
     private static func loggerWithRequestId(_ logger: Logger) -> Logger {

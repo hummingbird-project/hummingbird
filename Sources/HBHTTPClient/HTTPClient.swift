@@ -8,6 +8,7 @@ public final class HTTPClient {
         case invalidURL
         case malformedResponse
     }
+
     public struct Request {
         public var uri: URI
         public var method: HTTPMethod
@@ -23,7 +24,7 @@ public final class HTTPClient {
 
         public var port: Int {
             if let port = uri.port { return port }
-            if uri.requiresTLS { return 443 }
+            if self.uri.requiresTLS { return 443 }
             return 80
         }
 
@@ -75,7 +76,7 @@ public final class HTTPClient {
     public func syncShutdown() throws {
         switch self.eventLoopGroupProvider {
         case .createNew:
-            try eventLoopGroup.syncShutdownGracefully()
+            try self.eventLoopGroup.syncShutdownGracefully()
         default:
             break
         }
@@ -85,7 +86,7 @@ public final class HTTPClient {
         let eventLoop = eventLoop ?? self.eventLoopGroup.next()
         do {
             let request = try request.clean()
-            return execute(request, host: String(request.uri.host!), on: eventLoop)
+            return self.execute(request, host: String(request.uri.host!), on: eventLoop)
         } catch {
             return eventLoop.makeFailedFuture(error)
         }
@@ -94,7 +95,7 @@ public final class HTTPClient {
     func execute(_ request: Request, host: String, on eventLoop: EventLoop) -> EventLoopFuture<Response> {
         let promise = eventLoop.makePromise(of: Response.self)
         do {
-            try getBootstrap(request, host: host)
+            try self.getBootstrap(request, host: host)
                 .channelOption(ChannelOptions.socket(SocketOptionLevel(IPPROTO_TCP), TCP_NODELAY), value: 1)
                 .channelInitializer { channel in
                     return channel.pipeline.addHTTPClientHandlers()
@@ -119,7 +120,7 @@ public final class HTTPClient {
     }
 
     func getBootstrap(_ request: Request, host: String) throws -> NIOClientTCPBootstrap {
-        let tlsConfiguration = configuration.tlsConfiguration ?? TLSConfiguration.forClient()
+        let tlsConfiguration = self.configuration.tlsConfiguration ?? TLSConfiguration.forClient()
         let sslContext = try NIOSSLContext(configuration: tlsConfiguration)
         let tlsProvider = try NIOSSLClientTLSProvider<ClientBootstrap>(context: sslContext, serverHostname: host)
         let bootstrap = NIOClientTCPBootstrap(ClientBootstrap(group: eventLoopGroup), tls: tlsProvider)
@@ -130,7 +131,7 @@ public final class HTTPClient {
     }
 
     /// Channel Handler for serializing request header and data
-    private class HTTPClientRequestSerializer : ChannelOutboundHandler {
+    private class HTTPClientRequestSerializer: ChannelOutboundHandler {
         typealias OutboundIn = Request
         typealias OutboundOut = HTTPClientRequestPart
 
@@ -166,7 +167,7 @@ public final class HTTPClient {
         }
 
         private var state: ResponseState = .idle
-        private let promise : EventLoopPromise<Response>
+        private let promise: EventLoopPromise<Response>
 
         init(promise: EventLoopPromise<Response>) {
             self.promise = promise
@@ -178,14 +179,14 @@ public final class HTTPClient {
 
         func channelRead(context: ChannelHandlerContext, data: NIOAny) {
             let part = unwrapInboundIn(data)
-            switch (part, state) {
+            switch (part, self.state) {
             case (.head(let head), .idle):
                 state = .head(head)
             case (.body(let body), .head(let head)):
-                state = .body(head, body)
+                self.state = .body(head, body)
             case (.body(var part), .body(let head, var body)):
                 body.writeBuffer(&part)
-                state = .body(head, body)
+                self.state = .body(head, body)
             case (.end(let tailHeaders), .body(let head, let body)):
                 assert(tailHeaders == nil, "Unexpected tail headers")
                 let response = Response(
@@ -196,8 +197,8 @@ public final class HTTPClient {
                 if context.channel.isActive {
                     context.fireChannelRead(wrapOutboundOut(response))
                 }
-                promise.succeed(response)
-                state = .idle
+                self.promise.succeed(response)
+                self.state = .idle
             case (.end(let tailHeaders), .head(let head)):
                 assert(tailHeaders == nil, "Unexpected tail headers")
                 let response = Response(
@@ -208,10 +209,10 @@ public final class HTTPClient {
                 if context.channel.isActive {
                     context.fireChannelRead(wrapOutboundOut(response))
                 }
-                promise.succeed(response)
-                state = .idle
+                self.promise.succeed(response)
+                self.state = .idle
             default:
-                promise.fail(Error.malformedResponse)
+                self.promise.fail(Error.malformedResponse)
             }
         }
     }

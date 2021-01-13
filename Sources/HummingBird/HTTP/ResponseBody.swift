@@ -12,6 +12,7 @@ public enum ResponseBody {
     public static func streamCallback(_ closure: @escaping (EventLoop) -> EventLoopFuture<ResponseBody.StreamResult>) -> Self {
         .stream(ResponseBodyStreamerCallback(closure: closure))
     }
+
     /// response body streamer result. Either a ByteBuffer or the end of the stream
     public enum StreamResult {
         case byteBuffer(ByteBuffer)
@@ -27,7 +28,7 @@ public protocol ResponseBodyStreamer {
 extension ResponseBodyStreamer {
     /// Call closure for every ByteBuffer streamed
     /// - Returns: When everything has been streamed
-    func write(on eventLoop: EventLoop, _ writeCallback: @escaping (ByteBuffer) -> ()) -> EventLoopFuture<Void> {
+    func write(on eventLoop: EventLoop, _ writeCallback: @escaping (ByteBuffer) -> Void) -> EventLoopFuture<Void> {
         let promise = eventLoop.makePromise(of: Void.self)
         func _stream() {
             self.read(on: eventLoop).whenComplete { result in
@@ -50,6 +51,6 @@ extension ResponseBodyStreamer {
 struct ResponseBodyStreamerCallback: ResponseBodyStreamer {
     let closure: (EventLoop) -> EventLoopFuture<ResponseBody.StreamResult>
     func read(on eventLoop: EventLoop) -> EventLoopFuture<ResponseBody.StreamResult> {
-        return closure(eventLoop)
+        return self.closure(eventLoop)
     }
 }

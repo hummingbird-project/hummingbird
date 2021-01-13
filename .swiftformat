@@ -1,0 +1,23 @@
+# Minimum swiftformat version
+--minversion 0.47.4
+
+# Swift version
+--swiftversion 5.1
+
+# file options
+--exclude .build
+
+# rules
+--disable redundantReturn, redundantBackticks, trailingCommas, extensionAccessControl
+
+# format options
+--ifdef no-indent
+--nospaceoperators ...,..<
+--patternlet inline
+--self insert
+--stripunusedargs unnamed-only
+
+#--maxwidth 150
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first

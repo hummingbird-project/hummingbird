@@ -1,7 +1,6 @@
 import CURLParser
 
 public struct URI: CustomStringConvertible, ExpressibleByStringLiteral {
-
     public struct Scheme: RawRepresentable, Equatable {
         private enum _Scheme: Substring {
             case http
@@ -10,17 +9,19 @@ public struct URI: CustomStringConvertible, ExpressibleByStringLiteral {
             case http_unix = "http+unix"
             case https_unix = "https+unix"
         }
+
         private let value: _Scheme
 
         private init(value: _Scheme) {
             self.value = value
         }
+
         public init?(rawValue: Substring) {
             guard let value = _Scheme(rawValue: rawValue) else { return nil }
             self.value = value
         }
 
-        public var rawValue: Substring { return value.rawValue }
+        public var rawValue: Substring { return self.value.rawValue }
 
         public static var http: Self { return .init(value: .http) }
         public static var https: Self { return .init(value: .https) }
@@ -46,10 +47,10 @@ public struct URI: CustomStringConvertible, ExpressibleByStringLiteral {
             }
             return (key: value, value: "")
         }
-        return [Substring: Substring].init(queryKeyValues) { lhs,_ in lhs }
+        return [Substring: Substring].init(queryKeyValues) { lhs, _ in lhs }
     }
 
-    public var description: String { string }
+    public var description: String { self.string }
 
     public init(_ string: String) {
         var url = urlparser_url()
@@ -65,7 +66,7 @@ public struct URI: CustomStringConvertible, ExpressibleByStringLiteral {
         if let port = Self.substring(from: url.field_data.2, with: string) {
             self.port = Int(port)
         } else {
-            port = nil
+            self.port = nil
         }
         self.path = Self.substring(from: url.field_data.3, with: string) ?? "/"
         self.query = Self.substring(from: url.field_data.4, with: string)
@@ -75,7 +76,7 @@ public struct URI: CustomStringConvertible, ExpressibleByStringLiteral {
     public init(stringLiteral value: String) {
         self.init(value)
     }
-    
+
     private static func substring(from data: urlparser_field_data, with string: String) -> Substring? {
         guard data.len > 0 else { return nil }
         let start = string.index(string.startIndex, offsetBy: numericCast(data.off))

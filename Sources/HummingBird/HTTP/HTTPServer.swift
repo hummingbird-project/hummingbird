@@ -3,13 +3,12 @@ import NIOExtras
 import NIOHTTP1
 
 public class HTTPServer: Server {
-    
     public let eventLoopGroup: EventLoopGroup
     public let configuration: Configuration
-    
+
     let quiesce: ServerQuiescingHelper
 
-    public struct Configuration {        
+    public struct Configuration {
         public let port: Int
         public let host: String
 
@@ -27,13 +26,13 @@ public class HTTPServer: Server {
     }
 
     /// Append to list of `ChannelHandler`s to be added to server child channels
-    public func addChildChannelHandler(_ handler: @autoclosure @escaping ()->ChannelHandler, position: ChannelPipeline.Position = .last) {
-        _additionalChildHandlers.append((handler: handler, position: position))
+    public func addChildChannelHandler(_ handler: @autoclosure @escaping () -> ChannelHandler, position: ChannelPipeline.Position = .last) {
+        self._additionalChildHandlers.append((handler: handler, position: position))
     }
 
     public func start(application: Application) -> EventLoopFuture<Void> {
         func childChannelInitializer(channel: Channel) -> EventLoopFuture<Void> {
-            return channel.pipeline.addHandlers(additionalChildHandlers(at: .first)).flatMap {
+            return channel.pipeline.addHandlers(self.additionalChildHandlers(at: .first)).flatMap {
                 return channel.pipeline.configureHTTPServerPipeline(withErrorHandling: true)
                     .flatMap {
                         let childHandlers: [ChannelHandler] = self.additionalChildHandlers(at: .last) + [
@@ -61,7 +60,7 @@ public class HTTPServer: Server {
             .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 16)
             .childChannelOption(ChannelOptions.recvAllocator, value: AdaptiveRecvByteBufferAllocator())
             .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
-            .bind(host: configuration.host, port: configuration.port)
+            .bind(host: self.configuration.host, port: self.configuration.port)
             .map { _ in }
             .flatMapErrorThrowing { error in
                 self.quiesce.initiateShutdown(promise: nil)
@@ -70,16 +69,16 @@ public class HTTPServer: Server {
     }
 
     public func shutdown() -> EventLoopFuture<Void> {
-        let promise = eventLoopGroup.next().makePromise(of: Void.self)
-        quiesce.initiateShutdown(promise: promise)
+        let promise = self.eventLoopGroup.next().makePromise(of: Void.self)
+        self.quiesce.initiateShutdown(promise: promise)
         return promise.futureResult
     }
 
     func additionalChildHandlers(at position: ChannelPipeline.Position) -> [ChannelHandler] {
-        return _additionalChildHandlers.compactMap { if $0.position == position { return $0.handler() }; return nil }
+        return self._additionalChildHandlers.compactMap { if $0.position == position { return $0.handler() }; return nil }
     }
 
-    private var _additionalChildHandlers: [ (handler: ()->ChannelHandler, position: ChannelPipeline.Position) ]
+    private var _additionalChildHandlers: [(handler: () -> ChannelHandler, position: ChannelPipeline.Position)]
 }
 
 extension ChannelPipeline.Position: Equatable {

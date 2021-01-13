@@ -40,44 +40,44 @@ open class Application {
         self.threadPool = NIOThreadPool(numberOfThreads: 2)
         self.threadPool.start()
 
-        lifecycle.register(
+        self.lifecycle.register(
             label: "Application",
-            start: .sync({ self.responder = self.constructResponder() }),
+            start: .sync { self.responder = self.constructResponder() },
             shutdown: .sync(self.shutdown)
         )
     }
 
     /// Run application
     public func serve() {
-        for (key, value) in servers {
+        for (key, value) in self.servers {
             self.lifecycle.register(
                 label: key,
-                start: .eventLoopFuture({
+                start: .eventLoopFuture {
                     return value.start(application: self)
-                }),
+                },
                 shutdown: .eventLoopFuture(value.shutdown)
             )
         }
-        
-        lifecycle.start { error in
+
+        self.lifecycle.start { error in
             if let error = error {
                 self.logger.error("Failed starting HummingBird: \(error)")
             } else {
                 self.logger.info("HummingBird started successfully")
             }
         }
-        lifecycle.wait()
+        self.lifecycle.wait()
     }
 
     /// Shutdown application
     public func shutdown() {
-        lifecycle.shutdown()
+        self.lifecycle.shutdown()
     }
 
     public func addServer(_ server: Server, named: String) {
-        servers[named] = server
+        self.servers[named] = server
     }
-    
+
     /// Construct the RequestResponder from the middleware group and router
     func constructResponder() -> RequestResponder {
         return self.middlewares.constructResponder(finalResponder: self.router)
@@ -96,9 +96,9 @@ extension Application {
             group: self.eventLoopGroup,
             configuration: .init(port: configuration.port, host: configuration.host)
         )
-        addServer(server, named: "HTTP")
+        self.addServer(server, named: "HTTP")
         return server
     }
-    
-    public var http: HTTPServer? { servers["HTTP"] as? HTTPServer }
+
+    public var http: HTTPServer? { self.servers["HTTP"] as? HTTPServer }
 }

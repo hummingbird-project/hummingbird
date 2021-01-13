@@ -1,4 +1,2 @@
 
-class URLEncodedFormDecoder {
-    
-}
+class URLEncodedFormDecoder {}

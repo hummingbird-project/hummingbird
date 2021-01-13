@@ -1,14 +1,13 @@
-import XCTest
 import AsyncHTTPClient
-import NIOExtras
 import HummingBird
+import NIOExtras
+import XCTest
 
 enum ApplicationTestError: Error {
     case noBody
 }
 
 final class ApplicationTests: XCTestCase {
-
     func testConfiguration() {
         var configuration = Configuration()
         configuration["TEST_ENV"] = "testing"
@@ -30,7 +29,7 @@ final class ApplicationTests: XCTestCase {
             let buffer = request.allocator.buffer(string: "GET: Hello")
             return request.eventLoop.makeSucceededFuture(buffer)
         }
-        app.router.get("/accepted") { request -> HTTPResponseStatus in
+        app.router.get("/accepted") { _ -> HTTPResponseStatus in
             return .accepted
         }
         app.router.post("/hello") { request -> ByteBuffer in
@@ -48,7 +47,7 @@ final class ApplicationTests: XCTestCase {
             let body: ResponseBody
             if var requestBody = request.body {
                 body = .streamCallback { eventLoop in
-                    let bytesToDownload = min(32*1024, requestBody.readableBytes)
+                    let bytesToDownload = min(32 * 1024, requestBody.readableBytes)
                     guard bytesToDownload > 0 else { return eventLoop.makeSucceededFuture(.end) }
                     let buffer = requestBody.readSlice(length: bytesToDownload)!
                     return eventLoop.makeSucceededFuture(.byteBuffer(buffer))
@@ -61,7 +60,7 @@ final class ApplicationTests: XCTestCase {
         app.router.get("/wait") { request -> EventLoopFuture<String> in
             let waitString = request.uri.queryParameters["time"] ?? "0"
             let wait = Int(waitString) ?? 0
-            return request.eventLoop.scheduleTask(in: .milliseconds(Int64(wait))) { }.futureResult.map { String(waitString) }
+            return request.eventLoop.scheduleTask(in: .milliseconds(Int64(wait))) {}.futureResult.map { String(waitString) }
         }
         return app
     }
@@ -72,14 +71,14 @@ final class ApplicationTests: XCTestCase {
         return ByteBufferAllocator().buffer(bytes: data)
     }
 
-    func testRequest(_ request: HTTPClient.Request, app: Application? = nil, client: HTTPClient? = nil, test: @escaping (HTTPClient.Response) throws -> ()) {
+    func testRequest(_ request: HTTPClient.Request, app: Application? = nil, client: HTTPClient? = nil, test: @escaping (HTTPClient.Response) throws -> Void) {
         let localApp: Application
         let httpServer: HTTPServer
         if let app = app {
             localApp = app
             httpServer = app.http!
         } else {
-            localApp = createApp(.init(port: Int.random(in: 10000...15000), host: "localhost"))
+            localApp = self.createApp(.init(port: Int.random(in: 10000...15000), host: "localhost"))
             httpServer = localApp.servers["HTTP"] as! HTTPServer
             #if DEBUG
             httpServer.addChildChannelHandler(DebugInboundEventsHandler(), position: .last)
@@ -113,7 +112,7 @@ final class ApplicationTests: XCTestCase {
 
     func testGetRoute() {
         let request = try! HTTPClient.Request(url: "http://localhost:*/hello", method: .GET, headers: [:])
-        testRequest(request) { response in
+        self.testRequest(request) { response in
             guard var body = response.body else { throw ApplicationTestError.noBody }
             let string = body.readString(length: body.readableBytes)
             XCTAssertEqual(response.status, .ok)
@@ -123,14 +122,14 @@ final class ApplicationTests: XCTestCase {
 
     func testHTTPStatusRoute() {
         let request = try! HTTPClient.Request(url: "http://localhost:*/accepted", method: .GET, headers: [:])
-        testRequest(request) { response in
+        self.testRequest(request) { response in
             XCTAssertEqual(response.status, .accepted)
         }
     }
 
     func testPostRoute() {
         let request = try! HTTPClient.Request(url: "http://localhost:*/hello", method: .POST, headers: [:])
-        testRequest(request) { response in
+        self.testRequest(request) { response in
             guard var body = response.body else { throw ApplicationTestError.noBody }
             let string = body.readString(length: body.readableBytes)
             XCTAssertEqual(response.status, .ok)
@@ -140,7 +139,7 @@ final class ApplicationTests: XCTestCase {
 
     func testQueryRoute() {
         let request = try! HTTPClient.Request(url: "http://localhost:*/query?test=test%20data", method: .GET, headers: [:])
-        testRequest(request) { response in
+        self.testRequest(request) { response in
             guard var body = response.body else { throw ApplicationTestError.noBody }
             let string = body.readString(length: body.readableBytes)
             XCTAssertEqual(response.status, .ok)
@@ -149,17 +148,17 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testResponseBody() {
-        let buffer = randomBuffer(size: 140000)
+        let buffer = self.randomBuffer(size: 140_000)
         let request = try! HTTPClient.Request(url: "http://localhost:*/echo-body", method: .POST, headers: [:], body: .byteBuffer(buffer))
-        testRequest(request) { response in
+        self.testRequest(request) { response in
             XCTAssertEqual(response.body, buffer)
         }
     }
 
     func testResponseBodyStreaming() {
-        let buffer = randomBuffer(size: 140000)
+        let buffer = self.randomBuffer(size: 140_000)
         let request = try! HTTPClient.Request(url: "http://localhost:*/echo-body-streaming", method: .POST, headers: [:], body: .byteBuffer(buffer))
-        testRequest(request) { response in
+        self.testRequest(request) { response in
             XCTAssertEqual(response.body, buffer)
         }
     }
@@ -174,7 +173,7 @@ final class ApplicationTests: XCTestCase {
                 }
             }
         }
-        let app = createApp(.init(port: Int.random(in: 10000...15000), host: "localhost"))
+        let app = self.createApp(.init(port: Int.random(in: 10000...15000), host: "localhost"))
         defer { app.shutdown() }
         DispatchQueue.global().async {
             app.serve()
@@ -182,7 +181,7 @@ final class ApplicationTests: XCTestCase {
 
         app.middlewares.add(TestMiddleware())
         let request = try! HTTPClient.Request(url: "http://localhost:*/hello", method: .GET, headers: [:])
-        testRequest(request, app: app) { response in
+        self.testRequest(request, app: app) { response in
             XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
         }
     }
@@ -197,7 +196,7 @@ final class ApplicationTests: XCTestCase {
                 }
             }
         }
-        let app = createApp(.init(port: Int.random(in: 10000...15000), host: "localhost"))
+        let app = self.createApp(.init(port: Int.random(in: 10000...15000), host: "localhost"))
         DispatchQueue.global().async {
             app.serve()
         }
@@ -213,26 +212,26 @@ final class ApplicationTests: XCTestCase {
         }
 
         let request = try! HTTPClient.Request(url: "http://localhost:*/group", method: .GET, headers: [:])
-        testRequest(request, app: app) { response in
+        self.testRequest(request, app: app) { response in
             XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
         }
         let request2 = try! HTTPClient.Request(url: "http://localhost:*/not-group", method: .GET, headers: [:])
-        testRequest(request2, app: app) { response in
+        self.testRequest(request2, app: app) { response in
             XCTAssertEqual(response.headers["middleware"].first, nil)
         }
     }
 
     func testKeepAlive() {
         let request = try! HTTPClient.Request(url: "http://localhost:*/hello", method: .GET, headers: [:])
-        testRequest(request) { response in
+        self.testRequest(request) { response in
             XCTAssertEqual(response.headers["connection"].first, "keep-alive")
         }
     }
 
     func testOrdering() {
-        let app = createApp(.init(port: Int.random(in: 10000...15000), host: "localhost"))
+        let app = self.createApp(.init(port: Int.random(in: 10000...15000), host: "localhost"))
         let httpServer = app.servers["HTTP"] as! HTTPServer
-        
+
         DispatchQueue.global().async {
             app.serve()
         }
@@ -241,13 +240,13 @@ final class ApplicationTests: XCTestCase {
         }
         let client = HTTPClient(eventLoopGroupProvider: .createNew)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let responseFutures = (1...16).reversed().map { client.get(url: "http://localhost:\(httpServer.configuration.port)/wait?time=\($0*100)") }
+        let responseFutures = (1...16).reversed().map { client.get(url: "http://localhost:\(httpServer.configuration.port)/wait?time=\($0 * 100)") }
         let future = EventLoopFuture.whenAllComplete(responseFutures, on: client.eventLoopGroup.next()).map { results in
             for i in 0..<16 {
                 let result = results[i]
                 if case .success(let response) = result {
                     let string: String? = response.body.map { var buffer = $0; return buffer.readString(length: buffer.readableBytes)! }
-                    XCTAssertEqual(string, "\((16-i)*100)")
+                    XCTAssertEqual(string, "\((16 - i) * 100)")
                     return
                 }
                 XCTFail()

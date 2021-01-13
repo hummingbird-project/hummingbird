@@ -5,7 +5,7 @@ import NIOHTTP1
 final class HTTPServerHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPInHandler.Request
     typealias OutboundOut = Response
-    
+
     let responder: RequestResponder
     let application: Application
 
@@ -27,14 +27,14 @@ final class HTTPServerHandler: ChannelInboundHandler {
             method: rawRequest.head.method,
             headers: rawRequest.head.headers,
             body: rawRequest.body,
-            application: application,
+            application: self.application,
             eventLoop: context.eventLoop,
             allocator: context.channel.allocator
         )
 
         self.responsesInProgress += 1
 
-        responder.respond(to: request).whenComplete { result in
+        self.responder.respond(to: request).whenComplete { result in
             let keepAlive = rawRequest.head.isKeepAlive && self.closeAfterResponseWritten == false
             switch result {
             case .failure(let error):
@@ -55,7 +55,7 @@ final class HTTPServerHandler: ChannelInboundHandler {
             }
         }
     }
-    
+
     func writeResponse(context: ChannelHandlerContext, response: Response, keepAlive: Bool) {
         context.writeAndFlush(self.wrapOutboundOut(response)).whenComplete { _ in
             if keepAlive == false {
@@ -73,13 +73,13 @@ final class HTTPServerHandler: ChannelInboundHandler {
             // outstanding response will be written before the channel is
             // closed, and if we are idle or waiting for a request body to
             // finish wewill close the channel immediately.
-            if responsesInProgress > 1 {
+            if self.responsesInProgress > 1 {
                 self.closeAfterResponseWritten = true
             } else {
                 context.close(promise: nil)
             }
         default:
-            application.logger.debug("Unhandled event \(event as? ChannelEvent)")
+            self.application.logger.debug("Unhandled event \(event as? ChannelEvent)")
             context.fireUserInboundEventTriggered(event)
         }
     }

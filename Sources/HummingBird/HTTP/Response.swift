@@ -12,4 +12,3 @@ public struct Response {
         self.body = body
     }
 }
-

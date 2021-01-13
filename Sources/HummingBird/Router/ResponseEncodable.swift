@@ -17,7 +17,7 @@ extension ResponseEncodable {
     }
 }
 
-extension Response : ResponseEncodable {
+extension Response: ResponseEncodable {
     public func response(from request: Request) -> Response { self }
 }
 

@@ -25,43 +25,41 @@ final class HTTPInHandler: ChannelInboundHandler {
 
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let part = self.unwrapInboundIn(data)
-    
+
         switch (part, self.state) {
         case (.head(let head), .idle):
             state = .head(head)
         case (.body(let part), .head(let head)):
-            state = .body(head, part)
+            self.state = .body(head, part)
         case (.body(var part), .body(let head, var buffer)):
             buffer.writeBuffer(&part)
-            state = .body(head, buffer)
+            self.state = .body(head, buffer)
         case (.end, .head(let head)):
             let request = Request(head: head, body: nil, context: context)
             context.fireChannelRead(self.wrapInboundOut(request))
-            state = .idle
+            self.state = .idle
         case (.end, .body(let head, let body)):
             let request = Request(head: head, body: body, context: context)
             context.fireChannelRead(self.wrapInboundOut(request))
-            state = .idle
+            self.state = .idle
         default:
             assert(false)
             context.close(promise: nil)
-            break
         }
     }
-    
-   func channelReadComplete(context: ChannelHandlerContext) {
+
+    func channelReadComplete(context: ChannelHandlerContext) {
         context.flush()
     }
 }
 
-
 final class HTTPOutHandler: ChannelOutboundHandler {
     typealias OutboundIn = Response
     typealias OutboundOut = HTTPServerResponsePart
-    
+
     func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
         let response = self.unwrapOutboundIn(data)
-        
+
         // add content-length header
         var headers = response.headers
         if case .byteBuffer(let buffer) = response.body {
@@ -91,4 +89,3 @@ final class HTTPOutHandler: ChannelOutboundHandler {
         }
     }
 }
-

@@ -1,5 +1,4 @@
 import HBHTTPClient
 import XCTest
 
-class HTTPClientTests: XCTestCase {
-}
+class HTTPClientTests: XCTestCase {}

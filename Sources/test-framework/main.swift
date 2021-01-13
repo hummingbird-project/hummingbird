@@ -17,12 +17,14 @@ struct TestMiddleware: Middleware {
         }
     }
 }
+
 struct DebugMiddleware: Middleware {
     func apply(to request: Request, next: RequestResponder) -> EventLoopFuture<Response> {
         print("\(request.method): \(request.uri)")
         return next.respond(to: request)
     }
 }
+
 struct User: Codable {
     let name: String
     let age: Int

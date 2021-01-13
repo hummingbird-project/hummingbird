@@ -1,7 +1,7 @@
 import AsyncHTTPClient
-import NIOSSL
-import HummingBird
 import HBTLS
+import HummingBird
+import NIOSSL
 import XCTest
 
 class HBTLSTests: XCTestCase {
@@ -11,14 +11,14 @@ class HBTLSTests: XCTestCase {
             let buffer = request.allocator.buffer(string: "Hello")
             return request.eventLoop.makeSucceededFuture(buffer)
         }
-        let https = try app.addHTTPS(.init(port: 8000, host: "localhost"), tlsConfiguration: getServerTLSConfiguration())
+        let https = try app.addHTTPS(.init(port: 8000, host: "localhost"), tlsConfiguration: self.getServerTLSConfiguration())
         let http = app.addHTTP(.init(port: 8001, host: "localhost"))
         DispatchQueue.global().async {
             app.serve()
         }
         defer { app.shutdown() }
 
-        let client = try HTTPClient(eventLoopGroupProvider: .shared(app.eventLoopGroup), configuration: .init(tlsConfiguration: getClientTLSConfiguration()))
+        let client = try HTTPClient(eventLoopGroupProvider: .shared(app.eventLoopGroup), configuration: .init(tlsConfiguration: self.getClientTLSConfiguration()))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
         let future = client.get(url: "https://localhost:\(https.configuration.port)/hello")

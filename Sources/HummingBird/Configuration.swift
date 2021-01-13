@@ -4,10 +4,8 @@ import Glibc
 import Darwin.C
 #endif
 
-
 /// Configuration for Application
 public struct Configuration: Decodable, ExpressibleByDictionaryLiteral {
-
     /// initialize from environment variables
     public init() {
         self.values = Self.getEnvironment()
@@ -20,7 +18,7 @@ public struct Configuration: Decodable, ExpressibleByDictionaryLiteral {
             self.values[key.lowercased()] = value
         }
     }
-    
+
     /// initialize from dictionary literal
     public init(dictionaryLiteral elements: (String, String)...) {
         self.values = [:]
@@ -36,20 +34,20 @@ public struct Configuration: Decodable, ExpressibleByDictionaryLiteral {
     }
 
     public subscript(_ name: String) -> String? {
-        get { return values[name.lowercased()] }
-        set { values[name.lowercased()] = newValue }
+        get { return self.values[name.lowercased()] }
+        set { self.values[name.lowercased()] = newValue }
     }
 
     /// Port for server to bind to
     public var port: Int {
-        get { return values["port"].map { Int($0) ?? 8000 } ?? 8000 }
-        set { values["port"] = newValue.description }
+        get { return self.values["port"].map { Int($0) ?? 8000 } ?? 8000 }
+        set { self.values["port"] = newValue.description }
     }
 
     /// Host name
     public var host: String {
-        get { return values["host"] ?? "localhost" }
-        set { values["host"] = newValue }
+        get { return self.values["host"] ?? "localhost" }
+        set { self.values["host"] = newValue }
     }
 
     /// Get environment variables
@@ -73,4 +71,3 @@ public struct Configuration: Decodable, ExpressibleByDictionaryLiteral {
 
     var values: [String: String]
 }
-

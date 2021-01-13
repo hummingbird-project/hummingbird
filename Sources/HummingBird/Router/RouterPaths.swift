@@ -56,4 +56,3 @@ extension RouterPaths {
         add(path, method: .POST, closure: closure)
     }
 }
-

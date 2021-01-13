@@ -2,18 +2,18 @@ import NIO
 
 public class MiddlewareGroup {
     var middlewares: [Middleware]
-    
+
     init() {
-        middlewares = []
+        self.middlewares = []
     }
-    
+
     public func add(_ middleware: Middleware) {
-        middlewares.append(middleware)
+        self.middlewares.append(middleware)
     }
-    
+
     public func constructResponder(finalResponder: RequestResponder) -> RequestResponder {
         var currentResponser = finalResponder
-        for i in (0..<middlewares.count).reversed() {
+        for i in (0..<self.middlewares.count).reversed() {
             let responder = MiddlewareResponder(middleware: middlewares[i], next: currentResponser)
             currentResponser = responder
         }
