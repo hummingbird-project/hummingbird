@@ -19,6 +19,8 @@ jobs:
     strategy:
       matrix:
         image: ['swift:5.3']
+    container:
+      image: ${{ matrix.image }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
