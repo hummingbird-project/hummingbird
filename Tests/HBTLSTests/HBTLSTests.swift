@@ -11,7 +11,8 @@ class HBTLSTests: XCTestCase {
             let buffer = request.allocator.buffer(string: "Hello")
             return request.eventLoop.makeSucceededFuture(buffer)
         }
-        try app.installTLS(configuration: getServerTLSConfiguration())
+        let https = try app.addHTTPS(.init(port: 8000, host: "localhost"), tlsConfiguration: getServerTLSConfiguration())
+        let http = app.addHTTP(.init(port: 8001, host: "localhost"))
         DispatchQueue.global().async {
             app.serve()
         }
@@ -20,8 +21,10 @@ class HBTLSTests: XCTestCase {
         let client = try HTTPClient(eventLoopGroupProvider: .shared(app.eventLoopGroup), configuration: .init(tlsConfiguration: getClientTLSConfiguration()))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
-        let future = client.get(url: "https://localhost:\(app.configuration.port)/hello")
+        let future = client.get(url: "https://localhost:\(https.configuration.port)/hello")
         XCTAssertNoThrow(try future.wait())
+        let future2 = client.get(url: "http://localhost:\(http.configuration.port)/hello")
+        XCTAssertNoThrow(try future2.wait())
     }
 
     let caCertificateData = """

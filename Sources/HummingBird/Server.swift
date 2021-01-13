@@ -1,6 +1,6 @@
 import NIO
 
-protocol Server {
+public protocol Server {
     func start(application: Application) -> EventLoopFuture<Void>
     func shutdown() -> EventLoopFuture<Void>
 }
