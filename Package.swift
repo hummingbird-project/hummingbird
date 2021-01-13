@@ -23,7 +23,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.4.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "1.0.0-alpha.6"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.2.0"),
-        .package(name: "XMLEncoder", url: "https://github.com/adam-fowler/xml-encoder.git", from: "0.3.0"),
+        .package(url: "https://github.com/adam-fowler/xml-coding.git", from: "0.4.0"),
     ],
     targets: [
         .target(name: "test-framework", dependencies: [
@@ -64,7 +64,7 @@ let package = Package(
         .target(name: "HBXML", dependencies: [
             .byName(name: "HummingBird"),
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
-            .product(name: "XMLEncoder", package: "XMLEncoder")
+            .product(name: "XMLCoding", package: "xml-coding")
         ]),
         // test targets
         .testTarget(name: "HummingBirdTests", dependencies: [

@@ -1,7 +1,7 @@
 import Foundation
 import HummingBird
 import NIOFoundationCompat
-@_exported import xml_encoder
+@_exported import XMLCoding
 
 extension XMLEncoder: EncoderProtocol {
     public func encode<T: Encodable>(_ value: T, to byteBuffer: inout ByteBuffer) throws {
@@ -17,7 +17,7 @@ extension XMLDecoder: DecoderProtocol {
         guard let data = byteBuffer.readData(length: byteBuffer.readableBytes) else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Empty Buffer"))
         }
-        let xml = try XML.Element(xmlData: data)
+        let xml = try XML.Element(data: data)
         return try self.decode(T.self, from: xml)
     }
 }
