@@ -31,8 +31,9 @@ struct User: Codable {
 }
 
 let app = Application()
-app.encoder = JSONEncoder()
-app.decoder = JSONDecoder()
+app.addHTTP(.init(port: 8000, host: "localhost"))
+app.encoder = XMLEncoder()
+app.decoder = XMLDecoder()
 
 app.logger.logLevel = .debug
 
@@ -54,9 +55,15 @@ app.router.get("/user") { request -> EventLoopFuture<User> in
     return request.eventLoop.makeSucceededFuture(.init(name: String(name), age: 42))
 }
 
-app.router.put("/user") { request -> EventLoopFuture<String> in
+app.router.put("/user/name") { request -> EventLoopFuture<String> in
     guard let user = try? request.decode(as: User.self) else { return request.eventLoop.makeFailedFuture(HTTPError(.badRequest)) }
     return request.eventLoop.makeSucceededFuture("Hello \(user.name)")
+}
+
+app.router.put("/user") { request -> EventLoopFuture<User> in
+    guard let user = try? request.decode(as: User.self) else { return request.eventLoop.makeFailedFuture(HTTPError(.badRequest)) }
+    let newUser = User(name: user.name, age: user.age+1)
+    return request.eventLoop.makeSucceededFuture(newUser)
 }
 
 let group = app.router.group()

@@ -11,6 +11,7 @@ let package = Package(
         .library(name: "HummingBird", targets: ["HummingBird"]),
         .library(name: "HBFileMiddleware", targets: ["HBFileMiddleware"]),
         .library(name: "HBJSON", targets: ["HBJSON"]),
+        .library(name: "HBTLS", targets: ["HBTLS"]),
         .library(name: "HBURLEncodedForm", targets: ["HBURLEncodedForm"]),
         .library(name: "HBXML", targets: ["HBXML"]),
     ],
@@ -22,7 +23,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.4.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "1.0.0-alpha.6"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.2.0"),
-        .package(url: "https://github.com/MaxDesiatov/XMLCoder.git", from: "0.11.1"),
+        .package(name: "XMLEncoder", url: "https://github.com/adam-fowler/xml-encoder.git", from: "0.3.0"),
     ],
     targets: [
         .target(name: "test-framework", dependencies: [
@@ -63,7 +64,7 @@ let package = Package(
         .target(name: "HBXML", dependencies: [
             .byName(name: "HummingBird"),
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
-            .product(name: "XMLCoder", package: "XMLCoder")
+            .product(name: "XMLEncoder", package: "XMLEncoder")
         ]),
         // test targets
         .testTarget(name: "HummingBirdTests", dependencies: [

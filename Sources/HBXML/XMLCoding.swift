@@ -1,12 +1,14 @@
 import Foundation
 import HummingBird
 import NIOFoundationCompat
-@_exported import XMLCoder
+@_exported import xml_encoder
 
 extension XMLEncoder: EncoderProtocol {
     public func encode<T: Encodable>(_ value: T, to byteBuffer: inout ByteBuffer) throws {
-        let data = try self.encode(value, header: .init(version: 1, encoding: "UTF-8"))
-        byteBuffer.writeBytes(data)
+        let xml = try self.encode(value)
+        let xmlDocument = XML.Document(rootElement: xml)
+        let xmlString = xmlDocument.xmlString
+        byteBuffer.writeString(xmlString)
     }
 }
 
@@ -15,6 +17,8 @@ extension XMLDecoder: DecoderProtocol {
         guard let data = byteBuffer.readData(length: byteBuffer.readableBytes) else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Empty Buffer"))
         }
-        return try self.decode(T.self, from: data)
+        let xml = try XML.Element(xmlData: data)
+        return try self.decode(T.self, from: xml)
     }
 }
+
