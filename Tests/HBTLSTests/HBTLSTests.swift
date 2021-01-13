@@ -11,8 +11,8 @@ class HBTLSTests: XCTestCase {
             let buffer = request.allocator.buffer(string: "Hello")
             return request.eventLoop.makeSucceededFuture(buffer)
         }
-        let https = try app.addHTTPS(.init(port: 8000, host: "localhost"), tlsConfiguration: self.getServerTLSConfiguration())
-        let http = app.addHTTP(.init(port: 8001, host: "localhost"))
+        let https = try app.addHTTPS(.init(host: "localhost", port: 8000), tlsConfiguration: self.getServerTLSConfiguration())
+        let http = app.addHTTP(.init(host: "localhost", port: 8001))
         DispatchQueue.global().async {
             app.serve()
         }
