@@ -25,7 +25,7 @@ struct DebugMiddleware: Middleware {
     }
 }
 
-struct User: Codable {
+struct User: ResponseCodable {
     let name: String
     let age: Int
 }
@@ -60,10 +60,19 @@ app.router.put("/user/name") { request -> EventLoopFuture<String> in
     return request.eventLoop.makeSucceededFuture("Hello \(user.name)")
 }
 
-app.router.put("/user") { request -> EventLoopFuture<User> in
+app.router.put("/user") { request -> User in
+    guard let user = try? request.decode(as: User.self) else { throw HTTPError(.badRequest) }
+    let newUser = User(name: user.name, age: user.age+1)
+    return newUser
+}
+
+app.router.put("/user-future") { request -> EventLoopFuture<User> in
     guard let user = try? request.decode(as: User.self) else { return request.eventLoop.makeFailedFuture(HTTPError(.badRequest)) }
     let newUser = User(name: user.name, age: user.age+1)
     return request.eventLoop.makeSucceededFuture(newUser)
+}
+app.router.get("/string") { request -> String in
+    return "Hello"
 }
 
 let group = app.router.group()

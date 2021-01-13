@@ -1,40 +1,16 @@
-import NIO
-import NIOHTTP1
 
-/// Object that can be encoded into a `EventLoopFuture<Response>`
-public protocol ResponseFutureEncodable {
-    func responseFuture(from request: Request) -> EventLoopFuture<Response>
-}
+/// Protocol for encodable object that can generate a response
+public protocol ResponseEncodable: Encodable, ResponseGenerator  {}
 
-/// Object that can be encoded into a `Response`
-public protocol ResponseEncodable: ResponseFutureEncodable {
-    func response(from request: Request) -> Response
-}
+/// Protocol for codable object that can generate a response
+public protocol ResponseCodable: ResponseEncodable, Decodable {}
 
+/// Extend ResponseEncodable to conform to ResponseGenerator
 extension ResponseEncodable {
-    public func responseFuture(from request: Request) -> EventLoopFuture<Response> {
-        request.eventLoop.makeSucceededFuture(response(from: request))
+    public func response(from request: Request) throws -> Response {
+        var buffer = request.allocator.buffer(capacity: 0)
+        try request.application.encoder.encode(self, to: &buffer)
+        return Response(status: .ok, headers: [:], body: .byteBuffer(buffer))
     }
 }
 
-extension Response: ResponseEncodable {
-    public func response(from request: Request) -> Response { self }
-}
-
-extension ByteBuffer: ResponseEncodable {
-    public func response(from request: Request) -> Response {
-        Response(status: .ok, headers: [:], body: .byteBuffer(self))
-    }
-}
-
-extension HTTPResponseStatus: ResponseEncodable {
-    public func response(from request: Request) -> Response {
-        Response(status: self, headers: [:], body: .empty)
-    }
-}
-
-extension EventLoopFuture: ResponseFutureEncodable where Value: ResponseEncodable {
-    public func responseFuture(from request: Request) -> EventLoopFuture<Response> {
-        return self.map { $0.response(from: request) }
-    }
-}

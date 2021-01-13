@@ -17,19 +17,10 @@ public struct RouterGroup: RouterPaths {
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    public func add<R: ResponseFutureEncodable>(_ path: String, method: HTTPMethod, closure: @escaping (Request) -> R) {
-        let responder = CallbackResponder(callback: { request in closure(request).responseFuture(from: request) })
-        router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
-    }
-
-    /// Add path for closure returning type conforming to Codable
-    public func add<R: Encodable>(_ path: String, method: HTTPMethod, closure: @escaping (Request) -> R) {
+    public func add<R: ResponseGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (Request) throws -> R) {
         let responder = CallbackResponder(callback: { request in
             do {
-                let value = closure(request)
-                var buffer = request.allocator.buffer(capacity: 0)
-                try request.application.encoder.encode(value, to: &buffer)
-                let response = Response(status: .ok, headers: [:], body: .byteBuffer(buffer))
+                let response = try closure(request).response(from: request)
                 return request.eventLoop.makeSucceededFuture(response)
             } catch {
                 return request.eventLoop.makeFailedFuture(error)
@@ -38,15 +29,9 @@ public struct RouterGroup: RouterPaths {
         router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
     }
 
-    /// Add path for closure returning `EventLoopFuture` of type conforming to Codable
-    public func add<R: Encodable>(_ path: String, method: HTTPMethod, closure: @escaping (Request) -> EventLoopFuture<R>) {
-        let responder = CallbackResponder(callback: { request in
-            closure(request).flatMapThrowing { response in
-                var buffer = request.allocator.buffer(capacity: 0)
-                try request.application.encoder.encode(response, to: &buffer)
-                return Response(status: .ok, headers: [:], body: .byteBuffer(buffer))
-            }
-        })
+    /// Add path for closure returning type conforming to ResponseFutureEncodable
+    public func add<R: ResponseFutureGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (Request) -> R) {
+        let responder = CallbackResponder(callback: { request in closure(request).responseFuture(from: request) })
         router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
     }
 }
