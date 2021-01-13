@@ -51,12 +51,12 @@ app.router.get("/hello") { request -> EventLoopFuture<ByteBuffer> in
 }
 
 app.router.get("/hello2") { request -> String in
-    guard let name = request.uri.queryParameters["name"] else { throw HTTPError(.badRequest, message: "You need a \"name\" query parameter.") }
+    guard let name = request.uri.queryParameters["name"]?.removingPercentEncoding else { throw HTTPError(.badRequest, message: "You need a \"name\" query parameter.") }
     return "Hello \(name)"
 }
 
 app.router.get("/user") { request -> EventLoopFuture<User> in
-    let name = request.uri.queryParameters["name"] ?? "Unknown"
+    let name = request.uri.queryParameters["name"]?.removingPercentEncoding ?? "Unknown"
     return request.eventLoop.makeSucceededFuture(.init(name: String(name), age: 42))
 }
 

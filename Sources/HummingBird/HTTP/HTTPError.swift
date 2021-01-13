@@ -16,6 +16,7 @@ public struct HTTPError: Error, ResponseGenerator {
         if let message = self.message {
             let buffer = request.allocator.buffer(string: message)
             body = .byteBuffer(buffer)
+            headers.replaceOrAdd(name: "content-type", value: "text/plain; charset=utf-8")
             headers.replaceOrAdd(name: "content-length", value: buffer.readableBytes.description)
         } else {
             body = .empty

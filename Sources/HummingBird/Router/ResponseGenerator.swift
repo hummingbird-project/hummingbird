@@ -15,14 +15,14 @@ extension Response: ResponseGenerator {
 extension String: ResponseGenerator {
     public func response(from request: Request) -> Response {
         let buffer = request.allocator.buffer(string: self)
-        return Response(status: .ok, headers: [:], body: .byteBuffer(buffer))
+        return Response(status: .ok, headers: ["content-type": "text/plain; charset=utf-8"], body: .byteBuffer(buffer))
     }
 }
 
 /// Extend ByteBuffer to conform to ResponseGenerator
 extension ByteBuffer: ResponseGenerator {
     public func response(from request: Request) -> Response {
-        Response(status: .ok, headers: [:], body: .byteBuffer(self))
+        Response(status: .ok, headers: ["content-type": "application/octet-stream"], body: .byteBuffer(self))
     }
 }
 

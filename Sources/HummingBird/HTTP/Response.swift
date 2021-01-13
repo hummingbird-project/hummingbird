@@ -1,6 +1,7 @@
 import NIO
 import NIOHTTP1
 
+/// HTTP Response
 public struct Response {
     public var status: HTTPResponseStatus
     public var headers: HTTPHeaders
