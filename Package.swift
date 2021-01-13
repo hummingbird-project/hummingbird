@@ -19,6 +19,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-log.git", from: "1.4.0"),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.16.1"),
         .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.7.0"),
+        .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.4.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "1.0.0-alpha.6"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.2.0"),
         .package(url: "https://github.com/MaxDesiatov/XMLCoder.git", from: "0.11.1"),
@@ -28,6 +29,7 @@ let package = Package(
             .byName(name: "HummingBird"),
             .byName(name: "HBFileMiddleware"),
             .byName(name: "HBJSON"),
+            .byName(name: "HBTLS"),
             .byName(name: "HBXML"),
         ]),
         .target(name: "CURLParser", dependencies: []),
@@ -49,6 +51,11 @@ let package = Package(
             .byName(name: "HummingBird"),
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
         ]),
+        .target(name: "HBTLS", dependencies: [
+            .byName(name: "HummingBird"),
+            .product(name: "NIO", package: "swift-nio"),
+            .product(name: "NIOSSL", package: "swift-nio-ssl"),
+        ]),
         .target(name: "HBURLEncodedForm", dependencies: [
             .byName(name: "HummingBird"),
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
@@ -60,8 +67,13 @@ let package = Package(
         ]),
         // test targets
         .testTarget(name: "HummingBirdTests", dependencies: [
-                        "HummingBird",
-                        .product(name: "AsyncHTTPClient", package: "async-http-client")
+            "HummingBird",
+            .product(name: "AsyncHTTPClient", package: "async-http-client")
+        ]),
+        .testTarget(name: "HBTLSTests", dependencies: [
+            "HummingBird",
+            "HBTLS",
+            .product(name: "AsyncHTTPClient", package: "async-http-client")
         ]),
     ]
 )

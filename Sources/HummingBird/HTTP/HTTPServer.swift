@@ -2,11 +2,10 @@ import NIO
 import NIOExtras
 import NIOHTTP1
 
-public struct HTTPServer {
+public struct HTTPServer: Server {
     let eventLoopGroup: EventLoopGroup
     let configuration: Configuration
     let quiesce: ServerQuiescingHelper
-    var additionalChildHandlers: [ ()->ChannelHandler ]
 
     struct Configuration {
         let port: Int
@@ -17,25 +16,29 @@ public struct HTTPServer {
         self.eventLoopGroup = group
         self.configuration = configuration
         self.quiesce = ServerQuiescingHelper(group: self.eventLoopGroup)
-        self.additionalChildHandlers = []
+        self._additionalChildHandlers = []
     }
 
     /// Append to list of `ChannelHandler`s to be added to server child channels
-    public mutating func addChildChannelHandler(_ handler: @autoclosure @escaping ()->ChannelHandler) {
-        additionalChildHandlers.append(handler)
+    public mutating func addChildChannelHandler(_ handler: @autoclosure @escaping ()->ChannelHandler, position: ChannelPipeline.Position = .last) {
+        _additionalChildHandlers.append((handler: handler, position: position))
     }
 
     func start(application: Application) -> EventLoopFuture<Void> {
         func childChannelInitializer(channel: Channel) -> EventLoopFuture<Void> {
-            return channel.pipeline.configureHTTPServerPipeline(withErrorHandling: true)
-                .flatMap {
-                    let childHandlers: [ChannelHandler] = additionalChildHandlers.map { $0() } + [
-                        HTTPInHandler(),
-                        HTTPOutHandler(),
-                        HTTPServerHandler(application: application),
-                    ]
-                    return channel.pipeline.addHandlers(childHandlers)
-                }
+            return channel.pipeline.addHandlers(additionalChildHandlers(at: .first)).flatMap {
+                return channel.pipeline.configureHTTPServerPipeline(withErrorHandling: true)
+                    .flatMap {
+                        let childHandlers: [ChannelHandler] = additionalChildHandlers(at: .last) + [
+                            HTTPInHandler(),
+                            HTTPOutHandler(),
+                            HTTPServerHandler(application: application),
+                        ]
+                        return channel.pipeline.addHandlers(childHandlers)
+                    }.map { (_: Void) in
+                        print(channel.pipeline)
+                    }
+            }
         }
 
         return ServerBootstrap(group: self.eventLoopGroup)
@@ -65,5 +68,22 @@ public struct HTTPServer {
         let promise = eventLoopGroup.next().makePromise(of: Void.self)
         quiesce.initiateShutdown(promise: promise)
         return promise.futureResult
+    }
+
+    func additionalChildHandlers(at position: ChannelPipeline.Position) -> [ChannelHandler] {
+        return _additionalChildHandlers.compactMap { if $0.position == position { return $0.handler() }; return nil }
+    }
+
+    private var _additionalChildHandlers: [ (handler: ()->ChannelHandler, position: ChannelPipeline.Position) ]
+}
+
+extension ChannelPipeline.Position: Equatable {
+    public static func == (lhs: ChannelPipeline.Position, rhs: ChannelPipeline.Position) -> Bool {
+        switch (lhs, rhs) {
+        case (.first, .first), (.last, .last):
+            return true
+        default:
+            return false
+        }
     }
 }

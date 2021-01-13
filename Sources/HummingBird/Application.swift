@@ -79,6 +79,10 @@ open class Application {
         lifecycle.shutdown()
     }
 
+    public func addServer(_ server: Server) {
+
+    }
+    
     /// Construct the RequestResponder from the middleware group and router
     func constructResponder() -> RequestResponder {
         return self.middlewares.constructResponder(finalResponder: self.router)
