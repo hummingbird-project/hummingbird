@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches:
+    - main
+    paths:
+    - '**.swift'
+  pull_request:
+    branches:
+    - main
+    paths:
+    - '**.swift'
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: ['swift:5.3']
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Install dependencies
+      run: |
+        apt-get update -qq
+        apt-get install -q -y tzdata zlib1g-dev
+    - name: Test
+      run: |
+        swift test --enable-test-discovery --sanitize=thread
+
