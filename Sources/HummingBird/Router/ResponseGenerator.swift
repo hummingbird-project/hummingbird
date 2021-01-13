@@ -1,7 +1,7 @@
 import NIO
 import NIOHTTP1
 
-/// Object that can be encoded into a `Response`
+/// Object that can generate a `Response`
 public protocol ResponseGenerator {
     func response(from request: Request) throws -> Response
 }
@@ -33,7 +33,7 @@ extension HTTPResponseStatus: ResponseGenerator {
     }
 }
 
-/// Object that can be encoded into a `EventLoopFuture<Response>`
+/// Object that can generate a `EventLoopFuture<Response>`
 public protocol ResponseFutureGenerator {
     func responseFuture(from request: Request) -> EventLoopFuture<Response>
 }

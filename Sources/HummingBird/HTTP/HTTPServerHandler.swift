@@ -38,16 +38,14 @@ final class HTTPServerHandler: ChannelInboundHandler {
             let keepAlive = rawRequest.head.isKeepAlive && self.closeAfterResponseWritten == false
             switch result {
             case .failure(let error):
-                let status: HTTPResponseStatus
+                var response: Response
                 switch error {
                 case let httpError as HTTPError:
-                    status = httpError.status
+                    response = httpError.response(from: request)
                 default:
-                    status = .internalServerError
+                    response = Response(status: .internalServerError, headers: [:], body: .empty)
                 }
-                var headers: HTTPHeaders = [:]
-                headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
-                let response = Response(status: status, headers: headers, body: .byteBuffer(request.allocator.buffer(string: "ERROR!")))
+                response.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
                 self.writeResponse(context: context, response: response, keepAlive: keepAlive)
             case .success(var response):
                 response.headers.replaceOrAdd(name: "connection", value: rawRequest.head.isKeepAlive ? "keep-alive" : "close")

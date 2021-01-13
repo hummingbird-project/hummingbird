@@ -40,14 +40,19 @@ app.logger.logLevel = .debug
 app.middlewares.add(DebugMiddleware())
 app.middlewares.add(FileMiddleware(app: app))
 
-app.router.get("/") { request -> EventLoopFuture<ByteBuffer> in
+app.router.get("/") { request -> ByteBuffer in
     let response = request.allocator.buffer(string: "This is a test")
-    return request.eventLoop.makeSucceededFuture(response)
+    return response
 }
 
 app.router.get("/hello") { request -> EventLoopFuture<ByteBuffer> in
     let response = request.allocator.buffer(string: "Hello")
     return request.eventLoop.makeSucceededFuture(response)
+}
+
+app.router.get("/hello2") { request -> String in
+    guard let name = request.uri.queryParameters["name"] else { throw HTTPError(.badRequest, message: "You need a \"name\" query parameter.") }
+    return "Hello \(name)"
 }
 
 app.router.get("/user") { request -> EventLoopFuture<User> in
