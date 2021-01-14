@@ -43,9 +43,9 @@ final class ApplicationTests: XCTestCase {
             let body: ResponseBody = request.body.buffer.map { .byteBuffer($0) } ?? .empty
             return .init(status: .ok, headers: [:], body: body)
         }
-        /*app.router.post("/echo-body-streaming") { request -> EventLoopFuture<Response> in
+        app.router.post("/echo-body-streaming") { request -> EventLoopFuture<Response> in
             let body: ResponseBody
-            if var requestBody = request.body {
+            if var requestBody = request.body.buffer {
                 body = .streamCallback { eventLoop in
                     let bytesToDownload = min(32 * 1024, requestBody.readableBytes)
                     guard bytesToDownload > 0 else { return eventLoop.makeSucceededFuture(.end) }
@@ -56,7 +56,7 @@ final class ApplicationTests: XCTestCase {
                 body = .empty
             }
             return request.eventLoop.makeSucceededFuture(.init(status: .ok, headers: [:], body: body))
-        }*/
+        }
         app.router.get("/wait") { request -> EventLoopFuture<String> in
             let waitString = request.uri.queryParameters["time"] ?? "0"
             let wait = Int(waitString) ?? 0
