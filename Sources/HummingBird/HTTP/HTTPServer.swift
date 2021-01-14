@@ -11,10 +11,22 @@ public class HTTPServer: Server {
     public struct Configuration {
         public let port: Int
         public let host: String
+        public let reuseAddress: Bool
+        public let tcpNoDelay: Bool
+        public let enableHTTPPipelining: Bool
 
-        public init(host: String, port: Int) {
+        public init(
+            host: String = "localhost",
+            port: Int = 8080,
+            reuseAddress: Bool = true,
+            tcpNoDelay: Bool = true,
+            enableHTTPPipelining: Bool = false
+        ) {
             self.host = host
             self.port = port
+            self.reuseAddress = reuseAddress
+            self.tcpNoDelay = tcpNoDelay
+            self.enableHTTPPipelining = enableHTTPPipelining
         }
     }
 
@@ -33,32 +45,33 @@ public class HTTPServer: Server {
     public func start(application: Application) -> EventLoopFuture<Void> {
         func childChannelInitializer(channel: Channel) -> EventLoopFuture<Void> {
             return channel.pipeline.addHandlers(self.additionalChildHandlers(at: .first)).flatMap {
-                return channel.pipeline.configureHTTPServerPipeline(withErrorHandling: true)
-                    .flatMap {
-                        let childHandlers: [ChannelHandler] = self.additionalChildHandlers(at: .last) + [
-                            HTTPInHandler(),
-                            HTTPOutHandler(),
-                            HTTPServerHandler(application: application),
-                        ]
-                        return channel.pipeline.addHandlers(childHandlers)
-                    }
+                return channel.pipeline.configureHTTPServerPipeline(
+                    withPipeliningAssistance: self.configuration.enableHTTPPipelining,
+                    withErrorHandling: true
+                ).flatMap {
+                    let childHandlers: [ChannelHandler] = self.additionalChildHandlers(at: .last) + [
+                        HTTPInHandler(),
+                        HTTPOutHandler(),
+                        HTTPServerHandler(application: application),
+                    ]
+                    return channel.pipeline.addHandlers(childHandlers)
+                }
             }
         }
 
         return ServerBootstrap(group: self.eventLoopGroup)
             // Specify backlog and enable SO_REUSEADDR for the server itself
             .serverChannelOption(ChannelOptions.backlog, value: 256)
-            .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: 1)
+            .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: configuration.reuseAddress ? 1 : 0)
             .serverChannelInitializer { channel in
                 channel.pipeline.addHandler(self.quiesce.makeServerChannelHandler(channel: channel))
             }
             // Set the handlers that are applied to the accepted Channels
             .childChannelInitializer(childChannelInitializer)
 
-            // Enable SO_REUSEADDR for the accepted Channels
-            .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: 1)
-            .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 16)
-            .childChannelOption(ChannelOptions.recvAllocator, value: AdaptiveRecvByteBufferAllocator())
+            .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: configuration.reuseAddress ? 1 : 0)
+            .childChannelOption(ChannelOptions.socketOption(.tcp_nodelay), value: configuration.tcpNoDelay ? 1 : 0)
+            .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
             .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
             .bind(host: self.configuration.host, port: self.configuration.port)
             .map { _ in }
