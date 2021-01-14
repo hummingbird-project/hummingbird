@@ -55,7 +55,7 @@ final class HTTPServerHandler: ChannelInboundHandler {
     }
 
     func writeResponse(context: ChannelHandlerContext, response: Response, keepAlive: Bool) {
-        context.writeAndFlush(self.wrapOutboundOut(response)).whenComplete { _ in
+        context.write(self.wrapOutboundOut(response)).whenComplete { _ in
             if keepAlive == false {
                 context.close(promise: nil)
                 self.closeAfterResponseWritten = false
