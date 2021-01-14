@@ -7,6 +7,7 @@ public class HTTPServer: Server {
     public let configuration: Configuration
 
     let quiesce: ServerQuiescingHelper
+    var shutdownInitiated: Bool
 
     public struct Configuration {
         public let port: Int
@@ -35,6 +36,8 @@ public class HTTPServer: Server {
         self.configuration = configuration
         self.quiesce = ServerQuiescingHelper(group: self.eventLoopGroup)
         self._additionalChildHandlers = []
+
+        self.shutdownInitiated = false
     }
 
     /// Append to list of `ChannelHandler`s to be added to server child channels
@@ -50,14 +53,15 @@ public class HTTPServer: Server {
                     withErrorHandling: true
                 ).flatMap {
                     let childHandlers: [ChannelHandler] = self.additionalChildHandlers(at: .last) + [
-                        HTTPInHandler(),
                         HTTPOutHandler(),
+                        HTTPInHandler(),
                         HTTPServerHandler(application: application),
                     ]
                     return channel.pipeline.addHandlers(childHandlers)
                 }
             }
         }
+        self.shutdownInitiated = false
 
         return ServerBootstrap(group: self.eventLoopGroup)
             // Specify backlog and enable SO_REUSEADDR for the server itself
@@ -77,13 +81,18 @@ public class HTTPServer: Server {
             .map { _ in }
             .flatMapErrorThrowing { error in
                 self.quiesce.initiateShutdown(promise: nil)
+                self.shutdownInitiated = true
                 throw error
             }
     }
 
     public func shutdown() -> EventLoopFuture<Void> {
         let promise = self.eventLoopGroup.next().makePromise(of: Void.self)
-        self.quiesce.initiateShutdown(promise: promise)
+        if !shutdownInitiated {
+            self.quiesce.initiateShutdown(promise: promise)
+        } else {
+            promise.succeed(())
+        }
         return promise.futureResult
     }
 
