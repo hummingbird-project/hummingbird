@@ -40,10 +40,10 @@ final class ApplicationTests: XCTestCase {
             return request.eventLoop.makeSucceededFuture(buffer)
         }
         app.router.post("/echo-body") { request -> Response in
-            let body: ResponseBody = request.body.map { .byteBuffer($0) } ?? .empty
+            let body: ResponseBody = request.body.buffer.map { .byteBuffer($0) } ?? .empty
             return .init(status: .ok, headers: [:], body: body)
         }
-        app.router.post("/echo-body-streaming") { request -> EventLoopFuture<Response> in
+        /*app.router.post("/echo-body-streaming") { request -> EventLoopFuture<Response> in
             let body: ResponseBody
             if var requestBody = request.body {
                 body = .streamCallback { eventLoop in
@@ -56,7 +56,7 @@ final class ApplicationTests: XCTestCase {
                 body = .empty
             }
             return request.eventLoop.makeSucceededFuture(.init(status: .ok, headers: [:], body: body))
-        }
+        }*/
         app.router.get("/wait") { request -> EventLoopFuture<String> in
             let waitString = request.uri.queryParameters["time"] ?? "0"
             let wait = Int(waitString) ?? 0

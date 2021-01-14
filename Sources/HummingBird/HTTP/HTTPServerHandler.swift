@@ -48,7 +48,7 @@ final class HTTPServerHandler: ChannelInboundHandler {
                 response.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
                 self.writeResponse(context: context, response: response, keepAlive: keepAlive)
             case .success(var response):
-                response.headers.replaceOrAdd(name: "connection", value: rawRequest.head.isKeepAlive ? "keep-alive" : "close")
+                response.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
                 self.writeResponse(context: context, response: response, keepAlive: keepAlive)
             }
         }

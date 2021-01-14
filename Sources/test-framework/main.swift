@@ -1,5 +1,5 @@
 import Foundation
-import HBFileMiddleware
+//import HBFileMiddleware
 import HBJSON
 import HBXML
 import HummingBird
@@ -31,21 +31,20 @@ struct User: ResponseCodable {
 }
 
 let app = Application()
-app.addHTTP(.init(host: "localhost", port: 8000))
+app.addHTTP(.init())
 app.encoder = JSONEncoder()
 app.decoder = JSONDecoder()
 
-app.logger.logLevel = .debug
+app.logger.logLevel = .critical
 
-app.middlewares.add(DebugMiddleware())
-app.middlewares.add(FileMiddleware(app: app))
+//app.middlewares.add(DebugMiddleware())
+//app.middlewares.add(FileMiddleware(app: app))
 
-app.router.get("/") { request -> ByteBuffer in
-    let response = request.allocator.buffer(string: "This is a test")
-    return response
+app.router.get("/") { request -> String in
+    "This is a test"
 }
 
-app.router.get("/hello") { request -> EventLoopFuture<ByteBuffer> in
+/*app.router.get("/hello") { request -> EventLoopFuture<ByteBuffer> in
     let response = request.allocator.buffer(string: "Hello")
     return request.eventLoop.makeSucceededFuture(response)
 }
@@ -87,5 +86,6 @@ group.get("/test") { request -> EventLoopFuture<ByteBuffer> in
     let response = request.allocator.buffer(string: "GoodBye")
     return request.eventLoop.makeSucceededFuture(response)
 }
+*/
 
 app.serve()

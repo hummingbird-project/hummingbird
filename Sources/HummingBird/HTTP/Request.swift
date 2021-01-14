@@ -3,7 +3,7 @@ import NIO
 import NIOConcurrencyHelpers
 import NIOHTTP1
 
-public struct Request {
+public class Request {
     /// URI path
     public var uri: URI
     /// Request HTTP method
@@ -11,7 +11,7 @@ public struct Request {
     /// Request HTTP headers
     public var headers: HTTPHeaders
     /// Body of HTTP request
-    public var body: ByteBuffer?
+    public var body: RequestBody
     /// Logger to use
     public var logger: Logger
     /// reference to application
@@ -27,7 +27,7 @@ public struct Request {
         uri: URI,
         method: HTTPMethod,
         headers: HTTPHeaders,
-        body: ByteBuffer?,
+        body: RequestBody,
         application: Application,
         eventLoop: EventLoop,
         allocator: ByteBufferAllocator

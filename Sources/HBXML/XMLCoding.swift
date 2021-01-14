@@ -20,8 +20,8 @@ extension XMLEncoder: ResponseEncoder {
 
 extension XMLDecoder: RequestDecoder {
     public func decode<T: Decodable>(_ type: T.Type, from request: Request) throws -> T {
-        guard var body = request.body,
-            let data = body.readData(length: body.readableBytes) else {
+        guard var buffer = request.body.buffer,
+              let data = buffer.readData(length: buffer.readableBytes) else {
             throw HTTPError(.badRequest)
         }
         let xml = try XML.Element(data: data)

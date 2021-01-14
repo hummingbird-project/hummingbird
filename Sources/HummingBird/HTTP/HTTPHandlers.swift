@@ -12,12 +12,13 @@ final class HTTPInHandler: ChannelInboundHandler {
 
     struct Request {
         let head: HTTPRequestHead
-        let body: ByteBuffer?
+        let body: RequestBody
         let context: ChannelHandlerContext
     }
 
     /// handler state
     var state: State
+    var body: RequestBody? = nil
 
     init() {
         self.state = .idle
@@ -28,19 +29,22 @@ final class HTTPInHandler: ChannelInboundHandler {
 
         switch (part, self.state) {
         case (.head(let head), .idle):
+            self.body = RequestBody(eventLoop: context.eventLoop)
+            let request = Request(head: head, body: self.body!, context: context)
+            context.fireChannelRead(self.wrapInboundOut(request))
             state = .head(head)
         case (.body(let part), .head(let head)):
             self.state = .body(head, part)
         case (.body(var part), .body(let head, var buffer)):
             buffer.writeBuffer(&part)
             self.state = .body(head, buffer)
-        case (.end, .head(let head)):
-            let request = Request(head: head, body: nil, context: context)
-            context.fireChannelRead(self.wrapInboundOut(request))
+        case (.end, .head(_)):
+            self.body?.feed(nil)
+            self.body = nil
             self.state = .idle
-        case (.end, .body(let head, let body)):
-            let request = Request(head: head, body: body, context: context)
-            context.fireChannelRead(self.wrapInboundOut(request))
+        case (.end, .body(_, let body)):
+            self.body?.feed(body)
+            self.body = nil
             self.state = .idle
         default:
             assert(false)

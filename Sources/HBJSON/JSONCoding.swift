@@ -17,8 +17,8 @@ extension JSONEncoder: ResponseEncoder {
 
 extension JSONDecoder: RequestDecoder {
     public func decode<T: Decodable>(_ type: T.Type, from request: Request) throws -> T {
-        guard var body = request.body,
-              let data = body.readData(length: body.readableBytes) else {
+        guard var buffer = request.body.buffer,
+              let data = buffer.readData(length: buffer.readableBytes) else {
             throw HTTPError(.badRequest)
         }
         return try self.decode(T.self, from: data)

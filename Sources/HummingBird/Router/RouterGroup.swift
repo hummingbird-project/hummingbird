@@ -18,20 +18,21 @@ public struct RouterGroup: RouterPaths {
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
     public func add<R: ResponseGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (Request) throws -> R) {
-        let responder = CallbackResponder(callback: { request in
-            do {
-                let response = try closure(request).response(from: request)
-                return request.eventLoop.makeSucceededFuture(response)
-            } catch {
-                return request.eventLoop.makeFailedFuture(error)
+        let responder = CallbackResponder { request in
+            request.body.collect().flatMapThrowing { _ in
+                return try closure(request).response(from: request)
             }
-        })
+        }
         router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
     public func add<R: ResponseFutureGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (Request) -> R) {
-        let responder = CallbackResponder(callback: { request in closure(request).responseFuture(from: request) })
+        let responder = CallbackResponder { request in
+            request.body.collect().flatMap { _ in
+                return closure(request).responseFuture(from: request)
+            }
+        }
         router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
     }
 }
