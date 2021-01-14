@@ -1,23 +1,27 @@
 import NIO
 
 /// protocol for encoders generating ByteBuffers
-public protocol EncoderProtocol {
-    func encode<T: Encodable>(_ value: T, to: inout ByteBuffer) throws
+public protocol ResponseEncoder {
+    func encode<T: Encodable>(_ value: T, from request: Request) throws -> Response
 }
 
 /// protocol for decoder deserializing from ByteBuffers
-public protocol DecoderProtocol {
-    func decode<T: Decodable>(_ type: T.Type, from byteBuffer: inout ByteBuffer) throws -> T
+public protocol RequestDecoder {
+    func decode<T: Decodable>(_ type: T.Type, from request: Request) throws -> T
 }
 
-struct NullEncoder: EncoderProtocol {
-    func encode<T: Encodable>(_ value: T, to: inout ByteBuffer) throws {
-        to.writeString("\(value)")
+struct NullEncoder: ResponseEncoder {
+    func encode<T: Encodable>(_ value: T, from request: Request) throws -> Response {
+        return Response(
+            status: .ok,
+            headers: ["content-type": "text/plain; charset=utf-8"],
+            body: .byteBuffer(request.allocator.buffer(string: "\(value)"))
+        )
     }
 }
 
-struct NullDecoder: DecoderProtocol {
-    func decode<T: Decodable>(_ type: T.Type, from byteBuffer: inout ByteBuffer) throws -> T {
+struct NullDecoder: RequestDecoder {
+    func decode<T: Decodable>(_ type: T.Type, from request: Request) throws -> T {
         preconditionFailure("Application.decoder has not been set")
     }
 }

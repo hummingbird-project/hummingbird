@@ -44,10 +44,7 @@ public struct Request {
     }
 
     public func decode<Type: Codable>(as type: Type.Type) throws -> Type {
-        guard var buffer = self.body else {
-            throw HTTPError(.badRequest)
-        }
-        return try self.application.decoder.decode(type, from: &buffer)
+        return try self.application.decoder.decode(type, from: self)
     }
 
     private static func loggerWithRequestId(_ logger: Logger) -> Logger {

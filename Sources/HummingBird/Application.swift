@@ -22,9 +22,9 @@ open class Application {
     /// Logger
     public var logger: Logger
     /// Encoder used by router
-    public var encoder: EncoderProtocol
+    public var encoder: ResponseEncoder
     /// decoder used by router
-    public var decoder: DecoderProtocol
+    public var decoder: RequestDecoder
 
     var responder: RequestResponder?
 

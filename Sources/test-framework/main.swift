@@ -32,8 +32,8 @@ struct User: ResponseCodable {
 
 let app = Application()
 app.addHTTP(.init(host: "localhost", port: 8000))
-app.encoder = XMLEncoder()
-app.decoder = XMLDecoder()
+app.encoder = JSONEncoder()
+app.decoder = JSONDecoder()
 
 app.logger.logLevel = .debug
 
