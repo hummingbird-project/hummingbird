@@ -77,7 +77,9 @@ public class HTTPServer: Server {
             .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
             .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
             .bind(host: self.configuration.host, port: self.configuration.port)
-            .map { _ in }
+            .map { _ in
+                application.logger.info("Server started and listening on \(self.configuration.host):\(self.configuration.port)")
+            }
             .flatMapErrorThrowing { error in
                 _ = self.shutdown()
                 throw error
