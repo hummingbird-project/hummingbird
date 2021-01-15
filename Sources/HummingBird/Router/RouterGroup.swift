@@ -37,4 +37,15 @@ public struct RouterGroup: RouterPaths {
         }
         router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
     }
+
+    /// Add path for closure returning type conforming to ResponseFutureEncodable
+    public func addStreamingRoute<R: ResponseFutureGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (Request) -> R) {
+        let responder = CallbackResponder { request in
+            let streamer = request.body.streamBody(on: request.eventLoop)
+            request.body = .stream(streamer)
+            return closure(request).responseFuture(from: request)
+        }
+        router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
+    }
+
 }

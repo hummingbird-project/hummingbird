@@ -32,6 +32,16 @@ extension Router {
         add(path, method: method, responder: responder)
     }
 
+    /// Add path for closure returning type conforming to ResponseFutureEncodable
+    public func addStreamingRoute<R: ResponseFutureGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (Request) -> R) {
+        let responder = CallbackResponder { request in
+            let streamer = request.body.streamBody(on: request.eventLoop)
+            request.body = .stream(streamer)
+            return closure(request).responseFuture(from: request)
+        }
+        add(path, method: method, responder: responder)
+    }
+
     /// return new `RouterGroup` to add additional middleware to
     public func group() -> RouterGroup {
         return .init(router: self)
