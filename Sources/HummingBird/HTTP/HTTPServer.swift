@@ -6,8 +6,7 @@ public class HTTPServer: Server {
     public let eventLoopGroup: EventLoopGroup
     public let configuration: Configuration
 
-    let quiesce: ServerQuiescingHelper
-    var shutdownInitiated: Bool
+    var quiesce: ServerQuiescingHelper?
 
     public struct Configuration {
         public let port: Int
@@ -34,10 +33,8 @@ public class HTTPServer: Server {
     public init(group: EventLoopGroup, configuration: Configuration) {
         self.eventLoopGroup = group
         self.configuration = configuration
-        self.quiesce = ServerQuiescingHelper(group: self.eventLoopGroup)
+        self.quiesce = nil
         self._additionalChildHandlers = []
-
-        self.shutdownInitiated = false
     }
 
     /// Append to list of `ChannelHandler`s to be added to server child channels
@@ -58,20 +55,19 @@ public class HTTPServer: Server {
                         HTTPServerHandler(application: application),
                     ]
                     return channel.pipeline.addHandlers(childHandlers)
-                }/*.map {
-                    print(channel.pipeline)
-                }*/
-                
+                }
             }
         }
-        self.shutdownInitiated = false
-
+        
+        let quiesce = ServerQuiescingHelper(group: application.eventLoopGroup)
+        self.quiesce = quiesce
+        
         return ServerBootstrap(group: self.eventLoopGroup)
             // Specify backlog and enable SO_REUSEADDR for the server itself
             .serverChannelOption(ChannelOptions.backlog, value: 256)
             .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: configuration.reuseAddress ? 1 : 0)
             .serverChannelInitializer { channel in
-                channel.pipeline.addHandler(self.quiesce.makeServerChannelHandler(channel: channel))
+                channel.pipeline.addHandler(quiesce.makeServerChannelHandler(channel: channel))
             }
             // Set the handlers that are applied to the accepted Channels
             .childChannelInitializer(childChannelInitializer)
@@ -83,16 +79,16 @@ public class HTTPServer: Server {
             .bind(host: self.configuration.host, port: self.configuration.port)
             .map { _ in }
             .flatMapErrorThrowing { error in
-                self.quiesce.initiateShutdown(promise: nil)
-                self.shutdownInitiated = true
+                _ = self.shutdown()
                 throw error
             }
     }
 
     public func shutdown() -> EventLoopFuture<Void> {
         let promise = self.eventLoopGroup.next().makePromise(of: Void.self)
-        if !shutdownInitiated {
-            self.quiesce.initiateShutdown(promise: promise)
+        if let quiesce = self.quiesce {
+            quiesce.initiateShutdown(promise: promise)
+            self.quiesce = nil
         } else {
             promise.succeed(())
         }
