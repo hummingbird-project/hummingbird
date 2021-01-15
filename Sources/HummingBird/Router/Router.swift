@@ -13,7 +13,8 @@ extension Router {
     /// Add path for closure returning type conforming to ResponseFutureEncodable
     public func add<R: ResponseGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (Request) throws -> R) {
         let responder = CallbackResponder { request in
-            request.body.collect().flatMapThrowing { _ in
+            request.body.consumeBody(on: request.eventLoop).flatMapThrowing { buffer in
+                request.body = .byteBuffer(buffer)
                 return try closure(request).response(from: request)
             }
         }
@@ -23,7 +24,8 @@ extension Router {
     /// Add path for closure returning type conforming to ResponseFutureEncodable
     public func add<R: ResponseFutureGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (Request) -> R) {
         let responder = CallbackResponder { request in
-            request.body.collect().flatMap { _ in
+            request.body.consumeBody(on: request.eventLoop).flatMap { buffer in
+                request.body = .byteBuffer(buffer)
                 return closure(request).responseFuture(from: request)
             }
         }

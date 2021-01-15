@@ -7,7 +7,7 @@ final class HTTPInHandler: ChannelInboundHandler {
     enum State {
         case idle
         case head(HTTPRequestHead)
-        case body(HTTPRequestHead, ByteBuffer)
+        case body(RequestBodyStreamer)
     }
 
     struct Request {
@@ -18,7 +18,6 @@ final class HTTPInHandler: ChannelInboundHandler {
 
     /// handler state
     var state: State
-    var body: RequestBody? = nil
 
     init() {
         self.state = .idle
@@ -27,27 +26,32 @@ final class HTTPInHandler: ChannelInboundHandler {
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let part = self.unwrapInboundIn(data)
 
-        switch (part, self.state) {
+        switch (part, state) {
         case (.head(let head), .idle):
-            self.body = RequestBody(eventLoop: context.eventLoop)
-            let request = Request(head: head, body: self.body!, context: context)
-            context.fireChannelRead(self.wrapInboundOut(request))
-            state = .head(head)
+            self.state = .head(head)
+
         case (.body(let part), .head(let head)):
-            self.state = .body(head, part)
-        case (.body(var part), .body(let head, var buffer)):
-            buffer.writeBuffer(&part)
-            self.state = .body(head, buffer)
-        case (.end, .head(_)):
-            self.body?.feed(nil)
-            self.body = nil
+            let streamer = RequestBodyStreamer(eventLoop: context.eventLoop)
+            let request = Request(head: head, body: .stream(streamer), context: context)
+            streamer.feed(.byteBuffer(part))
+            context.fireChannelRead(self.wrapInboundOut(request))
+            self.state = .body(streamer)
+
+        case (.body(let part), .body(let streamer)):
+            streamer.feed(.byteBuffer(part))
+            self.state = .body(streamer)
+
+        case (.end, .head(let head)):
+            let request = Request(head: head, body: .byteBuffer(nil), context: context)
+            context.fireChannelRead(self.wrapInboundOut(request))
             self.state = .idle
-        case (.end, .body(_, let body)):
-            self.body?.feed(body)
-            self.body = nil
+
+        case (.end, .body(let streamer)):
+            streamer.feed(.end)
             self.state = .idle
+
         default:
-            assert(false)
+            assertionFailure("Should not get here")
             context.close(promise: nil)
         }
     }
