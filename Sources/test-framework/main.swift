@@ -26,7 +26,14 @@ struct DebugMiddleware: Middleware {
 }
 
 struct User: ResponseCodable {
+    internal init(name: String, address: String? = nil, age: Int) {
+        self.name = name
+        self.address = address
+        self.age = age
+    }
+
     let name: String
+    let address: String?
     let age: Int
 }
 
@@ -35,7 +42,7 @@ app.addHTTP(.init())
 app.encoder = JSONEncoder()
 app.decoder = JSONDecoder()
 
-app.logger.logLevel = .critical
+app.logger.logLevel = .info
 
 app.middlewares.add(DebugMiddleware())
 app.middlewares.add(FileMiddleware(app: app))
