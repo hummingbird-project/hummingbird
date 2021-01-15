@@ -1,10 +1,10 @@
 import AsyncHTTPClient
-import HBTLS
+import HummingBirdTLS
 import HummingBird
 import NIOSSL
 import XCTest
 
-class HBTLSTests: XCTestCase {
+class HummingBirdTLSTests: XCTestCase {
     func testTLS() throws {
         let app = Application()
         app.router.get("/hello") { request -> EventLoopFuture<ByteBuffer> in
