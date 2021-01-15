@@ -1,7 +1,7 @@
 import Foundation
-//import HBFileMiddleware
-import HBJSON
-import HBXML
+import HummingBirdFiles
+import HummingBirdJSON
+import HummingBirdXML
 import HummingBird
 import NIO
 import NIOHTTP1

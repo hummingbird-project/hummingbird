@@ -17,7 +17,7 @@ public class HTTPServer: Server {
         public let enableHTTPPipelining: Bool
 
         public init(
-            host: String = "localhost",
+            host: String = "127.0.0.1",
             port: Int = 8080,
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = true,
@@ -58,7 +58,10 @@ public class HTTPServer: Server {
                         HTTPServerHandler(application: application),
                     ]
                     return channel.pipeline.addHandlers(childHandlers)
-                }
+                }/*.map {
+                    print(channel.pipeline)
+                }*/
+                
             }
         }
         self.shutdownInitiated = false

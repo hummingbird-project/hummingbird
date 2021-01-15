@@ -9,11 +9,10 @@ let package = Package(
     products: [
         .executable(name: "test-framework", targets: ["test-framework"]),
         .library(name: "HummingBird", targets: ["HummingBird"]),
-        .library(name: "HBFileMiddleware", targets: ["HBFileMiddleware"]),
-        .library(name: "HBJSON", targets: ["HBJSON"]),
-        .library(name: "HBTLS", targets: ["HBTLS"]),
-        .library(name: "HBURLEncodedForm", targets: ["HBURLEncodedForm"]),
-        .library(name: "HBXML", targets: ["HBXML"]),
+        .library(name: "HummingBirdFiles", targets: ["HummingBirdFiles"]),
+        .library(name: "HummingBirdJSON", targets: ["HummingBirdJSON"]),
+        .library(name: "HummingBirdTLS", targets: ["HummingBirdTLS"]),
+        .library(name: "HummingBirdXML", targets: ["HummingBirdXML"]),
     ],
     dependencies: [
         .package(url: "https://github.com/swift-server/swift-backtrace.git", from: "1.1.1"),
@@ -28,10 +27,10 @@ let package = Package(
     targets: [
         .target(name: "test-framework", dependencies: [
             .byName(name: "HummingBird"),
-            .byName(name: "HBFileMiddleware"),
-            .byName(name: "HBJSON"),
-            .byName(name: "HBTLS"),
-            .byName(name: "HBXML"),
+            .byName(name: "HummingBirdFiles"),
+            .byName(name: "HummingBirdJSON"),
+            .byName(name: "HummingBirdTLS"),
+            .byName(name: "HummingBirdXML"),
         ]),
         .target(name: "CURLParser", dependencies: []),
         .target(name: "HummingBird", dependencies: [
@@ -44,24 +43,20 @@ let package = Package(
             .product(name: "NIOExtras", package: "swift-nio-extras"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
         ]),
-        .target(name: "HBFileMiddleware", dependencies: [
+        .target(name: "HummingBirdFiles", dependencies: [
             .byName(name: "HummingBird"),
             .product(name: "NIO", package: "swift-nio"),
         ]),
-        .target(name: "HBJSON", dependencies: [
+        .target(name: "HummingBirdJSON", dependencies: [
             .byName(name: "HummingBird"),
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
         ]),
-        .target(name: "HBTLS", dependencies: [
+        .target(name: "HummingBirdTLS", dependencies: [
             .byName(name: "HummingBird"),
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "NIOSSL", package: "swift-nio-ssl"),
         ]),
-        .target(name: "HBURLEncodedForm", dependencies: [
-            .byName(name: "HummingBird"),
-            .product(name: "NIOFoundationCompat", package: "swift-nio"),
-        ]),
-        .target(name: "HBXML", dependencies: [
+        .target(name: "HummingBirdXML", dependencies: [
             .byName(name: "HummingBird"),
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
             .product(name: "XMLCoding", package: "xml-coding")
@@ -71,9 +66,9 @@ let package = Package(
             "HummingBird",
             .product(name: "AsyncHTTPClient", package: "async-http-client")
         ]),
-        .testTarget(name: "HBTLSTests", dependencies: [
+        .testTarget(name: "HummingBirdTLSTests", dependencies: [
             "HummingBird",
-            "HBTLS",
+            "HummingBirdTLS",
             .product(name: "AsyncHTTPClient", package: "async-http-client")
         ]),
     ]
