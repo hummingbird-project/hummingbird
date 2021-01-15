@@ -7,18 +7,16 @@ import XCTest
 class HummingBirdTLSTests: XCTestCase {
     func testTLS() throws {
         let app = Application()
-        app.router.get("/hello") { request -> EventLoopFuture<ByteBuffer> in
-            let buffer = request.allocator.buffer(string: "Hello")
-            return request.eventLoop.makeSucceededFuture(buffer)
+        app.router.get("/hello") { request in
+            return "hello"
         }
-        let port = Int.random(in: 10000...15000)
-        let https = try app.addHTTPS(.init(host: "localhost", port: port), tlsConfiguration: self.getServerTLSConfiguration())
-        let http = app.addHTTP(.init(host: "localhost", port: port+1))
+        let https = try app.addHTTPS(.init(host: "localhost", port: 8000), tlsConfiguration: self.getServerTLSConfiguration())
+        let http = app.addHTTP(.init(host: "localhost", port: 8001))
         DispatchQueue.global().async {
             app.serve()
         }
-        defer { app.shutdown() }
-
+        defer { app.syncShutdown() }
+        Thread.sleep(forTimeInterval: 1)
         let client = try HTTPClient(eventLoopGroupProvider: .shared(app.eventLoopGroup), configuration: .init(tlsConfiguration: self.getClientTLSConfiguration()))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 

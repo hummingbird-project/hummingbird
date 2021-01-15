@@ -9,6 +9,23 @@ enum ApplicationTestError: Error {
 }
 
 final class ApplicationTests: XCTestCase {
+    static var app: Application!
+    
+    class override func setUp() {
+        app = createApp(.init(host: "localhost", port: Int.random(in: 8000...8001), tcpNoDelay: false))
+        #if DEBUG
+        app.http?.addChildChannelHandler(DebugInboundEventsHandler(), position: .last)
+        #endif
+        DispatchQueue.global().async {
+            app.serve()
+        }
+        Thread.sleep(forTimeInterval: 1)
+    }
+    
+    class override func tearDown() {
+        app.syncShutdown()
+    }
+    
     func testConfiguration() {
         var configuration = Configuration()
         configuration["TEST_ENV"] = "testing"
@@ -23,7 +40,17 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(configuration["TEST_VAR"], "TRUE")
     }
 
-    func createApp(_ configuration: HTTPServer.Configuration) -> Application {
+    static func createApp(_ configuration: HTTPServer.Configuration) -> Application {
+        struct TestMiddleware: Middleware {
+            func apply(to request: Request, next: RequestResponder) -> EventLoopFuture<Response> {
+                return next.respond(to: request).map { response in
+                    var response = response
+                    response.headers.replaceOrAdd(name: "middleware", value: "TestMiddleware")
+                    return response
+                }
+            }
+        }
+
         let app = Application()
         app.addHTTP(configuration)
         app.router.get("/hello") { request -> EventLoopFuture<ByteBuffer> in
@@ -59,29 +86,6 @@ final class ApplicationTests: XCTestCase {
             return request.eventLoop.makeSucceededFuture(.init(status: .ok, headers: [:], body: body))
         }
         app.router.addStreamingRoute("/echo-body-streaming2", method: .POST) { request -> EventLoopFuture<Response> in
-            /*class RequestStreamer: ResponseBodyStreamer {
-                var finished: Bool
-                var request: Request
-                init(request: Request) {
-                    self.request = request
-                    self.finished = false
-                }
-                func read(on eventLoop: EventLoop) -> EventLoopFuture<ResponseBody.StreamResult> {
-                    if self.finished {
-                        return eventLoop.makeSucceededFuture(.end)
-                    }
-                    return request.body.stream.consume(on: request.eventLoop).map { (finished, buffers) in
-                        if var buffer = buffers.first {
-                            for var b in buffers.dropFirst() {
-                                buffer.writeBuffer(&b)
-                            }
-                            self.finished = finished
-                            return .byteBuffer(buffer)
-                        }
-                        return .end
-                    }
-                }
-            }*/
             let body: ResponseBody = .streamCallback { eventLoop in
                 return request.body.stream.consume(on: request.eventLoop).map { output in
                     switch output {
@@ -106,6 +110,14 @@ final class ApplicationTests: XCTestCase {
             let wait = Int(waitString) ?? 0
             return request.eventLoop.scheduleTask(in: .milliseconds(Int64(wait))) {}.futureResult.map { String(waitString) }
         }
+        let group = app.router.group()
+            .add(middleware: TestMiddleware())
+        group.get("/group") { request in
+            return request.eventLoop.makeSucceededFuture(request.allocator.buffer(string: "hello"))
+        }
+        app.router.get("/not-group") { request in
+            return request.eventLoop.makeSucceededFuture(request.allocator.buffer(string: "hello"))
+        }
         return app
     }
 
@@ -116,24 +128,9 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testRequest(_ request: HTTPClient.Request, app: Application? = nil, client: HTTPClient? = nil, test: @escaping (HTTPClient.Response) throws -> Void) {
-        let localApp: Application
-        let httpServer: HTTPServer
-        if let app = app {
-            localApp = app
-            httpServer = app.http!
-        } else {
-            localApp = self.createApp(.init(port: Int.random(in: 10000...15000)))
-            httpServer = localApp.http!
-            #if DEBUG
-            httpServer.addChildChannelHandler(DebugInboundEventsHandler(), position: .last)
-            #endif
-            DispatchQueue.global().async {
-                localApp.serve()
-            }
-        }
-        defer {
-            if app == nil { localApp.syncShutdown() }
-        }
+        let app: Application = app ?? Self.app
+        let httpServer = app.http!
+
         let requestURL = request.url.absoluteString.replacingOccurrences(of: "*", with: httpServer.configuration.port.description)
         let request = try! HTTPClient.Request(url: requestURL, method: request.method, headers: request.headers, body: request.body)
 
@@ -141,7 +138,7 @@ final class ApplicationTests: XCTestCase {
         if let client = client {
             localClient = client
         } else {
-            localClient = HTTPClient(eventLoopGroupProvider: .createNew)
+            localClient = HTTPClient(eventLoopGroupProvider: .shared(app.eventLoopGroup))
         }
         defer {
             if client == nil { XCTAssertNoThrow(try localClient.syncShutdown()) }
@@ -225,13 +222,13 @@ final class ApplicationTests: XCTestCase {
                 }
             }
         }
-        let app = self.createApp(.init(port: Int.random(in: 10000...15000)))
-        defer { app.shutdown() }
+        let app = Self.createApp(.init(host: "localhost", port: Int.random(in: 7000...8999)))
+        defer { app.syncShutdown() }
         app.middlewares.add(TestMiddleware())
         DispatchQueue.global().async {
             app.serve()
         }
-
+        Thread.sleep(forTimeInterval: 1)
         let request = try! HTTPClient.Request(url: "http://localhost:*/hello", method: .GET, headers: [:])
         self.testRequest(request, app: app) { response in
             XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
@@ -239,36 +236,12 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testGroupMiddleware() {
-        struct TestMiddleware: Middleware {
-            func apply(to request: Request, next: RequestResponder) -> EventLoopFuture<Response> {
-                return next.respond(to: request).map { response in
-                    var response = response
-                    response.headers.replaceOrAdd(name: "middleware", value: "TestMiddleware")
-                    return response
-                }
-            }
-        }
-        let app = self.createApp(.init(host: "localhost", port: Int.random(in: 10000...15000)))
-        let group = app.router.group()
-            .add(middleware: TestMiddleware())
-        group.get("/group") { request in
-            return request.eventLoop.makeSucceededFuture(request.allocator.buffer(string: "hello"))
-        }
-        app.router.get("/not-group") { request in
-            return request.eventLoop.makeSucceededFuture(request.allocator.buffer(string: "hello"))
-        }
-
-        DispatchQueue.global().async {
-            app.serve()
-        }
-        defer { app.shutdown() }
-
         let request = try! HTTPClient.Request(url: "http://localhost:*/group", method: .GET, headers: [:])
-        self.testRequest(request, app: app) { response in
+        self.testRequest(request) { response in
             XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
         }
         let request2 = try! HTTPClient.Request(url: "http://localhost:*/not-group", method: .GET, headers: [:])
-        self.testRequest(request2, app: app) { response in
+        self.testRequest(request2) { response in
             XCTAssertEqual(response.headers["middleware"].first, nil)
         }
     }
@@ -281,15 +254,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testOrdering() {
-        let app = self.createApp(.init(port: Int.random(in: 10000...15000), withPipeliningAssistance: true))
-        let httpServer = app.servers["HTTP"] as! HTTPServer
-
-        DispatchQueue.global().async {
-            app.serve()
-        }
-        defer {
-            app.shutdown()
-        }
+        let httpServer = Self.app.http!
         let client = HTTPClient(eventLoopGroupProvider: .createNew)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let responseFutures = (1...16).reversed().map { client.get(url: "http://localhost:\(httpServer.configuration.port)/wait?time=\($0 * 100)") }
@@ -305,12 +270,5 @@ final class ApplicationTests: XCTestCase {
             }
         }
         XCTAssertNoThrow(try future.wait())
-    }
-}
-
-extension Application {
-    public func syncShutdown() {
-        lifecycle.shutdown()
-        lifecycle.wait()
     }
 }

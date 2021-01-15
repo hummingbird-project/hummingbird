@@ -77,6 +77,11 @@ open class Application {
         self.lifecycle.shutdown()
     }
 
+    public func syncShutdown() {
+        lifecycle.shutdown()
+        lifecycle.wait()
+    }
+
     public func addServer(_ server: Server, named: String) {
         self.servers[named] = server
     }
