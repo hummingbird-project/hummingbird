@@ -78,7 +78,7 @@ final class ApplicationTests: XCTestCase {
             localApp = app
             httpServer = app.http!
         } else {
-            localApp = self.createApp(.init(host: "localhost", port: Int.random(in: 10000...15000)))
+            localApp = self.createApp(.init(port: Int.random(in: 10000...15000)))
             httpServer = localApp.http!
             #if DEBUG
             httpServer.addChildChannelHandler(DebugInboundEventsHandler(), position: .last)
@@ -173,7 +173,7 @@ final class ApplicationTests: XCTestCase {
                 }
             }
         }
-        let app = self.createApp(.init(host: "localhost", port: Int.random(in: 10000...15000)))
+        let app = self.createApp(.init(port: Int.random(in: 10000...15000)))
         defer { app.shutdown() }
         app.middlewares.add(TestMiddleware())
         DispatchQueue.global().async {
@@ -229,7 +229,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testOrdering() {
-        let app = self.createApp(.init(host: "localhost", port: Int.random(in: 10000...15000), withPipeliningAssistance: true))
+        let app = self.createApp(.init(port: Int.random(in: 10000...15000), withPipeliningAssistance: true))
         let httpServer = app.servers["HTTP"] as! HTTPServer
 
         DispatchQueue.global().async {
