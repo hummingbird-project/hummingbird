@@ -48,8 +48,12 @@ public enum RequestBody {
 
 /// Request body streamer. HTTPInHandler feeds this with ByteBuffers while the Router consumes them
 public class RequestBodyStreamer {
-    public enum StreamResult {
+    public enum FeedInput {
         case byteBuffer(ByteBuffer)
+        case end
+    }
+    public enum ConsumeOutput {
+        case byteBuffers([ByteBuffer])
         case end
     }
 
@@ -65,7 +69,7 @@ public class RequestBodyStreamer {
 
     /// Feed a ByteBuffer to the request
     /// - Parameter result: Bytebuffer or end tag
-    func feed(_ result: StreamResult) {
+    func feed(_ result: FeedInput) {
         switch result {
         case .byteBuffer(let byteBuffer):
             self.entries.append(byteBuffer)
@@ -79,28 +83,26 @@ public class RequestBodyStreamer {
     /// - Parameter eventLoop: EventLoop to return future on
     /// - Returns: Returns an EventLoopFuture that will be fulfilled with array of ByteBuffers that has so far been fed to th request body
     ///     and whether we have consumed everything
-    public func consume(on eventLoop: EventLoop) -> EventLoopFuture<(Bool, [ByteBuffer])> {
-        nextPromise.futureResult.map { finished in
-            let entries = self.entries
-            self.entries = []
-            if !finished {
-                self.nextPromise = self.eventLoop.makePromise()
-            }
-            return (finished, entries)
-        }.hop(to: eventLoop)
+    public func consume(on eventLoop: EventLoop) -> EventLoopFuture<ConsumeOutput> {
+        consume().hop(to: eventLoop)
     }
 
     /// Consume what has been fed to the request
     /// - Returns: Returns an EventLoopFuture that will be fulfilled with array of ByteBuffers that has so far been fed to the request body
     ///     and whether we have consumed an end tag
-    func consume() -> EventLoopFuture<(Bool, [ByteBuffer])> {
+    func consume() -> EventLoopFuture<ConsumeOutput> {
         nextPromise.futureResult.map { finished in
             let entries = self.entries
             self.entries = []
-            if !finished {
+            if entries.count > 0 {
                 self.nextPromise = self.eventLoop.makePromise()
+                if finished {
+                    self.nextPromise.succeed(true)
+                }
+                return .byteBuffers(entries)
+            } else {
+                return .end
             }
-            return (finished, entries)
         }
     }
 
@@ -110,20 +112,22 @@ public class RequestBodyStreamer {
         let promise = self.eventLoop.makePromise(of: ByteBuffer?.self)
         var buffer: ByteBuffer? = nil
         func _consumeAll() {
-            consume().map { (finished, buffers) in
-                var buffersToAdd: ArraySlice<ByteBuffer>
-                if buffer == nil, let firstBuffer = buffers.first {
-                    buffer = firstBuffer
-                    buffersToAdd = buffers.dropFirst()
-                } else {
-                    buffersToAdd = buffers[...]
-                }
-                for var b in buffersToAdd {
-                    buffer!.writeBuffer(&b)
-                }
-                if !finished {
+            consume().map { output in
+                switch output {
+                case .byteBuffers(let buffers):
+                    var buffersToAdd: ArraySlice<ByteBuffer>
+                    if buffer == nil, let firstBuffer = buffers.first {
+                        buffer = firstBuffer
+                        buffersToAdd = buffers.dropFirst()
+                    } else {
+                        buffersToAdd = buffers[...]
+                    }
+                    for var b in buffersToAdd {
+                        buffer!.writeBuffer(&b)
+                    }
                     _consumeAll()
-                } else {
+                    
+                case .end:
                     promise.succeed(buffer)
                 }
             }

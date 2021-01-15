@@ -1,6 +1,7 @@
 import AsyncHTTPClient
 import HummingBird
 import NIOExtras
+import NIOHTTP1
 import XCTest
 
 enum ApplicationTestError: Error {
@@ -54,6 +55,49 @@ final class ApplicationTests: XCTestCase {
                 }
             } else {
                 body = .empty
+            }
+            return request.eventLoop.makeSucceededFuture(.init(status: .ok, headers: [:], body: body))
+        }
+        app.router.addStreamingRoute("/echo-body-streaming2", method: .POST) { request -> EventLoopFuture<Response> in
+            /*class RequestStreamer: ResponseBodyStreamer {
+                var finished: Bool
+                var request: Request
+                init(request: Request) {
+                    self.request = request
+                    self.finished = false
+                }
+                func read(on eventLoop: EventLoop) -> EventLoopFuture<ResponseBody.StreamResult> {
+                    if self.finished {
+                        return eventLoop.makeSucceededFuture(.end)
+                    }
+                    return request.body.stream.consume(on: request.eventLoop).map { (finished, buffers) in
+                        if var buffer = buffers.first {
+                            for var b in buffers.dropFirst() {
+                                buffer.writeBuffer(&b)
+                            }
+                            self.finished = finished
+                            return .byteBuffer(buffer)
+                        }
+                        return .end
+                    }
+                }
+            }*/
+            let body: ResponseBody = .streamCallback { eventLoop in
+                return request.body.stream.consume(on: request.eventLoop).map { output in
+                    switch output {
+                    case .byteBuffers(let buffers):
+                        if var buffer = buffers.first {
+                            for var b in buffers.dropFirst() {
+                                buffer.writeBuffer(&b)
+                            }
+                            return .byteBuffer(buffer)
+                        } else {
+                            return .byteBuffer(request.allocator.buffer(capacity: 0))
+                        }
+                    case .end:
+                        return .end
+                    }
+                }
             }
             return request.eventLoop.makeSucceededFuture(.init(status: .ok, headers: [:], body: body))
         }
@@ -158,6 +202,14 @@ final class ApplicationTests: XCTestCase {
     func testResponseBodyStreaming() {
         let buffer = self.randomBuffer(size: 140_000)
         let request = try! HTTPClient.Request(url: "http://localhost:*/echo-body-streaming", method: .POST, headers: [:], body: .byteBuffer(buffer))
+        self.testRequest(request) { response in
+            XCTAssertEqual(response.body, buffer)
+        }
+    }
+
+    func testRequestResponseBodyStreaming() {
+        let buffer = self.randomBuffer(size: 180_400)
+        let request = try! HTTPClient.Request(url: "http://localhost:*/echo-body-streaming2", method: .POST, headers: [:], body: .byteBuffer(buffer))
         self.testRequest(request) { response in
             XCTAssertEqual(response.body, buffer)
         }
