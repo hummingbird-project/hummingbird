@@ -20,7 +20,7 @@ struct TestMiddleware: Middleware {
 
 struct DebugMiddleware: Middleware {
     func apply(to request: Request, next: RequestResponder) -> EventLoopFuture<Response> {
-        print("\(request.method): \(request.uri)")
+        request.logger.debug("\(request.method): \(request.uri)")
         return next.respond(to: request)
     }
 }
@@ -37,14 +37,14 @@ app.decoder = JSONDecoder()
 
 app.logger.logLevel = .critical
 
-//app.middlewares.add(DebugMiddleware())
-//app.middlewares.add(FileMiddleware(app: app))
+app.middlewares.add(DebugMiddleware())
+app.middlewares.add(FileMiddleware(app: app))
 
 app.router.get("/") { request -> String in
     "This is a test"
 }
 
-/*app.router.get("/hello") { request -> EventLoopFuture<ByteBuffer> in
+app.router.get("/hello") { request -> EventLoopFuture<ByteBuffer> in
     let response = request.allocator.buffer(string: "Hello")
     return request.eventLoop.makeSucceededFuture(response)
 }
@@ -86,6 +86,6 @@ group.get("/test") { request -> EventLoopFuture<ByteBuffer> in
     let response = request.allocator.buffer(string: "GoodBye")
     return request.eventLoop.makeSucceededFuture(response)
 }
-*/
+
 
 app.serve()
