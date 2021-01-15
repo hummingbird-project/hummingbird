@@ -13,20 +13,20 @@ public class HTTPServer: Server {
         public let host: String
         public let reuseAddress: Bool
         public let tcpNoDelay: Bool
-        public let enableHTTPPipelining: Bool
+        public let withPipeliningAssistance: Bool
 
         public init(
             host: String = "127.0.0.1",
             port: Int = 8080,
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = true,
-            enableHTTPPipelining: Bool = false
+            withPipeliningAssistance: Bool = false
         ) {
             self.host = host
             self.port = port
             self.reuseAddress = reuseAddress
             self.tcpNoDelay = tcpNoDelay
-            self.enableHTTPPipelining = enableHTTPPipelining
+            self.withPipeliningAssistance = withPipeliningAssistance
         }
     }
 
@@ -46,7 +46,7 @@ public class HTTPServer: Server {
         func childChannelInitializer(channel: Channel) -> EventLoopFuture<Void> {
             return channel.pipeline.addHandlers(self.additionalChildHandlers(at: .first)).flatMap {
                 return channel.pipeline.configureHTTPServerPipeline(
-                    withPipeliningAssistance: self.configuration.enableHTTPPipelining,
+                    withPipeliningAssistance: self.configuration.withPipeliningAssistance,
                     withErrorHandling: true
                 ).flatMap {
                     let childHandlers: [ChannelHandler] = self.additionalChildHandlers(at: .last) + [

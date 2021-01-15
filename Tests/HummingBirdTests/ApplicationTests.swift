@@ -229,7 +229,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testOrdering() {
-        let app = self.createApp(.init(host: "localhost", port: Int.random(in: 10000...15000), enableHTTPPipelining: true))
+        let app = self.createApp(.init(host: "localhost", port: Int.random(in: 10000...15000), withPipeliningAssistance: true))
         let httpServer = app.servers["HTTP"] as! HTTPServer
 
         DispatchQueue.global().async {
