@@ -32,6 +32,18 @@ public enum RequestBody {
             return streamer.consumeAll().hop(to: eventLoop)
         }
     }
+
+    public func streamBody(on eventLoop: EventLoop) -> RequestBodyStreamer {
+        switch self {
+        case .byteBuffer(let buffer):
+            precondition(buffer == nil, "Cannot call streamBody on already loaded Body")
+            let streamer = RequestBodyStreamer(eventLoop: eventLoop)
+            stream.feed(.end)
+            return streamer
+        case .stream(let streamer):
+            return streamer
+        }
+    }
 }
 
 /// Request body streamer. HTTPInHandler feeds this with ByteBuffers while the Router consumes them
