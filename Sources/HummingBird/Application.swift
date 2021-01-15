@@ -94,7 +94,7 @@ open class Application {
 }
 
 extension Application {
-    @discardableResult public func addHTTP(_ configuration: HTTPServer.Configuration) -> HTTPServer {
+    @discardableResult public func addHTTP(_ configuration: HTTPServer.Configuration = HTTPServer.Configuration()) -> HTTPServer {
         let server = HTTPServer(
             group: self.eventLoopGroup,
             configuration: configuration

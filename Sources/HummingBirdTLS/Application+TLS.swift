@@ -7,7 +7,7 @@ extension Application {
     /// - Parameters:
     ///   - configuration: General HTTP configuration
     ///   - tlsConfiguration: TLS configuration
-    @discardableResult public func addHTTPS(_ configuration: HTTPServer.Configuration, tlsConfiguration: TLSConfiguration) throws -> HTTPServer {
+    @discardableResult public func addHTTPS(_ configuration: HTTPServer.Configuration = HTTPServer.Configuration(), tlsConfiguration: TLSConfiguration) throws -> HTTPServer {
         var tlsConfiguration = tlsConfiguration
         tlsConfiguration.applicationProtocols.append("http/1.1")
         let sslContext = try NIOSSLContext(configuration: tlsConfiguration)
