@@ -14,10 +14,13 @@ public struct TrieRouter: Router {
     
     public func respond(to request: Request) -> EventLoopFuture<Response> {
         let path = "\(request.method.rawValue)/\(request.uri.path)"
-        guard let responder = trie.getValueAndParameters(path) else {
+        guard let result = trie.getValueAndParameters(path) else {
             return request.eventLoop.makeFailedFuture(HTTPError(.notFound))
         }
-        return responder.value.respond(to: request)
+        if result.parameters.count > 0 {
+            request.parameters = result.parameters
+        }
+        return result.value.respond(to: request)
     }
 }
 

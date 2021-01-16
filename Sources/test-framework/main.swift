@@ -72,6 +72,10 @@ app.router.put("/user/name") { request -> EventLoopFuture<String> in
     return request.eventLoop.makeSucceededFuture("Hello \(user.name)")
 }
 
+app.router.get("/user/{id}") { request -> String in
+    return "User id: \(request.parameters.get("id", as: Int.self)!)"
+}
+
 app.router.put("/user") { request -> User in
     guard let user = try? request.decode(as: User.self) else { throw HTTPError(.badRequest) }
     let newUser = User(name: user.name, age: user.age+1)

@@ -47,7 +47,7 @@ public class Request {
         return try self.application.decoder.decode(type, from: self)
     }
 
-    public var parameters: Parameters? {
+    public var parameters: Parameters {
         get { storage.get(\.parameters) }
         set { storage.set(\.parameters, value: newValue) }
     }

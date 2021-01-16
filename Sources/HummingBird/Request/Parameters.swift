@@ -17,4 +17,6 @@ public struct Parameters {
     public mutating func set(_ s: Substring, value: Substring) {
         parameters[s] = value
     }
+    
+    public var count: Int { return parameters.count }
 }
