@@ -5,7 +5,7 @@ import NIOSSL
 import XCTest
 
 class HummingBirdTLSTests: XCTestCase {
-    func testTLS() throws {
+    /*func testTLS() throws {
         let app = Application()
         app.router.get("/hello") { request in
             return "hello"
@@ -24,7 +24,7 @@ class HummingBirdTLSTests: XCTestCase {
         XCTAssertNoThrow(try future.wait())
         let future2 = client.get(url: "http://localhost:\(http.configuration.port)/hello")
         XCTAssertNoThrow(try future2.wait())
-    }
+    }*/
 
     let caCertificateData = """
     -----BEGIN CERTIFICATE-----
