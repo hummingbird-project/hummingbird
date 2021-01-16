@@ -54,3 +54,19 @@ public struct Storage {
     var items: [ObjectIdentifier: Any]
 }
 
+public struct Storage2<Parent> {
+    public init() {
+        self.items = [:]
+    }
+
+    public func get<Type>(_ key: KeyPath<Parent, Type>) -> Type? {
+        items[key] as? Type
+    }
+
+    public mutating func set<Type>(_ key: KeyPath<Parent, Type>, value: Type?) {
+        items[key] = value
+    }
+
+    var items: [PartialKeyPath<Parent>: Any]
+}
+
