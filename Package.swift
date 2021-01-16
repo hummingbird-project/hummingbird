@@ -67,7 +67,6 @@ let package = Package(
             .product(name: "AsyncHTTPClient", package: "async-http-client")
         ]),
         .testTarget(name: "HummingBirdTLSTests", dependencies: [
-            "HummingBird",
             "HummingBirdTLS",
             .product(name: "AsyncHTTPClient", package: "async-http-client")
         ]),

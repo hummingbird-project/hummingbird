@@ -33,7 +33,7 @@ open class Application {
         self.lifecycle = ServiceLifecycle()
         self.logger = Logger(label: "HB")
         self.middlewares = MiddlewareGroup()
-        self.router = BasicRouter()
+        self.router = TrieRouter()
         self.servers = [:]
         self.storage = Storage()
         self.encoder = NullEncoder()
