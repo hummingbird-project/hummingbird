@@ -1,5 +1,5 @@
 
-public struct Parameters: StorageKey {
+public struct Parameters {
     var parameters: [Substring: Substring]
     
     init() {

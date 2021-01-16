@@ -21,7 +21,7 @@ public class Request {
     /// ByteBuffer allocator used by request
     public var allocator: ByteBufferAllocator
     /// additional storage
-    public var storage: Storage
+    public var storage: Storage<Request>
 
     internal init(
         uri: URI,
@@ -47,6 +47,11 @@ public class Request {
         return try self.application.decoder.decode(type, from: self)
     }
 
+    public var parameters: Parameters? {
+        get { storage.get(\.parameters) }
+        set { storage.set(\.parameters, value: newValue) }
+    }
+    
     private static func loggerWithRequestId(_ logger: Logger) -> Logger {
         var logger = logger
         logger[metadataKey: "id"] = .string(Self.globalRequestID.add(1).description)

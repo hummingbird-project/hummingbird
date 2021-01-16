@@ -18,7 +18,7 @@ open class Application {
     /// servers
     public var servers: [String: Server]
     /// storage
-    public var storage: Storage
+    public var storage: Storage<Application>
     /// Logger
     public var logger: Logger
     /// Encoder used by router
