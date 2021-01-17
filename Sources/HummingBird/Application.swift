@@ -17,8 +17,8 @@ open class Application {
     public var router: Router
     /// servers
     public var servers: [String: Server]
-    /// storage
-    public var storage: Storage<Application>
+    /// Application extensions
+    public var extensions: Extensions<Application>
     /// Logger
     public var logger: Logger
     /// Encoder used by router
@@ -35,7 +35,7 @@ open class Application {
         self.middlewares = MiddlewareGroup()
         self.router = TrieRouter()
         self.servers = [:]
-        self.storage = Storage()
+        self.extensions = Extensions()
         self.encoder = NullEncoder()
         self.decoder = NullDecoder()
 

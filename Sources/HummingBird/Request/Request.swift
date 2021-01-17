@@ -20,8 +20,8 @@ public class Request {
     public var eventLoop: EventLoop
     /// ByteBuffer allocator used by request
     public var allocator: ByteBufferAllocator
-    /// additional storage
-    public var storage: Storage<Request>
+    /// Request extensions
+    public var extensions: Extensions<Request>
 
     internal init(
         uri: URI,
@@ -40,7 +40,7 @@ public class Request {
         self.application = application
         self.eventLoop = eventLoop
         self.allocator = allocator
-        self.storage = Storage()
+        self.extensions = Extensions()
     }
 
     public func decode<Type: Codable>(as type: Type.Type) throws -> Type {
@@ -48,8 +48,8 @@ public class Request {
     }
 
     public var parameters: Parameters {
-        get { storage.get(\.parameters) }
-        set { storage.set(\.parameters, value: newValue) }
+        get { extensions.get(\.parameters) }
+        set { extensions.set(\.parameters, value: newValue) }
     }
     
     private static func loggerWithRequestId(_ logger: Logger) -> Logger {
