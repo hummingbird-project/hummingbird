@@ -38,8 +38,7 @@ struct User: ResponseCodable {
 }
 
 let app = Application()
-app.router = TrieRouter()
-app.addHTTPServer()
+app.addHTTPServer(.init(host: "0.0.0.0", port:8080))
 app.encoder = JSONEncoder()
 app.decoder = JSONDecoder()
 

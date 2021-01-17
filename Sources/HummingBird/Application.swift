@@ -52,6 +52,16 @@ open class Application {
 
     /// Run application
     public func start() {
+        for (name, server) in self.servers {
+            self.lifecycle.register(
+                label: name,
+                start: .eventLoopFuture {
+                    return server.start(application: self)
+                },
+                shutdown: .eventLoopFuture(server.stop)
+            )
+        }
+
         self.lifecycle.start { error in
             if let error = error {
                 self.logger.error("Failed starting HummingBird: \(error)")
@@ -73,13 +83,6 @@ open class Application {
 
     public func addServer(_ server: Server, named: String) {
         self.servers[named] = server
-        self.lifecycle.register(
-            label: named,
-            start: .eventLoopFuture {
-                return server.start(application: self)
-            },
-            shutdown: .eventLoopFuture(server.stop)
-        )
     }
 
     /// Construct the RequestResponder from the middleware group and router
