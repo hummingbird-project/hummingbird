@@ -25,18 +25,18 @@ final class ApplicationTests: XCTestCase {
         app.wait()
     }
     
-    func testConfiguration() {
-        var configuration = Configuration()
-        configuration["TEST_ENV"] = "testing"
-        XCTAssertEqual(configuration["TEST_ENV"], "testing")
-        configuration["TEST_ENV"] = nil
-        XCTAssertEqual(configuration["TEST_ENV"], nil)
+    func testEnvironment() {
+        var env = Environment()
+        env["TEST_ENV"] = "testing"
+        XCTAssertEqual(env["TEST_ENV"], "testing")
+        env["TEST_ENV"] = nil
+        XCTAssertEqual(env["TEST_ENV"], nil)
     }
 
     func testEnvironmentVariable() {
         setenv("TEST_VAR", "TRUE", 1)
-        let configuration = Configuration()
-        XCTAssertEqual(configuration["TEST_VAR"], "TRUE")
+        let env = Environment()
+        XCTAssertEqual(env["TEST_VAR"], "TRUE")
     }
 
     func testStartStop() {
