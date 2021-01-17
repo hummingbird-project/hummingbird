@@ -22,6 +22,7 @@ final class ApplicationTests: XCTestCase {
     
     class override func tearDown() {
         app.stop()
+        app.wait()
     }
     
     func testConfiguration() {
@@ -257,10 +258,14 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testOrdering() {
+        let app = Self.createApp(.init(port: 8002))
+        app.start()
+        defer { app.stop(); app.wait() }
+        
         let client = HTTPClient(eventLoopGroupProvider: .shared(Self.app.eventLoopGroup))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         
-        let responseFutures = (1...16).reversed().map { client.get(url: "http://localhost:\(Self.httpServer.configuration.port)/wait/\($0 * 100)") }
+        let responseFutures = (1...16).reversed().map { client.get(url: "http://localhost:8002/wait/\($0 * 100)") }
         let future = EventLoopFuture.whenAllComplete(responseFutures, on: client.eventLoopGroup.next()).map { results in
             for i in 0..<16 {
                 let result = results[i]
