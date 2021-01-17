@@ -109,10 +109,9 @@ final class ApplicationTests: XCTestCase {
             }
             return request.eventLoop.makeSucceededFuture(.init(status: .ok, headers: [:], body: body))
         }
-        app.router.get("/wait") { request -> EventLoopFuture<String> in
-            let waitString = request.uri.queryParameters["time"] ?? "0"
-            let wait = Int(waitString) ?? 0
-            return request.eventLoop.scheduleTask(in: .milliseconds(Int64(wait))) {}.futureResult.map { String(waitString) }
+        app.router.get("/wait/{time}") { request -> EventLoopFuture<String> in
+            let wait = request.parameters.get("time", as: Int64.self) ?? 0
+            return request.eventLoop.scheduleTask(in: .milliseconds(wait)) {}.futureResult.map { String(wait) }
         }
         let group = app.router.group()
             .add(middleware: TestMiddleware())
@@ -260,7 +259,7 @@ final class ApplicationTests: XCTestCase {
         let httpServer = Self.app.http!
         let client = HTTPClient(eventLoopGroupProvider: .createNew)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let responseFutures = (1...16).reversed().map { client.get(url: "http://localhost:\(httpServer.configuration.port)/wait?time=\($0 * 100)") }
+        let responseFutures = (1...16).reversed().map { client.get(url: "http://localhost:\(httpServer.configuration.port)/wait/\($0 * 100)") }
         let future = EventLoopFuture.whenAllComplete(responseFutures, on: client.eventLoopGroup.next()).map { results in
             for i in 0..<16 {
                 let result = results[i]
