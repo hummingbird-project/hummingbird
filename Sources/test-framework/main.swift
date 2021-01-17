@@ -100,4 +100,5 @@ group.get("/test") { request -> EventLoopFuture<ByteBuffer> in
 }
 
 
-app.serve()
+app.start()
+app.wait()

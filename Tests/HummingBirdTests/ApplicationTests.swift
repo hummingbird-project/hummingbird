@@ -16,14 +16,11 @@ final class ApplicationTests: XCTestCase {
         #if DEBUG
         app.http?.addChildChannelHandler(DebugInboundEventsHandler(), position: .last)
         #endif
-        DispatchQueue.global().async {
-            app.serve()
-        }
-        Thread.sleep(forTimeInterval: 1)
+        app.start()
     }
     
     class override func tearDown() {
-        app.syncShutdown()
+        app.stop()
     }
     
     func testConfiguration() {
@@ -40,6 +37,13 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(configuration["TEST_VAR"], "TRUE")
     }
 
+    func testStartStop() {
+        let app = Application()
+        app.addHTTP()
+        app.start()
+        app.stop()
+    }
+    
     static func createApp(_ configuration: HTTPServer.Configuration) -> Application {
         struct TestMiddleware: Middleware {
             func apply(to request: Request, next: RequestResponder) -> EventLoopFuture<Response> {
@@ -223,11 +227,10 @@ final class ApplicationTests: XCTestCase {
             }
         }
         let app = Self.createApp(.init(host: "localhost", port: Int.random(in: 7000...8999)))
-        defer { app.syncShutdown() }
         app.middlewares.add(TestMiddleware())
-        DispatchQueue.global().async {
-            app.serve()
-        }
+        app.start()
+        defer { app.stop() }
+
         Thread.sleep(forTimeInterval: 1)
         let request = try! HTTPClient.Request(url: "http://localhost:*/hello", method: .GET, headers: [:])
         self.testRequest(request, app: app) { response in

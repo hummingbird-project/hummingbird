@@ -46,12 +46,12 @@ open class Application {
         self.lifecycle.register(
             label: "Application",
             start: .sync { self.responder = self.constructResponder() },
-            shutdown: .sync(self.shutdown)
+            shutdown: .sync(self.shutdownEventLoopGroup)
         )
     }
 
     /// Run application
-    public func serve() {
+    public func start() {
         for (key, value) in self.servers {
             self.lifecycle.register(
                 label: key,
@@ -69,17 +69,16 @@ open class Application {
                 self.logger.info("HummingBird started successfully")
             }
         }
+    }
+
+    /// wait while server is running
+    public func wait() {
         self.lifecycle.wait()
     }
-
+    
     /// Shutdown application
-    public func shutdown() {
+    public func stop() {
         self.lifecycle.shutdown()
-    }
-
-    public func syncShutdown() {
-        lifecycle.shutdown()
-        lifecycle.wait()
     }
 
     public func addServer(_ server: Server, named: String) {
