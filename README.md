@@ -1,6 +1,6 @@
 # hummingbird
 
-Lightweight server based off Swift NIO
+Lightweight server framework based off Swift NIO
 
 ## Usage
 
@@ -15,5 +15,6 @@ app.router.get("/") { request -> String in
 app.router.get("user") { request -> EventLoopFuture<User> in
     return callDatabaseToGetUser()
 }
-app.serve()
+app.start()
+app.wait()
 ```
