@@ -8,6 +8,11 @@ public class HTTPServer: Server {
 
     var quiesce: ServerQuiescingHelper?
 
+    public enum ChannelPosition {
+        case beforeHTTP
+        case afterHTTP
+    }
+    
     public struct Configuration {
         public let port: Int
         public let host: String
@@ -38,18 +43,18 @@ public class HTTPServer: Server {
     }
 
     /// Append to list of `ChannelHandler`s to be added to server child channels
-    public func addChildChannelHandler(_ handler: @autoclosure @escaping () -> ChannelHandler, position: ChannelPipeline.Position = .last) {
+    public func addChildChannelHandler(_ handler: @autoclosure @escaping () -> ChannelHandler, position: ChannelPosition = .afterHTTP) {
         self._additionalChildHandlers.append((handler: handler, position: position))
     }
 
     public func start(application: Application) -> EventLoopFuture<Void> {
         func childChannelInitializer(channel: Channel) -> EventLoopFuture<Void> {
-            return channel.pipeline.addHandlers(self.additionalChildHandlers(at: .first)).flatMap {
+            return channel.pipeline.addHandlers(self.additionalChildHandlers(at: .beforeHTTP)).flatMap {
                 return channel.pipeline.configureHTTPServerPipeline(
                     withPipeliningAssistance: self.configuration.withPipeliningAssistance,
                     withErrorHandling: true
                 ).flatMap {
-                    let childHandlers: [ChannelHandler] = self.additionalChildHandlers(at: .last) + [
+                    let childHandlers: [ChannelHandler] = self.additionalChildHandlers(at: .afterHTTP) + [
                         HTTPOutHandler(),
                         HTTPInHandler(),
                         HTTPServerHandler(application: application),
@@ -97,11 +102,11 @@ public class HTTPServer: Server {
         return promise.futureResult
     }
 
-    func additionalChildHandlers(at position: ChannelPipeline.Position) -> [ChannelHandler] {
+    func additionalChildHandlers(at position: ChannelPosition) -> [ChannelHandler] {
         return self._additionalChildHandlers.compactMap { if $0.position == position { return $0.handler() }; return nil }
     }
 
-    private var _additionalChildHandlers: [(handler: () -> ChannelHandler, position: ChannelPipeline.Position)]
+    private var _additionalChildHandlers: [(handler: () -> ChannelHandler, position: ChannelPosition)]
 }
 
 extension ChannelPipeline.Position: Equatable {

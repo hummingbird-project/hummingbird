@@ -5,13 +5,13 @@ import NIOSSL
 import XCTest
 
 class HummingBirdTLSTests: XCTestCase {
-/*    func testTLS() throws {
+    func testTLS() throws {
         let app = Application()
         app.router.get("/hello") { request in
             return "hello"
         }
-        let https = try app.addHTTPS(.init(host: "localhost", port: 8000), tlsConfiguration: self.getServerTLSConfiguration())
-        let http = app.addHTTP(.init(host: "localhost", port: 8001))
+        let https = try app.addHTTPServer(.init(host: "localhost", port: 8000)).addTLS(tlsConfiguration: self.getServerTLSConfiguration())
+        let http = app.addHTTPServer(.init(host: "localhost", port: 8001))
         app.start()
         defer { app.stop() }
 
@@ -22,7 +22,7 @@ class HummingBirdTLSTests: XCTestCase {
         XCTAssertNoThrow(try future.wait())
         let future2 = client.get(url: "http://localhost:\(http.configuration.port)/hello")
         XCTAssertNoThrow(try future2.wait())
-    }*/
+    }
 
     let caCertificateData = """
     -----BEGIN CERTIFICATE-----

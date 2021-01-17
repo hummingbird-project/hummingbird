@@ -39,7 +39,7 @@ struct User: ResponseCodable {
 
 let app = Application()
 app.router = TrieRouter()
-app.addHTTP(.init())
+app.addHTTPServer()
 app.encoder = JSONEncoder()
 app.decoder = JSONDecoder()
 

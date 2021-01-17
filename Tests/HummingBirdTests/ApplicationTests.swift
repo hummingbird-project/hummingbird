@@ -10,11 +10,12 @@ enum ApplicationTestError: Error {
 
 final class ApplicationTests: XCTestCase {
     static var app: Application!
+    static var httpServer: HTTPServer!
     
     class override func setUp() {
-        app = createApp(.init(host: "localhost", port: Int.random(in: 8000...8001), tcpNoDelay: false))
+        app = createApp(.init(host: "localhost", port: 8000))
         #if DEBUG
-        app.http?.addChildChannelHandler(DebugInboundEventsHandler(), position: .last)
+        Self.httpServer.addChildChannelHandler(DebugInboundEventsHandler(), position: .afterHTTP)
         #endif
         app.start()
     }
@@ -39,7 +40,7 @@ final class ApplicationTests: XCTestCase {
 
     func testStartStop() {
         let app = Application()
-        app.addHTTP()
+        app.addHTTPServer()
         app.start()
         app.stop()
     }
@@ -56,7 +57,7 @@ final class ApplicationTests: XCTestCase {
         }
 
         let app = Application()
-        app.addHTTP(configuration)
+        Self.httpServer = app.addHTTPServer(configuration)
         app.router.get("/hello") { request -> EventLoopFuture<ByteBuffer> in
             let buffer = request.allocator.buffer(string: "GET: Hello")
             return request.eventLoop.makeSucceededFuture(buffer)
@@ -132,7 +133,7 @@ final class ApplicationTests: XCTestCase {
 
     func testRequest(_ request: HTTPClient.Request, app: Application? = nil, client: HTTPClient? = nil, test: @escaping (HTTPClient.Response) throws -> Void) {
         let app: Application = app ?? Self.app
-        let httpServer = app.http!
+        let httpServer = app.servers.first?.value as! HTTPServer
 
         let requestURL = request.url.absoluteString.replacingOccurrences(of: "*", with: httpServer.configuration.port.description)
         let request = try! HTTPClient.Request(url: requestURL, method: request.method, headers: request.headers, body: request.body)
@@ -225,10 +226,10 @@ final class ApplicationTests: XCTestCase {
                 }
             }
         }
-        let app = Self.createApp(.init(host: "localhost", port: Int.random(in: 7000...8999)))
+        let app = Self.createApp(.init(host: "localhost", port: 8080))
         app.middlewares.add(TestMiddleware())
         app.start()
-        defer { app.stop() }
+        defer { app.stop(); app.wait() }
 
         Thread.sleep(forTimeInterval: 1)
         let request = try! HTTPClient.Request(url: "http://localhost:*/hello", method: .GET, headers: [:])
@@ -256,10 +257,10 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testOrdering() {
-        let httpServer = Self.app.http!
-        let client = HTTPClient(eventLoopGroupProvider: .createNew)
+        let client = HTTPClient(eventLoopGroupProvider: .shared(Self.app.eventLoopGroup))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let responseFutures = (1...16).reversed().map { client.get(url: "http://localhost:\(httpServer.configuration.port)/wait/\($0 * 100)") }
+        
+        let responseFutures = (1...16).reversed().map { client.get(url: "http://localhost:\(Self.httpServer.configuration.port)/wait/\($0 * 100)") }
         let future = EventLoopFuture.whenAllComplete(responseFutures, on: client.eventLoopGroup.next()).map { results in
             for i in 0..<16 {
                 let result = results[i]

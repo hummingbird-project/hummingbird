@@ -52,16 +52,6 @@ open class Application {
 
     /// Run application
     public func start() {
-        for (key, value) in self.servers {
-            self.lifecycle.register(
-                label: key,
-                start: .eventLoopFuture {
-                    return value.start(application: self)
-                },
-                shutdown: .eventLoopFuture(value.stop)
-            )
-        }
-
         self.lifecycle.start { error in
             if let error = error {
                 self.logger.error("Failed starting HummingBird: \(error)")
@@ -83,6 +73,13 @@ open class Application {
 
     public func addServer(_ server: Server, named: String) {
         self.servers[named] = server
+        self.lifecycle.register(
+            label: named,
+            start: .eventLoopFuture {
+                return server.start(application: self)
+            },
+            shutdown: .eventLoopFuture(server.stop)
+        )
     }
 
     /// Construct the RequestResponder from the middleware group and router
@@ -98,14 +95,13 @@ open class Application {
 }
 
 extension Application {
-    @discardableResult public func addHTTP(_ configuration: HTTPServer.Configuration = HTTPServer.Configuration()) -> HTTPServer {
+    @discardableResult public func addHTTPServer(named: String? = nil, _ configuration: HTTPServer.Configuration = HTTPServer.Configuration()) -> HTTPServer {
         let server = HTTPServer(
             group: self.eventLoopGroup,
             configuration: configuration
         )
-        self.addServer(server, named: "HTTP")
+        let name = named ?? "HTTPServer \(servers.count)"
+        self.addServer(server, named: name)
         return server
     }
-
-    public var http: HTTPServer? { self.servers["HTTP"] as? HTTPServer }
 }
