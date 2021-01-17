@@ -24,7 +24,7 @@ public class HTTPServer: Server {
             host: String = "127.0.0.1",
             port: Int = 8080,
             reuseAddress: Bool = true,
-            tcpNoDelay: Bool = true,
+            tcpNoDelay: Bool = false,
             withPipeliningAssistance: Bool = false
         ) {
             self.host = host

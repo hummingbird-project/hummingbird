@@ -31,7 +31,7 @@ open class Application {
     /// Initialize new Application
     public init() {
         self.lifecycle = ServiceLifecycle()
-        self.logger = Logger(label: "HB")
+        self.logger = Logger(label: "HummingBird")
         self.middlewares = MiddlewareGroup()
         self.router = TrieRouter()
         self.servers = [:]

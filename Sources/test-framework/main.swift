@@ -1,7 +1,6 @@
 import Foundation
 import HummingBirdFiles
 import HummingBirdJSON
-import HummingBirdXML
 import HummingBird
 import NIO
 import NIOHTTP1
@@ -36,9 +35,11 @@ struct User: ResponseCodable {
     let address: String?
     let age: Int
 }
-
 let app = Application()
-app.addHTTPServer(.init(host: "0.0.0.0", port:8080))
+let env = Environment()
+let host = env["HOST"] ?? "127.0.0.1"
+
+app.addHTTPServer(.init(host: host, port:8080))
 app.encoder = JSONEncoder()
 app.decoder = JSONDecoder()
 
@@ -72,7 +73,7 @@ app.router.put("/user/name") { request -> EventLoopFuture<String> in
 }
 
 app.router.get("/user/{id}") { request -> String in
-    return "User id: \(request.parameters.get("id", as: Int.self)!)"
+    return "User id: \(request.parameters.get("id", as: Int.self) ?? 0)"
 }
 
 app.router.put("/user") { request -> User in
@@ -97,7 +98,6 @@ group.get("/test") { request -> EventLoopFuture<ByteBuffer> in
     let response = request.allocator.buffer(string: "GoodBye")
     return request.eventLoop.makeSucceededFuture(response)
 }
-
 
 app.start()
 app.wait()
