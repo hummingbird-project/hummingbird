@@ -81,12 +81,12 @@ public class HTTPServer: Server {
                 application.logger.info("Server started and listening on \(self.configuration.host):\(self.configuration.port)")
             }
             .flatMapErrorThrowing { error in
-                _ = self.shutdown()
+                _ = self.stop()
                 throw error
             }
     }
 
-    public func shutdown() -> EventLoopFuture<Void> {
+    public func stop() -> EventLoopFuture<Void> {
         let promise = self.eventLoopGroup.next().makePromise(of: Void.self)
         if let quiesce = self.quiesce {
             quiesce.initiateShutdown(promise: promise)

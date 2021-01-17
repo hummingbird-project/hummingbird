@@ -58,7 +58,7 @@ open class Application {
                 start: .eventLoopFuture {
                     return value.start(application: self)
                 },
-                shutdown: .eventLoopFuture(value.shutdown)
+                shutdown: .eventLoopFuture(value.stop)
             )
         }
 
