@@ -50,7 +50,7 @@ open class Application {
         self.lifecycle.register(
             label: "Application",
             start: .sync { self.responder = self.constructResponder() },
-            shutdown: .sync(self.shutdownEventLoopGroup)
+            shutdown: .sync(self.shutdownApplication)
         )
 
         self.lifecycle.register(
@@ -88,9 +88,10 @@ open class Application {
         return self.middlewares.constructResponder(finalResponder: self.router)
     }
 
-    /// shutdown eventloop and threadpool
-    func shutdownEventLoopGroup() throws {
+    /// shutdown eventloop, threadpool and any extensions attached to the Application
+    func shutdownApplication() throws {
         try self.threadPool.syncShutdownGracefully()
         try self.eventLoopGroup.syncShutdownGracefully()
+        self.extensions.shutdown()
     }
 }
