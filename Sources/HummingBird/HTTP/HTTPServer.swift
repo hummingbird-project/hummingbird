@@ -43,8 +43,9 @@ public class HTTPServer: Server {
     }
 
     /// Append to list of `ChannelHandler`s to be added to server child channels
-    public func addChildChannelHandler(_ handler: @autoclosure @escaping () -> ChannelHandler, position: ChannelPosition = .afterHTTP) {
+    @discardableResult public func addChildChannelHandler(_ handler: @autoclosure @escaping () -> ChannelHandler, position: ChannelPosition = .afterHTTP) -> Self {
         self._additionalChildHandlers.append((handler: handler, position: position))
+        return self
     }
 
     public func start(application: Application) -> EventLoopFuture<Void> {

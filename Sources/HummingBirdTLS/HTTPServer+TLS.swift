@@ -7,8 +7,7 @@ extension HTTPServer {
         tlsConfiguration.applicationProtocols.append("http/1.1")
         let sslContext = try NIOSSLContext(configuration: tlsConfiguration)
         
-        self.addChildChannelHandler(NIOSSLServerHandler(context: sslContext), position: .beforeHTTP)
-        return self
+        return self.addChildChannelHandler(NIOSSLServerHandler(context: sslContext), position: .beforeHTTP)
     }
 }
 
