@@ -6,7 +6,7 @@ import XCTest
 
 class HummingBirdTLSTests: XCTestCase {
     func testTLS() throws {
-        let app = Application(.init(host: "localhost", port: 8000))
+        let app = Application(.init(port: 8000))
         app.router.get("/hello") { request in
             return "hello"
         }
