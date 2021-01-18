@@ -24,10 +24,6 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Install dependencies
-      run: |
-        apt-get update -qq
-        apt-get install -q -y tzdata zlib1g-dev
     - name: Test
       run: |
         swift test --enable-test-discovery --sanitize=thread
