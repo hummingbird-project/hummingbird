@@ -20,8 +20,8 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.16.1"),
         .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.7.0"),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.4.0"),
-        .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "1.0.0-alpha.6"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.2.0"),
+        .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "1.0.0-alpha.6"),
         .package(url: "https://github.com/adam-fowler/xml-coding.git", from: "0.4.0"),
     ],
     targets: [
@@ -63,12 +63,12 @@ let package = Package(
         ]),
         // test targets
         .testTarget(name: "HummingBirdTests", dependencies: [
-            "HummingBird",
-            .product(name: "AsyncHTTPClient", package: "async-http-client")
+            .byName(name: "HummingBird"),
+            .product(name: "AsyncHTTPClient", package: "async-http-client"),
         ]),
         .testTarget(name: "HummingBirdTLSTests", dependencies: [
-            "HummingBirdTLS",
-            .product(name: "AsyncHTTPClient", package: "async-http-client")
+            .byName(name: "HummingBirdTLS"),
+            .product(name: "AsyncHTTPClient", package: "async-http-client"),
         ]),
     ]
 )

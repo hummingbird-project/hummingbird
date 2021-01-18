@@ -3,6 +3,7 @@ import NIO
 import NIOHTTP1
 import NIOSSL
 
+/// Bare bones HTTP client. 
 public final class HTTPClient {
     public enum Error: Swift.Error {
         case invalidURL
@@ -14,6 +15,13 @@ public final class HTTPClient {
         public var method: HTTPMethod
         public var headers: HTTPHeaders
         public var body: ByteBuffer?
+
+        public init(url: String, method: HTTPMethod, headers: HTTPHeaders, body: ByteBuffer? = nil) {
+            self.uri = .init(url)
+            self.method = method
+            self.headers = headers
+            self.body = body
+        }
 
         public init(uri: URI, method: HTTPMethod, headers: HTTPHeaders, body: ByteBuffer? = nil) {
             self.uri = uri
@@ -82,7 +90,15 @@ public final class HTTPClient {
         }
     }
 
-    public func execute(_ request: Request, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Response> {
+    public func get(url: String) -> EventLoopFuture<Response> {
+        return execute(request: .init(url: .init(url), method: .GET, headers: [:]))
+    }
+
+    public func put(url: String, body: ByteBuffer?) -> EventLoopFuture<Response> {
+        return execute(request: .init(url: .init(url), method: .GET, headers: [:], body: body))
+    }
+
+    public func execute(request: Request, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Response> {
         let eventLoop = eventLoop ?? self.eventLoopGroup.next()
         do {
             let request = try request.clean()
