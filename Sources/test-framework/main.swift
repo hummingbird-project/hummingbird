@@ -35,11 +35,11 @@ struct User: ResponseCodable {
     let address: String?
     let age: Int
 }
-let app = Application()
 let env = Environment()
 let host = env["HOST"] ?? "127.0.0.1"
 
-app.addHTTPServer(.init(host: host, port:8080))
+let app = Application(.init(host: host, port:8080))
+
 app.encoder = JSONEncoder()
 app.decoder = JSONDecoder()
 

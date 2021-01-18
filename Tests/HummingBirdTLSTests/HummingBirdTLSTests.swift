@@ -6,12 +6,11 @@ import XCTest
 
 class HummingBirdTLSTests: XCTestCase {
     func testTLS() throws {
-        let app = Application()
+        let app = Application(.init(host: "localhost", port: 8000))
         app.router.get("/hello") { request in
             return "hello"
         }
-        let https = try app.addHTTPServer(.init(host: "localhost", port: 8000)).addTLS(tlsConfiguration: self.getServerTLSConfiguration())
-        let http = app.addHTTPServer(.init(host: "localhost", port: 8001))
+        let https = try app.httpServer.addTLS(tlsConfiguration: self.getServerTLSConfiguration())
         app.start()
         defer { app.stop(); app.wait() }
 
@@ -20,8 +19,6 @@ class HummingBirdTLSTests: XCTestCase {
 
         let future = client.get(url: "https://localhost:\(https.configuration.port)/hello")
         XCTAssertNoThrow(try future.wait())
-        let future2 = client.get(url: "http://localhost:\(http.configuration.port)/hello")
-        XCTAssertNoThrow(try future2.wait())
     }
 
     let caCertificateData = """

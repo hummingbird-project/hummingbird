@@ -10,12 +10,11 @@ enum ApplicationTestError: Error {
 
 final class ApplicationTests: XCTestCase {
     static var app: Application!
-    static var httpServer: HTTPServer!
     
     class override func setUp() {
         app = createApp(.init(host: "localhost", port: 8000))
         #if DEBUG
-        Self.httpServer.addChildChannelHandler(DebugInboundEventsHandler(), position: .afterHTTP)
+        app.httpServer.addChildChannelHandler(DebugInboundEventsHandler(), position: .afterHTTP)
         #endif
         app.start()
     }
@@ -41,12 +40,12 @@ final class ApplicationTests: XCTestCase {
 
     func testStartStop() {
         let app = Application()
-        app.addHTTPServer()
         app.start()
         app.stop()
+        app.wait()
     }
     
-    static func createApp(_ configuration: HTTPServer.Configuration) -> Application {
+    static func createApp(_ configuration: Application.Configuration) -> Application {
         struct TestMiddleware: Middleware {
             func apply(to request: Request, next: RequestResponder) -> EventLoopFuture<Response> {
                 return next.respond(to: request).map { response in
@@ -57,8 +56,7 @@ final class ApplicationTests: XCTestCase {
             }
         }
 
-        let app = Application()
-        Self.httpServer = app.addHTTPServer(configuration)
+        let app = Application(configuration)
         app.router.get("/hello") { request -> EventLoopFuture<ByteBuffer> in
             let buffer = request.allocator.buffer(string: "GET: Hello")
             return request.eventLoop.makeSucceededFuture(buffer)
@@ -134,7 +132,7 @@ final class ApplicationTests: XCTestCase {
 
     func testRequest(_ request: HTTPClient.Request, app: Application? = nil, client: HTTPClient? = nil, test: @escaping (HTTPClient.Response) throws -> Void) {
         let app: Application = app ?? Self.app
-        let httpServer = app.servers.first?.value as! HTTPServer
+        let httpServer = app.httpServer
 
         let requestURL = request.url.absoluteString.replacingOccurrences(of: "*", with: httpServer.configuration.port.description)
         let request = try! HTTPClient.Request(url: requestURL, method: request.method, headers: request.headers, body: request.body)

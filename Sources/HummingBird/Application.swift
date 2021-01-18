@@ -15,8 +15,10 @@ open class Application {
     public let middlewares: MiddlewareGroup
     /// routes requests to requestResponders based on URI
     public var router: Router
-    /// servers
-    public var servers: [String: Server]
+    /// http server
+    public var httpServer: HTTPServer
+    /// Configuration
+    public var configuration: Configuration
     /// Application extensions
     public var extensions: Extensions<Application>
     /// Logger
@@ -29,12 +31,12 @@ open class Application {
     var responder: RequestResponder?
 
     /// Initialize new Application
-    public init() {
+    public init(_ configuration: Application.Configuration = Application.Configuration()) {
         self.lifecycle = ServiceLifecycle()
         self.logger = Logger(label: "HummingBird")
         self.middlewares = MiddlewareGroup()
         self.router = TrieRouter()
-        self.servers = [:]
+        self.configuration = configuration
         self.extensions = Extensions()
         self.encoder = NullEncoder()
         self.decoder = NullDecoder()
@@ -43,25 +45,25 @@ open class Application {
         self.threadPool = NIOThreadPool(numberOfThreads: 2)
         self.threadPool.start()
 
+        self.httpServer = HTTPServer(group: self.eventLoopGroup, configuration: self.configuration.httpServer)
+
         self.lifecycle.register(
             label: "Application",
             start: .sync { self.responder = self.constructResponder() },
             shutdown: .sync(self.shutdownEventLoopGroup)
         )
+
+        self.lifecycle.register(
+            label: "HTTP Server",
+            start: .eventLoopFuture {
+                return self.httpServer.start(application: self)
+            },
+            shutdown: .eventLoopFuture(self.httpServer.stop)
+        )
     }
 
     /// Run application
     public func start() {
-        for (name, server) in self.servers {
-            self.lifecycle.register(
-                label: name,
-                start: .eventLoopFuture {
-                    return server.start(application: self)
-                },
-                shutdown: .eventLoopFuture(server.stop)
-            )
-        }
-
         self.lifecycle.start { error in
             if let error = error {
                 self.logger.error("Failed starting HummingBird: \(error)")
@@ -81,10 +83,6 @@ open class Application {
         self.lifecycle.shutdown()
     }
 
-    public func addServer(_ server: Server, named: String) {
-        self.servers[named] = server
-    }
-
     /// Construct the RequestResponder from the middleware group and router
     func constructResponder() -> RequestResponder {
         return self.middlewares.constructResponder(finalResponder: self.router)
@@ -94,17 +92,5 @@ open class Application {
     func shutdownEventLoopGroup() throws {
         try self.threadPool.syncShutdownGracefully()
         try self.eventLoopGroup.syncShutdownGracefully()
-    }
-}
-
-extension Application {
-    @discardableResult public func addHTTPServer(named: String? = nil, _ configuration: HTTPServer.Configuration = HTTPServer.Configuration()) -> HTTPServer {
-        let server = HTTPServer(
-            group: self.eventLoopGroup,
-            configuration: configuration
-        )
-        let name = named ?? "HTTPServer \(servers.count)"
-        self.addServer(server, named: name)
-        return server
     }
 }
