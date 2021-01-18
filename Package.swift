@@ -7,6 +7,7 @@ let package = Package(
     name: "hummingbird",
     products: [
         .library(name: "HummingBird", targets: ["HummingBird"]),
+        .library(name: "HummingBirdCompression", targets: ["HummingBirdCompression"]),
         .library(name: "HummingBirdFiles", targets: ["HummingBirdFiles"]),
         .library(name: "HummingBirdJSON", targets: ["HummingBirdJSON"]),
         .library(name: "HummingBirdTLS", targets: ["HummingBirdTLS"]),
@@ -36,6 +37,10 @@ let package = Package(
             .byName(name: "HummingBird"),
             .product(name: "NIO", package: "swift-nio"),
         ]),
+        .target(name: "HummingBirdCompression", dependencies: [
+            .byName(name: "HummingBird"),
+            .product(name: "NIOHTTPCompression", package: "swift-nio-extras"),
+        ]),
         .target(name: "HummingBirdJSON", dependencies: [
             .byName(name: "HummingBird"),
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
@@ -48,6 +53,14 @@ let package = Package(
         // test targets
         .testTarget(name: "HummingBirdTests", dependencies: [
             .byName(name: "HummingBird"),
+            .product(name: "AsyncHTTPClient", package: "async-http-client"),
+        ]),
+        .testTarget(name: "HummingBirdCompressionTests", dependencies: [
+            .byName(name: "HummingBirdCompression"),
+            .product(name: "AsyncHTTPClient", package: "async-http-client"),
+        ]),
+        .testTarget(name: "HummingBirdJSONTests", dependencies: [
+            .byName(name: "HummingBirdJSON"),
             .product(name: "AsyncHTTPClient", package: "async-http-client"),
         ]),
         .testTarget(name: "HummingBirdTLSTests", dependencies: [
