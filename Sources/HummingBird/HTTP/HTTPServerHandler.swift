@@ -3,7 +3,7 @@ import NIO
 import NIOHTTP1
 
 final class HTTPServerHandler: ChannelInboundHandler {
-    typealias InboundIn = HTTPInHandler.Request
+    typealias InboundIn = HTTPDecodeHandler.Request
     typealias OutboundOut = Response
 
     let responder: RequestResponder
@@ -11,6 +11,7 @@ final class HTTPServerHandler: ChannelInboundHandler {
 
     var responsesInProgress: Int
     var closeAfterResponseWritten: Bool
+    var propagatedError: Error?
 
     init(application: Application) {
         self.application = application
@@ -18,6 +19,7 @@ final class HTTPServerHandler: ChannelInboundHandler {
         self.responder = application.responder!
         self.responsesInProgress = 0
         self.closeAfterResponseWritten = false
+        self.propagatedError = nil
     }
 
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
@@ -32,21 +34,20 @@ final class HTTPServerHandler: ChannelInboundHandler {
             allocator: context.channel.allocator
         )
 
+        if let error = propagatedError {
+            let keepAlive = rawRequest.head.isKeepAlive && self.closeAfterResponseWritten == false
+            writeError(context: context, error: error, keepAlive: keepAlive)
+            self.propagatedError = nil
+            return
+        }
         self.responsesInProgress += 1
 
         self.responder.respond(to: request).whenComplete { result in
             let keepAlive = rawRequest.head.isKeepAlive && self.closeAfterResponseWritten == false
             switch result {
             case .failure(let error):
-                var response: Response
-                switch error {
-                case let httpError as HTTPError:
-                    response = httpError.response(from: request)
-                default:
-                    response = Response(status: .internalServerError, headers: [:], body: .empty)
-                }
-                response.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
-                self.writeResponse(context: context, response: response, keepAlive: keepAlive)
+                self.writeError(context: context, error: error, keepAlive: keepAlive)
+
             case .success(var response):
                 response.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
                 self.writeResponse(context: context, response: response, keepAlive: keepAlive)
@@ -62,6 +63,18 @@ final class HTTPServerHandler: ChannelInboundHandler {
             }
             self.responsesInProgress -= 1
         }
+    }
+
+    func writeError(context: ChannelHandlerContext, error: Error, keepAlive: Bool) {
+        var response: Response
+        switch error {
+        case let httpError as HTTPError:
+            response = httpError.response(allocator: context.channel.allocator)
+        default:
+            response = Response(status: .internalServerError, headers: [:], body: .empty)
+        }
+        response.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
+        self.writeResponse(context: context, response: response, keepAlive: keepAlive)
     }
 
     func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
@@ -80,5 +93,9 @@ final class HTTPServerHandler: ChannelInboundHandler {
             self.application.logger.debug("Unhandled event \(event as? ChannelEvent)")
             context.fireUserInboundEventTriggered(event)
         }
+    }
+
+    func errorCaught(context: ChannelHandlerContext, error: Error) {
+        self.propagatedError = error
     }
 }

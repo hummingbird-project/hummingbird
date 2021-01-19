@@ -50,6 +50,7 @@ public enum RequestBody {
 public class RequestBodyStreamer {
     public enum FeedInput {
         case byteBuffer(ByteBuffer)
+        case error(Error)
         case end
     }
     public enum ConsumeOutput {
@@ -74,6 +75,8 @@ public class RequestBodyStreamer {
         case .byteBuffer(let byteBuffer):
             self.entries.append(byteBuffer)
             nextPromise.succeed(false)
+        case .error(let error):
+            nextPromise.fail(error)
         case .end:
             nextPromise.succeed(true)
         }

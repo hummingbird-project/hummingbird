@@ -56,8 +56,8 @@ public class HTTPServer: Server {
                     withErrorHandling: true
                 ).flatMap {
                     let childHandlers: [ChannelHandler] = self.additionalChildHandlers(at: .afterHTTP) + [
-                        HTTPOutHandler(),
-                        HTTPInHandler(),
+                        HTTPEncodeHandler(),
+                        HTTPDecodeHandler(),
                         HTTPServerHandler(application: application),
                     ]
                     return channel.pipeline.addHandlers(childHandlers)

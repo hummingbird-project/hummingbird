@@ -1,6 +1,6 @@
 import NIO
 
-final class HTTPInHandler: ChannelInboundHandler {
+final class HTTPDecodeHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPServerRequestPart
     typealias InboundOut = Request
 
@@ -8,6 +8,7 @@ final class HTTPInHandler: ChannelInboundHandler {
         case idle
         case head(HTTPRequestHead)
         case body(RequestBodyStreamer)
+        case error
     }
 
     struct Request {
@@ -50,6 +51,12 @@ final class HTTPInHandler: ChannelInboundHandler {
             streamer.feed(.end)
             self.state = .idle
 
+        case (.end, .error):
+            self.state = .idle
+
+        case (_, .error):
+            break
+
         default:
             assertionFailure("Should not get here")
             context.close(promise: nil)
@@ -59,9 +66,22 @@ final class HTTPInHandler: ChannelInboundHandler {
     func channelReadComplete(context: ChannelHandlerContext) {
         context.flush()
     }
+
+    func errorCaught(context: ChannelHandlerContext, error: Error) {
+        switch state {
+        case .body(let streamer):
+            // request has already been forwarded to next hander have to pass error via streamer
+            streamer.feed(.error(error))
+            // only set state to error if already streaming a request body. Don't want to feed
+            // additional ByteBuffers to streamer if error has been set
+            self.state = .error
+        default:
+            context.fireErrorCaught(error)
+        }
+    }
 }
 
-final class HTTPOutHandler: ChannelOutboundHandler {
+final class HTTPEncodeHandler: ChannelOutboundHandler {
     typealias OutboundIn = Response
     typealias OutboundOut = HTTPServerResponsePart
 

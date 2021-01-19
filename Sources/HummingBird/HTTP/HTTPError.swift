@@ -1,6 +1,6 @@
 import NIOHTTP1
 
-public struct HTTPError: Error, ResponseGenerator {
+public struct HTTPError: Error {
     public let status: HTTPResponseStatus
     public let message: String?
 
@@ -9,12 +9,12 @@ public struct HTTPError: Error, ResponseGenerator {
         self.message = message
     }
 
-    public func response(from request: Request) -> Response {
+    public func response(allocator: ByteBufferAllocator) -> Response {
         let body: ResponseBody
         var headers: HTTPHeaders = [:]
 
         if let message = self.message {
-            let buffer = request.allocator.buffer(string: message)
+            let buffer = allocator.buffer(string: message)
             body = .byteBuffer(buffer)
             headers.replaceOrAdd(name: "content-type", value: "text/plain; charset=utf-8")
             headers.replaceOrAdd(name: "content-length", value: buffer.readableBytes.description)

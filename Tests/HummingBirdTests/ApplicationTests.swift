@@ -10,20 +10,6 @@ enum ApplicationTestError: Error {
 
 final class ApplicationTests: XCTestCase {
 
-    func testEnvironment() {
-        var env = Environment()
-        env["TEST_ENV"] = "testing"
-        XCTAssertEqual(env["TEST_ENV"], "testing")
-        env["TEST_ENV"] = nil
-        XCTAssertEqual(env["TEST_ENV"], nil)
-    }
-
-    func testEnvironmentVariable() {
-        setenv("TEST_VAR", "TRUE", 1)
-        let env = Environment()
-        XCTAssertEqual(env["TEST_VAR"], "TRUE")
-    }
-
     func testApp(configuration: Application.Configuration = .init() , callback: (Application, HTTPClient) throws -> ()) {
         let app = Application(.init(port: Int.random(in: 4000..<9000)))
         defer {
@@ -41,6 +27,20 @@ final class ApplicationTests: XCTestCase {
         var data = [UInt8](repeating: 0, count: size)
         data = data.map { _ in UInt8.random(in: 0...255) }
         return ByteBufferAllocator().buffer(bytes: data)
+    }
+
+    func testEnvironment() {
+        var env = Environment()
+        env["TEST_ENV"] = "testing"
+        XCTAssertEqual(env["TEST_ENV"], "testing")
+        env["TEST_ENV"] = nil
+        XCTAssertEqual(env["TEST_ENV"], nil)
+    }
+
+    func testEnvironmentVariable() {
+        setenv("TEST_VAR", "TRUE", 1)
+        let env = Environment()
+        XCTAssertEqual(env["TEST_VAR"], "TRUE")
     }
 
     func testStartStop() {
@@ -276,5 +276,36 @@ final class ApplicationTests: XCTestCase {
             }
             XCTAssertNoThrow(try future.wait())
         }
+    }
+
+    func testChannelHandlerErrorPropagation() {
+        class CreateErrorHandler: ChannelInboundHandler {
+            typealias InboundIn = HTTPServerRequestPart
+
+            var seen: Bool = false
+            func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+                let part = self.unwrapInboundIn(data)
+
+                if case .body = part {
+                    context.fireErrorCaught(HTTPError(.insufficientStorage))
+                }
+                context.fireChannelRead(data)
+            }
+        }
+        let buffer = self.randomBuffer(size: 120_000)
+        testApp { app, client in
+            app.httpServer.addChildChannelHandler(CreateErrorHandler(), position: .afterHTTP)
+            app.router.put("/accepted") { _ -> HTTPResponseStatus in
+                return .accepted
+            }
+            app.start()
+
+            let response = client.put(url: "http://localhost:\(app.httpServer.configuration.port)/accepted", body: .byteBuffer(buffer))
+                .flatMapThrowing { response in
+                    XCTAssertEqual(response.status, .insufficientStorage)
+                }
+            XCTAssertNoThrow(try response.wait())
+        }
+
     }
 }
