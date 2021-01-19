@@ -37,8 +37,8 @@ public enum RequestBody {
         switch self {
         case .byteBuffer(let buffer):
             precondition(buffer == nil, "Cannot call streamBody on already loaded Body")
-            let streamer = RequestBodyStreamer(eventLoop: eventLoop)
-            stream.feed(.end)
+            let streamer = RequestBodyStreamer(eventLoop: eventLoop, maxSize: 0)
+            streamer.feed(.end)
             return streamer
         case .stream(let streamer):
             return streamer
@@ -61,11 +61,15 @@ public class RequestBodyStreamer {
     var entries: [ByteBuffer]
     let eventLoop: EventLoop
     var nextPromise: EventLoopPromise<Bool>
+    let maxSize: Int
+    var sizeFed: Int
 
-    init(eventLoop: EventLoop) {
+    init(eventLoop: EventLoop, maxSize: Int) {
         self.entries = []
         self.eventLoop = eventLoop
         self.nextPromise = eventLoop.makePromise()
+        self.sizeFed = 0
+        self.maxSize = maxSize
     }
 
     /// Feed a ByteBuffer to the request
@@ -73,8 +77,13 @@ public class RequestBodyStreamer {
     func feed(_ result: FeedInput) {
         switch result {
         case .byteBuffer(let byteBuffer):
-            self.entries.append(byteBuffer)
-            nextPromise.succeed(false)
+            sizeFed += byteBuffer.readableBytes
+            if sizeFed > maxSize {
+                nextPromise.fail(HTTPError(.payloadTooLarge))
+            } else {
+                self.entries.append(byteBuffer)
+                nextPromise.succeed(false)
+            }
         case .error(let error):
             nextPromise.fail(error)
         case .end:

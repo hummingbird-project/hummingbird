@@ -10,8 +10,8 @@ enum ApplicationTestError: Error {
 
 final class ApplicationTests: XCTestCase {
 
-    func testApp(configuration: Application.Configuration = .init() , callback: (Application, HTTPClient) throws -> ()) {
-        let app = Application(.init(port: Int.random(in: 4000..<9000)))
+    func testApp(configuration: Application.Configuration = .init(port: Int.random(in: 4000..<9000)) , callback: (Application, HTTPClient) throws -> ()) {
+        let app = Application(configuration)
         defer {
             app.stop()
             app.wait()
@@ -308,4 +308,22 @@ final class ApplicationTests: XCTestCase {
         }
 
     }
+
+    func testLargeUploadLimit() {
+        testApp(configuration: .init(maxUploadSize: 65536)) { app, client in
+            app.router.post("/upload") { request -> HTTPResponseStatus in
+                return .ok
+            }
+            app.start()
+
+            let buffer = self.randomBuffer(size: 140_000)
+            let request = try! HTTPClient.Request(url: "http://localhost:\(app.httpServer.configuration.port)/upload", method: .POST, headers: [:], body: .byteBuffer(buffer))
+            let response = client.execute(request: request)
+                .flatMapThrowing { response in
+                    XCTAssertEqual(response.status, .payloadTooLarge)
+                }
+            XCTAssertNoThrow(try response.wait())
+        }
+    }
+
 }
