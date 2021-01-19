@@ -4,6 +4,7 @@ import NIO
 public struct FileMiddleware: Middleware {
     let rootFolder: String
     let fileIO: NonBlockingFileIO
+    let chunkSize: Int
 
     public init(_ rootFolder: String = "public", app: Application) {
         var rootFolder = rootFolder
@@ -12,6 +13,7 @@ public struct FileMiddleware: Middleware {
         }
         self.rootFolder = rootFolder
         self.fileIO = .init(threadPool: app.threadPool)
+        self.chunkSize = NonBlockingFileIO.defaultChunkSize
     }
 
     public func apply(to request: Request, next: RequestResponder) -> EventLoopFuture<Response> {
@@ -28,7 +30,7 @@ public struct FileMiddleware: Middleware {
                 return fileIO.openFile(path: path, eventLoop: request.eventLoop).flatMap { handle, region in
                     request.logger.debug("[FileMiddleware] GET", metadata: ["file": .string(path)])
                     let futureResponse: EventLoopFuture<Response>
-                    if region.readableBytes > 32 * 1024 {
+                    if region.readableBytes > self.chunkSize {
                         futureResponse = streamFile(for: request, handle: handle, region: region)
                     } else {
                         futureResponse = loadFile(for: request, handle: handle, region: region)
@@ -63,28 +65,35 @@ public struct FileMiddleware: Middleware {
     }
 
     public func streamFile(for request: Request, handle: NIOFileHandle, region: FileRegion) -> EventLoopFuture<Response> {
-        let fileStreamer = FileStreamer(handle: handle, fileSize: region.readableBytes, fileIO: self.fileIO, allocator: request.allocator)
+        let fileStreamer = FileStreamer(
+            handle: handle,
+            fileSize: region.readableBytes,
+            fileIO: self.fileIO,
+            chunkSize: self.chunkSize,
+            allocator: request.allocator
+        )
         let response = Response(status: .ok, headers: [:], body: .stream(fileStreamer))
         return request.eventLoop.makeSucceededFuture(response)
     }
 
     // class used to stream files
     class FileStreamer: ResponseBodyStreamer {
-        static let chunkSize = 32 * 1024
+        let chunkSize: Int
         var handle: NIOFileHandle
         var bytesLeft: Int
         var fileIO: NonBlockingFileIO
         var allocator: ByteBufferAllocator
 
-        init(handle: NIOFileHandle, fileSize: Int, fileIO: NonBlockingFileIO, allocator: ByteBufferAllocator) {
+        init(handle: NIOFileHandle, fileSize: Int, fileIO: NonBlockingFileIO, chunkSize: Int, allocator: ByteBufferAllocator) {
             self.handle = handle
             self.bytesLeft = fileSize
             self.fileIO = fileIO
+            self.chunkSize = chunkSize
             self.allocator = allocator
         }
 
         func read(on eventLoop: EventLoop) -> EventLoopFuture<ResponseBody.StreamResult> {
-            let bytesToRead = min(Self.chunkSize, self.bytesLeft)
+            let bytesToRead = min(self.chunkSize, self.bytesLeft)
             if bytesToRead > 0 {
                 self.bytesLeft -= bytesToRead
                 return self.fileIO.read(fileHandle: self.handle, byteCount: bytesToRead, allocator: self.allocator, eventLoop: eventLoop)
