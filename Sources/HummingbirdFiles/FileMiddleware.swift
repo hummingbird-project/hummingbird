@@ -1,3 +1,4 @@
+import Foundation
 import Hummingbird
 import NIO
 
@@ -23,11 +24,19 @@ public struct FileMiddleware: Middleware {
                 return request.eventLoop.makeFailedFuture(error)
             }
 
-            let path = rootFolder + request.uri.path
+            guard let path = request.uri.path.removingPercentEncoding else {
+                return request.eventLoop.makeFailedFuture(HTTPError(.badRequest))
+            }
+
+            guard !path.contains("..") else {
+                return request.eventLoop.makeFailedFuture(HTTPError(.badRequest))
+            }
+
+            let fullPath = rootFolder + path
 
             switch request.method {
             case .GET:
-                return fileIO.openFile(path: path, eventLoop: request.eventLoop).flatMap { handle, region in
+                return fileIO.openFile(path: fullPath, eventLoop: request.eventLoop).flatMap { handle, region in
                     request.logger.debug("[FileMiddleware] GET", metadata: ["file": .string(path)])
                     let futureResponse: EventLoopFuture<Response>
                     if region.readableBytes > self.chunkSize {
@@ -40,7 +49,7 @@ public struct FileMiddleware: Middleware {
                     throw error
                 }
             case .HEAD:
-                return fileIO.openFile(path: path, eventLoop: request.eventLoop).flatMap { handle, region in
+                return fileIO.openFile(path: fullPath, eventLoop: request.eventLoop).flatMap { handle, region in
                     request.logger.debug("[FileMiddleware] HEAD", metadata: ["file": .string(path)])
                     let headers: HTTPHeaders = ["content-length": region.readableBytes.description]
                     let response = Response(status: .ok, headers: headers, body: .empty)
