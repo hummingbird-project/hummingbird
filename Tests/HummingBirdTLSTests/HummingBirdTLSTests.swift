@@ -6,7 +6,7 @@ import XCTest
 
 class HummingBirdTLSTests: XCTestCase {
     func testTLS() throws {
-        let app = Application(.init(port: 8000))
+        let app = Application(configuration: .init(address: .hostname(port: 8000)))
         app.router.get("/hello") { request in
             return "hello"
         }
@@ -17,7 +17,7 @@ class HummingBirdTLSTests: XCTestCase {
         let client = try HTTPClient(eventLoopGroupProvider: .shared(app.eventLoopGroup), configuration: .init(tlsConfiguration: self.getClientTLSConfiguration()))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
-        let future = client.get(url: "https://localhost:\(https.configuration.port)/hello")
+        let future = client.get(url: "https://localhost:\(https.configuration.address.port!)/hello")
         XCTAssertNoThrow(try future.wait())
     }
 

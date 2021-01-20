@@ -12,7 +12,7 @@ class HummingBirdJSONTests: XCTestCase {
     struct Error: Swift.Error {}
 
     func testDecode() {
-        let app = Application(.init(port: 8000))
+        let app = Application()
         app.decoder = JSONDecoder()
         app.router.put("/user") { request -> HTTPResponseStatus in
             guard let user = try? request.decode(as: User.self) else { throw HTTPError(.badRequest) }
@@ -28,12 +28,12 @@ class HummingBirdJSONTests: XCTestCase {
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
         let body = #"{"name": "John Smith", "email": "john.smith@email.com", "age": 25}"#
-        let response = client.put(url: "http://localhost:8000/user", body: .string(body), deadline: .now() + .seconds(10))
+        let response = client.put(url: "http://localhost:\(app.configuration.address.port!)/user", body: .string(body), deadline: .now() + .seconds(10))
         XCTAssertNoThrow(try response.wait())
     }
 
     func testEncode() {
-        let app = Application(.init(port: 8000))
+        let app = Application()
         app.encoder = JSONEncoder()
         app.router.get("/user") { request -> User in
             return User(name: "John Smith", email: "john.smith@email.com", age: 25)
@@ -44,7 +44,7 @@ class HummingBirdJSONTests: XCTestCase {
         let client = HTTPClient(eventLoopGroupProvider: .shared(app.eventLoopGroup))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
-        let response = client.get(url: "http://localhost:8000/user").flatMapThrowing { response in
+        let response = client.get(url: "http://localhost:\(app.configuration.address.port!)/user").flatMapThrowing { response in
             guard let body = response.body else { throw HummingBirdJSONTests.Error() }
             let user = try JSONDecoder().decode(User.self, from: body)
             XCTAssertEqual(user.name, "John Smith")

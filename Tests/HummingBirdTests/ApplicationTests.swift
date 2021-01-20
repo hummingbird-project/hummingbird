@@ -10,8 +10,8 @@ enum ApplicationTestError: Error {
 
 final class ApplicationTests: XCTestCase {
 
-    func testApp(configuration: Application.Configuration = .init(port: Int.random(in: 4000..<9000)) , callback: (Application, HTTPClient) throws -> ()) {
-        let app = Application(configuration)
+    func testApp(configuration: Application.Configuration = .init(address: .hostname(port: Int.random(in: 4000..<9000))) , callback: (Application, HTTPClient) throws -> ()) {
+        let app = Application(configuration: configuration)
         defer {
             app.stop()
             app.wait()
@@ -55,7 +55,7 @@ final class ApplicationTests: XCTestCase {
             }
             app.start()
 
-            let request = try! HTTPClient.Request(url: "http://localhost:\(app.httpServer.configuration.port)/hello", method: .GET, headers: [:])
+            let request = try! HTTPClient.Request(url: "http://localhost:\(app.httpServer.configuration.address.port!)/hello", method: .GET, headers: [:])
             let response = client.execute(request: request)
                 .flatMapThrowing { response in
                     guard var body = response.body else { throw ApplicationTestError.noBody }
@@ -74,7 +74,7 @@ final class ApplicationTests: XCTestCase {
             }
             app.start()
 
-            let request = try! HTTPClient.Request(url: "http://localhost:\(app.httpServer.configuration.port)/accepted", method: .GET, headers: [:])
+            let request = try! HTTPClient.Request(url: "http://localhost:\(app.httpServer.configuration.address.port!)/accepted", method: .GET, headers: [:])
             let response = client.execute(request: request)
                 .flatMapThrowing { response in
                     XCTAssertEqual(response.status, .accepted)
@@ -90,7 +90,7 @@ final class ApplicationTests: XCTestCase {
             }
             app.start()
 
-            let request = try! HTTPClient.Request(url: "http://localhost:\(app.httpServer.configuration.port)/hello", method: .GET, headers: [:])
+            let request = try! HTTPClient.Request(url: "http://localhost:\(app.configuration.address.port!)/hello", method: .GET, headers: [:])
             let response = client.execute(request: request)
                 .flatMapThrowing { response in
                     XCTAssertEqual(response.headers["connection"].first, "keep-alive")
@@ -107,7 +107,7 @@ final class ApplicationTests: XCTestCase {
             }
             app.start()
 
-            let request = try! HTTPClient.Request(url: "http://localhost:\(app.httpServer.configuration.port)/hello", method: .POST, headers: [:])
+            let request = try! HTTPClient.Request(url: "http://localhost:\(app.configuration.address.port!)/hello", method: .POST, headers: [:])
             let response = client.execute(request: request)
                 .flatMapThrowing { response in
                     guard var body = response.body else { throw ApplicationTestError.noBody }
@@ -127,7 +127,7 @@ final class ApplicationTests: XCTestCase {
             }
             app.start()
 
-            let request = try! HTTPClient.Request(url: "http://localhost:\(app.httpServer.configuration.port)/query?test=test%20data", method: .GET, headers: [:])
+            let request = try! HTTPClient.Request(url: "http://localhost:\(app.configuration.address.port!)/query?test=test%20data", method: .GET, headers: [:])
             let response = client.execute(request: request)
                 .flatMapThrowing { response in
                     guard var body = response.body else { throw ApplicationTestError.noBody }
@@ -148,7 +148,7 @@ final class ApplicationTests: XCTestCase {
             app.start()
 
             let buffer = self.randomBuffer(size: 140_000)
-            let request = try! HTTPClient.Request(url: "http://localhost:\(app.httpServer.configuration.port)/echo-body", method: .POST, headers: [:], body: .byteBuffer(buffer))
+            let request = try! HTTPClient.Request(url: "http://localhost:\(app.configuration.address.port!)/echo-body", method: .POST, headers: [:], body: .byteBuffer(buffer))
             let response = client.execute(request: request)
                 .flatMapThrowing { response in
                     XCTAssertEqual(response.body, buffer)
@@ -183,7 +183,7 @@ final class ApplicationTests: XCTestCase {
             app.start()
 
             let buffer = self.randomBuffer(size: 140_000)
-            let request = try! HTTPClient.Request(url: "http://localhost:\(app.httpServer.configuration.port)/echo-body-streaming", method: .POST, headers: [:], body: .byteBuffer(buffer))
+            let request = try! HTTPClient.Request(url: "http://localhost:\(app.configuration.address.port!)/echo-body-streaming", method: .POST, headers: [:], body: .byteBuffer(buffer))
             let response = client.execute(request: request)
                 .flatMapThrowing { response in
                     XCTAssertEqual(response.body, buffer)
@@ -209,7 +209,7 @@ final class ApplicationTests: XCTestCase {
             }
             app.start()
 
-            let request = try! HTTPClient.Request(url: "http://localhost:\(app.httpServer.configuration.port)/hello", method: .GET, headers: [:])
+            let request = try! HTTPClient.Request(url: "http://localhost:\(app.configuration.address.port!)/hello", method: .GET, headers: [:])
             let response = client.execute(request: request)
                 .flatMapThrowing { response in
                     XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
@@ -239,13 +239,13 @@ final class ApplicationTests: XCTestCase {
             }
             app.start()
 
-            let request = try! HTTPClient.Request(url: "http://localhost:\(app.httpServer.configuration.port)/group", method: .GET, headers: [:])
+            let request = try! HTTPClient.Request(url: "http://localhost:\(app.configuration.address.port!)/group", method: .GET, headers: [:])
             let response = client.execute(request: request)
                 .flatMapThrowing { response in
                     XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
                 }
             XCTAssertNoThrow(try response.wait())
-            let request2 = try! HTTPClient.Request(url: "http://localhost:\(app.httpServer.configuration.port)/not-group", method: .GET, headers: [:])
+            let request2 = try! HTTPClient.Request(url: "http://localhost:\(app.configuration.address.port!)/not-group", method: .GET, headers: [:])
             let response2 = client.execute(request: request2)
                 .flatMapThrowing { response in
                     XCTAssertEqual(response.headers["middleware"].first, nil)
@@ -262,7 +262,7 @@ final class ApplicationTests: XCTestCase {
             }
             app.start()
 
-            let responseFutures = (1...16).reversed().map { client.get(url: "http://localhost:\(app.httpServer.configuration.port)/wait/\($0 * 100)") }
+            let responseFutures = (1...16).reversed().map { client.get(url: "http://localhost:\(app.configuration.address.port!)/wait/\($0 * 100)") }
             let future = EventLoopFuture.whenAllComplete(responseFutures, on: client.eventLoopGroup.next()).map { results in
                 for i in 0..<16 {
                     let result = results[i]
@@ -300,7 +300,7 @@ final class ApplicationTests: XCTestCase {
             }
             app.start()
 
-            let response = client.put(url: "http://localhost:\(app.httpServer.configuration.port)/accepted", body: .byteBuffer(buffer))
+            let response = client.put(url: "http://localhost:\(app.configuration.address.port!)/accepted", body: .byteBuffer(buffer))
                 .flatMapThrowing { response in
                     XCTAssertEqual(response.status, .insufficientStorage)
                 }
@@ -317,7 +317,7 @@ final class ApplicationTests: XCTestCase {
             app.start()
 
             let buffer = self.randomBuffer(size: 140_000)
-            let request = try! HTTPClient.Request(url: "http://localhost:\(app.httpServer.configuration.port)/upload", method: .POST, headers: [:], body: .byteBuffer(buffer))
+            let request = try! HTTPClient.Request(url: "http://localhost:\(app.configuration.address.port!)/upload", method: .POST, headers: [:], body: .byteBuffer(buffer))
             let response = client.execute(request: request)
                 .flatMapThrowing { response in
                     XCTAssertEqual(response.status, .payloadTooLarge)

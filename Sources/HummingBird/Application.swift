@@ -31,7 +31,7 @@ open class Application {
     var responder: RequestResponder?
 
     /// Initialize new Application
-    public init(_ configuration: Application.Configuration = Application.Configuration()) {
+    public init(configuration: Application.Configuration = Application.Configuration()) {
         self.lifecycle = ServiceLifecycle()
         self.logger = Logger(label: "HummingBird")
         self.middlewares = MiddlewareGroup()

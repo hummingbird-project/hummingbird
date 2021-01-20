@@ -14,21 +14,18 @@ public class HTTPServer: Server {
     }
     
     public struct Configuration {
-        public let port: Int
-        public let host: String
+        public let address: Application.Address
         public let reuseAddress: Bool
         public let tcpNoDelay: Bool
         public let withPipeliningAssistance: Bool
 
         public init(
-            host: String = "127.0.0.1",
-            port: Int = 8080,
+            address: Application.Address = .hostname(),
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = false,
             withPipeliningAssistance: Bool = false
         ) {
-            self.host = host
-            self.port = port
+            self.address = address
             self.reuseAddress = reuseAddress
             self.tcpNoDelay = tcpNoDelay
             self.withPipeliningAssistance = withPipeliningAssistance
@@ -68,7 +65,7 @@ public class HTTPServer: Server {
         let quiesce = ServerQuiescingHelper(group: application.eventLoopGroup)
         self.quiesce = quiesce
         
-        return ServerBootstrap(group: self.eventLoopGroup)
+        let bootstrap = ServerBootstrap(group: self.eventLoopGroup)
             // Specify backlog and enable SO_REUSEADDR for the server itself
             .serverChannelOption(ChannelOptions.backlog, value: 256)
             .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: configuration.reuseAddress ? 1 : 0)
@@ -82,12 +79,25 @@ public class HTTPServer: Server {
             .childChannelOption(ChannelOptions.socketOption(.tcp_nodelay), value: configuration.tcpNoDelay ? 1 : 0)
             .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
             .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
-            .bind(host: self.configuration.host, port: self.configuration.port)
-            .map { _ in
-                application.logger.info("Server started and listening on \(self.configuration.host):\(self.configuration.port)")
-            }
+
+        let bindFuture: EventLoopFuture<Void>
+        switch configuration.address {
+        case .hostname(let host, let port):
+            bindFuture = bootstrap.bind(host: host, port: port)
+                .map { _ in
+                    application.logger.info("Server started and listening on \(host):\(port)")
+                }
+        case .unixDomainSocket(let path):
+            bindFuture = bootstrap.bind(unixDomainSocketPath: path)
+                .map { _ in
+                    application.logger.info("Server started and listening on socket path \(path)")
+                }
+        }
+
+        return bindFuture
             .flatMapErrorThrowing { error in
-                _ = self.stop()
+                quiesce.initiateShutdown(promise: nil)
+                self.quiesce = nil
                 throw error
             }
     }
