@@ -2,7 +2,7 @@
 
 Lightweight server framework based off Swift NIO. Hummingbird is designed to require the minimum number of dependencies. The core library `Hummingbird` requires `swift-backtrace`, `swift-log`, `swift-nio`, `swift-nio-extras`, `swift-service-lifecycle` and `swift-trace` and makes no use of Foundation.
 
-Hummingbird is easy to extended. You can add middleware for processing requests before they reach your handlers and process the responses returned, add additional channel handlers to the server, extend the `Application` and `Request` classes and provide custom encoding/decoding of `Codable` objects. 
+Hummingbird is easy to extended. You can add middleware for processing requests before they reach your handlers and process the responses returned, add additional channel handlers to the server, extend the `Application`, `Request`, `Response` classes and provide custom encoding/decoding of `Codable` objects. 
 
 The Hummingbird repository contains additional libraries to extend the framework to support some commonly required features. These have less limitations on what dependencies they can bring in. They currently include
 
