@@ -24,6 +24,11 @@ extension RouterPaths {
         add(path, method: .POST, closure: closure)
     }
 
+    /// POST path for closure returning type conforming to ResponseFutureEncodable
+    public func delete<R: ResponseGenerator>(_ path: String, closure: @escaping (Request) throws -> R) {
+        add(path, method: .DELETE, closure: closure)
+    }
+
     /// GET path for closure returning type conforming to ResponseFutureEncodable
     public func get<R: ResponseFutureGenerator>(_ path: String, closure: @escaping (Request) -> R) {
         add(path, method: .GET, closure: closure)
@@ -37,5 +42,10 @@ extension RouterPaths {
     /// POST path for closure returning type conforming to ResponseFutureEncodable
     public func post<R: ResponseFutureGenerator>(_ path: String, closure: @escaping (Request) -> R) {
         add(path, method: .POST, closure: closure)
+    }
+
+    /// POST path for closure returning type conforming to ResponseFutureEncodable
+    public func delete<R: ResponseFutureGenerator>(_ path: String, closure: @escaping (Request) -> R) {
+        add(path, method: .DELETE, closure: closure)
     }
 }
