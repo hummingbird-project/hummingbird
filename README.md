@@ -6,7 +6,7 @@ Hummingbird is easy to extended. You can add middleware for processing requests 
 
 The Hummingbird repository contains additional libraries to extend the framework to support some commonly required features. These have less limitations on what dependencies they can bring in. They currently include
 
-- HummingbirdFiles: static file serving
+- HummingbirdFiles: static file serving (uses Foundation)
 - HummingbirdJSON: JSON encoding and decoding (uses Foundation)
 - HummingbirdTLS: TLS support (use NIOSSL)
 
