@@ -1,3 +1,8 @@
+#if os(Linux)
+import Glibc
+#else
+import Darwin.C
+#endif
 import Foundation
 import Hummingbird
 import NIO
@@ -13,6 +18,18 @@ public struct FileMiddleware: Middleware {
         }
         self.rootFolder = rootFolder
         self.fileIO = .init(application: application)
+
+        let workingFolder: String
+        if let cwd = getcwd(nil, Int(PATH_MAX)) {
+            workingFolder = String(cString: cwd)
+            free(cwd)
+        } else {
+            workingFolder = "./"
+        }
+        defer {
+            application.logger.info("FileMiddleware serving from \(workingFolder)")
+        }
+
     }
 
     public func apply(to request: Request, next: RequestResponder) -> EventLoopFuture<Response> {
