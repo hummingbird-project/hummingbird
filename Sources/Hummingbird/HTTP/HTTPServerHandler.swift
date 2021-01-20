@@ -2,8 +2,9 @@ import Logging
 import NIO
 import NIOHTTP1
 
+/// Channel handler for responding to a request and returning a response
 final class HTTPServerHandler: ChannelInboundHandler {
-    typealias InboundIn = HTTPDecodeHandler.Request
+    typealias InboundIn = Request
     typealias OutboundOut = Response
 
     let responder: RequestResponder
@@ -23,32 +24,26 @@ final class HTTPServerHandler: ChannelInboundHandler {
     }
 
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
-        let rawRequest = unwrapInboundIn(data)
-        let request = Request(
-            uri: URI(rawRequest.head.uri),
-            method: rawRequest.head.method,
-            headers: rawRequest.head.headers,
-            body: rawRequest.body,
-            application: self.application,
-            eventLoop: context.eventLoop,
-            allocator: context.channel.allocator
-        )
+        let request = unwrapInboundIn(data)
 
+        // if error caught from previous channel handler then write an error
         if let error = propagatedError {
-            let keepAlive = rawRequest.head.isKeepAlive && self.closeAfterResponseWritten == false
+            let keepAlive = request.isKeepAlive && self.closeAfterResponseWritten == false
             writeError(context: context, error: error, keepAlive: keepAlive)
             self.propagatedError = nil
             return
         }
         self.responsesInProgress += 1
 
+        // respond to request
         self.responder.respond(to: request).whenComplete { result in
-            let keepAlive = rawRequest.head.isKeepAlive && self.closeAfterResponseWritten == false
+            // should we close the channel after responding
+            let keepAlive = request.isKeepAlive && self.closeAfterResponseWritten == false
             switch result {
             case .failure(let error):
                 self.writeError(context: context, error: error, keepAlive: keepAlive)
 
-            case .success(var response):
+            case .success(let response):
                 response.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
                 self.writeResponse(context: context, response: response, keepAlive: keepAlive)
             }

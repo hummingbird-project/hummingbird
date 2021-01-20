@@ -1,5 +1,6 @@
 import NIO
 
+/// Channel handler for decoding HTTP parts into a HTTP request
 final class HTTPDecodeHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPServerRequestPart
     typealias InboundOut = Request
@@ -11,18 +12,12 @@ final class HTTPDecodeHandler: ChannelInboundHandler {
         case error
     }
 
-    struct Request {
-        let head: HTTPRequestHead
-        let body: RequestBody
-        let context: ChannelHandlerContext
-    }
-
     /// handler state
-    var maxUploadSize: Int
+    var application: Application
     var state: State
 
     init(application: Application) {
-        self.maxUploadSize = application.configuration.maxUploadSize
+        self.application = application
         self.state = .idle
     }
 
@@ -34,8 +29,8 @@ final class HTTPDecodeHandler: ChannelInboundHandler {
             self.state = .head(head)
 
         case (.body(let part), .head(let head)):
-            let streamer = RequestBodyStreamer(eventLoop: context.eventLoop, maxSize: maxUploadSize)
-            let request = Request(head: head, body: .stream(streamer), context: context)
+            let streamer = RequestBodyStreamer(eventLoop: context.eventLoop, maxSize: self.application.configuration.maxUploadSize)
+            let request = Request(head: head, body: .stream(streamer), application: self.application, context: context)
             streamer.feed(.byteBuffer(part))
             context.fireChannelRead(self.wrapInboundOut(request))
             self.state = .body(streamer)
@@ -45,7 +40,7 @@ final class HTTPDecodeHandler: ChannelInboundHandler {
             self.state = .body(streamer)
 
         case (.end, .head(let head)):
-            let request = Request(head: head, body: .byteBuffer(nil), context: context)
+            let request = Request(head: head, body: .byteBuffer(nil), application: self.application, context: context)
             context.fireChannelRead(self.wrapInboundOut(request))
             self.state = .idle
 
@@ -83,6 +78,7 @@ final class HTTPDecodeHandler: ChannelInboundHandler {
     }
 }
 
+/// Channel handler for encoding Response into HTTP parts
 final class HTTPEncodeHandler: ChannelOutboundHandler {
     typealias OutboundIn = Response
     typealias OutboundOut = HTTPServerResponsePart

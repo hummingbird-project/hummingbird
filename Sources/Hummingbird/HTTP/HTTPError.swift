@@ -1,14 +1,22 @@
 import NIOHTTP1
 
+/// Default HTTP error. Provides an HTTP status and a message is so desired
 public struct HTTPError: Error {
     public let status: HTTPResponseStatus
     public let message: String?
 
+    /// Initialize HTTPError
+    /// - Parameters:
+    ///   - status: HTTP status
+    ///   - message: Associated message
     public init(_ status: HTTPResponseStatus, message: String? = nil) {
         self.status = status
         self.message = message
     }
 
+    /// Generate response from error
+    /// - Parameter allocator: Byte buffer allocator used to allocate message body
+    /// - Returns: Response
     public func response(allocator: ByteBufferAllocator) -> Response {
         let body: ResponseBody
         var headers: HTTPHeaders = [:]

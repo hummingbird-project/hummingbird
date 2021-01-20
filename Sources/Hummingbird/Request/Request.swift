@@ -22,24 +22,24 @@ public class Request {
     public var allocator: ByteBufferAllocator
     /// Request extensions
     public var extensions: Extensions<Request>
+    /// is keep alive
+    internal var isKeepAlive: Bool
 
     internal init(
-        uri: URI,
-        method: HTTPMethod,
-        headers: HTTPHeaders,
+        head: HTTPRequestHead,
         body: RequestBody,
         application: Application,
-        eventLoop: EventLoop,
-        allocator: ByteBufferAllocator
+        context: ChannelHandlerContext
     ) {
-        self.uri = uri
-        self.method = method
-        self.headers = headers
+        self.uri = .init(head.uri)
+        self.method = head.method
+        self.headers = head.headers
+        self.isKeepAlive = head.isKeepAlive
         self.body = body
         self.logger = Self.loggerWithRequestId(application.logger)
         self.application = application
-        self.eventLoop = eventLoop
-        self.allocator = allocator
+        self.eventLoop = context.eventLoop
+        self.allocator = context.channel.allocator
         self.extensions = Extensions()
     }
 

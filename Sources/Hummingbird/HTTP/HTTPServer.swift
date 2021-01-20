@@ -2,6 +2,7 @@ import NIO
 import NIOExtras
 import NIOHTTP1
 
+/// HTTP server
 public class HTTPServer: Server {
     public let eventLoopGroup: EventLoopGroup
     public let configuration: Configuration

@@ -196,7 +196,6 @@ final class ApplicationTests: XCTestCase {
         struct TestMiddleware: Middleware {
             func apply(to request: Request, next: RequestResponder) -> EventLoopFuture<Response> {
                 return next.respond(to: request).map { response in
-                    var response = response
                     response.headers.replaceOrAdd(name: "middleware", value: "TestMiddleware")
                     return response
                 }
@@ -222,7 +221,6 @@ final class ApplicationTests: XCTestCase {
         struct TestMiddleware: Middleware {
             func apply(to request: Request, next: RequestResponder) -> EventLoopFuture<Response> {
                 return next.respond(to: request).map { response in
-                    var response = response
                     response.headers.replaceOrAdd(name: "middleware", value: "TestMiddleware")
                     return response
                 }
