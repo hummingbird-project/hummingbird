@@ -256,7 +256,7 @@ final class ApplicationTests: XCTestCase {
 
     func testOrdering() {
         testApp { app, client in
-            app.router.get("/wait/{time}") { request -> EventLoopFuture<String> in
+            app.router.get("/wait/:time") { request -> EventLoopFuture<String> in
                 let wait = request.parameters.get("time", as: Int64.self) ?? 0
                 return request.eventLoop.scheduleTask(in: .milliseconds(wait)) {}.futureResult.map { String(wait) }
             }

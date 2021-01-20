@@ -26,8 +26,8 @@ struct Path: ExpressibleByStringLiteral {
     init(_ value: String) {
         let split = value.split(separator: "/", omittingEmptySubsequences: true)
         self.components = split.map { component in
-            if component.first == "{" && component.last == "}" {
-                return .parameter(component.dropFirst().dropLast())
+            if component.first == ":" {
+                return .parameter(component.dropFirst())
             } else if component == "*" {
                 return .wildcard
             } else {
