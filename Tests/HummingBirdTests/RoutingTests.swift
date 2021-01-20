@@ -30,8 +30,8 @@ class HummingBirdRoutingTests: XCTestCase {
 
     func testGetParameters() {
         let trie = PathTrie<String>()
-        trie.addEntry("users/{user}", value: "test1")
-        trie.addEntry("users/{user}/name", value: "john smith")
+        trie.addEntry("users/:user", value: "test1")
+        trie.addEntry("users/:user/name", value: "john smith")
         XCTAssertNil(trie.getValueAndParameters("/user/"))
         XCTAssertEqual(trie.getValueAndParameters("/users/1234")?.parameters.get("user"), "1234")
         XCTAssertEqual(trie.getValueAndParameters("/users/1234/name")?.parameters.get("user"), "1234")
