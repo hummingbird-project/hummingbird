@@ -1,5 +1,5 @@
 import AsyncHTTPClient
-import HummingBird
+import Hummingbird
 import NIOExtras
 import NIOHTTP1
 import XCTest

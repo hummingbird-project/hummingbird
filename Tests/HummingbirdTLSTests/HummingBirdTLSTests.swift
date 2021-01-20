@@ -1,6 +1,6 @@
 import AsyncHTTPClient
-import HummingBird
-import HummingBirdTLS
+import Hummingbird
+import HummingbirdTLS
 import NIOSSL
 import XCTest
 

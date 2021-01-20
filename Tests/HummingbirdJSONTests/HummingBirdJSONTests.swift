@@ -1,6 +1,6 @@
 import AsyncHTTPClient
-import HummingBird
-import HummingBirdJSON
+import Hummingbird
+import HummingbirdJSON
 import XCTest
 
 class HummingBirdJSONTests: XCTestCase {

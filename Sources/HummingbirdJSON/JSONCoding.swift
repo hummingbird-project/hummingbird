@@ -1,6 +1,6 @@
 @_exported import class Foundation.JSONEncoder
 @_exported import class Foundation.JSONDecoder
-import HummingBird
+import Hummingbird
 import NIOFoundationCompat
 
 extension JSONEncoder: ResponseEncoder {

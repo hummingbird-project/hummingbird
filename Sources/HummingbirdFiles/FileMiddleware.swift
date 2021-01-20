@@ -1,4 +1,4 @@
-import HummingBird
+import Hummingbird
 import NIO
 
 public struct FileMiddleware: Middleware {

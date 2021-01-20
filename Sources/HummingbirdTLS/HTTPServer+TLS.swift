@@ -1,4 +1,4 @@
-import HummingBird
+import Hummingbird
 import NIOSSL
 
 extension HTTPServer {

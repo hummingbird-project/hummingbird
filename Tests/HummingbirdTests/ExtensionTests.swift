@@ -1,4 +1,4 @@
-@testable import HummingBird
+@testable import Hummingbird
 import XCTest
 
 extension Application {
