@@ -1,14 +1,14 @@
 import NIO
 import NIOHTTP1
 
-public protocol RouterPaths {
+public protocol RouterMethods {
     /// Add path for closure returning type conforming to ResponseFutureEncodable
     func add<R: ResponseGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (Request) throws -> R)
     /// Add path for closure returning type conforming to ResponseFutureEncodable
     func add<R: ResponseFutureGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (Request) -> R)
 }
 
-extension RouterPaths {
+extension RouterMethods {
     /// GET path for closure returning type conforming to ResponseFutureEncodable
     public func get<R: ResponseGenerator>(_ path: String, closure: @escaping (Request) throws -> R) {
         add(path, method: .GET, closure: closure)
@@ -24,7 +24,7 @@ extension RouterPaths {
         add(path, method: .POST, closure: closure)
     }
 
-    /// POST path for closure returning type conforming to ResponseFutureEncodable
+    /// DELETE path for closure returning type conforming to ResponseFutureEncodable
     public func delete<R: ResponseGenerator>(_ path: String, closure: @escaping (Request) throws -> R) {
         add(path, method: .DELETE, closure: closure)
     }
@@ -39,7 +39,7 @@ extension RouterPaths {
         add(path, method: .PUT, closure: closure)
     }
 
-    /// POST path for closure returning type conforming to ResponseFutureEncodable
+    /// DELETE path for closure returning type conforming to ResponseFutureEncodable
     public func post<R: ResponseFutureGenerator>(_ path: String, closure: @escaping (Request) -> R) {
         add(path, method: .POST, closure: closure)
     }

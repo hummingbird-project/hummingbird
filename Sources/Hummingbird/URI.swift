@@ -1,5 +1,6 @@
 import CURLParser
 
+/// Swift interface to CURLParser
 public struct URI: CustomStringConvertible, ExpressibleByStringLiteral {
     public struct Scheme: RawRepresentable, Equatable {
         private enum _Scheme: Substring {

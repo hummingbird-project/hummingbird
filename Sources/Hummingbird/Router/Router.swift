@@ -4,7 +4,7 @@ import NIOHTTP1
 /// Directs Requests to RequestResponders based on the request uri.
 /// Conforms to RequestResponder so need to provide its own implementation of
 /// `func apply(to request: Request) -> EventLoopFuture<Response>`
-public protocol Router: RouterPaths, RequestResponder {
+public protocol Router: RouterMethods, RequestResponder {
     /// Add router entry
     func add(_ path: String, method: HTTPMethod, responder: RequestResponder)
 }

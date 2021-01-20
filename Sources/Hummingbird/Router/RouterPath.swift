@@ -1,5 +1,5 @@
-
-struct Path: ExpressibleByStringLiteral {
+/// Split router path into components
+struct RouterPath: ExpressibleByStringLiteral {
     
     enum Element: Equatable {
         case path(Substring)
@@ -42,12 +42,12 @@ struct Path: ExpressibleByStringLiteral {
     
 }
 
-extension Path: Collection {
+extension RouterPath: Collection {
     func index(after i: Int) -> Int {
         return components.index(after: i)
     }
     
-    subscript(_ index: Int) -> Path.Element {
+    subscript(_ index: Int) -> RouterPath.Element {
         return components[index]
     }
 

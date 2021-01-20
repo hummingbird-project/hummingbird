@@ -3,7 +3,7 @@ import XCTest
 
 class HummingBirdRoutingTests: XCTestCase {
     func testPathComponentsTrie() {
-        let trie = PathTrie<String>()
+        let trie = RouterPathTrie<String>()
         trie.addEntry("/usr/local/bin", value: "test1")
         trie.addEntry("/usr/bin", value: "test2")
         trie.addEntry("/Users/*/bin", value: "test3")
@@ -15,21 +15,21 @@ class HummingBirdRoutingTests: XCTestCase {
     }
     
     func testRootNode() {
-        let trie = PathTrie<String>()
+        let trie = RouterPathTrie<String>()
         trie.addEntry("", value: "test1")
         XCTAssertEqual(trie.getValueAndParameters("/")?.value, "test1")
         XCTAssertEqual(trie.getValueAndParameters("")?.value, "test1")
     }
     
     func testWildcard() {
-        let trie = PathTrie<String>()
+        let trie = RouterPathTrie<String>()
         trie.addEntry("users/*", value: "test1")
         XCTAssertEqual(trie.getValueAndParameters("/users/adam")?.value, "test1")
         XCTAssertNil(trie.getValueAndParameters("/users/adam/1")?.value)
     }
 
     func testGetParameters() {
-        let trie = PathTrie<String>()
+        let trie = RouterPathTrie<String>()
         trie.addEntry("users/:user", value: "test1")
         trie.addEntry("users/:user/name", value: "john smith")
         XCTAssertNil(trie.getValueAndParameters("/user/"))

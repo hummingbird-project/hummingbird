@@ -1,17 +1,25 @@
-
+/// Route requests to handlers based on request URI. Uses a Trie to select handler
 public struct TrieRouter: Router {
-    var trie: PathTrie<RequestResponder>
+    var trie: RouterPathTrie<RequestResponder>
     
     public init() {
-        self.trie = PathTrie()
+        self.trie = RouterPathTrie()
     }
-    
+
+    /// Add route to router
+    /// - Parameters:
+    ///   - path: URI path
+    ///   - method: http method
+    ///   - responder: handler to call
     public func add(_ path: String, method: HTTPMethod, responder: RequestResponder) {
         // add method at beginning of Path to differentiate between methods
         let path = "\(method.rawValue)/\(path)"
         trie.addEntry(.init(path), value: responder)
     }
-    
+
+    /// Respond to request by calling correct handler
+    /// - Parameter request: HTTP request
+    /// - Returns: EventLoopFuture that will be fulfilled with the Response
     public func respond(to request: Request) -> EventLoopFuture<Response> {
         let path = "\(request.method.rawValue)/\(request.uri.path)"
         guard let result = trie.getValueAndParameters(path) else {
@@ -24,14 +32,15 @@ public struct TrieRouter: Router {
     }
 }
 
-struct PathTrie<Value> {
+/// URI Path Trie
+struct RouterPathTrie<Value> {
     var root: Node
 
     init() {
         root = Node(key: .null, output: nil)
     }
     
-    func addEntry(_ entry: Path, value: Value) {
+    func addEntry(_ entry: RouterPath, value: Value) {
         var node = root
         for key in entry {
             node = node.addChild(key: key, output: nil)
@@ -58,19 +67,20 @@ struct PathTrie<Value> {
         }
         return nil
     }
-    
+
+    /// Trie Node. Each node represents one component of a URI path
     class Node {
-        let key: Path.Element
+        let key: RouterPath.Element
         var children: [Node]
         var value: Value?
         
-        init(key: Path.Element, output: Value?) {
+        init(key: RouterPath.Element, output: Value?) {
             self.key = key
             self.value = output
             self.children = []
         }
         
-        func addChild(key: Path.Element, output: Value?) -> Node {
+        func addChild(key: RouterPath.Element, output: Value?) -> Node {
             if let child = getChild(key) {
                 return child
             }
@@ -79,7 +89,7 @@ struct PathTrie<Value> {
             return node
         }
         
-        func getChild(_ key: Path.Element) -> Node? {
+        func getChild(_ key: RouterPath.Element) -> Node? {
             return children.first { $0.key == key }
         }
         

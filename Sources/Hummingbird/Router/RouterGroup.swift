@@ -1,7 +1,8 @@
 import NIO
 import NIOHTTP1
 
-public struct RouterGroup: RouterPaths {
+/// Apply additional middleware to a group of routes
+public struct RouterGroup: RouterMethods {
     let router: Router
     let middlewares: MiddlewareGroup
 
