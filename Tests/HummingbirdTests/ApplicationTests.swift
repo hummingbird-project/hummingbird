@@ -55,7 +55,7 @@ final class ApplicationTests: XCTestCase {
             }
             app.start()
 
-            let request = try! HTTPClient.Request(url: "http://localhost:\(app.httpServer.configuration.address.port!)/hello", method: .GET, headers: [:])
+            let request = try! HTTPClient.Request(url: "http://localhost:\(app.server.configuration.address.port!)/hello", method: .GET, headers: [:])
             let response = client.execute(request: request)
                 .flatMapThrowing { response in
                     guard var body = response.body else { throw ApplicationTestError.noBody }
@@ -74,7 +74,7 @@ final class ApplicationTests: XCTestCase {
             }
             app.start()
 
-            let request = try! HTTPClient.Request(url: "http://localhost:\(app.httpServer.configuration.address.port!)/accepted", method: .GET, headers: [:])
+            let request = try! HTTPClient.Request(url: "http://localhost:\(app.server.configuration.address.port!)/accepted", method: .GET, headers: [:])
             let response = client.execute(request: request)
                 .flatMapThrowing { response in
                     XCTAssertEqual(response.status, .accepted)
@@ -294,7 +294,7 @@ final class ApplicationTests: XCTestCase {
         }
         let buffer = self.randomBuffer(size: 120_000)
         testApp { app, client in
-            app.httpServer.addChildChannelHandler(CreateErrorHandler(), position: .afterHTTP)
+            app.server.addChildChannelHandler(CreateErrorHandler(), position: .afterHTTP)
             app.router.put("/accepted") { _ -> HTTPResponseStatus in
                 return .accepted
             }

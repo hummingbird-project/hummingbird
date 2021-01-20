@@ -10,7 +10,7 @@ class HummingBirdTLSTests: XCTestCase {
         app.router.get("/hello") { request in
             return "hello"
         }
-        let https = try app.httpServer.addTLS(tlsConfiguration: self.getServerTLSConfiguration())
+        let https = try app.server.addTLS(tlsConfiguration: self.getServerTLSConfiguration())
         app.start()
         defer { app.stop(); app.wait() }
 

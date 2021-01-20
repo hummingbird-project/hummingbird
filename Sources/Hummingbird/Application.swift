@@ -16,7 +16,7 @@ open class Application {
     /// routes requests to requestResponders based on URI
     public var router: Router
     /// http server
-    public var httpServer: HTTPServer
+    public var server: HTTPServer
     /// Configuration
     public var configuration: Configuration
     /// Application extensions
@@ -45,7 +45,7 @@ open class Application {
         self.threadPool = NIOThreadPool(numberOfThreads: 2)
         self.threadPool.start()
 
-        self.httpServer = HTTPServer(group: self.eventLoopGroup, configuration: self.configuration.httpServer)
+        self.server = HTTPServer(group: self.eventLoopGroup, configuration: self.configuration.httpServer)
 
         self.lifecycle.register(
             label: "Application",
@@ -56,9 +56,9 @@ open class Application {
         self.lifecycle.register(
             label: "HTTP Server",
             start: .eventLoopFuture {
-                return self.httpServer.start(application: self)
+                return self.server.start(application: self)
             },
-            shutdown: .eventLoopFuture(self.httpServer.stop)
+            shutdown: .eventLoopFuture(self.server.stop)
         )
     }
 
