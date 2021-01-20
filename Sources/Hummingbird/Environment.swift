@@ -33,9 +33,16 @@ public struct Environment: Decodable, ExpressibleByDictionaryLiteral {
         self.values = try container.decode([String: String].self)
     }
 
-    public subscript(_ name: String) -> String? {
-        get { return self.values[name.lowercased()] }
-        set { self.values[name.lowercased()] = newValue }
+    public func get(_ s: String) -> String? {
+        return values[s]
+    }
+
+    public func get<T: LosslessStringConvertible>(_ s: String, as: T.Type) -> T? {
+        return values[s].map { T(String($0)) } ?? nil
+    }
+
+    public mutating func set(_ s: String, value: String) {
+        values[s] = value
     }
 
     /// Get environment variables
