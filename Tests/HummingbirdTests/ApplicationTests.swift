@@ -31,16 +31,16 @@ final class ApplicationTests: XCTestCase {
 
     func testEnvironment() {
         var env = Environment()
-        env["TEST_ENV"] = "testing"
-        XCTAssertEqual(env["TEST_ENV"], "testing")
-        env["TEST_ENV"] = nil
-        XCTAssertEqual(env["TEST_ENV"], nil)
+        env.set("TEST_ENV", value: "testing")
+        XCTAssertEqual(env.get("TEST_ENV"), "testing")
+        env.set("TEST_ENV", value: nil)
+        XCTAssertEqual(env.get("TEST_ENV"), nil)
     }
 
     func testEnvironmentVariable() {
         setenv("TEST_VAR", "TRUE", 1)
         let env = Environment()
-        XCTAssertEqual(env["TEST_VAR"], "TRUE")
+        XCTAssertEqual(env.get("TEST_VAR"), "TRUE")
     }
 
     func testStartStop() {

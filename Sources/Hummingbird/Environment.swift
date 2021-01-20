@@ -34,15 +34,15 @@ public struct Environment: Decodable, ExpressibleByDictionaryLiteral {
     }
 
     public func get(_ s: String) -> String? {
-        return values[s]
+        return values[s.lowercased()]
     }
 
     public func get<T: LosslessStringConvertible>(_ s: String, as: T.Type) -> T? {
-        return values[s].map { T(String($0)) } ?? nil
+        return values[s.lowercased()].map { T(String($0)) } ?? nil
     }
 
-    public mutating func set(_ s: String, value: String) {
-        values[s] = value
+    public mutating func set(_ s: String, value: String?) {
+        values[s.lowercased()] = value
     }
 
     /// Get environment variables
