@@ -4,8 +4,8 @@ import NIOHTTP1
 
 /// Channel handler for responding to a request and returning a response
 final class HTTPServerHandler: ChannelInboundHandler {
-    typealias InboundIn = Request
-    typealias OutboundOut = Response
+    typealias InboundIn = HTTPDecodeHandler.Request
+    typealias OutboundOut = HTTPEncodeHandler.Response
 
     let responder: RequestResponder
     let application: Application
@@ -24,8 +24,13 @@ final class HTTPServerHandler: ChannelInboundHandler {
     }
 
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
-        let request = unwrapInboundIn(data)
-
+        let rawRequest = unwrapInboundIn(data)
+        let request = Request(
+            head: rawRequest.head,
+            body: rawRequest.body,
+            application: application,
+            context: context
+        )
         // if error caught from previous channel handler then write an error
         if let error = propagatedError {
             let keepAlive = request.isKeepAlive && self.closeAfterResponseWritten == false
@@ -51,6 +56,8 @@ final class HTTPServerHandler: ChannelInboundHandler {
     }
 
     func writeResponse(context: ChannelHandlerContext, response: Response, keepAlive: Bool) {
+        let responseHead = HTTPResponseHead(version: .init(major: 1, minor: 1), status: response.status, headers: response.headers)
+        let response = HTTPEncodeHandler.Response(head: responseHead, body: response.body)
         context.write(self.wrapOutboundOut(response)).whenComplete { _ in
             if keepAlive == false {
                 context.close(promise: nil)

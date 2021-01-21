@@ -1,4 +1,5 @@
 import NIO
+import NIOHTTP1
 
 /// Channel handler for decoding HTTP parts into a HTTP request
 final class HTTPDecodeHandler: ChannelInboundHandler {
@@ -10,6 +11,11 @@ final class HTTPDecodeHandler: ChannelInboundHandler {
         case head(HTTPRequestHead)
         case body(RequestBodyStreamer)
         case error
+    }
+
+    struct Request {
+        let head: HTTPRequestHead
+        let body: RequestBody
     }
 
     /// handler state
@@ -30,7 +36,7 @@ final class HTTPDecodeHandler: ChannelInboundHandler {
 
         case (.body(let part), .head(let head)):
             let streamer = RequestBodyStreamer(eventLoop: context.eventLoop, maxSize: self.application.configuration.maxUploadSize)
-            let request = Request(head: head, body: .stream(streamer), application: self.application, context: context)
+            let request = Request(head: head, body: .stream(streamer))
             streamer.feed(.byteBuffer(part))
             context.fireChannelRead(self.wrapInboundOut(request))
             self.state = .body(streamer)
@@ -40,7 +46,7 @@ final class HTTPDecodeHandler: ChannelInboundHandler {
             self.state = .body(streamer)
 
         case (.end, .head(let head)):
-            let request = Request(head: head, body: .byteBuffer(nil), application: self.application, context: context)
+            let request = Request(head: head, body: .byteBuffer(nil))
             context.fireChannelRead(self.wrapInboundOut(request))
             self.state = .idle
 
@@ -83,15 +89,19 @@ final class HTTPEncodeHandler: ChannelOutboundHandler {
     typealias OutboundIn = Response
     typealias OutboundOut = HTTPServerResponsePart
 
+    struct Response {
+        let head: HTTPResponseHead
+        let body: ResponseBody
+    }
+
     func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
         let response = self.unwrapOutboundIn(data)
 
         // add content-length header
-        var headers = response.headers
+        var head = response.head
         if case .byteBuffer(let buffer) = response.body {
-            headers.replaceOrAdd(name: "content-length", value: buffer.readableBytes.description)
+            head.headers.replaceOrAdd(name: "content-length", value: buffer.readableBytes.description)
         }
-        let head = HTTPResponseHead(version: .init(major: 1, minor: 1), status: response.status, headers: headers)
         context.write(self.wrapOutboundOut(.head(head)), promise: nil)
         switch response.body {
         case .byteBuffer(let buffer):
