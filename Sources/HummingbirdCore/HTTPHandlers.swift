@@ -9,6 +9,11 @@ public struct HTTPRequest {
 public struct HTTPResponse {
     public var head: HTTPResponseHead
     public var body: ResponseBody
+
+    public init(head: HTTPResponseHead, body: ResponseBody) {
+        self.head = head
+        self.body = body
+    }
 }
 
 /// Channel handler for decoding HTTP parts into a HTTP request

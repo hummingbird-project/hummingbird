@@ -15,14 +15,14 @@ public class HTTPServer {
     }
     
     public struct Configuration {
-        public let address: Application.Address
+        public let address: BindAddress
         public let reuseAddress: Bool
         public let tcpNoDelay: Bool
         public let withPipeliningAssistance: Bool
         public let maxUploadSize: Int
 
         public init(
-            address: Application.Address = .hostname(),
+            address: BindAddress = .hostname(),
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = false,
             withPipeliningAssistance: Bool = false,
@@ -122,15 +122,4 @@ public class HTTPServer {
     }
 
     private var _additionalChildHandlers: [(handler: () -> ChannelHandler, position: ChannelPosition)]
-}
-
-extension ChannelPipeline.Position: Equatable {
-    public static func == (lhs: ChannelPipeline.Position, rhs: ChannelPipeline.Position) -> Bool {
-        switch (lhs, rhs) {
-        case (.first, .first), (.last, .last):
-            return true
-        default:
-            return false
-        }
-    }
 }

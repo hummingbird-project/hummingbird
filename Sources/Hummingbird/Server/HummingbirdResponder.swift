@@ -1,3 +1,4 @@
+import HummingbirdCore
 import Logging
 import NIO
 import NIOHTTP1

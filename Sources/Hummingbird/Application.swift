@@ -1,3 +1,4 @@
+import HummingbirdCore
 import Lifecycle
 import LifecycleNIOCompat
 import Logging

@@ -1,3 +1,4 @@
+import NIO
 import NIOHTTP1
 
 /// Default HTTP error. Provides an HTTP status and a message is so desired
