@@ -1,4 +1,4 @@
-
+/// parameter map, extracted from Request URI
 public struct Parameters {
     var parameters: [Substring: Substring]
     
