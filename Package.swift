@@ -24,6 +24,7 @@ let package = Package(
         .target(name: "HummingbirdCore", dependencies: [
             .product(name: "Logging", package: "swift-log"),
             .product(name: "NIO", package: "swift-nio"),
+            .product(name: "NIOExtras", package: "swift-nio-extras"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
         ]),
         .target(name: "Hummingbird", dependencies: [
@@ -33,7 +34,6 @@ let package = Package(
             .product(name: "LifecycleNIOCompat", package: "swift-service-lifecycle"),
             .product(name: "Logging", package: "swift-log"),
             .product(name: "NIO", package: "swift-nio"),
-            .product(name: "NIOExtras", package: "swift-nio-extras"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
         ]),
         .target(name: "HummingbirdFiles", dependencies: [
@@ -52,6 +52,10 @@ let package = Package(
         // test targets
         .testTarget(name: "HummingbirdTests", dependencies: [
             .byName(name: "Hummingbird"),
+            .product(name: "AsyncHTTPClient", package: "async-http-client"),
+        ]),
+        .testTarget(name: "HummingbirdCoreTests", dependencies: [
+            .byName(name: "HummingbirdCore"),
             .product(name: "AsyncHTTPClient", package: "async-http-client"),
         ]),
         .testTarget(name: "HummingbirdJSONTests", dependencies: [
