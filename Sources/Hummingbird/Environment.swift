@@ -5,7 +5,7 @@ import Darwin.C
 #endif
 
 /// Environment variables
-public struct Environment: Decodable, ExpressibleByDictionaryLiteral {
+public struct HBEnvironment: Decodable, ExpressibleByDictionaryLiteral {
     /// initialize from environment variables
     public init() {
         self.values = Self.getEnvironment()

@@ -7,11 +7,11 @@ import Foundation
 import Hummingbird
 import NIO
 
-public struct FileMiddleware: Middleware {
+public struct HBFileMiddleware: HBMiddleware {
     let rootFolder: String
-    let fileIO: FileIO
+    let fileIO: HBFileIO
 
-    public init(_ rootFolder: String = "public", application: Application) {
+    public init(_ rootFolder: String = "public", application: HBApplication) {
         var rootFolder = rootFolder
         if rootFolder.last == "/" {
             rootFolder = String(rootFolder.dropLast())
@@ -32,19 +32,19 @@ public struct FileMiddleware: Middleware {
 
     }
 
-    public func apply(to request: Request, next: RequestResponder) -> EventLoopFuture<Response> {
+    public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
         // if next responder returns a 404 then check if file exists
         return next.respond(to: request).flatMapError { error in
-            guard let httpError = error as? HTTPError, httpError.status == .notFound else {
+            guard let httpError = error as? HBHTTPError, httpError.status == .notFound else {
                 return request.eventLoop.makeFailedFuture(error)
             }
 
             guard let path = request.uri.path.removingPercentEncoding else {
-                return request.eventLoop.makeFailedFuture(HTTPError(.badRequest))
+                return request.eventLoop.makeFailedFuture(HBHTTPError(.badRequest))
             }
 
             guard !path.contains("..") else {
-                return request.eventLoop.makeFailedFuture(HTTPError(.badRequest))
+                return request.eventLoop.makeFailedFuture(HBHTTPError(.badRequest))
             }
 
             let fullPath = rootFolder + path

@@ -2,9 +2,9 @@ import NIO
 import NIOConcurrencyHelpers
 
 /// Request Body. Either a ByteBuffer or a streaming of ByteBuffer
-public enum RequestBody {
+public enum HBRequestBody {
     case byteBuffer(ByteBuffer?)
-    case stream(RequestBodyStreamer)
+    case stream(HBRequestBodyStreamer)
 
     public var buffer: ByteBuffer? {
         switch self {
@@ -15,7 +15,7 @@ public enum RequestBody {
         }
     }
 
-    public var stream: RequestBodyStreamer {
+    public var stream: HBRequestBodyStreamer {
         switch self {
         case .stream(let streamer):
             return streamer
@@ -33,11 +33,11 @@ public enum RequestBody {
         }
     }
 
-    public func streamBody(on eventLoop: EventLoop) -> RequestBodyStreamer {
+    public func streamBody(on eventLoop: EventLoop) -> HBRequestBodyStreamer {
         switch self {
         case .byteBuffer(let buffer):
             precondition(buffer == nil, "Cannot call streamBody on already loaded Body")
-            let streamer = RequestBodyStreamer(eventLoop: eventLoop, maxSize: 0)
+            let streamer = HBRequestBodyStreamer(eventLoop: eventLoop, maxSize: 0)
             streamer.feed(.end)
             return streamer
         case .stream(let streamer):
@@ -47,7 +47,7 @@ public enum RequestBody {
 }
 
 /// Request body streamer. HTTPInHandler feeds this with ByteBuffers while the Router consumes them
-public class RequestBodyStreamer {
+public class HBRequestBodyStreamer {
     public enum FeedInput {
         case byteBuffer(ByteBuffer)
         case error(Error)
@@ -79,7 +79,7 @@ public class RequestBodyStreamer {
         case .byteBuffer(let byteBuffer):
             sizeFed += byteBuffer.readableBytes
             if sizeFed > maxSize {
-                nextPromise.fail(HTTPError(.payloadTooLarge))
+                nextPromise.fail(HBHTTPError(.payloadTooLarge))
             } else {
                 self.entries.append(byteBuffer)
                 nextPromise.succeed(false)

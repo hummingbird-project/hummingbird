@@ -4,7 +4,7 @@ import HummingbirdJSON
 import XCTest
 
 class HummingBirdJSONTests: XCTestCase {
-    struct User: ResponseCodable {
+    struct User: HBResponseCodable {
         let name: String
         let email: String
         let age: Int
@@ -12,10 +12,10 @@ class HummingBirdJSONTests: XCTestCase {
     struct Error: Swift.Error {}
 
     func testDecode() {
-        let app = Application()
+        let app = HBApplication()
         app.decoder = JSONDecoder()
         app.router.put("/user") { request -> HTTPResponseStatus in
-            guard let user = try? request.decode(as: User.self) else { throw HTTPError(.badRequest) }
+            guard let user = try? request.decode(as: User.self) else { throw HBHTTPError(.badRequest) }
             XCTAssertEqual(user.name, "John Smith")
             XCTAssertEqual(user.email, "john.smith@email.com")
             XCTAssertEqual(user.age, 25)
@@ -33,7 +33,7 @@ class HummingBirdJSONTests: XCTestCase {
     }
 
     func testEncode() {
-        let app = Application()
+        let app = HBApplication()
         app.encoder = JSONEncoder()
         app.router.get("/user") { request -> User in
             return User(name: "John Smith", email: "john.smith@email.com", age: 25)

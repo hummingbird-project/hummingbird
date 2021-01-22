@@ -1,5 +1,5 @@
 /// Address to bind to
-public enum BindAddress {
+public enum HBBindAddress {
     case hostname(_ host: String = "127.0.0.1", port: Int = 8080)
     case unixDomainSocket(path: String)
 

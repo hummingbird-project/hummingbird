@@ -2,15 +2,15 @@ import NIO
 
 /// Applied to request before it is dealt with by the router. Middleware passes the processed request onto the next responder
 /// by calling `next.apply(to: request)`. If you want to shortcut the request you can return a response immediately
-public protocol Middleware {
-    func apply(to request: Request, next: RequestResponder) -> EventLoopFuture<Response>
+public protocol HBMiddleware {
+    func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse>
 }
 
-struct MiddlewareResponder: RequestResponder {
-    let middleware: Middleware
-    let next: RequestResponder
+struct MiddlewareResponder: HBResponder {
+    let middleware: HBMiddleware
+    let next: HBResponder
 
-    func respond(to request: Request) -> EventLoopFuture<Response> {
+    func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
         return self.middleware.apply(to: request, next: self.next)
     }
 }

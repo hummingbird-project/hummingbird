@@ -3,23 +3,23 @@ import NIO
 import NIOHTTP1
 
 /// Apply additional middleware to a group of routes
-public struct RouterGroup: RouterMethods {
-    let router: Router
-    let middlewares: MiddlewareGroup
+public struct HBRouterGroup: HBRouterMethods {
+    let router: HBRouter
+    let middlewares: HBMiddlewareGroup
 
-    init(router: Router) {
+    init(router: HBRouter) {
         self.router = router
         self.middlewares = .init()
     }
 
     /// Add middleware to RouterGroup
-    public func add(middleware: Middleware) -> RouterGroup {
+    public func add(middleware: HBMiddleware) -> HBRouterGroup {
         self.middlewares.add(middleware)
         return self
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    public func add<R: ResponseGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (Request) throws -> R) {
+    public func add<R: HBResponseGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (HBRequest) throws -> R) {
         let responder = CallbackResponder { request in
             request.body.consumeBody(on: request.eventLoop).flatMapThrowing { buffer in
                 request.body = .byteBuffer(buffer)
@@ -30,7 +30,7 @@ public struct RouterGroup: RouterMethods {
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    public func add<R: ResponseFutureGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (Request) -> R) {
+    public func add<R: HBResponseFutureGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (HBRequest) -> R) {
         let responder = CallbackResponder { request in
             request.body.consumeBody(on: request.eventLoop).flatMap { buffer in
                 request.body = .byteBuffer(buffer)
@@ -41,7 +41,7 @@ public struct RouterGroup: RouterMethods {
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    public func addStreamingRoute<R: ResponseFutureGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (Request) -> R) {
+    public func addStreamingRoute<R: HBResponseFutureGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (HBRequest) -> R) {
         let responder = CallbackResponder { request in
             let streamer = request.body.streamBody(on: request.eventLoop)
             request.body = .stream(streamer)

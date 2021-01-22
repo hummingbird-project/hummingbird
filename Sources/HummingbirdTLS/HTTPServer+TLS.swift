@@ -1,8 +1,8 @@
 import HummingbirdCore
 import NIOSSL
 
-extension HTTPServer {
-    @discardableResult public func addTLS(tlsConfiguration: TLSConfiguration) throws -> HTTPServer {
+extension HBHTTPServer {
+    @discardableResult public func addTLS(tlsConfiguration: TLSConfiguration) throws -> HBHTTPServer {
         var tlsConfiguration = tlsConfiguration
         tlsConfiguration.applicationProtocols.append("http/1.1")
         let sslContext = try NIOSSLContext(configuration: tlsConfiguration)

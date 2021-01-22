@@ -1,8 +1,8 @@
 import HummingbirdCore
 
 /// Route requests to handlers based on request URI. Uses a Trie to select handler
-public struct TrieRouter: Router {
-    var trie: RouterPathTrie<RequestResponder>
+struct TrieRouter: HBRouter {
+    var trie: RouterPathTrie<HBResponder>
     
     public init() {
         self.trie = RouterPathTrie()
@@ -13,7 +13,7 @@ public struct TrieRouter: Router {
     ///   - path: URI path
     ///   - method: http method
     ///   - responder: handler to call
-    public func add(_ path: String, method: HTTPMethod, responder: RequestResponder) {
+    public func add(_ path: String, method: HTTPMethod, responder: HBResponder) {
         // add method at beginning of Path to differentiate between methods
         let path = "\(method.rawValue)/\(path)"
         trie.addEntry(.init(path), value: responder)
@@ -22,10 +22,10 @@ public struct TrieRouter: Router {
     /// Respond to request by calling correct handler
     /// - Parameter request: HTTP request
     /// - Returns: EventLoopFuture that will be fulfilled with the Response
-    public func respond(to request: Request) -> EventLoopFuture<Response> {
+    public func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
         let path = "\(request.method.rawValue)/\(request.uri.path)"
         guard let result = trie.getValueAndParameters(path) else {
-            return request.eventLoop.makeFailedFuture(HTTPError(.notFound))
+            return request.eventLoop.makeFailedFuture(HBHTTPError(.notFound))
         }
         if result.parameters.count > 0 {
             request.parameters = result.parameters
@@ -50,9 +50,9 @@ struct RouterPathTrie<Value> {
         node.value = value
     }
     
-    func getValueAndParameters(_ path: String) -> (value: Value, parameters: Parameters)? {
+    func getValueAndParameters(_ path: String) -> (value: Value, parameters: HBParameters)? {
         let pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
-        var parameters = Parameters()
+        var parameters = HBParameters()
         var node = root
         for component in pathComponents {
             if let childNode = node.getChild(component) {

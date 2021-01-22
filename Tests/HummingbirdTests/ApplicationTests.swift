@@ -10,8 +10,8 @@ enum ApplicationTestError: Error {
 
 final class ApplicationTests: XCTestCase {
 
-    func testApp(configuration: Application.Configuration = .init(address: .hostname(port: Int.random(in: 4000..<9000))) , callback: (Application, HTTPClient) throws -> ()) {
-        let app = Application(configuration: configuration)
+    func testApp(configuration: HBApplication.Configuration = .init(address: .hostname(port: Int.random(in: 4000..<9000))) , callback: (HBApplication, HTTPClient) throws -> ()) {
+        let app = HBApplication(configuration: configuration)
         defer {
             app.stop()
             app.wait()
@@ -30,7 +30,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testEnvironment() {
-        var env = Environment()
+        var env = HBEnvironment()
         env.set("TEST_ENV", value: "testing")
         XCTAssertEqual(env.get("TEST_ENV"), "testing")
         env.set("TEST_ENV", value: nil)
@@ -39,7 +39,7 @@ final class ApplicationTests: XCTestCase {
 
     func testEnvironmentVariable() {
         setenv("TEST_VAR", "TRUE", 1)
-        let env = Environment()
+        let env = HBEnvironment()
         XCTAssertEqual(env.get("TEST_VAR"), "TRUE")
     }
 
@@ -141,8 +141,8 @@ final class ApplicationTests: XCTestCase {
 
     func testResponseBody() {
         testApp { app, client in
-            app.router.post("/echo-body") { request -> Response in
-                let body: ResponseBody = request.body.buffer.map { .byteBuffer($0) } ?? .empty
+            app.router.post("/echo-body") { request -> HBResponse in
+                let body: HBResponseBody = request.body.buffer.map { .byteBuffer($0) } ?? .empty
                 return .init(status: .ok, headers: [:], body: body)
             }
             app.start()
@@ -160,8 +160,8 @@ final class ApplicationTests: XCTestCase {
     func testResponseBodyStreaming() {
         testApp { app, client in
             // stream request into response
-            app.router.addStreamingRoute("/echo-body-streaming", method: .POST) { request -> EventLoopFuture<Response> in
-                let body: ResponseBody = .streamCallback { eventLoop in
+            app.router.addStreamingRoute("/echo-body-streaming", method: .POST) { request -> EventLoopFuture<HBResponse> in
+                let body: HBResponseBody = .streamCallback { eventLoop in
                     return request.body.stream.consume(on: request.eventLoop).map { output in
                         switch output {
                         case .byteBuffers(let buffers):
@@ -193,8 +193,8 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testMiddleware() {
-        struct TestMiddleware: Middleware {
-            func apply(to request: Request, next: RequestResponder) -> EventLoopFuture<Response> {
+        struct TestMiddleware: HBMiddleware {
+            func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
                 return next.respond(to: request).map { response in
                     response.headers.replaceOrAdd(name: "middleware", value: "TestMiddleware")
                     return response
@@ -218,8 +218,8 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testGroupMiddleware() {
-        struct TestMiddleware: Middleware {
-            func apply(to request: Request, next: RequestResponder) -> EventLoopFuture<Response> {
+        struct TestMiddleware: HBMiddleware {
+            func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
                 return next.respond(to: request).map { response in
                     response.headers.replaceOrAdd(name: "middleware", value: "TestMiddleware")
                     return response
@@ -285,7 +285,7 @@ final class ApplicationTests: XCTestCase {
                 let part = self.unwrapInboundIn(data)
 
                 if case .body = part {
-                    context.fireErrorCaught(HTTPError(.insufficientStorage))
+                    context.fireErrorCaught(HBHTTPError(.insufficientStorage))
                 }
                 context.fireChannelRead(data)
             }

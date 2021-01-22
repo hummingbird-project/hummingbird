@@ -2,7 +2,7 @@ import Hummingbird
 import XCTest
 
 class URITests: XCTestCase {
-    func testURI<T: Equatable>(_ uri: URI, _ component: KeyPath<URI, T>, _ value: T) {
+    func testURI<T: Equatable>(_ uri: HBURL, _ component: KeyPath<HBURL, T>, _ value: T) {
         XCTAssertEqual(uri[keyPath: component], value)
     }
 

@@ -1,30 +1,30 @@
 import NIO
 import NIOHTTP1
 
-public struct HTTPRequest {
+public struct HBHTTPRequest {
     public var head: HTTPRequestHead
-    public var body: RequestBody
+    public var body: HBRequestBody
 }
 
-public struct HTTPResponse {
+public struct HBHTTPResponse {
     public var head: HTTPResponseHead
-    public var body: ResponseBody
+    public var body: HBResponseBody
 
-    public init(head: HTTPResponseHead, body: ResponseBody) {
+    public init(head: HTTPResponseHead, body: HBResponseBody) {
         self.head = head
         self.body = body
     }
 }
 
 /// Channel handler for decoding HTTP parts into a HTTP request
-final class HTTPDecodeHandler: ChannelInboundHandler {
+final class HBHTTPDecodeHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPServerRequestPart
-    typealias InboundOut = HTTPRequest
+    typealias InboundOut = HBHTTPRequest
 
     enum State {
         case idle
         case head(HTTPRequestHead)
-        case body(RequestBodyStreamer)
+        case body(HBRequestBodyStreamer)
         case error
     }
 
@@ -45,8 +45,8 @@ final class HTTPDecodeHandler: ChannelInboundHandler {
             self.state = .head(head)
 
         case (.body(let part), .head(let head)):
-            let streamer = RequestBodyStreamer(eventLoop: context.eventLoop, maxSize: self.maxUploadSize)
-            let request = HTTPRequest(head: head, body: .stream(streamer))
+            let streamer = HBRequestBodyStreamer(eventLoop: context.eventLoop, maxSize: self.maxUploadSize)
+            let request = HBHTTPRequest(head: head, body: .stream(streamer))
             streamer.feed(.byteBuffer(part))
             context.fireChannelRead(self.wrapInboundOut(request))
             self.state = .body(streamer)
@@ -56,7 +56,7 @@ final class HTTPDecodeHandler: ChannelInboundHandler {
             self.state = .body(streamer)
 
         case (.end, .head(let head)):
-            let request = HTTPRequest(head: head, body: .byteBuffer(nil))
+            let request = HBHTTPRequest(head: head, body: .byteBuffer(nil))
             context.fireChannelRead(self.wrapInboundOut(request))
             self.state = .idle
 
@@ -95,8 +95,8 @@ final class HTTPDecodeHandler: ChannelInboundHandler {
 }
 
 /// Channel handler for encoding Response into HTTP parts
-final class HTTPEncodeHandler: ChannelOutboundHandler {
-    typealias OutboundIn = HTTPResponse
+final class HBHTTPEncodeHandler: ChannelOutboundHandler {
+    typealias OutboundIn = HBHTTPResponse
     typealias OutboundOut = HTTPServerResponsePart
 
     func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {

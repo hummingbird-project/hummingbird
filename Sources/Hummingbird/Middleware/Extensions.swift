@@ -13,7 +13,7 @@
 ///     }
 /// }
 /// ```
-public struct Extensions<ParentObject> {
+public struct HBExtensions<ParentObject> {
     struct Item {
         let value: Any
         let shutdown: ((Any) -> ())?

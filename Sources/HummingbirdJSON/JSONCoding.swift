@@ -3,12 +3,12 @@
 import Hummingbird
 import NIOFoundationCompat
 
-extension JSONEncoder: ResponseEncoder {
-    public func encode<T: Encodable>(_ value: T, from request: Request) throws -> Response {
+extension JSONEncoder: HBResponseEncoder {
+    public func encode<T: Encodable>(_ value: T, from request: HBRequest) throws -> HBResponse {
         var buffer = request.allocator.buffer(capacity: 0)
         let data = try self.encode(value)
         buffer.writeBytes(data)
-        return Response(
+        return HBResponse(
             status: .ok,
             headers: ["content-type": "application/json; charset=utf-8"],
             body: .byteBuffer(buffer)
@@ -16,11 +16,11 @@ extension JSONEncoder: ResponseEncoder {
     }
 }
 
-extension JSONDecoder: RequestDecoder {
-    public func decode<T: Decodable>(_ type: T.Type, from request: Request) throws -> T {
+extension JSONDecoder: HBRequestDecoder {
+    public func decode<T: Decodable>(_ type: T.Type, from request: HBRequest) throws -> T {
         guard var buffer = request.body.buffer,
               let data = buffer.readData(length: buffer.readableBytes) else {
-            throw HTTPError(.badRequest)
+            throw HBHTTPError(.badRequest)
         }
         return try self.decode(T.self, from: data)
     }
