@@ -2,6 +2,7 @@ import Logging
 import NIO
 import NIOHTTP1
 
+/// Protocol for objects generating a `HBHTTPResponse` from a `HBHTTPRequest`
 public protocol HBHTTPResponder {
     func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse>
     var logger: Logger? { get }
