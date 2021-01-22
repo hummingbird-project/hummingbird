@@ -32,8 +32,8 @@ final class HBHTTPDecodeHandler: ChannelInboundHandler {
     var maxUploadSize: Int
     var state: State
 
-    init(maxUploadSize: Int) {
-        self.maxUploadSize = maxUploadSize
+    init(configuration: HBHTTPServer.Configuration) {
+        self.maxUploadSize = configuration.maxUploadSize
         self.state = .idle
     }
 

@@ -58,7 +58,7 @@ public class HBHTTPServer {
                 ).flatMap {
                     let childHandlers: [ChannelHandler] = self.additionalChildHandlers(at: .afterHTTP) + [
                         HBHTTPEncodeHandler(),
-                        HBHTTPDecodeHandler(maxUploadSize: self.configuration.maxUploadSize),
+                        HBHTTPDecodeHandler(configuration: self.configuration),
                         HBHTTPServerHandler(responder: responder),
                     ]
                     return channel.pipeline.addHandlers(childHandlers)
