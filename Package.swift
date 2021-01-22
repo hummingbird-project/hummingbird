@@ -7,6 +7,7 @@ let package = Package(
     name: "hummingbird",
     products: [
         .library(name: "Hummingbird", targets: ["Hummingbird"]),
+        .library(name: "HummingbirdCore", targets: ["HummingbirdCore"]),
         .library(name: "HummingbirdFiles", targets: ["HummingbirdFiles"]),
         .library(name: "HummingbirdJSON", targets: ["HummingbirdJSON"]),
         .library(name: "HummingbirdTLS", targets: ["HummingbirdTLS"]),
