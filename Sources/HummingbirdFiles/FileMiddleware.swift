@@ -7,7 +7,7 @@ import Foundation
 import Hummingbird
 import NIO
 
-public struct HBFileMiddleware: Middleware {
+public struct HBFileMiddleware: HBMiddleware {
     let rootFolder: String
     let fileIO: HBFileIO
 
@@ -32,7 +32,7 @@ public struct HBFileMiddleware: Middleware {
 
     }
 
-    public func apply(to request: HBRequest, next: RequestResponder) -> EventLoopFuture<Response> {
+    public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
         // if next responder returns a 404 then check if file exists
         return next.respond(to: request).flatMapError { error in
             guard let httpError = error as? HBHTTPError, httpError.status == .notFound else {
