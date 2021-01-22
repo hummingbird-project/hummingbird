@@ -1,21 +1,26 @@
 import NIO
 import NIOHTTP1
 
+public struct HTTPRequest {
+    public var head: HTTPRequestHead
+    public var body: RequestBody
+}
+
+public struct HTTPResponse {
+    public var head: HTTPResponseHead
+    public var body: ResponseBody
+}
+
 /// Channel handler for decoding HTTP parts into a HTTP request
 final class HTTPDecodeHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPServerRequestPart
-    typealias InboundOut = Request
+    typealias InboundOut = HTTPRequest
 
     enum State {
         case idle
         case head(HTTPRequestHead)
         case body(RequestBodyStreamer)
         case error
-    }
-
-    struct Request {
-        let head: HTTPRequestHead
-        let body: RequestBody
     }
 
     /// handler state
@@ -36,7 +41,7 @@ final class HTTPDecodeHandler: ChannelInboundHandler {
 
         case (.body(let part), .head(let head)):
             let streamer = RequestBodyStreamer(eventLoop: context.eventLoop, maxSize: self.maxUploadSize)
-            let request = Request(head: head, body: .stream(streamer))
+            let request = HTTPRequest(head: head, body: .stream(streamer))
             streamer.feed(.byteBuffer(part))
             context.fireChannelRead(self.wrapInboundOut(request))
             self.state = .body(streamer)
@@ -46,7 +51,7 @@ final class HTTPDecodeHandler: ChannelInboundHandler {
             self.state = .body(streamer)
 
         case (.end, .head(let head)):
-            let request = Request(head: head, body: .byteBuffer(nil))
+            let request = HTTPRequest(head: head, body: .byteBuffer(nil))
             context.fireChannelRead(self.wrapInboundOut(request))
             self.state = .idle
 
@@ -86,13 +91,8 @@ final class HTTPDecodeHandler: ChannelInboundHandler {
 
 /// Channel handler for encoding Response into HTTP parts
 final class HTTPEncodeHandler: ChannelOutboundHandler {
-    typealias OutboundIn = Response
+    typealias OutboundIn = HTTPResponse
     typealias OutboundOut = HTTPServerResponsePart
-
-    struct Response {
-        let head: HTTPResponseHead
-        let body: ResponseBody
-    }
 
     func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
         let response = self.unwrapOutboundIn(data)

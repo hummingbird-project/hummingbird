@@ -49,7 +49,7 @@ public class HTTPServer {
         return self
     }
 
-    public func start(application: Application) -> EventLoopFuture<Void> {
+    public func start(responder: HTTPResponder) -> EventLoopFuture<Void> {
         func childChannelInitializer(channel: Channel) -> EventLoopFuture<Void> {
             return channel.pipeline.addHandlers(self.additionalChildHandlers(at: .beforeHTTP)).flatMap {
                 return channel.pipeline.configureHTTPServerPipeline(
@@ -59,7 +59,7 @@ public class HTTPServer {
                     let childHandlers: [ChannelHandler] = self.additionalChildHandlers(at: .afterHTTP) + [
                         HTTPEncodeHandler(),
                         HTTPDecodeHandler(maxUploadSize: self.configuration.maxUploadSize),
-                        HTTPServerHandler(application: application),
+                        HTTPServerHandler(responder: responder),
                     ]
                     return channel.pipeline.addHandlers(childHandlers)
                 }
@@ -89,12 +89,12 @@ public class HTTPServer {
         case .hostname(let host, let port):
             bindFuture = bootstrap.bind(host: host, port: port)
                 .map { _ in
-                    application.logger.info("Server started and listening on \(host):\(port)")
+                    responder.logger?.info("Server started and listening on \(host):\(port)")
                 }
         case .unixDomainSocket(let path):
             bindFuture = bootstrap.bind(unixDomainSocketPath: path)
                 .map { _ in
-                    application.logger.info("Server started and listening on socket path \(path)")
+                    responder.logger?.info("Server started and listening on socket path \(path)")
                 }
         }
 

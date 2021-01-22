@@ -17,7 +17,7 @@ public struct HTTPError: Error {
     /// Generate response from error
     /// - Parameter allocator: Byte buffer allocator used to allocate message body
     /// - Returns: Response
-    public func response(allocator: ByteBufferAllocator) -> Response {
+    public func response(allocator: ByteBufferAllocator) -> HTTPResponse {
         let body: ResponseBody
         var headers: HTTPHeaders = [:]
 
@@ -29,6 +29,7 @@ public struct HTTPError: Error {
         } else {
             body = .empty
         }
-        return Response(status: self.status, headers: headers, body: body)
+        let responseHead = HTTPResponseHead(version: .init(major: 1, minor: 1), status: self.status, headers: headers)
+        return .init(head: responseHead, body: body)
     }
 }

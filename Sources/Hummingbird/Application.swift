@@ -56,7 +56,7 @@ open class Application {
         self.lifecycle.register(
             label: "HTTP Server",
             start: .eventLoopFuture {
-                return self.server.start(application: self)
+                return self.server.start(responder: HummingbirdResponder(application: self))
             },
             shutdown: .eventLoopFuture(self.server.stop)
         )
