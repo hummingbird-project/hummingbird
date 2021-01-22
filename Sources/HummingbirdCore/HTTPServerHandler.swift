@@ -2,23 +2,23 @@ import Logging
 import NIO
 import NIOHTTP1
 
-public protocol HTTPResponder {
-    func respond(to request: HTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HTTPResponse>
+public protocol HBHTTPResponder {
+    func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse>
     var logger: Logger? { get }
 }
 
 /// Channel handler for responding to a request and returning a response
-final class HTTPServerHandler: ChannelInboundHandler {
-    typealias InboundIn = HTTPRequest
-    typealias OutboundOut = HTTPResponse
+final class HBHTTPServerHandler: ChannelInboundHandler {
+    typealias InboundIn = HBHTTPRequest
+    typealias OutboundOut = HBHTTPResponse
 
-    let responder: HTTPResponder
+    let responder: HBHTTPResponder
     
     var responsesInProgress: Int
     var closeAfterResponseWritten: Bool
     var propagatedError: Error?
 
-    init(responder: HTTPResponder) {
+    init(responder: HBHTTPResponder) {
         self.responder = responder
         self.responsesInProgress = 0
         self.closeAfterResponseWritten = false
@@ -51,7 +51,7 @@ final class HTTPServerHandler: ChannelInboundHandler {
         }
     }
 
-    func writeResponse(context: ChannelHandlerContext, response: HTTPResponse, keepAlive: Bool) {
+    func writeResponse(context: ChannelHandlerContext, response: HBHTTPResponse, keepAlive: Bool) {
         context.write(self.wrapOutboundOut(response)).whenComplete { _ in
             if keepAlive == false {
                 context.close(promise: nil)
@@ -62,12 +62,12 @@ final class HTTPServerHandler: ChannelInboundHandler {
     }
 
     func writeError(context: ChannelHandlerContext, error: Error, keepAlive: Bool) {
-        var response: HTTPResponse
+        var response: HBHTTPResponse
         switch error {
-        case let httpError as HTTPError:
+        case let httpError as HBHTTPError:
             response = httpError.response(allocator: context.channel.allocator)
         default:
-            response = HTTPResponse(
+            response = HBHTTPResponse(
                 head: .init(version: .init(major: 1, minor: 1), status: .internalServerError),
                 body: .empty
             )

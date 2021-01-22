@@ -3,7 +3,7 @@ import NIOExtras
 import NIOHTTP1
 
 /// HTTP server
-public class HTTPServer {
+public class HBHTTPServer {
     public let eventLoopGroup: EventLoopGroup
     public let configuration: Configuration
 
@@ -15,14 +15,14 @@ public class HTTPServer {
     }
     
     public struct Configuration {
-        public let address: BindAddress
+        public let address: HBBindAddress
         public let reuseAddress: Bool
         public let tcpNoDelay: Bool
         public let withPipeliningAssistance: Bool
         public let maxUploadSize: Int
 
         public init(
-            address: BindAddress = .hostname(),
+            address: HBBindAddress = .hostname(),
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = false,
             withPipeliningAssistance: Bool = false,
@@ -49,7 +49,7 @@ public class HTTPServer {
         return self
     }
 
-    public func start(responder: HTTPResponder) -> EventLoopFuture<Void> {
+    public func start(responder: HBHTTPResponder) -> EventLoopFuture<Void> {
         func childChannelInitializer(channel: Channel) -> EventLoopFuture<Void> {
             return channel.pipeline.addHandlers(self.additionalChildHandlers(at: .beforeHTTP)).flatMap {
                 return channel.pipeline.configureHTTPServerPipeline(
@@ -57,9 +57,9 @@ public class HTTPServer {
                     withErrorHandling: true
                 ).flatMap {
                     let childHandlers: [ChannelHandler] = self.additionalChildHandlers(at: .afterHTTP) + [
-                        HTTPEncodeHandler(),
-                        HTTPDecodeHandler(maxUploadSize: self.configuration.maxUploadSize),
-                        HTTPServerHandler(responder: responder),
+                        HBHTTPEncodeHandler(),
+                        HBHTTPDecodeHandler(maxUploadSize: self.configuration.maxUploadSize),
+                        HBHTTPServerHandler(responder: responder),
                     ]
                     return channel.pipeline.addHandlers(childHandlers)
                 }

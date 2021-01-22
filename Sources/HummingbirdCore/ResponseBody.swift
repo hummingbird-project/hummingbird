@@ -1,15 +1,15 @@
 import NIO
 
 /// Response body
-public enum ResponseBody {
+public enum HBResponseBody {
     /// ByteBuffer
     case byteBuffer(ByteBuffer)
     /// Streamer object supplying byte buffers
-    case stream(ResponseBodyStreamer)
+    case stream(HBResponseBodyStreamer)
     /// Empty body
     case empty
 
-    public static func streamCallback(_ closure: @escaping (EventLoop) -> EventLoopFuture<ResponseBody.StreamResult>) -> Self {
+    public static func streamCallback(_ closure: @escaping (EventLoop) -> EventLoopFuture<HBResponseBody.StreamResult>) -> Self {
         .stream(ResponseBodyStreamerCallback(closure: closure))
     }
 
@@ -21,11 +21,11 @@ public enum ResponseBody {
 }
 
 /// Object supplying bytebuffers for a response body
-public protocol ResponseBodyStreamer {
-    func read(on eventLoop: EventLoop) -> EventLoopFuture<ResponseBody.StreamResult>
+public protocol HBResponseBodyStreamer {
+    func read(on eventLoop: EventLoop) -> EventLoopFuture<HBResponseBody.StreamResult>
 }
 
-extension ResponseBodyStreamer {
+extension HBResponseBodyStreamer {
     /// Call closure for every ByteBuffer streamed
     /// - Returns: When everything has been streamed
     func write(on eventLoop: EventLoop, _ writeCallback: @escaping (ByteBuffer) -> Void) -> EventLoopFuture<Void> {
@@ -48,9 +48,9 @@ extension ResponseBodyStreamer {
     }
 }
 
-struct ResponseBodyStreamerCallback: ResponseBodyStreamer {
-    let closure: (EventLoop) -> EventLoopFuture<ResponseBody.StreamResult>
-    func read(on eventLoop: EventLoop) -> EventLoopFuture<ResponseBody.StreamResult> {
+struct ResponseBodyStreamerCallback: HBResponseBodyStreamer {
+    let closure: (EventLoop) -> EventLoopFuture<HBResponseBody.StreamResult>
+    func read(on eventLoop: EventLoop) -> EventLoopFuture<HBResponseBody.StreamResult> {
         return self.closure(eventLoop)
     }
 }
