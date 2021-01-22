@@ -8,11 +8,11 @@ import NIOSSL
 import XCTest
 
 class HummingBirdTLSTests: XCTestCase {
-    struct HelloResponder: HTTPResponder {
-        func respond(to request: HTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HTTPResponse> {
+    struct HelloResponder: HBHTTPResponder {
+        func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
             let responseHead = HTTPResponseHead(version: .init(major: 1, minor: 1), status: .ok)
             let responseBody = context.channel.allocator.buffer(string: "Hello")
-            let response = HTTPResponse(head: responseHead, body: .byteBuffer(responseBody))
+            let response = HBHTTPResponse(head: responseHead, body: .byteBuffer(responseBody))
             return context.eventLoop.makeSucceededFuture(response)
         }
         
@@ -22,7 +22,7 @@ class HummingBirdTLSTests: XCTestCase {
     func testConnect() throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
-        let server = HTTPServer(group: eventLoopGroup, configuration: .init(address: .hostname(port: 8000)))
+        let server = HBHTTPServer(group: eventLoopGroup, configuration: .init(address: .hostname(port: 8000)))
         try server.addTLS(tlsConfiguration: self.getServerTLSConfiguration())
         try server.start(responder: HelloResponder()).wait()
         defer { XCTAssertNoThrow(try server.stop().wait()) }
