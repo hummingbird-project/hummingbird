@@ -4,30 +4,30 @@ import NIO
 import NIOConcurrencyHelpers
 import NIOHTTP1
 
-public class Request {
+public class HBRequest {
     /// URI path
-    public var uri: URI
+    public var uri: HBURL
     /// Request HTTP method
     public var method: HTTPMethod
     /// Request HTTP headers
     public var headers: HTTPHeaders
     /// Body of HTTP request
-    public var body: RequestBody
+    public var body: HBRequestBody
     /// Logger to use
     public var logger: Logger
     /// reference to application
-    public var application: Application
+    public var application: HBApplication
     /// EventLoop request is running on
     public var eventLoop: EventLoop
     /// ByteBuffer allocator used by request
     public var allocator: ByteBufferAllocator
     /// Request extensions
-    public var extensions: Extensions<Request>
+    public var extensions: HBExtensions<HBRequest>
 
     internal init(
         head: HTTPRequestHead,
-        body: RequestBody,
-        application: Application,
+        body: HBRequestBody,
+        application: HBApplication,
         context: ChannelHandlerContext
     ) {
         self.uri = .init(head.uri)
@@ -38,14 +38,14 @@ public class Request {
         self.application = application
         self.eventLoop = context.eventLoop
         self.allocator = context.channel.allocator
-        self.extensions = Extensions()
+        self.extensions = HBExtensions()
     }
 
     public func decode<Type: Codable>(as type: Type.Type) throws -> Type {
         return try self.application.decoder.decode(type, from: self)
     }
 
-    public var parameters: Parameters {
+    public var parameters: HBParameters {
         get { extensions.get(\.parameters) }
         set { extensions.set(\.parameters, value: newValue) }
     }

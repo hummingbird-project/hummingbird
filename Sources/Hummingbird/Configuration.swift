@@ -1,10 +1,10 @@
 import HummingbirdCore
 
-extension Application {
+extension HBApplication {
     /// Application configuration
     public struct Configuration {
         /// bind address
-        public let address: BindAddress
+        public let address: HBBindAddress
         /// Allows socket to be bound to an address that is already in use.
         public let reuseAddress: Bool
         /// Disables the Nagle algorithm for send coalescing.
@@ -16,7 +16,7 @@ extension Application {
         public let maxUploadSize: Int
 
         public init(
-            address: BindAddress = .hostname(),
+            address: HBBindAddress = .hostname(),
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = false,
             enableHttpPipelining: Bool = false,
@@ -29,7 +29,7 @@ extension Application {
             self.maxUploadSize = maxUploadSize
         }
 
-        var httpServer: HTTPServer.Configuration {
+        var httpServer: HBHTTPServer.Configuration {
             return .init(
                 address: self.address,
                 reuseAddress: self.reuseAddress,

@@ -5,7 +5,7 @@ import Logging
 import NIO
 
 /// Application class.
-open class Application {
+open class HBApplication {
     /// server lifecycle, controls initialization and shutdown of application
     public let lifecycle: ServiceLifecycle
     /// event loop group used by application
@@ -13,40 +13,40 @@ open class Application {
     /// thread pool used by application
     public let threadPool: NIOThreadPool
     /// middleware applied to requests
-    public let middlewares: MiddlewareGroup
+    public let middlewares: HBMiddlewareGroup
     /// routes requests to requestResponders based on URI
-    public var router: Router
+    public var router: HBRouter
     /// http server
-    public var server: HTTPServer
+    public var server: HBHTTPServer
     /// Configuration
     public var configuration: Configuration
     /// Application extensions
-    public var extensions: Extensions<Application>
+    public var extensions: HBExtensions<HBApplication>
     /// Logger
     public var logger: Logger
     /// Encoder used by router
-    public var encoder: ResponseEncoder
+    public var encoder: HBResponseEncoder
     /// decoder used by router
-    public var decoder: RequestDecoder
+    public var decoder: HBRequestDecoder
 
-    var responder: RequestResponder?
+    var responder: HBResponder?
 
     /// Initialize new Application
-    public init(configuration: Application.Configuration = Application.Configuration()) {
+    public init(configuration: HBApplication.Configuration = HBApplication.Configuration()) {
         self.lifecycle = ServiceLifecycle()
         self.logger = Logger(label: "HummingBird")
-        self.middlewares = MiddlewareGroup()
+        self.middlewares = HBMiddlewareGroup()
         self.router = TrieRouter()
         self.configuration = configuration
-        self.extensions = Extensions()
-        self.encoder = NullEncoder()
-        self.decoder = NullDecoder()
+        self.extensions = HBExtensions()
+        self.encoder = HBNullEncoder()
+        self.decoder = HBNullDecoder()
 
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         self.threadPool = NIOThreadPool(numberOfThreads: 2)
         self.threadPool.start()
 
-        self.server = HTTPServer(group: self.eventLoopGroup, configuration: self.configuration.httpServer)
+        self.server = HBHTTPServer(group: self.eventLoopGroup, configuration: self.configuration.httpServer)
 
         self.lifecycle.register(
             label: "Application",
@@ -85,7 +85,7 @@ open class Application {
     }
 
     /// Construct the RequestResponder from the middleware group and router
-    func constructResponder() -> RequestResponder {
+    func constructResponder() -> HBResponder {
         return self.middlewares.constructResponder(finalResponder: self.router)
     }
 

@@ -1,7 +1,7 @@
 @testable import Hummingbird
 import XCTest
 
-extension Application {
+extension HBApplication {
     class ActiveTest {
         var active: Bool
         init() {
@@ -26,14 +26,14 @@ extension Application {
 
 class ExtensionTests: XCTestCase {
     func testExtension() {
-        let app = Application()
+        let app = HBApplication()
         app.ext = 56
         XCTAssertEqual(app.ext, 56)
     }
 
     func testExtensionShutdown() throws {
-        let app = Application()
-        let test = Application.ActiveTest()
+        let app = HBApplication()
+        let test = HBApplication.ActiveTest()
         app.shutdownTest = test
         try app.shutdownApplication()
         XCTAssertEqual(test.active, false)

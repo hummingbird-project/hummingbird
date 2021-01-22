@@ -1,5 +1,5 @@
 /// parameter map, extracted from Request URI
-public struct Parameters {
+public struct HBParameters {
     var parameters: [Substring: Substring]
     
     init() {

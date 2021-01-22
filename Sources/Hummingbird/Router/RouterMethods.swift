@@ -1,51 +1,51 @@
 import NIO
 import NIOHTTP1
 
-public protocol RouterMethods {
+public protocol HBRouterMethods {
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    func add<R: ResponseGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (Request) throws -> R)
+    func add<R: HBResponseGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (HBRequest) throws -> R)
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    func add<R: ResponseFutureGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (Request) -> R)
+    func add<R: HBResponseFutureGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (HBRequest) -> R)
 }
 
-extension RouterMethods {
+extension HBRouterMethods {
     /// GET path for closure returning type conforming to ResponseFutureEncodable
-    public func get<R: ResponseGenerator>(_ path: String, closure: @escaping (Request) throws -> R) {
+    public func get<R: HBResponseGenerator>(_ path: String, closure: @escaping (HBRequest) throws -> R) {
         add(path, method: .GET, closure: closure)
     }
 
     /// PUT path for closure returning type conforming to ResponseFutureEncodable
-    public func put<R: ResponseGenerator>(_ path: String, closure: @escaping (Request) throws -> R) {
+    public func put<R: HBResponseGenerator>(_ path: String, closure: @escaping (HBRequest) throws -> R) {
         add(path, method: .PUT, closure: closure)
     }
 
     /// POST path for closure returning type conforming to ResponseFutureEncodable
-    public func post<R: ResponseGenerator>(_ path: String, closure: @escaping (Request) throws -> R) {
+    public func post<R: HBResponseGenerator>(_ path: String, closure: @escaping (HBRequest) throws -> R) {
         add(path, method: .POST, closure: closure)
     }
 
     /// DELETE path for closure returning type conforming to ResponseFutureEncodable
-    public func delete<R: ResponseGenerator>(_ path: String, closure: @escaping (Request) throws -> R) {
+    public func delete<R: HBResponseGenerator>(_ path: String, closure: @escaping (HBRequest) throws -> R) {
         add(path, method: .DELETE, closure: closure)
     }
 
     /// GET path for closure returning type conforming to ResponseFutureEncodable
-    public func get<R: ResponseFutureGenerator>(_ path: String, closure: @escaping (Request) -> R) {
+    public func get<R: HBResponseFutureGenerator>(_ path: String, closure: @escaping (HBRequest) -> R) {
         add(path, method: .GET, closure: closure)
     }
 
     /// PUT path for closure returning type conforming to ResponseFutureEncodable
-    public func put<R: ResponseFutureGenerator>(_ path: String, closure: @escaping (Request) -> R) {
+    public func put<R: HBResponseFutureGenerator>(_ path: String, closure: @escaping (HBRequest) -> R) {
         add(path, method: .PUT, closure: closure)
     }
 
     /// DELETE path for closure returning type conforming to ResponseFutureEncodable
-    public func post<R: ResponseFutureGenerator>(_ path: String, closure: @escaping (Request) -> R) {
+    public func post<R: HBResponseFutureGenerator>(_ path: String, closure: @escaping (HBRequest) -> R) {
         add(path, method: .POST, closure: closure)
     }
 
     /// POST path for closure returning type conforming to ResponseFutureEncodable
-    public func delete<R: ResponseFutureGenerator>(_ path: String, closure: @escaping (Request) -> R) {
+    public func delete<R: HBResponseFutureGenerator>(_ path: String, closure: @escaping (HBRequest) -> R) {
         add(path, method: .DELETE, closure: closure)
     }
 }
