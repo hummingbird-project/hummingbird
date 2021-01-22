@@ -19,11 +19,11 @@ final class HTTPDecodeHandler: ChannelInboundHandler {
     }
 
     /// handler state
-    var application: Application
+    var maxUploadSize: Int
     var state: State
 
-    init(application: Application) {
-        self.application = application
+    init(maxUploadSize: Int) {
+        self.maxUploadSize = maxUploadSize
         self.state = .idle
     }
 
@@ -35,7 +35,7 @@ final class HTTPDecodeHandler: ChannelInboundHandler {
             self.state = .head(head)
 
         case (.body(let part), .head(let head)):
-            let streamer = RequestBodyStreamer(eventLoop: context.eventLoop, maxSize: self.application.configuration.maxUploadSize)
+            let streamer = RequestBodyStreamer(eventLoop: context.eventLoop, maxSize: self.maxUploadSize)
             let request = Request(head: head, body: .stream(streamer))
             streamer.feed(.byteBuffer(part))
             context.fireChannelRead(self.wrapInboundOut(request))

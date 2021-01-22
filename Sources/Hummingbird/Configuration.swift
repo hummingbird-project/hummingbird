@@ -57,7 +57,8 @@ extension Application {
                 address: self.address,
                 reuseAddress: self.reuseAddress,
                 tcpNoDelay: self.tcpNoDelay,
-                withPipeliningAssistance: self.enableHttpPipelining
+                withPipeliningAssistance: self.enableHttpPipelining,
+                maxUploadSize: self.maxUploadSize
             )
         }
     }

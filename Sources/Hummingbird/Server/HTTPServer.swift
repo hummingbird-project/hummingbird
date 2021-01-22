@@ -19,17 +19,20 @@ public class HTTPServer {
         public let reuseAddress: Bool
         public let tcpNoDelay: Bool
         public let withPipeliningAssistance: Bool
+        public let maxUploadSize: Int
 
         public init(
             address: Application.Address = .hostname(),
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = false,
-            withPipeliningAssistance: Bool = false
+            withPipeliningAssistance: Bool = false,
+            maxUploadSize: Int = 2 * 1024 * 1024
         ) {
             self.address = address
             self.reuseAddress = reuseAddress
             self.tcpNoDelay = tcpNoDelay
             self.withPipeliningAssistance = withPipeliningAssistance
+            self.maxUploadSize = maxUploadSize
         }
     }
 
@@ -55,7 +58,7 @@ public class HTTPServer {
                 ).flatMap {
                     let childHandlers: [ChannelHandler] = self.additionalChildHandlers(at: .afterHTTP) + [
                         HTTPEncodeHandler(),
-                        HTTPDecodeHandler(application: application),
+                        HTTPDecodeHandler(maxUploadSize: self.configuration.maxUploadSize),
                         HTTPServerHandler(application: application),
                     ]
                     return channel.pipeline.addHandlers(childHandlers)
@@ -63,7 +66,7 @@ public class HTTPServer {
             }
         }
         
-        let quiesce = ServerQuiescingHelper(group: application.eventLoopGroup)
+        let quiesce = ServerQuiescingHelper(group: self.eventLoopGroup)
         self.quiesce = quiesce
         
         let bootstrap = ServerBootstrap(group: self.eventLoopGroup)
