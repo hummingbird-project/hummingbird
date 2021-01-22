@@ -11,7 +11,7 @@ public protocol HBRequestDecoder {
 }
 
 /// Default encoder. Outputs request with the swift string description of object
-struct HBNullEncoder: HBResponseEncoder {
+struct NullEncoder: HBResponseEncoder {
     func encode<T: Encodable>(_ value: T, from request: HBRequest) throws -> HBResponse {
         return HBResponse(
             status: .ok,
@@ -22,7 +22,7 @@ struct HBNullEncoder: HBResponseEncoder {
 }
 
 /// Default decoder. there is no default decoder path so this generates an error
-struct HBNullDecoder: HBRequestDecoder {
+struct NullDecoder: HBRequestDecoder {
     func decode<T: Decodable>(_ type: T.Type, from request: HBRequest) throws -> T {
         preconditionFailure("Application.decoder has not been set")
     }

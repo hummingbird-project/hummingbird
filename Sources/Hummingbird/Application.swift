@@ -39,8 +39,8 @@ open class HBApplication {
         self.router = TrieRouter()
         self.configuration = configuration
         self.extensions = HBExtensions()
-        self.encoder = HBNullEncoder()
-        self.decoder = HBNullDecoder()
+        self.encoder = NullEncoder()
+        self.decoder = NullDecoder()
 
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         self.threadPool = NIOThreadPool(numberOfThreads: 2)
