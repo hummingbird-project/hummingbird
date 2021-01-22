@@ -1,3 +1,5 @@
+import HummingbirdCore
+
 /// Route requests to handlers based on request URI. Uses a Trie to select handler
 public struct TrieRouter: Router {
     var trie: RouterPathTrie<RequestResponder>

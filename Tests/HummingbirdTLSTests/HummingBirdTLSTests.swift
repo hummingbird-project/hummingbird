@@ -1,23 +1,39 @@
 import AsyncHTTPClient
-import Hummingbird
+import HummingbirdCore
 import HummingbirdTLS
+import Logging
+import NIO
+import NIOHTTP1
 import NIOSSL
 import XCTest
 
 class HummingBirdTLSTests: XCTestCase {
-    func testTLS() throws {
-        let app = Application(configuration: .init(address: .hostname(port: 8000)))
-        app.router.get("/hello") { request in
-            return "hello"
+    struct HelloResponder: HTTPResponder {
+        func respond(to request: HTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HTTPResponse> {
+            let responseHead = HTTPResponseHead(version: .init(major: 1, minor: 1), status: .ok)
+            let responseBody = context.channel.allocator.buffer(string: "Hello")
+            let response = HTTPResponse(head: responseHead, body: .byteBuffer(responseBody))
+            return context.eventLoop.makeSucceededFuture(response)
         }
-        let https = try app.server.addTLS(tlsConfiguration: self.getServerTLSConfiguration())
-        app.start()
-        defer { app.stop(); app.wait() }
-
-        let client = try HTTPClient(eventLoopGroupProvider: .shared(app.eventLoopGroup), configuration: .init(tlsConfiguration: self.getClientTLSConfiguration()))
+        
+        var logger: Logger? = Logger(label: "Core")
+    }
+    
+    func testConnect() throws {
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        let server = HTTPServer(group: eventLoopGroup, configuration: .init(address: .hostname(port: 8000)))
+        try server.addTLS(tlsConfiguration: self.getServerTLSConfiguration())
+        try server.start(responder: HelloResponder()).wait()
+        defer { XCTAssertNoThrow(try server.stop().wait()) }
+        
+        let client = try HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup), configuration: .init(tlsConfiguration: self.getClientTLSConfiguration()))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
-        let future = client.get(url: "https://localhost:\(https.configuration.address.port!)/hello")
+        let future = client.get(url: "https://localhost:\(server.configuration.address.port!)/").flatMapThrowing { response in
+            var body = try XCTUnwrap(response.body)
+            XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
+        }
         XCTAssertNoThrow(try future.wait())
     }
 

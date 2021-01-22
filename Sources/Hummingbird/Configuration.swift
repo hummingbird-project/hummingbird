@@ -1,33 +1,10 @@
+import HummingbirdCore
 
 extension Application {
-    /// Address to bind
-    public enum Address {
-        case hostname(_ host: String = "127.0.0.1", port: Int = 8080)
-        case unixDomainSocket(path: String)
-
-        /// if address is hostname and port return port
-        public var port: Int? {
-            guard case .hostname(_, let port) = self else { return nil }
-            return port
-        }
-
-        /// if address is hostname and port return hostname
-        public var host: String? {
-            guard case .hostname(let host, _) = self else { return nil }
-            return host
-        }
-
-        /// if address is unix domain socket return unix domain socket path
-        public var unixDomainSocketPath: String? {
-            guard case .unixDomainSocket(let path) = self else { return nil }
-            return path
-        }
-    }
-
     /// Application configuration
     public struct Configuration {
         /// bind address
-        public let address: Address
+        public let address: BindAddress
         /// Allows socket to be bound to an address that is already in use.
         public let reuseAddress: Bool
         /// Disables the Nagle algorithm for send coalescing.
@@ -39,7 +16,7 @@ extension Application {
         public let maxUploadSize: Int
 
         public init(
-            address: Address = .hostname(),
+            address: BindAddress = .hostname(),
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = false,
             enableHttpPipelining: Bool = false,
@@ -57,7 +34,8 @@ extension Application {
                 address: self.address,
                 reuseAddress: self.reuseAddress,
                 tcpNoDelay: self.tcpNoDelay,
-                withPipeliningAssistance: self.enableHttpPipelining
+                withPipeliningAssistance: self.enableHttpPipelining,
+                maxUploadSize: self.maxUploadSize
             )
         }
     }

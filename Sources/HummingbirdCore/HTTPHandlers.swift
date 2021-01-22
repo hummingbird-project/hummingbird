@@ -1,9 +1,25 @@
 import NIO
+import NIOHTTP1
+
+public struct HTTPRequest {
+    public var head: HTTPRequestHead
+    public var body: RequestBody
+}
+
+public struct HTTPResponse {
+    public var head: HTTPResponseHead
+    public var body: ResponseBody
+
+    public init(head: HTTPResponseHead, body: ResponseBody) {
+        self.head = head
+        self.body = body
+    }
+}
 
 /// Channel handler for decoding HTTP parts into a HTTP request
 final class HTTPDecodeHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPServerRequestPart
-    typealias InboundOut = Request
+    typealias InboundOut = HTTPRequest
 
     enum State {
         case idle
@@ -13,11 +29,11 @@ final class HTTPDecodeHandler: ChannelInboundHandler {
     }
 
     /// handler state
-    var application: Application
+    var maxUploadSize: Int
     var state: State
 
-    init(application: Application) {
-        self.application = application
+    init(maxUploadSize: Int) {
+        self.maxUploadSize = maxUploadSize
         self.state = .idle
     }
 
@@ -29,8 +45,8 @@ final class HTTPDecodeHandler: ChannelInboundHandler {
             self.state = .head(head)
 
         case (.body(let part), .head(let head)):
-            let streamer = RequestBodyStreamer(eventLoop: context.eventLoop, maxSize: self.application.configuration.maxUploadSize)
-            let request = Request(head: head, body: .stream(streamer), application: self.application, context: context)
+            let streamer = RequestBodyStreamer(eventLoop: context.eventLoop, maxSize: self.maxUploadSize)
+            let request = HTTPRequest(head: head, body: .stream(streamer))
             streamer.feed(.byteBuffer(part))
             context.fireChannelRead(self.wrapInboundOut(request))
             self.state = .body(streamer)
@@ -40,7 +56,7 @@ final class HTTPDecodeHandler: ChannelInboundHandler {
             self.state = .body(streamer)
 
         case (.end, .head(let head)):
-            let request = Request(head: head, body: .byteBuffer(nil), application: self.application, context: context)
+            let request = HTTPRequest(head: head, body: .byteBuffer(nil))
             context.fireChannelRead(self.wrapInboundOut(request))
             self.state = .idle
 
@@ -80,18 +96,17 @@ final class HTTPDecodeHandler: ChannelInboundHandler {
 
 /// Channel handler for encoding Response into HTTP parts
 final class HTTPEncodeHandler: ChannelOutboundHandler {
-    typealias OutboundIn = Response
+    typealias OutboundIn = HTTPResponse
     typealias OutboundOut = HTTPServerResponsePart
 
     func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
         let response = self.unwrapOutboundIn(data)
 
         // add content-length header
-        var headers = response.headers
+        var head = response.head
         if case .byteBuffer(let buffer) = response.body {
-            headers.replaceOrAdd(name: "content-length", value: buffer.readableBytes.description)
+            head.headers.replaceOrAdd(name: "content-length", value: buffer.readableBytes.description)
         }
-        let head = HTTPResponseHead(version: .init(major: 1, minor: 1), status: response.status, headers: headers)
         context.write(self.wrapOutboundOut(.head(head)), promise: nil)
         switch response.body {
         case .byteBuffer(let buffer):

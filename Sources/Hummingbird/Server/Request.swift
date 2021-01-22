@@ -1,3 +1,4 @@
+import HummingbirdCore
 import Logging
 import NIO
 import NIOConcurrencyHelpers
@@ -22,8 +23,6 @@ public class Request {
     public var allocator: ByteBufferAllocator
     /// Request extensions
     public var extensions: Extensions<Request>
-    /// is keep alive
-    internal var isKeepAlive: Bool
 
     internal init(
         head: HTTPRequestHead,
@@ -34,7 +33,6 @@ public class Request {
         self.uri = .init(head.uri)
         self.method = head.method
         self.headers = head.headers
-        self.isKeepAlive = head.isKeepAlive
         self.body = body
         self.logger = Self.loggerWithRequestId(application.logger)
         self.application = application

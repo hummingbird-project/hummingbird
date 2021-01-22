@@ -2,22 +2,24 @@ import Logging
 import NIO
 import NIOHTTP1
 
+public protocol HTTPResponder {
+    func respond(to request: HTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HTTPResponse>
+    var logger: Logger? { get }
+}
+
 /// Channel handler for responding to a request and returning a response
 final class HTTPServerHandler: ChannelInboundHandler {
-    typealias InboundIn = Request
-    typealias OutboundOut = Response
+    typealias InboundIn = HTTPRequest
+    typealias OutboundOut = HTTPResponse
 
-    let responder: RequestResponder
-    let application: Application
-
+    let responder: HTTPResponder
+    
     var responsesInProgress: Int
     var closeAfterResponseWritten: Bool
     var propagatedError: Error?
 
-    init(application: Application) {
-        self.application = application
-        // application responder has been set for sure
-        self.responder = application.responder!
+    init(responder: HTTPResponder) {
+        self.responder = responder
         self.responsesInProgress = 0
         self.closeAfterResponseWritten = false
         self.propagatedError = nil
@@ -25,10 +27,9 @@ final class HTTPServerHandler: ChannelInboundHandler {
 
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let request = unwrapInboundIn(data)
-
         // if error caught from previous channel handler then write an error
         if let error = propagatedError {
-            let keepAlive = request.isKeepAlive && self.closeAfterResponseWritten == false
+            let keepAlive = request.head.isKeepAlive && self.closeAfterResponseWritten == false
             writeError(context: context, error: error, keepAlive: keepAlive)
             self.propagatedError = nil
             return
@@ -36,21 +37,21 @@ final class HTTPServerHandler: ChannelInboundHandler {
         self.responsesInProgress += 1
 
         // respond to request
-        self.responder.respond(to: request).whenComplete { result in
+        self.responder.respond(to: request, context: context).whenComplete { result in
             // should we close the channel after responding
-            let keepAlive = request.isKeepAlive && self.closeAfterResponseWritten == false
+            let keepAlive = request.head.isKeepAlive && self.closeAfterResponseWritten == false
             switch result {
             case .failure(let error):
                 self.writeError(context: context, error: error, keepAlive: keepAlive)
 
-            case .success(let response):
-                response.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
+            case .success(var response):
+                response.head.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
                 self.writeResponse(context: context, response: response, keepAlive: keepAlive)
             }
         }
     }
 
-    func writeResponse(context: ChannelHandlerContext, response: Response, keepAlive: Bool) {
+    func writeResponse(context: ChannelHandlerContext, response: HTTPResponse, keepAlive: Bool) {
         context.write(self.wrapOutboundOut(response)).whenComplete { _ in
             if keepAlive == false {
                 context.close(promise: nil)
@@ -61,14 +62,17 @@ final class HTTPServerHandler: ChannelInboundHandler {
     }
 
     func writeError(context: ChannelHandlerContext, error: Error, keepAlive: Bool) {
-        var response: Response
+        var response: HTTPResponse
         switch error {
         case let httpError as HTTPError:
             response = httpError.response(allocator: context.channel.allocator)
         default:
-            response = Response(status: .internalServerError, headers: [:], body: .empty)
+            response = HTTPResponse(
+                head: .init(version: .init(major: 1, minor: 1), status: .internalServerError),
+                body: .empty
+            )
         }
-        response.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
+        response.head.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
         self.writeResponse(context: context, response: response, keepAlive: keepAlive)
     }
 
@@ -85,7 +89,7 @@ final class HTTPServerHandler: ChannelInboundHandler {
                 context.close(promise: nil)
             }
         default:
-            self.application.logger.debug("Unhandled event \(event as? ChannelEvent)")
+            self.responder.logger?.debug("Unhandled event \(event as? ChannelEvent)")
             context.fireUserInboundEventTriggered(event)
         }
     }

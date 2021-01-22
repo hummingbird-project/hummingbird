@@ -15,21 +15,24 @@ public class HTTPServer {
     }
     
     public struct Configuration {
-        public let address: Application.Address
+        public let address: BindAddress
         public let reuseAddress: Bool
         public let tcpNoDelay: Bool
         public let withPipeliningAssistance: Bool
+        public let maxUploadSize: Int
 
         public init(
-            address: Application.Address = .hostname(),
+            address: BindAddress = .hostname(),
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = false,
-            withPipeliningAssistance: Bool = false
+            withPipeliningAssistance: Bool = false,
+            maxUploadSize: Int = 2 * 1024 * 1024
         ) {
             self.address = address
             self.reuseAddress = reuseAddress
             self.tcpNoDelay = tcpNoDelay
             self.withPipeliningAssistance = withPipeliningAssistance
+            self.maxUploadSize = maxUploadSize
         }
     }
 
@@ -46,7 +49,7 @@ public class HTTPServer {
         return self
     }
 
-    public func start(application: Application) -> EventLoopFuture<Void> {
+    public func start(responder: HTTPResponder) -> EventLoopFuture<Void> {
         func childChannelInitializer(channel: Channel) -> EventLoopFuture<Void> {
             return channel.pipeline.addHandlers(self.additionalChildHandlers(at: .beforeHTTP)).flatMap {
                 return channel.pipeline.configureHTTPServerPipeline(
@@ -55,15 +58,15 @@ public class HTTPServer {
                 ).flatMap {
                     let childHandlers: [ChannelHandler] = self.additionalChildHandlers(at: .afterHTTP) + [
                         HTTPEncodeHandler(),
-                        HTTPDecodeHandler(application: application),
-                        HTTPServerHandler(application: application),
+                        HTTPDecodeHandler(maxUploadSize: self.configuration.maxUploadSize),
+                        HTTPServerHandler(responder: responder),
                     ]
                     return channel.pipeline.addHandlers(childHandlers)
                 }
             }
         }
         
-        let quiesce = ServerQuiescingHelper(group: application.eventLoopGroup)
+        let quiesce = ServerQuiescingHelper(group: self.eventLoopGroup)
         self.quiesce = quiesce
         
         let bootstrap = ServerBootstrap(group: self.eventLoopGroup)
@@ -86,12 +89,12 @@ public class HTTPServer {
         case .hostname(let host, let port):
             bindFuture = bootstrap.bind(host: host, port: port)
                 .map { _ in
-                    application.logger.info("Server started and listening on \(host):\(port)")
+                    responder.logger?.info("Server started and listening on \(host):\(port)")
                 }
         case .unixDomainSocket(let path):
             bindFuture = bootstrap.bind(unixDomainSocketPath: path)
                 .map { _ in
-                    application.logger.info("Server started and listening on socket path \(path)")
+                    responder.logger?.info("Server started and listening on socket path \(path)")
                 }
         }
 
@@ -119,15 +122,4 @@ public class HTTPServer {
     }
 
     private var _additionalChildHandlers: [(handler: () -> ChannelHandler, position: ChannelPosition)]
-}
-
-extension ChannelPipeline.Position: Equatable {
-    public static func == (lhs: ChannelPipeline.Position, rhs: ChannelPipeline.Position) -> Bool {
-        switch (lhs, rhs) {
-        case (.first, .first), (.last, .last):
-            return true
-        default:
-            return false
-        }
-    }
 }
