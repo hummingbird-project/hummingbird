@@ -29,10 +29,10 @@ open class HBApplication {
     /// decoder used by router
     public var decoder: HBRequestDecoder
 
-    var responder: HBResponder?
+    let eventLoopGroupProvider: NIOEventLoopGroupProvider
 
     /// Initialize new Application
-    public init(configuration: HBApplication.Configuration = HBApplication.Configuration()) {
+    public init(configuration: HBApplication.Configuration = HBApplication.Configuration(), eventLoopGroupProvider: NIOEventLoopGroupProvider = .createNew) {
         self.lifecycle = ServiceLifecycle()
         self.logger = Logger(label: "HummingBird")
         self.middlewares = HBMiddlewareGroup()
@@ -42,7 +42,13 @@ open class HBApplication {
         self.encoder = NullEncoder()
         self.decoder = NullDecoder()
 
-        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        self.eventLoopGroupProvider = eventLoopGroupProvider
+        switch eventLoopGroupProvider {
+        case .createNew:
+            self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        case .shared(let elg):
+            self.eventLoopGroup = elg
+        }
         self.threadPool = NIOThreadPool(numberOfThreads: 2)
         self.threadPool.start()
 
@@ -50,14 +56,14 @@ open class HBApplication {
 
         self.lifecycle.register(
             label: "Application",
-            start: .sync { self.responder = self.constructResponder() },
+            start: .sync { },
             shutdown: .sync(self.shutdownApplication)
         )
 
         self.lifecycle.register(
             label: "HTTP Server",
             start: .eventLoopFuture {
-                return self.server.start(responder: HummingbirdResponder(application: self))
+                return self.server.start(responder: HTTPResponder(application: self))
             },
             shutdown: .eventLoopFuture(self.server.stop)
         )
@@ -92,7 +98,9 @@ open class HBApplication {
     /// shutdown eventloop, threadpool and any extensions attached to the Application
     func shutdownApplication() throws {
         try self.threadPool.syncShutdownGracefully()
-        try self.eventLoopGroup.syncShutdownGracefully()
+        if case .createNew = self.eventLoopGroupProvider {
+            try self.eventLoopGroup.syncShutdownGracefully()
+        }
         self.extensions.shutdown()
     }
 }
