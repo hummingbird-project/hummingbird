@@ -4,15 +4,6 @@ import NIO
 import NIOHTTP2
 import NIOSSL
 
-final class ErrorHandler: ChannelInboundHandler {
-    typealias InboundIn = Never
-
-    func errorCaught(context: ChannelHandlerContext, error: Error) {
-        print("Server received error: \(error)")
-        context.close(promise: nil)
-    }
-}
-
 struct HTTP2ChannelInitializer: HBChannelInitializer {
     init() {}
 
@@ -20,35 +11,23 @@ struct HTTP2ChannelInitializer: HBChannelInitializer {
         return channel.configureHTTP2Pipeline(mode: .server) { streamChannel -> EventLoopFuture<Void> in
             return streamChannel.pipeline.addHandler(HTTP2FramePayloadToHTTP1ServerCodec()).flatMap { () -> EventLoopFuture<Void> in
                 server.addChildHandlers(channel: streamChannel, responder: responder)
-            }.flatMap { () -> EventLoopFuture<Void> in
-                streamChannel.pipeline.addHandler(ErrorHandler())
             }
-        }.flatMap { (_: HTTP2StreamMultiplexer) in
-            return channel.pipeline.addHandler(ErrorHandler())
+            .map { _ in }
         }
+        .map { _ in }
     }
 }
 
 struct HTTP2UpgradeChannelInitializer: HBChannelInitializer {
-    let http1: HTTP1ChannelInitializer
-    
-    init() {
-        self.http1 = .init()
-    }
+    let http1 = HTTP1ChannelInitializer()
+    let http2 = HTTP2ChannelInitializer()
+
+    init() { }
 
     func initialize(_ server: HBHTTPServer, channel: Channel, responder: HBHTTPResponder) -> EventLoopFuture<Void> {
         channel.configureHTTP2SecureUpgrade(
             h2ChannelConfigurator: { channel in
-                channel.configureHTTP2Pipeline(
-                    mode: .server,
-                    inboundStreamInitializer: { channel in
-                        channel.pipeline.addHandler(HTTP2FramePayloadToHTTP1ServerCodec()).flatMap { () -> EventLoopFuture<Void> in
-                            server.addChildHandlers(channel: channel, responder: responder)
-                        }.map { _ in
-                            
-                        }
-                    }
-                ).map { _ in }
+                http2.initialize(server, channel: channel, responder: responder)
             },
             http1ChannelConfigurator: { channel in
                 http1.initialize(server, channel: channel, responder: responder)
