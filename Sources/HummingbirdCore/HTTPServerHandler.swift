@@ -31,7 +31,11 @@ final class HBHTTPServerHandler: ChannelInboundHandler {
         // if error caught from previous channel handler then write an error
         if let error = propagatedError {
             let keepAlive = request.head.isKeepAlive && self.closeAfterResponseWritten == false
-            writeError(context: context, error: error, keepAlive: keepAlive)
+            var response = getErrorResponse(context: context, error: error)
+            if request.head.version.major == 1 {
+                response.head.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
+            }
+            self.writeResponse(context: context, response: response, keepAlive: keepAlive)
             self.propagatedError = nil
             return
         }
@@ -41,14 +45,19 @@ final class HBHTTPServerHandler: ChannelInboundHandler {
         self.responder.respond(to: request, context: context).whenComplete { result in
             // should we close the channel after responding
             let keepAlive = request.head.isKeepAlive && self.closeAfterResponseWritten == false
+            var response: HBHTTPResponse
             switch result {
             case .failure(let error):
-                self.writeError(context: context, error: error, keepAlive: keepAlive)
+                response = self.getErrorResponse(context: context, error: error)
 
-            case .success(var response):
-                response.head.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
-                self.writeResponse(context: context, response: response, keepAlive: keepAlive)
+            case .success(let successfulResponse):
+                response = successfulResponse
+
             }
+            if request.head.version.major == 1 {
+                response.head.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
+            }
+            self.writeResponse(context: context, response: response, keepAlive: keepAlive)
         }
     }
 
@@ -62,19 +71,16 @@ final class HBHTTPServerHandler: ChannelInboundHandler {
         }
     }
 
-    func writeError(context: ChannelHandlerContext, error: Error, keepAlive: Bool) {
-        var response: HBHTTPResponse
+    func getErrorResponse(context: ChannelHandlerContext, error: Error) -> HBHTTPResponse {
         switch error {
         case let httpError as HBHTTPError:
-            response = httpError.response(allocator: context.channel.allocator)
+            return httpError.response(allocator: context.channel.allocator)
         default:
-            response = HBHTTPResponse(
+            return HBHTTPResponse(
                 head: .init(version: .init(major: 1, minor: 1), status: .internalServerError),
                 body: .empty
             )
         }
-        response.head.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
-        self.writeResponse(context: context, response: response, keepAlive: keepAlive)
     }
 
     func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
