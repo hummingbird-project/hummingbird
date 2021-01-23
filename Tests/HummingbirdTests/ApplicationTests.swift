@@ -48,31 +48,21 @@ final class ApplicationTests: XCTestCase {
         testApp { app, _ in app.start() }
     }
 
-    func testGetRoute2() throws {
+    func testGetRoute() throws {
         let app = HBApplication(.testing)
-        try app.xctStart()
-        let response = try app.xctRequest(.init(uri: "/hello", method: .GET))
-        print(response)
-        try app.xctStop()
-    }
-    func testGetRoute() {
-        testApp { app, client in
-            app.router.get("/hello") { request -> EventLoopFuture<ByteBuffer> in
-                let buffer = request.allocator.buffer(string: "GET: Hello")
-                return request.eventLoop.makeSucceededFuture(buffer)
-            }
-            app.start()
-
-            let request = try! HTTPClient.Request(url: "http://localhost:\(app.server.configuration.address.port!)/hello", method: .GET, headers: [:])
-            let response = client.execute(request: request)
-                .flatMapThrowing { response in
-                    guard var body = response.body else { throw ApplicationTestError.noBody }
-                    let string = body.readString(length: body.readableBytes)
-                    XCTAssertEqual(response.status, .ok)
-                    XCTAssertEqual(string, "GET: Hello")
-                }
-            XCTAssertNoThrow(try response.wait())
+        app.router.get("/hello") { request -> EventLoopFuture<ByteBuffer> in
+            let buffer = request.allocator.buffer(string: "GET: Hello")
+            return request.eventLoop.makeSucceededFuture(buffer)
         }
+        app.XCTStart()
+        defer { app.XCTStop() }
+        
+        XCTAssertNoThrow(try app.XCTTestResponse(.init(uri: "/hello", method: .GET)) { response in
+            var body = response.body
+            let string = body.readString(length: body.readableBytes)
+            XCTAssertEqual(response.status, .ok)
+            XCTAssertEqual(string, "GET: Hello")
+        })
     }
 
     func testHTTPStatusRoute() {

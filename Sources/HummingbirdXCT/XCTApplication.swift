@@ -21,7 +21,13 @@ extension HBApplication {
     public struct XCTResponse {
         public let status: HTTPResponseStatus
         public let headers: HTTPHeaders
-        public let body: ByteBuffer?
+        public let body: ByteBuffer
+    }
+    
+    public enum XCTError: Error {
+        case noHead
+        case illegalBody
+        case noEnd
     }
     
     var embeddedChannel: EmbeddedChannel {
@@ -34,48 +40,58 @@ extension HBApplication {
         set { extensions.set(\.embeddedEventLoop, value: newValue) }
     }
     
-    public enum TestingEnum {
+    public enum XCTTestingEnum {
         case testing
     }
     
-    public convenience init(_ testing: TestingEnum) {
+    public convenience init(_ testing: XCTTestingEnum) {
         let embeddedEventLoop = EmbeddedEventLoop()
         self.init(eventLoopGroupProvider: .shared(embeddedEventLoop))
         self.embeddedEventLoop = embeddedEventLoop
         self.embeddedChannel = EmbeddedChannel()
     }
     
-    public func xctStart() throws {
-        try self.embeddedChannel.pipeline.addHandlers([
+    public func XCTStart() {
+        XCTAssertNoThrow(try self.embeddedChannel.pipeline.addHandlers([
             HBHTTPEncodeHandler(),
             HBHTTPDecodeHandler(configuration: .init()),
             HBHTTPServerHandler(responder: HBApplication.HTTPResponder(application: self)),
-        ]).wait()
+        ]).wait())
     }
 
-    public func xctRequest(_ request: XCTRequest) throws -> XCTResponse? {
-        let head = HTTPRequestHead(version: .init(major: 1, minor: 1), method: request.method, uri: request.uri, headers: request.headers)
+    public func XCTStop() {
+        XCTAssertNoThrow(_ = try self.embeddedChannel.finish())
+        XCTAssertNoThrow(try self.threadPool.syncShutdownGracefully())
+        XCTAssertNoThrow(try self.eventLoopGroup.syncShutdownGracefully())
+    }
+
+    public func XCTTestResponse(_ request: XCTRequest, _ testCallback: (XCTResponse) -> ()) throws {
         
-        XCTAssertNoThrow(try writeInbound(.head(head)))
-        if let body = request.body {
-            XCTAssertNoThrow(try writeInbound(.body(body)))
-        }
-        XCTAssertNoThrow(try writeInbound(.end(nil)))
-        try embeddedChannel.flush()
+        // write request
         do {
-            guard case .head(let head) = try readOutbound() else { return nil }
+            let head = HTTPRequestHead(version: .init(major: 1, minor: 1), method: request.method, uri: request.uri, headers: request.headers)
+            try writeInbound(.head(head))
+            if let body = request.body {
+                try writeInbound(.body(body))
+            }
+            try writeInbound(.end(nil))
+        }
+        // flush
+        embeddedChannel.flush()
+        
+        // read response
+        do {
+            guard case .head(let head) = try readOutbound() else { throw XCTError.noHead }
             var next = try readOutbound()
             var buffer = embeddedChannel.allocator.buffer(capacity: 0)
             while case .body(let part) = next {
-                guard case .byteBuffer(var b) = part else { return nil }
+                guard case .byteBuffer(var b) = part else { throw XCTError.illegalBody }
                 buffer.writeBuffer(&b)
                 next = try readOutbound()
             }
-            guard case .end = next else { return nil }
-            return XCTResponse(status: head.status, headers: head.headers, body: buffer)
-        } catch {
-            XCTFail()
-            return nil
+            guard case .end = next else { throw XCTError.noEnd }
+            
+            testCallback(.init(status: head.status, headers: head.headers, body: buffer))
         }
     }
     
@@ -84,12 +100,6 @@ extension HBApplication {
     }
     
     func readOutbound() throws -> HTTPServerResponsePart? {
-        return try self.embeddedChannel.readInbound(as: HTTPServerResponsePart.self)
-    }
-    
-    public func xctStop() throws {
-        _ = try self.embeddedChannel.finish()
-        try self.threadPool.syncShutdownGracefully()
-        try self.eventLoopGroup.syncShutdownGracefully()
+        return try self.embeddedChannel.readOutbound(as: HTTPServerResponsePart.self)
     }
 }
