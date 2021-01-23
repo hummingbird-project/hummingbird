@@ -40,21 +40,27 @@ extension HBApplication {
         set { extensions.set(\.embeddedEventLoop, value: newValue) }
     }
     
+    var additionalChannels: [ChannelHandler] {
+        get { extensions.get(\.additionalChannels) }
+        set { extensions.set(\.additionalChannels, value: newValue) }
+    }
+    
     public enum XCTTestingEnum {
         case testing
     }
     
-    public convenience init(_ testing: XCTTestingEnum) {
+    public convenience init(_ testing: XCTTestingEnum, configuration: HBApplication.Configuration = .init()) {
         let embeddedEventLoop = EmbeddedEventLoop()
-        self.init(eventLoopGroupProvider: .shared(embeddedEventLoop))
+        self.init(configuration: configuration, eventLoopGroupProvider: .shared(embeddedEventLoop))
         self.embeddedEventLoop = embeddedEventLoop
         self.embeddedChannel = EmbeddedChannel()
+        self.additionalChannels = []
     }
     
     public func XCTStart() {
-        XCTAssertNoThrow(try self.embeddedChannel.pipeline.addHandlers([
+        XCTAssertNoThrow(try self.embeddedChannel.pipeline.addHandlers(self.additionalChannels + [
             HBHTTPEncodeHandler(),
-            HBHTTPDecodeHandler(configuration: .init()),
+            HBHTTPDecodeHandler(configuration: self.configuration.httpServer),
             HBHTTPServerHandler(responder: HBApplication.HTTPResponder(application: self)),
         ]).wait())
     }
@@ -65,6 +71,10 @@ extension HBApplication {
         XCTAssertNoThrow(try self.eventLoopGroup.syncShutdownGracefully())
     }
 
+    public func XCTAddChannelHandler(_ handler: ChannelHandler) {
+        self.additionalChannels.append(handler)
+    }
+    
     public func XCTTestResponse(_ request: XCTRequest, _ testCallback: (XCTResponse) -> ()) throws {
         
         // write request

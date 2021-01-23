@@ -59,7 +59,6 @@ let package = Package(
         .testTarget(name: "HummingbirdTests", dependencies: [
             .byName(name: "Hummingbird"),
             .byName(name: "HummingbirdXCT"),
-            .product(name: "AsyncHTTPClient", package: "async-http-client"),
         ]),
         .testTarget(name: "HummingbirdCoreTests", dependencies: [
             .byName(name: "HummingbirdCore"),
@@ -67,7 +66,7 @@ let package = Package(
         ]),
         .testTarget(name: "HummingbirdJSONTests", dependencies: [
             .byName(name: "HummingbirdJSON"),
-            .product(name: "AsyncHTTPClient", package: "async-http-client"),
+            .byName(name: "HummingbirdXCT"),
         ]),
         .testTarget(name: "HummingbirdTLSTests", dependencies: [
             .byName(name: "HummingbirdTLS"),

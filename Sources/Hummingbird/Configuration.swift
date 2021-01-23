@@ -29,7 +29,7 @@ extension HBApplication {
             self.maxUploadSize = maxUploadSize
         }
 
-        var httpServer: HBHTTPServer.Configuration {
+        public var httpServer: HBHTTPServer.Configuration {
             return .init(
                 address: self.address,
                 reuseAddress: self.reuseAddress,
