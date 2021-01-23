@@ -20,7 +20,7 @@ final class MiddlewareTests: XCTestCase {
         app.XCTStart()
         defer { app.XCTStop() }
         
-        XCTAssertNoThrow(try app.XCTTestResponse(.init(uri: "/hello", method: .GET)) { response in
+        XCTAssertNoThrow(try app.XCTTestResponse(uri: "/hello", method: .GET) { response in
             XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
         })
     }
@@ -44,7 +44,7 @@ final class MiddlewareTests: XCTestCase {
         app.XCTStart()
         defer { app.XCTStop() }
         
-        XCTAssertNoThrow(try app.XCTTestResponse(.init(uri: "/hello", method: .GET)) { response in
+        XCTAssertNoThrow(try app.XCTTestResponse(uri: "/hello", method: .GET) { response in
             // headers come back in opposite order as middleware is applied to responses in that order
             XCTAssertEqual(response.headers["middleware"].first, "second")
             XCTAssertEqual(response.headers["middleware"].last, "first")
@@ -72,11 +72,11 @@ final class MiddlewareTests: XCTestCase {
         app.XCTStart()
         defer { app.XCTStop() }
         
-        XCTAssertNoThrow(try app.XCTTestResponse(.init(uri: "/group", method: .GET)) { response in
+        XCTAssertNoThrow(try app.XCTTestResponse(uri: "/group", method: .GET) { response in
             XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
         })
 
-        XCTAssertNoThrow(try app.XCTTestResponse(.init(uri: "/not-group", method: .GET)) { response in
+        XCTAssertNoThrow(try app.XCTTestResponse(uri: "/not-group", method: .GET) { response in
             XCTAssertEqual(response.headers["middleware"].first, nil)
         })
     }

@@ -25,7 +25,7 @@ class HummingBirdJSONTests: XCTestCase {
         defer { app.XCTStop() }
         
         let body = #"{"name": "John Smith", "email": "john.smith@email.com", "age": 25}"#
-        XCTAssertNoThrow(try app.XCTTestResponse(.init(uri: "/user", method: .PUT, body: ByteBufferAllocator().buffer(string: body))) {
+        XCTAssertNoThrow(try app.XCTTestResponse(uri: "/user", method: .PUT, body: ByteBufferAllocator().buffer(string: body)) {
             XCTAssertEqual($0.status, .ok)
         })
     }
@@ -39,7 +39,7 @@ class HummingBirdJSONTests: XCTestCase {
         app.XCTStart()
         defer { app.XCTStop() }
         
-        XCTAssertNoThrow(try app.XCTTestResponse(.init(uri: "/user", method: .GET)) { response in
+        XCTAssertNoThrow(try app.XCTTestResponse(uri: "/user", method: .GET) { response in
             let user = try? JSONDecoder().decode(User.self, from: response.body)
             XCTAssertEqual(user?.name, "John Smith")
             XCTAssertEqual(user?.email, "john.smith@email.com")

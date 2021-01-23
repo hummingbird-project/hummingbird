@@ -38,7 +38,7 @@ final class ApplicationTests: XCTestCase {
         app.XCTStart()
         defer { app.XCTStop() }
         
-        XCTAssertNoThrow(try app.XCTTestResponse(.init(uri: "/hello", method: .GET)) { response in
+        XCTAssertNoThrow(try app.XCTTestResponse(uri: "/hello", method: .GET) { response in
             var body = response.body
             let string = body.readString(length: body.readableBytes)
             XCTAssertEqual(response.status, .ok)
@@ -54,7 +54,7 @@ final class ApplicationTests: XCTestCase {
         app.XCTStart()
         defer { app.XCTStop() }
         
-        XCTAssertNoThrow(try app.XCTTestResponse(.init(uri: "/accepted", method: .GET)) { response in
+        XCTAssertNoThrow(try app.XCTTestResponse(uri: "/accepted", method: .GET) { response in
             XCTAssertEqual(response.status, .accepted)
         })
     }
@@ -67,7 +67,7 @@ final class ApplicationTests: XCTestCase {
         app.XCTStart()
         defer { app.XCTStop() }
         
-        XCTAssertNoThrow(try app.XCTTestResponse(.init(uri: "/hello", method: .GET)) { response in
+        XCTAssertNoThrow(try app.XCTTestResponse(uri: "/hello", method: .GET) { response in
             XCTAssertEqual(response.headers["connection"].first, "keep-alive")
             XCTAssertEqual(response.headers["content-length"].first, "5")
         })
@@ -81,7 +81,7 @@ final class ApplicationTests: XCTestCase {
         app.XCTStart()
         defer { app.XCTStop() }
         
-        XCTAssertNoThrow(try app.XCTTestResponse(.init(uri: "/hello", method: .POST)) { response in
+        XCTAssertNoThrow(try app.XCTTestResponse(uri: "/hello", method: .POST) { response in
             var body = response.body
             let string = body.readString(length: body.readableBytes)
             XCTAssertEqual(response.status, .ok)
@@ -98,7 +98,7 @@ final class ApplicationTests: XCTestCase {
         app.XCTStart()
         defer { app.XCTStop() }
         
-        XCTAssertNoThrow(try app.XCTTestResponse(.init(uri: "/query?test=test%20data", method: .GET)) { response in
+        XCTAssertNoThrow(try app.XCTTestResponse(uri: "/query?test=test%20data", method: .GET) { response in
             var body = response.body
             let string = body.readString(length: body.readableBytes)
             XCTAssertEqual(response.status, .ok)
@@ -116,7 +116,7 @@ final class ApplicationTests: XCTestCase {
         defer { app.XCTStop() }
         
         let buffer = self.randomBuffer(size: 140_000)
-        XCTAssertNoThrow(try app.XCTTestResponse(.init(uri: "/echo-body", method: .POST, body: buffer)) { response in
+        XCTAssertNoThrow(try app.XCTTestResponse(uri: "/echo-body", method: .POST, body: buffer) { response in
             XCTAssertEqual(response.body, buffer)
         })
     }
@@ -148,7 +148,7 @@ final class ApplicationTests: XCTestCase {
         defer { app.XCTStop() }
         
         let buffer = self.randomBuffer(size: 140_000)
-        XCTAssertNoThrow(try app.XCTTestResponse(.init(uri: "/echo-body-streaming", method: .POST, body: buffer)) { response in
+        XCTAssertNoThrow(try app.XCTTestResponse(uri: "/echo-body-streaming", method: .POST, body: buffer) { response in
             XCTAssertEqual(response.body, buffer)
         })
     }
@@ -176,7 +176,7 @@ final class ApplicationTests: XCTestCase {
         defer { app.XCTStop() }
 
         let buffer = self.randomBuffer(size: 32)
-        XCTAssertNoThrow(try app.XCTTestResponse(.init(uri: "/accepted", method: .PUT, body: buffer)) { response in
+        XCTAssertNoThrow(try app.XCTTestResponse(uri: "/accepted", method: .PUT, body: buffer) { response in
             XCTAssertEqual(response.status, .insufficientStorage)
         })
     }
@@ -190,7 +190,7 @@ final class ApplicationTests: XCTestCase {
         defer { app.XCTStop() }
         
         let buffer = self.randomBuffer(size: 140_000)
-        XCTAssertNoThrow(try app.XCTTestResponse(.init(uri: "/upload", method: .PUT, body: buffer)) { response in
+        XCTAssertNoThrow(try app.XCTTestResponse(uri: "/upload", method: .PUT, body: buffer) { response in
             XCTAssertEqual(response.status, .payloadTooLarge)
         })
     }
