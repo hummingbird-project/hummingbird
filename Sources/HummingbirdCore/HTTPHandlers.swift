@@ -17,9 +17,9 @@ public struct HBHTTPResponse {
 }
 
 /// Channel handler for decoding HTTP parts into a HTTP request
-final class HBHTTPDecodeHandler: ChannelInboundHandler {
-    typealias InboundIn = HTTPServerRequestPart
-    typealias InboundOut = HBHTTPRequest
+public final class HBHTTPDecodeHandler: ChannelInboundHandler {
+    public typealias InboundIn = HTTPServerRequestPart
+    public typealias InboundOut = HBHTTPRequest
 
     enum State {
         case idle
@@ -32,12 +32,12 @@ final class HBHTTPDecodeHandler: ChannelInboundHandler {
     var maxUploadSize: Int
     var state: State
 
-    init(configuration: HBHTTPServer.Configuration) {
+    public init(configuration: HBHTTPServer.Configuration) {
         self.maxUploadSize = configuration.maxUploadSize
         self.state = .idle
     }
 
-    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+    public func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let part = self.unwrapInboundIn(data)
 
         switch (part, state) {
@@ -76,11 +76,11 @@ final class HBHTTPDecodeHandler: ChannelInboundHandler {
         }
     }
 
-    func channelReadComplete(context: ChannelHandlerContext) {
+    public func channelReadComplete(context: ChannelHandlerContext) {
         context.flush()
     }
 
-    func errorCaught(context: ChannelHandlerContext, error: Error) {
+    public func errorCaught(context: ChannelHandlerContext, error: Error) {
         switch state {
         case .body(let streamer):
             // request has already been forwarded to next hander have to pass error via streamer
@@ -95,11 +95,13 @@ final class HBHTTPDecodeHandler: ChannelInboundHandler {
 }
 
 /// Channel handler for encoding Response into HTTP parts
-final class HBHTTPEncodeHandler: ChannelOutboundHandler {
-    typealias OutboundIn = HBHTTPResponse
-    typealias OutboundOut = HTTPServerResponsePart
+public final class HBHTTPEncodeHandler: ChannelOutboundHandler {
+    public typealias OutboundIn = HBHTTPResponse
+    public typealias OutboundOut = HTTPServerResponsePart
 
-    func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
+    public init() {}
+    
+    public func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
         let response = self.unwrapOutboundIn(data)
 
         // add content-length header
