@@ -6,6 +6,7 @@ import NIOHTTP1
 public class HBHTTPServer {
     public let eventLoopGroup: EventLoopGroup
     public let configuration: Configuration
+    public var httpChannelInitializer: HBChannelInitializer
 
     var quiesce: ServerQuiescingHelper?
 
@@ -41,9 +42,12 @@ public class HBHTTPServer {
         self.configuration = configuration
         self.quiesce = nil
         self._additionalChildHandlers = []
+        // defaults to HTTP1
+        self.httpChannelInitializer = HTTP1ChannelInitializer()
     }
 
-    /// Append to list of `ChannelHandler`s to be added to server child channels
+    /// Append to list of `ChannelHandler`s to be added to server child channels. Need to provide a closure so new instance of these handlers are
+    /// created for each child channel
     @discardableResult public func addChildChannelHandler(_ handler: @autoclosure @escaping () -> ChannelHandler, position: ChannelPosition = .afterHTTP) -> Self {
         self._additionalChildHandlers.append((handler: handler, position: position))
         return self
@@ -52,17 +56,7 @@ public class HBHTTPServer {
     public func start(responder: HBHTTPResponder) -> EventLoopFuture<Void> {
         func childChannelInitializer(channel: Channel) -> EventLoopFuture<Void> {
             return channel.pipeline.addHandlers(self.additionalChildHandlers(at: .beforeHTTP)).flatMap {
-                return channel.pipeline.configureHTTPServerPipeline(
-                    withPipeliningAssistance: self.configuration.withPipeliningAssistance,
-                    withErrorHandling: true
-                ).flatMap {
-                    let childHandlers: [ChannelHandler] = self.additionalChildHandlers(at: .afterHTTP) + [
-                        HBHTTPEncodeHandler(),
-                        HBHTTPDecodeHandler(configuration: self.configuration),
-                        HBHTTPServerHandler(responder: responder),
-                    ]
-                    return channel.pipeline.addHandlers(childHandlers)
-                }
+                return self.httpChannelInitializer.initialize(self, channel: channel, responder: responder)
             }
         }
         
@@ -115,6 +109,15 @@ public class HBHTTPServer {
             promise.succeed(())
         }
         return promise.futureResult
+    }
+
+    public func addChildHandlers(channel: Channel, responder: HBHTTPResponder) -> EventLoopFuture<Void> {
+        let childHandlers: [ChannelHandler] = self.additionalChildHandlers(at: .afterHTTP) + [
+            HBHTTPEncodeHandler(),
+            HBHTTPDecodeHandler(configuration: self.configuration),
+            HBHTTPServerHandler(responder: responder),
+        ]
+        return channel.pipeline.addHandlers(childHandlers)
     }
 
     func additionalChildHandlers(at position: ChannelPosition) -> [ChannelHandler] {
