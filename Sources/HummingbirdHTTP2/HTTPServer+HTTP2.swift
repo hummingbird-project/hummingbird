@@ -6,7 +6,8 @@ import NIOSSL
 extension HBHTTPServer {
     /// Add HTTP2 secure upgrade handler
     ///
-    /// HTTP2 secure upgrade requires a TLS connection so this will add a TLS handler as well, so do not call `addTLS()` as well as this.
+    /// HTTP2 secure upgrade requires a TLS connection so this will add a TLS handler as well. Do not call `addTLS()` inconjunction with this as
+    /// you will then be adding two TLS handlers.
     ///
     /// - Parameter tlsConfiguration: TLS configuration
     @discardableResult public func addHTTP2Upgrade(tlsConfiguration: TLSConfiguration) throws -> HBHTTPServer {
