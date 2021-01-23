@@ -37,12 +37,7 @@ struct HTTP2UpgradeChannelInitializer: HBChannelInitializer {
 }
 
 extension HBHTTPServer {
-    public func upgradeToHTTP2() -> HBHTTPServer {
-        self.httpChannelInitializer = HTTP2ChannelInitializer()
-        return self
-    }
-    
-    public func addHTTP2Upgrade(tlsConfiguration: TLSConfiguration) throws -> HBHTTPServer {
+    @discardableResult public func addHTTP2Upgrade(tlsConfiguration: TLSConfiguration) throws -> HBHTTPServer {
         var tlsConfiguration = tlsConfiguration
         tlsConfiguration.applicationProtocols.append("h2")
         tlsConfiguration.applicationProtocols.append("http/1.1")
@@ -50,5 +45,10 @@ extension HBHTTPServer {
         
         self.httpChannelInitializer = HTTP2UpgradeChannelInitializer()
         return self.addChildChannelHandler(NIOSSLServerHandler(context: sslContext), position: .beforeHTTP)
+    }
+
+    @discardableResult public func setHTTP2() -> HBHTTPServer {
+        self.httpChannelInitializer = HTTP2ChannelInitializer()
+        return self
     }
 }
