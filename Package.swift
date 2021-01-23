@@ -11,6 +11,7 @@ let package = Package(
         .library(name: "HummingbirdFiles", targets: ["HummingbirdFiles"]),
         .library(name: "HummingbirdJSON", targets: ["HummingbirdJSON"]),
         .library(name: "HummingbirdTLS", targets: ["HummingbirdTLS"]),
+        .library(name: "HummingbirdXCT", targets: ["HummingbirdXCT"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-log.git", from: "1.4.0"),
