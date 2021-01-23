@@ -1,5 +1,6 @@
 import AsyncHTTPClient
 import Hummingbird
+import HummingbirdXCT
 import NIOExtras
 import NIOHTTP1
 import XCTest
@@ -47,6 +48,13 @@ final class ApplicationTests: XCTestCase {
         testApp { app, _ in app.start() }
     }
 
+    func testGetRoute2() throws {
+        let app = HBApplication(.testing)
+        try app.xctStart()
+        let response = try app.xctRequest(.init(uri: "/hello", method: .GET))
+        print(response)
+        try app.xctStop()
+    }
     func testGetRoute() {
         testApp { app, client in
             app.router.get("/hello") { request -> EventLoopFuture<ByteBuffer> in

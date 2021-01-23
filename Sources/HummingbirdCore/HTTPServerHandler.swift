@@ -9,9 +9,9 @@ public protocol HBHTTPResponder {
 }
 
 /// Channel handler for responding to a request and returning a response
-final class HBHTTPServerHandler: ChannelInboundHandler {
-    typealias InboundIn = HBHTTPRequest
-    typealias OutboundOut = HBHTTPResponse
+public final class HBHTTPServerHandler: ChannelInboundHandler {
+    public typealias InboundIn = HBHTTPRequest
+    public typealias OutboundOut = HBHTTPResponse
 
     let responder: HBHTTPResponder
     
@@ -19,14 +19,14 @@ final class HBHTTPServerHandler: ChannelInboundHandler {
     var closeAfterResponseWritten: Bool
     var propagatedError: Error?
 
-    init(responder: HBHTTPResponder) {
+    public init(responder: HBHTTPResponder) {
         self.responder = responder
         self.responsesInProgress = 0
         self.closeAfterResponseWritten = false
         self.propagatedError = nil
     }
 
-    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+    public func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let request = unwrapInboundIn(data)
         // if error caught from previous channel handler then write an error
         if let error = propagatedError {
@@ -77,7 +77,7 @@ final class HBHTTPServerHandler: ChannelInboundHandler {
         self.writeResponse(context: context, response: response, keepAlive: keepAlive)
     }
 
-    func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
+    public func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
         switch event {
         case let evt as ChannelEvent where evt == ChannelEvent.inputClosed:
             // The remote peer half-closed the channel. At this time, any
@@ -95,7 +95,7 @@ final class HBHTTPServerHandler: ChannelInboundHandler {
         }
     }
 
-    func errorCaught(context: ChannelHandlerContext, error: Error) {
+    public func errorCaught(context: ChannelHandlerContext, error: Error) {
         self.propagatedError = error
     }
 }

@@ -50,9 +50,15 @@ let package = Package(
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "NIOSSL", package: "swift-nio-ssl"),
         ]),
+        .target(name: "HummingbirdXCT", dependencies: [
+            .byName(name: "Hummingbird"),
+            .product(name: "NIO", package: "swift-nio"),
+            .product(name: "NIOHTTP1", package: "swift-nio"),
+        ]),
         // test targets
         .testTarget(name: "HummingbirdTests", dependencies: [
             .byName(name: "Hummingbird"),
+            .byName(name: "HummingbirdXCT"),
             .product(name: "AsyncHTTPClient", package: "async-http-client"),
         ]),
         .testTarget(name: "HummingbirdCoreTests", dependencies: [
