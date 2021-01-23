@@ -2,23 +2,6 @@ import NIO
 import NIOExtras
 import NIOHTTP1
 
-public protocol HBChannelInitializer {
-    func initialize(_ server: HBHTTPServer, channel: Channel, responder: HBHTTPResponder) -> EventLoopFuture<Void>
-}
-
-public struct HTTP1ChannelInitializer: HBChannelInitializer {
-    public init() {}
-
-    public func initialize(_ server: HBHTTPServer, channel: Channel, responder: HBHTTPResponder) -> EventLoopFuture<Void> {
-        return channel.pipeline.configureHTTPServerPipeline(
-            withPipeliningAssistance: server.configuration.withPipeliningAssistance,
-            withErrorHandling: true
-        ).flatMap {
-            return server.addChildHandlers(channel: channel, responder: responder)
-        }
-    }
-}
-
 /// HTTP server
 public class HBHTTPServer {
     public let eventLoopGroup: EventLoopGroup
