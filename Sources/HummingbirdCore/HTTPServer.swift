@@ -2,14 +2,14 @@ import NIO
 import NIOExtras
 import NIOHTTP1
 
-public protocol HBChildChannelInitializer {
+public protocol HBChannelInitializer {
     func initialize(_ server: HBHTTPServer, channel: Channel, responder: HBHTTPResponder) -> EventLoopFuture<Void>
 }
 
-struct HTTP1ChildChannelInitializer: HBChildChannelInitializer {
-    init() {}
+public struct HTTP1ChannelInitializer: HBChannelInitializer {
+    public init() {}
 
-    func initialize(_ server: HBHTTPServer, channel: Channel, responder: HBHTTPResponder) -> EventLoopFuture<Void> {
+    public func initialize(_ server: HBHTTPServer, channel: Channel, responder: HBHTTPResponder) -> EventLoopFuture<Void> {
         return channel.pipeline.configureHTTPServerPipeline(
             withPipeliningAssistance: server.configuration.withPipeliningAssistance,
             withErrorHandling: true
@@ -23,7 +23,7 @@ struct HTTP1ChildChannelInitializer: HBChildChannelInitializer {
 public class HBHTTPServer {
     public let eventLoopGroup: EventLoopGroup
     public let configuration: Configuration
-    public var childHTTPChannelInitializer: HBChildChannelInitializer
+    public var httpChannelInitializer: HBChannelInitializer
 
     var quiesce: ServerQuiescingHelper?
 
@@ -60,7 +60,7 @@ public class HBHTTPServer {
         self.quiesce = nil
         self._additionalChildHandlers = []
         // defaults to HTTP1
-        self.childHTTPChannelInitializer = HTTP1ChildChannelInitializer()
+        self.httpChannelInitializer = HTTP1ChannelInitializer()
     }
 
     /// Append to list of `ChannelHandler`s to be added to server child channels. Need to provide a closure so new instance of these handlers are
@@ -73,7 +73,7 @@ public class HBHTTPServer {
     public func start(responder: HBHTTPResponder) -> EventLoopFuture<Void> {
         func childChannelInitializer(channel: Channel) -> EventLoopFuture<Void> {
             return channel.pipeline.addHandlers(self.additionalChildHandlers(at: .beforeHTTP)).flatMap {
-                return self.childHTTPChannelInitializer.initialize(self, channel: channel, responder: responder)
+                return self.httpChannelInitializer.initialize(self, channel: channel, responder: responder)
             }
         }
         
