@@ -7,6 +7,7 @@ let package = Package(
     name: "hummingbird",
     products: [
         .library(name: "Hummingbird", targets: ["Hummingbird"]),
+        .library(name: "HummingbirdClient", targets: ["HummingbirdClient"]),
         .library(name: "HummingbirdCore", targets: ["HummingbirdCore"]),
         .library(name: "HummingbirdFiles", targets: ["HummingbirdFiles"]),
         .library(name: "HummingbirdHTTP2", targets: ["HummingbirdHTTP2"]),
@@ -30,6 +31,10 @@ let package = Package(
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "NIOExtras", package: "swift-nio-extras"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
+        ]),
+        .target(name: "HummingbirdClient", dependencies: [
+            .byName(name: "Hummingbird"),
+            .product(name: "AsyncHTTPClient", package: "async-http-client"),
         ]),
         .target(name: "Hummingbird", dependencies: [
             .byName(name: "CURLParser"),
