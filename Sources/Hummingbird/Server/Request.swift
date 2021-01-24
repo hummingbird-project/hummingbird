@@ -7,6 +7,8 @@ import NIOHTTP1
 public class HBRequest {
     /// URI path
     public var uri: HBURL
+    /// HTTP version
+    public var version: HTTPVersion
     /// Request HTTP method
     public var method: HTTPMethod
     /// Request HTTP headers
@@ -31,6 +33,7 @@ public class HBRequest {
         context: ChannelHandlerContext
     ) {
         self.uri = .init(head.uri)
+        self.version = head.version
         self.method = head.method
         self.headers = head.headers
         self.body = body
