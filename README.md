@@ -37,9 +37,9 @@ try? server.channel?.closeFuture.wait()
 
 Hummingbird is a lightweight and flexible web application framework that runs on top of HummingbirdCore. It is designed to require the minimum number of dependencies: `swift-backtrace`, `swift-log`, `swift-nio`, `swift-nio-extras`, `swift-service-lifecycle` and `swift-metrics` and makes no use of Foundation.
 
-It provides a router for directing different paths to different handlers, middleware for processing requests before they reach your handlers and processing the responses returned, support for adding channel handlers to extend the HTTP server, extending the core `HBApplication`, `HBRequest` and `HBResponse` classes and providing custom encoding/decoding of `Codable` objects.
+It provides a router for directing different endpoints to their handlers, middleware for processing requests before they reach your handlers and processing the responses returned, support for adding channel handlers to extend the HTTP server, extending the core `HBApplication`, `HBRequest` and `HBResponse` classes and providing custom encoding/decoding of `Codable` objects.
 
-The interface is fairly standard. Anyone who has had experience of Vapor, Express.js will recognise the interfaces. Simple setup is as follows
+The interface is fairly standard. Anyone who has had experience of Vapor, Express.js etc will recognise the interfaces. Simple setup is as follows
 
 ```swift
 import Hummingbird
