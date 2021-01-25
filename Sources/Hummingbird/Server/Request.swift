@@ -4,7 +4,7 @@ import NIO
 import NIOConcurrencyHelpers
 import NIOHTTP1
 
-public class HBRequest {
+public final class HBRequest: HBExtensible {
     /// URI path
     public var uri: HBURL
     /// HTTP version

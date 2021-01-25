@@ -14,10 +14,6 @@
 /// }
 /// ```
 public struct HBExtensions<ParentObject> {
-    struct Item {
-        let value: Any
-        let shutdown: ((Any) -> ())?
-    }
     public init() {
         self.items = [:]
     }
@@ -48,5 +44,15 @@ public struct HBExtensions<ParentObject> {
         items = [:]
     }
     
+    struct Item {
+        let value: Any
+        let shutdown: ((Any) -> ())?
+    }
+
     var items: [PartialKeyPath<ParentObject>: Item]
+}
+
+/// Protocol for extensible classes
+public protocol HBExtensible {
+    var extensions: HBExtensions<Self> { get set }
 }

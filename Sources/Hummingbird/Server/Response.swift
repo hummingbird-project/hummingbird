@@ -3,7 +3,7 @@ import NIO
 import NIOHTTP1
 
 /// HTTP Response
-public class HBResponse {
+public final class HBResponse: HBExtensible {
     /// response status
     public var status: HTTPResponseStatus
     /// response headers

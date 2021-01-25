@@ -5,7 +5,7 @@ import Logging
 import NIO
 
 /// Application class.
-open class HBApplication {
+public final class HBApplication: HBExtensible {
     /// server lifecycle, controls initialization and shutdown of application
     public let lifecycle: ServiceLifecycle
     /// event loop group used by application
