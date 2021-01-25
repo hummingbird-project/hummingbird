@@ -67,6 +67,6 @@ Extensions provided in other repositories include
 
 | Extension | Description |
 |-----------|-------------|
-| [HummingbirdCompress](https://github.com/hummingbird-project/hummingbird-compression) | Request decompression and response compression (uses [NIOCompress](https://github.com/adam-fowler/compress-nio))
+| [HummingbirdCompress](https://github.com/hummingbird-project/hummingbird-compression) | Request decompression and response compression (uses [CompressNIO](https://github.com/adam-fowler/compress-nio))
 | [HummingbirdFluent](https://github.com/hummingbird-project/hummingbird-fluent) | Interface to the Vapor database ORM (uses [FluentKit](https://github.com/vapor/fluent))
 
