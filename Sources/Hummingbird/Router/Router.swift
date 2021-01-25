@@ -12,7 +12,7 @@ public protocol HBRouter: HBRouterMethods, HBResponder {
 
 extension HBRouter {
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    public func add<R: HBResponseGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (HBRequest) throws -> R) {
+    public func add<R: HBResponseGenerator>(_ path: String, method: HTTPMethod, use closure: @escaping (HBRequest) throws -> R) {
         let responder = CallbackResponder { request in
             request.body.consumeBody(on: request.eventLoop).flatMapThrowing { buffer in
                 request.body = .byteBuffer(buffer)
@@ -23,7 +23,7 @@ extension HBRouter {
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    public func add<R: HBResponseFutureGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (HBRequest) -> R) {
+    public func add<R: HBResponseFutureGenerator>(_ path: String, method: HTTPMethod, use closure: @escaping (HBRequest) -> R) {
         let responder = CallbackResponder { request in
             request.body.consumeBody(on: request.eventLoop).flatMap { buffer in
                 request.body = .byteBuffer(buffer)
@@ -34,7 +34,7 @@ extension HBRouter {
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    public func addStreamingRoute<R: HBResponseFutureGenerator>(_ path: String, method: HTTPMethod, closure: @escaping (HBRequest) -> R) {
+    public func addStreamingRoute<R: HBResponseFutureGenerator>(_ path: String, method: HTTPMethod, use closure: @escaping (HBRequest) -> R) {
         let responder = CallbackResponder { request in
             let streamer = request.body.streamBody(on: request.eventLoop)
             request.body = .stream(streamer)
