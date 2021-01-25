@@ -1,11 +1,13 @@
 import NIO
 import NIOHTTP1
 
+/// HTTP request
 public struct HBHTTPRequest {
     public var head: HTTPRequestHead
     public var body: HBRequestBody
 }
 
+/// HTTP response
 public struct HBHTTPResponse {
     public var head: HTTPResponseHead
     public var body: HBResponseBody
