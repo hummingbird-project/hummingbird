@@ -49,14 +49,14 @@ public class HBHTTPServer {
 
     /// Append to list of `ChannelHandler`s to be added to server child channels. Need to provide a closure so new instance of these handlers are
     /// created for each child channel
-    @discardableResult public func addChildChannelHandler(_ handler: @autoclosure @escaping () -> ChannelHandler, position: ChannelPosition = .afterHTTP) -> Self {
+    @discardableResult public func addChannelHandler(_ handler: @autoclosure @escaping () -> ChannelHandler, position: ChannelPosition = .afterHTTP) -> Self {
         self._additionalChildHandlers.append((handler: handler, position: position))
         return self
     }
 
     public func start(responder: HBHTTPResponder) -> EventLoopFuture<Void> {
         func childChannelInitializer(channel: Channel) -> EventLoopFuture<Void> {
-            return channel.pipeline.addHandlers(self.additionalChildHandlers(at: .beforeHTTP)).flatMap {
+            return channel.pipeline.addHandlers(self.additionalChannelHandlers(at: .beforeHTTP)).flatMap {
                 return self.httpChannelInitializer.initialize(self, channel: channel, responder: responder)
             }
         }
@@ -115,7 +115,7 @@ public class HBHTTPServer {
     }
 
     public func addChildHandlers(channel: Channel, responder: HBHTTPResponder) -> EventLoopFuture<Void> {
-        let childHandlers: [ChannelHandler] = self.additionalChildHandlers(at: .afterHTTP) + [
+        let childHandlers: [ChannelHandler] = self.additionalChannelHandlers(at: .afterHTTP) + [
             HBHTTPEncodeHandler(),
             HBHTTPDecodeHandler(configuration: self.configuration),
             HBHTTPServerHandler(responder: responder),
@@ -123,7 +123,7 @@ public class HBHTTPServer {
         return channel.pipeline.addHandlers(childHandlers)
     }
 
-    func additionalChildHandlers(at position: ChannelPosition) -> [ChannelHandler] {
+    public func additionalChannelHandlers(at position: ChannelPosition) -> [ChannelHandler] {
         return self._additionalChildHandlers.compactMap { if $0.position == position { return $0.handler() }; return nil }
     }
 

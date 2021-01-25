@@ -7,7 +7,7 @@ extension HBHTTPServer {
         tlsConfiguration.applicationProtocols.append("http/1.1")
         let sslContext = try NIOSSLContext(configuration: tlsConfiguration)
         
-        return self.addChildChannelHandler(NIOSSLServerHandler(context: sslContext), position: .beforeHTTP)
+        return self.addChannelHandler(NIOSSLServerHandler(context: sslContext), position: .beforeHTTP)
     }
 }
 

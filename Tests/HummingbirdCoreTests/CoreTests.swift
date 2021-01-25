@@ -8,13 +8,12 @@ import XCTest
 class HummingBirdCoreTests: XCTestCase {
     struct HelloResponder: HBHTTPResponder {
         func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
-            let responseHead = HTTPResponseHead(version: .init(major: 1, minor: 1), status: .ok)
-            let responseBody = context.channel.allocator.buffer(string: "Hello")
-            let response = HBHTTPResponse(head: responseHead, body: .byteBuffer(responseBody))
+            let response = HBHTTPResponse(
+                head: .init(version: .init(major: 1, minor: 1), status: .ok),
+                body: .byteBuffer(context.channel.allocator.buffer(string: "Hello"))
+            )
             return context.eventLoop.makeSucceededFuture(response)
         }
-        
-        var logger: Logger? = Logger(label: "Core")
     }
     
     func testConnect() throws {
