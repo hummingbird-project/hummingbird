@@ -168,7 +168,7 @@ final class ApplicationTests: XCTestCase {
             }
         }
         let app = HBApplication(.testing, configuration: .init(maxUploadSize: 65536))
-        app.XCTAddChannelHandler(CreateErrorHandler())
+        app.server.addChannelHandler(CreateErrorHandler())
         app.router.put("/accepted") { _ -> HTTPResponseStatus in
             return .accepted
         }

@@ -18,21 +18,6 @@ extension HBApplication {
         case noEnd
     }
     
-    var xctEmbeddedChannel: EmbeddedChannel {
-        get { extensions.get(\.xctEmbeddedChannel) }
-        set { extensions.set(\.xctEmbeddedChannel, value: newValue) }
-    }
-    
-    var xctEmbeddedEventLoop: EmbeddedEventLoop {
-        get { extensions.get(\.xctEmbeddedEventLoop) }
-        set { extensions.set(\.xctEmbeddedEventLoop, value: newValue) }
-    }
-    
-    var xctAdditionalChannels: [ChannelHandler] {
-        get { extensions.get(\.xctAdditionalChannels) }
-        set { extensions.set(\.xctAdditionalChannels, value: newValue) }
-    }
-    
     public enum XCTTestingEnum {
         case testing
     }
@@ -46,12 +31,11 @@ extension HBApplication {
         self.init(configuration: configuration, eventLoopGroupProvider: .shared(embeddedEventLoop))
         self.xctEmbeddedEventLoop = embeddedEventLoop
         self.xctEmbeddedChannel = EmbeddedChannel()
-        self.xctAdditionalChannels = []
     }
     
     /// Start tests
     public func XCTStart() {
-        XCTAssertNoThrow(try self.xctEmbeddedChannel.pipeline.addHandlers(self.xctAdditionalChannels + [
+        XCTAssertNoThrow(try self.xctEmbeddedChannel.pipeline.addHandlers(self.server.additionalChannelHandlers(at: .afterHTTP) + [
             HBHTTPEncodeHandler(),
             HBHTTPDecodeHandler(configuration: self.configuration.httpServer),
             HBHTTPServerHandler(responder: HBApplication.HTTPResponder(application: self)),
@@ -63,12 +47,6 @@ extension HBApplication {
         XCTAssertNoThrow(_ = try self.xctEmbeddedChannel.finish())
         XCTAssertNoThrow(try self.threadPool.syncShutdownGracefully())
         XCTAssertNoThrow(try self.eventLoopGroup.syncShutdownGracefully())
-    }
-    
-    /// Add additional channel handler
-    /// - Parameter handler: channel handler
-    public func XCTAddChannelHandler(_ handler: ChannelHandler) {
-        self.xctAdditionalChannels.append(handler)
     }
     
     /// Send request and call test callback on the response returned
@@ -107,6 +85,16 @@ extension HBApplication {
         }
     }
     
+    var xctEmbeddedChannel: EmbeddedChannel {
+        get { extensions.get(\.xctEmbeddedChannel) }
+        set { extensions.set(\.xctEmbeddedChannel, value: newValue) }
+    }
+
+    var xctEmbeddedEventLoop: EmbeddedEventLoop {
+        get { extensions.get(\.xctEmbeddedEventLoop) }
+        set { extensions.set(\.xctEmbeddedEventLoop, value: newValue) }
+    }
+
     func writeInbound(_ part: HTTPServerRequestPart) throws {
         try self.xctEmbeddedChannel.writeInbound(part)
     }
