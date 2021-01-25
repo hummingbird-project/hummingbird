@@ -20,7 +20,7 @@ struct HelloResponder: HBHTTPResponder {
 }    
 ```
 
-The following will start up a server using the above `HBHTTPResponder`.
+The following will start up a server using the above `HelloResponder`.
 
 ```swift
 let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
@@ -29,7 +29,7 @@ let server = HBHTTPServer(
     configuration: .init(address: .hostname("127.0.0.1", port: 8080))
 )
 try server.start(responder: HelloResponder()).wait()
-// This never happens as server channel is never closed
+// Wait until server closes which never happens as server channel is never closed
 try? server.channel?.closeFuture.wait()
 ```
 
