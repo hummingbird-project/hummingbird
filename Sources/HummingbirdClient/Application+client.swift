@@ -3,7 +3,7 @@ import AsyncHTTPClient
 
 extension HBApplication {
     /// Create HTTP Client
-    public func createHTTPClient(configuration: HTTPClient.Configuration = .init()) {
+    public func initializeHTTPClient(configuration: HTTPClient.Configuration = .init()) {
         httpClient = HTTPClient(eventLoopGroupProvider: .shared(self.eventLoopGroup), configuration: configuration)
     }
 
