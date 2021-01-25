@@ -1,28 +1,68 @@
 # Hummingbird
 
-Lightweight server framework based off Swift NIO. Hummingbird is designed to require the minimum number of dependencies. The core library `Hummingbird` requires `swift-backtrace`, `swift-log`, `swift-nio`, `swift-nio-extras`, `swift-service-lifecycle` and `swift-trace` and makes no use of Foundation.
+Lightweight, flexible server framework written in Swift.
 
-Hummingbird is easy to extended. You can add middleware for processing requests before they reach your handlers and process the responses returned, add additional channel handlers to the server, extend the `Application`, `Request`, `Response` classes and provide custom encoding/decoding of `Codable` objects. 
+Hummingbird consists of three main components, the core HTTP server, a minimal web application framework and the extension modules.
 
-The Hummingbird repository contains additional libraries to extend the framework to support some commonly required features. These have less limitations on what dependencies they can bring in. They currently include
+## HummingbirdCore
 
-- HummingbirdFiles: static file serving (uses Foundation)
-- HummingbirdJSON: JSON encoding and decoding (uses Foundation)
-- HummingbirdTLS: TLS support (use NIOSSL)
+HummingbirdCore provides a Swift NIO based HTTP server. You provide it with an struct that conforms to `HBHTTPResponder` to define how the server should respond to requests. The following is a responder that always returns a response containing the word "Hello" in the body. 
 
-The list is not very long at the moment but we intend to extend this. 
+```swift
+struct HelloResponder: HBHTTPResponder {
+    func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
+        let response = HBHTTPResponse(
+            head: .init(version: .init(major: 1, minor: 1), status: .ok),
+            body: .byteBuffer(context.channel.allocator.buffer(string: "Hello"))
+        )
+        return context.eventLoop.makeSucceededFuture(response)
+   }
+}    
+```
 
-## Usage
+The following will start up a server using the above `HBHTTPResponder`.
 
-This is a basic setup for a server. It binds to port 8000 on localhost, adds a route for path "/" that returns "Hello" in the response body.
+```swift
+let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+let server = HBHTTPServer(
+    group: eventLoopGroup, 
+    configuration: .init(address: .hostname(port: 8080))
+)
+try server.start(responder: HelloResponder()).wait()
+// This never happens as server channel is never closed
+try? server.channel?.closeFuture.wait()
+```
+
+## Hummingbird
+
+Hummingbird is a lightweight and flexible web application framework that runs on top of HummingbirdCore. It is designed to require the minimum number of dependencies: `swift-backtrace`, `swift-log`, `swift-nio`, `swift-nio-extras`, `swift-service-lifecycle` and `swift-metrics` and makes no use of Foundation.
+
+It provides a router for directing different paths to different handlers, middleware for processing requests before they reach your handlers and processing the responses returned, support for adding channel handlers to extend the HTTP server, extending the core `HBApplication`, `HBRequest` and `HBResponse` classes and providing custom encoding/decoding of `Codable` objects.
+
+The interface is fairly standard. Anyone who has had experience of Vapor, Express.js will recognise the interfaces. Simple setup is as follows
+
 ```swift
 import Hummingbird
 
 let app = Application(configuration: .init(address: .hostname("127.0.0.1", port: 8080)))
-app.router.get("/") { request -> String in
+app.router.get("hello") { request -> String in
     return "Hello"
 }
 app.start()
 app.wait()
 ```
+
+## Hummingbird Extensions
+
+Hummingbird is designed to require the least number of dependencies possible, but this means many features are unavailable to the core libraries. Additional features are provided through extensions. The Hummingbird repository comes with the following extensions
+
+- HummingbirdFiles: static file serving (uses Foundation)
+- HummingbirdJSON: JSON encoding and decoding (uses Foundation)
+- HummingbirdTLS: TLS support (use NIOSSL)
+- HummingbirdHTTP2: HTTP2 upgrade support (uses NIOSSL, NIOHTTP2)
+
+Extensions provided in other repositories include
+
+- HummingbirdCompress: Request decompression and response compression (uses [NIOCompress](https://github.com/adam-fowler/compress-nio))
+- HummingbirdFluent: Interface to the Vapor database ORM (uses [FluentKit](https://github.com/vapor/fluent))
 
