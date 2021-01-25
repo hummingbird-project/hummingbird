@@ -26,7 +26,7 @@ The following will start up a server using the above `HBHTTPResponder`.
 let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
 let server = HBHTTPServer(
     group: eventLoopGroup, 
-    configuration: .init(address: .hostname(port: 8080))
+    configuration: .init(address: .hostname("127.0.0.1", port: 8080))
 )
 try server.start(responder: HelloResponder()).wait()
 // This never happens as server channel is never closed
