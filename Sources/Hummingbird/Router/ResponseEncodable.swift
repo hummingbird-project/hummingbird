@@ -14,10 +14,10 @@ extension HBResponseEncodable {
 }
 
 /// Extend Optional to conform to HBResponseGenerator
-extension Optional: HBResponseGenerator where Wrapped: HBResponseEncodable {}
+extension Optional: HBResponseGenerator where Wrapped: Encodable {}
 
 /// Extend Optional to conform to HBResponseEncodable
-extension Optional: HBResponseEncodable where Wrapped: HBResponseEncodable {
+extension Optional: HBResponseEncodable where Wrapped: Encodable {
     public func response(from request: HBRequest) throws -> HBResponse {
         switch self {
         case .some(let wrapped):
@@ -29,20 +29,20 @@ extension Optional: HBResponseEncodable where Wrapped: HBResponseEncodable {
 }
 
 /// Extend Array to conform to HBResponseGenerator
-extension Array: HBResponseGenerator where Element: HBResponseEncodable {}
+extension Array: HBResponseGenerator where Element: Encodable {}
 
 /// Extend Array to conform to HBResponseEncodable
-extension Array: HBResponseEncodable where Element: HBResponseEncodable {
+extension Array: HBResponseEncodable where Element: Encodable {
     public func response(from request: HBRequest) throws -> HBResponse {
         return try request.application.encoder.encode(self, from: request)
     }
 }
 
 /// Extend Dictionary to conform to HBResponseGenerator
-extension Dictionary: HBResponseGenerator where Key: HBResponseEncodable, Value: HBResponseEncodable {}
+extension Dictionary: HBResponseGenerator where Key: Encodable, Value: Encodable {}
 
 /// Extend Array to conform to HBResponseEncodable
-extension Dictionary: HBResponseEncodable where Key: HBResponseEncodable, Value: HBResponseEncodable {
+extension Dictionary: HBResponseEncodable where Key: Encodable, Value: Encodable {
     public func response(from request: HBRequest) throws -> HBResponse {
         return try request.application.encoder.encode(self, from: request)
     }
