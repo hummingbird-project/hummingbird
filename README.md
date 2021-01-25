@@ -56,13 +56,17 @@ app.wait()
 
 Hummingbird is designed to require the least number of dependencies possible, but this means many features are unavailable to the core libraries. Additional features are provided through extensions. The Hummingbird repository comes with the following extensions
 
-- HummingbirdFiles: static file serving (uses Foundation)
-- HummingbirdJSON: JSON encoding and decoding (uses Foundation)
-- HummingbirdTLS: TLS support (use NIOSSL)
-- HummingbirdHTTP2: HTTP2 upgrade support (uses NIOSSL, NIOHTTP2)
+| Extension | Description |
+|-----------|-------------|
+| HummingbirdFiles | static file serving (uses Foundation) |
+| HummingbirdJSON | JSON encoding and decoding (uses Foundation) |
+| HummingbirdTLS | TLS support (use NIOSSL) |
+| HummingbirdHTTP2 | HTTP2 upgrade support (uses NIOSSL, NIOHTTP2) |
 
 Extensions provided in other repositories include
 
-- HummingbirdCompress: Request decompression and response compression (uses [NIOCompress](https://github.com/adam-fowler/compress-nio))
-- HummingbirdFluent: Interface to the Vapor database ORM (uses [FluentKit](https://github.com/vapor/fluent))
+| Extension | Description |
+|-----------|-------------|
+| [HummingbirdCompress](https://github.com/hummingbird-project/hummingbird-compression) | Request decompression and response compression (uses [NIOCompress](https://github.com/adam-fowler/compress-nio))
+| [HummingbirdFluent](https://github.com/hummingbird-project/hummingbird-fluent) | Interface to the Vapor database ORM (uses [FluentKit](https://github.com/vapor/fluent))
 
