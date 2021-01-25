@@ -78,6 +78,10 @@ let package = Package(
             .byName(name: "HummingbirdCore"),
             .product(name: "AsyncHTTPClient", package: "async-http-client"),
         ]),
+        .testTarget(name: "HummingbirdFilesTests", dependencies: [
+            .byName(name: "HummingbirdFiles"),
+            .product(name: "AsyncHTTPClient", package: "async-http-client"),
+        ]),
         .testTarget(name: "HummingbirdJSONTests", dependencies: [
             .byName(name: "HummingbirdJSON"),
             .byName(name: "HummingbirdXCT"),
