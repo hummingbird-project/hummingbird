@@ -52,7 +52,7 @@ public class HBRequest {
         get { extensions.get(\.parameters) }
         set { extensions.set(\.parameters, value: newValue) }
     }
-    
+
     private static func loggerWithRequestId(_ logger: Logger) -> Logger {
         var logger = logger
         logger[metadataKey: "id"] = .string(Self.globalRequestID.add(1).description)
@@ -60,4 +60,14 @@ public class HBRequest {
     }
 
     private static let globalRequestID = NIOAtomic<Int>.makeAtomic(value: 0)
+}
+
+extension HBRequest {
+    public func failure<T>(_ error: Error) -> EventLoopFuture<T> {
+        return self.eventLoop.makeFailedFuture(error)
+    }
+
+    public func success<T>(_ value: T) -> EventLoopFuture<T> {
+        return self.eventLoop.makeSucceededFuture(value)
+    }
 }
