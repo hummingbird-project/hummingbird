@@ -19,3 +19,6 @@ public protocol HBHTTPResponder {
     var logger: Logger? { get }
 }
 
+extension HBHTTPResponder {
+    public var logger: Logger? { nil }
+}
