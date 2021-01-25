@@ -7,6 +7,7 @@ public class HBHTTPServer {
     public let eventLoopGroup: EventLoopGroup
     public let configuration: Configuration
     public var httpChannelInitializer: HBChannelInitializer
+    public var channel: Channel?
 
     var quiesce: ServerQuiescingHelper?
 
@@ -82,12 +83,14 @@ public class HBHTTPServer {
         switch configuration.address {
         case .hostname(let host, let port):
             bindFuture = bootstrap.bind(host: host, port: port)
-                .map { _ in
+                .map { channel in
+                    self.channel = channel
                     responder.logger?.info("Server started and listening on \(host):\(port)")
                 }
         case .unixDomainSocket(let path):
             bindFuture = bootstrap.bind(unixDomainSocketPath: path)
-                .map { _ in
+                .map { channel in
+                    self.channel = channel
                     responder.logger?.info("Server started and listening on socket path \(path)")
                 }
         }
@@ -108,7 +111,7 @@ public class HBHTTPServer {
         } else {
             promise.succeed(())
         }
-        return promise.futureResult
+        return promise.futureResult.map { _ in self.channel = nil }
     }
 
     public func addChildHandlers(channel: Channel, responder: HBHTTPResponder) -> EventLoopFuture<Void> {
