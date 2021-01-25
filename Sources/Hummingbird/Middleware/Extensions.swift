@@ -1,3 +1,5 @@
+import Logging
+
 /// Extend objects with additional member variables
 ///
 /// If you have only one instance of a type to attach you can extend it to conform to `StorageKey`
@@ -27,13 +29,21 @@ public struct HBExtensions<ParentObject> {
         return value
     }
 
-    public mutating func set<Type>(_ key: KeyPath<ParentObject, Type>, value: Type, shutdownCallback: ((Type) -> ())? = nil) {
+    public mutating func set<Type>(_ key: KeyPath<ParentObject, Type>, value: Type, shutdownCallback: ((Type) throws -> ())? = nil) {
         if let item = items[key] {
             item.shutdown?(item.value)
         }
         items[key] = .init(
             value: value,
-            shutdown: shutdownCallback.map { callback in return { item in callback(item as! Type) } }
+            shutdown: shutdownCallback.map { callback in
+                return { item in
+                    do {
+                        try callback(item as! Type)
+                    } catch {
+                        Logger(label: "Extensions").error("Failed to shutdown \(Type.self) with error: \(error)")
+                    }
+                }
+            }
         )
     }
 
