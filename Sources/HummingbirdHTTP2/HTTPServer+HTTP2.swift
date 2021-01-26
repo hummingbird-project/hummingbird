@@ -1,6 +1,4 @@
 import HummingbirdCore
-import NIO
-import NIOHTTP2
 import NIOSSL
 
 extension HBHTTPServer {
@@ -18,12 +16,5 @@ extension HBHTTPServer {
         
         self.httpChannelInitializer = HTTP2UpgradeChannelInitializer()
         return self.addChannelHandler(NIOSSLServerHandler(context: sslContext), position: .beforeHTTP)
-    }
-
-    /// Set HTTP server to use HTTP2. This assumes that HTTP2 will have already been negotiated. In general you are more likely to use
-    ///`addHTTP2Upgrade` so the HTTP version can be negotiated.
-    @discardableResult public func setHTTP2() -> HBHTTPServer {
-        self.httpChannelInitializer = HTTP2ChannelInitializer()
-        return self
     }
 }
