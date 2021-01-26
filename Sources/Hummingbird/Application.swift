@@ -54,10 +54,8 @@ public final class HBApplication: HBExtensible {
 
         self.server = HBHTTPServer(group: self.eventLoopGroup, configuration: self.configuration.httpServer)
 
-        self.lifecycle.register(
-            label: "Application",
-            start: .sync { },
-            shutdown: .sync(self.shutdownApplication)
+        self.lifecycle.registerShutdown(
+            label: "Application", .sync(self.shutdownApplication)
         )
 
         self.lifecycle.register(
@@ -96,7 +94,7 @@ public final class HBApplication: HBExtensible {
     }
 
     /// shutdown eventloop, threadpool and any extensions attached to the Application
-    func shutdownApplication() throws {
+    public func shutdownApplication() throws {
         try self.extensions.shutdown()
         try self.threadPool.syncShutdownGracefully()
         if case .createNew = self.eventLoopGroupProvider {

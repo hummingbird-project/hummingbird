@@ -25,9 +25,7 @@ extension HBApplication {
             xct = HBXCTLive(configuration: configuration)
         }
         self.init(configuration: configuration, eventLoopGroupProvider: .shared(xct.eventLoopGroup))
-        self.extensions.set(\.xct, value: xct) { xct in
-            xct.stop()
-        }
+        self.extensions.set(\.xct, value: xct)
     }
 
     var xct: HBXCT {
@@ -38,7 +36,15 @@ extension HBApplication {
     public func XCTStart() {
         xct.start(application: self)
     }
-    
+
+    /// Stop tests
+    public func XCTStop() {
+        // get XCT so we can ensure it is shutdown last
+        let xct = self.xct
+        try? self.shutdownApplication()
+        xct.stop()
+    }
+
     /// Send request and call test callback on the response returned
     public func XCTExecute(
         uri: String,

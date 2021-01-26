@@ -18,7 +18,7 @@ final class MiddlewareTests: XCTestCase {
             return "Hello"
         }
         app.XCTStart()
-        defer { app.stop() }
+        defer { app.XCTStop() }
         
         app.XCTExecute(uri: "/hello", method: .GET) { response in
             XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
@@ -42,7 +42,7 @@ final class MiddlewareTests: XCTestCase {
             return "Hello"
         }
         app.XCTStart()
-        defer { app.stop() }
+        defer { app.XCTStop() }
         
         app.XCTExecute(uri: "/hello", method: .GET) { response in
             // headers come back in opposite order as middleware is applied to responses in that order
@@ -70,7 +70,7 @@ final class MiddlewareTests: XCTestCase {
             return request.eventLoop.makeSucceededFuture(request.allocator.buffer(string: "hello"))
         }
         app.XCTStart()
-        defer { app.stop() }
+        defer { app.XCTStop() }
         
         app.XCTExecute(uri: "/group", method: .GET) { response in
             XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")

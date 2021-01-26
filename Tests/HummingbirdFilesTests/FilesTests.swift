@@ -18,7 +18,7 @@ class HummingbirdFilesTests: XCTestCase {
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
         app.XCTStart()
-        defer { app.stop(); }
+        defer { app.XCTStop(); }
 
         app.XCTExecute(uri: "/test.txt", method: .GET) { response in
             var body = try XCTUnwrap(response.body)
@@ -37,7 +37,7 @@ class HummingbirdFilesTests: XCTestCase {
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
         app.XCTStart()
-        defer { app.stop(); }
+        defer { app.XCTStop(); }
 
         app.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
             XCTAssertNil(response.body)

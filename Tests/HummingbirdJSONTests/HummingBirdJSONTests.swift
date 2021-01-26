@@ -22,7 +22,7 @@ class HummingBirdJSONTests: XCTestCase {
             return .ok
         }
         app.XCTStart()
-        defer { app.stop() }
+        defer { app.XCTStop() }
         
         let body = #"{"name": "John Smith", "email": "john.smith@email.com", "age": 25}"#
         app.XCTExecute(uri: "/user", method: .PUT, body: ByteBufferAllocator().buffer(string: body)) {
@@ -37,7 +37,7 @@ class HummingBirdJSONTests: XCTestCase {
             return User(name: "John Smith", email: "john.smith@email.com", age: 25)
         }
         app.XCTStart()
-        defer { app.stop() }
+        defer { app.XCTStop() }
         
         app.XCTExecute(uri: "/user", method: .GET) { response in
             let body = try XCTUnwrap(response.body)

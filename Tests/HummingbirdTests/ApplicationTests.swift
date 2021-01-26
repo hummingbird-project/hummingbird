@@ -36,7 +36,7 @@ final class ApplicationTests: XCTestCase {
             return request.eventLoop.makeSucceededFuture(buffer)
         }
         app.XCTStart()
-        defer { app.stop() }
+        defer { app.XCTStop() }
         
         app.XCTExecute(uri: "/hello", method: .GET) { response in
             var body = try XCTUnwrap(response.body)
@@ -52,7 +52,7 @@ final class ApplicationTests: XCTestCase {
             return .accepted
         }
         app.XCTStart()
-        defer { app.stop() }
+        defer { app.XCTStop() }
         
         app.XCTExecute(uri: "/accepted", method: .GET) { response in
             XCTAssertEqual(response.status, .accepted)
@@ -65,7 +65,7 @@ final class ApplicationTests: XCTestCase {
             return "Hello"
         }
         app.XCTStart()
-        defer { app.stop() }
+        defer { app.XCTStop() }
         
         app.XCTExecute(uri: "/hello", method: .GET) { response in
             XCTAssertEqual(response.headers["connection"].first, "keep-alive")
@@ -79,7 +79,7 @@ final class ApplicationTests: XCTestCase {
             return "POST: Hello"
         }
         app.XCTStart()
-        defer { app.stop() }
+        defer { app.XCTStop() }
         
         app.XCTExecute(uri: "/hello", method: .POST) { response in
             var body = try XCTUnwrap(response.body)
@@ -96,7 +96,7 @@ final class ApplicationTests: XCTestCase {
             return request.eventLoop.makeSucceededFuture(buffer)
         }
         app.XCTStart()
-        defer { app.stop() }
+        defer { app.XCTStop() }
         
         app.XCTExecute(uri: "/query?test=test%20data", method: .GET) { response in
             var body = try XCTUnwrap(response.body)
@@ -113,7 +113,7 @@ final class ApplicationTests: XCTestCase {
             return .init(status: .ok, headers: [:], body: body)
         }
         app.XCTStart()
-        defer { app.stop() }
+        defer { app.XCTStop() }
         
         let buffer = self.randomBuffer(size: 140_000)
         app.XCTExecute(uri: "/echo-body", method: .POST, body: buffer) { response in
@@ -145,7 +145,7 @@ final class ApplicationTests: XCTestCase {
             return request.eventLoop.makeSucceededFuture(.init(status: .ok, headers: [:], body: body))
         }
         app.XCTStart()
-        defer { app.stop() }
+        defer { app.XCTStop() }
         
         let buffer = self.randomBuffer(size: 140_000)
         app.XCTExecute(uri: "/echo-body-streaming", method: .POST, body: buffer) { response in
@@ -173,7 +173,7 @@ final class ApplicationTests: XCTestCase {
             return .accepted
         }
         app.XCTStart()
-        defer { app.stop() }
+        defer { app.XCTStop() }
 
         let buffer = self.randomBuffer(size: 32)
         app.XCTExecute(uri: "/accepted", method: .PUT, body: buffer) { response in
@@ -187,7 +187,7 @@ final class ApplicationTests: XCTestCase {
             return .accepted
         }
         app.XCTStart()
-        defer { app.stop() }
+        defer { app.XCTStop() }
         
         let buffer = self.randomBuffer(size: 140_000)
         app.XCTExecute(uri: "/upload", method: .PUT, body: buffer) { response in
