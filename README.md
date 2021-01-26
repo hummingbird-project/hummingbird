@@ -6,7 +6,7 @@ Hummingbird consists of three main components, the core HTTP server, a minimal w
 
 ## HummingbirdCore
 
-HummingbirdCore provides a Swift NIO based HTTP server. You provide it with an struct that conforms to `HBHTTPResponder` to define how the server should respond to requests. The following is a responder that always returns a response containing the word "Hello" in the body. 
+HummingbirdCore provides a Swift NIO based HTTP server. You provide it with a struct that conforms to `HBHTTPResponder` to define how the server should respond to requests. The following is a responder that always returns a response containing the word "Hello" in the body. 
 
 ```swift
 struct HelloResponder: HBHTTPResponder {
@@ -69,4 +69,4 @@ Extensions provided in other repositories include
 |-----------|-------------|
 | [HummingbirdCompress](https://github.com/hummingbird-project/hummingbird-compression) | Request decompression and response compression (uses [CompressNIO](https://github.com/adam-fowler/compress-nio))
 | [HummingbirdFluent](https://github.com/hummingbird-project/hummingbird-fluent) | Interface to the Vapor database ORM (uses [FluentKit](https://github.com/vapor/fluent))
-
+| [HummingbirdRedis](https://github.com/hummingbird-project/hummingbird-redis) | Interface to Redis (uses [RediStack](https://gitlab.com/mordil/RediStack.git))
