@@ -1,0 +1,52 @@
+import AsyncHTTPClient
+import Hummingbird
+import NIO
+import NIOHTTP1
+import XCTest
+
+/// Test using a live server and AsyncHTTPClient
+struct HBXCTLive: HBXCT {
+    init(configuration: HBApplication.Configuration) {
+        guard let port = configuration.address.port else {
+            preconditionFailure("Cannot test application bound to unix domain socket")
+        }
+        self.port = port
+        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        self.client = HTTPClient(eventLoopGroupProvider: .shared(self.eventLoopGroup))
+    }
+
+    /// Start tests
+    func start(application: HBApplication) {
+        application.start()
+    }
+
+    /// Stop tests
+    func stop() {
+        XCTAssertNoThrow(_ = try self.client.syncShutdown())
+        XCTAssertNoThrow(_ = try self.eventLoopGroup.syncShutdownGracefully())
+    }
+
+    /// Send request and call test callback on the response returned
+    func execute(
+        uri: String,
+        method: HTTPMethod,
+        headers: HTTPHeaders = [:],
+        body: ByteBuffer? = nil
+    ) -> EventLoopFuture<HBXCTResponse> {
+        let url = "http://localhost:\(port)\(uri)"
+        do {
+            let request = try HTTPClient.Request(url: url, method: method, headers: headers, body: body.map{ .byteBuffer($0) })
+            return client.execute(request: request)
+                .map { response in
+                    return .init(status: response.status, headers: response.headers, body: response.body)
+                }
+        } catch {
+            return eventLoopGroup.next().makeFailedFuture(error)
+        }
+    }
+
+    let eventLoopGroup: EventLoopGroup
+    var port: Int
+    let client: HTTPClient
+}
+

@@ -68,6 +68,7 @@ let package = Package(
             .byName(name: "Hummingbird"),
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
+            .product(name: "AsyncHTTPClient", package: "async-http-client"),
         ]),
         // test targets
         .testTarget(name: "HummingbirdTests", dependencies: [
@@ -80,7 +81,7 @@ let package = Package(
         ]),
         .testTarget(name: "HummingbirdFilesTests", dependencies: [
             .byName(name: "HummingbirdFiles"),
-            .product(name: "AsyncHTTPClient", package: "async-http-client"),
+            .byName(name: "HummingbirdXCT"),
         ]),
         .testTarget(name: "HummingbirdJSONTests", dependencies: [
             .byName(name: "HummingbirdJSON"),
