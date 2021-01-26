@@ -31,32 +31,28 @@ public struct HBExtensions<ParentObject> {
 
     public mutating func set<Type>(_ key: KeyPath<ParentObject, Type>, value: Type, shutdownCallback: ((Type) throws -> ())? = nil) {
         if let item = items[key] {
-            item.shutdown?(item.value)
+            guard item.shutdown == nil else {
+                preconditionFailure("Cannot replace items with shutdown functions")
+            }
         }
         items[key] = .init(
             value: value,
             shutdown: shutdownCallback.map { callback in
-                return { item in
-                    do {
-                        try callback(item as! Type)
-                    } catch {
-                        Logger(label: "Extensions").error("Failed to shutdown \(Type.self) with error: \(error)")
-                    }
-                }
+                return { item in try callback(item as! Type) }
             }
         )
     }
 
-    mutating func shutdown() {
+    mutating func shutdown() throws {
         for item in items.values {
-            item.shutdown?(item.value)
+            try item.shutdown?(item.value)
         }
         items = [:]
     }
     
     struct Item {
         let value: Any
-        let shutdown: ((Any) -> ())?
+        let shutdown: ((Any) throws -> ())?
     }
 
     var items: [PartialKeyPath<ParentObject>: Item]
