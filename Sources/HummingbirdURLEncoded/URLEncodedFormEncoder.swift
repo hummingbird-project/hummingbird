@@ -1,43 +1,62 @@
-//===----------------------------------------------------------------------===//
-//
-// This source file is part of the Soto for AWS open source project
-//
-// Copyright (c) 2017-2020 the Soto project authors
-// Licensed under Apache License v2.0
-//
-// See LICENSE.txt for license information
-// See CONTRIBUTORS.txt for the list of Soto project authors
-//
-// SPDX-License-Identifier: Apache-2.0
-//
-//===----------------------------------------------------------------------===//
-
-import struct Foundation.CharacterSet
-import struct Foundation.Data
-import struct Foundation.Date
-import class Foundation.DateFormatter
-import struct Foundation.Locale
-import struct Foundation.TimeZone
+import Foundation
 
 /// The wrapper struct for encoding Codable classes to Query dictionary
 public struct URLEncodedFormEncoder {
+
+    /// The strategy to use for encoding `Date` values.
+    public enum DateEncodingStrategy {
+        /// Defer to `Date` for encoding. This is the default strategy.
+        case deferredToDate
+
+        /// Encode the `Date` as a UNIX timestamp from a JSON number.
+        case secondsSince1970
+
+        /// Encode the `Date` as UNIX millisecond timestamp from a JSON number.
+        case millisecondsSince1970
+
+        /// Encode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
+        @available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
+        case iso8601
+
+        /// Encode the `Date` as a string parsed by the given formatter.
+        case formatted(DateFormatter)
+
+        /// Encode the `Date` as a custom value encoded by the given closure.
+        case custom((Date, Encoder) throws -> Void)
+    }
+
+    /// The strategy to use in Encoding dates. Defaults to `.deferredToDate`.
+    public var dateEncodingStrategy: DateEncodingStrategy
+
     /// Contextual user-provided information for use during encoding.
-    public var userInfo: [CodingUserInfoKey: Any] = [:]
+    public var userInfo: [CodingUserInfoKey: Any]
 
     /// additional keys to include
-    public var additionalKeys: [String: String] = [:]
+    public var additionalKeys: [String: String]
 
     /// Options set on the top-level encoder to pass down the encoding hierarchy.
     fileprivate struct _Options {
+        let dateEncodingStrategy: DateEncodingStrategy
         let userInfo: [CodingUserInfoKey: Any]
     }
 
     /// The options set on the top-level encoder.
     fileprivate var options: _Options {
-        return _Options(userInfo: self.userInfo)
+        return _Options(
+            dateEncodingStrategy: self.dateEncodingStrategy,
+            userInfo: self.userInfo
+        )
     }
 
-    public init() {}
+    public init(
+        dateEncodingStrategy: URLEncodedFormEncoder.DateEncodingStrategy = .deferredToDate,
+        userInfo: [CodingUserInfoKey : Any] = [:],
+        additionalKeys: [String : String] = [:]
+    ) {
+        self.dateEncodingStrategy = dateEncodingStrategy
+        self.userInfo = userInfo
+        self.additionalKeys = additionalKeys
+    }
 
     public func encode<T: Encodable>(_ value: T, name: String? = nil) throws -> String? {
         let encoder = _URLEncodedFormEncoder(options: options)
@@ -47,7 +66,9 @@ public struct URLEncodedFormEncoder {
         let result = flatten(encoder.result)
         return Self.urlEncodeParams(dictionary: result)
     }
+}
 
+extension URLEncodedFormEncoder {
     private static func urlEncodeParam(_ value: String) -> String {
         return value.addingPercentEncoding(withAllowedCharacters: URLEncodedForm.unreservedCharacters) ?? value
     }
@@ -367,7 +388,24 @@ extension _URLEncodedFormEncoder: SingleValueEncodingContainer {
 
 extension _URLEncodedFormEncoder {
     func box(_ date: Date) throws -> Any {
-        try encode(Self.dateFormatter.string(from: date))
+        switch options.dateEncodingStrategy {
+        case .deferredToDate:
+            try date.encode(to: self)
+        case .millisecondsSince1970:
+            try encode(Int(date.timeIntervalSince1970 * 1000).description)
+        case .secondsSince1970:
+            try encode(Int(date.timeIntervalSince1970).description)
+        case .iso8601:
+            if #available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *) {
+                try encode(Self.iso8601Formatter.string(from: date))
+            } else {
+                preconditionFailure("ISO8601DateFormatter is unavailable on this platform")
+            }
+        case .formatted(let formatter):
+            try encode(formatter.string(from: date))
+        case .custom(let closure):
+            try closure(date, self)
+        }
         return storage.popContainer()
     }
 
@@ -388,11 +426,10 @@ extension _URLEncodedFormEncoder {
         }
     }
 
-    static let dateFormatter: DateFormatter = {
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        return dateFormatter
+    @available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
+    fileprivate static var iso8601Formatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = .withInternetDateTime
+        return formatter
     }()
 }

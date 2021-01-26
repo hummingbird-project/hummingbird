@@ -2,9 +2,9 @@ import HummingbirdURLEncoded
 import XCTest
 
 class URLEncodedFormEncoderTests: XCTestCase {
-    func testForm<Input: Encodable>(_ value: Input, query: String) {
+    func testForm<Input: Encodable>(_ value: Input, query: String, encoder: URLEncodedFormEncoder = .init()) {
         do {
-            let query2 = try URLEncodedFormEncoder().encode(value)
+            let query2 = try encoder.encode(value)
             XCTAssertEqual(query2, query)
         } catch {
             XCTFail("\(error)")
@@ -72,6 +72,23 @@ class URLEncodedFormEncoderTests: XCTestCase {
         }
         let test = Test(a: ["one": 1, "two": 2, "three": 3])
         testForm(test, query: "a.one=1&a.three=3&a.two=2")
+    }
+
+    func testDateEncode() {
+        struct Test: Codable {
+            let d: Date
+        }
+        let test = Test(d: Date(timeIntervalSinceReferenceDate: 2387643))
+        testForm(test, query: "d=2387643.0")
+        testForm(test, query: "d=980694843000", encoder: .init(dateEncodingStrategy: .millisecondsSince1970))
+        testForm(test, query: "d=980694843", encoder: .init(dateEncodingStrategy: .secondsSince1970))
+        testForm(test, query: "d=2001-01-28T15%3A14%3A03Z", encoder: .init(dateEncodingStrategy: .iso8601))
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        testForm(test, query: "d=2001-01-28T15%3A14%3A03.000Z", encoder: .init(dateEncodingStrategy: .formatted(dateFormatter)))
     }
 
     func testDataBlobEncode() {
