@@ -2,10 +2,20 @@ import HummingbirdURLEncoded
 import XCTest
 
 class URLEncodedFormEncoderTests: XCTestCase {
+    static func XCTAssertEncodedEqual(_ lhs: String, _ rhs: String) {
+        let lhs = lhs.split(separator: "&")
+            .sorted { $0 < $1 }
+            .joined(separator: "&")
+        let rhs = rhs.split(separator: "&")
+            .sorted { $0 < $1 }
+            .joined(separator: "&")
+        XCTAssertEqual(lhs, rhs)
+    }
+
     func testForm<Input: Encodable>(_ value: Input, query: String, encoder: URLEncodedFormEncoder = .init()) {
         do {
             let query2 = try encoder.encode(value)
-            XCTAssertEqual(query2, query)
+            Self.XCTAssertEncodedEqual(query2, query)
         } catch {
             XCTFail("\(error)")
         }

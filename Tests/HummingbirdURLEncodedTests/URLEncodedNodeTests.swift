@@ -2,13 +2,21 @@
 import XCTest
 
 class URLEncodedFormNodeTests: XCTestCase {
+    static func XCTAssertEncodedEqual(_ lhs: String, _ rhs: String) {
+        let lhs = lhs.split(separator: "&")
+            .sorted { $0 < $1 }
+            .joined(separator: "&")
+        let rhs = rhs.split(separator: "&")
+            .sorted { $0 < $1 }
+            .joined(separator: "&")
+        XCTAssertEqual(lhs, rhs)
+    }
+
     func testDecodeEncode(_ string: String, encoded: URLEncodedFormNode) {
         do {
             let formData = try URLEncodedFormNode(from: string)
             XCTAssertEqual(formData, encoded)
-            let formDataString = formData.description
-            let formData2 = try URLEncodedFormNode(from: formDataString)
-            XCTAssertEqual(formData, formData2)
+            Self.XCTAssertEncodedEqual(formData.description, string)
         } catch {
             XCTFail("\(error)")
         }
