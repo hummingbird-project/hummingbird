@@ -80,8 +80,8 @@ class URLEncodedFormEncoderTests: XCTestCase {
         }
         let test = Test(d: Date(timeIntervalSinceReferenceDate: 2387643))
         testForm(test, query: "d=2387643.0")
-        testForm(test, query: "d=980694843000", encoder: .init(dateEncodingStrategy: .millisecondsSince1970))
-        testForm(test, query: "d=980694843", encoder: .init(dateEncodingStrategy: .secondsSince1970))
+        testForm(test, query: "d=980694843000.0", encoder: .init(dateEncodingStrategy: .millisecondsSince1970))
+        testForm(test, query: "d=980694843.0", encoder: .init(dateEncodingStrategy: .secondsSince1970))
         testForm(test, query: "d=2001-01-28T15%3A14%3A03Z", encoder: .init(dateEncodingStrategy: .iso8601))
 
         let dateFormatter = DateFormatter()

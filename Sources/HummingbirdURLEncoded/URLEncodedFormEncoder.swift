@@ -65,40 +65,6 @@ public struct URLEncodedFormEncoder {
     }
 }
 
-/// storage for Query Encoder. Stores a stack of QueryEncoder containers, plus leaf objects
-private struct URLEncodedFormEncoderStorage {
-    /// the container stack
-    private var containers: [URLEncodedFormNode] = []
-
-    /// initializes self with no containers
-    init() {
-        containers.append(.map())
-    }
-
-    /// push a new container onto the storage
-    mutating func pushKeyedContainer() -> URLEncodedFormNode.Map {
-        let map = URLEncodedFormNode.Map()
-        containers.append(.map(map))
-        return map
-    }
-
-    /// push a new container onto the storage
-    mutating func pushUnkeyedContainer() -> URLEncodedFormNode.Array {
-        let array = URLEncodedFormNode.Array()
-        containers.append(.array(array))
-        return array
-    }
-
-    mutating func push(container: URLEncodedFormNode) {
-        containers.append(container)
-    }
-
-    /// pop a container from the storage
-    @discardableResult mutating func popContainer() -> URLEncodedFormNode {
-        return containers.removeLast()
-    }
-}
-
 /// Internal QueryEncoder class. Does all the heavy lifting
 private class _URLEncodedFormEncoder: Encoder {
     var codingPath: [CodingKey]
@@ -333,12 +299,12 @@ extension _URLEncodedFormEncoder {
         case .deferredToDate:
             try date.encode(to: self)
         case .millisecondsSince1970:
-            try encode(Int(date.timeIntervalSince1970 * 1000).description)
+            try encode(Double(date.timeIntervalSince1970 * 1000).description)
         case .secondsSince1970:
-            try encode(Int(date.timeIntervalSince1970).description)
+            try encode(Double(date.timeIntervalSince1970).description)
         case .iso8601:
             if #available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *) {
-                try encode(Self.iso8601Formatter.string(from: date))
+                try encode(URLEncodedForm.iso8601Formatter.string(from: date))
             } else {
                 preconditionFailure("ISO8601DateFormatter is unavailable on this platform")
             }
@@ -366,11 +332,38 @@ extension _URLEncodedFormEncoder {
             return storage.popContainer()
         }
     }
+}
 
-    @available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
-    fileprivate static var iso8601Formatter: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = .withInternetDateTime
-        return formatter
-    }()
+/// storage for Query Encoder. Stores a stack of QueryEncoder containers, plus leaf objects
+private struct URLEncodedFormEncoderStorage {
+    /// the container stack
+    private var containers: [URLEncodedFormNode] = []
+
+    /// initializes self with no containers
+    init() {
+        //containers.append(.map(.init()))
+    }
+
+    /// push a new container onto the storage
+    mutating func pushKeyedContainer() -> URLEncodedFormNode.Map {
+        let map = URLEncodedFormNode.Map()
+        containers.append(.map(map))
+        return map
+    }
+
+    /// push a new container onto the storage
+    mutating func pushUnkeyedContainer() -> URLEncodedFormNode.Array {
+        let array = URLEncodedFormNode.Array()
+        containers.append(.array(array))
+        return array
+    }
+
+    mutating func push(container: URLEncodedFormNode) {
+        containers.append(container)
+    }
+
+    /// pop a container from the storage
+    @discardableResult mutating func popContainer() -> URLEncodedFormNode {
+        return containers.removeLast()
+    }
 }

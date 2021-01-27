@@ -1,4 +1,4 @@
-import struct Foundation.CharacterSet
+import Foundation
 
 internal enum URLEncodedForm {
     /// CodingKey used by Encoder and Decoder
@@ -31,4 +31,11 @@ internal enum URLEncodedForm {
 
     /// unreserved characters
     static let unreservedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~")
+
+    @available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
+    static var iso8601Formatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = .withInternetDateTime
+        return formatter
+    }()
 }
