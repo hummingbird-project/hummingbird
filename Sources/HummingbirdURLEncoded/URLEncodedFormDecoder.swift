@@ -31,9 +31,6 @@ public struct URLEncodedFormDecoder {
     /// Contextual user-provided information for use during encoding.
     public var userInfo: [CodingUserInfoKey: Any]
 
-    /// additional keys to include
-    public var additionalKeys: [String: String]
-
     /// Options set on the top-level encoder to pass down the encoding hierarchy.
     fileprivate struct _Options {
         let dateDecodingStrategy: DateDecodingStrategy
@@ -50,12 +47,10 @@ public struct URLEncodedFormDecoder {
 
     public init(
         dateDecodingStrategy: URLEncodedFormDecoder.DateDecodingStrategy = .deferredToDate,
-        userInfo: [CodingUserInfoKey : Any] = [:],
-        additionalKeys: [String : String] = [:]
+        userInfo: [CodingUserInfoKey : Any] = [:]
     ) {
         self.dateDecodingStrategy = dateDecodingStrategy
         self.userInfo = userInfo
-        self.additionalKeys = additionalKeys
     }
 
     public func decode<T: Decodable>(_ type: T.Type, from string: String) throws -> T {

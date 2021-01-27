@@ -31,9 +31,6 @@ public struct URLEncodedFormEncoder {
     /// Contextual user-provided information for use during encoding.
     public var userInfo: [CodingUserInfoKey: Any]
 
-    /// additional keys to include
-    public var additionalKeys: [String: String]
-
     /// Options set on the top-level encoder to pass down the encoding hierarchy.
     fileprivate struct _Options {
         let dateEncodingStrategy: DateEncodingStrategy
@@ -55,13 +52,15 @@ public struct URLEncodedFormEncoder {
     ) {
         self.dateEncodingStrategy = dateEncodingStrategy
         self.userInfo = userInfo
-        self.additionalKeys = additionalKeys
     }
 
-    public func encode<T: Encodable>(_ value: T, name: String? = nil) throws -> String? {
+    public func encode<T: Encodable>(_ value: T, name: String? = nil) throws -> String {
         let encoder = _URLEncodedFormEncoder(options: options)
         try value.encode(to: encoder)
-        return encoder.result?.description
+        guard let result = encoder.result else {
+            throw EncodingError.invalidValue(value, .init(codingPath: [], debugDescription: "URLEncodedFormEncoder cannot be used to encode arrays"))
+        }
+        return result.description
     }
 }
 
