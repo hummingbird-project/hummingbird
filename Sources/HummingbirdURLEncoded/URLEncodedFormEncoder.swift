@@ -1,6 +1,6 @@
 import Foundation
 
-/// The wrapper struct for encoding Codable classes to Query dictionary
+/// The wrapper struct for encoding Codable classes to URL encoded form data
 public struct URLEncodedFormEncoder {
 
     /// The strategy to use for encoding `Date` values.
