@@ -51,6 +51,18 @@ class URLEncodedFormNodeTests: XCTestCase {
         let encoded: URLEncodedFormNode = ["map": ["numbers": ["one": "1", "two": "2"]]]
         testDecodeEncode(values, encoded: encoded)
     }
+
+    func testPlusSign() {
+        let values = "name=John+Smith"
+        let encoded: URLEncodedFormNode = ["name": "John Smith"]
+        do {
+            let formData = try URLEncodedFormNode(from: values)
+            // only compare URLEncodedFormNode. Once encoded as string space is converted to %20
+            XCTAssertEqual(formData, encoded)
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
 }
 
 extension URLEncodedFormNode: ExpressibleByStringLiteral {

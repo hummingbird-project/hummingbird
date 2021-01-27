@@ -18,25 +18,25 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
     }
     
     static func decode(_ string: String) throws -> URLEncodedFormNode {
-        var entries: [(String, String)] = []
         let split = string.split(separator: "&")
         let node = Self.map(.init())
         try split.forEach {
             if let equals = $0.firstIndex(of: "=") {
                 let before = $0[..<equals].removingPercentEncoding
                 let afterEquals = $0.index(after: equals)
-                let after = $0[afterEquals...].removingPercentEncoding
-                guard let key = before, let value = after else { throw Error.failedToDecode("Failed to percent decode \($0)") }
-                entries.append((key: key, value: value))
+                let after = $0[afterEquals...].replacingOccurrences(of: "+", with: " ")
+                guard let key = before else { throw Error.failedToDecode("Failed to percent decode \($0)") }
 
                 guard let keys = KeyParser.parse(key) else { throw Error.failedToDecode("Unexpected key value")}
+                guard let value = NodeValue(percentEncoded: after) else { throw Error.failedToDecode("Failed to percent decode \(after)")}
+
                 try node.addValue(keys: keys[...], value: value)
             }
         }
         return node
     }
 
-    func addValue(keys: ArraySlice<KeyParser.KeyType>, value: String) throws {
+    func addValue(keys: ArraySlice<KeyParser.KeyType>, value: NodeValue) throws {
         func createNode(from key: KeyParser.KeyType) -> URLEncodedFormNode {
             switch key {
             case .array:
@@ -52,7 +52,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
             let key = String(key)
             if keys.count == 0 {
                 guard map.values[key] == nil else { throw Error.failedToDecode()}
-                map.values[key] = .leaf(.init(percentEncoded: value))
+                map.values[key] = .leaf(value)
             } else {
                 if let node = map.values[key] {
                     try node.addValue(keys: keys, value: value)
@@ -64,7 +64,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
             }
         case (.array(let array), .array):
             if keys.count == 0 {
-                array.values.append(.leaf(.init(percentEncoded: value)))
+                array.values.append(.leaf(value))
             } else {
                 // currently don't support arrays and maps inside arrays
                 throw Error.notSupported
@@ -77,7 +77,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
     private func encode(_ prefix: String) -> String {
         switch self {
         case .leaf(let string):
-            return string.map { "\(prefix)=\($0.value)"} ?? ""
+            return string.map { "\(prefix)=\($0.percentEncoded)"} ?? ""
         case .array(let array):
             return array.values.map {
                 $0.encode("\(prefix)[]")
@@ -96,15 +96,21 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
     }
     
     class NodeValue: Equatable {
+        /// string value of node (with percent encoding removed)
         var value: String
+
         init(_ value: LosslessStringConvertible) {
-            let string = String(describing: value)
-            self.value = string.addingPercentEncoding(withAllowedCharacters: URLEncodedForm.unreservedCharacters) ?? string
+            self.value = String(describing: value)
         }
-        init(percentEncoded value: String) {
+        init?(percentEncoded value: String) {
+            guard let value = value.removingPercentEncoding else { return nil }
             self.value = value
         }
-        
+
+        var percentEncoded: String {
+            return value.addingPercentEncoding(withAllowedCharacters: URLEncodedForm.unreservedCharacters) ?? value
+        }
+
         static func == (lhs: URLEncodedFormNode.NodeValue, rhs: URLEncodedFormNode.NodeValue) -> Bool {
             lhs.value == rhs.value
         }
