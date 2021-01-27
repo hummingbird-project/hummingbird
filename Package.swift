@@ -96,6 +96,7 @@ let package = Package(
         ]),
         .testTarget(name: "HummingbirdURLEncodedTests", dependencies: [
             .byName(name: "HummingbirdURLEncoded"),
+            .byName(name: "HummingbirdXCT"),
         ]),
     ]
 )
