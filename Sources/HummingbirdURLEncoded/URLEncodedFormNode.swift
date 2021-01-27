@@ -1,8 +1,8 @@
 
 enum URLEncodedFormNode: CustomStringConvertible, Equatable {
     case leaf(NodeValue?)
-    case map(Map = .init())
-    case array(Array = .init())
+    case map(Map)
+    case array(Array)
 
     enum Error: Swift.Error {
         case failedToDecode(String? = nil)
@@ -20,7 +20,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
     static func decode(_ string: String) throws -> URLEncodedFormNode {
         var entries: [(String, String)] = []
         let split = string.split(separator: "&")
-        let node = Self.map()
+        let node = Self.map(.init())
         try split.forEach {
             if let equals = $0.firstIndex(of: "=") {
                 let before = $0[..<equals].removingPercentEncoding
@@ -40,9 +40,9 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
         func createNode(from key: KeyParser.KeyType) -> URLEncodedFormNode {
             switch key {
             case .array:
-                return .array()
+                return .array(.init())
             case .map:
-                return .map()
+                return .map(.init())
             }
         }
         let keyType = keys.first

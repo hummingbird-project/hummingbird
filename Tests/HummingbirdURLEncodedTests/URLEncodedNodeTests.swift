@@ -1,7 +1,7 @@
 @testable import HummingbirdURLEncoded
 import XCTest
 
-class URLEncodedFormDataTests: XCTestCase {
+class URLEncodedFormNodeTests: XCTestCase {
     func testDecodeEncode(_ string: String, encoded: URLEncodedFormNode) {
         do {
             let formData = try URLEncodedFormNode(from: string)
