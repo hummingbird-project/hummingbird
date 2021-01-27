@@ -13,6 +13,7 @@ let package = Package(
         .library(name: "HummingbirdHTTP2", targets: ["HummingbirdHTTP2"]),
         .library(name: "HummingbirdJSON", targets: ["HummingbirdJSON"]),
         .library(name: "HummingbirdTLS", targets: ["HummingbirdTLS"]),
+        .library(name: "HummingbirdURLEncoded", targets: ["HummingbirdURLEncoded"]),
         .library(name: "HummingbirdXCT", targets: ["HummingbirdXCT"]),
     ],
     dependencies: [
