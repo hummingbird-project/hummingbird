@@ -1,7 +1,7 @@
 @testable import HummingbirdURLEncoded
 import XCTest
 
-class KeyParserTests: XCTest {
+class KeyParserTests: XCTestCase {
     func testSingle() {
         let values = KeyParser.parse("value")
         XCTAssertEqual(values, [.map("value")])
@@ -27,3 +27,4 @@ class KeyParserTests: XCTest {
         XCTAssertEqual(values, [.map("array"), .map("object"), .array])
     }
 }
+
