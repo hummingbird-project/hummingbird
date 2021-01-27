@@ -42,7 +42,7 @@ class URLEncodedFormEncoderTests: XCTestCase {
             let t: Test
         }
         let test = Test2(t: Test(a: 42, b: "Life"))
-        testForm(test, query: "t.a=42&t.b=Life")
+        testForm(test, query: "t[a]=42&t[b]=Life")
     }
 
     func testEnumEncode() {
@@ -63,7 +63,7 @@ class URLEncodedFormEncoderTests: XCTestCase {
             let a: [Int]
         }
         let test = Test(a: [9, 8, 7, 6])
-        testForm(test, query: "a.1=9&a.2=8&a.3=7&a.4=6")
+        testForm(test, query: "a[]=9&a[]=8&a[]=7&a[]=6")
     }
 
     func testDictionaryEncode() {
@@ -71,7 +71,7 @@ class URLEncodedFormEncoderTests: XCTestCase {
             let a: [String: Int]
         }
         let test = Test(a: ["one": 1, "two": 2, "three": 3])
-        testForm(test, query: "a.one=1&a.three=3&a.two=2")
+        testForm(test, query: "a[one]=1&a[three]=3&a[two]=2")
     }
 
     func testDateEncode() {

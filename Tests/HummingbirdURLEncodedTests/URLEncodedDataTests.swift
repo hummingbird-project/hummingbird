@@ -2,12 +2,12 @@
 import XCTest
 
 class URLEncodedFormDataTests: XCTestCase {
-    func testDecodeEncode(_ string: String, encoded: URLEncodeFormData) {
+    func testDecodeEncode(_ string: String, encoded: URLEncodedFormNode) {
         do {
-            let formData = try URLEncodeFormData(from: string)
+            let formData = try URLEncodedFormNode(from: string)
             XCTAssertEqual(formData, encoded)
             let formDataString = formData.description
-            let formData2 = try URLEncodeFormData(from: formDataString)
+            let formData2 = try URLEncodedFormNode(from: formDataString)
             XCTAssertEqual(formData, formData2)
         } catch {
             XCTFail("\(error)")
@@ -16,47 +16,50 @@ class URLEncodedFormDataTests: XCTestCase {
     
     func testSimple() {
         let values = "one=1&two=2&three=3"
-        let encoded: URLEncodeFormData = ["one": "1", "two": "2", "three": "3"]
+        let encoded: URLEncodedFormNode = ["one": "1", "two": "2", "three": "3"]
         testDecodeEncode(values, encoded: encoded)
     }
 
     func testArray() {
         let values = "array[]=1&array[]=2&array[]=3&array[]=6"
-        let encoded: URLEncodeFormData = ["array": ["1", "2", "3", "6"]]
+        let encoded: URLEncodedFormNode = ["array": ["1", "2", "3", "6"]]
         testDecodeEncode(values, encoded: encoded)
     }
 
     func testMap() {
         let values = "map[one]=1&map[two]=2&map[three]=3&map[six]=6"
-        let encoded: URLEncodeFormData = ["map": ["one": "1", "two": "2", "three": "3", "six": "6"]]
+        let encoded: URLEncodedFormNode = ["map": ["one": "1", "two": "2", "three": "3", "six": "6"]]
         testDecodeEncode(values, encoded: encoded)
     }
 
     func testMapArray() {
         let values = "map[numbers][]=1&map[numbers][]=2"
-        let encoded: URLEncodeFormData = ["map": ["numbers": ["1","2"]]]
+        let encoded: URLEncodedFormNode = ["map": ["numbers": ["1","2"]]]
         testDecodeEncode(values, encoded: encoded)
     }
 
     func testMapMap() {
         let values = "map[numbers][one]=1&map[numbers][two]=2"
-        let encoded: URLEncodeFormData = ["map": ["numbers": ["one": "1", "two": "2"]]]
+        let encoded: URLEncodedFormNode = ["map": ["numbers": ["one": "1", "two": "2"]]]
         testDecodeEncode(values, encoded: encoded)
     }
 }
 
-extension URLEncodeFormData: ExpressibleByStringLiteral {
+extension URLEncodedFormNode: ExpressibleByStringLiteral {
     public init(stringLiteral value: String) {
-        self = .leaf(value)
+        self = .leaf(.init(value))
     }
 }
-extension URLEncodeFormData: ExpressibleByDictionaryLiteral {
-    public init(dictionaryLiteral elements: (Substring, URLEncodeFormData)...) {
+extension URLEncodedFormNode: ExpressibleByDictionaryLiteral {
+    public typealias Key = String
+    public typealias Value = URLEncodedFormNode
+    
+    public init(dictionaryLiteral elements: (String, URLEncodedFormNode)...) {
         self = .map(.init(values: .init(elements) { first,_ in first }))
     }
 }
-extension URLEncodeFormData: ExpressibleByArrayLiteral {
-    public init(arrayLiteral elements: URLEncodeFormData...) {
+extension URLEncodedFormNode: ExpressibleByArrayLiteral {
+    public init(arrayLiteral elements: URLEncodedFormNode...) {
         self = .array(.init(values: .init(elements)))
     }
 }

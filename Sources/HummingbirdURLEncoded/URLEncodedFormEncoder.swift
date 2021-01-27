@@ -61,111 +61,40 @@ public struct URLEncodedFormEncoder {
     public func encode<T: Encodable>(_ value: T, name: String? = nil) throws -> String? {
         let encoder = _URLEncodedFormEncoder(options: options)
         try value.encode(to: encoder)
-
-        // encode generates a tree of dictionaries and arrays. We need to flatten this into a single dictionary with keys joined together
-        let result = flatten(encoder.result)
-        return Self.urlEncodeParams(dictionary: result)
-    }
-}
-
-extension URLEncodedFormEncoder {
-    private static func urlEncodeParam(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: URLEncodedForm.unreservedCharacters) ?? value
-    }
-
-    // generate string from
-    private static func urlEncodeParams(dictionary: [(key: String, value: String)]) -> String? {
-        guard dictionary.count > 0 else { return nil }
-        return dictionary
-            .sorted { $0.key < $1.key }
-            .map { "\($0.key)=\(urlEncodeParam(String(describing: $0.value)))" }
-            .joined(separator: "&")
-    }
-
-    /// Flatten dictionary and array tree into one dictionary
-    /// - Parameter container: The root container
-    private func flatten(_ container: URLEncodedFormEncoderKeyedContainer?) -> [(key: String, value: String)] {
-        var result: [(key: String, value: String)] = additionalKeys.map { return $0 }
-
-        func flatten(dictionary: [String: Any], path: String) {
-            for (key, value) in dictionary {
-                switch value {
-                case let keyed as URLEncodedFormEncoderKeyedContainer:
-                    flatten(dictionary: keyed.values, path: "\(path)\(key).")
-                case let unkeyed as URLEncodedFormEncoderUnkeyedContainer:
-                    flatten(array: unkeyed.values, path: "\(path)\(key).")
-                default:
-                    result.append((key: "\(path)\(key)", value: String(describing: value)))
-                }
-            }
-        }
-        func flatten(array: [Any], path: String) {
-            for iterator in array.enumerated() {
-                switch iterator.element {
-                case let keyed as URLEncodedFormEncoderKeyedContainer:
-                    flatten(dictionary: keyed.values, path: "\(path)\(iterator.offset + 1).")
-                case let unkeyed as URLEncodedFormEncoderUnkeyedContainer:
-                    flatten(array: unkeyed.values, path: "\(path)\(iterator.offset + 1)")
-                default:
-                    result.append((key: "\(path)\(iterator.offset + 1)", value: String(describing: iterator.element)))
-                }
-            }
-        }
-        if let container = container {
-            flatten(dictionary: container.values, path: "")
-        }
-        return result
-    }
-}
-
-/// class for holding a keyed container (dictionary). Need to encapsulate dictionary in class so we can be sure we are
-/// editing the dictionary we push onto the stack
-private class URLEncodedFormEncoderKeyedContainer {
-    private(set) var values: [String: Any] = [:]
-
-    func addChild(path: String, child: Any) {
-        values[path] = child
-    }
-}
-
-/// class for holding unkeyed container (array). Need to encapsulate array in class so we can be sure we are
-/// editing the array we push onto the stack
-private class URLEncodedFormEncoderUnkeyedContainer {
-    private(set) var values: [Any] = []
-
-    func addChild(_ child: Any) {
-        values.append(child)
+        return encoder.result?.description
     }
 }
 
 /// storage for Query Encoder. Stores a stack of QueryEncoder containers, plus leaf objects
 private struct URLEncodedFormEncoderStorage {
     /// the container stack
-    private var containers: [Any] = []
+    private var containers: [URLEncodedFormNode] = []
 
     /// initializes self with no containers
-    init() {}
-
-    /// push a new container onto the storage
-    mutating func pushKeyedContainer() -> URLEncodedFormEncoderKeyedContainer {
-        let container = URLEncodedFormEncoderKeyedContainer()
-        containers.append(container)
-        return container
+    init() {
+        containers.append(.map())
     }
 
     /// push a new container onto the storage
-    mutating func pushUnkeyedContainer() -> URLEncodedFormEncoderUnkeyedContainer {
-        let container = URLEncodedFormEncoderUnkeyedContainer()
-        containers.append(container)
-        return container
+    mutating func pushKeyedContainer() -> URLEncodedFormNode.Map {
+        let map = URLEncodedFormNode.Map()
+        containers.append(.map(map))
+        return map
     }
 
-    mutating func push(container: Any) {
+    /// push a new container onto the storage
+    mutating func pushUnkeyedContainer() -> URLEncodedFormNode.Array {
+        let array = URLEncodedFormNode.Array()
+        containers.append(.array(array))
+        return array
+    }
+
+    mutating func push(container: URLEncodedFormNode) {
         containers.append(container)
     }
 
     /// pop a container from the storage
-    @discardableResult mutating func popContainer() -> Any {
+    @discardableResult mutating func popContainer() -> URLEncodedFormNode {
         return containers.removeLast()
     }
 }
@@ -181,7 +110,7 @@ private class _URLEncodedFormEncoder: Encoder {
     var options: URLEncodedFormEncoder._Options
 
     /// resultant url encoded array
-    var result: URLEncodedFormEncoderKeyedContainer?
+    var result: URLEncodedFormNode?
 
     /// Contextual user-provided information for use during encoding.
     public var userInfo: [CodingUserInfoKey: Any] {
@@ -200,27 +129,31 @@ private class _URLEncodedFormEncoder: Encoder {
     }
 
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key: CodingKey {
-        let newContainer = storage.pushKeyedContainer()
+        let keyedContainer = storage.pushKeyedContainer()
         if self.result == nil {
-            self.result = newContainer
+            self.result = .map(keyedContainer)
         }
-        return KeyedEncodingContainer(KEC(referencing: self, container: newContainer))
+        return KeyedEncodingContainer(KEC(referencing: self, container: keyedContainer))
     }
 
     struct KEC<Key: CodingKey>: KeyedEncodingContainerProtocol {
         var codingPath: [CodingKey] { return encoder.codingPath }
-        let container: URLEncodedFormEncoderKeyedContainer
+        let container: URLEncodedFormNode.Map
         let encoder: _URLEncodedFormEncoder
 
         /// Initialization
         /// - Parameter referencing: encoder that created this
-        init(referencing: _URLEncodedFormEncoder, container: URLEncodedFormEncoderKeyedContainer) {
+        init(referencing: _URLEncodedFormEncoder, container: URLEncodedFormNode.Map) {
             self.encoder = referencing
             self.container = container
         }
 
-        mutating func encode(_ value: Any, key: String) {
-            container.addChild(path: key, child: value)
+        mutating func encode(_ value: URLEncodedFormNode, key: String) {
+            container.addChild(key: key, value: value)
+        }
+
+        mutating func encode(_ value: LosslessStringConvertible, key: String) {
+            self.encode(.leaf(.init(value)), key: key)
         }
 
         mutating func encodeNil(forKey key: Key) throws { encode("", key: key.stringValue) }
@@ -244,15 +177,15 @@ private class _URLEncodedFormEncoder: Encoder {
             defer { self.encoder.codingPath.removeLast() }
 
             let childContainer = try encoder.box(value)
-            container.addChild(path: key.stringValue, child: childContainer)
+            container.addChild(key: key.stringValue, value: childContainer)
         }
 
         mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
             self.encoder.codingPath.append(key)
             defer { self.encoder.codingPath.removeLast() }
 
-            let keyedContainer = URLEncodedFormEncoderKeyedContainer()
-            container.addChild(path: key.stringValue, child: keyedContainer)
+            let keyedContainer = URLEncodedFormNode.Map()
+            container.addChild(key: key.stringValue, value: .map(keyedContainer))
 
             let kec = KEC<NestedKey>(referencing: self.encoder, container: keyedContainer)
             return KeyedEncodingContainer(kec)
@@ -262,8 +195,8 @@ private class _URLEncodedFormEncoder: Encoder {
             self.encoder.codingPath.append(key)
             defer { self.encoder.codingPath.removeLast() }
 
-            let unkeyedContainer = URLEncodedFormEncoderUnkeyedContainer()
-            container.addChild(path: key.stringValue, child: unkeyedContainer)
+            let unkeyedContainer = URLEncodedFormNode.Array()
+            container.addChild(key: key.stringValue, value: .array(unkeyedContainer))
 
             return UKEC(referencing: self.encoder, container: unkeyedContainer)
         }
@@ -284,19 +217,23 @@ private class _URLEncodedFormEncoder: Encoder {
 
     struct UKEC: UnkeyedEncodingContainer {
         var codingPath: [CodingKey] { return encoder.codingPath }
-        let container: URLEncodedFormEncoderUnkeyedContainer
+        let container: URLEncodedFormNode.Array
         let encoder: _URLEncodedFormEncoder
         var count: Int
 
-        init(referencing: _URLEncodedFormEncoder, container: URLEncodedFormEncoderUnkeyedContainer) {
+        init(referencing: _URLEncodedFormEncoder, container: URLEncodedFormNode.Array) {
             self.encoder = referencing
             self.container = container
             self.count = 0
         }
 
-        mutating func encodeResult(_ value: Any) {
+        mutating func encodeResult(_ value: URLEncodedFormNode) {
             count += 1
-            container.addChild(value)
+            container.addChild(value: value)
+        }
+
+        mutating func encodeResult(_ value: LosslessStringConvertible) {
+            encodeResult(.leaf(.init(value)))
         }
 
         mutating func encodeNil() throws { encodeResult("") }
@@ -322,7 +259,7 @@ private class _URLEncodedFormEncoder: Encoder {
             defer { self.encoder.codingPath.removeLast() }
 
             let childContainer = try encoder.box(value)
-            container.addChild(childContainer)
+            container.addChild(value: childContainer)
         }
 
         mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
@@ -331,8 +268,8 @@ private class _URLEncodedFormEncoder: Encoder {
             self.encoder.codingPath.append(URLEncodedForm.Key(index: count))
             defer { self.encoder.codingPath.removeLast() }
 
-            let keyedContainer = URLEncodedFormEncoderKeyedContainer()
-            container.addChild(keyedContainer)
+            let keyedContainer = URLEncodedFormNode.Map()
+            container.addChild(value: .map(keyedContainer))
 
             let kec = KEC<NestedKey>(referencing: self.encoder, container: keyedContainer)
             return KeyedEncodingContainer(kec)
@@ -341,8 +278,8 @@ private class _URLEncodedFormEncoder: Encoder {
         mutating func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
             count += 1
 
-            let unkeyedContainer = URLEncodedFormEncoderUnkeyedContainer()
-            container.addChild(unkeyedContainer)
+            let unkeyedContainer = URLEncodedFormNode.Array()
+            container.addChild(value: .array(unkeyedContainer))
 
             return UKEC(referencing: self.encoder, container: unkeyedContainer)
         }
@@ -354,8 +291,12 @@ private class _URLEncodedFormEncoder: Encoder {
 }
 
 extension _URLEncodedFormEncoder: SingleValueEncodingContainer {
-    func encodeResult(_ value: Any) {
+    func encodeResult(_ value: URLEncodedFormNode) {
         storage.push(container: value)
+    }
+
+    func encodeResult(_ value: LosslessStringConvertible) {
+        storage.push(container: .leaf(.init(value)))
     }
 
     func encodeNil() throws {
@@ -387,7 +328,7 @@ extension _URLEncodedFormEncoder: SingleValueEncodingContainer {
 }
 
 extension _URLEncodedFormEncoder {
-    func box(_ date: Date) throws -> Any {
+    func box(_ date: Date) throws -> URLEncodedFormNode {
         switch options.dateEncodingStrategy {
         case .deferredToDate:
             try date.encode(to: self)
@@ -409,12 +350,12 @@ extension _URLEncodedFormEncoder {
         return storage.popContainer()
     }
 
-    func box(_ data: Data) throws -> Any {
+    func box(_ data: Data) throws -> URLEncodedFormNode {
         try encode(data.base64EncodedString())
         return storage.popContainer()
     }
 
-    func box(_ value: Encodable) throws -> Any {
+    func box(_ value: Encodable) throws -> URLEncodedFormNode {
         let type = Swift.type(of: value)
         if type == Data.self {
             return try self.box(value as! Data)
