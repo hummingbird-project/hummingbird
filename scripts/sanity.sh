@@ -52,13 +52,13 @@ for language in swift-or-c; do
         cat > "$tmp" <<"EOF"
 //===----------------------------------------------------------------------===//
 //
-// This source file is part of the Soto for AWS open source project
+// This source file is part of the Hummingbird open source project
 //
-// Copyright (c) YEARS the Soto project authors
+// Copyright (c) YEARS the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
-// See CONTRIBUTORS.txt for the list of Soto project authors
+// See CONTRIBUTORS.txt for the list of Hummingbird authors
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -70,13 +70,13 @@ EOF
         cat > "$tmp" <<"EOF"
 ##===----------------------------------------------------------------------===##
 ##
-## This source file is part of the Soto for AWS open source project
+## This source file is part of the Hummingbird open source project
 ##
-## Copyright (c) YEARS the Soto project authors
+## Copyright (c) YEARS the Hummingbird authors
 ## Licensed under Apache License v2.0
 ##
 ## See LICENSE.txt for license information
-## See CONTRIBUTORS.txt for the list of Soto project authors
+## See CONTRIBUTORS.txt for the list of Hummingbird authors
 ##
 ## SPDX-License-Identifier: Apache-2.0
 ##
