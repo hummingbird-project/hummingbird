@@ -1,10 +1,10 @@
-import Hummingbird
 import AsyncHTTPClient
+import Hummingbird
 
 extension HBApplication {
     /// Create HTTP Client
     public func initializeHTTPClient(configuration: HTTPClient.Configuration = .init()) {
-        httpClient = HTTPClient(eventLoopGroupProvider: .shared(self.eventLoopGroup), configuration: configuration)
+        self.httpClient = HTTPClient(eventLoopGroupProvider: .shared(self.eventLoopGroup), configuration: configuration)
     }
 
     /// Access HTTP client attached to HBApplication
@@ -15,4 +15,3 @@ extension HBApplication {
         } }
     }
 }
-

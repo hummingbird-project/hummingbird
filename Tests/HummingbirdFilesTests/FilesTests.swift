@@ -6,7 +6,6 @@ import HummingbirdXCT
 import XCTest
 
 class HummingbirdFilesTests: XCTestCase {
-
     func testGet() {
         let app = HBApplication(testing: .live)
         app.middleware.add(HBFileMiddleware(".", application: app))
@@ -18,7 +17,7 @@ class HummingbirdFilesTests: XCTestCase {
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
         app.XCTStart()
-        defer { app.XCTStop(); }
+        defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/test.txt", method: .GET) { response in
             var body = try XCTUnwrap(response.body)
@@ -37,7 +36,7 @@ class HummingbirdFilesTests: XCTestCase {
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
         app.XCTStart()
-        defer { app.XCTStop(); }
+        defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
             XCTAssertNil(response.body)
@@ -45,4 +44,3 @@ class HummingbirdFilesTests: XCTestCase {
         }
     }
 }
-

@@ -9,6 +9,7 @@ class HummingBirdURLEncodedTests: XCTestCase {
         let email: String
         let age: Int
     }
+
     struct Error: Swift.Error {}
 
     func testDecode() {
@@ -33,7 +34,7 @@ class HummingBirdURLEncodedTests: XCTestCase {
     func testEncode() {
         let app = HBApplication(testing: .embedded)
         app.encoder = URLEncodedFormEncoder()
-        app.router.get("/user") { request -> User in
+        app.router.get("/user") { _ -> User in
             return User(name: "John Smith", email: "john.smith@email.com", age: 25)
         }
         app.XCTStart()
@@ -49,5 +50,3 @@ class HummingBirdURLEncodedTests: XCTestCase {
         }
     }
 }
-
-

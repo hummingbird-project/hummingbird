@@ -101,7 +101,7 @@ private extension Substring {
         struct RemovePercentEncodingError: Error {}
         // if no % characters in string, don't waste time allocating a new string
         guard self.contains("%") else { return self }
-        
+
         do {
             let size = self.utf8.count + 1
             if #available(macOS 11, *) {
@@ -115,7 +115,7 @@ private extension Substring {
                 return result[...]
             } else {
                 // allocate buffer size of original string and run remove percent encoding
-                let mem = UnsafeMutablePointer<UInt8>.allocate(capacity: count+1)
+                let mem = UnsafeMutablePointer<UInt8>.allocate(capacity: count + 1)
                 try self.withCString { cstr in
                     let len = urlparser_remove_percent_encoding(cstr, numericCast(self.utf8.count), mem, 1024)
                     guard len > 0 else { throw RemovePercentEncodingError() }

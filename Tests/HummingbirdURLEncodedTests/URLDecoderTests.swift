@@ -51,6 +51,7 @@ class URLDecodedFormDecoderTests: XCTestCase {
                 case first
                 case second
             }
+
             let a: TestEnum
         }
         let test = Test(a: .second)
@@ -78,7 +79,7 @@ class URLDecodedFormDecoderTests: XCTestCase {
         struct Test: Codable, Equatable {
             let d: Date
         }
-        let test = Test(d: Date(timeIntervalSinceReferenceDate: 2387643))
+        let test = Test(d: Date(timeIntervalSinceReferenceDate: 2_387_643))
         testForm(test, query: "d=2387643.0")
         testForm(test, query: "d=980694843000", decoder: .init(dateDecodingStrategy: .millisecondsSince1970))
         testForm(test, query: "d=980694843", decoder: .init(dateDecodingStrategy: .secondsSince1970))
@@ -88,7 +89,7 @@ class URLDecodedFormDecoderTests: XCTestCase {
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        testForm(test, query: "d=2001-01-28T15%3A14%3A03.000Z", decoder: .init(dateDecodingStrategy: .formatted(dateFormatter)))
+        self.testForm(test, query: "d=2001-01-28T15%3A14%3A03.000Z", decoder: .init(dateDecodingStrategy: .formatted(dateFormatter)))
     }
 
     func testDataBlobDecode() {
@@ -105,13 +106,13 @@ class URLDecodedFormDecoderTests: XCTestCase {
             let forename: String
             let surname: String
             let age: Int
-            
+
             init(forename: String, surname: String, age: Int) {
                 self.forename = forename
                 self.surname = surname
                 self.age = age
             }
-            
+
             init(from decoder: Decoder) throws {
                 let container = try decoder.container(keyedBy: CodingKeys.self)
                 let nameContainer = try container.nestedContainer(keyedBy: NameCodingKeys.self, forKey: .name)
@@ -119,10 +120,12 @@ class URLDecodedFormDecoderTests: XCTestCase {
                 self.surname = try nameContainer.decode(String.self, forKey: .surname)
                 self.age = try container.decode(Int.self, forKey: .age)
             }
+
             private enum CodingKeys: String, CodingKey {
                 case name
                 case age
             }
+
             private enum NameCodingKeys: String, CodingKey {
                 case forename = "first"
                 case surname = "second"

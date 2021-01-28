@@ -25,4 +25,3 @@ protocol HBXCT {
     ) -> EventLoopFuture<HBXCTResponse>
     var eventLoopGroup: EventLoopGroup { get }
 }
-

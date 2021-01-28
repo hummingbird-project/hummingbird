@@ -3,7 +3,7 @@ import NIO
 import NIOHTTP1
 import XCTest
 
-/// Test application by running on an EmbeddedChannel 
+/// Test application by running on an EmbeddedChannel
 struct HBXCTEmbedded: HBXCT {
     init() {
         let embeddedEventLoop = EmbeddedEventLoop()
@@ -38,17 +38,17 @@ struct HBXCTEmbedded: HBXCT {
             let requestHead = HTTPRequestHead(version: .init(major: 1, minor: 1), method: method, uri: uri, headers: headers)
             try writeInbound(.head(requestHead))
             if let body = body {
-                try writeInbound(.body(body))
+                try self.writeInbound(.body(body))
             }
-            try writeInbound(.end(nil))
+            try self.writeInbound(.end(nil))
 
             // flush
-            embeddedChannel.flush()
+            self.embeddedChannel.flush()
 
             // read response
             guard case .head(let head) = try readOutbound() else { throw HBXCTError.noHead }
             var next = try readOutbound()
-            var buffer = embeddedChannel.allocator.buffer(capacity: 0)
+            var buffer = self.embeddedChannel.allocator.buffer(capacity: 0)
             while case .body(let part) = next {
                 guard case .byteBuffer(var b) = part else { throw HBXCTError.illegalBody }
                 buffer.writeBuffer(&b)
@@ -56,13 +56,13 @@ struct HBXCTEmbedded: HBXCT {
             }
             guard case .end = next else { throw HBXCTError.noEnd }
 
-            return embeddedEventLoop.makeSucceededFuture(.init(status: head.status, headers: head.headers, body: buffer))
+            return self.embeddedEventLoop.makeSucceededFuture(.init(status: head.status, headers: head.headers, body: buffer))
         } catch {
-            return embeddedEventLoop.makeFailedFuture(error)
+            return self.embeddedEventLoop.makeFailedFuture(error)
         }
     }
 
-    var eventLoopGroup: EventLoopGroup { return embeddedEventLoop }
+    var eventLoopGroup: EventLoopGroup { return self.embeddedEventLoop }
 
     func writeInbound(_ part: HTTPServerRequestPart) throws {
         try self.embeddedChannel.writeInbound(part)

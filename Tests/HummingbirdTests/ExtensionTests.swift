@@ -5,7 +5,7 @@ extension HBApplication {
     class ActiveTest {
         var active: Bool
         init() {
-            active = true
+            self.active = true
         }
     }
 

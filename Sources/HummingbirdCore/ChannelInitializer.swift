@@ -18,4 +18,3 @@ public struct HTTP1ChannelInitializer: HBChannelInitializer {
         }
     }
 }
-

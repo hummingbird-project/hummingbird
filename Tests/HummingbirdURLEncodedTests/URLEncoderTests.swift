@@ -61,6 +61,7 @@ class URLEncodedFormEncoderTests: XCTestCase {
                 case first
                 case second
             }
+
             let a: TestEnum
         }
         let test = Test(a: .second)
@@ -88,7 +89,7 @@ class URLEncodedFormEncoderTests: XCTestCase {
         struct Test: Codable {
             let d: Date
         }
-        let test = Test(d: Date(timeIntervalSinceReferenceDate: 2387643))
+        let test = Test(d: Date(timeIntervalSinceReferenceDate: 2_387_643))
         testForm(test, query: "d=2387643.0")
         testForm(test, query: "d=980694843000.0", encoder: .init(dateEncodingStrategy: .millisecondsSince1970))
         testForm(test, query: "d=980694843.0", encoder: .init(dateEncodingStrategy: .secondsSince1970))
@@ -98,7 +99,7 @@ class URLEncodedFormEncoderTests: XCTestCase {
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        testForm(test, query: "d=2001-01-28T15%3A14%3A03.000Z", encoder: .init(dateEncodingStrategy: .formatted(dateFormatter)))
+        self.testForm(test, query: "d=2001-01-28T15%3A14%3A03.000Z", encoder: .init(dateEncodingStrategy: .formatted(dateFormatter)))
     }
 
     func testDataBlobEncode() {

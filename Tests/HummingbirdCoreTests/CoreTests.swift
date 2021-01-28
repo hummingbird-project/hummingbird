@@ -15,14 +15,14 @@ class HummingBirdCoreTests: XCTestCase {
             return context.eventLoop.makeSucceededFuture(response)
         }
     }
-    
+
     func testConnect() throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
         let server = HBHTTPServer(group: eventLoopGroup, configuration: .init(address: .hostname(port: 8000)))
         try server.start(responder: HelloResponder()).wait()
         defer { XCTAssertNoThrow(try server.stop().wait()) }
-        
+
         let client = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 

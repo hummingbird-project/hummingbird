@@ -53,6 +53,7 @@ public class HBRequestBodyStreamer {
         case error(Error)
         case end
     }
+
     public enum ConsumeOutput {
         case byteBuffers([ByteBuffer])
         case end
@@ -77,17 +78,17 @@ public class HBRequestBodyStreamer {
     func feed(_ result: FeedInput) {
         switch result {
         case .byteBuffer(let byteBuffer):
-            sizeFed += byteBuffer.readableBytes
-            if sizeFed > maxSize {
-                nextPromise.fail(HBHTTPError(.payloadTooLarge))
+            self.sizeFed += byteBuffer.readableBytes
+            if self.sizeFed > self.maxSize {
+                self.nextPromise.fail(HBHTTPError(.payloadTooLarge))
             } else {
                 self.entries.append(byteBuffer)
-                nextPromise.succeed(false)
+                self.nextPromise.succeed(false)
             }
         case .error(let error):
-            nextPromise.fail(error)
+            self.nextPromise.fail(error)
         case .end:
-            nextPromise.succeed(true)
+            self.nextPromise.succeed(true)
         }
     }
 
@@ -96,14 +97,14 @@ public class HBRequestBodyStreamer {
     /// - Returns: Returns an EventLoopFuture that will be fulfilled with array of ByteBuffers that has so far been fed to th request body
     ///     and whether we have consumed everything
     public func consume(on eventLoop: EventLoop) -> EventLoopFuture<ConsumeOutput> {
-        consume().hop(to: eventLoop)
+        self.consume().hop(to: eventLoop)
     }
 
     /// Consume what has been fed to the request
     /// - Returns: Returns an EventLoopFuture that will be fulfilled with array of ByteBuffers that has so far been fed to the request body
     ///     and whether we have consumed an end tag
     func consume() -> EventLoopFuture<ConsumeOutput> {
-        nextPromise.futureResult.map { finished in
+        self.nextPromise.futureResult.map { finished in
             let entries = self.entries
             self.entries = []
             if entries.count > 0 {
@@ -122,9 +123,9 @@ public class HBRequestBodyStreamer {
     /// - Returns: EventLoopFuture that will be fulfilled with the full ByteBuffer of the Request
     func consumeAll() -> EventLoopFuture<ByteBuffer?> {
         let promise = self.eventLoop.makePromise(of: ByteBuffer?.self)
-        var buffer: ByteBuffer? = nil
+        var buffer: ByteBuffer?
         func _consumeAll() {
-            consume().map { output in
+            self.consume().map { output in
                 switch output {
                 case .byteBuffers(let buffers):
                     var buffersToAdd: ArraySlice<ByteBuffer>
@@ -138,7 +139,7 @@ public class HBRequestBodyStreamer {
                         buffer!.writeBuffer(&b)
                     }
                     _consumeAll()
-                    
+
                 case .end:
                     promise.succeed(buffer)
                 }

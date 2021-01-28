@@ -9,6 +9,7 @@ class HummingBirdJSONTests: XCTestCase {
         let email: String
         let age: Int
     }
+
     struct Error: Swift.Error {}
 
     func testDecode() {
@@ -23,7 +24,7 @@ class HummingBirdJSONTests: XCTestCase {
         }
         app.XCTStart()
         defer { app.XCTStop() }
-        
+
         let body = #"{"name": "John Smith", "email": "john.smith@email.com", "age": 25}"#
         app.XCTExecute(uri: "/user", method: .PUT, body: ByteBufferAllocator().buffer(string: body)) {
             XCTAssertEqual($0.status, .ok)
@@ -33,12 +34,12 @@ class HummingBirdJSONTests: XCTestCase {
     func testEncode() {
         let app = HBApplication(testing: .embedded)
         app.encoder = JSONEncoder()
-        app.router.get("/user") { request -> User in
+        app.router.get("/user") { _ -> User in
             return User(name: "John Smith", email: "john.smith@email.com", age: 25)
         }
         app.XCTStart()
         defer { app.XCTStop() }
-        
+
         app.XCTExecute(uri: "/user", method: .GET) { response in
             let body = try XCTUnwrap(response.body)
             let user = try JSONDecoder().decode(User.self, from: body)
@@ -48,4 +49,3 @@ class HummingBirdJSONTests: XCTestCase {
         }
     }
 }
-

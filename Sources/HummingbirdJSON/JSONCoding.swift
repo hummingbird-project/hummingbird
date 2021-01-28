@@ -1,5 +1,5 @@
-@_exported import class Foundation.JSONEncoder
 @_exported import class Foundation.JSONDecoder
+@_exported import class Foundation.JSONEncoder
 import Hummingbird
 import NIOFoundationCompat
 
@@ -19,7 +19,8 @@ extension JSONEncoder: HBResponseEncoder {
 extension JSONDecoder: HBRequestDecoder {
     public func decode<T: Decodable>(_ type: T.Type, from request: HBRequest) throws -> T {
         guard var buffer = request.body.buffer,
-              let data = buffer.readData(length: buffer.readableBytes) else {
+              let data = buffer.readData(length: buffer.readableBytes)
+        else {
             throw HBHTTPError(.badRequest)
         }
         return try self.decode(T.self, from: data)

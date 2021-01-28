@@ -15,7 +15,7 @@ public class HBHTTPServer {
         case beforeHTTP
         case afterHTTP
     }
-    
+
     public struct Configuration {
         public let address: HBBindAddress
         public let reuseAddress: Bool
@@ -60,27 +60,27 @@ public class HBHTTPServer {
                 return self.httpChannelInitializer.initialize(self, channel: channel, responder: responder)
             }
         }
-        
+
         let quiesce = ServerQuiescingHelper(group: self.eventLoopGroup)
         self.quiesce = quiesce
-        
+
         let bootstrap = ServerBootstrap(group: self.eventLoopGroup)
             // Specify backlog and enable SO_REUSEADDR for the server itself
             .serverChannelOption(ChannelOptions.backlog, value: 256)
-            .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: configuration.reuseAddress ? 1 : 0)
+            .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: self.configuration.reuseAddress ? 1 : 0)
             .serverChannelInitializer { channel in
                 channel.pipeline.addHandler(quiesce.makeServerChannelHandler(channel: channel))
             }
             // Set the handlers that are applied to the accepted Channels
             .childChannelInitializer(childChannelInitializer)
 
-            .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: configuration.reuseAddress ? 1 : 0)
-            .childChannelOption(ChannelOptions.socketOption(.tcp_nodelay), value: configuration.tcpNoDelay ? 1 : 0)
+            .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: self.configuration.reuseAddress ? 1 : 0)
+            .childChannelOption(ChannelOptions.socketOption(.tcp_nodelay), value: self.configuration.tcpNoDelay ? 1 : 0)
             .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
             .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
 
         let bindFuture: EventLoopFuture<Void>
-        switch configuration.address {
+        switch self.configuration.address {
         case .hostname(let host, let port):
             bindFuture = bootstrap.bind(host: host, port: port)
                 .map { channel in

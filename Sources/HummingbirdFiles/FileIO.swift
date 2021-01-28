@@ -11,7 +11,7 @@ public struct HBFileIO {
     }
 
     public func headFile(for request: HBRequest, path: String) -> EventLoopFuture<HBResponse> {
-        return fileIO.openFile(path: path, eventLoop: request.eventLoop).flatMap { handle, region in
+        return self.fileIO.openFile(path: path, eventLoop: request.eventLoop).flatMap { handle, region in
             request.logger.debug("[FileIO] HEAD", metadata: ["file": .string(path)])
             let headers: HTTPHeaders = ["content-length": region.readableBytes.description]
             let response = HBResponse(status: .ok, headers: headers, body: .empty)
@@ -23,7 +23,7 @@ public struct HBFileIO {
     }
 
     public func loadFile(for request: HBRequest, path: String) -> EventLoopFuture<HBResponse> {
-        return fileIO.openFile(path: path, eventLoop: request.eventLoop).flatMap { handle, region in
+        return self.fileIO.openFile(path: path, eventLoop: request.eventLoop).flatMap { handle, region in
             request.logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
             let futureResponse: EventLoopFuture<HBResponse>
             if region.readableBytes > self.chunkSize {

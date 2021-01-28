@@ -13,14 +13,14 @@ extension HBApplication {
             // application responder has been set for sure
             self.responder = application.constructResponder()
         }
-        
+
         public var logger: Logger? { return self.application.logger }
-        
+
         public func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
             let request = HBRequest(
                 head: request.head,
                 body: request.body,
-                application: application,
+                application: self.application,
                 context: context
             )
 

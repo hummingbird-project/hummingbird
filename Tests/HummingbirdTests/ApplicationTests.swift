@@ -8,7 +8,6 @@ enum ApplicationTestError: Error {
 }
 
 final class ApplicationTests: XCTestCase {
-
     func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
         data = data.map { _ in UInt8.random(in: 0...255) }
@@ -37,7 +36,7 @@ final class ApplicationTests: XCTestCase {
         }
         app.XCTStart()
         defer { app.XCTStop() }
-        
+
         app.XCTExecute(uri: "/hello", method: .GET) { response in
             var body = try XCTUnwrap(response.body)
             let string = body.readString(length: body.readableBytes)
@@ -53,7 +52,7 @@ final class ApplicationTests: XCTestCase {
         }
         app.XCTStart()
         defer { app.XCTStop() }
-        
+
         app.XCTExecute(uri: "/accepted", method: .GET) { response in
             XCTAssertEqual(response.status, .accepted)
         }
@@ -61,12 +60,12 @@ final class ApplicationTests: XCTestCase {
 
     func testStandardHeaders() {
         let app = HBApplication(testing: .embedded)
-        app.router.get("/hello") { request in
+        app.router.get("/hello") { _ in
             return "Hello"
         }
         app.XCTStart()
         defer { app.XCTStop() }
-        
+
         app.XCTExecute(uri: "/hello", method: .GET) { response in
             XCTAssertEqual(response.headers["connection"].first, "keep-alive")
             XCTAssertEqual(response.headers["content-length"].first, "5")
@@ -75,12 +74,12 @@ final class ApplicationTests: XCTestCase {
 
     func testPostRoute() {
         let app = HBApplication(testing: .embedded)
-        app.router.post("/hello") { request -> String in
+        app.router.post("/hello") { _ -> String in
             return "POST: Hello"
         }
         app.XCTStart()
         defer { app.XCTStop() }
-        
+
         app.XCTExecute(uri: "/hello", method: .POST) { response in
             var body = try XCTUnwrap(response.body)
             let string = body.readString(length: body.readableBytes)
@@ -97,7 +96,7 @@ final class ApplicationTests: XCTestCase {
         }
         app.XCTStart()
         defer { app.XCTStop() }
-        
+
         app.XCTExecute(uri: "/query?test=test%20data%C3%A9", method: .GET) { response in
             var body = try XCTUnwrap(response.body)
             let string = body.readString(length: body.readableBytes)
@@ -116,7 +115,7 @@ final class ApplicationTests: XCTestCase {
             }
         app.XCTStart()
         defer { app.XCTStop() }
-        
+
         let buffer = self.randomBuffer(size: 140_000)
         app.XCTExecute(uri: "/echo-body", method: .POST, body: buffer) { response in
             XCTAssertEqual(response.body, buffer)
@@ -129,7 +128,7 @@ final class ApplicationTests: XCTestCase {
         app.router
             .endpoint("/echo-body-streaming")
             .onStreaming(method: .POST) { request -> EventLoopFuture<HBResponse> in
-                let body: HBResponseBody = .streamCallback { eventLoop in
+                let body: HBResponseBody = .streamCallback { _ in
                     return request.body.stream.consume(on: request.eventLoop).map { output in
                         switch output {
                         case .byteBuffers(let buffers):
@@ -150,7 +149,7 @@ final class ApplicationTests: XCTestCase {
             }
         app.XCTStart()
         defer { app.XCTStop() }
-        
+
         let buffer = self.randomBuffer(size: 140_000)
         app.XCTExecute(uri: "/echo-body-streaming", method: .POST, body: buffer) { response in
             XCTAssertEqual(response.body, buffer)
@@ -192,11 +191,10 @@ final class ApplicationTests: XCTestCase {
         }
         app.XCTStart()
         defer { app.XCTStop() }
-        
+
         let buffer = self.randomBuffer(size: 140_000)
         app.XCTExecute(uri: "/upload", method: .PUT, body: buffer) { response in
             XCTAssertEqual(response.status, .payloadTooLarge)
         }
     }
-
 }

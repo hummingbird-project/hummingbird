@@ -1,12 +1,11 @@
 /// Split router path into components
 struct RouterPath: ExpressibleByStringLiteral {
-    
     enum Element: Equatable {
         case path(Substring)
         case parameter(Substring)
         case wildcard
         case null
-        
+
         static func == <S: StringProtocol>(lhs: Element, rhs: S) -> Bool {
             switch lhs {
             case .path(let lhs):
@@ -20,9 +19,9 @@ struct RouterPath: ExpressibleByStringLiteral {
             }
         }
     }
-    
+
     let components: [Element]
-    
+
     init(_ value: String) {
         let split = value.split(separator: "/", omittingEmptySubsequences: true)
         self.components = split.map { component in
@@ -39,19 +38,17 @@ struct RouterPath: ExpressibleByStringLiteral {
     init(stringLiteral value: String) {
         self.init(value)
     }
-    
 }
 
 extension RouterPath: Collection {
     func index(after i: Int) -> Int {
-        return components.index(after: i)
+        return self.components.index(after: i)
     }
-    
+
     subscript(_ index: Int) -> RouterPath.Element {
-        return components[index]
+        return self.components[index]
     }
 
-    var startIndex: Int { components.startIndex }
-    var endIndex: Int { components.endIndex }
-
+    var startIndex: Int { self.components.startIndex }
+    var endIndex: Int { self.components.endIndex }
 }

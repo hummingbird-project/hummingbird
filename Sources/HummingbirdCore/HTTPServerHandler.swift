@@ -8,7 +8,7 @@ public final class HBHTTPServerHandler: ChannelInboundHandler {
     public typealias OutboundOut = HBHTTPResponse
 
     let responder: HBHTTPResponder
-    
+
     var responsesInProgress: Int
     var closeAfterResponseWritten: Bool
     var propagatedError: Error?
@@ -25,7 +25,7 @@ public final class HBHTTPServerHandler: ChannelInboundHandler {
         // if error caught from previous channel handler then write an error
         if let error = propagatedError {
             let keepAlive = request.head.isKeepAlive && self.closeAfterResponseWritten == false
-            var response = getErrorResponse(context: context, error: error)
+            var response = self.getErrorResponse(context: context, error: error)
             if request.head.version.major == 1 {
                 response.head.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
             }
@@ -46,7 +46,6 @@ public final class HBHTTPServerHandler: ChannelInboundHandler {
 
             case .success(let successfulResponse):
                 response = successfulResponse
-
             }
             if request.head.version.major == 1 {
                 response.head.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")

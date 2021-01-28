@@ -82,7 +82,7 @@ public final class HBApplication: HBExtensible {
     public func wait() {
         self.lifecycle.wait()
     }
-    
+
     /// Shutdown application
     public func stop() {
         self.lifecycle.shutdown()

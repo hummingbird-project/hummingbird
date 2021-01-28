@@ -21,7 +21,7 @@ class URLEncodedFormNodeTests: XCTestCase {
             XCTFail("\(error)")
         }
     }
-    
+
     func testSimple() {
         let values = "one=1&two=2&three=3"
         let encoded: URLEncodedFormNode = ["one": "1", "two": "2", "three": "3"]
@@ -42,7 +42,7 @@ class URLEncodedFormNodeTests: XCTestCase {
 
     func testMapArray() {
         let values = "map[numbers][]=1&map[numbers][]=2"
-        let encoded: URLEncodedFormNode = ["map": ["numbers": ["1","2"]]]
+        let encoded: URLEncodedFormNode = ["map": ["numbers": ["1", "2"]]]
         testDecodeEncode(values, encoded: encoded)
     }
 
@@ -70,14 +70,16 @@ extension URLEncodedFormNode: ExpressibleByStringLiteral {
         self = .leaf(.init(value))
     }
 }
+
 extension URLEncodedFormNode: ExpressibleByDictionaryLiteral {
     public typealias Key = String
     public typealias Value = URLEncodedFormNode
-    
+
     public init(dictionaryLiteral elements: (String, URLEncodedFormNode)...) {
-        self = .map(.init(values: .init(elements) { first,_ in first }))
+        self = .map(.init(values: .init(elements) { first, _ in first }))
     }
 }
+
 extension URLEncodedFormNode: ExpressibleByArrayLiteral {
     public init(arrayLiteral elements: URLEncodedFormNode...) {
         self = .array(.init(values: .init(elements)))

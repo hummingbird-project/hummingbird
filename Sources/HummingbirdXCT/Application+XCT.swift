@@ -11,7 +11,7 @@ extension HBApplication {
         /// test using live server
         case live
     }
-    
+
     /// Initialization for when testing
     /// - Parameters:
     ///   - testing: indicate we are testing
@@ -34,7 +34,7 @@ extension HBApplication {
 
     /// Start tests
     public func XCTStart() {
-        xct.start(application: self)
+        self.xct.start(application: self)
     }
 
     /// Stop tests
@@ -51,9 +51,9 @@ extension HBApplication {
         method: HTTPMethod,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        testCallback: @escaping (HBXCTResponse) throws -> ()
+        testCallback: @escaping (HBXCTResponse) throws -> Void
     ) {
-        XCTAssertNoThrow(try xct.execute(uri: uri, method: method, headers: headers, body: body).flatMapThrowing { response in
+        XCTAssertNoThrow(try self.xct.execute(uri: uri, method: method, headers: headers, body: body).flatMapThrowing { response in
             try testCallback(response)
         }.wait())
     }

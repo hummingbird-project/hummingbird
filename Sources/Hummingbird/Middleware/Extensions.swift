@@ -21,21 +21,21 @@ public struct HBExtensions<ParentObject> {
     }
 
     public func get<Type>(_ key: KeyPath<ParentObject, Type>) -> Type? {
-        items[key]?.value as? Type
+        self.items[key]?.value as? Type
     }
 
     public func get<Type>(_ key: KeyPath<ParentObject, Type>) -> Type {
-        guard let value = items[key]?.value as? Type else { preconditionFailure("Cannot get extension without having set it")}
+        guard let value = items[key]?.value as? Type else { preconditionFailure("Cannot get extension without having set it") }
         return value
     }
 
-    public mutating func set<Type>(_ key: KeyPath<ParentObject, Type>, value: Type, shutdownCallback: ((Type) throws -> ())? = nil) {
+    public mutating func set<Type>(_ key: KeyPath<ParentObject, Type>, value: Type, shutdownCallback: ((Type) throws -> Void)? = nil) {
         if let item = items[key] {
             guard item.shutdown == nil else {
                 preconditionFailure("Cannot replace items with shutdown functions")
             }
         }
-        items[key] = .init(
+        self.items[key] = .init(
             value: value,
             shutdown: shutdownCallback.map { callback in
                 return { item in try callback(item as! Type) }
@@ -44,15 +44,15 @@ public struct HBExtensions<ParentObject> {
     }
 
     mutating func shutdown() throws {
-        for item in items.values {
+        for item in self.items.values {
             try item.shutdown?(item.value)
         }
-        items = [:]
+        self.items = [:]
     }
-    
+
     struct Item {
         let value: Any
-        let shutdown: ((Any) throws -> ())?
+        let shutdown: ((Any) throws -> Void)?
     }
 
     var items: [PartialKeyPath<ParentObject>: Item]

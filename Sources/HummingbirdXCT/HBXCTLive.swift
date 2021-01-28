@@ -35,13 +35,13 @@ struct HBXCTLive: HBXCT {
     ) -> EventLoopFuture<HBXCTResponse> {
         let url = "http://localhost:\(port)\(uri)"
         do {
-            let request = try HTTPClient.Request(url: url, method: method, headers: headers, body: body.map{ .byteBuffer($0) })
-            return client.execute(request: request)
+            let request = try HTTPClient.Request(url: url, method: method, headers: headers, body: body.map { .byteBuffer($0) })
+            return self.client.execute(request: request)
                 .map { response in
                     return .init(status: response.status, headers: response.headers, body: response.body)
                 }
         } catch {
-            return eventLoopGroup.next().makeFailedFuture(error)
+            return self.eventLoopGroup.next().makeFailedFuture(error)
         }
     }
 
@@ -49,4 +49,3 @@ struct HBXCTLive: HBXCT {
     var port: Int
     let client: HTTPClient
 }
-

@@ -32,4 +32,3 @@ struct HTTP2UpgradeChannelInitializer: HBChannelInitializer {
         )
     }
 }
-

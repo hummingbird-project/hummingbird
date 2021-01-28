@@ -16,7 +16,8 @@ extension URLEncodedFormEncoder: HBResponseEncoder {
 extension URLEncodedFormDecoder: HBRequestDecoder {
     public func decode<T: Decodable>(_ type: T.Type, from request: HBRequest) throws -> T {
         guard var buffer = request.body.buffer,
-              let string = buffer.readString(length: buffer.readableBytes) else {
+              let string = buffer.readString(length: buffer.readableBytes)
+        else {
             throw HBHTTPError(.badRequest)
         }
         return try self.decode(T.self, from: string)

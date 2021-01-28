@@ -21,5 +21,3 @@ public enum HBBindAddress {
         return path
     }
 }
-
-

@@ -27,4 +27,3 @@ class KeyParserTests: XCTestCase {
         XCTAssertEqual(values, [.map("array"), .map("object"), .array])
     }
 }
-

@@ -42,7 +42,7 @@ public final class HBHTTPDecodeHandler: ChannelInboundHandler {
     public func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let part = self.unwrapInboundIn(data)
 
-        switch (part, state) {
+        switch (part, self.state) {
         case (.head(let head), .idle):
             self.state = .head(head)
 
@@ -83,7 +83,7 @@ public final class HBHTTPDecodeHandler: ChannelInboundHandler {
     }
 
     public func errorCaught(context: ChannelHandlerContext, error: Error) {
-        switch state {
+        switch self.state {
         case .body(let streamer):
             // request has already been forwarded to next hander have to pass error via streamer
             streamer.feed(.error(error))
@@ -102,7 +102,7 @@ public final class HBHTTPEncodeHandler: ChannelOutboundHandler {
     public typealias OutboundOut = HTTPServerResponsePart
 
     public init() {}
-    
+
     public func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
         let response = self.unwrapOutboundIn(data)
 

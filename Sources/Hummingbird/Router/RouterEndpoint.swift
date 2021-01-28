@@ -45,8 +45,8 @@ public struct HBRouterEndpoint: HBRouterMethods {
                 return try closure(request).response(from: request)
             }
         }
-        let path = combinePaths(self.path, path)
-        router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
+        let path = self.combinePaths(self.path, path)
+        self.router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         return self
     }
 
@@ -62,8 +62,8 @@ public struct HBRouterEndpoint: HBRouterMethods {
                 return closure(request).responseFuture(from: request).hop(to: request.eventLoop)
             }
         }
-        let path = combinePaths(self.path, path)
-        router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
+        let path = self.combinePaths(self.path, path)
+        self.router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         return self
     }
 
@@ -78,8 +78,8 @@ public struct HBRouterEndpoint: HBRouterMethods {
             request.body = .stream(streamer)
             return closure(request).responseFuture(from: request).hop(to: request.eventLoop)
         }
-        let path = combinePaths(self.path, path)
-        router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
+        let path = self.combinePaths(self.path, path)
+        self.router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         return self
     }
 

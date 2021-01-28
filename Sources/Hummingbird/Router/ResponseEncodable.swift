@@ -1,7 +1,7 @@
 import HummingbirdCore
 
 /// Protocol for encodable object that can generate a response
-public protocol HBResponseEncodable: Encodable, HBResponseGenerator  {}
+public protocol HBResponseEncodable: Encodable, HBResponseGenerator {}
 
 /// Protocol for codable object that can generate a response
 public protocol HBResponseCodable: HBResponseEncodable, Decodable {}
@@ -47,4 +47,3 @@ extension Dictionary: HBResponseEncodable where Key: Encodable, Value: Encodable
         return try request.application.encoder.encode(self, from: request)
     }
 }
-

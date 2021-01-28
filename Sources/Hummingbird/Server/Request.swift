@@ -49,8 +49,8 @@ public final class HBRequest: HBExtensible {
     }
 
     public var parameters: HBParameters {
-        get { extensions.get(\.parameters) }
-        set { extensions.set(\.parameters, value: newValue) }
+        get { self.extensions.get(\.parameters) }
+        set { self.extensions.set(\.parameters, value: newValue) }
     }
 
     private static func loggerWithRequestId(_ logger: Logger) -> Logger {

@@ -15,10 +15,10 @@ class HummingBirdTLSTests: XCTestCase {
             let response = HBHTTPResponse(head: responseHead, body: .byteBuffer(responseBody))
             return context.eventLoop.makeSucceededFuture(response)
         }
-        
+
         var logger: Logger? = Logger(label: "Core")
     }
-    
+
     func testConnect() throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
@@ -26,7 +26,7 @@ class HummingBirdTLSTests: XCTestCase {
         try server.addTLS(tlsConfiguration: self.getServerTLSConfiguration())
         try server.start(responder: HelloResponder()).wait()
         defer { XCTAssertNoThrow(try server.stop().wait()) }
-        
+
         let client = try HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup), configuration: .init(tlsConfiguration: self.getClientTLSConfiguration()))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 

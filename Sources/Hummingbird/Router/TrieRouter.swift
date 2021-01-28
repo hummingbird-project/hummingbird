@@ -3,7 +3,7 @@ import HummingbirdCore
 /// Route requests to handlers based on request URI. Uses a Trie to select handler
 struct TrieRouter: HBRouter {
     var trie: RouterPathTrie<HBResponder>
-    
+
     public init() {
         self.trie = RouterPathTrie()
     }
@@ -16,7 +16,7 @@ struct TrieRouter: HBRouter {
     public func add(_ path: String, method: HTTPMethod, responder: HBResponder) {
         // add method at beginning of Path to differentiate between methods
         let path = "\(path)/\(method.rawValue)"
-        trie.addEntry(.init(path), value: responder)
+        self.trie.addEntry(.init(path), value: responder)
     }
 
     /// Respond to request by calling correct handler
@@ -39,21 +39,21 @@ struct RouterPathTrie<Value> {
     var root: Node
 
     init() {
-        root = Node(key: .null, output: nil)
+        self.root = Node(key: .null, output: nil)
     }
-    
+
     func addEntry(_ entry: RouterPath, value: Value) {
-        var node = root
+        var node = self.root
         for key in entry {
             node = node.addChild(key: key, output: nil)
         }
         node.value = value
     }
-    
+
     func getValueAndParameters(_ path: String) -> (value: Value, parameters: HBParameters)? {
         let pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
         var parameters = HBParameters()
-        var node = root
+        var node = self.root
         for component in pathComponents {
             if let childNode = node.getChild(component) {
                 node = childNode
@@ -75,13 +75,13 @@ struct RouterPathTrie<Value> {
         let key: RouterPath.Element
         var children: [Node]
         var value: Value?
-        
+
         init(key: RouterPath.Element, output: Value?) {
             self.key = key
             self.value = output
             self.children = []
         }
-        
+
         func addChild(key: RouterPath.Element, output: Value?) -> Node {
             if let child = getChild(key) {
                 return child
@@ -90,13 +90,13 @@ struct RouterPathTrie<Value> {
             children.append(node)
             return node
         }
-        
+
         func getChild(_ key: RouterPath.Element) -> Node? {
-            return children.first { $0.key == key }
+            return self.children.first { $0.key == key }
         }
-        
+
         func getChild(_ key: Substring) -> Node? {
-            return children.first { $0.key == key }
+            return self.children.first { $0.key == key }
         }
     }
 }
