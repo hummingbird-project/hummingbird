@@ -1,3 +1,9 @@
+#if os(Linux)
+import Glibc
+#else
+import Darwin.C
+#endif
+
 import CURLParser
 
 /// Swift interface to CURLParser
@@ -82,6 +88,15 @@ public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral {
         guard data.len > 0 else { return nil }
         let start = string.index(string.startIndex, offsetBy: numericCast(data.off))
         let end = string.index(start, offsetBy: numericCast(data.len))
-        return string[start..<end]
+
+        let result = string[start..<end]
+        // allocate 1024 bytes and run remove percent encoding
+        let mem = UnsafeMutablePointer<Int8>.allocate(capacity: 1024)
+        _ = result.withCString { cstr in
+            urlparser_remove_percent_encoding(cstr, numericCast(data.len), mem, 1024)
+        }
+        let test = String(cString: mem)
+        mem.deallocate()
+        return test[...]
     }
 }

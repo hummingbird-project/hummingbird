@@ -102,7 +102,7 @@ final class ApplicationTests: XCTestCase {
             var body = try XCTUnwrap(response.body)
             let string = body.readString(length: body.readableBytes)
             XCTAssertEqual(response.status, .ok)
-            XCTAssertEqual(string, "test=test%20data")
+            XCTAssertEqual(string, "test=test data")
         }
     }
 

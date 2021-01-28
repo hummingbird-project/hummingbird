@@ -56,4 +56,7 @@ struct urlparser_url {
 int urlparser_parse(const char *buf, size_t buflen,
                           int is_connect,
                           struct urlparser_url *u);
+
+int urlparser_remove_percent_encoding(const char *buf, size_t buflen, char *targetBuf, size_t targetBufLen);
+
 #endif

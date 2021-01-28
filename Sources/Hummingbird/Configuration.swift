@@ -14,19 +14,23 @@ extension HBApplication {
 
         /// max upload size
         public let maxUploadSize: Int
+        /// number of threads to allocate in the application thread pool
+        public let threadPoolSize: Int
 
         public init(
             address: HBBindAddress = .hostname(),
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = false,
             enableHttpPipelining: Bool = false,
-            maxUploadSize: Int = 2 * 1024 * 1024
+            maxUploadSize: Int = 2 * 1024 * 1024,
+            threadPoolSize: Int = 2
         ) {
             self.address = address
             self.reuseAddress = reuseAddress
             self.tcpNoDelay = tcpNoDelay
             self.enableHttpPipelining = enableHttpPipelining
             self.maxUploadSize = maxUploadSize
+            self.threadPoolSize = threadPoolSize
         }
 
         public var httpServer: HBHTTPServer.Configuration {
