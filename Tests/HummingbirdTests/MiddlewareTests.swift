@@ -13,7 +13,7 @@ final class MiddlewareTests: XCTestCase {
             }
         }
         let app = HBApplication(testing: .embedded)
-        app.middlewares.add(TestMiddleware())
+        app.middleware.add(TestMiddleware())
         app.router.get("/hello") { request -> String in
             return "Hello"
         }
@@ -36,8 +36,8 @@ final class MiddlewareTests: XCTestCase {
             }
         }
         let app = HBApplication(testing: .embedded)
-        app.middlewares.add(TestMiddleware(string: "first"))
-        app.middlewares.add(TestMiddleware(string: "second"))
+        app.middleware.add(TestMiddleware(string: "first"))
+        app.middleware.add(TestMiddleware(string: "second"))
         app.router.get("/hello") { request -> String in
             return "Hello"
         }
@@ -61,10 +61,11 @@ final class MiddlewareTests: XCTestCase {
             }
         }
         let app = HBApplication(testing: .embedded)
-        let group = app.router.group()
+        app.router
+            .endpoint("/group")
             .add(middleware: TestMiddleware())
-        group.get("/group") { request in
-            return request.eventLoop.makeSucceededFuture(request.allocator.buffer(string: "hello"))
+            .get { request in
+                return request.eventLoop.makeSucceededFuture(request.allocator.buffer(string: "hello"))
         }
         app.router.get("/not-group") { request in
             return request.eventLoop.makeSucceededFuture(request.allocator.buffer(string: "hello"))
