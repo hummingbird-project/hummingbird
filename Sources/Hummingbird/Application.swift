@@ -13,7 +13,7 @@ public final class HBApplication: HBExtensible {
     /// thread pool used by application
     public let threadPool: NIOThreadPool
     /// middleware applied to requests
-    public let middlewares: HBMiddlewareGroup
+    public let middleware: HBMiddlewareGroup
     /// routes requests to requestResponders based on URI
     public var router: HBRouter
     /// http server
@@ -35,7 +35,7 @@ public final class HBApplication: HBExtensible {
     public init(configuration: HBApplication.Configuration = HBApplication.Configuration(), eventLoopGroupProvider: NIOEventLoopGroupProvider = .createNew) {
         self.lifecycle = ServiceLifecycle()
         self.logger = Logger(label: "HummingBird")
-        self.middlewares = HBMiddlewareGroup()
+        self.middleware = HBMiddlewareGroup()
         self.router = TrieRouter()
         self.configuration = configuration
         self.extensions = HBExtensions()
@@ -90,7 +90,7 @@ public final class HBApplication: HBExtensible {
 
     /// Construct the RequestResponder from the middleware group and router
     func constructResponder() -> HBResponder {
-        return self.middlewares.constructResponder(finalResponder: self.router)
+        return self.middleware.constructResponder(finalResponder: self.router)
     }
 
     /// shutdown eventloop, threadpool and any extensions attached to the Application

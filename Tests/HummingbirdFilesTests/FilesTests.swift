@@ -9,7 +9,7 @@ class HummingbirdFilesTests: XCTestCase {
 
     func testGet() {
         let app = HBApplication(testing: .live)
-        app.middlewares.add(HBFileMiddleware(".", application: app))
+        app.middleware.add(HBFileMiddleware(".", application: app))
 
         let text = "Test file contents"
         let data = Data(text.utf8)
@@ -28,7 +28,7 @@ class HummingbirdFilesTests: XCTestCase {
 
     func testHead() throws {
         let app = HBApplication(testing: .live)
-        app.middlewares.add(HBFileMiddleware(".", application: app))
+        app.middleware.add(HBFileMiddleware(".", application: app))
 
         let text = "Test file contents"
         let data = Data(text.utf8)
