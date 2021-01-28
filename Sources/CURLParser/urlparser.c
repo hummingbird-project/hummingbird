@@ -706,8 +706,10 @@ urlparser_parse(const char *buf, size_t buflen, int is_connect,
     return 0;
 }
 
-int
-urlparser_remove_percent_encoding(const char *buf, size_t buflen, uint8_t *targetBuf, size_t targetBufLen) {
+/// Remove percent encoding from string buffer
+/// Based on code from swift-corelibs-foundation
+/// https://github.com/apple/swift-corelibs-foundation/blob/e9d8347e64ece3de453d617887af7229f73358d8/CoreFoundation/URL.subproj/CFURLComponents_URIParser.c#L439
+int urlparser_remove_percent_encoding(const char *buf, size_t buflen, uint8_t *targetBuf, size_t targetBufLen) {
     static const uint8_t hexvalues[] = {
         /* 00 */  0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
         /* 08 */  0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
