@@ -30,8 +30,9 @@ public final class HBHTTPDecodeHandler: ChannelInboundHandler {
         case error
     }
 
+    let maxUploadSize: Int
+
     /// handler state
-    var maxUploadSize: Int
     var state: State
 
     public init(configuration: HBHTTPServer.Configuration) {
@@ -101,7 +102,11 @@ public final class HBHTTPEncodeHandler: ChannelOutboundHandler {
     public typealias OutboundIn = HBHTTPResponse
     public typealias OutboundOut = HTTPServerResponsePart
 
-    public init() {}
+    let serverName: String?
+
+    public init(configuration: HBHTTPServer.Configuration) {
+        self.serverName = configuration.serverName
+    }
 
     public func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
         let response = self.unwrapOutboundIn(data)
@@ -110,6 +115,10 @@ public final class HBHTTPEncodeHandler: ChannelOutboundHandler {
         var head = response.head
         if case .byteBuffer(let buffer) = response.body {
             head.headers.replaceOrAdd(name: "content-length", value: buffer.readableBytes.description)
+        }
+        // server name
+        if let serverName = self.serverName {
+            head.headers.replaceOrAdd(name: "server", value: serverName)
         }
         context.write(self.wrapOutboundOut(.head(head)), promise: nil)
         switch response.body {

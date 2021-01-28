@@ -14,7 +14,7 @@ struct HBXCTEmbedded: HBXCT {
     /// Start tests
     func start(application: HBApplication) {
         XCTAssertNoThrow(try self.embeddedChannel.pipeline.addHandlers(application.server.additionalChannelHandlers(at: .afterHTTP) + [
-            HBHTTPEncodeHandler(),
+            HBHTTPEncodeHandler(configuration: application.configuration.httpServer),
             HBHTTPDecodeHandler(configuration: application.configuration.httpServer),
             HBHTTPServerHandler(responder: HBApplication.HTTPResponder(application: application)),
         ]).wait())

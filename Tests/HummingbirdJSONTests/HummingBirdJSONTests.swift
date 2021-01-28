@@ -48,4 +48,19 @@ class HummingBirdJSONTests: XCTestCase {
             XCTAssertEqual(user.age, 25)
         }
     }
+
+    func testEncode2() {
+        let app = HBApplication(testing: .embedded)
+        app.encoder = JSONEncoder()
+        app.router.get("/json") { _ in
+            return ["message": "Hello, world!"]
+        }
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/json", method: .GET) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), #"{"message":"Hello, world!"}"#)
+        }
+    }
 }

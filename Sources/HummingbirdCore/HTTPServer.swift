@@ -18,23 +18,26 @@ public class HBHTTPServer {
 
     public struct Configuration {
         public let address: HBBindAddress
+        public let serverName: String?
+        public let maxUploadSize: Int
         public let reuseAddress: Bool
         public let tcpNoDelay: Bool
         public let withPipeliningAssistance: Bool
-        public let maxUploadSize: Int
 
         public init(
             address: HBBindAddress = .hostname(),
+            serverName: String? = nil,
+            maxUploadSize: Int = 2 * 1024 * 1024,
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = false,
-            withPipeliningAssistance: Bool = false,
-            maxUploadSize: Int = 2 * 1024 * 1024
+            withPipeliningAssistance: Bool = false
         ) {
             self.address = address
+            self.serverName = serverName
+            self.maxUploadSize = maxUploadSize
             self.reuseAddress = reuseAddress
             self.tcpNoDelay = tcpNoDelay
             self.withPipeliningAssistance = withPipeliningAssistance
-            self.maxUploadSize = maxUploadSize
         }
     }
 
@@ -116,7 +119,7 @@ public class HBHTTPServer {
 
     public func addChildHandlers(channel: Channel, responder: HBHTTPResponder) -> EventLoopFuture<Void> {
         let childHandlers: [ChannelHandler] = self.additionalChannelHandlers(at: .afterHTTP) + [
-            HBHTTPEncodeHandler(),
+            HBHTTPEncodeHandler(configuration: self.configuration),
             HBHTTPDecodeHandler(configuration: self.configuration),
             HBHTTPServerHandler(responder: responder),
         ]

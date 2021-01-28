@@ -72,6 +72,19 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    func testServerHeaders() {
+        let app = HBApplication(testing: .embedded, configuration: .init(serverName: "Hummingbird"))
+        app.router.get("/hello") { _ in
+            return "Hello"
+        }
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/hello", method: .GET) { response in
+            XCTAssertEqual(response.headers["server"].first, "Hummingbird")
+        }
+    }
+
     func testPostRoute() {
         let app = HBApplication(testing: .embedded)
         app.router.post("/hello") { _ -> String in
