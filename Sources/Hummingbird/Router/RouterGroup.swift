@@ -34,7 +34,7 @@ public struct HBRouterGroup: HBRouterMethods {
         let responder = CallbackResponder { request in
             request.body.consumeBody(on: request.eventLoop).flatMap { buffer in
                 request.body = .byteBuffer(buffer)
-                return closure(request).responseFuture(from: request)
+                return closure(request).responseFuture(from: request).hop(to: request.eventLoop)
             }
         }
         router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
@@ -45,7 +45,7 @@ public struct HBRouterGroup: HBRouterMethods {
         let responder = CallbackResponder { request in
             let streamer = request.body.streamBody(on: request.eventLoop)
             request.body = .stream(streamer)
-            return closure(request).responseFuture(from: request)
+            return closure(request).responseFuture(from: request).hop(to: request.eventLoop)
         }
         router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
     }
