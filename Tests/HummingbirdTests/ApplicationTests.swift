@@ -108,10 +108,12 @@ final class ApplicationTests: XCTestCase {
 
     func testResponseBody() {
         let app = HBApplication(testing: .embedded)
-        app.router.post("/echo-body") { request -> HBResponse in
-            let body: HBResponseBody = request.body.buffer.map { .byteBuffer($0) } ?? .empty
-            return .init(status: .ok, headers: [:], body: body)
-        }
+        app.router
+            .endpoint("/echo-body")
+            .post { request -> HBResponse in
+                let body: HBResponseBody = request.body.buffer.map { .byteBuffer($0) } ?? .empty
+                return .init(status: .ok, headers: [:], body: body)
+            }
         app.XCTStart()
         defer { app.XCTStop() }
         
@@ -124,26 +126,28 @@ final class ApplicationTests: XCTestCase {
     func testResponseBodyStreaming() {
         let app = HBApplication(testing: .embedded)
         // stream request into response
-        app.router.addStreamingRoute("/echo-body-streaming", method: .POST) { request -> EventLoopFuture<HBResponse> in
-            let body: HBResponseBody = .streamCallback { eventLoop in
-                return request.body.stream.consume(on: request.eventLoop).map { output in
-                    switch output {
-                    case .byteBuffers(let buffers):
-                        if var buffer = buffers.first {
-                            for var b in buffers.dropFirst() {
-                                buffer.writeBuffer(&b)
+        app.router
+            .endpoint("/echo-body-streaming")
+            .onStreaming(method: .POST) { request -> EventLoopFuture<HBResponse> in
+                let body: HBResponseBody = .streamCallback { eventLoop in
+                    return request.body.stream.consume(on: request.eventLoop).map { output in
+                        switch output {
+                        case .byteBuffers(let buffers):
+                            if var buffer = buffers.first {
+                                for var b in buffers.dropFirst() {
+                                    buffer.writeBuffer(&b)
+                                }
+                                return .byteBuffer(buffer)
+                            } else {
+                                return .byteBuffer(request.allocator.buffer(capacity: 0))
                             }
-                            return .byteBuffer(buffer)
-                        } else {
-                            return .byteBuffer(request.allocator.buffer(capacity: 0))
+                        case .end:
+                            return .end
                         }
-                    case .end:
-                        return .end
                     }
                 }
+                return request.eventLoop.makeSucceededFuture(.init(status: .ok, headers: [:], body: body))
             }
-            return request.eventLoop.makeSucceededFuture(.init(status: .ok, headers: [:], body: body))
-        }
         app.XCTStart()
         defer { app.XCTStop() }
         
