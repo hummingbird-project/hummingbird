@@ -49,7 +49,7 @@ public final class HBApplication: HBExtensible {
         case .shared(let elg):
             self.eventLoopGroup = elg
         }
-        self.threadPool = NIOThreadPool(numberOfThreads: 2)
+        self.threadPool = NIOThreadPool(numberOfThreads: configuration.threadPoolSize)
         self.threadPool.start()
 
         self.server = HBHTTPServer(group: self.eventLoopGroup, configuration: self.configuration.httpServer)

@@ -92,17 +92,17 @@ final class ApplicationTests: XCTestCase {
     func testQueryRoute() {
         let app = HBApplication(testing: .embedded)
         app.router.get("/query") { request -> EventLoopFuture<ByteBuffer> in
-            let buffer = request.allocator.buffer(string: request.uri.query.map { String($0) } ?? "")
+            let buffer = request.allocator.buffer(string: request.uri.queryParameters["test"].map { String($0) } ?? "")
             return request.eventLoop.makeSucceededFuture(buffer)
         }
         app.XCTStart()
         defer { app.XCTStop() }
         
-        app.XCTExecute(uri: "/query?test=test%20data", method: .GET) { response in
+        app.XCTExecute(uri: "/query?test=test%20data%C3%A9", method: .GET) { response in
             var body = try XCTUnwrap(response.body)
             let string = body.readString(length: body.readableBytes)
             XCTAssertEqual(response.status, .ok)
-            XCTAssertEqual(string, "test=test%20data")
+            XCTAssertEqual(string, "test dataé")
         }
     }
 
