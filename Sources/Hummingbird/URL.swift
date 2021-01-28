@@ -75,7 +75,7 @@ public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral {
         } else {
             self.port = nil
         }
-        self.path = Self.substring(from: url.field_data.3, with: string) ?? "/"
+        self.path = Self.substring(from: url.field_data.3, with: string)?.removingPercentEncoding ?? "/"
         self.query = Self.substring(from: url.field_data.4, with: string)
         self.fragment = Self.substring(from: url.field_data.5, with: string)
     }
