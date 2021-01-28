@@ -12,7 +12,11 @@ public protocol HBRouter: HBRouterMethods, HBResponder {
 
 extension HBRouter {
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func on<R: HBResponseGenerator>(_ path: String, method: HTTPMethod, use closure: @escaping (HBRequest) throws -> R) -> Self {
+    @discardableResult public func on<R: HBResponseGenerator>(
+        _ path: String,
+        method: HTTPMethod,
+        use closure: @escaping (HBRequest) throws -> R
+    ) -> Self {
         let responder = CallbackResponder { request in
             request.body.consumeBody(on: request.eventLoop).flatMapThrowing { buffer in
                 request.body = .byteBuffer(buffer)
@@ -24,7 +28,11 @@ extension HBRouter {
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func on<R: HBResponseFutureGenerator>(_ path: String, method: HTTPMethod, use closure: @escaping (HBRequest) -> R) -> Self {
+    @discardableResult public func on<R: HBResponseFutureGenerator>(
+        _ path: String,
+        method: HTTPMethod,
+        use closure: @escaping (HBRequest) -> R
+    ) -> Self {
         let responder = CallbackResponder { request in
             request.body.consumeBody(on: request.eventLoop).flatMap { buffer in
                 request.body = .byteBuffer(buffer)
@@ -36,7 +44,11 @@ extension HBRouter {
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func onStreaming<R: HBResponseFutureGenerator>(_ path: String, method: HTTPMethod, use closure: @escaping (HBRequest) -> R) -> Self {
+    @discardableResult public func onStreaming<R: HBResponseFutureGenerator>(
+        _ path: String,
+        method: HTTPMethod,
+        use closure: @escaping (HBRequest) -> R
+    ) -> Self {
         let responder = CallbackResponder { request in
             let streamer = request.body.streamBody(on: request.eventLoop)
             request.body = .stream(streamer)
@@ -46,8 +58,8 @@ extension HBRouter {
         return self
     }
 
-    /// return new `RouterEndpoint` to add additional middleware to
-    public func endpoint(_ path: String = "") -> HBRouterEndpoint {
+    /// return new `RouterEndpoint`
+    public func endpoint(_ path: String) -> HBRouterEndpoint {
         return .init(path: path, router: self)
     }
 }

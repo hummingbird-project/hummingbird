@@ -15,7 +15,7 @@ struct TrieRouter: HBRouter {
     ///   - responder: handler to call
     public func add(_ path: String, method: HTTPMethod, responder: HBResponder) {
         // add method at beginning of Path to differentiate between methods
-        let path = "\(method.rawValue)/\(path)"
+        let path = "\(path)/\(method.rawValue)"
         trie.addEntry(.init(path), value: responder)
     }
 
@@ -23,7 +23,7 @@ struct TrieRouter: HBRouter {
     /// - Parameter request: HTTP request
     /// - Returns: EventLoopFuture that will be fulfilled with the Response
     public func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
-        let path = "\(request.method.rawValue)/\(request.uri.path)"
+        let path = "\(request.uri.path)/\(request.method.rawValue)"
         guard let result = trie.getValueAndParameters(path) else {
             return request.eventLoop.makeFailedFuture(HBHTTPError(.notFound))
         }

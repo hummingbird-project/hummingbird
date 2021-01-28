@@ -2,7 +2,20 @@ import HummingbirdCore
 import NIO
 import NIOHTTP1
 
-/// Apply additional middleware to a group of routes
+/// Used to group together routes under a single path. Additional middleware can be added to the endpoint and each route can add a
+/// suffix to the endpoint path
+///
+/// The below create an `HBRouteEndpoint`with path "todos" and adds GET and PUT routes on "todos" and adds GET, PUT and
+/// DELETE routes on "todos/:id" where id is the identifier for the todo
+/// ```
+/// app.router
+/// .endpoint("todos")
+/// .get(use: todoController.list)
+/// .put(use: todoController.create)
+/// .get(":id", use: todoController.get)
+/// .put(":id", use: todoController.update)
+/// .delete(":id", use: todoController.delete)
+/// ```
 public struct HBRouterEndpoint: HBRouterMethods {
     let path: String
     let router: HBRouter
@@ -14,14 +27,18 @@ public struct HBRouterEndpoint: HBRouterMethods {
         self.middlewares = .init()
     }
 
-    /// Add middleware to RouterGroup
+    /// Add middleware to RouterEndpoint
     public func add(middleware: HBMiddleware) -> HBRouterEndpoint {
         self.middlewares.add(middleware)
         return self
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func on<R: HBResponseGenerator>(_ path: String = "", method: HTTPMethod, use closure: @escaping (HBRequest) throws -> R) -> Self {
+    @discardableResult public func on<R: HBResponseGenerator>(
+        _ path: String = "",
+        method: HTTPMethod,
+        use closure: @escaping (HBRequest) throws -> R
+    ) -> Self {
         let responder = CallbackResponder { request in
             request.body.consumeBody(on: request.eventLoop).flatMapThrowing { buffer in
                 request.body = .byteBuffer(buffer)
@@ -34,7 +51,11 @@ public struct HBRouterEndpoint: HBRouterMethods {
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func on<R: HBResponseFutureGenerator>(_ path: String = "", method: HTTPMethod, use closure: @escaping (HBRequest) -> R) -> Self {
+    @discardableResult public func on<R: HBResponseFutureGenerator>(
+        _ path: String = "",
+        method: HTTPMethod,
+        use closure: @escaping (HBRequest) -> R
+    ) -> Self {
         let responder = CallbackResponder { request in
             request.body.consumeBody(on: request.eventLoop).flatMap { buffer in
                 request.body = .byteBuffer(buffer)
@@ -47,7 +68,11 @@ public struct HBRouterEndpoint: HBRouterMethods {
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func onStreaming<R: HBResponseFutureGenerator>(_ path: String = "", method: HTTPMethod, use closure: @escaping (HBRequest) -> R) -> Self {
+    @discardableResult public func onStreaming<R: HBResponseFutureGenerator>(
+        _ path: String = "",
+        method: HTTPMethod,
+        use closure: @escaping (HBRequest) -> R
+    ) -> Self {
         let responder = CallbackResponder { request in
             let streamer = request.body.streamBody(on: request.eventLoop)
             request.body = .stream(streamer)
