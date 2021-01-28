@@ -39,7 +39,7 @@ Hummingbird is a lightweight and flexible web application framework that runs on
 
 It provides a router for directing different endpoints to their handlers, middleware for processing requests before they reach your handlers and processing the responses returned, support for adding channel handlers to extend the HTTP server, extending the core `HBApplication`, `HBRequest` and `HBResponse` classes and providing custom encoding/decoding of `Codable` objects.
 
-The interface is fairly standard. Anyone who has had experience of Vapor, Express.js etc will recognise the interfaces. Simple setup is as follows
+The interface is fairly standard. Anyone who has had experience of Vapor, Express.js etc will recognise most of the APIs. Simple setup is as follows
 
 ```swift
 import Hummingbird
