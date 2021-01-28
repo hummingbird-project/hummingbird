@@ -61,10 +61,11 @@ final class MiddlewareTests: XCTestCase {
             }
         }
         let app = HBApplication(testing: .embedded)
-        let group = app.router.group()
+        app.router
+            .endpoint("/group")
             .add(middleware: TestMiddleware())
-        group.get("/group") { request in
-            return request.eventLoop.makeSucceededFuture(request.allocator.buffer(string: "hello"))
+            .get { request in
+                return request.eventLoop.makeSucceededFuture(request.allocator.buffer(string: "hello"))
         }
         app.router.get("/not-group") { request in
             return request.eventLoop.makeSucceededFuture(request.allocator.buffer(string: "hello"))

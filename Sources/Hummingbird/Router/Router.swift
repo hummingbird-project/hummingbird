@@ -12,7 +12,7 @@ public protocol HBRouter: HBRouterMethods, HBResponder {
 
 extension HBRouter {
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    public func add<R: HBResponseGenerator>(_ path: String, method: HTTPMethod, use closure: @escaping (HBRequest) throws -> R) {
+    @discardableResult public func add<R: HBResponseGenerator>(_ path: String, method: HTTPMethod, use closure: @escaping (HBRequest) throws -> R) -> Self {
         let responder = CallbackResponder { request in
             request.body.consumeBody(on: request.eventLoop).flatMapThrowing { buffer in
                 request.body = .byteBuffer(buffer)
@@ -20,10 +20,11 @@ extension HBRouter {
             }
         }
         add(path, method: method, responder: responder)
+        return self
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    public func add<R: HBResponseFutureGenerator>(_ path: String, method: HTTPMethod, use closure: @escaping (HBRequest) -> R) {
+    @discardableResult public func add<R: HBResponseFutureGenerator>(_ path: String, method: HTTPMethod, use closure: @escaping (HBRequest) -> R) -> Self {
         let responder = CallbackResponder { request in
             request.body.consumeBody(on: request.eventLoop).flatMap { buffer in
                 request.body = .byteBuffer(buffer)
@@ -31,20 +32,22 @@ extension HBRouter {
             }
         }
         add(path, method: method, responder: responder)
+        return self
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    public func addStreamingRoute<R: HBResponseFutureGenerator>(_ path: String, method: HTTPMethod, use closure: @escaping (HBRequest) -> R) {
+    @discardableResult public func addStreamingRoute<R: HBResponseFutureGenerator>(_ path: String, method: HTTPMethod, use closure: @escaping (HBRequest) -> R) -> Self {
         let responder = CallbackResponder { request in
             let streamer = request.body.streamBody(on: request.eventLoop)
             request.body = .stream(streamer)
             return closure(request).responseFuture(from: request).hop(to: request.eventLoop)
         }
         add(path, method: method, responder: responder)
+        return self
     }
 
-    /// return new `RouterGroup` to add additional middleware to
-    public func group() -> HBRouterGroup {
-        return .init(router: self)
+    /// return new `RouterEndpoint` to add additional middleware to
+    public func endpoint(_ path: String = "") -> HBRouterEndpoint {
+        return .init(path: path, router: self)
     }
 }
