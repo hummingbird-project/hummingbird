@@ -8,7 +8,7 @@
 --exclude .build
 
 # rules
---disable redundantReturn, redundantBackticks, trailingCommas, extensionAccessControl
+--disable redundantReturn, extensionAccessControl
 
 # format options
 --ifdef no-indent
