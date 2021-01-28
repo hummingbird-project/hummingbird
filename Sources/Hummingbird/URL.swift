@@ -50,7 +50,7 @@ public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral {
         let queries = query.split(separator: "&")
         let queryKeyValues = queries.map { value -> (key: Substring, value: Substring) in
             if let equals = value.firstIndex(of: "=") {
-                return (key: value[..<equals], value: value[value.index(after: equals)...])
+                return (key: value[..<equals].removingPercentEncoding, value: value[value.index(after: equals)...].removingPercentEncoding)
             }
             return (key: value, value: "")
         }
@@ -89,14 +89,41 @@ public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral {
         let start = string.index(string.startIndex, offsetBy: numericCast(data.off))
         let end = string.index(start, offsetBy: numericCast(data.len))
 
-        let result = string[start..<end]
-        // allocate 1024 bytes and run remove percent encoding
-        let mem = UnsafeMutablePointer<Int8>.allocate(capacity: 1024)
-        _ = result.withCString { cstr in
-            urlparser_remove_percent_encoding(cstr, numericCast(data.len), mem, 1024)
+        return string[start..<end]
+    }
+}
+
+private extension Substring {
+    /// Local copy of removingPercentEncoding so I don't need to include Foundation
+    var removingPercentEncoding: Substring {
+        struct RemovePercentEncodingError: Error {}
+        // if no % characters in string, don't waste time allocating a new string
+        guard self.contains("%") else { return self }
+        
+        do {
+            let size = self.utf8.count + 1
+            if #available(macOS 11, *) {
+                let result = try String(unsafeUninitializedCapacity: size) { buffer -> Int in
+                    try self.withCString { cstr -> Int in
+                        let len = urlparser_remove_percent_encoding(cstr, numericCast(self.utf8.count), buffer.baseAddress, size)
+                        guard len > 0 else { throw RemovePercentEncodingError() }
+                        return numericCast(len)
+                    }
+                }
+                return result[...]
+            } else {
+                // allocate buffer size of original string and run remove percent encoding
+                let mem = UnsafeMutablePointer<UInt8>.allocate(capacity: count+1)
+                try self.withCString { cstr in
+                    let len = urlparser_remove_percent_encoding(cstr, numericCast(self.utf8.count), mem, 1024)
+                    guard len > 0 else { throw RemovePercentEncodingError() }
+                }
+                let result = String(cString: mem)
+                mem.deallocate()
+                return result[...]
+            }
+        } catch {
+            return self
         }
-        let test = String(cString: mem)
-        mem.deallocate()
-        return test[...]
     }
 }

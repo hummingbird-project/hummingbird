@@ -36,7 +36,8 @@ class URITests: XCTestCase {
         self.testURI("https://hummingbird.co.uk", \.query, nil)
         self.testURI("https://hummingbird.co.uk?test=true", \.query, "test=true")
         self.testURI("https://hummingbird.co.uk?single#id", \.query, "single")
-        self.testURI("https://hummingbird.co.uk?test1=hello%20rg&test2=true", \.query, "test1=hello rg&test2=true")
+        self.testURI("https://hummingbird.co.uk?test1=hello%20rg&test2=true", \.query, "test1=hello%20rg&test2=true")
+        self.testURI("https://hummingbird.co.uk?test1=hello%20rg&test2=true", \.queryParameters["test1"], "hello rg")
     }
 
     func testFragment() {

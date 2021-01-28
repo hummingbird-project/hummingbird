@@ -707,7 +707,7 @@ urlparser_parse(const char *buf, size_t buflen, int is_connect,
 }
 
 int
-urlparser_remove_percent_encoding(const char *buf, size_t buflen, char *targetBuf, size_t targetBufLen) {
+urlparser_remove_percent_encoding(const char *buf, size_t buflen, uint8_t *targetBuf, size_t targetBufLen) {
     static const uint8_t hexvalues[] = {
         /* 00 */  0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
         /* 08 */  0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
@@ -743,8 +743,9 @@ urlparser_remove_percent_encoding(const char *buf, size_t buflen, char *targetBu
         /* F0 */  0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
         /* F8 */  0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
     };
-    uint8_t *bufPtr = (uint8_t*)targetBuf;
-    const uint8_t *bufEndPtr = (uint8_t*)bufPtr + targetBufLen - 1;
+    uint8_t *bufPtr = targetBuf;
+    const uint8_t *bufStartPtr = bufPtr;
+    const uint8_t *bufEndPtr = bufPtr + targetBufLen;
     const uint8_t *bytePtr = (uint8_t*)buf;
     int idx;
 
@@ -783,5 +784,5 @@ urlparser_remove_percent_encoding(const char *buf, size_t buflen, char *targetBu
         }
     }
     *bufPtr = '\0';
-    return 1;
+    return bufPtr - bufStartPtr;
 }
