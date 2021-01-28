@@ -86,6 +86,8 @@ public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral {
 
     private static func substring(from data: urlparser_field_data, with string: String) -> Substring? {
         guard data.len > 0 else { return nil }
+        // this code relies on the fact we are being supplied ASCII 127 characters. Fortunately in this
+        // case that is correct
         let start = string.index(string.startIndex, offsetBy: numericCast(data.off))
         let end = string.index(start, offsetBy: numericCast(data.len))
 

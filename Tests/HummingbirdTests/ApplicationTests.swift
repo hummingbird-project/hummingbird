@@ -98,11 +98,11 @@ final class ApplicationTests: XCTestCase {
         app.XCTStart()
         defer { app.XCTStop() }
         
-        app.XCTExecute(uri: "/query?test=test%20data", method: .GET) { response in
+        app.XCTExecute(uri: "/query?test=test%20data%C3%A9", method: .GET) { response in
             var body = try XCTUnwrap(response.body)
             let string = body.readString(length: body.readableBytes)
             XCTAssertEqual(response.status, .ok)
-            XCTAssertEqual(string, "test data")
+            XCTAssertEqual(string, "test dataé")
         }
     }
 
