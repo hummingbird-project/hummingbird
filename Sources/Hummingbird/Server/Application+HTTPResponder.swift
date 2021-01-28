@@ -26,7 +26,7 @@ extension HBApplication {
 
             // respond to request
             return self.responder.respond(to: request).map { response in
-                let responseHead = HTTPResponseHead(version: .init(major: 1, minor: 1), status: response.status, headers: response.headers)
+                let responseHead = HTTPResponseHead(version: request.version, status: response.status, headers: response.headers)
                 return HBHTTPResponse(head: responseHead, body: response.body)
             }
         }

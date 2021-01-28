@@ -18,7 +18,7 @@ public struct HBHTTPError: Error {
     /// Generate response from error
     /// - Parameter allocator: Byte buffer allocator used to allocate message body
     /// - Returns: Response
-    public func response(allocator: ByteBufferAllocator) -> HBHTTPResponse {
+    public func response(version: HTTPVersion, allocator: ByteBufferAllocator) -> HBHTTPResponse {
         var headers: HTTPHeaders = [:]
 
         let body: HBResponseBody
@@ -30,7 +30,7 @@ public struct HBHTTPError: Error {
         } else {
             body = .empty
         }
-        let responseHead = HTTPResponseHead(version: .init(major: 1, minor: 1), status: self.status, headers: headers)
+        let responseHead = HTTPResponseHead(version: version, status: self.status, headers: headers)
         return .init(head: responseHead, body: body)
     }
 }
