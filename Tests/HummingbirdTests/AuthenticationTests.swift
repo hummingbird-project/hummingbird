@@ -5,9 +5,9 @@ import XCTest
 class AuthenticationTests: XCTestCase {
     func testBasicAuthentication() {
         let app = HBApplication(testing: .embedded, configuration: .init(maxUploadSize: 65536))
-        app.router.get("/authenticate") { request -> [String: String] in
+        app.router.get("/authenticate") { request -> [String] in
             guard let basic = request.auth.basic else { throw HBHTTPError(.unauthorized) }
-            return ["username": basic.username, "password": basic.password]
+            return [basic.username, basic.password]
         }
         app.XCTStart()
         defer { app.XCTStop() }
@@ -16,7 +16,7 @@ class AuthenticationTests: XCTestCase {
         let basicHeader = "Basic \(String(base64Encoding: basic.utf8))"
         app.XCTExecute(uri: "/authenticate", method: .GET, headers: ["Authorization": basicHeader]) { response in
             let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(String(buffer: body), #"["username": "adamfowler", "password": "testpassword"]"#)
+            XCTAssertEqual(String(buffer: body), #"["adamfowler", "testpassword"]"#)
         }
     }
 
