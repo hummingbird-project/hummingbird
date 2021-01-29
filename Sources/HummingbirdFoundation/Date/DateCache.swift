@@ -4,21 +4,12 @@ import NIO
 import NIOConcurrencyHelpers
 
 public class DateCache {
-    var _currentDate: String
-    var currentDateSeconds: Int
+    var currentDate: String
 
-    public init() {
-        self.currentDateSeconds = Int(Date().timeIntervalSince1970.rounded(.down))
-        self._currentDate = Self.formatDate()
-    }
-
-    public var currentDate: String {
-        let date = Int(Date().timeIntervalSince1970.rounded(.down))
-        if date == currentDateSeconds {
-            return _currentDate
-        } else {
-            updateDate()
-            return _currentDate
+    public init(eventLoop: EventLoop) {
+        self.currentDate = Self.formatDate()
+        eventLoop.scheduleRepeatedTask(initialDelay: .seconds(1), delay: .seconds(1)) { _ in
+            self.updateDate()
         }
     }
 
@@ -27,7 +18,7 @@ public class DateCache {
     }
 
     func updateDate() {
-        self._currentDate = Self.formatDate()
+        self.currentDate = Self.formatDate()
     }
 
     static var dateFormatter: DateFormatter = {
@@ -41,7 +32,22 @@ public class DateCache {
 
 extension HBApplication.EventLoopStorage {
     public var dateCache: DateCache {
-        get { self.extensions.get(\.dateCache) }
-        set { self.extensions.set(\.dateCache, value: newValue) }
+        self.extensions.get(\._dateCache)!
+    }
+
+    fileprivate var _dateCache: DateCache? {
+        get { self.extensions.get(\._dateCache) }
+        set { self.extensions.set(\._dateCache, value: newValue) }
+    }
+}
+
+extension HBApplication {
+    func addDateCaches() {
+        for eventLoop in eventLoopGroup.makeIterator() {
+            let storage = self.eventLoopStorage(for: eventLoop)
+            if storage._dateCache == nil {
+                storage._dateCache = DateCache(eventLoop: eventLoop)
+            }
+        }
     }
 }
