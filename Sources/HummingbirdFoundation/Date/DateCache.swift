@@ -14,14 +14,14 @@ public class DateCache {
     }
 
     static func formatDate() -> String {
-        return Self.dateFormatter.string(from: Date())
+        return Self.rfc1123Formatter.string(from: Date())
     }
 
     func updateDate() {
         self.currentDate = Self.formatDate()
     }
 
-    static var dateFormatter: DateFormatter = {
+    static var rfc1123Formatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "EEE, d MMM yyy HH:mm:ss z"
