@@ -4,7 +4,7 @@ import NIO
 import NIOConcurrencyHelpers
 
 public class DateCache {
-    var currentDate: String
+    public var currentDate: String
 
     public init(eventLoop: EventLoop) {
         self.currentDate = Self.formatDate()
