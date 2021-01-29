@@ -46,6 +46,9 @@ let package = Package(
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
         ]),
+        .target(name: "HummingbirdFoundation", dependencies: [
+            .byName(name: "Hummingbird"),
+        ]),
         .target(name: "HummingbirdFiles", dependencies: [
             .byName(name: "Hummingbird"),
             .product(name: "NIO", package: "swift-nio"),
@@ -85,6 +88,10 @@ let package = Package(
         ]),
         .testTarget(name: "HummingbirdFilesTests", dependencies: [
             .byName(name: "HummingbirdFiles"),
+            .byName(name: "HummingbirdXCT"),
+        ]),
+        .testTarget(name: "HummingbirdFoundationTests", dependencies: [
+            .byName(name: "HummingbirdFoundation"),
             .byName(name: "HummingbirdXCT"),
         ]),
         .testTarget(name: "HummingbirdJSONTests", dependencies: [
