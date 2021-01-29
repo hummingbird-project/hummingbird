@@ -6,9 +6,8 @@ import XCTest
 /// Test application by running on an EmbeddedChannel
 struct HBXCTEmbedded: HBXCT {
     init() {
-        let embeddedEventLoop = EmbeddedEventLoop()
-        self.embeddedEventLoop = embeddedEventLoop
         self.embeddedChannel = EmbeddedChannel()
+        self.embeddedEventLoop = self.embeddedChannel.embeddedEventLoop
     }
 
     /// Start tests
