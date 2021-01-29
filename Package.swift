@@ -24,6 +24,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.4.0"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.2.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "1.0.0-alpha.6"),
+        .package(url: "https://github.com/swift-extras/swift-extras-base64.git", from: "0.5.0"),
     ],
     targets: [
         .target(name: "CURLParser", dependencies: []),
@@ -45,6 +46,7 @@ let package = Package(
             .product(name: "Logging", package: "swift-log"),
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
+            .product(name: "ExtrasBase64", package: "swift-extras-base64")
         ]),
         .target(name: "HummingbirdFiles", dependencies: [
             .byName(name: "Hummingbird"),
