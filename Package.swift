@@ -46,7 +46,7 @@ let package = Package(
             .product(name: "Logging", package: "swift-log"),
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
-            .product(name: "ExtrasBase64", package: "swift-extras-base64")
+            .product(name: "ExtrasBase64", package: "swift-extras-base64"),
         ]),
         .target(name: "HummingbirdFiles", dependencies: [
             .byName(name: "Hummingbird"),
