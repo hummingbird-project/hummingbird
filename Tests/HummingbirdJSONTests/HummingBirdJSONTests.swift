@@ -3,7 +3,7 @@ import HummingbirdJSON
 import HummingbirdXCT
 import XCTest
 
-class HummingBirdJSONTests: XCTestCase {
+class HummingbirdJSONTests: XCTestCase {
     struct User: HBResponseCodable {
         let name: String
         let email: String
