@@ -10,6 +10,7 @@ let package = Package(
         .library(name: "HummingbirdClient", targets: ["HummingbirdClient"]),
         .library(name: "HummingbirdCore", targets: ["HummingbirdCore"]),
         .library(name: "HummingbirdFiles", targets: ["HummingbirdFiles"]),
+        .library(name: "HummingbirdFoundation", targets: ["HummingbirdFoundation"]),
         .library(name: "HummingbirdHTTP2", targets: ["HummingbirdHTTP2"]),
         .library(name: "HummingbirdJSON", targets: ["HummingbirdJSON"]),
         .library(name: "HummingbirdTLS", targets: ["HummingbirdTLS"]),
