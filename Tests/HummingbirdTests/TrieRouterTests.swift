@@ -1,7 +1,7 @@
 @testable import Hummingbird
 import XCTest
 
-class HummingbirdRoutingTests: XCTestCase {
+class HummingbirdTrieRouterTests: XCTestCase {
     func testPathComponentsTrie() {
         let trie = RouterPathTrie<String>()
         trie.addEntry("/usr/local/bin", value: "test1")

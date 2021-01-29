@@ -50,35 +50,4 @@ final class MiddlewareTests: XCTestCase {
             XCTAssertEqual(response.headers["middleware"].last, "first")
         }
     }
-
-    func testGroupMiddleware() {
-        struct TestMiddleware: HBMiddleware {
-            func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
-                return next.respond(to: request).map { response in
-                    response.headers.replaceOrAdd(name: "middleware", value: "TestMiddleware")
-                    return response
-                }
-            }
-        }
-        let app = HBApplication(testing: .embedded)
-        app.router
-            .endpoint("/group")
-            .add(middleware: TestMiddleware())
-            .get { request in
-                return request.eventLoop.makeSucceededFuture(request.allocator.buffer(string: "hello"))
-            }
-        app.router.get("/not-group") { request in
-            return request.eventLoop.makeSucceededFuture(request.allocator.buffer(string: "hello"))
-        }
-        app.XCTStart()
-        defer { app.XCTStop() }
-
-        app.XCTExecute(uri: "/group", method: .GET) { response in
-            XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
-        }
-
-        app.XCTExecute(uri: "/not-group", method: .GET) { response in
-            XCTAssertEqual(response.headers["middleware"].first, nil)
-        }
-    }
 }

@@ -2,35 +2,35 @@ import HummingbirdCore
 import NIO
 import NIOHTTP1
 
-/// Used to group together routes under a single path. Additional middleware can be added to the endpoint and each route can add a
-/// suffix to the endpoint path
+/// Used to group together routes with additional middleware applied
 ///
 /// The below create an `HBRouteEndpoint`with path "todos" and adds GET and PUT routes on "todos" and adds GET, PUT and
 /// DELETE routes on "todos/:id" where id is the identifier for the todo
 /// ```
-/// app.router
-/// .endpoint("todos")
-/// .get(use: todoController.list)
-/// .put(use: todoController.create)
-/// .get(":id", use: todoController.get)
-/// .put(":id", use: todoController.update)
-/// .delete(":id", use: todoController.delete)
+/// let group = app.router
+///     .group()
+///     .add(middleware: MyMiddleware())
+/// group
+///     .get("path", use: myController.get)
+///     .put("path", use: myController.put)
 /// ```
-public struct HBRouterEndpoint: HBRouterMethods {
-    let path: String
+public struct HBRouterGroup: HBRouterMethods {
     let router: HBRouter
     let middlewares: HBMiddlewareGroup
 
-    init(path: String, middlewares: HBMiddlewareGroup = .init(), router: HBRouter) {
-        self.path = path
+    init(router: HBRouter) {
         self.router = router
-        self.middlewares = middlewares
+        self.middlewares = .init()
     }
 
     /// Add middleware to RouterEndpoint
-    public func add(middleware: HBMiddleware) -> HBRouterEndpoint {
+    public func add(middleware: HBMiddleware) -> HBRouterGroup {
         self.middlewares.add(middleware)
         return self
+    }
+
+    public func endpoint(_ path: String) -> HBRouterEndpoint {
+        return HBRouterEndpoint(path: path, middlewares: self.middlewares, router: self.router)
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
@@ -45,7 +45,6 @@ public struct HBRouterEndpoint: HBRouterMethods {
                 return try closure(request).response(from: request)
             }
         }
-        let path = self.combinePaths(self.path, path)
         self.router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         return self
     }
@@ -62,7 +61,6 @@ public struct HBRouterEndpoint: HBRouterMethods {
                 return closure(request).responseFuture(from: request).hop(to: request.eventLoop)
             }
         }
-        let path = self.combinePaths(self.path, path)
         self.router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         return self
     }
@@ -78,32 +76,7 @@ public struct HBRouterEndpoint: HBRouterMethods {
             request.body = .stream(streamer)
             return closure(request).responseFuture(from: request).hop(to: request.eventLoop)
         }
-        let path = self.combinePaths(self.path, path)
         self.router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         return self
-    }
-
-    private func combinePaths(_ path1: String, _ path2: String) -> String {
-        let path1 = path1.dropSuffix("/")
-        let path2 = path2.dropPrefix("/")
-        return "\(path1)/\(path2)"
-    }
-}
-
-private extension String {
-    func dropPrefix(_ prefix: String) -> Substring {
-        if hasPrefix(prefix) {
-            return self.dropFirst(prefix.count)
-        } else {
-            return self[...]
-        }
-    }
-
-    func dropSuffix(_ suffix: String) -> Substring {
-        if hasSuffix(suffix) {
-            return self.dropLast(suffix.count)
-        } else {
-            return self[...]
-        }
     }
 }
