@@ -20,6 +20,14 @@ public final class HBHTTPServerHandler: ChannelInboundHandler {
         self.propagatedError = nil
     }
 
+    public func handlerAdded(context: ChannelHandlerContext) {
+        responder.handlerAdded(context: context)
+    }
+
+    public func handlerRemoved(context: ChannelHandlerContext) {
+        responder.handlerRemoved(context: context)
+    }
+
     public func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let request = unwrapInboundIn(data)
         // if error caught from previous channel handler then write an error

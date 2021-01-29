@@ -8,6 +8,12 @@ import NIO
 /// you convert requests to the server into responses
 ///
 public protocol HBHTTPResponder {
+    /// Called when HTTP server handler is added to channel
+    func handlerAdded(context: ChannelHandlerContext)
+
+    /// Called when HTTP server handler is removed from channel
+    func handlerRemoved(context: ChannelHandlerContext)
+
     /// Returns an EventLoopFuture that will be fullfilled with the response to the request passed in to the function
     /// - Parameters:
     ///   - request: HTTP request
@@ -19,5 +25,7 @@ public protocol HBHTTPResponder {
 }
 
 extension HBHTTPResponder {
+    public func handlerAdded(context: ChannelHandlerContext) {}
+    public func handlerRemoved(context: ChannelHandlerContext) {}
     public var logger: Logger? { nil }
 }
