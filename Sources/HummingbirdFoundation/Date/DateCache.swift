@@ -8,7 +8,9 @@ public class DateCache {
 
     public init(eventLoop: EventLoop) {
         self.currentDate = Self.formatDate()
-        eventLoop.scheduleRepeatedTask(initialDelay: .seconds(1), delay: .seconds(1)) { _ in
+        let millisecondsSinceLastSecond = Date().timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1.0) * 1_000
+        let millisecondsUntilNextSecond = Int64(1000.0 - millisecondsSinceLastSecond)
+        eventLoop.scheduleRepeatedTask(initialDelay: .milliseconds(millisecondsUntilNextSecond), delay: .seconds(1)) { _ in
             self.updateDate()
         }
     }
