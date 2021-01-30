@@ -6,7 +6,7 @@ public struct HBCookies {
         self.map = .init(request.headers["cookie"].compactMap {
             guard let cookie = HBCookie(from: $0) else { return nil }
             return (cookie.name, cookie)
-        }) { first, _ in first}
+        }) { first, _ in first }
     }
 
     public subscript(_ key: String) -> HBCookie? {
