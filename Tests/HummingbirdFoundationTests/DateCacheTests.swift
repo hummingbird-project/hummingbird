@@ -15,14 +15,14 @@ class HummingbirdDateTests: XCTestCase {
         app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/date", method: .GET) { response in
+        app.XCTExecute(uri: "/date", method: .GET) { _ in
         }
     }
 
     func testDateResponseMiddleware() {
         let app = HBApplication(testing: .embedded)
         app.addFoundation()
-        app.router.get("date") { request in
+        app.router.get("date") { _ in
             return "hello"
         }
 

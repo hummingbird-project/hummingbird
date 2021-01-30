@@ -21,11 +21,11 @@ public final class HBHTTPServerHandler: ChannelInboundHandler {
     }
 
     public func handlerAdded(context: ChannelHandlerContext) {
-        responder.handlerAdded(context: context)
+        self.responder.handlerAdded(context: context)
     }
 
     public func handlerRemoved(context: ChannelHandlerContext) {
-        responder.handlerRemoved(context: context)
+        self.responder.handlerRemoved(context: context)
     }
 
     public func channelRead(context: ChannelHandlerContext, data: NIOAny) {

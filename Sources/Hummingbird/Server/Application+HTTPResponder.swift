@@ -7,8 +7,8 @@ extension HBApplication {
     public struct HTTPResponder: HBHTTPResponder {
         let application: HBApplication
         let responder: HBResponder
-        let handlerAddedCallback: (ChannelHandlerContext)->()
-        let handlerRemovedCallback: (ChannelHandlerContext)->()
+        let handlerAddedCallback: (ChannelHandlerContext) -> Void
+        let handlerRemovedCallback: (ChannelHandlerContext) -> Void
 
         public init(application: HBApplication) {
             self.application = application
