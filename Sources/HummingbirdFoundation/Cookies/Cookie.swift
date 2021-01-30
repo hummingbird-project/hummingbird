@@ -13,22 +13,22 @@ public struct HBCookie: CustomStringConvertible {
     public let value: String
     /// properties
     public let properties: Properties
-    
+
     /// indicates the maximum lifetime of the cookie
-    public var expires: Date? { return properties[.expires].map { DateCache.rfc1123Formatter.date(from: $0) } ?? nil }
+    public var expires: Date? { return self.properties[.expires].map { DateCache.rfc1123Formatter.date(from: $0) } ?? nil }
     /// indicates the maximum lifetime of the cookie in seconds. Max age has precedence over expires
     /// (not all user agents support max-age)
-    public var maxAge: Int? { return properties[.maxAge].map { Int($0) } ?? nil }
+    public var maxAge: Int? { return self.properties[.maxAge].map { Int($0) } ?? nil }
     /// specifies those hosts to which the cookie will be sent
-    public var domain: String? { return properties[.domain] }
+    public var domain: String? { return self.properties[.domain] }
     /// The scope of each cookie is limited to a set of paths, controlled by the Path attribute
-    public var path: String? { return properties[.path] }
+    public var path: String? { return self.properties[.path] }
     /// The Secure attribute limits the scope of the cookie to "secure" channels
-    public var secure: Bool { return properties[.secure] != nil }
+    public var secure: Bool { return self.properties[.secure] != nil }
     /// The HttpOnly attribute limits the scope of the cookie to HTTP requests
-    public var httpOnly: Bool { return properties[.httpOnly] != nil }
+    public var httpOnly: Bool { return self.properties[.httpOnly] != nil }
     /// The SameSite attribute lets servers specify whether/when cookies are sent with cross-origin requests
-    public var sameSite: SameSite? { return properties[.sameSite].map { SameSite(rawValue: $0) } ?? nil }
+    public var sameSite: SameSite? { return self.properties[.sameSite].map { SameSite(rawValue: $0) } ?? nil }
 
     public init(
         name: String,
@@ -65,7 +65,7 @@ public struct HBCookie: CustomStringConvertible {
         guard keyValue.count == 2 else { return nil }
         self.name = String(keyValue[0])
         self.value = String(keyValue[1])
-        
+
         var properties = Properties()
         // extract elements
         for element in elements.dropFirst() {
@@ -79,7 +79,7 @@ public struct HBCookie: CustomStringConvertible {
         }
         self.properties = properties
     }
-    
+
     public var description: String {
         var output: String = "\(self.name)=\(self.value)"
         for property in self.properties.table {
@@ -102,25 +102,26 @@ public struct HBCookie: CustomStringConvertible {
             case httpOnly = "HttpOnly"
             case sameSite = "SameSite"
         }
-        
+
         init() {
             self.table = [:]
         }
-        
+
         subscript(_ string: String) -> String? {
-            get { table[string[...]] }
-            set { table[string[...]] = newValue}
+            get { self.table[string[...]] }
+            set { self.table[string[...]] = newValue }
         }
-        
+
         public subscript(_ string: Substring) -> String? {
-            get { table[string] }
-            set { table[string] = newValue}
+            get { self.table[string] }
+            set { self.table[string] = newValue }
         }
-        
+
         subscript(_ property: CommonProperties) -> String? {
-            get { table[property.rawValue] }
-            set { table[property.rawValue] = newValue}
+            get { self.table[property.rawValue] }
+            set { self.table[property.rawValue] = newValue }
         }
+
         var table: [Substring: String]
     }
 }

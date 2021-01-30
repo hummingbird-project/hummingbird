@@ -4,13 +4,13 @@ public struct HBCookies {
     init(from request: HBRequest) {
         self.array = request.headers["cookie"].compactMap { HBCookie(from: $0) }
     }
-    
+
     let array: [HBCookie]
 }
 
 extension HBCookies: Collection {
     public typealias Element = HBCookie
-    
+
     public func index(after i: Int) -> Int {
         return self.array.index(after: i)
     }
