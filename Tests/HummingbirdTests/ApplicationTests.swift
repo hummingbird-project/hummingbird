@@ -14,20 +14,6 @@ final class ApplicationTests: XCTestCase {
         return ByteBufferAllocator().buffer(bytes: data)
     }
 
-    func testEnvironment() {
-        var env = HBEnvironment()
-        env.set("TEST_ENV", value: "testing")
-        XCTAssertEqual(env.get("TEST_ENV"), "testing")
-        env.set("TEST_ENV", value: nil)
-        XCTAssertEqual(env.get("TEST_ENV"), nil)
-    }
-
-    func testEnvironmentVariable() {
-        setenv("TEST_VAR", "TRUE", 1)
-        let env = HBEnvironment()
-        XCTAssertEqual(env.get("TEST_VAR"), "TRUE")
-    }
-
     func testGetRoute() throws {
         let app = HBApplication(testing: .embedded)
         app.router.get("/hello") { request -> EventLoopFuture<ByteBuffer> in
