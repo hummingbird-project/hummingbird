@@ -39,8 +39,7 @@ public struct HBCookie: CustomStringConvertible {
         path: String? = nil,
         secure: Bool = false,
         httpOnly: Bool = false,
-        sameSite: SameSite? = nil,
-        additionalProperties: [String: String] = [:]
+        sameSite: SameSite? = nil
     ) {
         self.name = name
         self.value = value
@@ -52,9 +51,6 @@ public struct HBCookie: CustomStringConvertible {
         if secure { properties[.secure] = "" }
         if httpOnly { properties[.httpOnly] = "" }
         properties[.sameSite] = sameSite?.rawValue
-        for p in additionalProperties {
-            properties[p.key] = p.value
-        }
         self.properties = properties
     }
 
