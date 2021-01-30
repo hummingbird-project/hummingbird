@@ -9,12 +9,9 @@ let package = Package(
         .library(name: "Hummingbird", targets: ["Hummingbird"]),
         .library(name: "HummingbirdClient", targets: ["HummingbirdClient"]),
         .library(name: "HummingbirdCore", targets: ["HummingbirdCore"]),
-        .library(name: "HummingbirdFiles", targets: ["HummingbirdFiles"]),
         .library(name: "HummingbirdFoundation", targets: ["HummingbirdFoundation"]),
         .library(name: "HummingbirdHTTP2", targets: ["HummingbirdHTTP2"]),
-        .library(name: "HummingbirdJSON", targets: ["HummingbirdJSON"]),
         .library(name: "HummingbirdTLS", targets: ["HummingbirdTLS"]),
-        .library(name: "HummingbirdURLEncoded", targets: ["HummingbirdURLEncoded"]),
         .library(name: "HummingbirdXCT", targets: ["HummingbirdXCT"]),
     ],
     dependencies: [
@@ -50,22 +47,11 @@ let package = Package(
         .target(name: "HummingbirdFoundation", dependencies: [
             .byName(name: "Hummingbird"),
         ]),
-        .target(name: "HummingbirdFiles", dependencies: [
-            .byName(name: "Hummingbird"),
-            .product(name: "NIO", package: "swift-nio"),
-        ]),
         .target(name: "HummingbirdHTTP2", dependencies: [
             .byName(name: "HummingbirdCore"),
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "NIOHTTP2", package: "swift-nio-http2"),
             .product(name: "NIOSSL", package: "swift-nio-ssl"),
-        ]),
-        .target(name: "HummingbirdJSON", dependencies: [
-            .byName(name: "Hummingbird"),
-            .product(name: "NIOFoundationCompat", package: "swift-nio"),
-        ]),
-        .target(name: "HummingbirdURLEncoded", dependencies: [
-            .byName(name: "Hummingbird"),
         ]),
         .target(name: "HummingbirdTLS", dependencies: [
             .byName(name: "HummingbirdCore"),
@@ -87,25 +73,13 @@ let package = Package(
             .byName(name: "HummingbirdCore"),
             .product(name: "AsyncHTTPClient", package: "async-http-client"),
         ]),
-        .testTarget(name: "HummingbirdFilesTests", dependencies: [
-            .byName(name: "HummingbirdFiles"),
-            .byName(name: "HummingbirdXCT"),
-        ]),
         .testTarget(name: "HummingbirdFoundationTests", dependencies: [
             .byName(name: "HummingbirdFoundation"),
-            .byName(name: "HummingbirdXCT"),
-        ]),
-        .testTarget(name: "HummingbirdJSONTests", dependencies: [
-            .byName(name: "HummingbirdJSON"),
             .byName(name: "HummingbirdXCT"),
         ]),
         .testTarget(name: "HummingbirdTLSTests", dependencies: [
             .byName(name: "HummingbirdTLS"),
             .product(name: "AsyncHTTPClient", package: "async-http-client"),
-        ]),
-        .testTarget(name: "HummingbirdURLEncodedTests", dependencies: [
-            .byName(name: "HummingbirdURLEncoded"),
-            .byName(name: "HummingbirdXCT"),
         ]),
     ]
 )
