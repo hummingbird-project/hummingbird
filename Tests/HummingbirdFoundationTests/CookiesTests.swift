@@ -1,0 +1,66 @@
+@testable import HummingbirdFoundation
+import XCTest
+
+class CookieTests: XCTestCase {
+    func testNameValue() {
+        let cookie = HBCookie(from: "name=value")
+        XCTAssertEqual(cookie?.name, "name")
+        XCTAssertEqual(cookie?.value, "value")
+        XCTAssertEqual(cookie?.description, "name=value")
+    }
+
+    func testPropertyOutput() {
+        let cookie = HBCookie(from: "name=value; Expires=Wed, 21 Oct 2015 07:28:00 GMT")
+        XCTAssertEqual(cookie?.description, "name=value; Expires=Wed, 21 Oct 2015 07:28:00 GMT")
+    }
+
+    func testExpires() {
+        let cookie = HBCookie(from: "name=value; Expires=Wed, 21 Oct 2015 07:28:00 GMT")
+        XCTAssertEqual(cookie?.expires, DateCache.rfc1123Formatter.date(from: "Wed, 21 Oct 2015 07:28:00 GMT"))
+    }
+
+    func testDomain() {
+        let cookie = HBCookie(from: "name=value; Domain=test.com")
+        XCTAssertEqual(cookie?.domain, "test.com")
+    }
+
+    func testPath() {
+        let cookie = HBCookie(from: "name=value; Path=/test")
+        XCTAssertEqual(cookie?.path, "/test")
+    }
+
+    func testMaxAge() {
+        let cookie = HBCookie(from: "name=value; Max-Age=3600")
+        XCTAssertEqual(cookie?.maxAge, 3600)
+    }
+
+    func testSecure() {
+        let cookie = HBCookie(from: "name=value; Secure")
+        XCTAssertEqual(cookie?.secure, true)
+    }
+
+    func testHttpOnly() {
+        let cookie = HBCookie(from: "name=value; HttpOnly")
+        XCTAssertEqual(cookie?.httpOnly, true)
+    }
+
+    func testSameSite() {
+        let cookie = HBCookie(from: "name=value; SameSite=Secure")
+        XCTAssertEqual(cookie?.sameSite, .secure)
+    }
+    
+    func testSetCookie() {
+        let app = HBApplication(testing: .embedded)
+        app.router.post("/") { _ -> HBResponse in
+            let response = HBResponse(status: .ok, headers: [:], body: .empty)
+            response.cookies.set(cookie: .init(name: "test", value: "value"))
+            return response
+        }
+        app.XCTStart()
+        defer { app.XCTStop() }
+        
+        app.XCTExecute(uri: "/", method: .POST) { response in
+            XCTAssertEqual(response.headers["Set-Cookie"].first, "test=value")
+        }
+    }
+}
