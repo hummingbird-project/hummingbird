@@ -8,24 +8,27 @@ public struct HBCookie: CustomStringConvertible {
     }
 
     /// Cookie name
-    let name: String
+    public let name: String
     /// Cookie value
-    let value: String
+    public let value: String
+    /// properties
+    public let properties: Properties
+    
     /// indicates the maximum lifetime of the cookie
-    let expires: Date?
+    public var expires: Date? { return properties[.expires].map { DateCache.rfc1123Formatter.date(from: $0) } ?? nil }
     /// indicates the maximum lifetime of the cookie in seconds. Max age has precedence over expires
     /// (not all user agents support max-age)
-    let maxAge: Int?
+    public var maxAge: Int? { return properties[.maxAge].map { Int($0) } ?? nil }
     /// specifies those hosts to which the cookie will be sent
-    let domain: String?
+    public var domain: String? { return properties[.domain] }
     /// The scope of each cookie is limited to a set of paths, controlled by the Path attribute
-    let path: String?
+    public var path: String? { return properties[.path] }
     /// The Secure attribute limits the scope of the cookie to "secure" channels
-    let secure: Bool
+    public var secure: Bool { return properties[.secure] != nil }
     /// The HttpOnly attribute limits the scope of the cookie to HTTP requests
-    let httpOnly: Bool
+    public var httpOnly: Bool { return properties[.httpOnly] != nil }
     /// The SameSite attribute lets servers specify whether/when cookies are sent with cross-origin requests
-    let sameSite: SameSite?
+    public var sameSite: SameSite? { return properties[.sameSite].map { SameSite(rawValue: $0) } ?? nil }
 
     public init(
         name: String,
@@ -34,32 +37,90 @@ public struct HBCookie: CustomStringConvertible {
         maxAge: Int? = nil,
         domain: String? = nil,
         path: String? = nil,
-        secure: Bool,
-        httpOnly: Bool,
-        sameSite: SameSite? = nil
+        secure: Bool = false,
+        httpOnly: Bool = false,
+        sameSite: SameSite? = nil,
+        additionalProperties: [String: String] = [:]
     ) {
         self.name = name
         self.value = value
-        self.expires = expires
-        self.maxAge = maxAge
-        self.domain = domain
-        self.path = path
-        self.secure = secure
-        self.httpOnly = httpOnly
-        self.sameSite = sameSite
+        var properties = Properties()
+        properties[.expires] = expires.map { DateCache.rfc1123Formatter.string(from: $0) }
+        properties[.maxAge] = maxAge?.description
+        properties[.domain] = domain
+        properties[.path] = path
+        if secure { properties[.secure] = "" }
+        if httpOnly { properties[.httpOnly] = "" }
+        properties[.sameSite] = sameSite?.rawValue
+        for p in additionalProperties {
+            properties[p.key] = p.value
+        }
+        self.properties = properties
     }
 
+    init?(from header: String) {
+        let elements = header.split(separator: ";")
+        guard elements.count > 0 else { return nil }
+        let keyValue = elements[0].split(separator: "=", maxSplits: 1)
+        guard keyValue.count == 2 else { return nil }
+        self.name = String(keyValue[0])
+        self.value = String(keyValue[1])
+        
+        var properties = Properties()
+        // extract elements
+        for element in elements.dropFirst() {
+            let keyValue = element.split(separator: "=", maxSplits: 1)
+            let key = keyValue[0].drop { $0 == " " }
+            if keyValue.count == 2 {
+                properties[key] = String(keyValue[1])
+            } else {
+                properties[key] = ""
+            }
+        }
+        self.properties = properties
+    }
+    
     public var description: String {
         var output: String = "\(self.name)=\(self.value)"
-        if let expires = self.expires {
-            output += "; Expires=\(DateCache.rfc1123Formatter.string(from: expires))"
+        for property in self.properties.table {
+            if property.value == "" {
+                output += "; \(property.key)"
+            } else {
+                output += "; \(property.key)=\(property.value)"
+            }
         }
-        if let maxAge = self.maxAge { output += "; Max-Age=\(maxAge)" }
-        if let domain = self.domain { output += "; Domain=\(domain)" }
-        if let path = self.path { output += "; Path=\(path)" }
-        if self.secure { output += "; Secure" }
-        if self.httpOnly { output += "; HttpOnly" }
-        if let sameSite = self.sameSite { output += "; Same-Site=\(sameSite)"}
         return output
+    }
+
+    public struct Properties {
+        enum CommonProperties: Substring {
+            case expires = "Expires"
+            case maxAge = "Max-Age"
+            case domain = "Domain"
+            case path = "Path"
+            case secure = "Secure"
+            case httpOnly = "HttpOnly"
+            case sameSite = "SameSite"
+        }
+        
+        init() {
+            self.table = [:]
+        }
+        
+        subscript(_ string: String) -> String? {
+            get { table[string[...]] }
+            set { table[string[...]] = newValue}
+        }
+        
+        public subscript(_ string: Substring) -> String? {
+            get { table[string] }
+            set { table[string] = newValue}
+        }
+        
+        subscript(_ property: CommonProperties) -> String? {
+            get { table[property.rawValue] }
+            set { table[property.rawValue] = newValue}
+        }
+        var table: [Substring: String]
     }
 }
