@@ -29,6 +29,14 @@ public struct HBExtensions<ParentObject> {
         return value
     }
 
+    public mutating func getOrCreate<Type>(_ key: KeyPath<ParentObject, Type>, _ createCB: @autoclosure () -> Type) -> Type {
+        guard let value = items[key]?.value as? Type else {
+            self.set(key, value: createCB())
+            return self.items[key]!.value as! Type
+        }
+        return value
+    }
+
     public mutating func set<Type>(_ key: KeyPath<ParentObject, Type>, value: Type, shutdownCallback: ((Type) throws -> Void)? = nil) {
         if let item = items[key] {
             guard item.shutdown == nil else {
