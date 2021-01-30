@@ -229,6 +229,4 @@ final class ApplicationTests: XCTestCase {
             XCTAssertEqual(string, "Hello")
         }
     }
-
-
 }
