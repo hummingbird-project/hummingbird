@@ -2,7 +2,7 @@ import NIOHTTP1
 
 extension HBRequest {
     /// Patches Response via `HBResponse.apply(patch:)`
-    public struct ResponsePatch {
+    public class ResponsePatch {
         /// patch status of reponse
         public var status: HTTPResponseStatus?
         /// headers to add to response
@@ -15,9 +15,13 @@ extension HBRequest {
     }
 
     /// Allows you to edit the status and headers of the response
-    var response: ResponsePatch {
+    public var response: ResponsePatch {
         get { self.extensions.getOrCreate(\.response, ResponsePatch()) }
         set { self.extensions.set(\.response, value: newValue) }
+    }
+
+    var optionalResponse: ResponsePatch? {
+        self.extensions.get(\.response)
     }
 }
 

@@ -210,4 +210,25 @@ final class ApplicationTests: XCTestCase {
             XCTAssertEqual(response.status, .payloadTooLarge)
         }
     }
+
+    func testEditResponse() throws {
+        let app = HBApplication(testing: .embedded)
+        app.router.get("/hello") { request -> String in
+            request.response.headers.add(name: "test", value: "value")
+            request.response.status = .imATeapot
+            return "Hello"
+        }
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/hello", method: .GET) { response in
+            var body = try XCTUnwrap(response.body)
+            let string = body.readString(length: body.readableBytes)
+            XCTAssertEqual(response.status, .imATeapot)
+            XCTAssertEqual(response.headers["test"].first, "value")
+            XCTAssertEqual(string, "Hello")
+        }
+    }
+
+
 }

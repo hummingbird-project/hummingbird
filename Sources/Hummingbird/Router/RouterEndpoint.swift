@@ -42,7 +42,7 @@ public struct HBRouterEndpoint: HBRouterMethods {
         let responder = CallbackResponder { request in
             request.body.consumeBody(on: request.eventLoop).flatMapThrowing { buffer in
                 request.body = .byteBuffer(buffer)
-                return try closure(request).response(from: request)
+                return try closure(request).response(from: request).apply(patch: request.optionalResponse)
             }
         }
         let path = self.combinePaths(self.path, path)
@@ -59,7 +59,9 @@ public struct HBRouterEndpoint: HBRouterMethods {
         let responder = CallbackResponder { request in
             request.body.consumeBody(on: request.eventLoop).flatMap { buffer in
                 request.body = .byteBuffer(buffer)
-                return closure(request).responseFuture(from: request).hop(to: request.eventLoop)
+                return closure(request).responseFuture(from: request)
+                    .map { $0.apply(patch: request.optionalResponse) }
+                    .hop(to: request.eventLoop)
             }
         }
         let path = self.combinePaths(self.path, path)
@@ -76,7 +78,9 @@ public struct HBRouterEndpoint: HBRouterMethods {
         let responder = CallbackResponder { request in
             let streamer = request.body.streamBody(on: request.eventLoop)
             request.body = .stream(streamer)
-            return closure(request).responseFuture(from: request).hop(to: request.eventLoop)
+            return closure(request).responseFuture(from: request)
+                .map { $0.apply(patch: request.optionalResponse) }
+                .hop(to: request.eventLoop)
         }
         let path = self.combinePaths(self.path, path)
         self.router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
