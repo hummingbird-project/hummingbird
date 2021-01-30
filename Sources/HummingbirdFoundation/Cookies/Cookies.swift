@@ -1,24 +1,33 @@
 import Hummingbird
 
 public struct HBCookies {
+    public typealias CollectionType = [String: HBCookie]
     init(from request: HBRequest) {
-        self.array = request.headers["cookie"].compactMap { HBCookie(from: $0) }
+        self.map = .init(request.headers["cookie"].compactMap {
+            guard let cookie = HBCookie(from: $0) else { return nil }
+            return (cookie.name, cookie)
+        }) { first, _ in first}
     }
 
-    let array: [HBCookie]
+    public subscript(_ key: String) -> HBCookie? {
+        get { return self.map[key] }
+        set { self.map[key] = newValue }
+    }
+
+    var map: CollectionType
 }
 
 extension HBCookies: Collection {
-    public typealias Element = HBCookie
+    public typealias Element = CollectionType.Element
 
-    public func index(after i: Int) -> Int {
-        return self.array.index(after: i)
+    public func index(after i: CollectionType.Index) -> CollectionType.Index {
+        return self.map.index(after: i)
     }
 
-    public subscript(_ index: Int) -> HBCookies.Element {
-        return self.array[index]
+    public subscript(_ index: CollectionType.Index) -> HBCookies.Element {
+        return self.map[index]
     }
 
-    public var startIndex: Int { self.array.startIndex }
-    public var endIndex: Int { self.array.endIndex }
+    public var startIndex: CollectionType.Index { self.map.startIndex }
+    public var endIndex: CollectionType.Index { self.map.endIndex }
 }
