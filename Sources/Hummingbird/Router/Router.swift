@@ -20,7 +20,7 @@ extension HBRouter {
         let responder = CallbackResponder { request in
             request.body.consumeBody(on: request.eventLoop).flatMapThrowing { buffer in
                 request.body = .byteBuffer(buffer)
-                return try closure(request).response(from: request)
+                return try closure(request).response(from: request).apply(patch: request.response)
             }
         }
         add(path, method: method, responder: responder)
@@ -36,7 +36,9 @@ extension HBRouter {
         let responder = CallbackResponder { request in
             request.body.consumeBody(on: request.eventLoop).flatMap { buffer in
                 request.body = .byteBuffer(buffer)
-                return closure(request).responseFuture(from: request).hop(to: request.eventLoop)
+                return closure(request).responseFuture(from: request)
+                    .map { $0.apply(patch: request.response) }
+                    .hop(to: request.eventLoop)
             }
         }
         add(path, method: method, responder: responder)
@@ -52,7 +54,9 @@ extension HBRouter {
         let responder = CallbackResponder { request in
             let streamer = request.body.streamBody(on: request.eventLoop)
             request.body = .stream(streamer)
-            return closure(request).responseFuture(from: request).hop(to: request.eventLoop)
+            return closure(request).responseFuture(from: request)
+                .map { $0.apply(patch: request.response) }
+                .hop(to: request.eventLoop)
         }
         add(path, method: method, responder: responder)
         return self
