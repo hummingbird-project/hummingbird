@@ -32,7 +32,7 @@ public struct HBRouterGroup: HBRouterMethods {
         self.middlewares.add(middleware)
         return self
     }
-    
+
     /// Return a group inside the current group
     /// - Parameter path: path prefix to add to routes inside this group
     public func group(_ path: String = "") -> HBRouterGroup {

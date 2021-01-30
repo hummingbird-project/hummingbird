@@ -66,7 +66,7 @@ extension HBApplication.EventLoopStorageMap: Sequence {
     /// EventLoopStorageMap iterator
     public struct Iterator: Sequence, IteratorProtocol {
         public typealias Element = (eventLoop: EventLoop, storage: HBApplication.EventLoopStorage)
-        
+
         private var eventLoopStorage: HBApplication.EventLoopStorageMap
         private var iterator: EventLoopIterator
 
@@ -81,12 +81,12 @@ extension HBApplication.EventLoopStorageMap: Sequence {
         /// - returns: The next `EventLoop` if a next element exists; otherwise, `nil`.
         public mutating func next() -> Element? {
             guard let eventLoop = self.iterator.next() else { return nil }
-            return (eventLoop: eventLoop, storage: eventLoopStorage.get(for: eventLoop))
+            return (eventLoop: eventLoop, storage: self.eventLoopStorage.get(for: eventLoop))
         }
     }
-    
+
     public typealias Element = Iterator.Element
-    
+
     public func makeIterator() -> HBApplication.EventLoopStorageMap.Iterator {
         return Iterator(self)
     }
