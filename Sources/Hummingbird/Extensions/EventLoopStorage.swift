@@ -37,7 +37,7 @@ extension HBApplication {
     }
 
     public func eventLoopStorage(for eventLoop: EventLoop) -> EventLoopStorage {
-        return eventLoopStorage.get(for: eventLoop)
+        return self.eventLoopStorage.get(for: eventLoop)
     }
 
     /// Allow the application to attach data to each EventLoop
