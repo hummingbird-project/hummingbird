@@ -63,12 +63,13 @@ extension HBRouter {
     }
 
     /// return new `RouterGroup`
-    public func group() -> HBRouterGroup {
-        return .init(router: self)
+    /// - Parameter path: prefix to add to paths inside the group
+    public func group(_ path: String = "") -> HBRouterGroup {
+        return .init(path: path, router: self)
     }
 
     /// return new `RouterEndpoint`
-    public func endpoint(_ path: String) -> HBRouterEndpoint {
+    public func endpoint(_ path: String) -> HBRouterGroup {
         return .init(path: path, router: self)
     }
 }
