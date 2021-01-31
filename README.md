@@ -59,7 +59,7 @@ Hummingbird is designed to require the least number of dependencies possible, bu
 | Extension | Description |
 |-----------|-------------|
 | HummingbirdFoundation | Features we can't include in Hummingbird because they require Foundation, includes JSONEncoder, URLEncodedForms, Static file serving, and Cookies |
-| HummingbirdTLS | Extend HumminbirdCore to support TLS (uses [NIOSSL](https://github.com/apple/swift-nio-ssl) |
+| HummingbirdTLS | Extend HumminbirdCore to support TLS (uses [NIOSSL](https://github.com/apple/swift-nio-ssl)) |
 | HummingbirdHTTP2 | Extend HumminbirdCore to support HTTP2 upgrades (uses [NIOSSL](https://github.com/apple/swift-nio-ssl), [NIOHTTP2](https://github.com/apple/swift-nio-http2)) |
 
 Extensions provided in other repositories include
