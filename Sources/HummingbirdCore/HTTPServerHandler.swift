@@ -89,9 +89,8 @@ public final class HBHTTPServerHandler: ChannelInboundHandler {
         case let evt as ChannelEvent where evt == ChannelEvent.inputClosed:
             // The remote peer half-closed the channel. At this time, any
             // outstanding response will be written before the channel is
-            // closed, and if we are idle or waiting for a request body to
-            // finish wewill close the channel immediately.
-            if self.responsesInProgress > 1 {
+            // closed, and if we are idle we will close the channel immediately.
+            if self.responsesInProgress > 0 {
                 self.closeAfterResponseWritten = true
             } else {
                 context.close(promise: nil)
