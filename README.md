@@ -58,9 +58,7 @@ Hummingbird is designed to require the least number of dependencies possible, bu
 
 | Extension | Description |
 |-----------|-------------|
-| HummingbirdFiles | static file serving (uses Foundation) |
-| HummingbirdJSON | JSON encoding and decoding (uses Foundation) |
-| HummingbirdURLEncoded | Encoding and decoding of URL encoded form data (uses Foundation) |
+| HummingbirdFoundation | Features we can't include in Hummingbird because they require Foundation, includes JSONEncoder, URLEncodedForms, Static file serving, and Cookies |
 | HummingbirdTLS | TLS support (use NIOSSL) |
 | HummingbirdHTTP2 | HTTP2 upgrade support (uses NIOSSL, NIOHTTP2) |
 

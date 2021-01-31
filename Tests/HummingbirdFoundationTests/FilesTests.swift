@@ -1,7 +1,7 @@
 import AsyncHTTPClient
 import Foundation
 import Hummingbird
-import HummingbirdFiles
+import HummingbirdFoundation
 import HummingbirdXCT
 import XCTest
 

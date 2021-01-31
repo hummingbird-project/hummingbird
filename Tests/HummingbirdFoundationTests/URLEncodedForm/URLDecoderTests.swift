@@ -1,4 +1,4 @@
-import HummingbirdURLEncoded
+import HummingbirdFoundation
 import XCTest
 
 class URLDecodedFormDecoderTests: XCTestCase {

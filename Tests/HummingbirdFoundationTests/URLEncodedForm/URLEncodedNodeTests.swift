@@ -1,4 +1,4 @@
-@testable import HummingbirdURLEncoded
+@testable import HummingbirdFoundation
 import XCTest
 
 class URLEncodedFormNodeTests: XCTestCase {
@@ -20,6 +20,31 @@ class URLEncodedFormNodeTests: XCTestCase {
         } catch {
             XCTFail("\(error)")
         }
+    }
+
+    func testKeyParserSingle() {
+        let values = KeyParser.parse("value")
+        XCTAssertEqual(values, [.map("value")])
+    }
+
+    func testKeyParserArray() {
+        let values = KeyParser.parse("array[]")
+        XCTAssertEqual(values, [.map("array"), .array])
+    }
+
+    func testKeyParserMap() {
+        let values = KeyParser.parse("array[object]")
+        XCTAssertEqual(values, [.map("array"), .map("object")])
+    }
+
+    func testKeyParserArrayMap() {
+        let values = KeyParser.parse("array[][object]")
+        XCTAssertEqual(values, [.map("array"), .array, .map("object")])
+    }
+
+    func testKeyParserMapArray() {
+        let values = KeyParser.parse("array[object][]")
+        XCTAssertEqual(values, [.map("array"), .map("object"), .array])
     }
 
     func testSimple() {
