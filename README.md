@@ -6,13 +6,13 @@ Hummingbird consists of three main components, the core HTTP server, a minimal w
 
 ## HummingbirdCore
 
-HummingbirdCore provides a Swift NIO based HTTP server. You provide it with a struct that conforms to `HBHTTPResponder` to define how the server should respond to requests. The following is a responder that always returns a response containing the word "Hello" in the body. 
+HummingbirdCore provides an extendible Swift NIO based HTTP server. You initialize a `HBHTTPServer` with a responder object conforming to protocol `HBHTTPResponder`. This protocol requires you setup a `respond` function that will return a HTTP response for a supplied HTTP request. The following is a responder that always returns a response containing the word "Hello" in the body. 
 
 ```swift
 struct HelloResponder: HBHTTPResponder {
     func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
         let response = HBHTTPResponse(
-            head: .init(version: .init(major: 1, minor: 1), status: .ok),
+            head: .init(version: request.head.version, status: .ok),
             body: .byteBuffer(context.channel.allocator.buffer(string: "Hello"))
         )
         return context.eventLoop.makeSucceededFuture(response)
@@ -54,13 +54,13 @@ app.wait()
 
 ## Hummingbird Extensions
 
-Hummingbird is designed to require the least number of dependencies possible, but this means many features are unavailable to the core libraries. Additional features are provided through extensions. The Hummingbird repository comes with the following extensions
+Hummingbird is designed to require the least number of dependencies possible, but this means some features are unavailable to the core libraries. Additional features are provided through extension modules. The Hummingbird repository comes with the following extensions
 
 | Extension | Description |
 |-----------|-------------|
 | HummingbirdFoundation | Features we can't include in Hummingbird because they require Foundation, includes JSONEncoder, URLEncodedForms, Static file serving, and Cookies |
-| HummingbirdTLS | TLS support (use NIOSSL) |
-| HummingbirdHTTP2 | HTTP2 upgrade support (uses NIOSSL, NIOHTTP2) |
+| HummingbirdTLS | Extend HumminbirdCore to support TLS (uses [NIOSSL](https://github.com/apple/swift-nio-ssl) |
+| HummingbirdHTTP2 | Extend HumminbirdCore to support HTTP2 upgrades (uses [NIOSSL](https://github.com/apple/swift-nio-ssl), [NIOHTTP2](https://github.com/apple/swift-nio-http2)) |
 
 Extensions provided in other repositories include
 
