@@ -16,6 +16,11 @@ public class HBHTTPServer {
         case afterHTTP
     }
 
+    public enum Error: Swift.Error {
+        case serverNotRunning
+    }
+
+    /// HTTP server configuration
     public struct Configuration {
         public let address: HBBindAddress
         public let serverName: String?
@@ -41,6 +46,10 @@ public class HBHTTPServer {
         }
     }
 
+    /// Initialize HTTP server
+    /// - Parameters:
+    ///   - group: EventLoopGroup server uses
+    ///   - configuration: Configuration for server
     public init(group: EventLoopGroup, configuration: Configuration) {
         self.eventLoopGroup = group
         self.configuration = configuration
@@ -57,6 +66,9 @@ public class HBHTTPServer {
         return self
     }
 
+    /// Start server
+    /// - Parameter responder: Object that provides responses to requests sent to the server
+    /// - Returns: EventLoopFuture that is fulfilled when server has started
     public func start(responder: HBHTTPResponder) -> EventLoopFuture<Void> {
         func childChannelInitializer(channel: Channel) -> EventLoopFuture<Void> {
             return channel.pipeline.addHandlers(self.additionalChannelHandlers(at: .beforeHTTP)).flatMap {
@@ -106,6 +118,8 @@ public class HBHTTPServer {
             }
     }
 
+    /// Stop HTTP server
+    /// - Returns: EventLoopFuture that is fulfilled when server has stopped
     public func stop() -> EventLoopFuture<Void> {
         let promise = self.eventLoopGroup.next().makePromise(of: Void.self)
         if let quiesce = self.quiesce {
@@ -117,6 +131,21 @@ public class HBHTTPServer {
         return promise.futureResult.map { _ in self.channel = nil }
     }
 
+    /// Wait on server. This won't return until `stop` has been called
+    /// - Throws: `Error.serverNotRunning` if server hasn't fully started
+    public func wait() throws {
+        guard let channel = self.channel else { throw Error.serverNotRunning }
+        try channel.closeFuture.wait()
+    }
+
+    /// Add ChannelHandlers to child channel just created.
+    ///
+    /// You should only ever need this if you are writing a `HBChannelInitializer`
+    ///
+    /// - Parameters:
+    ///   - channel: Channel
+    ///   - responder: The HTTP responder
+    /// - Returns: <#description#>
     public func addChildHandlers(channel: Channel, responder: HBHTTPResponder) -> EventLoopFuture<Void> {
         let childHandlers: [ChannelHandler] = self.additionalChannelHandlers(at: .afterHTTP) + [
             HBHTTPEncodeHandler(configuration: self.configuration),
@@ -126,7 +155,7 @@ public class HBHTTPServer {
         return channel.pipeline.addHandlers(childHandlers)
     }
 
-    public func additionalChannelHandlers(at position: ChannelPosition) -> [ChannelHandler] {
+    func additionalChannelHandlers(at position: ChannelPosition) -> [ChannelHandler] {
         return self._additionalChildHandlers.compactMap { if $0.position == position { return $0.handler() }; return nil }
     }
 
