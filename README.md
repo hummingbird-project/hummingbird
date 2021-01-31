@@ -30,7 +30,7 @@ let server = HBHTTPServer(
 )
 try server.start(responder: HelloResponder()).wait()
 // Wait until server closes which never happens as server channel is never closed
-try? server.channel?.closeFuture.wait()
+try server.wait()
 ```
 
 ## Hummingbird
