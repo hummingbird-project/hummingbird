@@ -63,9 +63,7 @@ public final class HBApplication: HBExtensible {
 
         self.lifecycle.register(
             label: "HTTP Server",
-            start: .eventLoopFuture {
-                return self.server.start(responder: HTTPResponder(application: self))
-            },
+            start: .eventLoopFuture { self.server.start(responder: HTTPResponder(application: self)) },
             shutdown: .eventLoopFuture(self.server.stop)
         )
     }
