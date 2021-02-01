@@ -21,9 +21,9 @@ struct HBXCTLive: HBXCT {
     }
 
     /// Stop tests
-    func stop() {
+    func stop(application: HBApplication) {
         XCTAssertNoThrow(_ = try self.client.syncShutdown())
-        XCTAssertNoThrow(_ = try self.eventLoopGroup.syncShutdownGracefully())
+        application.stop()
     }
 
     /// Send request and call test callback on the response returned

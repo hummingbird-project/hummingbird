@@ -21,7 +21,8 @@ struct HBXCTEmbedded: HBXCT {
     }
 
     /// Stop tests
-    func stop() {
+    func stop(application: HBApplication) {
+        try? application.shutdownApplication()
         XCTAssertNoThrow(_ = try self.embeddedChannel.finish())
         XCTAssertNoThrow(_ = try self.embeddedEventLoop.syncShutdownGracefully())
     }

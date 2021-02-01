@@ -28,7 +28,7 @@ extension HBApplication {
         self.extensions.set(\.xct, value: xct)
     }
 
-    var xct: HBXCT {
+    public var xct: HBXCT {
         self.extensions.get(\.xct)
     }
 
@@ -39,10 +39,7 @@ extension HBApplication {
 
     /// Stop tests
     public func XCTStop() {
-        // get XCT so we can ensure it is shutdown last
-        let xct = self.xct
-        try? self.shutdownApplication()
-        xct.stop()
+        xct.stop(application: self)
     }
 
     /// Send request and call test callback on the response returned

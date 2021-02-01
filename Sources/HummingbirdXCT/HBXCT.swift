@@ -14,9 +14,9 @@ public enum HBXCTError: Error {
     case noEnd
 }
 
-protocol HBXCT {
+public protocol HBXCT {
     func start(application: HBApplication)
-    func stop()
+    func stop(application: HBApplication)
     func execute(
         uri: String,
         method: HTTPMethod,
