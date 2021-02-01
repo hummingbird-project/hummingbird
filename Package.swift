@@ -33,6 +33,7 @@ let package = Package(
         ]),
         .target(name: "HummingbirdFoundation", dependencies: [
             .byName(name: "Hummingbird"),
+            .product(name: "NIOFoundationCompat", package: "swift-nio"),
         ]),
         .target(name: "HummingbirdXCT", dependencies: [
             .byName(name: "Hummingbird"),
