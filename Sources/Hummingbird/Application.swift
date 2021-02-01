@@ -29,10 +29,6 @@ public final class HBApplication: HBExtensible {
     /// decoder used by router
     public var decoder: HBRequestDecoder
 
-    /// added handler callbacks
-    var handlerAddedCallbacks: [(ChannelHandlerContext) -> Void]
-    /// added handler callbacks
-    var handlerRemovedCallbacks: [(ChannelHandlerContext) -> Void]
     /// who provided the eventLoopGroup
     let eventLoopGroupProvider: NIOEventLoopGroupProvider
 
@@ -46,8 +42,6 @@ public final class HBApplication: HBExtensible {
         self.extensions = HBExtensions()
         self.encoder = NullEncoder()
         self.decoder = NullDecoder()
-        self.handlerAddedCallbacks = []
-        self.handlerRemovedCallbacks = []
 
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {
@@ -95,15 +89,6 @@ public final class HBApplication: HBExtensible {
     /// Shutdown application
     public func stop() {
         self.lifecycle.shutdown()
-    }
-
-    /// add add/remove handlers
-    public func addChannelAddedCallback(_ cb: @escaping (ChannelHandlerContext) -> Void) {
-        self.handlerAddedCallbacks.append(cb)
-    }
-
-    public func addChannelRemovedCallback(_ cb: @escaping (ChannelHandlerContext) -> Void) {
-        self.handlerRemovedCallbacks.append(cb)
     }
 
     /// Construct the RequestResponder from the middleware group and router
