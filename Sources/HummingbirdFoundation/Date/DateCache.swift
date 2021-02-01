@@ -1,7 +1,6 @@
 import Foundation
 import Hummingbird
 import NIO
-import NIOConcurrencyHelpers
 
 public class DateCache {
     public var currentDate: String
