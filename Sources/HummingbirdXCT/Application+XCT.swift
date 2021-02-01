@@ -39,7 +39,7 @@ extension HBApplication {
 
     /// Stop tests
     public func XCTStop() {
-        xct.stop(application: self)
+        self.xct.stop(application: self)
     }
 
     /// Send request and call test callback on the response returned

@@ -6,32 +6,7 @@ Hummingbird consists of three main components, the core HTTP server, a minimal w
 
 ## HummingbirdCore
 
-HummingbirdCore provides a Swift NIO based HTTP server. You provide it with a struct that conforms to `HBHTTPResponder` to define how the server should respond to requests. The following is a responder that always returns a response containing the word "Hello" in the body. 
-
-```swift
-struct HelloResponder: HBHTTPResponder {
-    func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
-        let response = HBHTTPResponse(
-            head: .init(version: .init(major: 1, minor: 1), status: .ok),
-            body: .byteBuffer(context.channel.allocator.buffer(string: "Hello"))
-        )
-        return context.eventLoop.makeSucceededFuture(response)
-   }
-}    
-```
-
-The following will start up a server using the above `HelloResponder`.
-
-```swift
-let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-let server = HBHTTPServer(
-    group: eventLoopGroup, 
-    configuration: .init(address: .hostname("127.0.0.1", port: 8080))
-)
-try server.start(responder: HelloResponder()).wait()
-// Wait until server closes which never happens as server channel is never closed
-try server.wait()
-```
+HummingbirdCore contains a Swift NIO based HTTP server. You will find the code for it in the [hummingbird-core](https://github.com/hummingbird-project/hummingbird-core) repository. The HTTP server is initialized with a object conforming to protocol `HBHTTPResponder` which defines how your server responds to an HTTP request. The HTTP server can be extended to support TLS and HTTP2 via the `HummingbirdTLS` and `HummingbirdHTTP2` libraries also available in the hummingbird-core repository.
 
 ## Hummingbird
 
@@ -54,13 +29,7 @@ app.wait()
 
 ## Hummingbird Extensions
 
-Hummingbird is designed to require the least number of dependencies possible, but this means many features are unavailable to the core libraries. Additional features are provided through extensions. The Hummingbird repository comes with the following extensions
-
-| Extension | Description |
-|-----------|-------------|
-| HummingbirdFoundation | Features we can't include in Hummingbird because they require Foundation, includes JSONEncoder, URLEncodedForms, Static file serving, and Cookies |
-| HummingbirdTLS | TLS support (use NIOSSL) |
-| HummingbirdHTTP2 | HTTP2 upgrade support (uses NIOSSL, NIOHTTP2) |
+Hummingbird is designed to require the least number of dependencies possible, but this means many features are unavailable to the core libraries. Additional features are provided through extensions. The Hummingbird repository comes with a `HummingbirdFoundation` library that contains a number of features that can only really be implemented with the help of Foundation. This include JSON encoding/decoding, URLEncodedForms, static file serving, and cookies.
 
 Extensions provided in other repositories include
 
