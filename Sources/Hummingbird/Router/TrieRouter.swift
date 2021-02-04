@@ -96,7 +96,10 @@ struct RouterPathTrie<Value> {
         }
 
         func getChild(_ key: Substring) -> Node? {
-            return self.children.first { $0.key == key }
+            if let child = self.children.first(where: { $0.key == key }) {
+                return child
+            }
+            return self.children.first { $0.key ~= key }
         }
     }
 }

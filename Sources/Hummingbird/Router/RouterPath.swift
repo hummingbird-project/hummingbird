@@ -6,7 +6,7 @@ struct RouterPath: ExpressibleByStringLiteral {
         case wildcard
         case null
 
-        static func == <S: StringProtocol>(lhs: Element, rhs: S) -> Bool {
+        static func ~= <S: StringProtocol>(lhs: Element, rhs: S) -> Bool {
             switch lhs {
             case .path(let lhs):
                 return lhs == rhs
@@ -14,6 +14,15 @@ struct RouterPath: ExpressibleByStringLiteral {
                 return true
             case .wildcard:
                 return true
+            default:
+                return false
+            }
+        }
+
+        static func == <S: StringProtocol>(lhs: Element, rhs: S) -> Bool {
+            switch lhs {
+            case .path(let lhs):
+                return lhs == rhs
             default:
                 return false
             }
