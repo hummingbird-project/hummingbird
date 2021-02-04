@@ -21,7 +21,8 @@ extension HBApplication {
                 head: request.head,
                 body: request.body,
                 application: self.application,
-                context: context
+                eventLoop: context.eventLoop,
+                allocator: context.channel.allocator
             )
 
             // respond to request

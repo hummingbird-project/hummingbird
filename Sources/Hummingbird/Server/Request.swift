@@ -26,11 +26,12 @@ public final class HBRequest: HBExtensible {
     /// Request extensions
     public var extensions: HBExtensions<HBRequest>
 
-    internal init(
+    public init(
         head: HTTPRequestHead,
         body: HBRequestBody,
         application: HBApplication,
-        context: ChannelHandlerContext
+        eventLoop: EventLoop,
+        allocator: ByteBufferAllocator
     ) {
         self.uri = .init(head.uri)
         self.version = head.version
@@ -39,12 +40,12 @@ public final class HBRequest: HBExtensible {
         self.body = body
         self.logger = Self.loggerWithRequestId(application.logger)
         self.application = application
-        self.eventLoop = context.eventLoop
-        self.allocator = context.channel.allocator
+        self.eventLoop = eventLoop
+        self.allocator = allocator
         self.extensions = HBExtensions()
     }
 
-    public func decode<Type: Codable>(as type: Type.Type) throws -> Type {
+    public func decode<Type: Decodable>(as type: Type.Type) throws -> Type {
         return try self.application.decoder.decode(type, from: self)
     }
 
