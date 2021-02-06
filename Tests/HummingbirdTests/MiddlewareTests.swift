@@ -50,7 +50,7 @@ final class MiddlewareTests: XCTestCase {
             XCTAssertEqual(response.headers["middleware"].last, "first")
         }
     }
-    
+
     func testCORSUseOrigin() {
         let app = HBApplication(testing: .embedded)
         app.middleware.add(HBCORSMiddleware())
@@ -65,7 +65,7 @@ final class MiddlewareTests: XCTestCase {
             XCTAssertEqual(response.headers["Access-Control-Allow-Origin"].first, "foo.com")
         }
     }
-    
+
     func testCORSUseAll() {
         let app = HBApplication(testing: .embedded)
         app.middleware.add(HBCORSMiddleware(allowOrigin: .all))
@@ -80,7 +80,7 @@ final class MiddlewareTests: XCTestCase {
             XCTAssertEqual(response.headers["Access-Control-Allow-Origin"].first, "*")
         }
     }
-    
+
     func testCORSOptions() {
         let app = HBApplication(testing: .embedded)
         app.middleware.add(HBCORSMiddleware(

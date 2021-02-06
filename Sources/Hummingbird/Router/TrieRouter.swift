@@ -20,9 +20,9 @@ struct TrieRouter: HBRouter {
     }
 
     func endpoint(_ path: String) -> HBEndpointResponder? {
-        trie.getValueAndParameters(path)?.value
+        self.trie.getValueAndParameters(path)?.value
     }
-    
+
     /// Respond to request by calling correct handler
     /// - Parameter request: HTTP request
     /// - Returns: EventLoopFuture that will be fulfilled with the Response
@@ -46,7 +46,7 @@ struct RouterPathTrie<Value> {
         self.root = Node(key: .null, output: nil)
     }
 
-    func addEntry(_ entry: RouterPath, value: @autoclosure () -> Value, onAdd: (Node) -> () = { _ in }) {
+    func addEntry(_ entry: RouterPath, value: @autoclosure () -> Value, onAdd: (Node) -> Void = { _ in }) {
         var node = self.root
         for key in entry {
             node = node.addChild(key: key, output: nil)
