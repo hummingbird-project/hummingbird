@@ -2,7 +2,7 @@ import HummingbirdCore
 
 /// Route requests to handlers based on request URI. Uses a Trie to select handler
 struct TrieRouter: HBRouter {
-    var trie: RouterPathTrie<HBResponder>
+    var trie: RouterPathTrie<HBEndpointResponder>
 
     public init() {
         self.trie = RouterPathTrie()
@@ -14,16 +14,16 @@ struct TrieRouter: HBRouter {
     ///   - method: http method
     ///   - responder: handler to call
     public func add(_ path: String, method: HTTPMethod, responder: HBResponder) {
-        // add method at beginning of Path to differentiate between methods
-        let path = "\(path)/\(method.rawValue)"
-        self.trie.addEntry(.init(path), value: responder)
+        self.trie.addEntry(.init(path), value: HBEndpointResponder()) { node in
+            node.value!.addResponder(for: method, responder: responder)
+        }
     }
 
     /// Respond to request by calling correct handler
     /// - Parameter request: HTTP request
     /// - Returns: EventLoopFuture that will be fulfilled with the Response
     public func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
-        let path = "\(request.uri.path)/\(request.method.rawValue)"
+        let path = "\(request.uri.path)"
         guard let result = trie.getValueAndParameters(path) else {
             return request.eventLoop.makeFailedFuture(HBHTTPError(.notFound))
         }
@@ -42,12 +42,17 @@ struct RouterPathTrie<Value> {
         self.root = Node(key: .null, output: nil)
     }
 
-    func addEntry(_ entry: RouterPath, value: Value) {
+    func addEntry(_ entry: RouterPath, value: @autoclosure () -> Value, onAdd: (Node) -> () = { _ in }) {
         var node = self.root
         for key in entry {
             node = node.addChild(key: key, output: nil)
         }
-        node.value = value
+        if node.value != nil {
+            onAdd(node)
+        } else {
+            node.value = value()
+            onAdd(node)
+        }
     }
 
     func getValueAndParameters(_ path: String) -> (value: Value, parameters: HBParameters)? {
