@@ -19,6 +19,10 @@ struct TrieRouter: HBRouter {
         }
     }
 
+    func endpoint(_ path: String) -> HBEndpointResponder? {
+        trie.getValueAndParameters(path)?.value
+    }
+    
     /// Respond to request by calling correct handler
     /// - Parameter request: HTTP request
     /// - Returns: EventLoopFuture that will be fulfilled with the Response
