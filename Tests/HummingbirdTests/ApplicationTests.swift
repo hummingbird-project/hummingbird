@@ -87,6 +87,49 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    func testMultipleMethods() {
+        let app = HBApplication(testing: .embedded)
+        app.router.post("/hello") { _ -> String in
+            return "POST"
+        }
+        app.router.get("/hello") { _ -> String in
+            return "GET"
+        }
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/hello", method: .GET) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "GET")
+        }
+        app.XCTExecute(uri: "/hello", method: .POST) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "POST")
+        }
+    }
+
+    func testMultipleGroupMethods() {
+        let app = HBApplication(testing: .embedded)
+        app.router.group("hello")
+            .post { _ -> String in
+                return "POST"
+            }
+            .get { _ -> String in
+                return "GET"
+            }
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/hello", method: .GET) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "GET")
+        }
+        app.XCTExecute(uri: "/hello", method: .POST) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "POST")
+        }
+    }
+
     func testQueryRoute() {
         let app = HBApplication(testing: .embedded)
         app.router.get("/query") { request -> EventLoopFuture<ByteBuffer> in

@@ -50,4 +50,64 @@ final class MiddlewareTests: XCTestCase {
             XCTAssertEqual(response.headers["middleware"].last, "first")
         }
     }
+
+    func testCORSUseOrigin() {
+        let app = HBApplication(testing: .embedded)
+        app.middleware.add(HBCORSMiddleware())
+        app.router.get("/hello") { _ -> String in
+            return "Hello"
+        }
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/hello", method: .GET, headers: ["origin": "foo.com"]) { response in
+            // headers come back in opposite order as middleware is applied to responses in that order
+            XCTAssertEqual(response.headers["Access-Control-Allow-Origin"].first, "foo.com")
+        }
+    }
+
+    func testCORSUseAll() {
+        let app = HBApplication(testing: .embedded)
+        app.middleware.add(HBCORSMiddleware(allowOrigin: .all))
+        app.router.get("/hello") { _ -> String in
+            return "Hello"
+        }
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/hello", method: .GET, headers: ["origin": "foo.com"]) { response in
+            // headers come back in opposite order as middleware is applied to responses in that order
+            XCTAssertEqual(response.headers["Access-Control-Allow-Origin"].first, "*")
+        }
+    }
+
+    func testCORSOptions() {
+        let app = HBApplication(testing: .embedded)
+        app.middleware.add(HBCORSMiddleware(
+            allowOrigin: .all,
+            allowHeaders: ["content-type", "authorization"],
+            allowMethods: [.GET, .PUT, .DELETE, .OPTIONS],
+            allowCredentials: true,
+            exposedHeaders: ["content-length"],
+            maxAge: .seconds(3600)
+        ))
+        app.router.get("/hello") { _ -> String in
+            return "Hello"
+        }
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/hello", method: .OPTIONS, headers: ["origin": "foo.com"]) { response in
+            // headers come back in opposite order as middleware is applied to responses in that order
+            XCTAssertEqual(response.headers["Access-Control-Allow-Origin"].first, "*")
+            let headers = response.headers[canonicalForm: "Access-Control-Allow-Headers"].joined(separator: ", ")
+            XCTAssertEqual(headers, "content-type, authorization")
+            let methods = response.headers[canonicalForm: "Access-Control-Allow-Methods"].joined(separator: ", ")
+            XCTAssertEqual(methods, "GET, PUT, DELETE, OPTIONS")
+            XCTAssertEqual(response.headers["Access-Control-Allow-Credentials"].first, "true")
+            XCTAssertEqual(response.headers["Access-Control-Max-Age"].first, "3600")
+            let exposedHeaders = response.headers[canonicalForm: "Access-Control-Expose-Headers"].joined(separator: ", ")
+            XCTAssertEqual(exposedHeaders, "content-length")
+        }
+    }
 }
