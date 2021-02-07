@@ -7,12 +7,12 @@ public class HBMiddlewareGroup {
     init() {
         self.middlewares = []
     }
-    
+
     /// Add middleware to group
     public func add(_ middleware: HBMiddleware) {
         self.middlewares.append(middleware)
     }
-    
+
     /// Construct responder chain from this middleware group
     /// - Parameter finalResponder: The responder the last middleware calls
     /// - Returns: Responder chain
