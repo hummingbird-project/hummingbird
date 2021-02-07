@@ -23,7 +23,7 @@ extension HBApplication {
             self.extensions = .init()
         }
     }
-    
+
     /// Provide access to `EventLoopStorage` from `EventLoop`.
     public struct EventLoopStorageMap {
         init(eventLoopGroup: EventLoopGroup) {
@@ -46,13 +46,13 @@ extension HBApplication {
         fileprivate let eventLoopGroup: EventLoopGroup
         fileprivate let eventLoops: [EventLoop.Key: EventLoopStorage]
     }
-    
+
     /// EventLoopStorageMap for Application.
     public private(set) var eventLoopStorage: EventLoopStorageMap {
         get { return extensions.get(\.eventLoopStorage) }
         set { return extensions.set(\.eventLoopStorage, value: newValue) }
     }
-    
+
     /// Get `EventLoopStorage` for `EventLoop`
     public func eventLoopStorage(for eventLoop: EventLoop) -> EventLoopStorage {
         return self.eventLoopStorage.get(for: eventLoop)

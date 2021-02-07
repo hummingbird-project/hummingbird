@@ -20,7 +20,7 @@ public struct HBExtensions<ParentObject> {
     public init() {
         self.items = [:]
     }
-    
+
     /// Get extension from a `KeyPath`
     public func get<Type>(_ key: KeyPath<ParentObject, Type>) -> Type? {
         self.items[key]?.value as? Type
@@ -43,7 +43,7 @@ public struct HBExtensions<ParentObject> {
         }
         return value
     }
-    
+
     /// Set extension for a `KeyPath`
     /// - Parameters:
     ///   - key: KeyPath

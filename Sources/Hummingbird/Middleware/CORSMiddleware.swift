@@ -29,7 +29,7 @@ public struct HBCORSMiddleware: HBMiddleware {
             }
         }
     }
-    
+
     /// What origins are allowed, header `Access-Control-Allow-Origin`
     let allowOrigin: AllowOrigin
     /// What headers are allowed, header `Access-Control-Allow-Headers`
@@ -42,7 +42,7 @@ public struct HBCORSMiddleware: HBMiddleware {
     let exposedHeaders: String?
     /// how long the results of a pre-flight request can be cached, header `Access-Control-Max-Age`
     let maxAge: String?
-    
+
     /// Initialize CORS middleware
     ///
     /// - Parameters:
@@ -68,6 +68,7 @@ public struct HBCORSMiddleware: HBMiddleware {
         self.maxAge = maxAge.map { String(describing: $0.nanoseconds / 1_000_000_000) }
     }
 
+    /// apply CORS middleware
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
         // if no origin header then don't apply CORS
         guard request.headers["origin"].first != nil else { return next.respond(to: request) }
