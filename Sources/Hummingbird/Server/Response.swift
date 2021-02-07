@@ -13,7 +13,7 @@ public final class HBResponse: HBExtensible {
     /// Response extensions
     public var extensions: HBExtensions<HBResponse>
 
-    public init(status: HTTPResponseStatus, headers: HTTPHeaders, body: HBResponseBody) {
+    public init(status: HTTPResponseStatus, headers: HTTPHeaders = [:], body: HBResponseBody = .empty) {
         self.status = status
         self.headers = headers
         self.body = body
