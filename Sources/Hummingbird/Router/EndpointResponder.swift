@@ -1,11 +1,12 @@
 import NIO
 import NIOHTTP1
 
-public class HBEndpointResponder: HBResponder {
+/// Responder that chooses the next responder to call based on the request method
+class HBEndpointResponder: HBResponder {
     init() {
         self.methods = [:]
     }
-
+    
     public func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
         guard let responder = methods[request.method.rawValue] else {
             return request.failure(HBHTTPError(.notFound))
