@@ -2,16 +2,29 @@ import NIO
 
 /// Allow user to attach data to EventLoop.
 ///
-/// Extend EventLoopStorage using HBExtensions.
-/// Access data via `request.eventLoopStorage`
+/// Access data via `request.eventLoopStorage`.
 extension HBApplication {
+    /// Extend EventLoopStorage using HBExtensions.
+    ///
+    /// Use this to add additional data to each `EventLoop` in the application `EventLoopGroup`.
+    /// ```
+    /// extension HBApplication.EventLoopStorage {
+    ///     var myVar: String {
+    ///         get { extensions.get(\.myVar) }
+    ///         set { extensions.set(\.myVar, value: newValue) }
+    ///     }
+    /// }
+    /// ```
+    /// You can access the extension via `HBApplication.eventLoopStorage(for: eventLoop).myVar` or
+    /// if you have an `HBRequest` you can access the extension via `HBRequest.eventLoopStorage.ext`.
     public class EventLoopStorage {
         public var extensions: HBExtensions<EventLoopStorage>
         init() {
             self.extensions = .init()
         }
     }
-
+    
+    /// Provide access to `EventLoopStorage` from `EventLoop`.
     public struct EventLoopStorageMap {
         init(eventLoopGroup: EventLoopGroup) {
             var eventLoops: [EventLoop.Key: EventLoopStorage] = [:]
@@ -22,6 +35,7 @@ extension HBApplication {
             self.eventLoopGroup = eventLoopGroup
         }
 
+        /// get `EventLoopStorage` from `EventLoop`
         public func get(for eventLoop: EventLoop) -> EventLoopStorage {
             guard let storage = eventLoops[eventLoop.key] else {
                 preconditionFailure("EventLoop must be from the Application's EventLoopGroup")
@@ -32,12 +46,14 @@ extension HBApplication {
         fileprivate let eventLoopGroup: EventLoopGroup
         fileprivate let eventLoops: [EventLoop.Key: EventLoopStorage]
     }
-
-    public var eventLoopStorage: EventLoopStorageMap {
+    
+    /// EventLoopStorageMap for Application.
+    public private(set) var eventLoopStorage: EventLoopStorageMap {
         get { return extensions.get(\.eventLoopStorage) }
         set { return extensions.set(\.eventLoopStorage, value: newValue) }
     }
-
+    
+    /// Get `EventLoopStorage` for `EventLoop`
     public func eventLoopStorage(for eventLoop: EventLoop) -> EventLoopStorage {
         return self.eventLoopStorage.get(for: eventLoop)
     }
@@ -49,6 +65,7 @@ extension HBApplication {
 }
 
 extension HBRequest {
+    /// `EventLoopStorage` attached to `EventLoop` used by Request
     public var eventLoopStorage: HBApplication.EventLoopStorage {
         self.application.eventLoopStorage(for: self.eventLoop)
     }

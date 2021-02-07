@@ -16,19 +16,26 @@ import Logging
 /// }
 /// ```
 public struct HBExtensions<ParentObject> {
+    /// Initialize extensions
     public init() {
         self.items = [:]
     }
-
+    
+    /// Get extension from a `KeyPath`
     public func get<Type>(_ key: KeyPath<ParentObject, Type>) -> Type? {
         self.items[key]?.value as? Type
     }
 
+    /// Get extension from a `KeyPath`
     public func get<Type>(_ key: KeyPath<ParentObject, Type>) -> Type {
         guard let value = items[key]?.value as? Type else { preconditionFailure("Cannot get extension without having set it") }
         return value
     }
 
+    /// Get extension from a `KeyPath`. If it doesn't exist then create it
+    /// - Parameters:
+    ///   - key: KeyPath
+    ///   - createCB: closure used to create instance of object if it doesn't exist
     public mutating func getOrCreate<Type>(_ key: KeyPath<ParentObject, Type>, _ createCB: @autoclosure () -> Type) -> Type {
         guard let value = items[key]?.value as? Type else {
             self.set(key, value: createCB())
@@ -36,7 +43,12 @@ public struct HBExtensions<ParentObject> {
         }
         return value
     }
-
+    
+    /// Set extension for a `KeyPath`
+    /// - Parameters:
+    ///   - key: KeyPath
+    ///   - value: value to store in extension
+    ///   - shutdownCallback: closure to call when extensions are shutsdown
     public mutating func set<Type>(_ key: KeyPath<ParentObject, Type>, value: Type, shutdownCallback: ((Type) throws -> Void)? = nil) {
         if let item = items[key] {
             guard item.shutdown == nil else {

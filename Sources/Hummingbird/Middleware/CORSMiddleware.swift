@@ -1,6 +1,13 @@
 import NIO
 
+/// Middleware implementing Cross-Origin Resource Sharing (CORS) headers.
+///
+/// If request has "origin" header then generate CORS headers. If method is OPTIONS
+/// then return an empty body with all the standard CORS headers otherwise send
+/// request onto the next handler and when you receive the response add a
+/// "access-control-allow-origin" header
 public struct HBCORSMiddleware: HBMiddleware {
+    /// Defines what origins are allowed
     public enum AllowOrigin {
         case none
         case all
@@ -22,14 +29,29 @@ public struct HBCORSMiddleware: HBMiddleware {
             }
         }
     }
-
+    
+    /// What origins are allowed, header `Access-Control-Allow-Origin`
     let allowOrigin: AllowOrigin
+    /// What headers are allowed, header `Access-Control-Allow-Headers`
     let allowHeaders: String
+    /// What methods are allowed, header `Access-Control-Allow-Methods`
     let allowMethods: String
+    /// Are requests with cookies or an "Authorization" header allowed, header `Access-Control-Allow-Credentials`
     let allowCredentials: Bool
+    /// What headers can be exposed back to the browser, header `Access-Control-Expose-Headers`
     let exposedHeaders: String?
+    /// how long the results of a pre-flight request can be cached, header `Access-Control-Max-Age`
     let maxAge: String?
-
+    
+    /// Initialize CORS middleware
+    ///
+    /// - Parameters:
+    ///   - allowOrigin: allow origin enum
+    ///   - allowHeaders: array of headers that are allowed
+    ///   - allowMethods: array of methods that are allowed
+    ///   - allowCredentials: are credentials alloed
+    ///   - exposedHeaders: array of headers that can be exposed back to the browser
+    ///   - maxAge: how long the results of a pre-flight request can be cached
     public init(
         allowOrigin: AllowOrigin = .originBased,
         allowHeaders: [String] = ["accept", "authorization", "content-type", "origin"],
