@@ -9,7 +9,7 @@ public struct HBMetricsMiddleware: HBMiddleware {
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
         let dimensions: [(String, String)] = [
             ("hb_uri", request.uri.description),
-            ("hb_method", request.method.rawValue)
+            ("hb_method", request.method.rawValue),
         ]
         let startTime = DispatchTime.now().uptimeNanoseconds
 

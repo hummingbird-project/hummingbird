@@ -29,7 +29,7 @@ public struct HBCORSMiddleware: HBMiddleware {
             }
         }
     }
-    
+
     /// What origins are allowed, header `Access-Control-Allow-Origin`
     let allowOrigin: AllowOrigin
     /// What headers are allowed, header `Access-Control-Allow-Headers`
@@ -42,7 +42,7 @@ public struct HBCORSMiddleware: HBMiddleware {
     let exposedHeaders: String?
     /// how long the results of a pre-flight request can be cached, header `Access-Control-Max-Age`
     let maxAge: String?
-    
+
     /// Initialize CORS middleware
     ///
     /// - Parameters:
