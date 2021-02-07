@@ -68,6 +68,7 @@ public struct HBCORSMiddleware: HBMiddleware {
         self.maxAge = maxAge.map { String(describing: $0.nanoseconds / 1_000_000_000) }
     }
 
+    /// apply CORS middleware
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
         // if no origin header then don't apply CORS
         guard request.headers["origin"].first != nil else { return next.respond(to: request) }
