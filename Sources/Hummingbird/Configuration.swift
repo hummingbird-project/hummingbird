@@ -18,7 +18,8 @@ extension HBApplication {
 
         /// number of threads to allocate in the application thread pool
         public let threadPoolSize: Int
-
+        
+        /// Create configuration struct
         public init(
             address: HBBindAddress = .hostname(),
             serverName: String? = nil,
@@ -37,7 +38,8 @@ extension HBApplication {
 
             self.threadPoolSize = threadPoolSize
         }
-
+        
+        /// return HTTP server configuration
         public var httpServer: HBHTTPServer.Configuration {
             return .init(
                 address: self.address,
