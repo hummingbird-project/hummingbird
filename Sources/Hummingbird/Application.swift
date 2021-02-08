@@ -4,7 +4,20 @@ import LifecycleNIOCompat
 import Logging
 import NIO
 
-/// Application class.
+/// Application class. Brings together all the components of Hummingbird together
+///
+/// Create an HBApplication, setup your application middleware, encoders, routes etc and then call `start` to
+/// start the server and then `wait` to wait until the server is stopped.
+/// ```
+/// let app = HBApplication()
+/// app.middleware.add(MyMiddleware())
+/// app.get("hello") { _ in
+///     return "hello"
+/// }
+/// app.start()
+/// app.wait()
+/// ```
+/// Editing the application setup after calling `start` will produce undefined behaviour.
 public final class HBApplication: HBExtensible {
     /// server lifecycle, controls initialization and shutdown of application
     public let lifecycle: ServiceLifecycle
@@ -33,7 +46,10 @@ public final class HBApplication: HBExtensible {
     let eventLoopGroupProvider: NIOEventLoopGroupProvider
 
     /// Initialize new Application
-    public init(configuration: HBApplication.Configuration = HBApplication.Configuration(), eventLoopGroupProvider: NIOEventLoopGroupProvider = .createNew) {
+    public init(
+        configuration: HBApplication.Configuration = HBApplication.Configuration(),
+        eventLoopGroupProvider: NIOEventLoopGroupProvider = .createNew
+    ) {
         self.lifecycle = ServiceLifecycle()
         self.logger = Logger(label: "HummingBird")
         self.middleware = HBMiddlewareGroup()
@@ -43,6 +59,7 @@ public final class HBApplication: HBExtensible {
         self.encoder = NullEncoder()
         self.decoder = NullDecoder()
 
+        // create eventLoopGroup
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {
         case .createNew:
@@ -57,10 +74,12 @@ public final class HBApplication: HBExtensible {
 
         self.addEventLoopStorage()
 
+        // register application shutdown with lifecycle
         self.lifecycle.registerShutdown(
             label: "Application", .sync(self.shutdownApplication)
         )
 
+        // register server startup and shutdown with lifecycle
         self.lifecycle.register(
             label: "HTTP Server",
             start: .eventLoopFuture { self.server.start(responder: HTTPResponder(application: self)) },

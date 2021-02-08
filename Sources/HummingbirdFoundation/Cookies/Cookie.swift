@@ -1,5 +1,6 @@
 import Foundation
 
+/// Structure holding a single cookie
 public struct HBCookie: CustomStringConvertible {
     public enum SameSite: String {
         case lax = "Lax"
@@ -30,6 +31,17 @@ public struct HBCookie: CustomStringConvertible {
     /// The SameSite attribute lets servers specify whether/when cookies are sent with cross-origin requests
     public var sameSite: SameSite? { return self.properties[.sameSite].map { SameSite(rawValue: $0) } ?? nil }
 
+    /// Create `HBCookie`
+    /// - Parameters:
+    ///   - name: Name of cookie
+    ///   - value: Value of cookie
+    ///   - expires: indicates the maximum lifetime of the cookie
+    ///   - maxAge: indicates the maximum lifetime of the cookie in seconds. Max age has precedence over expires (not all user agents support max-age)
+    ///   - domain: specifies those hosts to which the cookie will be sent
+    ///   - path: The scope of each cookie is limited to a set of paths, controlled by the Path attribute
+    ///   - secure: The Secure attribute limits the scope of the cookie to "secure" channels
+    ///   - httpOnly: The HttpOnly attribute limits the scope of the cookie to HTTP requests
+    ///   - sameSite: The SameSite attribute lets servers specify whether/when cookies are sent with cross-origin requests
     public init(
         name: String,
         value: String,
@@ -54,6 +66,8 @@ public struct HBCookie: CustomStringConvertible {
         self.properties = properties
     }
 
+    /// Construct cookie from cookie header value
+    /// - Parameter header: cookie header value
     init?(from header: String) {
         let elements = header.split(separator: ";")
         guard elements.count > 0 else { return nil }
@@ -76,6 +90,7 @@ public struct HBCookie: CustomStringConvertible {
         self.properties = properties
     }
 
+    /// Output cookie string
     public var description: String {
         var output: String = "\(self.name)=\(self.value)"
         for property in self.properties.table {
@@ -88,7 +103,9 @@ public struct HBCookie: CustomStringConvertible {
         return output
     }
 
+    /// Cookie properties table
     public struct Properties {
+        /// Common properties of a cookie
         enum CommonProperties: Substring {
             case expires = "Expires"
             case maxAge = "Max-Age"

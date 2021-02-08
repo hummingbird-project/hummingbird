@@ -44,6 +44,10 @@ public struct URLEncodedFormEncoder {
         )
     }
 
+    /// Create URLEncodedFormEncoder
+    /// - Parameters:
+    ///   - dateEncodingStrategy: date encoding strategy
+    ///   - userInfo: user info to supply to encoder
     public init(
         dateEncodingStrategy: URLEncodedFormEncoder.DateEncodingStrategy = .deferredToDate,
         userInfo: [CodingUserInfoKey: Any] = [:],
@@ -53,7 +57,11 @@ public struct URLEncodedFormEncoder {
         self.userInfo = userInfo
     }
 
-    public func encode<T: Encodable>(_ value: T, name: String? = nil) throws -> String {
+    /// Encode object into URL encoded form data
+    /// - Parameters:
+    ///   - value: Value to encode
+    /// - Returns: URL encoded form data
+    public func encode<T: Encodable>(_ value: T) throws -> String {
         let encoder = _URLEncodedFormEncoder(options: options)
         try value.encode(to: encoder)
         guard let result = encoder.result else {

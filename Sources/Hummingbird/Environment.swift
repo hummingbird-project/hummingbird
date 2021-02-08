@@ -4,7 +4,7 @@ import Glibc
 import Darwin.C
 #endif
 
-/// Environment variables
+/// Access environment variables
 public struct HBEnvironment: Decodable, ExpressibleByDictionaryLiteral {
     /// initialize from environment variables
     public init() {
@@ -33,19 +33,29 @@ public struct HBEnvironment: Decodable, ExpressibleByDictionaryLiteral {
         self.values = try container.decode([String: String].self)
     }
 
+    /// Get environment variable with name
+    /// - Parameter s: Environment variable name
     public func get(_ s: String) -> String? {
         return self.values[s.lowercased()]
     }
 
+    /// Get environment variable with name as a certain type
+    /// - Parameters:
+    ///   - s: Environment variable name
+    ///   - as: Type we want variable to be cast to
     public func get<T: LosslessStringConvertible>(_ s: String, as: T.Type) -> T? {
         return self.values[s.lowercased()].map { T(String($0)) } ?? nil
     }
 
+    /// Set environment variable
+    /// - Parameters:
+    ///   - s: Environment variable name
+    ///   - value: Environment variable name value
     public mutating func set(_ s: String, value: String?) {
         self.values[s.lowercased()] = value
     }
 
-    /// Get environment variables
+    /// Construct environment variable map
     static func getEnvironment() -> [String: String] {
         var values: [String: String] = [:]
         let equalSign = Character("=")

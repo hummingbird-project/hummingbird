@@ -2,9 +2,38 @@ import HummingbirdCore
 import NIO
 import NIOHTTP1
 
-/// Directs Requests to RequestResponders based on the request uri.
+/// Directs Requests to handlers based on the request uri.
+///
 /// Conforms to RequestResponder so need to provide its own implementation of
-/// `func apply(to request: Request) -> EventLoopFuture<Response>`
+/// `func apply(to request: Request) -> EventLoopFuture<Response>`.
+///
+/// `HBRouter` implements the `on(path:method:use)` functions but because it also conforms
+/// to `HBRouterMethods` it is also possible to call the method specific functions `get`, `put`,
+/// `head`, `post` and `patch`.  The route handler closures all return objects conforming to
+/// `HBResponseGenerator`.  This allows us to support routes which return a multitude of types eg
+/// ```
+/// app.router.get("string") { _ -> String in
+///     return "string"
+/// }
+/// app.router.post("status") { _ -> HTTPResponseStatus in
+///     return .ok
+/// }
+/// app.router.data("data") { request -> ByteBuffer in
+///     return request.allocator.buffer(string: "buffer")
+/// }
+/// ```
+/// Routes can also return `EventLoopFuture`'s. So you can support returning values from
+/// asynchronous processes.
+///
+/// The default `Router` setup in `HBApplication` is the `TrieRouter` . This uses a
+/// trie to partition all the routes for faster access. It also supports wildcards and parameter extraction
+/// ```
+/// app.router.get("user/*", use: anyUser)
+/// app.router.get("user/:id", use: userWithId)
+/// ```
+/// Both of these match routes which start with "/user" and the next path segment being anything.
+/// The second version extracts the path segment out and adds it to `HBRequest.parameters` with the
+/// key "id".
 public protocol HBRouter: HBRouterMethods, HBResponder {
     /// Add router entry
     func add(_ path: String, method: HTTPMethod, responder: HBResponder)

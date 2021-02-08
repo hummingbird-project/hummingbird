@@ -1,7 +1,8 @@
 import NIO
 import NIOHTTP1
 
-public class HBEndpointResponder: HBResponder {
+/// Responder that chooses the next responder to call based on the request method
+class HBEndpointResponder: HBResponder {
     init() {
         self.methods = [:]
     }

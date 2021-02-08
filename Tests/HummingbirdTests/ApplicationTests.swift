@@ -147,6 +147,20 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    func testArray() {
+        let app = HBApplication(testing: .embedded)
+        app.router.get("array") { _ -> [String] in
+            return ["yes", "no"]
+        }
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/array", method: .GET) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "[\"yes\", \"no\"]")
+        }
+    }
+
     func testResponseBody() {
         let app = HBApplication(testing: .embedded)
         app.router

@@ -12,10 +12,28 @@ extension HBApplication {
         case live
     }
 
-    /// Initialization for when testing
+    /// This creates a version of `HBApplication` that can be used for testing code
+    ///
+    /// You use `XCTStart`, `XCTStop` and `XCTExecute` to run test applications. The example below
+    /// is using the `.embedded` framework to test
+    /// ```
+    /// let app = HBApplication(testing: .embedded)
+    /// app.router.get("/hello") { _ in
+    ///     return "hello"
+    /// }
+    /// app.XCTStart()
+    /// defer { app.XCTStop() }
+    ///
+    /// // does my app return "hello" in the body for this route
+    /// app.XCTExecute(uri: "/hello", method: .GET) { response in
+    ///     let body = try XCTUnwrap(response.body)
+    ///     XCTAssertEqual(String(buffer: body, "hello")
+    /// }
+    /// ```
+    ///
     /// - Parameters:
-    ///   - testing: indicate we are testing
-    ///   - configuration: configuration
+    ///   - testing: indicates which type of testing framework we want
+    ///   - configuration: configuration of application
     public convenience init(testing: XCTTestingSetup, configuration: HBApplication.Configuration = .init()) {
         let xct: HBXCT
         switch testing {

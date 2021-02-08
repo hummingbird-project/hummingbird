@@ -1,6 +1,7 @@
 import HummingbirdCore
 
-/// Protocol for encodable object that can generate a response
+/// Protocol for encodable object that can generate a response. The router will encode
+/// the response using the encoder stored in `HBApplication.encoder`.
 public protocol HBResponseEncodable: Encodable, HBResponseGenerator {}
 
 /// Protocol for codable object that can generate a response

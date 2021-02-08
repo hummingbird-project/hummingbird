@@ -25,6 +25,46 @@ class URLDecodedFormDecoderTests: XCTestCase {
         testForm(test, query: "A=Testing&B=42")
     }
 
+    func testNumbers() {
+        struct Test: Codable, Equatable {
+            let b: Bool
+            let i: Int
+            let i8: Int8
+            let i16: Int16
+            let i32: Int32
+            let i64: Int64
+            let u: UInt
+            let u8: UInt8
+            let u16: UInt16
+            let u32: UInt32
+            let u64: UInt64
+            let f: Float
+            let d: Double
+        }
+        let test = Test(b: true, i: 34, i8: 23, i16: 9, i32: -6872, i64: 23, u: 0, u8: 255, u16: 7673, u32: 88222, u64: 234, f: -1.1, d: 8)
+        testForm(test, query: "b=true&i=34&i8=23&i16=9&i32=-6872&i64=23&u=0&u8=255&u16=7673&u32=88222&u64=234&f=-1.1&d=8")
+    }
+
+    func testNumberArrays() {
+        struct Test: Codable, Equatable {
+            let b: [Bool]
+            let i: [Int]
+            let i8: [Int8]
+            let i16: [Int16]
+            let i32: [Int32]
+            let i64: [Int64]
+            let u: [UInt]
+            let u8: [UInt8]
+            let u16: [UInt16]
+            let u32: [UInt32]
+            let u64: [UInt64]
+            let f: [Float]
+            let d: [Double]
+        }
+        let test = Test(b: [true, false], i: [34], i8: [23], i16: [9], i32: [-6872], i64: [23], u: [0], u8: [255], u16: [7673], u32: [88222], u64: [234], f: [-1.1], d: [8])
+        testForm(test, query: "b[]=true&b[]=false&i[]=34&i8[]=23&i16[]=9&i32[]=-6872&i64[]=23&u[]=0&u8[]=255&u16[]=7673&u32[]=88222&u64[]=234&f[]=-1.1&d[]=8")
+    }
+
     func testStringSpecialCharactersDecode() {
         struct Test: Codable, Equatable {
             let a: String
@@ -35,7 +75,7 @@ class URLDecodedFormDecoderTests: XCTestCase {
 
     func testContainingStructureDecode() {
         struct Test: Codable, Equatable {
-            let a: Int
+            let a: Int8
             let b: String
         }
         struct Test2: Codable, Equatable {
@@ -61,7 +101,7 @@ class URLDecodedFormDecoderTests: XCTestCase {
 
     func testArrayDecode() {
         struct Test: Codable, Equatable {
-            let a: [Int]
+            let a: [Int16]
         }
         let test = Test(a: [9, 8, 7, 6])
         testForm(test, query: "a[]=9&a[]=8&a[]=7&a[]=6")
