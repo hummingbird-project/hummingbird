@@ -113,55 +113,15 @@
         <section>
           <section class="section">
             
-            <h1 id='hummingbird' class='heading'>Hummingbird</h1>
+            <h1 id='hummingbird-documentation' class='heading'>Hummingbird Documentation</h1>
 
-<p>Lightweight, flexible server framework written in Swift.</p>
+<p>Hummingbird is split into multiple modules. Below are links to the documentation for each of these modules</p>
 
-<p>Hummingbird consists of three main components, the core HTTP server, a minimal web application framework and the extension modules.</p>
-<h2 id='hummingbirdcore' class='heading'>HummingbirdCore</h2>
-
-<p>HummingbirdCore contains a Swift NIO based HTTP server. You will find the code for it in the <a href="https://github.com/hummingbird-project/hummingbird-core">hummingbird-core</a> repository. The HTTP server is initialized with a object conforming to protocol <code>HBHTTPResponder</code> which defines how your server responds to an HTTP request. The HTTP server can be extended to support TLS and HTTP2 via the <code>HummingbirdTLS</code> and <code>HummingbirdHTTP2</code> libraries also available in the hummingbird-core repository.</p>
-<h2 id='hummingbird' class='heading'>Hummingbird</h2>
-
-<p>Hummingbird is a lightweight and flexible web application framework that runs on top of HummingbirdCore. It is designed to require the minimum number of dependencies: <code>swift-backtrace</code>, <code>swift-log</code>, <code>swift-nio</code>, <code>swift-nio-extras</code>, <code>swift-service-lifecycle</code> and <code>swift-metrics</code> and makes no use of Foundation.</p>
-
-<p>It provides a router for directing different endpoints to their handlers, middleware for processing requests before they reach your handlers and processing the responses returned, support for adding channel handlers to extend the HTTP server, extending the core <code>HBApplication</code>, <code>HBRequest</code> and <code>HBResponse</code> classes and providing custom encoding/decoding of <code>Codable</code> objects.</p>
-
-<p>The interface is fairly standard. Anyone who has had experience of Vapor, Express.js etc will recognise most of the APIs. Simple setup is as follows</p>
-<pre class="highlight swift"><code><span class="kd">import</span> <span class="kt">Hummingbird</span>
-
-<span class="k">let</span> <span class="nv">app</span> <span class="o">=</span> <span class="kt">Application</span><span class="p">(</span><span class="nv">configuration</span><span class="p">:</span> <span class="o">.</span><span class="nf">init</span><span class="p">(</span><span class="nv">address</span><span class="p">:</span> <span class="o">.</span><span class="nf">hostname</span><span class="p">(</span><span class="s">"127.0.0.1"</span><span class="p">,</span> <span class="nv">port</span><span class="p">:</span> <span class="mi">8080</span><span class="p">)))</span>
-<span class="n">app</span><span class="o">.</span><span class="n">router</span><span class="o">.</span><span class="nf">get</span><span class="p">(</span><span class="s">"hello"</span><span class="p">)</span> <span class="p">{</span> <span class="n">request</span> <span class="o">-&gt;</span> <span class="kt">String</span> <span class="k">in</span>
-    <span class="k">return</span> <span class="s">"Hello"</span>
-<span class="p">}</span>
-<span class="n">app</span><span class="o">.</span><span class="nf">start</span><span class="p">()</span>
-<span class="n">app</span><span class="o">.</span><span class="nf">wait</span><span class="p">()</span>
-</code></pre>
-<h2 id='hummingbird-extensions' class='heading'>Hummingbird Extensions</h2>
-
-<p>Hummingbird is designed to require the least number of dependencies possible, but this means many features are unavailable to the core libraries. Additional features are provided through extensions. The Hummingbird repository comes with a <code>HummingbirdFoundation</code> library that contains a number of features that can only really be implemented with the help of Foundation. This include JSON encoding/decoding, URLEncodedForms, static file serving, and cookies.</p>
-
-<p>Extensions provided in other repositories include</p>
-
-<table><thead>
-<tr>
-<th>Extension</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><a href="https://github.com/hummingbird-project/hummingbird-compression">HummingbirdCompress</a></td>
-<td>Request decompression and response compression (uses <a href="https://github.com/adam-fowler/compress-nio">CompressNIO</a>)</td>
-</tr>
-<tr>
-<td><a href="https://github.com/hummingbird-project/hummingbird-fluent">HummingbirdFluent</a></td>
-<td>Interface to the Vapor database ORM (uses <a href="https://github.com/vapor/fluent">FluentKit</a>)</td>
-</tr>
-<tr>
-<td><a href="https://github.com/hummingbird-project/hummingbird-redis">HummingbirdRedis</a></td>
-<td>Interface to Redis (uses <a href="https://gitlab.com/mordil/RediStack.git">RediStack</a>)</td>
-</tr>
-</tbody></table>
+<ul>
+<li><a href="https://hummingbird-project.github.io/hummingbird/current/hummingbird/index.html">Hummingbird</a></li>
+<li><a href="https://hummingbird-project.github.io/hummingbird/current/hummingbird-foundation/index.html">HummingbirdFoundation</a></li>
+<li><a href="https://hummingbird-project.github.io/hummingbird/current/hummingbird-xct/index.html">HummingbirdXCT</a></li>
+</ul>
 
           </section>
         </section>
