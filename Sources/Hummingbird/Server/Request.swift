@@ -4,6 +4,7 @@ import NIO
 import NIOConcurrencyHelpers
 import NIOHTTP1
 
+/// Holds all the values required to process a request
 public final class HBRequest: HBExtensible {
     /// URI path
     public var uri: HBURL
@@ -25,7 +26,14 @@ public final class HBRequest: HBExtensible {
     public var allocator: ByteBufferAllocator
     /// Request extensions
     public var extensions: HBExtensions<HBRequest>
-
+    
+    /// Create new HBRequest
+    /// - Parameters:
+    ///   - head: HTTP head
+    ///   - body: HTTP body
+    ///   - application: reference to application that created this request
+    ///   - eventLoop: EventLoop request processing is running on
+    ///   - allocator: Allocator used by channel request processing is running on
     public init(
         head: HTTPRequestHead,
         body: HBRequestBody,
@@ -44,11 +52,14 @@ public final class HBRequest: HBExtensible {
         self.allocator = allocator
         self.extensions = HBExtensions()
     }
-
+    
+    /// Decode request using decoder stored at `HBApplication.decoder`.
+    /// - Parameter type: Type you want to decode to
     public func decode<Type: Decodable>(as type: Type.Type) throws -> Type {
         return try self.application.decoder.decode(type, from: self)
     }
-
+    
+    /// Parameters extracted during processing of request URI. These are available to you inside the route handler
     public var parameters: HBParameters {
         get { self.extensions.get(\.parameters) }
         set { self.extensions.set(\.parameters, value: newValue) }
@@ -66,10 +77,12 @@ public final class HBRequest: HBExtensible {
 }
 
 extension HBRequest {
+    /// Return failed `EventLoopFuture`
     public func failure<T>(_ error: Error) -> EventLoopFuture<T> {
         return self.eventLoop.makeFailedFuture(error)
     }
 
+    /// Return succeeded `EventLoopFuture`
     public func success<T>(_ value: T) -> EventLoopFuture<T> {
         return self.eventLoop.makeSucceededFuture(value)
     }
