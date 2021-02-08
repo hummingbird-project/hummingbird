@@ -1,15 +1,23 @@
 import Hummingbird
 import NIO
 
+/// Manages File loading. Can either stream or load file.
 public struct HBFileIO {
     let fileIO: NonBlockingFileIO
     let chunkSize: Int
 
+    /// Initialize FileIO
+    /// - Parameter application: application using FileIO
     public init(application: HBApplication) {
         self.fileIO = .init(threadPool: application.threadPool)
         self.chunkSize = NonBlockingFileIO.defaultChunkSize
     }
 
+    /// Return details about file, without downloading it
+    /// - Parameters:
+    ///   - request: request for file
+    ///   - path: System file path
+    /// - Returns: Response including file details
     public func headFile(for request: HBRequest, path: String) -> EventLoopFuture<HBResponse> {
         return self.fileIO.openFile(path: path, eventLoop: request.eventLoop).flatMap { handle, region in
             request.logger.debug("[FileIO] HEAD", metadata: ["file": .string(path)])
@@ -22,6 +30,14 @@ public struct HBFileIO {
         }
     }
 
+    /// Load file and pass to response
+    ///
+    /// Depending on the file size this will return either a response containing a ByteBuffer or a stream that will provide the
+    /// file in chunks.
+    /// - Parameters:
+    ///   - request: request for file
+    ///   - path: System file path
+    /// - Returns: Response include file
     public func loadFile(for request: HBRequest, path: String) -> EventLoopFuture<HBResponse> {
         return self.fileIO.openFile(path: path, eventLoop: request.eventLoop).flatMap { handle, region in
             request.logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
@@ -37,7 +53,7 @@ public struct HBFileIO {
         }
     }
 
-    public func loadFile(for request: HBRequest, handle: NIOFileHandle, region: FileRegion) -> EventLoopFuture<HBResponse> {
+    func loadFile(for request: HBRequest, handle: NIOFileHandle, region: FileRegion) -> EventLoopFuture<HBResponse> {
         return self.fileIO.read(fileHandle: handle, byteCount: region.readableBytes, allocator: request.allocator, eventLoop: request.eventLoop).map { buffer in
             return HBResponse(status: .ok, headers: [:], body: .byteBuffer(buffer))
         }
@@ -46,7 +62,7 @@ public struct HBFileIO {
         }
     }
 
-    public func streamFile(for request: HBRequest, handle: NIOFileHandle, region: FileRegion) -> EventLoopFuture<HBResponse> {
+    func streamFile(for request: HBRequest, handle: NIOFileHandle, region: FileRegion) -> EventLoopFuture<HBResponse> {
         let fileStreamer = FileStreamer(
             handle: handle,
             fileSize: region.readableBytes,
@@ -58,7 +74,7 @@ public struct HBFileIO {
         return request.eventLoop.makeSucceededFuture(response)
     }
 
-    // class used to stream files
+    /// class used to stream files
     class FileStreamer: HBResponseBodyStreamer {
         let chunkSize: Int
         var handle: NIOFileHandle
