@@ -32,13 +32,13 @@ public struct HBEnvironment: Decodable, ExpressibleByDictionaryLiteral {
         let container = try decoder.singleValueContainer()
         self.values = try container.decode([String: String].self)
     }
-    
+
     /// Get environment variable with name
     /// - Parameter s: Environment variable name
     public func get(_ s: String) -> String? {
         return self.values[s.lowercased()]
     }
-    
+
     /// Get environment variable with name as a certain type
     /// - Parameters:
     ///   - s: Environment variable name
@@ -46,7 +46,7 @@ public struct HBEnvironment: Decodable, ExpressibleByDictionaryLiteral {
     public func get<T: LosslessStringConvertible>(_ s: String, as: T.Type) -> T? {
         return self.values[s.lowercased()].map { T(String($0)) } ?? nil
     }
-    
+
     /// Set environment variable
     /// - Parameters:
     ///   - s: Environment variable name

@@ -6,7 +6,7 @@ class HBEndpointResponder: HBResponder {
     init() {
         self.methods = [:]
     }
-    
+
     public func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
         guard let responder = methods[request.method.rawValue] else {
             return request.failure(HBHTTPError(.notFound))

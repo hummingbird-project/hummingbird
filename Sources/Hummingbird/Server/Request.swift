@@ -26,7 +26,7 @@ public final class HBRequest: HBExtensible {
     public var allocator: ByteBufferAllocator
     /// Request extensions
     public var extensions: HBExtensions<HBRequest>
-    
+
     /// Create new HBRequest
     /// - Parameters:
     ///   - head: HTTP head
@@ -52,13 +52,13 @@ public final class HBRequest: HBExtensible {
         self.allocator = allocator
         self.extensions = HBExtensions()
     }
-    
+
     /// Decode request using decoder stored at `HBApplication.decoder`.
     /// - Parameter type: Type you want to decode to
     public func decode<Type: Decodable>(as type: Type.Type) throws -> Type {
         return try self.application.decoder.decode(type, from: self)
     }
-    
+
     /// Parameters extracted during processing of request URI. These are available to you inside the route handler
     public var parameters: HBParameters {
         get { self.extensions.get(\.parameters) }

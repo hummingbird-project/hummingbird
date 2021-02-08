@@ -14,7 +14,7 @@ public final class HBResponse: HBExtensible {
     public var extensions: HBExtensions<HBResponse>
 
     /// Create an `HBResponse`
-    /// 
+    ///
     /// - Parameters:
     ///   - status: response status
     ///   - headers: response headers

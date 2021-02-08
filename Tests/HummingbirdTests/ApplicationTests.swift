@@ -160,7 +160,7 @@ final class ApplicationTests: XCTestCase {
             XCTAssertEqual(String(buffer: body), "[\"yes\", \"no\"]")
         }
     }
-    
+
     func testResponseBody() {
         let app = HBApplication(testing: .embedded)
         app.router

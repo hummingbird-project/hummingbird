@@ -24,7 +24,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
 
     /// Create `URLEncodedFormNode` from URL encoded form data
     /// - Parameter string: URL encoded form data
-    static private func decode(_ string: String) throws -> URLEncodedFormNode {
+    private static func decode(_ string: String) throws -> URLEncodedFormNode {
         let split = string.split(separator: "&")
         let node = Self.map(.init())
         try split.forEach {

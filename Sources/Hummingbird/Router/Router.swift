@@ -9,7 +9,7 @@ import NIOHTTP1
 ///
 /// `HBRouter` implements the `on(path:method:use)` functions but because it also conforms
 /// to `HBRouterMethods` it is also possible to call the method specific functions `get`, `put`,
-///`head`, `post` and `patch`.  The route handler closures all return objects conforming to
+/// `head`, `post` and `patch`.  The route handler closures all return objects conforming to
 /// `HBResponseGenerator`.  This allows us to support routes which return a multitude of types eg
 /// ```
 /// app.router.get("string") { _ -> String in

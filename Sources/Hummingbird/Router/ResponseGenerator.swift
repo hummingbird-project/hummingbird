@@ -56,4 +56,3 @@ extension EventLoopFuture: HBResponseFutureGenerator where Value: HBResponseGene
         return self.flatMapThrowing { try $0.response(from: request) }
     }
 }
-

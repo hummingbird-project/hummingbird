@@ -10,7 +10,7 @@ extension HBApplication {
     public struct HTTPResponder: HBHTTPResponder {
         let application: HBApplication
         let responder: HBResponder
-        
+
         /// Construct HTTP responder
         /// - Parameter application: application creating this responder
         public init(application: HBApplication) {
@@ -18,10 +18,10 @@ extension HBApplication {
             // application responder has been set for sure
             self.responder = application.constructResponder()
         }
-        
+
         /// Logger used by responder
         public var logger: Logger? { return self.application.logger }
-        
+
         /// Return EventLoopFuture that will be fulfilled with the HTTP response for the supplied HTTP request
         /// - Parameters:
         ///   - request: request

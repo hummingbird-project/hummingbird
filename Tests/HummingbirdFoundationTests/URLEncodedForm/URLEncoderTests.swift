@@ -51,10 +51,10 @@ class URLEncodedFormEncoderTests: XCTestCase {
             let f: Float
             let d: Double
         }
-        let test = Test(b: true, i: 34, i8: 23, i16: 9, i32:-6872, i64: 23, u: 0, u8:255, u16: 7673, u32: 88222, u64: 234, f: -1.1, d: 8)
+        let test = Test(b: true, i: 34, i8: 23, i16: 9, i32: -6872, i64: 23, u: 0, u8: 255, u16: 7673, u32: 88222, u64: 234, f: -1.1, d: 8)
         testForm(test, query: "b=true&i=34&i8=23&i16=9&i32=-6872&i64=23&u=0&u8=255&u16=7673&u32=88222&u64=234&f=-1.1&d=8.0")
     }
-    
+
     func testNumberArrays() {
         struct Test: Codable, Equatable {
             let b: [Bool]
@@ -71,10 +71,10 @@ class URLEncodedFormEncoderTests: XCTestCase {
             let f: [Float]
             let d: [Double]
         }
-        let test = Test(b: [true], i: [34], i8: [23], i16: [9], i32:[-6872], i64: [23], u: [0], u8:[255], u16: [7673], u32: [88222], u64: [234], f: [-1.1], d: [8])
+        let test = Test(b: [true], i: [34], i8: [23], i16: [9], i32: [-6872], i64: [23], u: [0], u8: [255], u16: [7673], u32: [88222], u64: [234], f: [-1.1], d: [8])
         testForm(test, query: "b[]=true&i[]=34&i8[]=23&i16[]=9&i32[]=-6872&i64[]=23&u[]=0&u8[]=255&u16[]=7673&u32[]=88222&u64[]=234&f[]=-1.1&d[]=8.0")
     }
-    
+
     func testStringSpecialCharactersEncode() {
         struct Test: Codable {
             let a: String

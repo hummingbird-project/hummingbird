@@ -5,13 +5,13 @@ public struct HBParameters {
     init() {
         self.parameters = [:]
     }
-    
+
     /// Return parameter with specified id
     /// - Parameter s: parameter id
     public func get(_ s: Substring) -> Substring? {
         return self.parameters[s[...]]
     }
-    
+
     /// Return parameter with specified id as a certain type
     /// - Parameters:
     ///   - s: parameter id
@@ -19,7 +19,7 @@ public struct HBParameters {
     public func get<T: LosslessStringConvertible>(_ s: Substring, as: T.Type) -> T? {
         return self.parameters[s[...]].map { T(String($0)) } ?? nil
     }
-    
+
     /// Set parameter
     /// - Parameters:
     ///   - s: parameter id
