@@ -7,7 +7,7 @@ import NIO
 /// Application class. Brings together all the components of Hummingbird together
 ///
 /// Create an HBApplication, setup your application middleware, encoders, routes etc and then call `start` to
-/// start the server and then `wait` to wait until the server is stopped.
+/// start the server and `wait` to wait until the server is stopped.
 /// ```
 /// let app = HBApplication()
 /// app.middleware.add(MyMiddleware())
@@ -19,6 +19,8 @@ import NIO
 /// ```
 /// Editing the application setup after calling `start` will produce undefined behaviour.
 public final class HBApplication: HBExtensible {
+    // MARK: Member variables
+
     /// server lifecycle, controls initialization and shutdown of application
     public let lifecycle: ServiceLifecycle
     /// event loop group used by application
@@ -44,6 +46,8 @@ public final class HBApplication: HBExtensible {
 
     /// who provided the eventLoopGroup
     let eventLoopGroupProvider: NIOEventLoopGroupProvider
+
+    // MARK: Initialization
 
     /// Initialize new Application
     public init(
@@ -86,6 +90,8 @@ public final class HBApplication: HBExtensible {
             shutdown: .eventLoopFuture(self.server.stop)
         )
     }
+
+    // MARK: Methods
 
     /// Run application
     public func start() {

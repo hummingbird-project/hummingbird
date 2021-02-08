@@ -4,6 +4,8 @@ import NIO
 import NIOHTTP1
 
 extension HBApplication {
+    // MARK: HTTPResponder
+
     /// HTTP responder class for Hummingbird. This is the interface between Hummingbird and HummingbirdCore
     ///
     /// The HummingbirdCore server calls `respond` to get the HTTP response from Hummingbird

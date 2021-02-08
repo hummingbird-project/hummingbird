@@ -1,23 +1,29 @@
 import HummingbirdCore
 
 extension HBApplication {
+    // MARK: Configuration
+
     /// Application configuration
     public struct Configuration {
-        /// bind address
+        // MARK: Member variables
+
+        /// Bind address for server
         public let address: HBBindAddress
-        /// server name to return in "server" header
+        /// Server name to return in "server" header
         public let serverName: String?
-        /// max upload size
+        /// Maximum upload size allowed
         public let maxUploadSize: Int
         /// Allows socket to be bound to an address that is already in use.
         public let reuseAddress: Bool
         /// Disables the Nagle algorithm for send coalescing.
         public let tcpNoDelay: Bool
-        /// pipelining ensures that only one http request is processed at one time
+        /// Pipelining ensures that only one http request is processed at one time
         public let enableHttpPipelining: Bool
 
-        /// number of threads to allocate in the application thread pool
+        /// Number of threads to allocate in the application thread pool
         public let threadPoolSize: Int
+
+        // MARK: Initialization
 
         /// Create configuration struct
         public init(
@@ -40,7 +46,7 @@ extension HBApplication {
         }
 
         /// return HTTP server configuration
-        public var httpServer: HBHTTPServer.Configuration {
+        var httpServer: HBHTTPServer.Configuration {
             return .init(
                 address: self.address,
                 serverName: self.serverName,

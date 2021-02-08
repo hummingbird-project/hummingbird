@@ -6,6 +6,8 @@ import NIOHTTP1
 
 /// Holds all the values required to process a request
 public final class HBRequest: HBExtensible {
+    // MARK: Member variables
+
     /// URI path
     public var uri: HBURL
     /// HTTP version
@@ -26,6 +28,14 @@ public final class HBRequest: HBExtensible {
     public var allocator: ByteBufferAllocator
     /// Request extensions
     public var extensions: HBExtensions<HBRequest>
+
+    /// Parameters extracted during processing of request URI. These are available to you inside the route handler
+    public var parameters: HBParameters {
+        get { self.extensions.get(\.parameters) }
+        set { self.extensions.set(\.parameters, value: newValue) }
+    }
+
+    // MARK: Initialization
 
     /// Create new HBRequest
     /// - Parameters:
@@ -53,16 +63,22 @@ public final class HBRequest: HBExtensible {
         self.extensions = HBExtensions()
     }
 
+    // MARK: Methods
+
     /// Decode request using decoder stored at `HBApplication.decoder`.
     /// - Parameter type: Type you want to decode to
     public func decode<Type: Decodable>(as type: Type.Type) throws -> Type {
         return try self.application.decoder.decode(type, from: self)
     }
 
-    /// Parameters extracted during processing of request URI. These are available to you inside the route handler
-    public var parameters: HBParameters {
-        get { self.extensions.get(\.parameters) }
-        set { self.extensions.set(\.parameters, value: newValue) }
+    /// Return failed `EventLoopFuture`
+    public func failure<T>(_ error: Error) -> EventLoopFuture<T> {
+        return self.eventLoop.makeFailedFuture(error)
+    }
+
+    /// Return succeeded `EventLoopFuture`
+    public func success<T>(_ value: T) -> EventLoopFuture<T> {
+        return self.eventLoop.makeSucceededFuture(value)
     }
 
     private static func loggerWithRequestId(_ logger: Logger, uri: String, method: String) -> Logger {
@@ -74,16 +90,4 @@ public final class HBRequest: HBExtensible {
     }
 
     private static let globalRequestID = NIOAtomic<Int>.makeAtomic(value: 0)
-}
-
-extension HBRequest {
-    /// Return failed `EventLoopFuture`
-    public func failure<T>(_ error: Error) -> EventLoopFuture<T> {
-        return self.eventLoop.makeFailedFuture(error)
-    }
-
-    /// Return succeeded `EventLoopFuture`
-    public func success<T>(_ value: T) -> EventLoopFuture<T> {
-        return self.eventLoop.makeSucceededFuture(value)
-    }
 }

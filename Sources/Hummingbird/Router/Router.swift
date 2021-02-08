@@ -4,11 +4,11 @@ import NIOHTTP1
 
 /// Directs Requests to handlers based on the request uri.
 ///
-/// Conforms to RequestResponder so need to provide its own implementation of
+/// Conforms to `HBResponder` so need to provide its own implementation of
 /// `func apply(to request: Request) -> EventLoopFuture<Response>`.
 ///
-/// `HBRouter` implements the `on(path:method:use)` functions but because it also conforms
-/// to `HBRouterMethods` it is also possible to call the method specific functions `get`, `put`,
+/// `HBRouter` requires an implementation of  the `on(path:method:use)` functions but because it
+/// also conforms to `HBRouterMethods` it is also possible to call the method specific functions `get`, `put`,
 /// `head`, `post` and `patch`.  The route handler closures all return objects conforming to
 /// `HBResponseGenerator`.  This allows us to support routes which return a multitude of types eg
 /// ```

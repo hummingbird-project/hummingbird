@@ -9,7 +9,7 @@ import NIOHTTP1
 /// DELETE routes on "todos/:id" where id is the identifier for the todo
 /// ```
 /// app.router
-/// .endpoint("todos")
+/// .group("todos")
 /// .get(use: todoController.list)
 /// .put(use: todoController.create)
 /// .get(":id", use: todoController.get)

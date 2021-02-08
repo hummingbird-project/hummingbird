@@ -5,7 +5,7 @@ import NIO
 ///
 /// Middleware is added to the application by calling `app.middleware.add(MyMiddleware()`.
 ///
-/// Middleware allows you to process a request before it reaches the your request handler and then process the response
+/// Middleware allows you to process a request before it reaches your request handler and then process the response
 /// returned by that handler.
 /// ```
 /// func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {

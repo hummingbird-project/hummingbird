@@ -4,6 +4,8 @@ import NIO
 ///
 /// Access data via `request.eventLoopStorage`.
 extension HBApplication {
+    // MARK: EventLoopStorage
+
     /// Extend EventLoopStorage using HBExtensions.
     ///
     /// Use this to add additional data to each `EventLoop` in the application `EventLoopGroup`.
@@ -16,8 +18,9 @@ extension HBApplication {
     /// }
     /// ```
     /// You can access the extension via `HBApplication.eventLoopStorage(for: eventLoop).myVar` or
-    /// if you have an `HBRequest` you can access the extension via `HBRequest.eventLoopStorage.ext`.
+    /// if you have an `HBRequest` you can access the extension via `HBRequest.eventLoopStorage.myVar`.
     public class EventLoopStorage {
+        /// Allows you tp extend `EventLoopStorage`
         public var extensions: HBExtensions<EventLoopStorage>
         init() {
             self.extensions = .init()
@@ -65,7 +68,9 @@ extension HBApplication {
 }
 
 extension HBRequest {
-    /// `EventLoopStorage` attached to `EventLoop` used by Request
+    // MARK: EventLoopStorage
+
+    /// Access extension data associated with the `EventLoop` used by this Request
     public var eventLoopStorage: HBApplication.EventLoopStorage {
         self.application.eventLoopStorage(for: self.eventLoop)
     }
