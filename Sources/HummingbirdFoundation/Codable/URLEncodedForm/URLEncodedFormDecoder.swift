@@ -44,6 +44,10 @@ public struct URLEncodedFormDecoder {
         )
     }
 
+    /// Create URLEncodedFormDecoder
+    /// - Parameters:
+    ///   - dateDecodingStrategy: date decoding strategy
+    ///   - userInfo: user info to supply to decoder
     public init(
         dateDecodingStrategy: URLEncodedFormDecoder.DateDecodingStrategy = .deferredToDate,
         userInfo: [CodingUserInfoKey: Any] = [:]
@@ -52,6 +56,10 @@ public struct URLEncodedFormDecoder {
         self.userInfo = userInfo
     }
 
+    /// Decode from URL encoded form data to type
+    /// - Parameters:
+    ///   - type: Type to decode to
+    ///   - string: URL encoded form data
     public func decode<T: Decodable>(_ type: T.Type, from string: String) throws -> T {
         let decoder = _URLEncodedFormDecoder(options: self.options)
         let node = try URLEncodedFormNode(from: string)

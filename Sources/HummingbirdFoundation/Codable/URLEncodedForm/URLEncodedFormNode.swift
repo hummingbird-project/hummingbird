@@ -1,7 +1,10 @@
-
+/// Internal representation of URL encoded form data used by both encode and decode
 enum URLEncodedFormNode: CustomStringConvertible, Equatable {
+    /// holds a value
     case leaf(NodeValue?)
+    /// holds a map of strings to nodes
     case map(Map)
+    /// holds an array of nodes
     case array(Array)
 
     enum Error: Swift.Error {
@@ -9,6 +12,8 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
         case notSupported
     }
 
+    /// Initialize node from URL encoded form data
+    /// - Parameter string: URL encoded form data
     init(from string: String) throws {
         self = try Self.decode(string)
     }
@@ -17,7 +22,9 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
         self.encode("")
     }
 
-    static func decode(_ string: String) throws -> URLEncodedFormNode {
+    /// Create `URLEncodedFormNode` from URL encoded form data
+    /// - Parameter string: URL encoded form data
+    static private func decode(_ string: String) throws -> URLEncodedFormNode {
         let split = string.split(separator: "&")
         let node = Self.map(.init())
         try split.forEach {
@@ -36,7 +43,12 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
         return node
     }
 
-    func addValue(keys: ArraySlice<KeyParser.KeyType>, value: NodeValue) throws {
+    /// Add URL encoded string to node
+    /// - Parameters:
+    ///   - keys: Array of key parser types (array or map)
+    ///   - value: value to add to leaf node
+    private func addValue(keys: ArraySlice<KeyParser.KeyType>, value: NodeValue) throws {
+        /// function for create `URLEncodedFormNode` from `KeyParser.Key.Type`
         func createNode(from key: KeyParser.KeyType) -> URLEncodedFormNode {
             switch key {
             case .array:
@@ -45,8 +57,11 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
                 return .map(.init())
             }
         }
+
+        // get key and remove from list
         let keyType = keys.first
         let keys = keys.dropFirst()
+
         switch (self, keyType) {
         case (.map(let map), .map(let key)):
             let key = String(key)
@@ -74,6 +89,9 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
         }
     }
 
+    /// Create URL encoded string from node
+    /// - Parameter prefix: Prefix for string
+    /// - Returns: URL encoded string
     private func encode(_ prefix: String) -> String {
         switch self {
         case .leaf(let string):
