@@ -38,3 +38,7 @@ Extensions provided in other repositories include
 | [HummingbirdCompress](https://github.com/hummingbird-project/hummingbird-compression) | Request decompression and response compression (uses [CompressNIO](https://github.com/adam-fowler/compress-nio))
 | [HummingbirdFluent](https://github.com/hummingbird-project/hummingbird-fluent) | Interface to the Vapor database ORM (uses [FluentKit](https://github.com/vapor/fluent))
 | [HummingbirdRedis](https://github.com/hummingbird-project/hummingbird-redis) | Interface to Redis (uses [RediStack](https://gitlab.com/mordil/RediStack.git))
+
+## Documentation
+
+You can find reference documentation for Hummingbird [here](https://hummingbird-project.github.io/hummingbird/current/hummingbird/index.html).
