@@ -1,14 +1,20 @@
 import NIO
 
-/// Response body
+/// Response body. Either static 
 public enum HBResponseBody {
-    /// ByteBuffer
+    /// Body stored as a single ByteBuffer
     case byteBuffer(ByteBuffer)
     /// Streamer object supplying byte buffers
     case stream(HBResponseBodyStreamer)
     /// Empty body
     case empty
 
+    /// Construct a `HBResponseBody` from a closure supplying `ByteBuffer`'s.
+    ///
+    /// This function should supply `.byteBuffer(ByteBuffer)` until there is no more data, at which
+    /// point is should return `'end`.
+    ///
+    /// - Parameter closure: Closure called whenever a new ByteBuffer is needed
     public static func streamCallback(_ closure: @escaping (EventLoop) -> EventLoopFuture<HBResponseBody.StreamResult>) -> Self {
         .stream(ResponseBodyStreamerCallback(closure: closure))
     }

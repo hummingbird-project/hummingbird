@@ -3,9 +3,9 @@ import NIO
 import NIOHTTP1
 
 /// Channel handler for responding to a request and returning a response
-public final class HBHTTPServerHandler: ChannelInboundHandler {
-    public typealias InboundIn = HBHTTPRequest
-    public typealias OutboundOut = HBHTTPResponse
+final class HBHTTPServerHandler: ChannelInboundHandler {
+    typealias InboundIn = HBHTTPRequest
+    typealias OutboundOut = HBHTTPResponse
 
     let responder: HBHTTPResponder
 
@@ -13,22 +13,22 @@ public final class HBHTTPServerHandler: ChannelInboundHandler {
     var closeAfterResponseWritten: Bool
     var propagatedError: Error?
 
-    public init(responder: HBHTTPResponder) {
+    init(responder: HBHTTPResponder) {
         self.responder = responder
         self.responsesInProgress = 0
         self.closeAfterResponseWritten = false
         self.propagatedError = nil
     }
 
-    public func handlerAdded(context: ChannelHandlerContext) {
+    func handlerAdded(context: ChannelHandlerContext) {
         self.responder.handlerAdded(context: context)
     }
 
-    public func handlerRemoved(context: ChannelHandlerContext) {
+    func handlerRemoved(context: ChannelHandlerContext) {
         self.responder.handlerRemoved(context: context)
     }
 
-    public func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let request = unwrapInboundIn(data)
         // if error caught from previous channel handler then write an error
         if let error = propagatedError {
@@ -85,7 +85,7 @@ public final class HBHTTPServerHandler: ChannelInboundHandler {
         }
     }
 
-    public func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
+    func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
         switch event {
         case let evt as ChannelEvent where evt == ChannelEvent.inputClosed:
             // The remote peer half-closed the channel. At this time, any
@@ -102,7 +102,7 @@ public final class HBHTTPServerHandler: ChannelInboundHandler {
         }
     }
 
-    public func errorCaught(context: ChannelHandlerContext, error: Error) {
+    func errorCaught(context: ChannelHandlerContext, error: Error) {
         self.propagatedError = error
     }
 }

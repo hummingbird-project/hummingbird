@@ -2,48 +2,31 @@ import NIO
 import NIOExtras
 import NIOHTTP1
 
-/// HTTP server
+/// HTTP server class
 public class HBHTTPServer {
+    /// EventLoopGroup used by server
     public let eventLoopGroup: EventLoopGroup
+    /// Server configuration
     public let configuration: Configuration
+    /// object initializing HTTP child handlers. This defaults to creating an HTTP1 channel
     public var httpChannelInitializer: HBChannelInitializer
+    /// Server channel
     public var channel: Channel?
 
     var quiesce: ServerQuiescingHelper?
 
+    /// Position to place channel handler
     public enum ChannelPosition {
+        /// before all the HTTP channel handlers. This is primarily used by TLS
         case beforeHTTP
+        /// after the HTTP channel handlers
         case afterHTTP
     }
 
+    /// HTTP server errors
     public enum Error: Swift.Error {
+        /// waiting on the server while it is not running will throw this
         case serverNotRunning
-    }
-
-    /// HTTP server configuration
-    public struct Configuration {
-        public let address: HBBindAddress
-        public let serverName: String?
-        public let maxUploadSize: Int
-        public let reuseAddress: Bool
-        public let tcpNoDelay: Bool
-        public let withPipeliningAssistance: Bool
-
-        public init(
-            address: HBBindAddress = .hostname(),
-            serverName: String? = nil,
-            maxUploadSize: Int = 2 * 1024 * 1024,
-            reuseAddress: Bool = true,
-            tcpNoDelay: Bool = false,
-            withPipeliningAssistance: Bool = false
-        ) {
-            self.address = address
-            self.serverName = serverName
-            self.maxUploadSize = maxUploadSize
-            self.reuseAddress = reuseAddress
-            self.tcpNoDelay = tcpNoDelay
-            self.withPipeliningAssistance = withPipeliningAssistance
-        }
     }
 
     /// Initialize HTTP server
@@ -61,6 +44,9 @@ public class HBHTTPServer {
 
     /// Append to list of `ChannelHandler`s to be added to server child channels. Need to provide a closure so new instance of these handlers are
     /// created for each child channel
+    /// - Parameters:
+    ///   - handler: autoclosure generating handler
+    ///   - position: position to place channel handler
     @discardableResult public func addChannelHandler(_ handler: @autoclosure @escaping () -> ChannelHandler, position: ChannelPosition = .afterHTTP) -> Self {
         self._additionalChildHandlers.append((handler: handler, position: position))
         return self
@@ -145,7 +131,6 @@ public class HBHTTPServer {
     /// - Parameters:
     ///   - channel: Channel
     ///   - responder: The HTTP responder
-    /// - Returns: <#description#>
     public func addChildHandlers(channel: Channel, responder: HBHTTPResponder) -> EventLoopFuture<Void> {
         let childHandlers: [ChannelHandler] = self.additionalChannelHandlers(at: .afterHTTP) + [
             HBHTTPEncodeHandler(configuration: self.configuration),
@@ -160,4 +145,46 @@ public class HBHTTPServer {
     }
 
     private var _additionalChildHandlers: [(handler: () -> ChannelHandler, position: ChannelPosition)]
+}
+
+extension HBHTTPServer {
+    /// HTTP server configuration
+    public struct Configuration {
+        /// Bind address for server
+        public let address: HBBindAddress
+        /// Server name to return in "server" header
+        public let serverName: String?
+        /// Maximum upload size allowed
+        public let maxUploadSize: Int
+        /// Allows socket to be bound to an address that is already in use.
+        public let reuseAddress: Bool
+        /// Disables the Nagle algorithm for send coalescing.
+        public let tcpNoDelay: Bool
+        /// Pipelining ensures that only one http request is processed at one time
+        public let withPipeliningAssistance: Bool
+
+        /// Initialize HTTP server configuration
+        /// - Parameters:
+        ///   - address: Bind address for server
+        ///   - serverName: Server name to return in "server" header
+        ///   - maxUploadSize: Maximum upload size allowed
+        ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
+        ///   - tcpNoDelay: Disables the Nagle algorithm for send coalescing.
+        ///   - withPipeliningAssistance: Pipelining ensures that only one http request is processed at one time
+        public init(
+            address: HBBindAddress = .hostname(),
+            serverName: String? = nil,
+            maxUploadSize: Int = 2 * 1024 * 1024,
+            reuseAddress: Bool = true,
+            tcpNoDelay: Bool = false,
+            withPipeliningAssistance: Bool = false
+        ) {
+            self.address = address
+            self.serverName = serverName
+            self.maxUploadSize = maxUploadSize
+            self.reuseAddress = reuseAddress
+            self.tcpNoDelay = tcpNoDelay
+            self.withPipeliningAssistance = withPipeliningAssistance
+        }
+    }
 }

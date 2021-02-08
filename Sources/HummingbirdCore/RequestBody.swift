@@ -1,11 +1,14 @@
 import NIO
 import NIOConcurrencyHelpers
 
-/// Request Body. Either a ByteBuffer or a streaming of ByteBuffer
+/// Request Body. Either a ByteBuffer or a ByteBuffer streamer
 public enum HBRequestBody {
+    /// Static ByteBuffer
     case byteBuffer(ByteBuffer?)
+    /// ByteBuffer streamer
     case stream(HBRequestBodyStreamer)
 
+    /// Return as ByteBuffer
     public var buffer: ByteBuffer? {
         switch self {
         case .byteBuffer(let buffer):
@@ -15,6 +18,7 @@ public enum HBRequestBody {
         }
     }
 
+    /// Return as streamer if it is a streamer
     public var stream: HBRequestBodyStreamer {
         switch self {
         case .stream(let streamer):
@@ -24,6 +28,9 @@ public enum HBRequestBody {
         }
     }
 
+    /// Provide body as a single ByteBuffer
+    /// - Parameter eventLoop: EventLoop to use
+    /// - Returns: EventLoopFuture that will be fulfilled with ByteBuffer. If no body is include then return `nil`
     public func consumeBody(on eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer?> {
         switch self {
         case .byteBuffer(let buffer):
@@ -33,6 +40,9 @@ public enum HBRequestBody {
         }
     }
 
+    /// Return as streaming body. Can convert empty body to a streamer
+    /// - Parameter eventLoop: EventLoop to use
+    /// - Returns: streaming body
     public func streamBody(on eventLoop: EventLoop) -> HBRequestBodyStreamer {
         switch self {
         case .byteBuffer(let buffer):
@@ -46,14 +56,16 @@ public enum HBRequestBody {
     }
 }
 
-/// Request body streamer. HTTPInHandler feeds this with ByteBuffers while the Router consumes them
+/// Request body streamer. `HBHTTPDecodeHandler` feeds this with ByteBuffers while the Router consumes them
 public class HBRequestBodyStreamer {
+    /// Values we can feed the streamer with
     public enum FeedInput {
         case byteBuffer(ByteBuffer)
         case error(Error)
         case end
     }
 
+    /// Values returned when we consume the contents of the streamer
     public enum ConsumeOutput {
         case byteBuffers([ByteBuffer])
         case end

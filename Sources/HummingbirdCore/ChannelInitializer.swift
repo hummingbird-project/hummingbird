@@ -1,6 +1,6 @@
 import NIO
 
-/// HTTPServer child channel initializer
+/// HTTPServer child channel initializer protocol
 public protocol HBChannelInitializer {
     func initialize(_ server: HBHTTPServer, channel: Channel, responder: HBHTTPResponder) -> EventLoopFuture<Void>
 }

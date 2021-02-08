@@ -7,6 +7,26 @@ import NIO
 /// to `HBHTTPResponder` when you call `HTTPServer.start`. This object is used to define how
 /// you convert requests to the server into responses
 ///
+/// This is an example `HBHTTPResponder` that replies with a response with body "Hello"
+/// ```
+/// struct HelloResponder: HBHTTPResponder {
+///     func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
+///         let response = HBHTTPResponse(
+///             head: .init(version: .init(major: 1, minor: 1), status: .ok),
+///             body: .byteBuffer(context.channel.allocator.buffer(string: "Hello"))
+///         )
+///         return context.eventLoop.makeSucceededFuture(response)
+///    }
+/// }
+/// ```
+/// The following will start up a server using the above `HelloResponder`.
+/// ```
+/// let server = HBHTTPServer(
+///     group: eventLoopGroup,
+///     configuration: .init(address: .hostname("127.0.0.1", port: 8080))
+/// )
+/// try server.start(responder: HelloResponder()).wait()
+/// ```
 public protocol HBHTTPResponder {
     /// Called when HTTP server handler is added to channel
     func handlerAdded(context: ChannelHandlerContext)
