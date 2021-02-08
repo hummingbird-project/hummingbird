@@ -1,0 +1,68 @@
+{
+  "warnings": [
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Cookies/Cookie.swift",
+      "line": 5,
+      "symbol": "HBCookie.SameSite",
+      "symbol_kind": "source.lang.swift.decl.enum",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Cookies/Cookie.swift",
+      "line": 6,
+      "symbol": "HBCookie.SameSite.lax",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Cookies/Cookie.swift",
+      "line": 7,
+      "symbol": "HBCookie.SameSite.secure",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Cookies/Cookie.swift",
+      "line": 8,
+      "symbol": "HBCookie.SameSite.none",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Cookies/Cookie.swift",
+      "line": 128,
+      "symbol": "HBCookie.Properties.subscript(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.subscript",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Cookies/Cookies.swift",
+      "line": 7,
+      "symbol": "HBCookies.CollectionType",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Files/FileMiddleware.swift",
+      "line": 10,
+      "symbol": "HBFileMiddleware",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Files/FileMiddleware.swift",
+      "line": 14,
+      "symbol": "HBFileMiddleware.init(_:application:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Files/FileMiddleware.swift",
+      "line": 36,
+      "symbol": "HBFileMiddleware.apply(to:next:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    }
+  ],
+  "source_directory": "/Users/adamfowler/Developer/server/hummingbird/hummingbird"
+}

@@ -1,0 +1,12 @@
+{
+  "warnings": [
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdXCT/Application+XCT.swift",
+      "line": 61,
+      "symbol": "HBApplication.xct",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    }
+  ],
+  "source_directory": "/Users/adamfowler/Developer/server/hummingbird/hummingbird"
+}

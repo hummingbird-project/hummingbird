@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Structures  Reference</title>
+    <link rel="stylesheet" type="text/css" href="css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="js/jquery.min.js" defer></script>
+    <script src="js/jazzy.js" defer></script>
+    
+    <script src="js/lunr.min.js" defer></script>
+    <script src="js/typeahead.jquery.js" defer></script>
+    <script src="js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Section/Structures" class="dashAnchor"></a>
+    <a title="Structures  Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="index.html">Hummingbird 0.2.0 Docs</a> (87% documented)</p>
+        <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="img/gh.png"/>View on GitHub</a></p>
+        <p class="header-right">
+          <form role="search" action="search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="index.html">Hummingbird Reference</a>
+        <img id="carat" src="img/carat.png" />
+        Structures  Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Classes/HBApplication.html">HBApplication</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/HBApplication/Configuration.html">– Configuration</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/HBApplication/EventLoopStorage.html">– EventLoopStorage</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/HBApplication/EventLoopStorageMap.html">– EventLoopStorageMap</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/HBApplication/HTTPResponder.html">– HTTPResponder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/HBMiddlewareGroup.html">HBMiddlewareGroup</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/HBRequest.html">HBRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/HBRequest/ResponsePatch.html">– ResponsePatch</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/HBResponse.html">HBResponse</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Extensions/Array.html">Array</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/ByteBuffer.html">ByteBuffer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/Dictionary.html">Dictionary</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/EventLoopFuture.html">EventLoopFuture</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/HTTPResponseStatus.html">HTTPResponseStatus</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/Optional.html">Optional</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/String.html">String</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Protocols/HBExtensible.html">HBExtensible</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/HBMiddleware.html">HBMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/HBRequestDecoder.html">HBRequestDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/HBResponder.html">HBResponder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols.html#/s:11Hummingbird17HBResponseCodableP">HBResponseCodable</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/HBResponseEncodable.html">HBResponseEncodable</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/HBResponseEncoder.html">HBResponseEncoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/HBResponseFutureGenerator.html">HBResponseFutureGenerator</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/HBResponseGenerator.html">HBResponseGenerator</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/HBRouter.html">HBRouter</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/HBRouterMethods.html">HBRouterMethods</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Structs/HBCORSMiddleware.html">HBCORSMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBCORSMiddleware/AllowOrigin.html">– AllowOrigin</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBEnvironment.html">HBEnvironment</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBExtensions.html">HBExtensions</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBLogRequestsMiddleware.html">HBLogRequestsMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBMetricsMiddleware.html">HBMetricsMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBParameters.html">HBParameters</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBRouterGroup.html">HBRouterGroup</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBURL.html">HBURL</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBURL/Scheme.html">– Scheme</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>Structures</h1>
+            <p>The following structures are available globally.</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird13HBEnvironmentV"></a>
+                    <a name="//apple_ref/swift/Struct/HBEnvironment" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird13HBEnvironmentV">HBEnvironment</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Access environment variables</p>
+
+                        <a href="Structs/HBEnvironment.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HBEnvironment</span> <span class="p">:</span> <span class="kt">Decodable</span><span class="p">,</span> <span class="kt">ExpressibleByDictionaryLiteral</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird12HBExtensionsV"></a>
+                    <a name="//apple_ref/swift/Struct/HBExtensions" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird12HBExtensionsV">HBExtensions</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Extend objects with additional member variables</p>
+
+<p>If you have only one instance of a type to attach you can extend it to conform to <code>StorageKey</code></p>
+<pre class="highlight swift"><code><span class="kd">struct</span> <span class="kt">Object</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nv">extensions</span><span class="p">:</span> <span class="kt">Extensions</span><span class="o">&lt;</span><span class="kt">Object</span><span class="o">&gt;</span>
+<span class="p">}</span>
+
+<span class="kd">extension</span> <span class="kt">Object</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nv">extra</span><span class="p">:</span> <span class="kt">Extra</span><span class="p">?</span> <span class="p">{</span>
+        <span class="k">get</span> <span class="p">{</span> <span class="k">return</span> <span class="n">extensions</span><span class="o">.</span><span class="nf">get</span><span class="p">(\</span><span class="o">.</span><span class="n">extra</span><span class="p">)</span> <span class="p">}</span>
+        <span class="k">set</span> <span class="p">{</span> <span class="n">extensions</span><span class="o">.</span><span class="nf">set</span><span class="p">(\</span><span class="o">.</span><span class="n">extra</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="n">newValue</span><span class="p">)</span> <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+
+                        <a href="Structs/HBExtensions.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HBExtensions</span><span class="o">&lt;</span><span class="kt">ParentObject</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird16HBCORSMiddlewareV"></a>
+                    <a name="//apple_ref/swift/Struct/HBCORSMiddleware" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird16HBCORSMiddlewareV">HBCORSMiddleware</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Middleware implementing Cross-Origin Resource Sharing (CORS) headers.</p>
+
+<p>If request has &ldquo;origin&rdquo; header then generate CORS headers. If method is OPTIONS
+then return an empty body with all the standard CORS headers otherwise send
+request onto the next handler and when you receive the response add a
+&ldquo;access-control-allow-origin&rdquo; header</p>
+
+                        <a href="Structs/HBCORSMiddleware.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HBCORSMiddleware</span> <span class="p">:</span> <span class="kt"><a href="Protocols/HBMiddleware.html">HBMiddleware</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird23HBLogRequestsMiddlewareV"></a>
+                    <a name="//apple_ref/swift/Struct/HBLogRequestsMiddleware" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird23HBLogRequestsMiddlewareV">HBLogRequestsMiddleware</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Middleware outputting to log for every call to server</p>
+
+                        <a href="Structs/HBLogRequestsMiddleware.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HBLogRequestsMiddleware</span> <span class="p">:</span> <span class="kt"><a href="Protocols/HBMiddleware.html">HBMiddleware</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird19HBMetricsMiddlewareV"></a>
+                    <a name="//apple_ref/swift/Struct/HBMetricsMiddleware" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird19HBMetricsMiddlewareV">HBMetricsMiddleware</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Middleware recording metrics for each request</p>
+
+<p>Records the number of requests, the request duration and how many errors were thrown. Each metric has additional
+dimensions URI and method.</p>
+
+                        <a href="Structs/HBMetricsMiddleware.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HBMetricsMiddleware</span> <span class="p">:</span> <span class="kt"><a href="Protocols/HBMiddleware.html">HBMiddleware</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird12HBParametersV"></a>
+                    <a name="//apple_ref/swift/Struct/HBParameters" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird12HBParametersV">HBParameters</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Store for parameters extracted from Request URI</p>
+
+                        <a href="Structs/HBParameters.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HBParameters</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird13HBRouterGroupV"></a>
+                    <a name="//apple_ref/swift/Struct/HBRouterGroup" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird13HBRouterGroupV">HBRouterGroup</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Used to group together routes under a single path. Additional middleware can be added to the endpoint and each route can add a
+suffix to the endpoint path</p>
+
+<p>The code below creates an <code>HBRouterGroup</code>with path &ldquo;todos&rdquo; and adds GET and PUT routes on &ldquo;todos&rdquo; and adds GET, PUT and
+DELETE routes on &ldquo;todos/:id&rdquo; where id is the identifier for the todo</p>
+<pre class="highlight swift"><code><span class="n">app</span><span class="o">.</span><span class="n">router</span>
+<span class="o">.</span><span class="nf">group</span><span class="p">(</span><span class="s">"todos"</span><span class="p">)</span>
+<span class="o">.</span><span class="nf">get</span><span class="p">(</span><span class="nv">use</span><span class="p">:</span> <span class="n">todoController</span><span class="o">.</span><span class="n">list</span><span class="p">)</span>
+<span class="o">.</span><span class="nf">put</span><span class="p">(</span><span class="nv">use</span><span class="p">:</span> <span class="n">todoController</span><span class="o">.</span><span class="n">create</span><span class="p">)</span>
+<span class="o">.</span><span class="nf">get</span><span class="p">(</span><span class="s">":id"</span><span class="p">,</span> <span class="nv">use</span><span class="p">:</span> <span class="n">todoController</span><span class="o">.</span><span class="k">get</span><span class="p">)</span>
+<span class="o">.</span><span class="nf">put</span><span class="p">(</span><span class="s">":id"</span><span class="p">,</span> <span class="nv">use</span><span class="p">:</span> <span class="n">todoController</span><span class="o">.</span><span class="n">update</span><span class="p">)</span>
+<span class="o">.</span><span class="nf">delete</span><span class="p">(</span><span class="s">":id"</span><span class="p">,</span> <span class="nv">use</span><span class="p">:</span> <span class="n">todoController</span><span class="o">.</span><span class="n">delete</span><span class="p">)</span>
+</code></pre>
+
+                        <a href="Structs/HBRouterGroup.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HBRouterGroup</span> <span class="p">:</span> <span class="kt"><a href="Protocols/HBRouterMethods.html">HBRouterMethods</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird5HBURLV"></a>
+                    <a name="//apple_ref/swift/Struct/HBURL" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird5HBURLV">HBURL</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Swift interface to CURLParser</p>
+
+                        <a href="Structs/HBURL.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HBURL</span> <span class="p">:</span> <span class="kt">CustomStringConvertible</span><span class="p">,</span> <span class="kt">ExpressibleByStringLiteral</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-02-08)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

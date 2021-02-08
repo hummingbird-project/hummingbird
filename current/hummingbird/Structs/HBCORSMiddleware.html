@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>HBCORSMiddleware Structure Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Struct/HBCORSMiddleware" class="dashAnchor"></a>
+    <a title="HBCORSMiddleware Structure Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">Hummingbird 0.2.0 Docs</a> (87% documented)</p>
+        <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="../img/gh.png"/>View on GitHub</a></p>
+        <p class="header-right">
+          <form role="search" action="../search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">Hummingbird Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        HBCORSMiddleware Structure Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/HBApplication.html">HBApplication</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/HBApplication/Configuration.html">– Configuration</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/HBApplication/EventLoopStorage.html">– EventLoopStorage</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/HBApplication/EventLoopStorageMap.html">– EventLoopStorageMap</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/HBApplication/HTTPResponder.html">– HTTPResponder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/HBMiddlewareGroup.html">HBMiddlewareGroup</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/HBRequest.html">HBRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/HBRequest/ResponsePatch.html">– ResponsePatch</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/HBResponse.html">HBResponse</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/Array.html">Array</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/ByteBuffer.html">ByteBuffer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Dictionary.html">Dictionary</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/EventLoopFuture.html">EventLoopFuture</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/HTTPResponseStatus.html">HTTPResponseStatus</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Optional.html">Optional</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/String.html">String</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols/HBExtensible.html">HBExtensible</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/HBMiddleware.html">HBMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/HBRequestDecoder.html">HBRequestDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/HBResponder.html">HBResponder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols.html#/s:11Hummingbird17HBResponseCodableP">HBResponseCodable</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/HBResponseEncodable.html">HBResponseEncodable</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/HBResponseEncoder.html">HBResponseEncoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/HBResponseFutureGenerator.html">HBResponseFutureGenerator</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/HBRouter.html">HBRouter</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/HBRouterMethods.html">HBRouterMethods</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/HBCORSMiddleware.html">HBCORSMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBCORSMiddleware/AllowOrigin.html">– AllowOrigin</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBEnvironment.html">HBEnvironment</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBExtensions.html">HBExtensions</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBLogRequestsMiddleware.html">HBLogRequestsMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBMetricsMiddleware.html">HBMetricsMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBParameters.html">HBParameters</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBRouterGroup.html">HBRouterGroup</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBURL.html">HBURL</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBURL/Scheme.html">– Scheme</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>HBCORSMiddleware</h1>
+              <div class="declaration">
+                <div class="language">
+                  
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HBCORSMiddleware</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/HBMiddleware.html">HBMiddleware</a></span></code></pre>
+
+                </div>
+              </div>
+            <p>Middleware implementing Cross-Origin Resource Sharing (CORS) headers.</p>
+
+<p>If request has &ldquo;origin&rdquo; header then generate CORS headers. If method is OPTIONS
+then return an empty body with all the standard CORS headers otherwise send
+request onto the next handler and when you receive the response add a
+&ldquo;access-control-allow-origin&rdquo; header</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird16HBCORSMiddlewareV11AllowOriginO"></a>
+                    <a name="//apple_ref/swift/Enum/AllowOrigin" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird16HBCORSMiddlewareV11AllowOriginO">AllowOrigin</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Defines what origins are allowed</p>
+
+                        <a href="../Structs/HBCORSMiddleware/AllowOrigin.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">AllowOrigin</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird16HBCORSMiddlewareV11allowOrigin0C7Headers0C7Methods0C11Credentials07exposedE06maxAgeA2C05AllowD0O_SaySSGSay8NIOHTTP110HTTPMethodOGSbALSg3NIO10TimeAmountVSgtcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(allowOrigin:allowHeaders:allowMethods:allowCredentials:exposedHeaders:maxAge:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird16HBCORSMiddlewareV11allowOrigin0C7Headers0C7Methods0C11Credentials07exposedE06maxAgeA2C05AllowD0O_SaySSGSay8NIOHTTP110HTTPMethodOGSbALSg3NIO10TimeAmountVSgtcfc">init(allowOrigin:<wbr>allowHeaders:<wbr>allowMethods:<wbr>allowCredentials:<wbr>exposedHeaders:<wbr>maxAge:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Initialize CORS middleware</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span>
+    <span class="nv">allowOrigin</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBCORSMiddleware/AllowOrigin.html">AllowOrigin</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">originBased</span><span class="p">,</span>
+    <span class="nv">allowHeaders</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">"accept"</span><span class="p">,</span> <span class="s">"authorization"</span><span class="p">,</span> <span class="s">"content-type"</span><span class="p">,</span> <span class="s">"origin"</span><span class="p">],</span>
+    <span class="nv">allowMethods</span><span class="p">:</span> <span class="p">[</span><span class="kt">HTTPMethod</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="o">.</span><span class="kt">GET</span><span class="p">,</span> <span class="o">.</span><span class="kt">POST</span><span class="p">,</span> <span class="o">.</span><span class="kt">HEAD</span><span class="p">,</span> <span class="o">.</span><span class="kt">OPTIONS</span><span class="p">],</span>
+    <span class="nv">allowCredentials</span><span class="p">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="kc">false</span><span class="p">,</span>
+    <span class="nv">exposedHeaders</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">]?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">maxAge</span><span class="p">:</span> <span class="kt">TimeAmount</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
+<span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>allowOrigin</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>allow origin enum</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>allowHeaders</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>array of headers that are allowed</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>allowMethods</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>array of methods that are allowed</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>allowCredentials</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>are credentials alloed</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>exposedHeaders</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>array of headers that can be exposed back to the browser</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>maxAge</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>how long the results of a pre-flight request can be cached</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird16HBCORSMiddlewareV5apply2to4next3NIO15EventLoopFutureCyAA10HBResponseCGAA9HBRequestC_AA11HBResponder_ptF"></a>
+                    <a name="//apple_ref/swift/Method/apply(to:next:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird16HBCORSMiddlewareV5apply2to4next3NIO15EventLoopFutureCyAA10HBResponseCGAA9HBRequestC_AA11HBResponder_ptF">apply(to:<wbr>next:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>apply CORS middleware</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">apply</span><span class="p">(</span><span class="n">to</span> <span class="nv">request</span><span class="p">:</span> <span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">,</span> <span class="nv">next</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponder.html">HBResponder</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt"><a href="../Classes/HBResponse.html">HBResponse</a></span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-02-08)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>
