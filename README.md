@@ -65,3 +65,7 @@ import HummingbirdHTTP2
 server.addHTTP2Upgrade(tlsConfiguration: myTLSConfiguration)
 ```
 As the HTTP2 upgrade requires a TLS connection this is added automatically when enabling HTTP2 upgrade. So don't call both function as this will setup two TLS handlers.
+
+## Documentation
+
+Reference documentation for both HummingbirdCore and Hummingbird can be found [here](https://hummingbird-project.github.io/hummingbird-core/current/hummingbird-core/index.html)
