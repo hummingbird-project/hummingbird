@@ -76,6 +76,11 @@ public final class HBRequest: HBExtensible {
         return self.eventLoop.makeFailedFuture(error)
     }
 
+    /// Return failed `EventLoopFuture` with http response status code and message
+    public func failure<T>(_ status: HTTPResponseStatus, message: String? = nil) -> EventLoopFuture<T> {
+        return self.eventLoop.makeFailedFuture(HBHTTPError(status, message: message))
+    }
+
     /// Return succeeded `EventLoopFuture`
     public func success<T>(_ value: T) -> EventLoopFuture<T> {
         return self.eventLoop.makeSucceededFuture(value)
