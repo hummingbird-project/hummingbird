@@ -49,9 +49,9 @@ public struct HBCookie: CustomStringConvertible {
         maxAge: Int? = nil,
         domain: String? = nil,
         path: String? = nil,
-        secure: Bool = false,
-        httpOnly: Bool = false,
-        sameSite: SameSite? = nil
+        secure: Bool = true,
+        httpOnly: Bool = true,
+        sameSite: SameSite? = .secure
     ) {
         self.name = name
         self.value = value
