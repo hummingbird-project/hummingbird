@@ -49,9 +49,8 @@ public struct HBCookie: CustomStringConvertible {
         maxAge: Int? = nil,
         domain: String? = nil,
         path: String? = nil,
-        secure: Bool = true,
-        httpOnly: Bool = true,
-        sameSite: SameSite? = .secure
+        secure: Bool = false,
+        httpOnly: Bool = true
     ) {
         self.name = name
         self.value = value
@@ -62,7 +61,41 @@ public struct HBCookie: CustomStringConvertible {
         properties[.path] = path
         if secure { properties[.secure] = "" }
         if httpOnly { properties[.httpOnly] = "" }
-        properties[.sameSite] = sameSite?.rawValue
+        self.properties = properties
+    }
+
+    /// Create `HBCookie`
+    /// - Parameters:
+    ///   - name: Name of cookie
+    ///   - value: Value of cookie
+    ///   - expires: indicates the maximum lifetime of the cookie
+    ///   - maxAge: indicates the maximum lifetime of the cookie in seconds. Max age has precedence over expires (not all user agents support max-age)
+    ///   - domain: specifies those hosts to which the cookie will be sent
+    ///   - path: The scope of each cookie is limited to a set of paths, controlled by the Path attribute
+    ///   - secure: The Secure attribute limits the scope of the cookie to "secure" channels
+    ///   - httpOnly: The HttpOnly attribute limits the scope of the cookie to HTTP requests
+    ///   - sameSite: The SameSite attribute lets servers specify whether/when cookies are sent with cross-origin requests
+    public init(
+        name: String,
+        value: String,
+        expires: Date? = nil,
+        maxAge: Int? = nil,
+        domain: String? = nil,
+        path: String? = nil,
+        secure: Bool = false,
+        httpOnly: Bool = true,
+        sameSite: SameSite
+    ) {
+        self.name = name
+        self.value = value
+        var properties = Properties()
+        properties[.expires] = expires.map { DateCache.rfc1123Formatter.string(from: $0) }
+        properties[.maxAge] = maxAge?.description
+        properties[.domain] = domain
+        properties[.path] = path
+        if secure { properties[.secure] = "" }
+        if httpOnly { properties[.httpOnly] = "" }
+        properties[.sameSite] = sameSite.rawValue
         self.properties = properties
     }
 
