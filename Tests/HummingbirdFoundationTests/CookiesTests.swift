@@ -60,7 +60,7 @@ class CookieTests: XCTestCase {
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/", method: .POST) { response in
-            XCTAssertEqual(response.headers["Set-Cookie"].first, "test=value")
+            XCTAssertEqual(response.headers["Set-Cookie"].first, "test=value; HttpOnly")
         }
     }
 
@@ -74,7 +74,7 @@ class CookieTests: XCTestCase {
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/", method: .POST) { response in
-            XCTAssertEqual(response.headers["Set-Cookie"].first, "test=value")
+            XCTAssertEqual(response.headers["Set-Cookie"].first, "test=value; HttpOnly")
         }
     }
 
