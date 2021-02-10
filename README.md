@@ -68,4 +68,4 @@ As the HTTP2 upgrade requires a TLS connection this is added automatically when 
 
 ## Documentation
 
-Reference documentation for both HummingbirdCore and Hummingbird can be found [here](https://hummingbird-project.github.io/hummingbird-core/current/hummingbird-core/index.html)
+Reference documentation for both HummingbirdCore and Hummingbird can be found [here](https://hummingbird-project.github.io/hummingbird/current/hummingbird-core/index.html)
