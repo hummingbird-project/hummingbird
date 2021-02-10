@@ -39,10 +39,26 @@ extension HBApplication {
             )
 
             // respond to request
-            return self.responder.respond(to: request).map { response in
-                let responseHead = HTTPResponseHead(version: request.version, status: response.status, headers: response.headers)
-                return HBHTTPResponse(head: responseHead, body: response.body)
-            }
+            return self.responder.respond(to: request)
+                .map { response in
+                    let responseHead = HTTPResponseHead(version: request.version, status: response.status, headers: response.headers)
+                    return HBHTTPResponse(head: responseHead, body: response.body)
+                }
+                .flatMapError { error in
+                    // catch error to print to the log
+                    request.logger.error("\(error)")
+                    // then convert to valid response so this isn't treated as an error further down
+                    let response: HBHTTPResponse
+                    if let error = error as? HBHTTPErrorResponse {
+                        response = error.response(version: request.version, allocator: request.allocator)
+                    } else {
+                        response = HBHTTPResponse(
+                            head: .init(version: request.version, status: .internalServerError),
+                            body: .empty
+                        )
+                    }
+                    return request.success(response)
+                }
         }
     }
 }

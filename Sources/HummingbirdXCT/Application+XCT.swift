@@ -3,7 +3,6 @@ import NIO
 import NIOHTTP1
 import XCTest
 
-
 /// Extends `HBApplication` to support testing of applications
 ///
 /// You use `XCTStart`, `XCTStop` and `XCTExecute` to run test applications. You can either create an
