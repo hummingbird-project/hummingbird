@@ -23,7 +23,7 @@ public struct HBHTTPError: Error {
     /// - Parameters:
     ///   - status: HTTP status
     ///   - message: Associated message
-    public init(_ status: HTTPResponseStatus, message: String?) {
+    public init(_ status: HTTPResponseStatus, message: String) {
         self.status = status
         self.headers = ["content-type": "text/plain; charset=utf-8"]
         self.body = message
