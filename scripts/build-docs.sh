@@ -2,55 +2,47 @@
 
 set -eux
 
-build_hummingbird() {
-    VERSION=$1
+CWD=$(pwd)
+TEMP_DIR=$(mktemp -d)
+
+get_latest_version() {
+    RELEASE_REVISION=$(git rev-list --tags --max-count=1)
+    echo $(git describe --tags "$RELEASE_REVISION")
+}
+
+build_docs() {
+    MODULE_NAME=$1
+    GITHUB_FOLDER=$2
+    DOCS_FOLDER=$3
+    VERSION=$(get_latest_version)
     jazzy \
         --clean \
         --author "Adam Fowler" \
         --author_url https://github.com/adam-fowler \
-        --github_url https://github.com/hummingbird-project/hummingbird \
+        --github_url https://github.com/hummingbird-project/"$GITHUB_FOLDER" \
         --module-version "$VERSION" \
-        --module Hummingbird \
-        --readme documentation/readme.md \
-        --output docs/hummingbird
+        --module "$MODULE_NAME" \
+        --readme "$CWD"/documentation/readme.md \
+        --output "$CWD"/docs/"$DOCS_FOLDER"
 }
 
-build_hummingbird_foundation() {
-    VERSION=$1
-    jazzy \
-        --clean \
-        --author "Adam Fowler" \
-        --author_url https://github.com/adam-fowler \
-        --github_url https://github.com/hummingbird-project/hummingbird \
-        --module-version "$VERSION" \
-        --module HummingbirdFoundation \
-        --readme documentation/readme.md \
-        --output docs/hummingbird-foundation
+build_docs_from_other_repo() {
+    GITHUB_FOLDER=$2
+
+    pushd "$TEMP_DIR"
+    git clone https://github.com/hummingbird-project/"$GITHUB_FOLDER"
+    cd "$GITHUB_FOLDER"
+    build_docs $1 $2 $3
+
+    popd
 }
 
-build_hummingbird_xct() {
-    VERSION=$1
-    jazzy \
-        --clean \
-        --author "Adam Fowler" \
-        --author_url https://github.com/adam-fowler \
-        --github_url https://github.com/hummingbird-project/hummingbird \
-        --module-version "$VERSION" \
-        --module HummingbirdXCT \
-        --readme documentation/readme.md \
-        --output docs/hummingbird-xct
-}
+build_docs Hummingbird hummingbird hummingbird
+build_docs HummingbirdFoundation hummingbird hummingbird-foundation
+build_docs HummingbirdXCT hummingbird hummingbird-xct
 
-VERSION=""
+build_docs_from_other_repo HummingbirdCore hummingbird-core hummingbird-core
+build_docs_from_other_repo HummingbirdAuth hummingbird-auth hummingbird-auth
 
-while getopts 'v:' option
-do
-    case $option in
-        v) VERSION=$OPTARG ;;
-        *) usage ;;
-    esac
-done
 
-build_hummingbird "$VERSION"
-build_hummingbird_foundation "$VERSION"
-build_hummingbird_xct "$VERSION"
+rm -rf "$TEMP_DIR"
