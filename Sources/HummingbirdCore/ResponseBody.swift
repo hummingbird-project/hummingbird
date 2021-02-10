@@ -1,6 +1,6 @@
 import NIO
 
-/// Response body. Either static 
+/// Response body. Either static
 public enum HBResponseBody {
     /// Body stored as a single ByteBuffer
     case byteBuffer(ByteBuffer)

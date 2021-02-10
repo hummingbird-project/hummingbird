@@ -75,7 +75,7 @@ final class HBHTTPServerHandler: ChannelInboundHandler {
     func getErrorResponse(context: ChannelHandlerContext, error: Error, version: HTTPVersion) -> HBHTTPResponse {
         self.responder.logger?.error("\(error)")
         switch error {
-        case let httpError as HBHTTPError:
+        case let httpError as HBHTTPResponseError:
             return httpError.response(version: version, allocator: context.channel.allocator)
         default:
             return HBHTTPResponse(
