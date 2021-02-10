@@ -30,7 +30,7 @@
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Cookies/Cookie.swift",
-      "line": 128,
+      "line": 161,
       "symbol": "HBCookie.Properties.subscript(_:)",
       "symbol_kind": "source.lang.swift.decl.function.subscript",
       "warning": "undocumented"

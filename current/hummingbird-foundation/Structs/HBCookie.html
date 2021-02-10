@@ -17,7 +17,7 @@
     <a title="HBCookie Structure Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">HummingbirdFoundation  Docs</a> (88% documented)</p>
+        <p><a href="../index.html">HummingbirdFoundation 0.3.0 Docs</a> (89% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../search.json">
@@ -429,9 +429,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:21HummingbirdFoundation8HBCookieV4name5value7expires6maxAge6domain4path6secure8httpOnly8sameSiteACSS_SS0B04DateVSgSiSgSSSgARS2bAC04SameO0OSgtcfc"></a>
-                    <a name="//apple_ref/swift/Method/init(name:value:expires:maxAge:domain:path:secure:httpOnly:sameSite:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:21HummingbirdFoundation8HBCookieV4name5value7expires6maxAge6domain4path6secure8httpOnly8sameSiteACSS_SS0B04DateVSgSiSgSSSgARS2bAC04SameO0OSgtcfc">init(name:<wbr>value:<wbr>expires:<wbr>maxAge:<wbr>domain:<wbr>path:<wbr>secure:<wbr>httpOnly:<wbr>sameSite:<wbr>)</a>
+                    <a name="/s:21HummingbirdFoundation8HBCookieV4name5value7expires6maxAge6domain4path6secure8httpOnlyACSS_SS0B04DateVSgSiSgSSSgAQS2btcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(name:value:expires:maxAge:domain:path:secure:httpOnly:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:21HummingbirdFoundation8HBCookieV4name5value7expires6maxAge6domain4path6secure8httpOnlyACSS_SS0B04DateVSgSiSgSSSgAQS2btcfc">init(name:<wbr>value:<wbr>expires:<wbr>maxAge:<wbr>domain:<wbr>path:<wbr>secure:<wbr>httpOnly:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -454,8 +454,159 @@
     <span class="nv">domain</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">secure</span><span class="p">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="kc">false</span><span class="p">,</span>
-    <span class="nv">httpOnly</span><span class="p">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="kc">false</span><span class="p">,</span>
-    <span class="nv">sameSite</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBCookie/SameSite.html">SameSite</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
+    <span class="nv">httpOnly</span><span class="p">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="kc">true</span>
+<span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>name</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Name of cookie</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Value of cookie</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>expires</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>indicates the maximum lifetime of the cookie</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>maxAge</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>indicates the maximum lifetime of the cookie in seconds. Max age has precedence over expires (not all user agents support max-age)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>domain</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>specifies those hosts to which the cookie will be sent</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>path</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The scope of each cookie is limited to a set of paths, controlled by the Path attribute</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>secure</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The Secure attribute limits the scope of the cookie to &ldquo;secure&rdquo; channels</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>httpOnly</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The HttpOnly attribute limits the scope of the cookie to HTTP requests</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>sameSite</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The SameSite attribute lets servers specify whether/when cookies are sent with cross-origin requests</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:21HummingbirdFoundation8HBCookieV4name5value7expires6maxAge6domain4path6secure8httpOnly8sameSiteACSS_SS0B04DateVSgSiSgSSSgARS2bAC04SameO0Otcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(name:value:expires:maxAge:domain:path:secure:httpOnly:sameSite:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:21HummingbirdFoundation8HBCookieV4name5value7expires6maxAge6domain4path6secure8httpOnly8sameSiteACSS_SS0B04DateVSgSiSgSSSgARS2bAC04SameO0Otcfc">init(name:<wbr>value:<wbr>expires:<wbr>maxAge:<wbr>domain:<wbr>path:<wbr>secure:<wbr>httpOnly:<wbr>sameSite:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Create <code>HBCookie</code></p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span>
+    <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">value</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">expires</span><span class="p">:</span> <span class="kt">Date</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">maxAge</span><span class="p">:</span> <span class="kt">Int</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">domain</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">secure</span><span class="p">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="kc">false</span><span class="p">,</span>
+    <span class="nv">httpOnly</span><span class="p">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="nv">sameSite</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBCookie/SameSite.html">SameSite</a></span>
 <span class="p">)</span></code></pre>
 
                         </div>
@@ -638,7 +789,7 @@
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-02-08)</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-02-10)</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>

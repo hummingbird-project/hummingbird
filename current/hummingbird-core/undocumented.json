@@ -1,0 +1,117 @@
+{
+  "warnings": [
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.Dj0i4WaW/hummingbird-core/Sources/HummingbirdCore/ChannelInitializer.swift",
+      "line": 5,
+      "symbol": "HBChannelInitializer.initialize(_:channel:responder:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.Dj0i4WaW/hummingbird-core/Sources/HummingbirdCore/ChannelInitializer.swift",
+      "line": 10,
+      "symbol": "HTTP1ChannelInitializer.init()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.Dj0i4WaW/hummingbird-core/Sources/HummingbirdCore/ChannelInitializer.swift",
+      "line": 12,
+      "symbol": "HTTP1ChannelInitializer.initialize(_:channel:responder:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.Dj0i4WaW/hummingbird-core/Sources/HummingbirdCore/HTTPHandlers.swift",
+      "line": 6,
+      "symbol": "HBHTTPRequest.head",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.Dj0i4WaW/hummingbird-core/Sources/HummingbirdCore/HTTPHandlers.swift",
+      "line": 7,
+      "symbol": "HBHTTPRequest.body",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.Dj0i4WaW/hummingbird-core/Sources/HummingbirdCore/HTTPHandlers.swift",
+      "line": 12,
+      "symbol": "HBHTTPResponse.head",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.Dj0i4WaW/hummingbird-core/Sources/HummingbirdCore/HTTPHandlers.swift",
+      "line": 13,
+      "symbol": "HBHTTPResponse.body",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.Dj0i4WaW/hummingbird-core/Sources/HummingbirdCore/HTTPHandlers.swift",
+      "line": 15,
+      "symbol": "HBHTTPResponse.init(head:body:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.Dj0i4WaW/hummingbird-core/Sources/HummingbirdCore/RequestBody.swift",
+      "line": 63,
+      "symbol": "HBRequestBodyStreamer.FeedInput.byteBuffer(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.Dj0i4WaW/hummingbird-core/Sources/HummingbirdCore/RequestBody.swift",
+      "line": 64,
+      "symbol": "HBRequestBodyStreamer.FeedInput.error(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.Dj0i4WaW/hummingbird-core/Sources/HummingbirdCore/RequestBody.swift",
+      "line": 65,
+      "symbol": "HBRequestBodyStreamer.FeedInput.end",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.Dj0i4WaW/hummingbird-core/Sources/HummingbirdCore/RequestBody.swift",
+      "line": 70,
+      "symbol": "HBRequestBodyStreamer.ConsumeOutput.byteBuffers(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.Dj0i4WaW/hummingbird-core/Sources/HummingbirdCore/RequestBody.swift",
+      "line": 71,
+      "symbol": "HBRequestBodyStreamer.ConsumeOutput.end",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.Dj0i4WaW/hummingbird-core/Sources/HummingbirdCore/ResponseBody.swift",
+      "line": 24,
+      "symbol": "HBResponseBody.StreamResult.byteBuffer(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.Dj0i4WaW/hummingbird-core/Sources/HummingbirdCore/ResponseBody.swift",
+      "line": 25,
+      "symbol": "HBResponseBody.StreamResult.end",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.Dj0i4WaW/hummingbird-core/Sources/HummingbirdCore/ResponseBody.swift",
+      "line": 31,
+      "symbol": "HBResponseBodyStreamer.read(on:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    }
+  ],
+  "source_directory": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.Dj0i4WaW/hummingbird-core"
+}
