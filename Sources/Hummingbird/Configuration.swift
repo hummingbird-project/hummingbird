@@ -55,7 +55,7 @@ extension HBApplication {
                 address: self.address,
                 serverName: self.serverName,
                 maxUploadSize: self.maxUploadSize,
-                //maxStreamingBufferSize: self.maxStreamingBufferSize,
+                // maxStreamingBufferSize: self.maxStreamingBufferSize,
                 reuseAddress: self.reuseAddress,
                 tcpNoDelay: self.tcpNoDelay,
                 withPipeliningAssistance: self.enableHttpPipelining

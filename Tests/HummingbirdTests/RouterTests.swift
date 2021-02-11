@@ -15,7 +15,7 @@ final class RouterTests: XCTestCase {
     func testEndpoint() {
         let app = HBApplication(testing: .embedded)
         app.router
-            .endpoint("/endpoint")
+            .group("/endpoint")
             .get { _ in
                 return "GET"
             }
@@ -62,15 +62,15 @@ final class RouterTests: XCTestCase {
     func testEndpointMiddleware() {
         let app = HBApplication(testing: .embedded)
         app.router
-            .endpoint("/group")
+            .group("/group")
             .add(middleware: TestMiddleware())
-            .get { _ in
+            .head { _ in
                 return "hello"
             }
         app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/group", method: .GET) { response in
+        app.XCTExecute(uri: "/group", method: .HEAD) { response in
             XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
         }
     }
@@ -81,14 +81,29 @@ final class RouterTests: XCTestCase {
             .group("/test")
             .add(middleware: TestMiddleware())
             .group("/group")
-            .get { _ in
-                return "hello"
+            .get { request in
+                return request.success("hello")
             }
         app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/test/group", method: .GET) { response in
             XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
+        }
+    }
+
+    func testParameters() {
+        let app = HBApplication(testing: .embedded)
+        app.router
+            .delete("/user/:id") { request -> String? in
+                return request.parameters.get("id", as: String.self)
+            }
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/user/1234", method: .DELETE) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "1234")
         }
     }
 }

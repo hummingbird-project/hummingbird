@@ -110,4 +110,30 @@ final class MiddlewareTests: XCTestCase {
             XCTAssertEqual(exposedHeaders, "content-length")
         }
     }
+
+    func testRouteLoggingMiddleware() {
+        let app = HBApplication(testing: .embedded)
+        app.middleware.add(HBLogRequestsMiddleware(.debug))
+        app.router.put("/hello") { request -> EventLoopFuture<String> in
+            return request.failure(.badRequest)
+        }
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/hello", method: .PUT) { _ in
+        }
+    }
+
+    func testMetricsMiddleware() {
+        let app = HBApplication(testing: .embedded)
+        app.middleware.add(HBMetricsMiddleware())
+        app.router.delete("/hello") { request -> EventLoopFuture<String> in
+            return request.failure(.badRequest)
+        }
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/hello", method: .DELETE) { _ in
+        }
+    }
 }

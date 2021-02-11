@@ -29,8 +29,12 @@ public struct HBEnvironment: Decodable, ExpressibleByDictionaryLiteral {
 
     /// Initialize from Decodable
     public init(from decoder: Decoder) throws {
+        self.values = Self.getEnvironment()
         let container = try decoder.singleValueContainer()
-        self.values = try container.decode([String: String].self)
+        let decodedValues = try container.decode([String: String].self)
+        for (key, value) in decodedValues {
+            self.values[key.lowercased()] = value
+        }
     }
 
     /// Get environment variable with name

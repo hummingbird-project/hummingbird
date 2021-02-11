@@ -96,9 +96,4 @@ extension HBRouter {
     public func group(_ path: String = "") -> HBRouterGroup {
         return .init(path: path, router: self)
     }
-
-    /// return new `RouterEndpoint`
-    public func endpoint(_ path: String) -> HBRouterGroup {
-        return .init(path: path, router: self)
-    }
 }

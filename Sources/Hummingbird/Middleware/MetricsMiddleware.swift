@@ -6,6 +6,8 @@ import Metrics
 /// Records the number of requests, the request duration and how many errors were thrown. Each metric has additional
 /// dimensions URI and method.
 public struct HBMetricsMiddleware: HBMiddleware {
+    public init() {}
+
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
         let dimensions: [(String, String)] = [
             ("hb_uri", request.uri.description),
