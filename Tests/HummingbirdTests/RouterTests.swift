@@ -91,4 +91,19 @@ final class RouterTests: XCTestCase {
             XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
         }
     }
+
+    func testParameters() {
+        let app = HBApplication(testing: .embedded)
+        app.router
+            .delete("/user/:id") { request -> String? in
+                return request.parameters.get("id", as: String.self)
+            }
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/user/1234", method: .DELETE) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "1234")
+        }
+    }
 }
