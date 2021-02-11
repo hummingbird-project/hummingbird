@@ -36,7 +36,8 @@ final class HBHTTPEncodeHandler: ChannelOutboundHandler {
             .whenComplete { result in
                 switch result {
                 case .failure:
-                    // not sure what do write when result is an error, just closing channel for the moment
+                    // not sure what do write when result is an error, sending .end and closing channel for the moment
+                    context.writeAndFlush(self.wrapOutboundOut(.end(nil)), promise: promise)
                     context.close(promise: nil)
                 case .success:
                     context.writeAndFlush(self.wrapOutboundOut(.end(nil)), promise: promise)
