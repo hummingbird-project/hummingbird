@@ -9,12 +9,12 @@ class HummingBirdCoreTests: XCTestCase {
     static var eventLoopGroup: EventLoopGroup!
     static var httpClient: HTTPClient!
 
-    class override func setUp() {
+    enum override func setUp() {
         eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
     }
 
-    class override func tearDown() {
+    enum override func tearDown() {
         XCTAssertNoThrow(try httpClient.syncShutdown())
         XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
     }
@@ -50,7 +50,6 @@ class HummingBirdCoreTests: XCTestCase {
         XCTAssertNoThrow(try future.wait())
     }
 
-
     func testConsumeBody() {
         struct Responder: HBHTTPResponder {
             func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
@@ -65,7 +64,7 @@ class HummingBirdCoreTests: XCTestCase {
                 }
             }
         }
-        let server = HBHTTPServer(group: Self.eventLoopGroup, configuration: .init(address: .hostname(port: 8080), maxStreamingBufferSize: 256*1024))
+        let server = HBHTTPServer(group: Self.eventLoopGroup, configuration: .init(address: .hostname(port: 8080), maxStreamingBufferSize: 256 * 1024))
         XCTAssertNoThrow(try server.start(responder: Responder()).wait())
         defer { XCTAssertNoThrow(try server.stop().wait()) }
 
@@ -103,7 +102,7 @@ class HummingBirdCoreTests: XCTestCase {
                 return context.eventLoop.makeSucceededFuture(response)
             }
         }
-        let server = HBHTTPServer(group: Self.eventLoopGroup, configuration: .init(address: .hostname(port: 8080), maxStreamingBufferSize: 256*1024))
+        let server = HBHTTPServer(group: Self.eventLoopGroup, configuration: .init(address: .hostname(port: 8080), maxStreamingBufferSize: 256 * 1024))
         XCTAssertNoThrow(try server.start(responder: Responder()).wait())
         defer { XCTAssertNoThrow(try server.stop().wait()) }
 
@@ -142,7 +141,7 @@ class HummingBirdCoreTests: XCTestCase {
                 return context.eventLoop.makeSucceededFuture(response)
             }
         }
-        let server = HBHTTPServer(group: Self.eventLoopGroup, configuration: .init(address: .hostname(port: 8080), maxStreamingBufferSize: 256*1024))
+        let server = HBHTTPServer(group: Self.eventLoopGroup, configuration: .init(address: .hostname(port: 8080), maxStreamingBufferSize: 256 * 1024))
         XCTAssertNoThrow(try server.start(responder: Responder()).wait())
         defer { XCTAssertNoThrow(try server.stop().wait()) }
 
@@ -257,11 +256,11 @@ class HummingBirdCoreTests: XCTestCase {
                 }
             }
         }
-        let server = HBHTTPServer(group: Self.eventLoopGroup, configuration: .init(address: .hostname(port: 8080), maxUploadSize: 64*1024))
+        let server = HBHTTPServer(group: Self.eventLoopGroup, configuration: .init(address: .hostname(port: 8080), maxUploadSize: 64 * 1024))
         XCTAssertNoThrow(try server.start(responder: Responder()).wait())
         defer { XCTAssertNoThrow(try server.stop().wait()) }
 
-        let buffer = self.randomBuffer(size: 320000)
+        let buffer = self.randomBuffer(size: 320_000)
         let request = try! HTTPClient.Request(
             url: "http://localhost:\(server.configuration.address.port!)/",
             headers: ["connection": "close"],
