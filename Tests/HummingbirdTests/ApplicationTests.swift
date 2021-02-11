@@ -128,14 +128,14 @@ final class ApplicationTests: XCTestCase {
 
     func testQueryRoute() {
         let app = HBApplication(testing: .embedded)
-        app.router.get("/query") { request -> EventLoopFuture<ByteBuffer> in
+        app.router.post("/query") { request -> EventLoopFuture<ByteBuffer> in
             let buffer = request.allocator.buffer(string: request.uri.queryParameters["test"].map { String($0) } ?? "")
             return request.eventLoop.makeSucceededFuture(buffer)
         }
         app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/query?test=test%20data%C3%A9", method: .GET) { response in
+        app.XCTExecute(uri: "/query?test=test%20data%C3%A9", method: .POST) { response in
             var body = try XCTUnwrap(response.body)
             let string = body.readString(length: body.readableBytes)
             XCTAssertEqual(response.status, .ok)
@@ -157,10 +157,24 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    func testEventLoopFutureArray() {
+        let app = HBApplication(testing: .embedded)
+        app.router.patch("array") { request -> EventLoopFuture<[String]> in
+            return request.success(["yes", "no"])
+        }
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/array", method: .PATCH) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "[\"yes\", \"no\"]")
+        }
+    }
+
     func testResponseBody() {
         let app = HBApplication(testing: .embedded)
         app.router
-            .endpoint("/echo-body")
+            .group("/echo-body")
             .post { request -> HBResponse in
                 let body: HBResponseBody = request.body.buffer.map { .byteBuffer($0) } ?? .empty
                 return .init(status: .ok, headers: [:], body: body)
@@ -177,7 +191,7 @@ final class ApplicationTests: XCTestCase {
     func testOptional() {
         let app = HBApplication(testing: .embedded)
         app.router
-            .endpoint("/echo-body")
+            .group("/echo-body")
             .post { request -> ByteBuffer? in
                 return request.body.buffer
             }
@@ -202,13 +216,13 @@ final class ApplicationTests: XCTestCase {
         let app = HBApplication(testing: .embedded)
         app.router
             .group("/name")
-            .post { request -> Name? in
+            .patch { request -> Name? in
                 return Name(first: "john", last: "smith")
             }
         app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/name", method: .POST) { response in
+        app.XCTExecute(uri: "/name", method: .PATCH) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), #"Name(first: "john", last: "smith")"#)
         }
@@ -216,7 +230,7 @@ final class ApplicationTests: XCTestCase {
 
     func testEditResponse() throws {
         let app = HBApplication(testing: .embedded)
-        app.router.get("/hello") { request -> String in
+        app.router.delete("/hello") { request -> String in
             request.response.headers.add(name: "test", value: "value")
             request.response.status = .imATeapot
             return "Hello"
@@ -224,7 +238,7 @@ final class ApplicationTests: XCTestCase {
         app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/hello", method: .GET) { response in
+        app.XCTExecute(uri: "/hello", method: .DELETE) { response in
             var body = try XCTUnwrap(response.body)
             let string = body.readString(length: body.readableBytes)
             XCTAssertEqual(response.status, .imATeapot)

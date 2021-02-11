@@ -9,32 +9,32 @@ public protocol HBRouterMethods {
 }
 
 extension HBRouterMethods {
-    /// GET path for closure returning type conforming to ResponseFutureEncodable
+    /// GET path for closure returning type conforming to HBResponseGenerator
     @discardableResult public func get<R: HBResponseGenerator>(_ path: String = "", use closure: @escaping (HBRequest) throws -> R) -> Self {
         return on(path, method: .GET, use: closure)
     }
 
-    /// PUT path for closure returning type conforming to ResponseFutureEncodable
+    /// PUT path for closure returning type conforming to HBResponseGenerator
     @discardableResult public func put<R: HBResponseGenerator>(_ path: String = "", use closure: @escaping (HBRequest) throws -> R) -> Self {
         return on(path, method: .PUT, use: closure)
     }
 
-    /// POST path for closure returning type conforming to ResponseFutureEncodable
+    /// POST path for closure returning type conforming to HBResponseGenerator
     @discardableResult public func post<R: HBResponseGenerator>(_ path: String = "", use closure: @escaping (HBRequest) throws -> R) -> Self {
         return on(path, method: .POST, use: closure)
     }
 
-    /// HEAD path for closure returning type conforming to ResponseFutureEncodable
+    /// HEAD path for closure returning type conforming to HBResponseGenerator
     @discardableResult public func head<R: HBResponseGenerator>(_ path: String = "", use closure: @escaping (HBRequest) throws -> R) -> Self {
         return on(path, method: .HEAD, use: closure)
     }
 
-    /// DELETE path for closure returning type conforming to ResponseFutureEncodable
+    /// DELETE path for closure returning type conforming to HBResponseGenerator
     @discardableResult public func delete<R: HBResponseGenerator>(_ path: String = "", use closure: @escaping (HBRequest) throws -> R) -> Self {
         return on(path, method: .DELETE, use: closure)
     }
 
-    /// PATCH path for closure returning type conforming to ResponseFutureEncodable
+    /// PATCH path for closure returning type conforming to HBResponseGenerator
     @discardableResult public func patch<R: HBResponseGenerator>(_ path: String = "", use closure: @escaping (HBRequest) throws -> R) -> Self {
         return on(path, method: .PATCH, use: closure)
     }

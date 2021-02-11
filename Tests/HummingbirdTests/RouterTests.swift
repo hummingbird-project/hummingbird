@@ -15,7 +15,7 @@ final class RouterTests: XCTestCase {
     func testEndpoint() {
         let app = HBApplication(testing: .embedded)
         app.router
-            .endpoint("/endpoint")
+            .group("/endpoint")
             .get { _ in
                 return "GET"
             }
@@ -62,15 +62,15 @@ final class RouterTests: XCTestCase {
     func testEndpointMiddleware() {
         let app = HBApplication(testing: .embedded)
         app.router
-            .endpoint("/group")
+            .group("/group")
             .add(middleware: TestMiddleware())
-            .get { _ in
+            .head { _ in
                 return "hello"
             }
         app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/group", method: .GET) { response in
+        app.XCTExecute(uri: "/group", method: .HEAD) { response in
             XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
         }
     }
