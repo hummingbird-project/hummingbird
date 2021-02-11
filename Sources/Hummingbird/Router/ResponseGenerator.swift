@@ -40,6 +40,18 @@ extension HTTPResponseStatus: HBResponseGenerator {
     }
 }
 
+/// Extend Optional to conform to HBResponseGenerator
+extension Optional: HBResponseGenerator where Wrapped: HBResponseGenerator {
+    public func response(from request: HBRequest) throws -> HBResponse {
+        switch self {
+        case .some(let wrapped):
+            return try wrapped.response(from: request)
+        case .none:
+            throw HBHTTPError(.notFound)
+        }
+    }
+}
+
 /// Object that can generate a `EventLoopFuture<Response>`
 ///
 /// This is used by `Router` to convert handler `EventLoopFuture` based return values into a
