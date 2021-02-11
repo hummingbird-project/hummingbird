@@ -9,14 +9,14 @@ class HummingBirdCoreTests: XCTestCase {
     static var eventLoopGroup: EventLoopGroup!
     static var httpClient: HTTPClient!
 
-    enum override func setUp() {
-        eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-        httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
+    override class func setUp() {
+        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        self.httpClient = HTTPClient(eventLoopGroupProvider: .shared(self.eventLoopGroup))
     }
 
-    enum override func tearDown() {
-        XCTAssertNoThrow(try httpClient.syncShutdown())
-        XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+    override class func tearDown() {
+        XCTAssertNoThrow(try self.httpClient.syncShutdown())
+        XCTAssertNoThrow(try self.eventLoopGroup.syncShutdownGracefully())
     }
 
     func randomBuffer(size: Int) -> ByteBuffer {
