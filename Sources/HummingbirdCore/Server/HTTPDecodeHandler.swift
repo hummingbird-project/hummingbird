@@ -16,12 +16,14 @@ final class HBHTTPDecodeHandler: ChannelDuplexHandler {
     }
 
     let maxUploadSize: Int
+    let maxStreamingBufferSize: Int
 
     /// handler state
     var state: State
 
     init(configuration: HBHTTPServer.Configuration) {
         self.maxUploadSize = configuration.maxUploadSize
+        self.maxStreamingBufferSize = configuration.maxStreamingBufferSize
         self.state = .idle
     }
 
@@ -65,6 +67,16 @@ final class HBHTTPDecodeHandler: ChannelDuplexHandler {
     }
 
     func read(context: ChannelHandlerContext) {
+        if case .body(let streamer) = self.state {
+            guard streamer.currentSize < self.maxStreamingBufferSize else {
+                streamer.onConsume = { streamer in
+                    if streamer.currentSize < self.maxStreamingBufferSize {
+                        context.read()
+                    }
+                }
+                return
+            }
+        }
         context.read()
     }
 
@@ -81,4 +93,3 @@ final class HBHTTPDecodeHandler: ChannelDuplexHandler {
         }
     }
 }
-

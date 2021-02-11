@@ -156,6 +156,8 @@ extension HBHTTPServer {
         public let serverName: String?
         /// Maximum upload size allowed
         public let maxUploadSize: Int
+        /// Maximum size of buffer for streaming request payloads
+        public let maxStreamingBufferSize: Int
         /// Allows socket to be bound to an address that is already in use.
         public let reuseAddress: Bool
         /// Disables the Nagle algorithm for send coalescing.
@@ -168,6 +170,7 @@ extension HBHTTPServer {
         ///   - address: Bind address for server
         ///   - serverName: Server name to return in "server" header
         ///   - maxUploadSize: Maximum upload size allowed
+        ///   - maxStreamingBufferSize: Maximum size of buffer for streaming request payloads
         ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
         ///   - tcpNoDelay: Disables the Nagle algorithm for send coalescing.
         ///   - withPipeliningAssistance: Pipelining ensures that only one http request is processed at one time
@@ -175,6 +178,7 @@ extension HBHTTPServer {
             address: HBBindAddress = .hostname(),
             serverName: String? = nil,
             maxUploadSize: Int = 2 * 1024 * 1024,
+            maxStreamingBufferSize: Int = 1 * 1024 * 1024,
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = false,
             withPipeliningAssistance: Bool = false
@@ -182,6 +186,7 @@ extension HBHTTPServer {
             self.address = address
             self.serverName = serverName
             self.maxUploadSize = maxUploadSize
+            self.maxStreamingBufferSize = maxStreamingBufferSize
             self.reuseAddress = reuseAddress
             self.tcpNoDelay = tcpNoDelay
             self.withPipeliningAssistance = withPipeliningAssistance

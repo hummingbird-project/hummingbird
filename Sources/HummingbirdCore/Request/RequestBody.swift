@@ -76,7 +76,7 @@ public class HBRequestBodyStreamer {
     /// EventLoop everything is running on
     let eventLoop: EventLoop
     /// called every time a ByteBuffer is consumed
-    var onConsume: ((HBRequestBodyStreamer)->())?
+    var onConsume: ((HBRequestBodyStreamer) -> Void)?
     /// maximum allowed size to upload
     let maxSize: Int
     /// current size in memory
@@ -104,7 +104,7 @@ public class HBRequestBodyStreamer {
 
         switch result {
         case .byteBuffer(let byteBuffer):
-            self.queue.append(eventLoop.makePromise())
+            self.queue.append(self.eventLoop.makePromise())
 
             self.sizeFed += byteBuffer.readableBytes
             self.currentSize += byteBuffer.readableBytes

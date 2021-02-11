@@ -6,4 +6,3 @@ public struct HBHTTPRequest {
     public var head: HTTPRequestHead
     public var body: HBRequestBody
 }
-
