@@ -71,9 +71,12 @@ public class HBRequestBodyStreamer {
         case end
     }
 
-    var entries: CircularBuffer<ByteBuffer>
+    /// Queue of promises for each ByteBuffer fed to the streamer. Last entry is always waiting for the next buffer or end tag
+    var queue: CircularBuffer<EventLoopPromise<ConsumeOutput>>
+    /// EventLoop everything is running on
     let eventLoop: EventLoop
-    var nextPromise: EventLoopPromise<Bool>
+    /// called every time a ByteBuffer is consumed
+    var onConsume: ((HBRequestBodyStreamer)->())?
     /// maximum allowed size to upload
     let maxSize: Int
     /// current size in memory
@@ -82,31 +85,39 @@ public class HBRequestBodyStreamer {
     var sizeFed: Int
 
     init(eventLoop: EventLoop, maxSize: Int) {
-        self.entries = .init(initialCapacity: 8)
+        self.queue = .init(initialCapacity: 8)
+        self.queue.append(eventLoop.makePromise())
         self.eventLoop = eventLoop
-        self.nextPromise = eventLoop.makePromise()
         self.sizeFed = 0
         self.currentSize = 0
         self.maxSize = maxSize
+        self.onConsume = nil
     }
 
     /// Feed a ByteBuffer to the request
     /// - Parameter result: Bytebuffer or end tag
     func feed(_ result: FeedInput) {
+        self.eventLoop.assertInEventLoop()
+        // queue most have at least one promise on it, or something has gone wrong
+        assert(self.queue.last != nil)
+        let promise = self.queue.last!
+
         switch result {
         case .byteBuffer(let byteBuffer):
+            self.queue.append(eventLoop.makePromise())
+
             self.sizeFed += byteBuffer.readableBytes
             self.currentSize += byteBuffer.readableBytes
+
             if self.sizeFed > self.maxSize {
-                self.nextPromise.fail(HBHTTPError(.payloadTooLarge))
+                promise.fail(HBHTTPError(.payloadTooLarge))
             } else {
-                self.entries.append(byteBuffer)
-                self.nextPromise.succeed(false)
+                promise.succeed(.byteBuffers(byteBuffer))
             }
         case .error(let error):
-            self.nextPromise.fail(error)
+            promise.fail(error)
         case .end:
-            self.nextPromise.succeed(true)
+            promise.succeed(.end)
         }
     }
 
@@ -122,32 +133,20 @@ public class HBRequestBodyStreamer {
     /// - Returns: Returns an EventLoopFuture that will be fulfilled with array of ByteBuffers that has so far been fed to the request body
     ///     and whether we have consumed an end tag
     func consume() -> EventLoopFuture<ConsumeOutput> {
-        self.nextPromise.futureResult.map { finished in
-            if let entry = self.entries.popFirst() {
-                if self.entries.count == 0 {
-                    self.nextPromise = self.eventLoop.makePromise()
-                }
-                if finished {
-                    self.nextPromise.succeed(true)
-                }
-                return .byteBuffers(entry)
-            } else {
-                return .end
+        assert(self.queue.first != nil)
+        let promise = self.queue.first!
+        return promise.futureResult.map { result in
+            _ = self.queue.popFirst()
+
+            switch result {
+            case .byteBuffers(let buffer):
+                self.currentSize -= buffer.readableBytes
+            case .end:
+                assert(self.currentSize == 0)
             }
+            self.onConsume?(self)
+            return result
         }
-/*        self.nextPromise.futureResult.map { finished in
-            let entries = self.entries
-            self.entries = []
-            if entries.count > 0 {
-                self.nextPromise = self.eventLoop.makePromise()
-                if finished {
-                    self.nextPromise.succeed(true)
-                }
-                return .byteBuffers(entries)
-            } else {
-                return .end
-            }
-        }*/
     }
 
     /// Consume the request body until you receive an end tag
