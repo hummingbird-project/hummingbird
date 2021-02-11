@@ -216,7 +216,7 @@ final class ApplicationTests: XCTestCase {
         let app = HBApplication(testing: .embedded)
         app.router
             .group("/name")
-            .patch { request -> Name? in
+            .patch { _ -> Name? in
                 return Name(first: "john", last: "smith")
             }
         app.XCTStart()

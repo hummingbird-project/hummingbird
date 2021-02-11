@@ -3,7 +3,6 @@ import Hummingbird
 import XCTest
 
 final class EnvironmentTests: XCTestCase {
-
     func testInitFromEnvironment() {
         XCTAssertEqual(setenv("TEST_VAR", "testSetFromEnvironment", 1), 0)
         let env = HBEnvironment()
