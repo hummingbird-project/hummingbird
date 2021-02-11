@@ -3,10 +3,6 @@ import HummingbirdXCT
 import NIOHTTP1
 import XCTest
 
-enum ApplicationTestError: Error {
-    case noBody
-}
-
 final class ApplicationTests: XCTestCase {
     func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
@@ -172,85 +168,49 @@ final class ApplicationTests: XCTestCase {
         app.XCTStart()
         defer { app.XCTStop() }
 
-        let buffer = self.randomBuffer(size: 140_000)
+        let buffer = self.randomBuffer(size: 1_140_000)
         app.XCTExecute(uri: "/echo-body", method: .POST, body: buffer) { response in
             XCTAssertEqual(response.body, buffer)
         }
     }
 
-    func testResponseBodyStreaming() {
+    func testOptional() {
         let app = HBApplication(testing: .embedded)
-        // stream request into response
         app.router
-            .endpoint("/echo-body-streaming")
-            .onStreaming(method: .POST) { request -> EventLoopFuture<HBResponse> in
-                let body: HBResponseBody = .streamCallback { _ in
-                    return request.body.stream.consume(on: request.eventLoop).map { output in
-                        switch output {
-                        case .byteBuffers(let buffers):
-                            if var buffer = buffers.first {
-                                for var b in buffers.dropFirst() {
-                                    buffer.writeBuffer(&b)
-                                }
-                                return .byteBuffer(buffer)
-                            } else {
-                                return .byteBuffer(request.allocator.buffer(capacity: 0))
-                            }
-                        case .end:
-                            return .end
-                        }
-                    }
-                }
-                return request.eventLoop.makeSucceededFuture(.init(status: .ok, headers: [:], body: body))
+            .endpoint("/echo-body")
+            .post { request -> ByteBuffer? in
+                return request.body.buffer
             }
         app.XCTStart()
         defer { app.XCTStop() }
 
-        let buffer = self.randomBuffer(size: 140_000)
-        app.XCTExecute(uri: "/echo-body-streaming", method: .POST, body: buffer) { response in
+        let buffer = self.randomBuffer(size: 64)
+        app.XCTExecute(uri: "/echo-body", method: .POST, body: buffer) { response in
+            XCTAssertEqual(response.status, .ok)
             XCTAssertEqual(response.body, buffer)
         }
+        app.XCTExecute(uri: "/echo-body", method: .POST) { response in
+            XCTAssertEqual(response.status, .notFound)
+        }
     }
 
-    func testChannelHandlerErrorPropagation() {
-        class CreateErrorHandler: ChannelInboundHandler {
-            typealias InboundIn = HTTPServerRequestPart
-
-            var seen: Bool = false
-            func channelRead(context: ChannelHandlerContext, data: NIOAny) {
-                let part = self.unwrapInboundIn(data)
-
-                if case .body = part {
-                    context.fireErrorCaught(HBHTTPError(.insufficientStorage))
-                }
-                context.fireChannelRead(data)
+    func testOptionalCodable() {
+        struct Name: HBResponseCodable {
+            let first: String
+            let last: String
+        }
+        let app = HBApplication(testing: .embedded)
+        app.router
+            .group("/name")
+            .post { request -> Name? in
+                return Name(first: "john", last: "smith")
             }
-        }
-        let app = HBApplication(testing: .embedded, configuration: .init(maxUploadSize: 65536))
-        app.server.addChannelHandler(CreateErrorHandler())
-        app.router.put("/accepted") { _ -> HTTPResponseStatus in
-            return .accepted
-        }
         app.XCTStart()
         defer { app.XCTStop() }
 
-        let buffer = self.randomBuffer(size: 32)
-        app.XCTExecute(uri: "/accepted", method: .PUT, body: buffer) { response in
-            XCTAssertEqual(response.status, .insufficientStorage)
-        }
-    }
-
-    func testLargeUploadLimit() {
-        let app = HBApplication(testing: .embedded, configuration: .init(maxUploadSize: 65536))
-        app.router.put("/upload") { _ -> HTTPResponseStatus in
-            return .accepted
-        }
-        app.XCTStart()
-        defer { app.XCTStop() }
-
-        let buffer = self.randomBuffer(size: 140_000)
-        app.XCTExecute(uri: "/upload", method: .PUT, body: buffer) { response in
-            XCTAssertEqual(response.status, .payloadTooLarge)
+        app.XCTExecute(uri: "/name", method: .POST) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), #"Name(first: "john", last: "smith")"#)
         }
     }
 
