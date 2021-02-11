@@ -67,40 +67,57 @@ public class HBRequestBodyStreamer {
 
     /// Values returned when we consume the contents of the streamer
     public enum ConsumeOutput {
-        case byteBuffers([ByteBuffer])
+        case byteBuffers(ByteBuffer)
         case end
     }
 
-    var entries: [ByteBuffer]
+    /// Queue of promises for each ByteBuffer fed to the streamer. Last entry is always waiting for the next buffer or end tag
+    var queue: CircularBuffer<EventLoopPromise<ConsumeOutput>>
+    /// EventLoop everything is running on
     let eventLoop: EventLoop
-    var nextPromise: EventLoopPromise<Bool>
+    /// called every time a ByteBuffer is consumed
+    var onConsume: ((HBRequestBodyStreamer) -> Void)?
+    /// maximum allowed size to upload
     let maxSize: Int
+    /// current size in memory
+    var currentSize: Int
+    /// bytes fed to streamer so far
     var sizeFed: Int
 
     init(eventLoop: EventLoop, maxSize: Int) {
-        self.entries = []
+        self.queue = .init(initialCapacity: 8)
+        self.queue.append(eventLoop.makePromise())
         self.eventLoop = eventLoop
-        self.nextPromise = eventLoop.makePromise()
         self.sizeFed = 0
+        self.currentSize = 0
         self.maxSize = maxSize
+        self.onConsume = nil
     }
 
     /// Feed a ByteBuffer to the request
     /// - Parameter result: Bytebuffer or end tag
     func feed(_ result: FeedInput) {
+        self.eventLoop.assertInEventLoop()
+        // queue most have at least one promise on it, or something has gone wrong
+        assert(self.queue.last != nil)
+        let promise = self.queue.last!
+
         switch result {
         case .byteBuffer(let byteBuffer):
+            self.queue.append(self.eventLoop.makePromise())
+
             self.sizeFed += byteBuffer.readableBytes
+            self.currentSize += byteBuffer.readableBytes
+
             if self.sizeFed > self.maxSize {
-                self.nextPromise.fail(HBHTTPError(.payloadTooLarge))
+                promise.fail(HBHTTPError(.payloadTooLarge))
             } else {
-                self.entries.append(byteBuffer)
-                self.nextPromise.succeed(false)
+                promise.succeed(.byteBuffers(byteBuffer))
             }
         case .error(let error):
-            self.nextPromise.fail(error)
+            promise.fail(error)
         case .end:
-            self.nextPromise.succeed(true)
+            promise.succeed(.end)
         }
     }
 
@@ -116,18 +133,19 @@ public class HBRequestBodyStreamer {
     /// - Returns: Returns an EventLoopFuture that will be fulfilled with array of ByteBuffers that has so far been fed to the request body
     ///     and whether we have consumed an end tag
     func consume() -> EventLoopFuture<ConsumeOutput> {
-        self.nextPromise.futureResult.map { finished in
-            let entries = self.entries
-            self.entries = []
-            if entries.count > 0 {
-                self.nextPromise = self.eventLoop.makePromise()
-                if finished {
-                    self.nextPromise.succeed(true)
-                }
-                return .byteBuffers(entries)
-            } else {
-                return .end
+        assert(self.queue.first != nil)
+        let promise = self.queue.first!
+        return promise.futureResult.map { result in
+            _ = self.queue.popFirst()
+
+            switch result {
+            case .byteBuffers(let buffer):
+                self.currentSize -= buffer.readableBytes
+            case .end:
+                assert(self.currentSize == 0)
             }
+            self.onConsume?(self)
+            return result
         }
     }
 
@@ -135,25 +153,20 @@ public class HBRequestBodyStreamer {
     /// - Returns: EventLoopFuture that will be fulfilled with the full ByteBuffer of the Request
     func consumeAll() -> EventLoopFuture<ByteBuffer?> {
         let promise = self.eventLoop.makePromise(of: ByteBuffer?.self)
-        var buffer: ByteBuffer?
+        var completeBuffer: ByteBuffer?
         func _consumeAll() {
             self.consume().map { output in
                 switch output {
-                case .byteBuffers(let buffers):
-                    var buffersToAdd: ArraySlice<ByteBuffer>
-                    if buffer == nil, let firstBuffer = buffers.first {
-                        buffer = firstBuffer
-                        buffersToAdd = buffers.dropFirst()
+                case .byteBuffers(var buffer):
+                    if completeBuffer != nil {
+                        completeBuffer!.writeBuffer(&buffer)
                     } else {
-                        buffersToAdd = buffers[...]
-                    }
-                    for var b in buffersToAdd {
-                        buffer!.writeBuffer(&b)
+                        completeBuffer = buffer
                     }
                     _consumeAll()
 
                 case .end:
-                    promise.succeed(buffer)
+                    promise.succeed(completeBuffer)
                 }
             }
             .cascadeFailure(to: promise)
