@@ -7,7 +7,7 @@ import Metrics
 /// dimensions URI and method.
 public struct HBMetricsMiddleware: HBMiddleware {
     public init() {}
-    
+
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
         let dimensions: [(String, String)] = [
             ("hb_uri", request.uri.description),
