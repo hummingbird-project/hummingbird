@@ -1,4 +1,5 @@
 import Hummingbird
+import Logging
 import NIO
 
 /// Manages File loading. Can either stream or load file.
@@ -38,31 +39,61 @@ public struct HBFileIO {
     ///   - request: request for file
     ///   - path: System file path
     /// - Returns: Response include file
-    public func loadFile(for request: HBRequest, path: String) -> EventLoopFuture<HBResponse> {
+    public func loadFile(for request: HBRequest, path: String) -> EventLoopFuture<HBResponseBody> {
         return self.fileIO.openFile(path: path, eventLoop: request.eventLoop).flatMap { handle, region in
             request.logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
-            let futureResponse: EventLoopFuture<HBResponse>
+            let futureResult: EventLoopFuture<HBResponseBody>
             if region.readableBytes > self.chunkSize {
-                futureResponse = streamFile(for: request, handle: handle, region: region)
+                futureResult = streamFile(for: request, handle: handle, region: region)
             } else {
-                futureResponse = loadFile(for: request, handle: handle, region: region)
+                futureResult = loadFile(for: request, handle: handle, region: region)
+                // only close file handle for load, as streamer hasn't loaded data at this point
+                futureResult.whenComplete { _ in
+                    try? handle.close()
+                }
             }
-            return futureResponse
+            return futureResult
         }.flatMapErrorThrowing { _ in
             throw HBHTTPError(.notFound)
         }
     }
 
-    func loadFile(for request: HBRequest, handle: NIOFileHandle, region: FileRegion) -> EventLoopFuture<HBResponse> {
-        return self.fileIO.read(fileHandle: handle, byteCount: region.readableBytes, allocator: request.allocator, eventLoop: request.eventLoop).map { buffer in
-            return HBResponse(status: .ok, headers: [:], body: .byteBuffer(buffer))
-        }
-        .always { _ in
-            try? handle.close()
+    /// Write contents of request body to file
+    ///
+    /// This can be used to save arbitrary ByteBuffers by passing in `.byteBuffer(ByteBuffer)` as contents
+    /// - Parameters:
+    ///   - contents: Request body to write.
+    ///   - path: Path to write to
+    ///   - eventLoop: EventLoop everything runs on
+    ///   - logger: Logger
+    /// - Returns: EventLoopFuture fulfilled when everything is done
+    public func writeFile(contents: HBRequestBody, path: String, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void> {
+        return self.fileIO.openFile(path: path, mode: .write, flags: .allowFileCreation(), eventLoop: eventLoop).flatMap { handle in
+            logger.debug("[FileIO] PUT", metadata: ["file": .string(path)])
+            let futureResult: EventLoopFuture<Void>
+            switch contents {
+            case .byteBuffer(let buffer):
+                guard let buffer = buffer else { return eventLoop.makeSucceededFuture(()) }
+                futureResult = writeFile(buffer: buffer, handle: handle, on: eventLoop)
+            case .stream(let streamer):
+                futureResult = writeFile(stream: streamer, handle: handle, on: eventLoop)
+            }
+            futureResult.whenComplete { _ in
+                try? handle.close()
+            }
+            return futureResult
         }
     }
 
-    func streamFile(for request: HBRequest, handle: NIOFileHandle, region: FileRegion) -> EventLoopFuture<HBResponse> {
+    /// Load file as ByteBuffer
+    func loadFile(for request: HBRequest, handle: NIOFileHandle, region: FileRegion) -> EventLoopFuture<HBResponseBody> {
+        return self.fileIO.read(fileHandle: handle, byteCount: region.readableBytes, allocator: request.allocator, eventLoop: request.eventLoop).map { buffer in
+            return .byteBuffer(buffer)
+        }
+    }
+
+    /// Return streamer that will load file
+    func streamFile(for request: HBRequest, handle: NIOFileHandle, region: FileRegion) -> EventLoopFuture<HBResponseBody> {
         let fileStreamer = FileStreamer(
             handle: handle,
             fileSize: region.readableBytes,
@@ -70,8 +101,39 @@ public struct HBFileIO {
             chunkSize: self.chunkSize,
             allocator: request.allocator
         )
-        let response = HBResponse(status: .ok, headers: [:], body: .stream(fileStreamer))
-        return request.eventLoop.makeSucceededFuture(response)
+        return request.eventLoop.makeSucceededFuture(.stream(fileStreamer))
+    }
+
+    /// write byte buffer to file
+    func writeFile(buffer: ByteBuffer, handle: NIOFileHandle, on eventLoop: EventLoop) -> EventLoopFuture<Void> {
+        return self.fileIO.write(fileHandle: handle, buffer: buffer, eventLoop: eventLoop)
+    }
+
+    /// write output of streamer to file
+    func writeFile(stream: HBRequestBodyStreamer, handle: NIOFileHandle, on eventLoop: EventLoop) -> EventLoopFuture<Void> {
+        let promise = eventLoop.makePromise(of: Void.self)
+
+        func _writeFile() {
+            stream.consume(on: eventLoop).map { output in
+                switch output {
+                case .byteBuffer(let buffer):
+                    self.fileIO.write(fileHandle: handle, buffer: buffer, eventLoop: eventLoop).whenComplete { result in
+                        switch result {
+                        case .failure(let error):
+                            promise.fail(error)
+                        case .success:
+                            _writeFile()
+                        }
+                    }
+                case .end:
+                    promise.succeed(())
+                }
+            }
+            .cascadeFailure(to: promise)
+        }
+
+        _writeFile()
+        return promise.futureResult
     }
 
     /// class used to stream files
@@ -96,8 +158,14 @@ public struct HBFileIO {
                 self.bytesLeft -= bytesToRead
                 return self.fileIO.read(fileHandle: self.handle, byteCount: bytesToRead, allocator: self.allocator, eventLoop: eventLoop)
                     .map { .byteBuffer($0) }
+                    .flatMapErrorThrowing { error in
+                        // close handle on error being returned
+                        try? self.handle.close()
+                        throw error
+                    }
             } else {
-                try? self.handle.close()
+                // close handle now streamer has finished
+                try? handle.close()
                 return eventLoop.makeSucceededFuture(.end)
             }
         }

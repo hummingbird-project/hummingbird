@@ -53,6 +53,7 @@ public struct HBFileMiddleware: HBMiddleware {
             switch request.method {
             case .GET:
                 return fileIO.loadFile(for: request, path: fullPath)
+                    .map { HBResponse(status: .ok, body: $0) } 
 
             case .HEAD:
                 return fileIO.headFile(for: request, path: fullPath)
