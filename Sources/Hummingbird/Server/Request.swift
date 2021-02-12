@@ -91,6 +91,23 @@ public final class HBRequest: HBExtensible {
         return self.eventLoop.makeSucceededFuture(value)
     }
 
+    /// Return context request is running in
+    public var context: Context {
+        .init(logger: self.logger, application: self.application, eventLoop: self.eventLoop, allocator: self.allocator)
+    }
+
+    /// Context request is running in
+    public struct Context {
+        /// Logger to use
+        public var logger: Logger
+        /// reference to application
+        public var application: HBApplication
+        /// EventLoop request is running on
+        public var eventLoop: EventLoop
+        /// ByteBuffer allocator used by request
+        public var allocator: ByteBufferAllocator
+    }
+
     private static func loggerWithRequestId(_ logger: Logger, uri: String, method: String) -> Logger {
         var logger = logger
         logger[metadataKey: "hb_id"] = .string(String(describing: Self.globalRequestID.add(1)))

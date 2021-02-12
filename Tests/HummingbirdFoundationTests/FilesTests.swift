@@ -35,7 +35,7 @@ class HummingbirdFilesTests: XCTestCase {
         let app = HBApplication(testing: .live)
         app.middleware.add(HBFileMiddleware(".", application: app))
 
-        let buffer = randomBuffer(size: 380_000)
+        let buffer = self.randomBuffer(size: 380_000)
         let data = Data(buffer: buffer)
         let fileURL = URL(fileURLWithPath: "test.txt")
         XCTAssertNoThrow(try data.write(to: fileURL))
@@ -74,7 +74,7 @@ class HummingbirdFilesTests: XCTestCase {
         let app = HBApplication(testing: .live)
         app.router.put("store") { request -> EventLoopFuture<HTTPResponseStatus> in
             let fileIO = HBFileIO(application: request.application)
-            return fileIO.writeFile(contents: request.body, path: filename, on: request.eventLoop, logger: request.logger)
+            return fileIO.writeFile(contents: request.body, path: filename, context: request.context)
                 .map { .ok }
         }
 
@@ -97,14 +97,14 @@ class HummingbirdFilesTests: XCTestCase {
         let app = HBApplication(testing: .live)
         app.router.put("store") { request -> EventLoopFuture<HTTPResponseStatus> in
             let fileIO = HBFileIO(application: request.application)
-            return fileIO.writeFile(contents: request.body, path: filename, on: request.eventLoop, logger: request.logger)
+            return fileIO.writeFile(contents: request.body, path: filename, context: request.context)
                 .map { .ok }
         }
 
         app.XCTStart()
         defer { app.XCTStop() }
 
-        let buffer = randomBuffer(size: 400_000)
+        let buffer = self.randomBuffer(size: 400_000)
         app.XCTExecute(uri: "/store", method: .PUT, body: buffer) { response in
             XCTAssertEqual(response.status, .ok)
         }

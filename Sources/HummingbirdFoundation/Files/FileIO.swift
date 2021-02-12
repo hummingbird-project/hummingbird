@@ -19,13 +19,13 @@ public struct HBFileIO {
     ///   - request: request for file
     ///   - path: System file path
     /// - Returns: Response including file details
-    public func headFile(for request: HBRequest, path: String) -> EventLoopFuture<HBResponse> {
-        return self.fileIO.openFile(path: path, eventLoop: request.eventLoop).flatMap { handle, region in
-            request.logger.debug("[FileIO] HEAD", metadata: ["file": .string(path)])
+    public func headFile(path: String, context: HBRequest.Context) -> EventLoopFuture<HBResponse> {
+        return self.fileIO.openFile(path: path, eventLoop: context.eventLoop).flatMap { handle, region in
+            context.logger.debug("[FileIO] HEAD", metadata: ["file": .string(path)])
             let headers: HTTPHeaders = ["content-length": region.readableBytes.description]
             let response = HBResponse(status: .ok, headers: headers, body: .empty)
             try? handle.close()
-            return request.eventLoop.makeSucceededFuture(response)
+            return context.eventLoop.makeSucceededFuture(response)
         }.flatMapErrorThrowing { _ in
             throw HBHTTPError(.notFound)
         }
@@ -39,14 +39,14 @@ public struct HBFileIO {
     ///   - request: request for file
     ///   - path: System file path
     /// - Returns: Response include file
-    public func loadFile(for request: HBRequest, path: String) -> EventLoopFuture<HBResponseBody> {
-        return self.fileIO.openFile(path: path, eventLoop: request.eventLoop).flatMap { handle, region in
-            request.logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
+    public func loadFile(path: String, context: HBRequest.Context) -> EventLoopFuture<HBResponseBody> {
+        return self.fileIO.openFile(path: path, eventLoop: context.eventLoop).flatMap { handle, region in
+            context.logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
             let futureResult: EventLoopFuture<HBResponseBody>
             if region.readableBytes > self.chunkSize {
-                futureResult = streamFile(for: request, handle: handle, region: region)
+                futureResult = streamFile(handle: handle, region: region, context: context)
             } else {
-                futureResult = loadFile(for: request, handle: handle, region: region)
+                futureResult = loadFile(handle: handle, region: region, context: context)
                 // only close file handle for load, as streamer hasn't loaded data at this point
                 futureResult.whenComplete { _ in
                     try? handle.close()
@@ -67,16 +67,16 @@ public struct HBFileIO {
     ///   - eventLoop: EventLoop everything runs on
     ///   - logger: Logger
     /// - Returns: EventLoopFuture fulfilled when everything is done
-    public func writeFile(contents: HBRequestBody, path: String, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void> {
-        return self.fileIO.openFile(path: path, mode: .write, flags: .allowFileCreation(), eventLoop: eventLoop).flatMap { handle in
-            logger.debug("[FileIO] PUT", metadata: ["file": .string(path)])
+    public func writeFile(contents: HBRequestBody, path: String, context: HBRequest.Context) -> EventLoopFuture<Void> {
+        return self.fileIO.openFile(path: path, mode: .write, flags: .allowFileCreation(), eventLoop: context.eventLoop).flatMap { handle in
+            context.logger.debug("[FileIO] PUT", metadata: ["file": .string(path)])
             let futureResult: EventLoopFuture<Void>
             switch contents {
             case .byteBuffer(let buffer):
-                guard let buffer = buffer else { return eventLoop.makeSucceededFuture(()) }
-                futureResult = writeFile(buffer: buffer, handle: handle, on: eventLoop)
+                guard let buffer = buffer else { return context.eventLoop.makeSucceededFuture(()) }
+                futureResult = writeFile(buffer: buffer, handle: handle, on: context.eventLoop)
             case .stream(let streamer):
-                futureResult = writeFile(stream: streamer, handle: handle, on: eventLoop)
+                futureResult = writeFile(stream: streamer, handle: handle, on: context.eventLoop)
             }
             futureResult.whenComplete { _ in
                 try? handle.close()
@@ -86,22 +86,22 @@ public struct HBFileIO {
     }
 
     /// Load file as ByteBuffer
-    func loadFile(for request: HBRequest, handle: NIOFileHandle, region: FileRegion) -> EventLoopFuture<HBResponseBody> {
-        return self.fileIO.read(fileHandle: handle, byteCount: region.readableBytes, allocator: request.allocator, eventLoop: request.eventLoop).map { buffer in
+    func loadFile(handle: NIOFileHandle, region: FileRegion, context: HBRequest.Context) -> EventLoopFuture<HBResponseBody> {
+        return self.fileIO.read(fileHandle: handle, byteCount: region.readableBytes, allocator: context.allocator, eventLoop: context.eventLoop).map { buffer in
             return .byteBuffer(buffer)
         }
     }
 
     /// Return streamer that will load file
-    func streamFile(for request: HBRequest, handle: NIOFileHandle, region: FileRegion) -> EventLoopFuture<HBResponseBody> {
+    func streamFile(handle: NIOFileHandle, region: FileRegion, context: HBRequest.Context) -> EventLoopFuture<HBResponseBody> {
         let fileStreamer = FileStreamer(
             handle: handle,
             fileSize: region.readableBytes,
             fileIO: self.fileIO,
             chunkSize: self.chunkSize,
-            allocator: request.allocator
+            allocator: context.allocator
         )
-        return request.eventLoop.makeSucceededFuture(.stream(fileStreamer))
+        return context.eventLoop.makeSucceededFuture(.stream(fileStreamer))
     }
 
     /// write byte buffer to file
@@ -145,7 +145,7 @@ public struct HBFileIO {
                     }
             } else {
                 // close handle now streamer has finished
-                try? handle.close()
+                try? self.handle.close()
                 return eventLoop.makeSucceededFuture(.end)
             }
         }
