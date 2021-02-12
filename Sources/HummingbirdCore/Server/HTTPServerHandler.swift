@@ -96,7 +96,7 @@ final class HBHTTPServerHandler: ChannelInboundHandler {
             } else {
                 context.close(promise: nil)
             }
-            
+
         case is ChannelShouldQuiesceEvent:
             // we received a quiesce event. If we have any requests in progress we should
             // wait for them to finish
