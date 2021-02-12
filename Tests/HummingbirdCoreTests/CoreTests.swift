@@ -40,8 +40,7 @@ class HummingBirdCoreTests: XCTestCase {
         defer { XCTAssertNoThrow(try server.stop().wait()) }
 
         let request = try! HTTPClient.Request(
-            url: "http://localhost:\(server.configuration.address.port!)/",
-            headers: ["connection": "close"]
+            url: "http://localhost:\(server.configuration.address.port!)/"
         )
         let future = Self.httpClient.execute(request: request).flatMapThrowing { response in
             var body = try XCTUnwrap(response.body)
@@ -71,7 +70,6 @@ class HummingBirdCoreTests: XCTestCase {
         let buffer = self.randomBuffer(size: 1_140_000)
         let request = try! HTTPClient.Request(
             url: "http://localhost:\(server.configuration.address.port!)/",
-            headers: ["connection": "close"],
             body: .byteBuffer(buffer)
         )
         let future = Self.httpClient.execute(request: request)
@@ -105,7 +103,6 @@ class HummingBirdCoreTests: XCTestCase {
         let buffer = self.randomBuffer(size: 450_000)
         let request = try! HTTPClient.Request(
             url: "http://localhost:\(server.configuration.address.port!)/",
-            headers: ["connection": "close"],
             body: .byteBuffer(buffer)
         )
         let future = Self.httpClient.execute(request: request)
@@ -143,7 +140,6 @@ class HummingBirdCoreTests: XCTestCase {
         let buffer = self.randomBuffer(size: 1_140_000)
         let request = try! HTTPClient.Request(
             url: "http://localhost:\(server.configuration.address.port!)/",
-            headers: ["connection": "close"],
             body: .byteBuffer(buffer)
         )
         let future = Self.httpClient.execute(request: request)
@@ -182,7 +178,6 @@ class HummingBirdCoreTests: XCTestCase {
         let buffer = self.randomBuffer(size: 1_140_000)
         let request = try! HTTPClient.Request(
             url: "http://localhost:\(server.configuration.address.port!)/",
-            headers: ["connection": "close"],
             body: .byteBuffer(buffer)
         )
         let future = Self.httpClient.execute(request: request)
@@ -226,7 +221,6 @@ class HummingBirdCoreTests: XCTestCase {
         let buffer = self.randomBuffer(size: 1_140_000)
         let request = try! HTTPClient.Request(
             url: "http://localhost:\(server.configuration.address.port!)/",
-            headers: ["connection": "close"],
             body: .byteBuffer(buffer)
         )
         let future = Self.httpClient.execute(request: request)
@@ -266,7 +260,6 @@ class HummingBirdCoreTests: XCTestCase {
         let buffer = self.randomBuffer(size: 32)
         let request = try! HTTPClient.Request(
             url: "http://localhost:\(server.configuration.address.port!)/",
-            headers: ["connection": "close"],
             body: .byteBuffer(buffer)
         )
         let future = Self.httpClient.execute(request: request)
@@ -297,7 +290,6 @@ class HummingBirdCoreTests: XCTestCase {
         let buffer = self.randomBuffer(size: 320_000)
         let request = try! HTTPClient.Request(
             url: "http://localhost:\(server.configuration.address.port!)/",
-            headers: ["connection": "close"],
             body: .byteBuffer(buffer)
         )
         let future = Self.httpClient.execute(request: request)
