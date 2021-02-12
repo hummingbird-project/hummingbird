@@ -111,29 +111,9 @@ public struct HBFileIO {
 
     /// write output of streamer to file
     func writeFile(stream: HBRequestBodyStreamer, handle: NIOFileHandle, on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-        let promise = eventLoop.makePromise(of: Void.self)
-
-        func _writeFile() {
-            stream.consume(on: eventLoop).map { output in
-                switch output {
-                case .byteBuffer(let buffer):
-                    self.fileIO.write(fileHandle: handle, buffer: buffer, eventLoop: eventLoop).whenComplete { result in
-                        switch result {
-                        case .failure(let error):
-                            promise.fail(error)
-                        case .success:
-                            _writeFile()
-                        }
-                    }
-                case .end:
-                    promise.succeed(())
-                }
-            }
-            .cascadeFailure(to: promise)
+        return stream.consumeAll(on: eventLoop) { buffer in
+            return self.fileIO.write(fileHandle: handle, buffer: buffer, eventLoop: eventLoop)
         }
-
-        _writeFile()
-        return promise.futureResult
     }
 
     /// class used to stream files
