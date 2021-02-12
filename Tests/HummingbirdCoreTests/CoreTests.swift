@@ -82,13 +82,47 @@ class HummingBirdCoreTests: XCTestCase {
         XCTAssertNoThrow(try future.wait())
     }
 
+    func testConsumeAllBody() {
+        struct Responder: HBHTTPResponder {
+            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
+                var size = 0
+                return request.body.streamBody(on: context.eventLoop).consumeAll(on: context.eventLoop) { buffer in
+                    size += buffer.readableBytes
+                    return context.eventLoop.makeSucceededFuture(())
+                }
+                .flatMapThrowing { _ in
+                    return HBHTTPResponse(
+                        head: .init(version: .init(major: 1, minor: 1), status: .ok),
+                        body: .byteBuffer(context.channel.allocator.buffer(integer: size))
+                    )
+                }
+            }
+        }
+        let server = HBHTTPServer(group: Self.eventLoopGroup, configuration: .init(address: .hostname(port: 8080), maxStreamingBufferSize: 256 * 1024))
+        XCTAssertNoThrow(try server.start(responder: Responder()).wait())
+        defer { XCTAssertNoThrow(try server.stop().wait()) }
+
+        let buffer = self.randomBuffer(size: 450_000)
+        let request = try! HTTPClient.Request(
+            url: "http://localhost:\(server.configuration.address.port!)/",
+            headers: ["connection": "close"],
+            body: .byteBuffer(buffer)
+        )
+        let future = Self.httpClient.execute(request: request)
+            .flatMapThrowing { response in
+                var body = try XCTUnwrap(response.body)
+                XCTAssertEqual(body.readInteger(), buffer.readableBytes)
+            }
+        XCTAssertNoThrow(try future.wait())
+    }
+
     func testStreamBody() {
         struct Responder: HBHTTPResponder {
             func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
                 let body: HBResponseBody = .streamCallback { _ in
                     return request.body.stream.consume(on: context.eventLoop).map { output in
                         switch output {
-                        case .byteBuffers(let buffer):
+                        case .byteBuffer(let buffer):
                             return .byteBuffer(buffer)
                         case .end:
                             return .end
@@ -126,7 +160,7 @@ class HummingBirdCoreTests: XCTestCase {
                 let body: HBResponseBody = .streamCallback { _ in
                     return request.body.stream.consume(on: context.eventLoop).flatMap { output in
                         switch output {
-                        case .byteBuffers(let buffer):
+                        case .byteBuffer(let buffer):
                             // delay processing of buffer
                             return context.eventLoop.scheduleTask(in: .milliseconds(Int64.random(in: 0..<200))) { .byteBuffer(buffer) }.futureResult
                         case .end:

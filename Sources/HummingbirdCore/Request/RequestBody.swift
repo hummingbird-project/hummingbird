@@ -67,7 +67,7 @@ public class HBRequestBodyStreamer {
 
     /// Values returned when we consume the contents of the streamer
     public enum ConsumeOutput {
-        case byteBuffers(ByteBuffer)
+        case byteBuffer(ByteBuffer)
         case end
     }
 
@@ -112,7 +112,7 @@ public class HBRequestBodyStreamer {
             if self.sizeFed > self.maxSize {
                 promise.fail(HBHTTPError(.payloadTooLarge))
             } else {
-                promise.succeed(.byteBuffers(byteBuffer))
+                promise.succeed(.byteBuffer(byteBuffer))
             }
         case .error(let error):
             promise.fail(error)
@@ -129,6 +129,36 @@ public class HBRequestBodyStreamer {
         self.consume().hop(to: eventLoop)
     }
 
+    /// Consume the request body, calling `process` on each buffer until you receive an end tag
+    /// - Returns: EventLoopFuture that will be fulfilled with the full ByteBuffer of the Request
+    /// - Parameters:
+    ///   - eventLoop: EventLoop to run on
+    ///   - process: Closure to call to process ByteBuffer
+    public func consumeAll(on eventLoop: EventLoop, _ process: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
+        let promise = self.eventLoop.makePromise(of: Void.self)
+        func _consumeAll() {
+            self.consume(on: eventLoop).map { output in
+                switch output {
+                case .byteBuffer(let buffer):
+                    process(buffer).whenComplete { result in
+                        switch result {
+                        case .failure(let error):
+                            promise.fail(error)
+                        case .success:
+                            _consumeAll()
+                        }
+                    }
+
+                case .end:
+                    promise.succeed(())
+                }
+            }
+            .cascadeFailure(to: promise)
+        }
+        _consumeAll()
+        return promise.futureResult
+    }
+
     /// Consume what has been fed to the request
     /// - Returns: Returns an EventLoopFuture that will be fulfilled with array of ByteBuffers that has so far been fed to the request body
     ///     and whether we have consumed an end tag
@@ -139,7 +169,7 @@ public class HBRequestBodyStreamer {
             _ = self.queue.popFirst()
 
             switch result {
-            case .byteBuffers(let buffer):
+            case .byteBuffer(let buffer):
                 self.currentSize -= buffer.readableBytes
             case .end:
                 assert(self.currentSize == 0)
@@ -157,7 +187,7 @@ public class HBRequestBodyStreamer {
         func _consumeAll() {
             self.consume().map { output in
                 switch output {
-                case .byteBuffers(var buffer):
+                case .byteBuffer(var buffer):
                     if completeBuffer != nil {
                         completeBuffer!.writeBuffer(&buffer)
                     } else {
