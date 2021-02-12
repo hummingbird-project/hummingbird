@@ -9,13 +9,13 @@ final class HBHTTPServerHandler: ChannelInboundHandler {
 
     let responder: HBHTTPResponder
 
-    var responsesInProgress: Int
+    var requestsInProgress: Int
     var closeAfterResponseWritten: Bool
     var propagatedError: Error?
 
     init(responder: HBHTTPResponder) {
         self.responder = responder
-        self.responsesInProgress = 0
+        self.requestsInProgress = 0
         self.closeAfterResponseWritten = false
         self.propagatedError = nil
     }
@@ -41,7 +41,7 @@ final class HBHTTPServerHandler: ChannelInboundHandler {
             self.propagatedError = nil
             return
         }
-        self.responsesInProgress += 1
+        self.requestsInProgress += 1
 
         // respond to request
         self.responder.respond(to: request, context: context).whenComplete { result in
@@ -68,7 +68,7 @@ final class HBHTTPServerHandler: ChannelInboundHandler {
                 context.close(promise: nil)
                 self.closeAfterResponseWritten = false
             }
-            self.responsesInProgress -= 1
+            self.requestsInProgress -= 1
         }
     }
 
@@ -91,11 +91,21 @@ final class HBHTTPServerHandler: ChannelInboundHandler {
             // The remote peer half-closed the channel. At this time, any
             // outstanding response will be written before the channel is
             // closed, and if we are idle we will close the channel immediately.
-            if self.responsesInProgress > 0 {
+            if self.requestsInProgress > 0 {
                 self.closeAfterResponseWritten = true
             } else {
                 context.close(promise: nil)
             }
+            
+        case is ChannelShouldQuiesceEvent:
+            // we received a quiesce event. If we have any requests in progress we should
+            // wait for them to finish
+            if self.requestsInProgress > 0 {
+                self.closeAfterResponseWritten = true
+            } else {
+                context.close(promise: nil)
+            }
+
         default:
             self.responder.logger?.debug("Unhandled event \(event as? ChannelEvent)")
             context.fireUserInboundEventTriggered(event)
