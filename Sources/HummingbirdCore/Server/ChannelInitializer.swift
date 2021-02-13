@@ -1,20 +1,30 @@
 import NIO
+import NIOHTTP1
 
 /// HTTPServer child channel initializer protocol
 public protocol HBChannelInitializer {
-    func initialize(_ server: HBHTTPServer, channel: Channel, responder: HBHTTPResponder) -> EventLoopFuture<Void>
+    func initialize(channel: Channel, childHandlers: [ChannelHandler], configuration: HBHTTPServer.Configuration) -> EventLoopFuture<Void>
 }
 
 /// Setup child channel for HTTP1
 public struct HTTP1ChannelInitializer: HBChannelInitializer {
-    public init() {}
+    public init(upgraders: [HTTPServerProtocolUpgrader] = []) {
+        self.upgraders = upgraders
+    }
 
-    public func initialize(_ server: HBHTTPServer, channel: Channel, responder: HBHTTPResponder) -> EventLoopFuture<Void> {
+    public func initialize(channel: Channel, childHandlers: [ChannelHandler], configuration: HBHTTPServer.Configuration) -> EventLoopFuture<Void> {
+        var serverUpgrade: NIOHTTPServerUpgradeConfiguration?
+        if self.upgraders.count > 0 {
+            serverUpgrade = (self.upgraders, { _ in })
+        }
         return channel.pipeline.configureHTTPServerPipeline(
-            withPipeliningAssistance: server.configuration.withPipeliningAssistance,
+            withPipeliningAssistance: configuration.withPipeliningAssistance,
+            withServerUpgrade: serverUpgrade,
             withErrorHandling: true
         ).flatMap {
-            return server.addChildHandlers(channel: channel, responder: responder)
+            return channel.pipeline.addHandlers(childHandlers)
         }
     }
+
+    let upgraders: [HTTPServerProtocolUpgrader]
 }

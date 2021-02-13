@@ -58,7 +58,12 @@ public class HBHTTPServer {
     public func start(responder: HBHTTPResponder) -> EventLoopFuture<Void> {
         func childChannelInitializer(channel: Channel) -> EventLoopFuture<Void> {
             return channel.pipeline.addHandlers(self.additionalChannelHandlers(at: .beforeHTTP)).flatMap {
-                return self.httpChannelInitializer.initialize(self, channel: channel, responder: responder)
+                let childHandlers = self.additionalChannelHandlers(at: .afterHTTP) + [
+                    HBHTTPEncodeHandler(configuration: self.configuration),
+                    HBHTTPDecodeHandler(configuration: self.configuration),
+                    HBHTTPServerHandler(responder: responder),
+                ]
+                return self.httpChannelInitializer.initialize(channel: channel, childHandlers: childHandlers, configuration: self.configuration)
             }
         }
 
@@ -122,22 +127,6 @@ public class HBHTTPServer {
     public func wait() throws {
         guard let channel = self.channel else { throw Error.serverNotRunning }
         try channel.closeFuture.wait()
-    }
-
-    /// Add ChannelHandlers to child channel just created.
-    ///
-    /// You should only ever need this if you are writing a `HBChannelInitializer`
-    ///
-    /// - Parameters:
-    ///   - channel: Channel
-    ///   - responder: The HTTP responder
-    public func addChildHandlers(channel: Channel, responder: HBHTTPResponder) -> EventLoopFuture<Void> {
-        let childHandlers: [ChannelHandler] = self.additionalChannelHandlers(at: .afterHTTP) + [
-            HBHTTPEncodeHandler(configuration: self.configuration),
-            HBHTTPDecodeHandler(configuration: self.configuration),
-            HBHTTPServerHandler(responder: responder),
-        ]
-        return channel.pipeline.addHandlers(childHandlers)
     }
 
     func additionalChannelHandlers(at position: ChannelPosition) -> [ChannelHandler] {
