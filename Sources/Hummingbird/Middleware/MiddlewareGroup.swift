@@ -4,7 +4,7 @@ import NIO
 public class HBMiddlewareGroup {
     var middlewares: [HBMiddleware]
 
-    init() {
+    public init() {
         self.middlewares = []
     }
 
