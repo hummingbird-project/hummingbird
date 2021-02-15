@@ -14,9 +14,8 @@ struct HBXCTEmbedded: HBXCT {
     func start(application: HBApplication) {
         application.server.addChannelHandler(BreakupHTTPBodyChannelHandler())
         XCTAssertNoThrow(
-            try application.server.addChildHandlers(
-                channel: self.embeddedChannel,
-                responder: HBApplication.HTTPResponder(application: application)
+            try self.embeddedChannel.pipeline.addHandlers(
+                application.server.getChildHandlers(responder: HBApplication.HTTPResponder(application: application))
             ).wait()
         )
     }
@@ -80,7 +79,7 @@ struct HBXCTEmbedded: HBXCT {
 
 /// Embedded channels pass all the data down immediately. This is not a real world situation so this handler
 /// can be used to fake TCP/IP data packets coming in arbitrary sizes (well at least for the HTTP body)
-class BreakupHTTPBodyChannelHandler: ChannelInboundHandler {
+class BreakupHTTPBodyChannelHandler: ChannelInboundHandler, RemovableChannelHandler {
     typealias InboundIn = HTTPServerRequestPart
     typealias InboundOut = HTTPServerRequestPart
 

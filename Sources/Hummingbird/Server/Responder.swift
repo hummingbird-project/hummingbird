@@ -9,7 +9,7 @@ public protocol HBResponder {
 }
 
 /// Responder that calls supplied closure
-public struct CallbackResponder: HBResponder {
+public struct HBCallbackResponder: HBResponder {
     let callback: (HBRequest) -> EventLoopFuture<HBResponse>
 
     public init(callback: @escaping (HBRequest) -> EventLoopFuture<HBResponse>) {

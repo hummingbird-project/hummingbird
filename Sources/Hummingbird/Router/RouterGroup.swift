@@ -45,7 +45,7 @@ public struct HBRouterGroup: HBRouterMethods {
         method: HTTPMethod,
         use closure: @escaping (HBRequest) throws -> R
     ) -> Self {
-        let responder = CallbackResponder { request in
+        let responder = HBCallbackResponder { request in
             request.body.consumeBody(on: request.eventLoop).flatMapThrowing { buffer in
                 request.body = .byteBuffer(buffer)
                 return try closure(request).response(from: request).apply(patch: request.optionalResponse)
@@ -62,7 +62,7 @@ public struct HBRouterGroup: HBRouterMethods {
         method: HTTPMethod,
         use closure: @escaping (HBRequest) -> R
     ) -> Self {
-        let responder = CallbackResponder { request in
+        let responder = HBCallbackResponder { request in
             request.body.consumeBody(on: request.eventLoop).flatMap { buffer in
                 request.body = .byteBuffer(buffer)
                 return closure(request).responseFuture(from: request)
@@ -81,7 +81,7 @@ public struct HBRouterGroup: HBRouterMethods {
         method: HTTPMethod,
         use closure: @escaping (HBRequest) -> R
     ) -> Self {
-        let responder = CallbackResponder { request in
+        let responder = HBCallbackResponder { request in
             let streamer = request.body.streamBody(on: request.eventLoop)
             request.body = .stream(streamer)
             return closure(request).responseFuture(from: request)
