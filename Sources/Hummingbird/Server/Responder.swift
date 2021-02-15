@@ -9,10 +9,15 @@ public protocol HBResponder {
 }
 
 /// Responder that calls supplied closure
-struct CallbackResponder: HBResponder {
+public struct CallbackResponder: HBResponder {
     let callback: (HBRequest) -> EventLoopFuture<HBResponse>
+
+    public init(callback: @escaping (HBRequest) -> EventLoopFuture<HBResponse>) {
+        self.callback = callback
+    }
+    
     /// Return EventLoopFuture that will be fulfilled with response to the request supplied
-    func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
+    public func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
         return self.callback(request)
     }
 }
