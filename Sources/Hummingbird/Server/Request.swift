@@ -93,15 +93,13 @@ public final class HBRequest: HBExtensible {
 
     /// Return context request is running in
     public var context: Context {
-        .init(logger: self.logger, application: self.application, eventLoop: self.eventLoop, allocator: self.allocator)
+        .init(logger: self.logger, eventLoop: self.eventLoop, allocator: self.allocator)
     }
 
     /// Context request is running in
     public struct Context {
         /// Logger to use
         public var logger: Logger
-        /// reference to application
-        public var application: HBApplication
         /// EventLoop request is running on
         public var eventLoop: EventLoop
         /// ByteBuffer allocator used by request
