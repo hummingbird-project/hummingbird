@@ -8,6 +8,8 @@ Hummingbird consists of three main components, the core HTTP server, a minimal w
 
 HummingbirdCore contains a Swift NIO based HTTP server. You will find the code for it in the [hummingbird-core](https://github.com/hummingbird-project/hummingbird-core) repository. The HTTP server is initialized with a object conforming to protocol `HBHTTPResponder` which defines how your server responds to an HTTP request. The HTTP server can be extended to support TLS and HTTP2 via the `HummingbirdTLS` and `HummingbirdHTTP2` libraries also available in the hummingbird-core repository.
 
+HummingbirdCore can be used separately from Hummingbird if you want to write your own web application framework.
+
 ## Hummingbird
 
 Hummingbird is a lightweight and flexible web application framework that runs on top of HummingbirdCore. It is designed to require the minimum number of dependencies: `swift-backtrace`, `swift-log`, `swift-nio`, `swift-nio-extras`, `swift-service-lifecycle` and `swift-metrics` and makes no use of Foundation.
