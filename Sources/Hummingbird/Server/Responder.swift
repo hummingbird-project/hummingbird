@@ -15,7 +15,7 @@ public struct HBCallbackResponder: HBResponder {
     public init(callback: @escaping (HBRequest) -> EventLoopFuture<HBResponse>) {
         self.callback = callback
     }
-    
+
     /// Return EventLoopFuture that will be fulfilled with response to the request supplied
     public func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
         return self.callback(request)
