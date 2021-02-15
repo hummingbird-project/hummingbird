@@ -58,6 +58,10 @@ public enum HBRequestBody {
 
 /// Request body streamer. `HBHTTPDecodeHandler` feeds this with ByteBuffers while the Router consumes them
 public class HBRequestBodyStreamer {
+    public enum StreamerError: Swift.Error {
+        case bodyDropped
+    }
+
     /// Values we can feed the streamer with
     public enum FeedInput {
         case byteBuffer(ByteBuffer)
@@ -83,6 +87,8 @@ public class HBRequestBodyStreamer {
     var currentSize: Int
     /// bytes fed to streamer so far
     var sizeFed: Int
+    /// has request streamer data been dropped
+    var dropped: Bool
 
     init(eventLoop: EventLoop, maxSize: Int) {
         self.queue = .init(initialCapacity: 8)
@@ -92,12 +98,15 @@ public class HBRequestBodyStreamer {
         self.currentSize = 0
         self.maxSize = maxSize
         self.onConsume = nil
+        self.dropped = false
     }
 
     /// Feed a ByteBuffer to the request
     /// - Parameter result: Bytebuffer or end tag
     func feed(_ result: FeedInput) {
         self.eventLoop.assertInEventLoop()
+        guard self.dropped == false else { return }
+
         // queue most have at least one promise on it, or something has gone wrong
         assert(self.queue.last != nil)
         let promise = self.queue.last!
@@ -157,6 +166,24 @@ public class HBRequestBodyStreamer {
         }
         _consumeAll()
         return promise.futureResult
+    }
+
+    /// Drop the remains of the data to be streamed as we are not interested in it anymore.
+    ///
+    /// This is required to be called as soon as we know we do not need the contents of the
+    /// `HBRequestBodyStreamer`. If we do not drop the data then it can stall the loading
+    /// of the next HTTP request because the back pressure will still consider there to be too
+    /// much data currently being processed
+    public func drop() {
+        self.eventLoop.assertInEventLoop()
+        // empty the queue and succeed each promise
+        guard self.queue.last != nil else { return }
+        while let promise = self.queue.popFirst() {
+            promise.fail(StreamerError.bodyDropped)
+        }
+        self.currentSize = 0
+        self.dropped = true
+        self.onConsume?(self)
     }
 
     /// Consume what has been fed to the request

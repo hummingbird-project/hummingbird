@@ -37,7 +37,7 @@ final class HBHTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler 
             if request.head.version.major == 1 {
                 response.head.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
             }
-            self.writeResponse(context: context, response: response, keepAlive: keepAlive)
+            self.writeResponse(context: context, response: response, request: request, keepAlive: keepAlive)
             self.propagatedError = nil
             return
         }
@@ -58,17 +58,21 @@ final class HBHTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler 
             if request.head.version.major == 1 {
                 response.head.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
             }
-            self.writeResponse(context: context, response: response, keepAlive: keepAlive)
+            self.writeResponse(context: context, response: response, request: request, keepAlive: keepAlive)
         }
     }
 
-    func writeResponse(context: ChannelHandlerContext, response: HBHTTPResponse, keepAlive: Bool) {
+    func writeResponse(context: ChannelHandlerContext, response: HBHTTPResponse, request: HBHTTPRequest, keepAlive: Bool) {
         context.write(self.wrapOutboundOut(response)).whenComplete { _ in
             if keepAlive == false {
                 context.close(promise: nil)
                 self.closeAfterResponseWritten = false
             }
             self.requestsInProgress -= 1
+            // once we have finished writing the response we can drop the request body
+            if case .stream(let streamer) = request.body {
+                streamer.drop()
+            }
         }
     }
 
