@@ -2,7 +2,7 @@ import NIO
 import NIOHTTP1
 
 /// Channel handler for decoding HTTP parts into a HTTP request
-final class HBHTTPDecodeHandler: ChannelDuplexHandler {
+final class HBHTTPDecodeHandler: ChannelDuplexHandler, RemovableChannelHandler {
     public typealias InboundIn = HTTPServerRequestPart
     public typealias InboundOut = HBHTTPRequest
     public typealias OutboundIn = Never

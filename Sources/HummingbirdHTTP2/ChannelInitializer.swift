@@ -5,7 +5,7 @@ import NIOSSL
 
 /// HTTP2 channel initializer
 struct HTTP2ChannelInitializer: HBChannelInitializer {
-    func initialize(channel: Channel, childHandlers: [ChannelHandler], configuration: HBHTTPServer.Configuration) -> EventLoopFuture<Void> {
+    func initialize(channel: Channel, childHandlers: [RemovableChannelHandler], configuration: HBHTTPServer.Configuration) -> EventLoopFuture<Void> {
         return channel.configureHTTP2Pipeline(mode: .server) { streamChannel -> EventLoopFuture<Void> in
             return streamChannel.pipeline.addHandler(HTTP2FramePayloadToHTTP1ServerCodec()).flatMap { () -> EventLoopFuture<Void> in
                 channel.pipeline.addHandlers(childHandlers)
@@ -21,7 +21,7 @@ struct HTTP2UpgradeChannelInitializer: HBChannelInitializer {
     let http1 = HTTP1ChannelInitializer()
     let http2 = HTTP2ChannelInitializer()
 
-    func initialize(channel: Channel, childHandlers: [ChannelHandler], configuration: HBHTTPServer.Configuration) -> EventLoopFuture<Void> {
+    func initialize(channel: Channel, childHandlers: [RemovableChannelHandler], configuration: HBHTTPServer.Configuration) -> EventLoopFuture<Void> {
         channel.configureHTTP2SecureUpgrade(
             h2ChannelConfigurator: { channel in
                 channel.pipeline.addHandlers(childHandlers)

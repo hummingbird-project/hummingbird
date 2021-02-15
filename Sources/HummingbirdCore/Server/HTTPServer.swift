@@ -47,7 +47,7 @@ public class HBHTTPServer {
     /// - Parameters:
     ///   - handler: autoclosure generating handler
     ///   - position: position to place channel handler
-    @discardableResult public func addChannelHandler(_ handler: @autoclosure @escaping () -> ChannelHandler, position: ChannelPosition = .afterHTTP) -> Self {
+    @discardableResult public func addChannelHandler(_ handler: @autoclosure @escaping () -> RemovableChannelHandler, position: ChannelPosition = .afterHTTP) -> Self {
         self._additionalChildHandlers.append((handler: handler, position: position))
         return self
     }
@@ -129,11 +129,11 @@ public class HBHTTPServer {
         try channel.closeFuture.wait()
     }
 
-    func additionalChannelHandlers(at position: ChannelPosition) -> [ChannelHandler] {
+    func additionalChannelHandlers(at position: ChannelPosition) -> [RemovableChannelHandler] {
         return self._additionalChildHandlers.compactMap { if $0.position == position { return $0.handler() }; return nil }
     }
 
-    private var _additionalChildHandlers: [(handler: () -> ChannelHandler, position: ChannelPosition)]
+    private var _additionalChildHandlers: [(handler: () -> RemovableChannelHandler, position: ChannelPosition)]
 }
 
 extension HBHTTPServer {

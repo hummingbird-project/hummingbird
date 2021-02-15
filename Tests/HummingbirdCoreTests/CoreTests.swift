@@ -190,7 +190,7 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testStreamBodySlowStream() {
         /// channel handler that delays the sending of data
-        class SlowInputChannelHandler: ChannelOutboundHandler {
+        class SlowInputChannelHandler: ChannelOutboundHandler, RemovableChannelHandler {
             public typealias OutboundIn = Never
             public typealias OutboundOut = HTTPServerResponsePart
 
@@ -232,7 +232,7 @@ class HummingBirdCoreTests: XCTestCase {
     }
 
     func testChannelHandlerErrorPropagation() {
-        class CreateErrorHandler: ChannelInboundHandler {
+        class CreateErrorHandler: ChannelInboundHandler, RemovableChannelHandler {
             typealias InboundIn = HTTPServerRequestPart
 
             var seen: Bool = false

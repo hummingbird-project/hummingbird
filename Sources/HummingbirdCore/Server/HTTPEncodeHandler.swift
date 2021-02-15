@@ -2,7 +2,7 @@ import NIO
 import NIOHTTP1
 
 /// Channel handler for encoding Response into HTTP parts
-final class HBHTTPEncodeHandler: ChannelOutboundHandler {
+final class HBHTTPEncodeHandler: ChannelOutboundHandler, RemovableChannelHandler {
     typealias OutboundIn = HBHTTPResponse
     typealias OutboundOut = HTTPServerResponsePart
 

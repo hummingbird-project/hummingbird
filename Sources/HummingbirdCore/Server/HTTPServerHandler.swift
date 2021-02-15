@@ -3,7 +3,7 @@ import NIO
 import NIOHTTP1
 
 /// Channel handler for responding to a request and returning a response
-final class HBHTTPServerHandler: ChannelInboundHandler {
+final class HBHTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     typealias InboundIn = HBHTTPRequest
     typealias OutboundOut = HBHTTPResponse
 
