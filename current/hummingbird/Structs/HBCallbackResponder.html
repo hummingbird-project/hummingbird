@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Optional Extension Reference</title>
+    <title>HBCallbackResponder Structure Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,8 +13,8 @@
     <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Extension/Optional" class="dashAnchor"></a>
-    <a title="Optional Extension Reference"></a>
+    <a name="//apple_ref/swift/Struct/HBCallbackResponder" class="dashAnchor"></a>
+    <a title="HBCallbackResponder Structure Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../index.html">Hummingbird 0.4.0 Docs</a> (86% documented)</p>
@@ -30,7 +30,7 @@
       <p id="breadcrumbs">
         <a href="../index.html">Hummingbird Reference</a>
         <img id="carat" src="../img/carat.png" />
-        Optional Extension Reference
+        HBCallbackResponder Structure Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -178,35 +178,26 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>Optional</h1>
+            <h1>HBCallbackResponder</h1>
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Optional</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span> <span class="k">where</span> <span class="kt">Wrapped</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HBCallbackResponder</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponder.html">HBResponder</a></span></code></pre>
 
                 </div>
               </div>
-            <p>Extend Optional to conform to HBResponseGenerator</p>
+            <p>Responder that calls supplied closure</p>
 
           </section>
           <section class="section task-group-section">
             <div class="task-group">
-              <div class="task-name-container">
-                <a name="/Available%20where%20%60Wrapped%60%3A%20%60HBResponseGenerator%60"></a>
-                <a name="//apple_ref/swift/Section/Available where `Wrapped`: `HBResponseGenerator`" class="dashAnchor"></a>
-                <div class="section-name-container">
-                  <a class="section-name-link" href="#/Available%20where%20%60Wrapped%60%3A%20%60HBResponseGenerator%60"></a>
-                  <h3 class="section-name"><p>Available where <code>Wrapped</code>: <code><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></code></p>
-</h3>
-                </div>
-              </div>
               <ul>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird19HBResponseGeneratorP8response4fromAA0B0CAA9HBRequestC_tKF"></a>
-                    <a name="//apple_ref/swift/Method/response(from:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird19HBResponseGeneratorP8response4fromAA0B0CAA9HBRequestC_tKF">response(from:<wbr>)</a>
+                    <a name="/s:11Hummingbird19HBCallbackResponderV8callbackAC3NIO15EventLoopFutureCyAA10HBResponseCGAA9HBRequestCc_tcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(callback:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird19HBCallbackResponderV8callbackAC3NIO15EventLoopFutureCyAA10HBResponseCGAA9HBRequestCc_tcfc">init(callback:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -214,13 +205,41 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        
+                        <p>Undocumented</p>
+
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">response</span><span class="p">(</span><span class="n">from</span> <span class="nv">request</span><span class="p">:</span> <span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/HBResponse.html">HBResponse</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">callback</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt"><a href="../Classes/HBResponse.html">HBResponse</a></span><span class="o">&gt;</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird19HBCallbackResponderV7respond2to3NIO15EventLoopFutureCyAA10HBResponseCGAA9HBRequestC_tF"></a>
+                    <a name="//apple_ref/swift/Method/respond(to:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird19HBCallbackResponderV7respond2to3NIO15EventLoopFutureCyAA10HBResponseCGAA9HBRequestC_tF">respond(to:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Return EventLoopFuture that will be fulfilled with response to the request supplied</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">respond</span><span class="p">(</span><span class="n">to</span> <span class="nv">request</span><span class="p">:</span> <span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt"><a href="../Classes/HBResponse.html">HBResponse</a></span><span class="o">&gt;</span></code></pre>
 
                         </div>
                       </div>

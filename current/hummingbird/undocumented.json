@@ -52,14 +52,28 @@
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Middleware/MetricsMiddleware.swift",
       "line": 9,
+      "symbol": "HBMetricsMiddleware.init()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Middleware/MetricsMiddleware.swift",
+      "line": 11,
       "symbol": "HBMetricsMiddleware.apply(to:next:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Middleware/Middleware.swift",
-      "line": 29,
+      "line": 30,
       "symbol": "HBMiddleware.apply(to:next:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Middleware/MiddlewareGroup.swift",
+      "line": 7,
+      "symbol": "HBMiddlewareGroup.init()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
@@ -75,6 +89,13 @@
       "line": 11,
       "symbol": "HBRouterMethods",
       "symbol_kind": "source.lang.swift.decl.extension",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Server/Responder.swift",
+      "line": 15,
+      "symbol": "HBCallbackResponder.init(callback:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {

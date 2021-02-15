@@ -17,7 +17,7 @@
     <a title="Extensions  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">Hummingbird 0.3.0 Docs</a> (87% documented)</p>
+        <p><a href="index.html">Hummingbird 0.4.0 Docs</a> (86% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="search.json">
@@ -59,6 +59,9 @@
               </li>
               <li class="nav-group-task">
                 <a href="Classes/HBRequest.html">HBRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/HBRequest/Context.html">– Context</a>
               </li>
               <li class="nav-group-task">
                 <a href="Classes/HBRequest/ResponsePatch.html">– ResponsePatch</a>
@@ -142,6 +145,9 @@
                 <a href="Structs/HBCORSMiddleware/AllowOrigin.html">– AllowOrigin</a>
               </li>
               <li class="nav-group-task">
+                <a href="Structs/HBCallbackResponder.html">HBCallbackResponder</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="Structs/HBEnvironment.html">HBEnvironment</a>
               </li>
               <li class="nav-group-task">
@@ -179,35 +185,6 @@
           <section class="section task-group-section">
             <div class="task-group">
               <ul>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:Sq"></a>
-                    <a name="//apple_ref/swift/Extension/Optional" class="dashAnchor"></a>
-                    <a class="token" href="#/s:Sq">Optional</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Extend Optional to conform to HBResponseGenerator</p>
-
-                        <a href="Extensions/Optional.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Optional</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span> <span class="k">where</span> <span class="kt">Wrapped</span><span class="p">:</span> <span class="kt">Encodable</span></code></pre>
-<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Optional</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBResponseEncodable.html">HBResponseEncodable</a></span> <span class="k">where</span> <span class="kt">Wrapped</span><span class="p">:</span> <span class="kt">Encodable</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
                 <li class="item">
                   <div>
                     <code>
@@ -353,6 +330,34 @@
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/s:Sq"></a>
+                    <a name="//apple_ref/swift/Extension/Optional" class="dashAnchor"></a>
+                    <a class="token" href="#/s:Sq">Optional</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Extend Optional to conform to HBResponseGenerator</p>
+
+                        <a href="Extensions/Optional.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Optional</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span> <span class="k">where</span> <span class="kt">Wrapped</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/s:3NIO15EventLoopFutureC"></a>
                     <a name="//apple_ref/swift/Extension/EventLoopFuture" class="dashAnchor"></a>
                     <a class="token" href="#/s:3NIO15EventLoopFutureC">EventLoopFuture</a>
@@ -383,7 +388,7 @@
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-02-10)</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-02-15)</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>

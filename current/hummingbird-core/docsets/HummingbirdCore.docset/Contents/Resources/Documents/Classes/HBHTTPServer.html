@@ -17,7 +17,7 @@
     <a title="HBHTTPServer Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">HummingbirdCore 0.3.0 Docs</a> (82% documented)</p>
+        <p><a href="../index.html">HummingbirdCore 0.4.2 Docs</a> (85% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird-core"><img src="../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../search.json">
@@ -357,9 +357,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15HummingbirdCore12HBHTTPServerC17addChannelHandler_8positionACXD3NIO0eF0_pyXA_AC0E8PositionOtF"></a>
+                    <a name="/s:15HummingbirdCore12HBHTTPServerC17addChannelHandler_8positionACXD3NIO09RemovableeF0_pyXA_AC0E8PositionOtF"></a>
                     <a name="//apple_ref/swift/Method/addChannelHandler(_:position:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15HummingbirdCore12HBHTTPServerC17addChannelHandler_8positionACXD3NIO0eF0_pyXA_AC0E8PositionOtF">addChannelHandler(_:<wbr>position:<wbr>)</a>
+                    <a class="token" href="#/s:15HummingbirdCore12HBHTTPServerC17addChannelHandler_8positionACXD3NIO09RemovableeF0_pyXA_AC0E8PositionOtF">addChannelHandler(_:<wbr>position:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -376,7 +376,7 @@ created for each child channel</p>
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">addChannelHandler</span><span class="p">(</span><span class="n">_</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@autoclosure</span> <span class="kd">@escaping</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">ChannelHandler</span><span class="p">,</span> <span class="nv">position</span><span class="p">:</span> <span class="kt"><a href="../Classes/HBHTTPServer/ChannelPosition.html">ChannelPosition</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">afterHTTP</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">addChannelHandler</span><span class="p">(</span><span class="n">_</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@autoclosure</span> <span class="kd">@escaping</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">RemovableChannelHandler</span><span class="p">,</span> <span class="nv">position</span><span class="p">:</span> <span class="kt"><a href="../Classes/HBHTTPServer/ChannelPosition.html">ChannelPosition</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">afterHTTP</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
 
                         </div>
                       </div>
@@ -530,9 +530,9 @@ created for each child channel</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15HummingbirdCore12HBHTTPServerC16addChildHandlers7channel9responder3NIO15EventLoopFutureCyytGAG7Channel_p_AA15HBHTTPResponder_ptF"></a>
-                    <a name="//apple_ref/swift/Method/addChildHandlers(channel:responder:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15HummingbirdCore12HBHTTPServerC16addChildHandlers7channel9responder3NIO15EventLoopFutureCyytGAG7Channel_p_AA15HBHTTPResponder_ptF">addChildHandlers(channel:<wbr>responder:<wbr>)</a>
+                    <a name="/s:15HummingbirdCore12HBHTTPServerC16getChildHandlers9responderSay3NIO23RemovableChannelHandler_pGAA15HBHTTPResponder_p_tF"></a>
+                    <a name="//apple_ref/swift/Method/getChildHandlers(responder:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15HummingbirdCore12HBHTTPServerC16getChildHandlers9responderSay3NIO23RemovableChannelHandler_pGAA15HBHTTPResponder_p_tF">getChildHandlers(responder:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -540,16 +540,14 @@ created for each child channel</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Add ChannelHandlers to child channel just created.</p>
-
-<p>You should only ever need this if you are writing a <code><a href="../Protocols/HBChannelInitializer.html">HBChannelInitializer</a></code></p>
+                        <p>Return array of child handlers added after HTTP handlers. Used by HBApplication.xct</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">addChildHandlers</span><span class="p">(</span><span class="nv">channel</span><span class="p">:</span> <span class="kt">Channel</span><span class="p">,</span> <span class="nv">responder</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBHTTPResponder.html">HBHTTPResponder</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Void</span><span class="o">&gt;</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getChildHandlers</span><span class="p">(</span><span class="nv">responder</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBHTTPResponder.html">HBHTTPResponder</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">RemovableChannelHandler</span><span class="p">]</span></code></pre>
 
                         </div>
                       </div>
@@ -560,24 +558,12 @@ created for each child channel</p>
                             <tr>
                               <td>
                                 <code>
-                                <em>channel</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>Channel</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
                                 <em>responder</em>
                                 </code>
                               </td>
                               <td>
                                 <div>
-                                  <p>The HTTP responder</p>
+                                  <p>final responder to user</p>
                                 </div>
                               </td>
                             </tr>
@@ -620,7 +606,7 @@ created for each child channel</p>
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-02-10)</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-02-15)</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>

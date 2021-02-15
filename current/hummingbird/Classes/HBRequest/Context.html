@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>AllowOrigin Enumeration Reference</title>
+    <title>Context Structure Reference</title>
     <link rel="stylesheet" type="text/css" href="../../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../../css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,8 +13,8 @@
     <script src="../../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Enum/AllowOrigin" class="dashAnchor"></a>
-    <a title="AllowOrigin Enumeration Reference"></a>
+    <a name="//apple_ref/swift/Struct/Context" class="dashAnchor"></a>
+    <a title="Context Structure Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../../index.html">Hummingbird 0.4.0 Docs</a> (86% documented)</p>
@@ -30,7 +30,7 @@
       <p id="breadcrumbs">
         <a href="../../index.html">Hummingbird Reference</a>
         <img id="carat" src="../../img/carat.png" />
-        AllowOrigin Enumeration Reference
+        Context Structure Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -178,15 +178,15 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>AllowOrigin</h1>
+            <h1>Context</h1>
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">AllowOrigin</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Context</span></code></pre>
 
                 </div>
               </div>
-            <p>Defines what origins are allowed</p>
+            <p>Context request is running in</p>
 
           </section>
           <section class="section task-group-section">
@@ -195,9 +195,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird16HBCORSMiddlewareV11AllowOriginO4noneyA2EmF"></a>
-                    <a name="//apple_ref/swift/Element/none" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird16HBCORSMiddlewareV11AllowOriginO4noneyA2EmF">none</a>
+                    <a name="/s:11Hummingbird9HBRequestC7ContextV6logger7Logging6LoggerVvp"></a>
+                    <a name="//apple_ref/swift/Property/logger" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird9HBRequestC7ContextV6logger7Logging6LoggerVvp">logger</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -205,14 +205,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Logger to use</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="k">none</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span></code></pre>
 
                         </div>
                       </div>
@@ -222,9 +222,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird16HBCORSMiddlewareV11AllowOriginO3allyA2EmF"></a>
-                    <a name="//apple_ref/swift/Element/all" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird16HBCORSMiddlewareV11AllowOriginO3allyA2EmF">all</a>
+                    <a name="/s:11Hummingbird9HBRequestC7ContextV9eventLoop3NIO05EventE0_pvp"></a>
+                    <a name="//apple_ref/swift/Property/eventLoop" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird9HBRequestC7ContextV9eventLoop3NIO05EventE0_pvp">eventLoop</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -232,14 +232,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>EventLoop request is running on</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">all</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span></code></pre>
 
                         </div>
                       </div>
@@ -249,9 +249,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird16HBCORSMiddlewareV11AllowOriginO11originBasedyA2EmF"></a>
-                    <a name="//apple_ref/swift/Element/originBased" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird16HBCORSMiddlewareV11AllowOriginO11originBasedyA2EmF">originBased</a>
+                    <a name="/s:11Hummingbird9HBRequestC7ContextV9allocator3NIO19ByteBufferAllocatorVvp"></a>
+                    <a name="//apple_ref/swift/Property/allocator" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird9HBRequestC7ContextV9allocator3NIO19ByteBufferAllocatorVvp">allocator</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -259,41 +259,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>ByteBuffer allocator used by request</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">originBased</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:11Hummingbird16HBCORSMiddlewareV11AllowOriginO6customyAESScAEmF"></a>
-                    <a name="//apple_ref/swift/Element/custom(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird16HBCORSMiddlewareV11AllowOriginO6customyAESScAEmF">custom(_:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">custom</span><span class="p">(</span><span class="kt">String</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">allocator</span><span class="p">:</span> <span class="kt">ByteBufferAllocator</span></code></pre>
 
                         </div>
                       </div>
