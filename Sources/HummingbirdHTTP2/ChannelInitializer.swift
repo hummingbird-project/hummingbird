@@ -7,8 +7,8 @@ import NIOSSL
 struct HTTP2ChannelInitializer: HBChannelInitializer {
     func initialize(channel: Channel, childHandlers: [RemovableChannelHandler], configuration: HBHTTPServer.Configuration) -> EventLoopFuture<Void> {
         return channel.configureHTTP2Pipeline(mode: .server) { streamChannel -> EventLoopFuture<Void> in
-            return streamChannel.pipeline.addHandler(HTTP2FramePayloadToHTTP1ServerCodec()).flatMap { () -> EventLoopFuture<Void> in
-                channel.pipeline.addHandlers(childHandlers)
+            return streamChannel.pipeline.addHandler(HTTP2FramePayloadToHTTP1ServerCodec()).flatMap { _ in
+                streamChannel.pipeline.addHandlers(childHandlers)
             }
             .map { _ in }
         }
@@ -24,10 +24,10 @@ struct HTTP2UpgradeChannelInitializer: HBChannelInitializer {
     func initialize(channel: Channel, childHandlers: [RemovableChannelHandler], configuration: HBHTTPServer.Configuration) -> EventLoopFuture<Void> {
         channel.configureHTTP2SecureUpgrade(
             h2ChannelConfigurator: { channel in
-                channel.pipeline.addHandlers(childHandlers)
+                http2.initialize(channel: channel, childHandlers: childHandlers, configuration: configuration)
             },
             http1ChannelConfigurator: { channel in
-                channel.pipeline.addHandlers(childHandlers)
+                http1.initialize(channel: channel, childHandlers: childHandlers, configuration: configuration)
             }
         )
     }
