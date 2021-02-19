@@ -7,7 +7,7 @@ import Darwin.C
 import CURLParser
 
 /// Swift interface to CURLParser
-public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral {
+public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral, Equatable {
     public struct Scheme: RawRepresentable, Equatable {
         private enum _Scheme: Substring {
             case http
