@@ -84,7 +84,7 @@ class HummingBirdCoreTests: XCTestCase {
         struct Responder: HBHTTPResponder {
             func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
                 var size = 0
-                return request.body.streamBody(on: context.eventLoop).consumeAll(on: context.eventLoop) { buffer in
+                return request.body.stream!.consumeAll(on: context.eventLoop) { buffer in
                     size += buffer.readableBytes
                     return context.eventLoop.makeSucceededFuture(())
                 }
@@ -117,7 +117,7 @@ class HummingBirdCoreTests: XCTestCase {
         struct Responder: HBHTTPResponder {
             func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
                 let body: HBResponseBody = .streamCallback { _ in
-                    return request.body.stream.consume(on: context.eventLoop).map { output in
+                    return request.body.stream!.consume(on: context.eventLoop).map { output in
                         switch output {
                         case .byteBuffer(let buffer):
                             return .byteBuffer(buffer)
@@ -154,7 +154,7 @@ class HummingBirdCoreTests: XCTestCase {
         struct Responder: HBHTTPResponder {
             func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
                 let body: HBResponseBody = .streamCallback { _ in
-                    return request.body.stream.consume(on: context.eventLoop).flatMap { output in
+                    return request.body.stream!.consume(on: context.eventLoop).flatMap { output in
                         switch output {
                         case .byteBuffer(let buffer):
                             // delay processing of buffer

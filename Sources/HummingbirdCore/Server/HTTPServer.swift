@@ -128,7 +128,7 @@ public class HBHTTPServer {
         guard let channel = self.channel else { throw Error.serverNotRunning }
         try channel.closeFuture.wait()
     }
-    
+
     /// Return array of child handlers added after HTTP handlers. Used by HBApplication.xct
     /// - Parameter responder: final responder to user
     public func getChildHandlers(responder: HBHTTPResponder) -> [RemovableChannelHandler] {
@@ -138,7 +138,7 @@ public class HBHTTPServer {
             HBHTTPServerHandler(responder: responder),
         ]
     }
-    
+
     func additionalChannelHandlers(at position: ChannelPosition) -> [RemovableChannelHandler] {
         return self._additionalChildHandlers.compactMap { if $0.position == position { return $0.handler() }; return nil }
     }
