@@ -188,6 +188,40 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    /// Test streaming of requests and streaming of responses by streaming the request body into a response streamer
+    func testStreaming() {
+        let app = HBApplication(testing: .embedded)
+        app.router.post("streaming", body: .stream) { request -> HBResponse in
+            guard let stream = request.body.stream else { throw HBHTTPError(.badRequest) }
+            struct RequestStreamer: HBResponseBodyStreamer {
+                let stream: HBRequestBodyStreamer
+
+                func read(on eventLoop: EventLoop) -> EventLoopFuture<HBResponseBody.StreamResult> {
+                    return stream.consume(on: eventLoop).map { chunk in
+                        switch chunk {
+                        case .byteBuffer(let buffer):
+                            return .byteBuffer(buffer)
+                        case .end:
+                            return .end
+                        }
+                    }
+                }
+            }
+            return HBResponse(status: .ok, headers: [:], body: .stream(RequestStreamer(stream: stream)))
+        }
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        let buffer = self.randomBuffer(size: 640001)
+        app.XCTExecute(uri: "/streaming", method: .POST, body: buffer) { response in
+            XCTAssertEqual(response.status, .ok)
+            XCTAssertEqual(response.body, buffer)
+        }
+        app.XCTExecute(uri: "/streaming", method: .POST) { response in
+            XCTAssertEqual(response.status, .badRequest)
+        }
+    }
+
     func testOptional() {
         let app = HBApplication(testing: .embedded)
         app.router
