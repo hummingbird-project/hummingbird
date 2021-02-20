@@ -82,8 +82,6 @@ public struct HBRouterGroup: HBRouterMethods {
         use closure: @escaping (HBRequest) -> R
     ) -> Self {
         let responder = HBCallbackResponder { request in
-            let streamer = request.body.streamBody(on: request.eventLoop)
-            request.body = .stream(streamer)
             return closure(request).responseFuture(from: request)
                 .map { $0.apply(patch: request.optionalResponse) }
                 .hop(to: request.eventLoop)
