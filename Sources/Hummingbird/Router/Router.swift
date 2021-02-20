@@ -41,60 +41,25 @@ public protocol HBRouter: HBRouterMethods, HBResponder {
 
 extension HBRouter {
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func on<R: HBResponseGenerator>(
+    @discardableResult public func on<Output: HBResponseGenerator>(
         _ path: String,
         method: HTTPMethod,
         body: HBBodyCollation = .collate,
-        use closure: @escaping (HBRequest) throws -> R
+        use closure: @escaping (HBRequest) throws -> Output
     ) -> Self {
-        let responder: HBResponder
-        switch body {
-        case .collate:
-            responder = HBCallbackResponder { request in
-                request.body.consumeBody(on: request.eventLoop).flatMapThrowing { buffer in
-                    request.body = .byteBuffer(buffer)
-                    return try closure(request).response(from: request).apply(patch: request.optionalResponse)
-                }
-            }
-        case .stream:
-            responder = HBCallbackResponder { request in
-                do {
-                    let response = try closure(request).response(from: request).apply(patch: request.optionalResponse)
-                    return request.success(response)
-                } catch {
-                    return request.failure(error)
-                }
-            }
-        }
+        let responder = constructResponder(body: body, use: closure)
         add(path, method: method, responder: responder)
         return self
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func on<R: HBResponseFutureGenerator>(
+    @discardableResult public func on<Output: HBResponseFutureGenerator>(
         _ path: String,
         method: HTTPMethod,
         body: HBBodyCollation = .collate,
-        use closure: @escaping (HBRequest) -> R
+        use closure: @escaping (HBRequest) -> Output
     ) -> Self {
-        let responder: HBResponder
-        switch body {
-        case .collate:
-            responder = HBCallbackResponder { request in
-                request.body.consumeBody(on: request.eventLoop).flatMap { buffer in
-                    request.body = .byteBuffer(buffer)
-                    return closure(request).responseFuture(from: request)
-                        .map { $0.apply(patch: request.optionalResponse) }
-                        .hop(to: request.eventLoop)
-                }
-            }
-        case .stream:
-            responder = HBCallbackResponder { request in
-                return closure(request).responseFuture(from: request)
-                    .map { $0.apply(patch: request.optionalResponse) }
-                    .hop(to: request.eventLoop)
-            }
-        }
+        let responder = constructResponder(body: body, use: closure)
         add(path, method: method, responder: responder)
         return self
     }

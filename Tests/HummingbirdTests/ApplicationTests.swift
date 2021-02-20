@@ -212,7 +212,7 @@ final class ApplicationTests: XCTestCase {
         app.XCTStart()
         defer { app.XCTStop() }
 
-        let buffer = self.randomBuffer(size: 640001)
+        let buffer = self.randomBuffer(size: 640_001)
         app.XCTExecute(uri: "/streaming", method: .POST, body: buffer) { response in
             XCTAssertEqual(response.status, .ok)
             XCTAssertEqual(response.body, buffer)

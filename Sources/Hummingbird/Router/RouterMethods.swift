@@ -1,7 +1,6 @@
 import NIO
 import NIOHTTP1
 
-
 public enum HBBodyCollation {
     case collate
     case stream
@@ -132,5 +131,54 @@ extension HBRouterMethods {
         use handler: @escaping (HBRequest) -> Output
     ) -> Self {
         return on(path, method: .PATCH, body: body, use: handler)
+    }
+}
+
+extension HBRouterMethods {
+    func constructResponder<Output: HBResponseGenerator>(
+        body: HBBodyCollation,
+        use closure: @escaping (HBRequest) throws -> Output
+    ) -> HBResponder {
+        switch body {
+        case .collate:
+            return HBCallbackResponder { request in
+                request.body.consumeBody(on: request.eventLoop).flatMapThrowing { buffer in
+                    request.body = .byteBuffer(buffer)
+                    return try closure(request).response(from: request).apply(patch: request.optionalResponse)
+                }
+            }
+        case .stream:
+            return HBCallbackResponder { request in
+                do {
+                    let response = try closure(request).response(from: request).apply(patch: request.optionalResponse)
+                    return request.success(response)
+                } catch {
+                    return request.failure(error)
+                }
+            }
+        }
+    }
+
+    func constructResponder<Output: HBResponseFutureGenerator>(
+        body: HBBodyCollation,
+        use closure: @escaping (HBRequest) -> Output
+    ) -> HBResponder {
+        switch body {
+        case .collate:
+            return HBCallbackResponder { request in
+                request.body.consumeBody(on: request.eventLoop).flatMap { buffer in
+                    request.body = .byteBuffer(buffer)
+                    return closure(request).responseFuture(from: request)
+                        .map { $0.apply(patch: request.optionalResponse) }
+                        .hop(to: request.eventLoop)
+                }
+            }
+        case .stream:
+            return HBCallbackResponder { request in
+                return closure(request).responseFuture(from: request)
+                    .map { $0.apply(patch: request.optionalResponse) }
+                    .hop(to: request.eventLoop)
+            }
+        }
     }
 }
