@@ -1,71 +1,136 @@
 import NIO
 import NIOHTTP1
 
+
+public enum HBBodyCollation {
+    case collate
+    case stream
+}
+
 public protocol HBRouterMethods {
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult func on<R: HBResponseGenerator>(_ path: String, method: HTTPMethod, use: @escaping (HBRequest) throws -> R) -> Self
+    @discardableResult func on<Output: HBResponseGenerator>(
+        _ path: String,
+        method: HTTPMethod,
+        body: HBBodyCollation,
+        use: @escaping (HBRequest) throws -> Output
+    ) -> Self
+
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult func on<R: HBResponseFutureGenerator>(_ path: String, method: HTTPMethod, use: @escaping (HBRequest) -> R) -> Self
+    @discardableResult func on<Output: HBResponseFutureGenerator>(
+        _ path: String,
+        method: HTTPMethod,
+        body: HBBodyCollation,
+        use: @escaping (HBRequest) -> Output
+    ) -> Self
 }
 
 extension HBRouterMethods {
     /// GET path for closure returning type conforming to HBResponseGenerator
-    @discardableResult public func get<R: HBResponseGenerator>(_ path: String = "", use closure: @escaping (HBRequest) throws -> R) -> Self {
-        return on(path, method: .GET, use: closure)
+    @discardableResult public func get<Output: HBResponseGenerator>(
+        _ path: String = "",
+        body: HBBodyCollation = .collate,
+        use handler: @escaping (HBRequest) throws -> Output
+    ) -> Self {
+        return on(path, method: .GET, body: body, use: handler)
     }
 
     /// PUT path for closure returning type conforming to HBResponseGenerator
-    @discardableResult public func put<R: HBResponseGenerator>(_ path: String = "", use closure: @escaping (HBRequest) throws -> R) -> Self {
-        return on(path, method: .PUT, use: closure)
+    @discardableResult public func put<Output: HBResponseGenerator>(
+        _ path: String = "",
+        body: HBBodyCollation = .collate,
+        use handler: @escaping (HBRequest) throws -> Output
+    ) -> Self {
+        return on(path, method: .PUT, body: body, use: handler)
     }
 
     /// POST path for closure returning type conforming to HBResponseGenerator
-    @discardableResult public func post<R: HBResponseGenerator>(_ path: String = "", use closure: @escaping (HBRequest) throws -> R) -> Self {
-        return on(path, method: .POST, use: closure)
+    @discardableResult public func post<Output: HBResponseGenerator>(
+        _ path: String = "",
+        body: HBBodyCollation = .collate,
+        use handler: @escaping (HBRequest) throws -> Output
+    ) -> Self {
+        return on(path, method: .POST, body: body, use: handler)
     }
 
     /// HEAD path for closure returning type conforming to HBResponseGenerator
-    @discardableResult public func head<R: HBResponseGenerator>(_ path: String = "", use closure: @escaping (HBRequest) throws -> R) -> Self {
-        return on(path, method: .HEAD, use: closure)
+    @discardableResult public func head<Output: HBResponseGenerator>(
+        _ path: String = "",
+        body: HBBodyCollation = .collate,
+        use handler: @escaping (HBRequest) throws -> Output
+    ) -> Self {
+        return on(path, method: .HEAD, body: body, use: handler)
     }
 
     /// DELETE path for closure returning type conforming to HBResponseGenerator
-    @discardableResult public func delete<R: HBResponseGenerator>(_ path: String = "", use closure: @escaping (HBRequest) throws -> R) -> Self {
-        return on(path, method: .DELETE, use: closure)
+    @discardableResult public func delete<Output: HBResponseGenerator>(
+        _ path: String = "",
+        body: HBBodyCollation = .collate,
+        use handler: @escaping (HBRequest) throws -> Output
+    ) -> Self {
+        return on(path, method: .DELETE, body: body, use: handler)
     }
 
     /// PATCH path for closure returning type conforming to HBResponseGenerator
-    @discardableResult public func patch<R: HBResponseGenerator>(_ path: String = "", use closure: @escaping (HBRequest) throws -> R) -> Self {
-        return on(path, method: .PATCH, use: closure)
+    @discardableResult public func patch<Output: HBResponseGenerator>(
+        _ path: String = "",
+        body: HBBodyCollation = .collate,
+        use handler: @escaping (HBRequest) throws -> Output
+    ) -> Self {
+        return on(path, method: .PATCH, body: body, use: handler)
     }
 
     /// GET path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func get<R: HBResponseFutureGenerator>(_ path: String = "", use closure: @escaping (HBRequest) -> R) -> Self {
-        return on(path, method: .GET, use: closure)
+    @discardableResult public func get<Output: HBResponseFutureGenerator>(
+        _ path: String = "",
+        body: HBBodyCollation = .collate,
+        use handler: @escaping (HBRequest) -> Output
+    ) -> Self {
+        return on(path, method: .GET, body: body, use: handler)
     }
 
     /// PUT path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func put<R: HBResponseFutureGenerator>(_ path: String = "", use closure: @escaping (HBRequest) -> R) -> Self {
-        return on(path, method: .PUT, use: closure)
+    @discardableResult public func put<Output: HBResponseFutureGenerator>(
+        _ path: String = "",
+        body: HBBodyCollation = .collate,
+        use handler: @escaping (HBRequest) -> Output
+    ) -> Self {
+        return on(path, method: .PUT, body: body, use: handler)
     }
 
     /// POST path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func delete<R: HBResponseFutureGenerator>(_ path: String = "", use closure: @escaping (HBRequest) -> R) -> Self {
-        return on(path, method: .DELETE, use: closure)
+    @discardableResult public func delete<Output: HBResponseFutureGenerator>(
+        _ path: String = "",
+        body: HBBodyCollation = .collate,
+        use handler: @escaping (HBRequest) -> Output
+    ) -> Self {
+        return on(path, method: .DELETE, body: body, use: handler)
     }
 
     /// HEAD path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func head<R: HBResponseFutureGenerator>(_ path: String = "", use closure: @escaping (HBRequest) -> R) -> Self {
-        return on(path, method: .HEAD, use: closure)
+    @discardableResult public func head<Output: HBResponseFutureGenerator>(
+        _ path: String = "",
+        body: HBBodyCollation = .collate,
+        use handler: @escaping (HBRequest) -> Output
+    ) -> Self {
+        return on(path, method: .HEAD, body: body, use: handler)
     }
 
     /// DELETE path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func post<R: HBResponseFutureGenerator>(_ path: String = "", use closure: @escaping (HBRequest) -> R) -> Self {
-        return on(path, method: .POST, use: closure)
+    @discardableResult public func post<Output: HBResponseFutureGenerator>(
+        _ path: String = "",
+        body: HBBodyCollation = .collate,
+        use handler: @escaping (HBRequest) -> Output
+    ) -> Self {
+        return on(path, method: .POST, body: body, use: handler)
     }
 
     /// PATCH path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func patch<R: HBResponseFutureGenerator>(_ path: String = "", use closure: @escaping (HBRequest) -> R) -> Self {
-        return on(path, method: .PATCH, use: closure)
+    @discardableResult public func patch<Output: HBResponseFutureGenerator>(
+        _ path: String = "",
+        body: HBBodyCollation = .collate,
+        use handler: @escaping (HBRequest) -> Output
+    ) -> Self {
+        return on(path, method: .PATCH, body: body, use: handler)
     }
 }

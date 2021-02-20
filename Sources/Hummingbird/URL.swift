@@ -40,12 +40,12 @@ public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral, Equata
     public let string: String
     public let scheme: Scheme?
 
-    public var host: String? { return _host.map { String($0) }}
-    public var port: Int? { return _port.map { Int($0) } ?? nil }
-    public var path: String { String(_path) }
-    public var query: String? { return _query.map { String($0) }}
-    public var fragment: String? { return _fragment.map { String($0) }}
-    public var queryParameters: HBParameters { return .init(fromQuery: _query) }
+    public var host: String? { return self._host.map { String($0) }}
+    public var port: Int? { return self._port.map { Int($0) } ?? nil }
+    public var path: String { String(self._path) }
+    public var query: String? { return self._query.map { String($0) }}
+    public var fragment: String? { return self._fragment.map { String($0) }}
+    public var queryParameters: HBParameters { return .init(fromQuery: self._query) }
 
     private let _host: Substring?
     private let _port: Substring?

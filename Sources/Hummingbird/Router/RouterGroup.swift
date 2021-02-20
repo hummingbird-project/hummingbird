@@ -43,12 +43,26 @@ public struct HBRouterGroup: HBRouterMethods {
     @discardableResult public func on<R: HBResponseGenerator>(
         _ path: String = "",
         method: HTTPMethod,
+        body: HBBodyCollation = .collate,
         use closure: @escaping (HBRequest) throws -> R
     ) -> Self {
-        let responder = HBCallbackResponder { request in
-            request.body.consumeBody(on: request.eventLoop).flatMapThrowing { buffer in
-                request.body = .byteBuffer(buffer)
-                return try closure(request).response(from: request).apply(patch: request.optionalResponse)
+        let responder: HBResponder
+        switch body {
+        case .collate:
+            responder = HBCallbackResponder { request in
+                request.body.consumeBody(on: request.eventLoop).flatMapThrowing { buffer in
+                    request.body = .byteBuffer(buffer)
+                    return try closure(request).response(from: request).apply(patch: request.optionalResponse)
+                }
+            }
+        case .stream:
+            responder = HBCallbackResponder { request in
+                do {
+                    let response = try closure(request).response(from: request).apply(patch: request.optionalResponse)
+                    return request.success(response)
+                } catch {
+                    return request.failure(error)
+                }
             }
         }
         let path = self.combinePaths(self.path, path)
@@ -60,31 +74,26 @@ public struct HBRouterGroup: HBRouterMethods {
     @discardableResult public func on<R: HBResponseFutureGenerator>(
         _ path: String = "",
         method: HTTPMethod,
+        body: HBBodyCollation = .collate,
         use closure: @escaping (HBRequest) -> R
     ) -> Self {
-        let responder = HBCallbackResponder { request in
-            request.body.consumeBody(on: request.eventLoop).flatMap { buffer in
-                request.body = .byteBuffer(buffer)
+        let responder: HBResponder
+        switch body {
+        case .collate:
+            responder = HBCallbackResponder { request in
+                request.body.consumeBody(on: request.eventLoop).flatMap { buffer in
+                    request.body = .byteBuffer(buffer)
+                    return closure(request).responseFuture(from: request)
+                        .map { $0.apply(patch: request.optionalResponse) }
+                        .hop(to: request.eventLoop)
+                }
+            }
+        case .stream:
+            responder = HBCallbackResponder { request in
                 return closure(request).responseFuture(from: request)
                     .map { $0.apply(patch: request.optionalResponse) }
                     .hop(to: request.eventLoop)
             }
-        }
-        let path = self.combinePaths(self.path, path)
-        self.router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
-        return self
-    }
-
-    /// Add path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func onStreaming<R: HBResponseFutureGenerator>(
-        _ path: String = "",
-        method: HTTPMethod,
-        use closure: @escaping (HBRequest) -> R
-    ) -> Self {
-        let responder = HBCallbackResponder { request in
-            return closure(request).responseFuture(from: request)
-                .map { $0.apply(patch: request.optionalResponse) }
-                .hop(to: request.eventLoop)
         }
         let path = self.combinePaths(self.path, path)
         self.router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
