@@ -41,14 +41,14 @@ public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral, Equata
     public let scheme: Scheme?
 
     public var host: String? { return _host.map { String($0) }}
-    public var port: String? { return _port.map { String($0) }}
+    public var port: Int? { return _port.map { Int($0) } ?? nil }
     public var path: String { String(_path) }
     public var query: String? { return _query.map { String($0) }}
     public var fragment: String? { return _fragment.map { String($0) }}
     public var queryParameters: HBParameters { return .init(fromQuery: _query) }
 
     private let _host: Substring?
-    private let _port: Int?
+    private let _port: Substring?
     private let _path: Substring
     private let _query: Substring?
     private let _fragment: Substring?
@@ -66,11 +66,7 @@ public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral, Equata
             self.scheme = nil
         }
         self._host = Self.substring(from: url.field_data.1, with: string)
-        if let port = Self.substring(from: url.field_data.2, with: string) {
-            self._port = Int(port)
-        } else {
-            self._port = nil
-        }
+        self._port = Self.substring(from: url.field_data.2, with: string)
         self._path = Self.substring(from: url.field_data.3, with: string)?.removingPercentEncoding ?? "/"
         self._query = Self.substring(from: url.field_data.4, with: string)
         self._fragment = Self.substring(from: url.field_data.5, with: string)
