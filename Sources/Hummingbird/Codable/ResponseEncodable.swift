@@ -14,21 +14,6 @@ extension HBResponseEncodable {
     }
 }
 
-/// Extend Optional to conform to HBResponseGenerator
-/* extension Optional: HBResponseGenerator where Wrapped: Encodable {}
-
- /// Extend Optional to conform to HBResponseEncodable
- extension Optional: HBResponseEncodable where Wrapped: Encodable {
-     public func response(from request: HBRequest) throws -> HBResponse {
-         switch self {
-         case .some(let wrapped):
-             return try request.application.encoder.encode(wrapped, from: request)
-         case .none:
-             throw HBHTTPError(.notFound)
-         }
-     }
- }
- */
 /// Extend Array to conform to HBResponseGenerator
 extension Array: HBResponseGenerator where Element: Encodable {}
 
