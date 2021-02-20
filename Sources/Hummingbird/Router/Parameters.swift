@@ -1,6 +1,6 @@
-/// Store for parameters extracted from Request URI
+/// Store for parameters key, value pairs extracted from URI
 public struct HBParameters {
-    var parameters: [Substring: Substring]
+    internal var parameters: [Substring: Substring]
 
     init() {
         self.parameters = [:]
@@ -8,15 +8,15 @@ public struct HBParameters {
 
     /// Return parameter with specified id
     /// - Parameter s: parameter id
-    public func get(_ s: Substring) -> Substring? {
-        return self.parameters[s[...]]
+    public func get(_ s: String) -> String? {
+        return self.parameters[s[...]].map { String($0) }
     }
 
     /// Return parameter with specified id as a certain type
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
-    public func get<T: LosslessStringConvertible>(_ s: Substring, as: T.Type) -> T? {
+    public func get<T: LosslessStringConvertible>(_ s: String, as: T.Type) -> T? {
         return self.parameters[s[...]].map { T(String($0)) } ?? nil
     }
 
@@ -24,8 +24,16 @@ public struct HBParameters {
     /// - Parameters:
     ///   - s: parameter id
     ///   - value: parameter value
-    public mutating func set(_ s: Substring, value: Substring) {
+    mutating func set(_ s: Substring, value: Substring) {
         self.parameters[s] = value
+    }
+
+    public subscript(_ s: String) -> String? {
+        return self.parameters[s[...]].map { String($0) }
+    }
+
+    public subscript(_ s: Substring) -> String? {
+        return self.parameters[s].map { String($0) }
     }
 
     /// number of parameters
