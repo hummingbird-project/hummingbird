@@ -10,14 +10,13 @@ public struct HBMetricsMiddleware: HBMiddleware {
 
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
         let dimensions: [(String, String)] = [
-            ("hb_uri", request.uri.description),
+            ("hb_uri", request.uri.path),
             ("hb_method", request.method.rawValue),
         ]
         let startTime = DispatchTime.now().uptimeNanoseconds
 
-        Counter(label: "hb_requests", dimensions: dimensions).increment()
-
         return next.respond(to: request).map { response in
+            Counter(label: "hb_requests", dimensions: dimensions).increment()
             Metrics.Timer(
                 label: "hb_request_duration",
                 dimensions: dimensions,
@@ -26,6 +25,10 @@ public struct HBMetricsMiddleware: HBMiddleware {
             return response
         }
         .flatMapErrorThrowing { error in
+            // Don't record 404 errors, to avoid spamming of metrics
+            if let error = error as? HBHTTPError, error.status == .notFound {
+                throw error
+            }
             Counter(label: "hb_errors", dimensions: dimensions).increment()
             throw error
         }

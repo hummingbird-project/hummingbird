@@ -45,13 +45,14 @@ extension HBApplication {
                     return HBHTTPResponse(head: responseHead, body: response.body)
                 }
                 .flatMapError { error in
-                    // catch error to print to the log
-                    request.logger.error("\(error)")
                     // then convert to valid response so this isn't treated as an error further down
                     let response: HBHTTPResponse
                     if let error = error as? HBHTTPResponseError {
+                        // this is a processed error so don't log as Error
+                        request.logger.info("Error: \(error)")
                         response = error.response(version: request.version, allocator: request.allocator)
                     } else {
+                        request.logger.error("\(error)")
                         response = HBHTTPResponse(
                             head: .init(version: request.version, status: .internalServerError),
                             body: .empty
