@@ -45,4 +45,4 @@ Extensions provided in other repositories include
 
 ## Documentation
 
-You can find reference documentation for Hummingbird [here](https://hummingbird-project.github.io/hummingbird/current/hummingbird/index.html).
+You can find reference documentation for Hummingbird [here](https://hummingbird-project.github.io/hummingbird/current/hummingbird/index.html). The [hummingbird-examples](https://github.com/hummingbird-project/hummingbird-examples) repository has a number of examples of different uses of the library.
