@@ -52,17 +52,8 @@ extension Optional: HBResponseGenerator where Wrapped: HBResponseGenerator {
     }
 }
 
-/// Object that can generate a `EventLoopFuture<Response>`
-///
-/// This is used by `Router` to convert handler `EventLoopFuture` based return values into a
-/// `EventLoopFuture<HBResponse>`.
-public protocol HBResponseFutureGenerator {
-    /// Generate `EventLoopFuture` that will be fulfilled with the response
-    func responseFuture(from request: HBRequest) -> EventLoopFuture<HBResponse>
-}
-
 /// Extend EventLoopFuture of a ResponseEncodable to conform to ResponseFutureEncodable
-extension EventLoopFuture: HBResponseFutureGenerator where Value: HBResponseGenerator {
+extension EventLoopFuture where Value: HBResponseGenerator {
     /// Generate `EventLoopFuture` that will be fulfilled with the response
     public func responseFuture(from request: HBRequest) -> EventLoopFuture<HBResponse> {
         return self.flatMapThrowing { try $0.response(from: request) }

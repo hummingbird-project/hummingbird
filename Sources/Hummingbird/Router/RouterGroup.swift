@@ -53,11 +53,11 @@ public struct HBRouterGroup: HBRouterMethods {
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func on<Output: HBResponseFutureGenerator>(
+    @discardableResult public func on<Output: HBResponseGenerator>(
         _ path: String = "",
         method: HTTPMethod,
         body: HBBodyCollation = .collate,
-        use closure: @escaping (HBRequest) -> Output
+        use closure: @escaping (HBRequest) -> EventLoopFuture<Output>
     ) -> Self {
         let responder = constructResponder(body: body, use: closure)
         let path = self.combinePaths(self.path, path)
