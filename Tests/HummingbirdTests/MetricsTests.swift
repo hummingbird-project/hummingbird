@@ -165,8 +165,8 @@ internal class TestTimer: TimerHandler, Equatable {
 final class MetricsTests: XCTestCase {
     static var testMetrics = TestMetrics()
 
-    enum override func setUp() {
-        MetricsSystem.bootstrap(testMetrics)
+    override class func setUp() {
+        MetricsSystem.bootstrap(self.testMetrics)
     }
 
     func testCounter() throws {
