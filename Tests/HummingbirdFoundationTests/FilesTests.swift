@@ -63,22 +63,25 @@ class HummingbirdFilesTests: XCTestCase {
         app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=100-4000"]) { response in
+        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=100-3999"]) { response in
             let body = try XCTUnwrap(response.body)
             let slice = buffer.getSlice(at: 100, length: 3900)
             XCTAssertEqual(body, slice)
+            XCTAssertEqual(response.headers["content-range"].first, "bytes 100-3999/326000")
         }
 
-        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=-4000"]) { response in
+        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=-3999"]) { response in
             let body = try XCTUnwrap(response.body)
             let slice = buffer.getSlice(at: 0, length: 4000)
             XCTAssertEqual(body, slice)
+            XCTAssertEqual(response.headers["content-range"].first, "bytes 0-3999/326000")
         }
 
         app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=6000-"]) { response in
             let body = try XCTUnwrap(response.body)
             let slice = buffer.getSlice(at: 6000, length: 320000)
             XCTAssertEqual(body, slice)
+            XCTAssertEqual(response.headers["content-range"].first, "bytes 6000-325999/326000")
         }
     }
 

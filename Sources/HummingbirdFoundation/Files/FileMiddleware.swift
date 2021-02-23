@@ -57,7 +57,15 @@ public struct HBFileMiddleware: HBMiddleware {
                     range = getRangeFromHeaderValue(rangeHeader)
                 }
                 return fileIO.loadFile(path: fullPath, range: range, context: request.context)
-                    .map { HBResponse(status: .ok, body: $0) }
+                    .map { body, fileSize in
+                        var headers: HTTPHeaders = [:]
+                        if let range = range {
+                            let lowerBound = max(range.lowerBound, 0)
+                            let upperBound = min(range.upperBound, fileSize - 1)
+                            headers.replaceOrAdd(name: "content-range", value: "bytes \(lowerBound)-\(upperBound)/\(fileSize)")
+                        }
+                        return HBResponse(status: .ok, headers: headers, body: body)
+                    }
 
             case .HEAD:
                 return fileIO.headFile(path: fullPath, context: request.context)

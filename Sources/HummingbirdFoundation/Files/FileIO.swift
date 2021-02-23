@@ -38,23 +38,26 @@ public struct HBFileIO {
     /// - Parameters:
     ///   - request: request for file
     ///   - path: System file path
-    /// - Returns: Response include file
-    public func loadFile(path: String, range: ClosedRange<Int>? = nil, context: HBRequest.Context) -> EventLoopFuture<HBResponseBody> {
+    /// - Returns: Response body plus file size
+    public func loadFile(path: String, range: ClosedRange<Int>? = nil, context: HBRequest.Context) -> EventLoopFuture<(HBResponseBody, Int)> {
         return self.fileIO.openFile(path: path, eventLoop: context.eventLoop).flatMap { handle, region in
             context.logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
-            var region = region
+            var loadRegion = region
             // work out region to load
             if let range = range {
                 let regionRange = region.readerIndex...region.readerIndex+region.readableBytes
                 let range = range.clamped(to: regionRange)
-                region = FileRegion(fileHandle: handle, readerIndex: range.lowerBound, endIndex: range.upperBound)
+                // add one to upperBound as range is inclusive of upper bound
+                loadRegion = FileRegion(fileHandle: handle, readerIndex: range.lowerBound, endIndex: range.upperBound + 1)
             }
 
-            let futureResult: EventLoopFuture<HBResponseBody>
-            if region.readableBytes > self.chunkSize {
-                futureResult = streamFile(handle: handle, region: region, context: context)
+            let futureResult: EventLoopFuture<(HBResponseBody, Int)>
+            if loadRegion.readableBytes > self.chunkSize {
+                futureResult = streamFile(handle: handle, region: loadRegion, context: context)
+                    .map { ($0, region.readableBytes) }
             } else {
-                futureResult = loadFile(handle: handle, region: region, context: context)
+                futureResult = loadFile(handle: handle, region: loadRegion, context: context)
+                    .map { ($0, region.readableBytes) }
                 // only close file handle for load, as streamer hasn't loaded data at this point
                 futureResult.whenComplete { _ in
                     try? handle.close()
