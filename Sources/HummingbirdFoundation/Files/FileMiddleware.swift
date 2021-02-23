@@ -52,7 +52,11 @@ public struct HBFileMiddleware: HBMiddleware {
 
             switch request.method {
             case .GET:
-                return fileIO.loadFile(path: fullPath, context: request.context)
+                var range: ClosedRange<Int>? = nil
+                if let rangeHeader = request.headers["Range"].first {
+                    range = getRangeFromHeaderValue(rangeHeader)
+                }
+                return fileIO.loadFile(path: fullPath, range: range, context: request.context)
                     .map { HBResponse(status: .ok, body: $0) }
 
             case .HEAD:
@@ -62,5 +66,30 @@ public struct HBFileMiddleware: HBMiddleware {
                 return request.eventLoop.makeFailedFuture(error)
             }
         }
+    }
+}
+
+extension HBFileMiddleware {
+    /// Convert "bytes=value-value" range header into `ClosedRange<Int>`
+    ///
+    /// Also supports open ended ranges
+    func getRangeFromHeaderValue(_ header: String) -> ClosedRange<Int>? {
+        let scanner = Scanner(string: header)
+        guard scanner.scanString("bytes=") == "bytes=" else { return nil }
+        let position = scanner.currentIndex
+        let char = scanner.scanCharacter()
+        if char == "-" {
+            guard let upperBound = scanner.scanInt() else { return nil }
+            return Int.min...upperBound
+        }
+        scanner.currentIndex = position
+        guard let lowerBound = scanner.scanInt() else { return nil }
+        guard scanner.scanCharacter() == "-" else { return nil }
+        if scanner.isAtEnd {
+            return lowerBound...Int.max
+        }
+        guard let upperBound = scanner.scanInt() else { return nil }
+        guard upperBound >= lowerBound else { return nil }
+        return lowerBound...upperBound
     }
 }

@@ -39,9 +39,17 @@ public struct HBFileIO {
     ///   - request: request for file
     ///   - path: System file path
     /// - Returns: Response include file
-    public func loadFile(path: String, context: HBRequest.Context) -> EventLoopFuture<HBResponseBody> {
+    public func loadFile(path: String, range: ClosedRange<Int>? = nil, context: HBRequest.Context) -> EventLoopFuture<HBResponseBody> {
         return self.fileIO.openFile(path: path, eventLoop: context.eventLoop).flatMap { handle, region in
             context.logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
+            var region = region
+            // work out region to load
+            if let range = range {
+                let regionRange = region.readerIndex...region.readerIndex+region.readableBytes
+                let range = range.clamped(to: regionRange)
+                region = FileRegion(fileHandle: handle, readerIndex: range.lowerBound, endIndex: range.upperBound)
+            }
+
             let futureResult: EventLoopFuture<HBResponseBody>
             if region.readableBytes > self.chunkSize {
                 futureResult = streamFile(handle: handle, region: region, context: context)
@@ -87,7 +95,13 @@ public struct HBFileIO {
 
     /// Load file as ByteBuffer
     func loadFile(handle: NIOFileHandle, region: FileRegion, context: HBRequest.Context) -> EventLoopFuture<HBResponseBody> {
-        return self.fileIO.read(fileHandle: handle, byteCount: region.readableBytes, allocator: context.allocator, eventLoop: context.eventLoop).map { buffer in
+        return self.fileIO.read(
+            fileHandle: handle,
+            fromOffset: Int64(region.readerIndex),
+            byteCount: region.readableBytes,
+            allocator: context.allocator,
+            eventLoop: context.eventLoop
+        ).map { buffer in
             return .byteBuffer(buffer)
         }
     }

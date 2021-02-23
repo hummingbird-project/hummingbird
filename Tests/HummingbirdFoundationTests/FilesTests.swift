@@ -50,6 +50,38 @@ class HummingbirdFilesTests: XCTestCase {
         }
     }
 
+    func testReadRange() {
+        let app = HBApplication(testing: .live)
+        app.middleware.add(HBFileMiddleware(".", application: app))
+
+        let buffer = self.randomBuffer(size: 64000)
+        let data = Data(buffer: buffer)
+        let fileURL = URL(fileURLWithPath: "test.txt")
+        XCTAssertNoThrow(try data.write(to: fileURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=100-4000"]) { response in
+            let body = try XCTUnwrap(response.body)
+            let slice = buffer.getSlice(at: 100, length: 3900)
+            XCTAssertEqual(body, slice)
+        }
+
+        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=-4000"]) { response in
+            let body = try XCTUnwrap(response.body)
+            let slice = buffer.getSlice(at: 0, length: 4000)
+            XCTAssertEqual(body, slice)
+        }
+
+        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=61000-"]) { response in
+            let body = try XCTUnwrap(response.body)
+            let slice = buffer.getSlice(at: 61000, length: 3000)
+            XCTAssertEqual(body, slice)
+        }
+    }
+
     func testHead() throws {
         let app = HBApplication(testing: .live)
         app.middleware.add(HBFileMiddleware(".", application: app))
