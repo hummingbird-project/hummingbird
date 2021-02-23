@@ -28,6 +28,8 @@ public final class HBRequest: HBExtensible {
     public var allocator: ByteBufferAllocator
     /// Request extensions
     public var extensions: HBExtensions<HBRequest>
+    /// endpoint that services this request
+    public var endpointPath: String?
 
     /// Parameters extracted during processing of request URI. These are available to you inside the route handler
     public var parameters: HBParameters {
@@ -61,6 +63,7 @@ public final class HBRequest: HBExtensible {
         self.eventLoop = eventLoop
         self.allocator = allocator
         self.extensions = HBExtensions()
+        self.endpointPath = nil
     }
 
     // MARK: Methods

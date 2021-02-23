@@ -9,13 +9,15 @@ public struct HBMetricsMiddleware: HBMiddleware {
     public init() {}
 
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
-        let dimensions: [(String, String)] = [
-            ("hb_uri", request.uri.path),
-            ("hb_method", request.method.rawValue),
-        ]
         let startTime = DispatchTime.now().uptimeNanoseconds
 
         return next.respond(to: request).map { response in
+            // need to create dimensions once request has been responded to ensure
+            // we have the correct endpoint path
+            let dimensions: [(String, String)] = [
+                ("hb_uri", request.endpointPath ?? request.uri.path),
+                ("hb_method", request.method.rawValue),
+            ]
             Counter(label: "hb_requests", dimensions: dimensions).increment()
             Metrics.Timer(
                 label: "hb_request_duration",
@@ -25,9 +27,19 @@ public struct HBMetricsMiddleware: HBMiddleware {
             return response
         }
         .flatMapErrorThrowing { error in
-            // Don't record 404 errors, to avoid spamming of metrics
+            // need to create dimensions once request has been responded to ensure
+            // we have the correct endpoint path
+            let dimensions: [(String, String)]
             if let error = error as? HBHTTPError, error.status == .notFound {
-                throw error
+                // Don't record uri in 404 errors, to avoid spamming of metrics
+                dimensions = [
+                    ("hb_method", request.method.rawValue),
+                ]
+            } else {
+                dimensions = [
+                    ("hb_uri", request.endpointPath ?? request.uri.path),
+                    ("hb_method", request.method.rawValue),
+                ]
             }
             Counter(label: "hb_errors", dimensions: dimensions).increment()
             throw error

@@ -14,7 +14,7 @@ struct TrieRouter: HBRouter {
     ///   - method: http method
     ///   - responder: handler to call
     public func add(_ path: String, method: HTTPMethod, responder: HBResponder) {
-        self.trie.addEntry(.init(path), value: HBEndpointResponder()) { node in
+        self.trie.addEntry(.init(path), value: HBEndpointResponder(path: path)) { node in
             node.value!.addResponder(for: method, responder: responder)
         }
     }
@@ -34,6 +34,8 @@ struct TrieRouter: HBRouter {
         if result.parameters.count > 0 {
             request.parameters = result.parameters
         }
+        // store endpoint path in request (mainly for metrics)
+        request.endpointPath = result.value.path
         return result.value.respond(to: request)
     }
 }

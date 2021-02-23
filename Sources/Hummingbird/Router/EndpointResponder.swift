@@ -3,7 +3,8 @@ import NIOHTTP1
 
 /// Responder that chooses the next responder to call based on the request method
 class HBEndpointResponder: HBResponder {
-    init() {
+    init(path: String) {
+        self.path = path
         self.methods = [:]
     }
 
@@ -22,4 +23,5 @@ class HBEndpointResponder: HBResponder {
     }
 
     var methods: [String: HBResponder]
+    var path: String
 }
