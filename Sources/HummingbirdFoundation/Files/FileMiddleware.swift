@@ -59,13 +59,15 @@ public struct HBFileMiddleware: HBMiddleware {
                 return fileIO.loadFile(path: fullPath, range: range, context: request.context)
                     .map { body, fileSize in
                         var headers: HTTPHeaders = [:]
+                        var status: HTTPResponseStatus = .ok
                         if let range = range {
                             let lowerBound = max(range.lowerBound, 0)
                             let upperBound = min(range.upperBound, fileSize - 1)
                             headers.replaceOrAdd(name: "content-range", value: "bytes \(lowerBound)-\(upperBound)/\(fileSize)")
+                            status = .partialContent
                         }
                         headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
-                        return HBResponse(status: .ok, headers: headers, body: body)
+                        return HBResponse(status: status, headers: headers, body: body)
                     }
 
             case .HEAD:
