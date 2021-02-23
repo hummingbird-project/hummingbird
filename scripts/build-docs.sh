@@ -23,6 +23,7 @@ build_docs() {
         --module-version "$VERSION" \
         --module "$MODULE_NAME" \
         --readme "$CWD"/documentation/readme.md \
+        --documentation "$CWD"/documentation/* \
         --output "$CWD"/docs/"$DOCS_FOLDER"
 }
 
@@ -38,11 +39,11 @@ build_docs_from_other_repo() {
 }
 
 build_docs Hummingbird hummingbird hummingbird
-build_docs HummingbirdFoundation hummingbird hummingbird-foundation
-build_docs HummingbirdXCT hummingbird hummingbird-xct
+#build_docs HummingbirdFoundation hummingbird hummingbird-foundation
+#build_docs HummingbirdXCT hummingbird hummingbird-xct
 
-build_docs_from_other_repo HummingbirdCore hummingbird-core hummingbird-core
-build_docs_from_other_repo HummingbirdAuth hummingbird-auth hummingbird-auth
+#build_docs_from_other_repo HummingbirdCore hummingbird-core hummingbird-core
+#build_docs_from_other_repo HummingbirdAuth hummingbird-auth hummingbird-auth
 
 
 rm -rf "$TEMP_DIR"
