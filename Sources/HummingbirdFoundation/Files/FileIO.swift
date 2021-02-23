@@ -31,22 +31,60 @@ public struct HBFileIO {
         }
     }
 
-    /// Load file and pass to response
+    /// Load file and return response body
     ///
-    /// Depending on the file size this will return either a response containing a ByteBuffer or a stream that will provide the
+    /// Depending on the file size this will return either a response body containing a ByteBuffer or a stream that will provide the
     /// file in chunks.
     /// - Parameters:
-    ///   - request: request for file
     ///   - path: System file path
-    /// - Returns: Response include file
+    ///   - context: Context this request is being called in
+    /// - Returns: Response body plus file size
     public func loadFile(path: String, context: HBRequest.Context) -> EventLoopFuture<HBResponseBody> {
         return self.fileIO.openFile(path: path, eventLoop: context.eventLoop).flatMap { handle, region in
             context.logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
+
             let futureResult: EventLoopFuture<HBResponseBody>
             if region.readableBytes > self.chunkSize {
                 futureResult = streamFile(handle: handle, region: region, context: context)
             } else {
                 futureResult = loadFile(handle: handle, region: region, context: context)
+                // only close file handle for load, as streamer hasn't loaded data at this point
+                futureResult.whenComplete { _ in
+                    try? handle.close()
+                }
+            }
+            return futureResult
+        }.flatMapErrorThrowing { _ in
+            throw HBHTTPError(.notFound)
+        }
+    }
+
+    /// Load part of file and return response body.
+    ///
+    /// Depending on the size of the part this will return either a response body containing a ByteBuffer or a stream that will provide the
+    /// file in chunks.
+    /// - Parameters:
+    ///   - path: System file path
+    ///   - range:Range defining how much of the file is to be loaded
+    ///   - context: Context this request is being called in
+    /// - Returns: Response body plus file size
+    public func loadFile(path: String, range: ClosedRange<Int>, context: HBRequest.Context) -> EventLoopFuture<(HBResponseBody, Int)> {
+        return self.fileIO.openFile(path: path, eventLoop: context.eventLoop).flatMap { handle, region in
+            context.logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
+
+            // work out region to load
+            let regionRange = region.readerIndex...region.endIndex
+            let range = range.clamped(to: regionRange)
+            // add one to upperBound as range is inclusive of upper bound
+            let loadRegion = FileRegion(fileHandle: handle, readerIndex: range.lowerBound, endIndex: range.upperBound + 1)
+
+            let futureResult: EventLoopFuture<(HBResponseBody, Int)>
+            if loadRegion.readableBytes > self.chunkSize {
+                futureResult = streamFile(handle: handle, region: loadRegion, context: context)
+                    .map { ($0, region.readableBytes) }
+            } else {
+                futureResult = loadFile(handle: handle, region: loadRegion, context: context)
+                    .map { ($0, region.readableBytes) }
                 // only close file handle for load, as streamer hasn't loaded data at this point
                 futureResult.whenComplete { _ in
                     try? handle.close()
@@ -87,7 +125,13 @@ public struct HBFileIO {
 
     /// Load file as ByteBuffer
     func loadFile(handle: NIOFileHandle, region: FileRegion, context: HBRequest.Context) -> EventLoopFuture<HBResponseBody> {
-        return self.fileIO.read(fileHandle: handle, byteCount: region.readableBytes, allocator: context.allocator, eventLoop: context.eventLoop).map { buffer in
+        return self.fileIO.read(
+            fileHandle: handle,
+            fromOffset: Int64(region.readerIndex),
+            byteCount: region.readableBytes,
+            allocator: context.allocator,
+            eventLoop: context.eventLoop
+        ).map { buffer in
             return .byteBuffer(buffer)
         }
     }
@@ -96,7 +140,7 @@ public struct HBFileIO {
     func streamFile(handle: NIOFileHandle, region: FileRegion, context: HBRequest.Context) -> EventLoopFuture<HBResponseBody> {
         let fileStreamer = FileStreamer(
             handle: handle,
-            fileSize: region.readableBytes,
+            fileRegion: region,
             fileIO: self.fileIO,
             chunkSize: self.chunkSize,
             allocator: context.allocator
@@ -119,24 +163,28 @@ public struct HBFileIO {
     /// class used to stream files
     class FileStreamer: HBResponseBodyStreamer {
         let chunkSize: Int
-        var handle: NIOFileHandle
-        var bytesLeft: Int
-        var fileIO: NonBlockingFileIO
-        var allocator: ByteBufferAllocator
+        let handle: NIOFileHandle
+        var fileOffset: Int
+        let endOffset: Int
+        let fileIO: NonBlockingFileIO
+        let allocator: ByteBufferAllocator
 
-        init(handle: NIOFileHandle, fileSize: Int, fileIO: NonBlockingFileIO, chunkSize: Int, allocator: ByteBufferAllocator) {
+        init(handle: NIOFileHandle, fileRegion: FileRegion, fileIO: NonBlockingFileIO, chunkSize: Int, allocator: ByteBufferAllocator) {
             self.handle = handle
-            self.bytesLeft = fileSize
+            self.fileOffset = fileRegion.readerIndex
+            self.endOffset = fileRegion.endIndex
             self.fileIO = fileIO
             self.chunkSize = chunkSize
             self.allocator = allocator
         }
 
         func read(on eventLoop: EventLoop) -> EventLoopFuture<HBResponseBody.StreamResult> {
-            let bytesToRead = min(self.chunkSize, self.bytesLeft)
+            let bytesLeft = self.endOffset - self.fileOffset
+            let bytesToRead = min(self.chunkSize, bytesLeft)
             if bytesToRead > 0 {
-                self.bytesLeft -= bytesToRead
-                return self.fileIO.read(fileHandle: self.handle, byteCount: bytesToRead, allocator: self.allocator, eventLoop: eventLoop)
+                let fileOffsetToRead = self.fileOffset
+                self.fileOffset += bytesToRead
+                return self.fileIO.read(fileHandle: self.handle, fromOffset: Int64(fileOffsetToRead), byteCount: bytesToRead, allocator: self.allocator, eventLoop: eventLoop)
                     .map { .byteBuffer($0) }
                     .flatMapErrorThrowing { error in
                         // close handle on error being returned
