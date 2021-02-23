@@ -30,14 +30,15 @@ public struct HBMetricsMiddleware: HBMiddleware {
             // need to create dimensions once request has been responded to ensure
             // we have the correct endpoint path
             let dimensions: [(String, String)]
-            if let error = error as? HBHTTPError, error.status == .notFound {
-                // Don't record uri in 404 errors, to avoid spamming of metrics
+            // Don't record uri in 404 errors, to avoid spamming of metrics
+            if let endpointPath = request.endpointPath {
                 dimensions = [
+                    ("hb_uri", endpointPath),
                     ("hb_method", request.method.rawValue),
                 ]
+                Counter(label: "hb_requests", dimensions: dimensions).increment()
             } else {
                 dimensions = [
-                    ("hb_uri", request.endpointPath ?? request.uri.path),
                     ("hb_method", request.method.rawValue),
                 ]
             }
