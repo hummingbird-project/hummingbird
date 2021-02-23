@@ -52,29 +52,32 @@ public struct HBFileMiddleware: HBMiddleware {
 
             switch request.method {
             case .GET:
-                var range: ClosedRange<Int>?
                 if let rangeHeader = request.headers["Range"].first {
-                    range = getRangeFromHeaderValue(rangeHeader)
-                }
-                return fileIO.loadFile(path: fullPath, range: range, context: request.context)
-                    .map { body, fileSize in
-                        var headers: HTTPHeaders = [:]
-                        var status: HTTPResponseStatus = .ok
-                        if let range = range {
+                    guard let range = getRangeFromHeaderValue(rangeHeader) else {
+                        return request.failure(.rangeNotSatisfiable)
+                    }
+                    return fileIO.loadFile(path: fullPath, range: range, context: request.context)
+                        .map { body, fileSize in
+                            var headers: HTTPHeaders = ["accept-ranges": "bytes"]
+
                             let lowerBound = max(range.lowerBound, 0)
                             let upperBound = min(range.upperBound, fileSize - 1)
                             headers.replaceOrAdd(name: "content-range", value: "bytes \(lowerBound)-\(upperBound)/\(fileSize)")
-                            status = .partialContent
+
+                            return HBResponse(status: .partialContent, headers: headers, body: body)
                         }
-                        headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
-                        return HBResponse(status: status, headers: headers, body: body)
+                }
+                return fileIO.loadFile(path: fullPath, context: request.context)
+                    .map { body in
+                        let headers: HTTPHeaders = ["accept-ranges": "bytes"]
+                        return HBResponse(status: .ok, headers: headers, body: body)
                     }
 
             case .HEAD:
                 return fileIO.headFile(path: fullPath, context: request.context)
 
             default:
-                return request.eventLoop.makeFailedFuture(error)
+                return request.failure(error)
             }
         }
     }
