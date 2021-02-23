@@ -64,6 +64,7 @@ public struct HBFileMiddleware: HBMiddleware {
                             let upperBound = min(range.upperBound, fileSize - 1)
                             headers.replaceOrAdd(name: "content-range", value: "bytes \(lowerBound)-\(upperBound)/\(fileSize)")
                         }
+                        headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
                         return HBResponse(status: .ok, headers: headers, body: body)
                     }
 
