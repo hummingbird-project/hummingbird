@@ -54,7 +54,7 @@ class HummingbirdFilesTests: XCTestCase {
         let app = HBApplication(testing: .live)
         app.middleware.add(HBFileMiddleware(".", application: app))
 
-        let buffer = self.randomBuffer(size: 326000)
+        let buffer = self.randomBuffer(size: 326_000)
         let data = Data(buffer: buffer)
         let fileURL = URL(fileURLWithPath: "test.txt")
         XCTAssertNoThrow(try data.write(to: fileURL))
@@ -79,7 +79,7 @@ class HummingbirdFilesTests: XCTestCase {
 
         app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=6000-"]) { response in
             let body = try XCTUnwrap(response.body)
-            let slice = buffer.getSlice(at: 6000, length: 320000)
+            let slice = buffer.getSlice(at: 6000, length: 320_000)
             XCTAssertEqual(body, slice)
             XCTAssertEqual(response.headers["content-range"].first, "bytes 6000-325999/326000")
         }

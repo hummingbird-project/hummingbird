@@ -52,7 +52,7 @@ public struct HBFileMiddleware: HBMiddleware {
 
             switch request.method {
             case .GET:
-                var range: ClosedRange<Int>? = nil
+                var range: ClosedRange<Int>?
                 if let rangeHeader = request.headers["Range"].first {
                     range = getRangeFromHeaderValue(rangeHeader)
                 }

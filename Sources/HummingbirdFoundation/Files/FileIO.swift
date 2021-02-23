@@ -19,7 +19,7 @@ public struct HBFileIO {
     ///   - request: request for file
     ///   - path: System file path
     /// - Returns: Response including file details
-    public func  headFile(path: String, context: HBRequest.Context) -> EventLoopFuture<HBResponse> {
+    public func headFile(path: String, context: HBRequest.Context) -> EventLoopFuture<HBResponse> {
         return self.fileIO.openFile(path: path, eventLoop: context.eventLoop).flatMap { handle, region in
             context.logger.debug("[FileIO] HEAD", metadata: ["file": .string(path)])
             let headers: HTTPHeaders = ["content-length": region.readableBytes.description]
@@ -45,7 +45,7 @@ public struct HBFileIO {
             var loadRegion = region
             // work out region to load
             if let range = range {
-                let regionRange = region.readerIndex...region.readerIndex+region.readableBytes
+                let regionRange = region.readerIndex...region.readerIndex + region.readableBytes
                 let range = range.clamped(to: regionRange)
                 // add one to upperBound as range is inclusive of upper bound
                 loadRegion = FileRegion(fileHandle: handle, readerIndex: range.lowerBound, endIndex: range.upperBound + 1)
@@ -152,7 +152,7 @@ public struct HBFileIO {
         }
 
         func read(on eventLoop: EventLoop) -> EventLoopFuture<HBResponseBody.StreamResult> {
-            let bytesLeft = endOffset - fileOffset
+            let bytesLeft = self.endOffset - self.fileOffset
             let bytesToRead = min(self.chunkSize, bytesLeft)
             if bytesToRead > 0 {
                 let fileOffsetToRead = self.fileOffset
