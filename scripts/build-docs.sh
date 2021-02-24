@@ -23,7 +23,7 @@ build_docs() {
         --module-version "$VERSION" \
         --module "$MODULE_NAME" \
         --readme "$CWD"/documentation/readme.md \
-        --documentation "$CWD"/documentation/* \
+        --documentation "$CWD/documentation/[^r]*.md" \
         --output "$CWD"/docs/"$DOCS_FOLDER"
 }
 
