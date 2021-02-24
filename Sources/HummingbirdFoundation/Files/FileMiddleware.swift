@@ -88,22 +88,34 @@ extension HBFileMiddleware {
     ///
     /// Also supports open ended ranges
     func getRangeFromHeaderValue(_ header: String) -> ClosedRange<Int>? {
-        let scanner = Scanner(string: header)
-        guard scanner.scanString("bytes=") == "bytes=" else { return nil }
-        let position = scanner.currentIndex
-        let char = scanner.scanCharacter()
-        if char == "-" {
-            guard let upperBound = scanner.scanInt() else { return nil }
+        let groups = matchRegex(header, expression: "^bytes=([\\d]*)-([\\d]*)$")
+        guard groups.count == 3 else { return nil }
+
+        if groups[1] == "" {
+            guard let upperBound = Int(groups[2]) else { return nil }
             return Int.min...upperBound
-        }
-        scanner.currentIndex = position
-        guard let lowerBound = scanner.scanInt() else { return nil }
-        guard scanner.scanCharacter() == "-" else { return nil }
-        if scanner.isAtEnd {
+        } else if groups[2] == "" {
+            guard let lowerBound = Int(groups[1]) else { return nil }
             return lowerBound...Int.max
+        } else {
+            guard let lowerBound = Int(groups[1]),
+                  let upperBound = Int(groups[2]) else { return nil }
+            return lowerBound...upperBound
         }
-        guard let upperBound = scanner.scanInt() else { return nil }
-        guard upperBound >= lowerBound else { return nil }
-        return lowerBound...upperBound
+    }
+
+    private func matchRegex(_ string: String, expression: String) -> [Substring] {
+        guard let regularExpression = try? NSRegularExpression(pattern: expression, options: []),
+              let firstMatch = regularExpression.firstMatch(in: string, range: NSMakeRange(0, string.count)) else {
+            return []
+        }
+
+        var groups: [Substring] = []
+        groups.reserveCapacity(firstMatch.numberOfRanges)
+        for i in 0..<firstMatch.numberOfRanges {
+            guard let range = Range(firstMatch.range(at: i), in: string) else { continue }
+            groups.append(string[range])
+        }
+        return groups
     }
 }

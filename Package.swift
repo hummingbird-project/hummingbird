@@ -5,7 +5,6 @@ import PackageDescription
 
 let package = Package(
     name: "hummingbird",
-    platforms: [.macOS(.v10_15)],
     products: [
         .library(name: "Hummingbird", targets: ["Hummingbird"]),
         .library(name: "HummingbirdFoundation", targets: ["HummingbirdFoundation"]),
