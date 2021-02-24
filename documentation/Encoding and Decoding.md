@@ -47,10 +47,13 @@ struct User: Decodable {
     let surname: String
 }
 app.router.post("user") { request -> EventLoopFuture<HTTPResponseStatus> in
+    // decode user from request
     guard let user = try? request.decode(as: User.self) else {
         return request.failure(.badRequest)
     }
-    return createUser(user, on: request.eventLoop).map { _ in .ok }
+    // create user and if ok return `.ok` status
+    return createUser(user, on: request.eventLoop)
+        .map { _ in .ok }
 }
 ```
 Like the standard `Decoder.decode` functions `HBRequest.decode` can throw an error if decoding fails. In this situation when I received a decode error I return a failed `EventLoopFuture`. I use the function `HBRequest.failure` to generate the failed `EventLoopFuture`.
@@ -67,3 +70,24 @@ app.router.get("user") { request -> User in
     return user
 }
 ```
+
+## Decoding/Encoding based on Request headers
+
+Because the full request is supplied to the `HBRequestDecoder`. You can make decoding decisions based on headers in the request. In the example below we are decoding using either the `JSONDecoder` or `URLEncodedFormDecoder` based on the "content-type" header.
+
+```swift
+struct MyRequestDecoder: HBRequestDecoder {
+    func decode<T>(_ type: T.Type, from request: HBRequest) throws -> T where T : Decodable {
+        switch request.headers["content-type"].first {
+        case "json/application", "application/json; charset=utf-8:
+            return try JSONDecoder().decode(type, from: request)
+        case "application/x-www-form-urlencoded":
+            return try URLEncodedFormDecoder().decode(type, from: request)
+        default:
+            throw HBHTTPError(.badRequest)
+        }
+    }
+}
+```
+
+Using a similar manner you could also create a `HBResponseEncoder` based on the "accepts" header in the request.

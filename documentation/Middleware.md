@@ -22,12 +22,14 @@ The first route that calls `createUser` does not have the `BasicAuthenticatorMid
 
 ## Writing Middleware
 
-All middleware has to conform to the protocol `HBMiddleware`. This requires one function `apply(to:next)` to be implemented. At some point in this function unless you want to shortcut the router and return your own reponse you are required to call `next.respond(to: request)` and return the result, or a result processed by your middleware. The following is a simple logging middleware that outputs every URI being sent to the server
+All middleware has to conform to the protocol `HBMiddleware`. This requires one function `apply(to:next)` to be implemented. At some point in this function unless you want to shortcut the router and return your own response you are required to call `next.respond(to: request)` and return the result, or a result processed by your middleware. The following is a simple logging middleware that outputs every URI being sent to the server
 
 ```swift
 public struct LogRequestsMiddleware: HBMiddleware {
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
+        // log request URI
         request.logger.log(level: .debug, String(describing:request.uri.path))
+        // pass request onto next middleware or the router
         return next.respond(to: request)
     }
 }
@@ -38,9 +40,12 @@ If you want to process the response after it has been returned by the route hand
 public struct ResponseProcessingMiddleware: HBMiddleware {
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
         return next.respond(to: request).map { response in
+            // process responses from handler and middleware further down the chain
             return processResponse(response)
         }
         .flatMapError { error in
+            // if an error is thrown by handler or middleware further down the 
+            // chain process that
             return processError(error)
         }
     }
@@ -52,7 +57,7 @@ public struct ResponseProcessingMiddleware: HBMiddleware {
 Hummingbird comes with a number of middleware already implemented.
 
 - `HBCORSMiddleware`: Sets CORS headers
-- `HBLogRequestsMiddleware`: Outputs request detail to the log
+- `HBLogRequestsMiddleware`: Outputs request details to the log
 - `HBMetricsMiddleware`: Outputs request details to a metrics server
 
 HummingbirdFoundation also provides some middleware
