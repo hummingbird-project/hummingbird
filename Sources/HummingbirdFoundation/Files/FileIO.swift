@@ -19,13 +19,12 @@ public struct HBFileIO {
     ///   - request: request for file
     ///   - path: System file path
     /// - Returns: Response including file details
-    public func headFile(path: String, context: HBRequest.Context) -> EventLoopFuture<HBResponse> {
+    public func headFile(path: String, context: HBRequest.Context) -> EventLoopFuture<HTTPHeaders> {
         return self.fileIO.openFile(path: path, eventLoop: context.eventLoop).flatMap { handle, region in
             context.logger.debug("[FileIO] HEAD", metadata: ["file": .string(path)])
             let headers: HTTPHeaders = ["content-length": region.readableBytes.description]
-            let response = HBResponse(status: .ok, headers: headers, body: .empty)
             try? handle.close()
-            return context.eventLoop.makeSucceededFuture(response)
+            return context.eventLoop.makeSucceededFuture(headers)
         }.flatMapErrorThrowing { _ in
             throw HBHTTPError(.notFound)
         }

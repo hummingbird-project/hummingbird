@@ -49,6 +49,15 @@ public struct HBFileMiddleware: HBMiddleware {
             }
 
             let fullPath = rootFolder + path
+            var headers = HTTPHeaders()
+
+            // content-type
+            if let extPointIndex = path.lastIndex(of: ".") {
+                let extIndex = path.index(after: extPointIndex)
+                if let contentType = HBMediaType.getMediaType(for: String(path.suffix(from: extIndex))) {
+                    headers.add(name: "content-type", value: contentType.description)
+                }
+            }
 
             switch request.method {
             case .GET:
@@ -58,7 +67,7 @@ public struct HBFileMiddleware: HBMiddleware {
                     }
                     return fileIO.loadFile(path: fullPath, range: range, context: request.context)
                         .map { body, fileSize in
-                            var headers: HTTPHeaders = ["accept-ranges": "bytes"]
+                            headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
 
                             let lowerBound = max(range.lowerBound, 0)
                             let upperBound = min(range.upperBound, fileSize - 1)
@@ -69,12 +78,16 @@ public struct HBFileMiddleware: HBMiddleware {
                 }
                 return fileIO.loadFile(path: fullPath, context: request.context)
                     .map { body in
-                        let headers: HTTPHeaders = ["accept-ranges": "bytes"]
+                        headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
                         return HBResponse(status: .ok, headers: headers, body: body)
                     }
 
             case .HEAD:
                 return fileIO.headFile(path: fullPath, context: request.context)
+                    .map { headHeaders in
+                        headers.add(contentsOf: headHeaders)
+                        return HBResponse(status: .ok, headers: headers, body: .empty)
+                    }
 
             default:
                 return request.failure(error)

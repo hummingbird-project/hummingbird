@@ -18,17 +18,18 @@ class HummingbirdFilesTests: XCTestCase {
 
         let text = "Test file contents"
         let data = Data(text.utf8)
-        let fileURL = URL(fileURLWithPath: "test.txt")
+        let fileURL = URL(fileURLWithPath: "test.jpg")
         XCTAssertNoThrow(try data.write(to: fileURL))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
         app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/test.txt", method: .GET) { response in
+        app.XCTExecute(uri: "/test.jpg", method: .GET) { response in
             var body = try XCTUnwrap(response.body)
             XCTAssertEqual(body.readString(length: body.readableBytes), text)
-        }
+            XCTAssertEqual(response.headers["content-type"].first, "image/jpeg")
+       }
     }
 
     func testReadLargeFile() {
@@ -68,6 +69,7 @@ class HummingbirdFilesTests: XCTestCase {
             let slice = buffer.getSlice(at: 100, length: 3900)
             XCTAssertEqual(body, slice)
             XCTAssertEqual(response.headers["content-range"].first, "bytes 100-3999/326000")
+            XCTAssertEqual(response.headers["content-type"].first, "text/plain")
         }
 
         app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=-3999"]) { response in
@@ -101,6 +103,7 @@ class HummingbirdFilesTests: XCTestCase {
         app.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
             XCTAssertNil(response.body)
             XCTAssertEqual(response.headers["Content-Length"].first, text.utf8.count.description)
+            XCTAssertEqual(response.headers["content-type"].first, "text/plain")
         }
     }
 
