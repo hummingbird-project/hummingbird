@@ -3,7 +3,10 @@ import Hummingbird
 /// Adds a "Date" header to every response from the server
 public struct HBDateResponseMiddleware: HBMiddleware {
     /// Initialize HBDateResponseMiddleware
-    public init() {}
+    public init(application: HBApplication) {
+        // the date response middleware requires that the data cache has been setup
+        application.addDateCaches()
+    }
 
     /// Add "Date" header after request has been processed
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
