@@ -9,7 +9,7 @@ app.middleware.add(MyMiddlware())
 
 ## Groups
 
-Middleware can also be applied to a specific set of routes using groups. Below is a example of applying authentication middleware to routes that need protected.
+Middleware can also be applied to a specific set of routes using groups. Below is a example of applying an authentication middleware `BasicAuthenticatorMiddleware` to routes that need protected.
 
 ```swift
 let app = HBApplication()
@@ -22,18 +22,18 @@ The first route that calls `createUser` does not have the `BasicAuthenticatorMid
 
 ## Writing Middleware
 
-All middleware has to conform to the protocol `HBMiddleware`. This requires one function `apply(to:next)` to be implemented. At some point in this function unless you want to shortcut the router and return your own reponse you are required to call `next.respond(to: request)` and return the result, or a result processed by the middleware. The following is a simple logging middleware that outputs every URI being sent to the server
+All middleware has to conform to the protocol `HBMiddleware`. This requires one function `apply(to:next)` to be implemented. At some point in this function unless you want to shortcut the router and return your own reponse you are required to call `next.respond(to: request)` and return the result, or a result processed by your middleware. The following is a simple logging middleware that outputs every URI being sent to the server
 
 ```swift
 public struct LogRequestsMiddleware: HBMiddleware {
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
-        request.logger.log(level: .debug, String(describing:request.path))
+        request.logger.log(level: .debug, String(describing:request.uri.path))
         return next.respond(to: request)
     }
 }
 ```
 
-If you want to process the response after it has been returned by the route handler you will need to use run a function on the `EventLoopFuture` returned by `next.respond`. 
+If you want to process the response after it has been returned by the route handler you will need to use run a function on the `EventLoopFuture` returned by `next.respond`. Swift NIO provide documentation `EventLoopFuture` [here](https://apple.github.io/swift-nio/docs/current/NIO/Classes/EventLoopFuture.html).
 ```swift
 public struct ResponseProcessingMiddleware: HBMiddleware {
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
@@ -46,3 +46,16 @@ public struct ResponseProcessingMiddleware: HBMiddleware {
     }
 }
 ```
+
+## Already available
+
+Hummingbird comes with a number of middleware already implemented.
+
+- `HBCORSMiddleware`: Sets CORS headers
+- `HBLogRequestsMiddleware`: Outputs request detail to the log
+- `HBMetricsMiddleware`: Outputs request details to a metrics server
+
+HummingbirdFoundation also provides some middleware
+
+- `HBFileMiddleware`: Serves static files
+- `HBDateResponseMiddleware`: Sets the date header in the response in an optimal manner. 
