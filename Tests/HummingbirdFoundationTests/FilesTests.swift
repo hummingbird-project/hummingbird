@@ -142,6 +142,62 @@ class HummingbirdFilesTests: XCTestCase {
         }
     }
 
+    func testIfNoneMatch() throws {
+        let app = HBApplication(testing: .live)
+        app.middleware.add(HBFileMiddleware(".", application: app))
+
+        let buffer = self.randomBuffer(size: 16_200)
+        let data = Data(buffer: buffer)
+        let fileURL = URL(fileURLWithPath: "test.txt")
+        XCTAssertNoThrow(try data.write(to: fileURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        var eTag: String?
+        app.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
+            eTag = try XCTUnwrap(response.headers["eTag"].first)
+        }
+        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-none-match": eTag!]) { response in
+            XCTAssertEqual(response.status, .notModified)
+        }
+        var headers: HTTPHeaders = ["if-none-match": "test"]
+        headers.add(name: "if-none-match", value: "\(eTag!)")
+        app.XCTExecute(uri: "/test.txt", method: .GET, headers: headers) { response in
+            XCTAssertEqual(response.status, .notModified)
+        }
+        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-none-match": "dummyETag"]) { response in
+            XCTAssertEqual(response.status, .ok)
+        }
+    }
+
+    func testIfModifiedSince() throws {
+        let app = HBApplication(testing: .live)
+        app.middleware.add(HBFileMiddleware(".", application: app))
+
+        let buffer = self.randomBuffer(size: 16_200)
+        let data = Data(buffer: buffer)
+        let fileURL = URL(fileURLWithPath: "test.txt")
+        XCTAssertNoThrow(try data.write(to: fileURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        var modifiedDate: String?
+        app.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
+            modifiedDate = try XCTUnwrap(response.headers["modified-date"].first)
+        }
+        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-modified-since": modifiedDate!]) { response in
+            XCTAssertEqual(response.status, .notModified)
+        }
+        let date = try XCTUnwrap(self.rfc1123Formatter.string(from: Date(timeIntervalSinceNow: -1)))
+        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-modified-since": date]) { response in
+            XCTAssertEqual(response.status, .ok)
+        }
+    }
+
     func testWrite() throws {
         let filename = "testWrite.txt"
         let app = HBApplication(testing: .live)

@@ -58,9 +58,15 @@ public struct HBFileMiddleware: HBMiddleware {
             } catch {
                 return request.failure(.notFound)
             }
+            let eTag = createETag([
+                String(describing: modificationDate?.timeIntervalSince1970 ?? 0),
+                String(describing: contentSize ?? 0)
+            ])
+
+            // construct headers
             var headers = HTTPHeaders()
 
-            // conent-length
+            // content-length
             if let contentSize = contentSize {
                 headers.add(name: "content-length", value: String(describing: contentSize))
             }
@@ -69,11 +75,32 @@ public struct HBFileMiddleware: HBMiddleware {
                 headers.add(name: "modified-date", value: HBDateCache.rfc1123Formatter.string(from: modificationDate))
             }
             // eTag (constructed from modification date and content size)
-            headers.add(name: "eTag", value: eTag([
-                String(describing: modificationDate?.timeIntervalSince1970 ?? 0),
-                String(describing: contentSize ?? 0)
-            ]))
-            
+            headers.add(name: "eTag", value: eTag)
+
+            // verify if-none-match. No need to verify if-match as this is used for state changing
+            // operations
+            let ifNoneMatch = request.headers["if-none-match"]
+            if ifNoneMatch.count > 0 {
+                for match in ifNoneMatch {
+                    if eTag == match {
+                        return request.success(HBResponse(status: .notModified, headers: headers))
+                    }
+                }
+            }
+            // verify if-modified-since
+            else if let ifModifiedSince = request.headers["if-modified-since"].first,
+               let modificationDate = modificationDate {
+                if let ifModifiedSinceDate = HBDateCache.rfc1123Formatter.date(from: ifModifiedSince) {
+                    // round modification date of file down to seconds for comparison
+                    let modificationDateTimeInterval = modificationDate.timeIntervalSince1970.rounded(.down)
+                    let ifModifiedSinceDateTimeInterval = ifModifiedSinceDate.timeIntervalSince1970
+                    if modificationDateTimeInterval <= ifModifiedSinceDateTimeInterval {
+                        return request.success(HBResponse(status: .notModified, headers: headers))
+                    }
+
+                }
+            }
+
             // content-type
             if let extPointIndex = path.lastIndex(of: ".") {
                 let extIndex = path.index(after: extPointIndex)
@@ -154,7 +181,7 @@ extension HBFileMiddleware {
         return groups
     }
 
-    private func eTag(_ strings: [String]) -> String {
+    private func createETag(_ strings: [String]) -> String {
         let string = strings.joined(separator: "-")
         let buffer = Array<UInt8>.init(unsafeUninitializedCapacity: 16) { bytes, size in
             var index = 0
