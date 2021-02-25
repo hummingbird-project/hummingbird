@@ -12,7 +12,7 @@ public struct HBMediaType: CustomStringConvertible {
     ///   - type: category
     ///   - subType: specific kind of data
     ///   - parameter: additional parameter
-    public init(type: Category, subType: String, parameter: (String, String)? = nil) {
+    public init(type: Category, subType: String = "*", parameter: (String, String)? = nil) {
         self.type = type
         self.subType = subType
         self.parameter = parameter
@@ -70,8 +70,8 @@ public struct HBMediaType: CustomStringConvertible {
     /// Get media type from a file extension
     /// - Parameter extension: file extension
     /// - Returns: media type
-    public static func getMediaType(for extension: String) -> HBMediaType? {
-        return extensionMediaTypeMap[`extension`]
+    public static func getMediaType(forExtension: String) -> HBMediaType? {
+        return extensionMediaTypeMap[forExtension]
     }
 
     /// Media type categories
@@ -100,116 +100,128 @@ public struct HBMediaType: CustomStringConvertible {
 }
 
 extension HBMediaType {
+    // types
+    public static var application: Self { .init(type: .application) }
+    public static var audio: Self { .init(type: .audio) }
+    public static var example: Self { .init(type: .example) }
+    public static var font: Self { .init(type: .font) }
+    public static var image: Self { .init(type: .image) }
+    public static var message: Self { .init(type: .message) }
+    public static var model: Self { .init(type: .model) }
+    public static var multipart: Self { .init(type: .multipart) }
+    public static var text: Self { .init(type: .text) }
+    public static var video: Self { .init(type: .video) }
+
     // application files
 
     /// AbiWord document
-    public static var abiWord: Self { .init(type: .application, subType: "x-abiword") }
+    public static var applicationAbiWord: Self { .init(type: .application, subType: "x-abiword") }
     /// Archive document (multiple files embedded)
-    public static var arc: Self { .init(type: .application, subType: "x-freearc") }
+    public static var applicationArc: Self { .init(type: .application, subType: "x-freearc") }
     /// OGG
     public static var applicationOgg: Self { .init(type: .application, subType: "ogg") }
     /// Amazon Kindle eBook format
-    public static var amzKindleEBook: Self { .init(type: .application, subType: "vnd.amazon.ebook") }
+    public static var applicationAmzKindleEBook: Self { .init(type: .application, subType: "vnd.amazon.ebook") }
     /// Any kind of binary data
-    public static var binary: Self { .init(type: .application, subType: "octet-stream") }
+    public static var applicationBinary: Self { .init(type: .application, subType: "octet-stream") }
     /// BZip archive
-    public static var bzip: Self { .init(type: .application, subType: "x-bzip") }
+    public static var applicationBzip: Self { .init(type: .application, subType: "x-bzip") }
     /// BZip2 archive
-    public static var bzip2: Self { .init(type: .application, subType: "x-bzip2") }
+    public static var applicationBzip2: Self { .init(type: .application, subType: "x-bzip2") }
     /// C-Shell script
-    public static var csh: Self { .init(type: .application, subType: "x-csh") }
+    public static var applicationCsh: Self { .init(type: .application, subType: "x-csh") }
     /// Microsoft Word
-    public static var msword: Self { .init(type: .application, subType: "msword") }
+    public static var applicationMsword: Self { .init(type: .application, subType: "msword") }
     /// Microsoft Word (OpenXML)
-    public static var docx: Self { .init(type: .application, subType: "vnd.openxmlformats-officedocument.wordprocessingml.document") }
+    public static var applicationDocx: Self { .init(type: .application, subType: "vnd.openxmlformats-officedocument.wordprocessingml.document") }
     /// MS Embedded OpenType fonts
-    public static var eot: Self { .init(type: .application, subType: "vnd.ms-fontobject") }
+    public static var applicationEot: Self { .init(type: .application, subType: "vnd.ms-fontobject") }
     /// Electronic publication (EPUB)
-    public static var epub: Self { .init(type: .application, subType: "application/epub+zip") }
+    public static var applicationEpub: Self { .init(type: .application, subType: "application/epub+zip") }
     /// GZip Compressed Archive
-    public static var gzip: Self { .init(type: .application, subType: "gzip") }
+    public static var applicationGzip: Self { .init(type: .application, subType: "gzip") }
     /// Java Archive (JAR)
-    public static var jar: Self { .init(type: .application, subType: "java-archive") }
+    public static var applicationJar: Self { .init(type: .application, subType: "java-archive") }
     /// JSON format
-    public static var json: Self { .init(type: .application, subType: "json") }
+    public static var applicationJson: Self { .init(type: .application, subType: "json") }
     /// JSON-LD format
-    public static var jsonLD: Self { .init(type: .application, subType: "ld+json") }
+    public static var applicationJsonLD: Self { .init(type: .application, subType: "ld+json") }
     /// Apple Installer Package
-    public static var mpkg: Self { .init(type: .application, subType: "application/vnd.apple.installer+xml") }
+    public static var applicationMpkg: Self { .init(type: .application, subType: "application/vnd.apple.installer+xml") }
     /// URL encoded form data
-    public static var urlEncoded: Self { .init(type: .application, subType: "x-www-form-urlencoded") }
+    public static var applicationUrlEncoded: Self { .init(type: .application, subType: "x-www-form-urlencoded") }
     /// OpenDocument presentation document
-    public static var odp: Self { .init(type: .application, subType: "vnd.oasis.opendocument.presentation") }
+    public static var applicationOdp: Self { .init(type: .application, subType: "vnd.oasis.opendocument.presentation") }
     /// OpenDocument spreadsheet document
-    public static var ods: Self { .init(type: .application, subType: "vnd.oasis.opendocument.spreadsheet") }
+    public static var applicationOds: Self { .init(type: .application, subType: "vnd.oasis.opendocument.spreadsheet") }
     /// OpenDocument text document
-    public static var odt: Self { .init(type: .application, subType: "vnd.oasis.opendocument.text") }
+    public static var applicationOdt: Self { .init(type: .application, subType: "vnd.oasis.opendocument.text") }
     /// Adobe Portable Document Format
-    public static var pdf: Self { .init(type: .application, subType: "pdf") }
+    public static var applicationPdf: Self { .init(type: .application, subType: "pdf") }
     /// Hypertext Preprocessor
-    public static var php: Self { .init(type: .application, subType: "x-httpd-php") }
+    public static var applicationPhp: Self { .init(type: .application, subType: "x-httpd-php") }
     /// Microsoft PowerPoint
-    public static var ppt: Self { .init(type: .application, subType: "vnd.ms-powerpoint") }
+    public static var applicationPpt: Self { .init(type: .application, subType: "vnd.ms-powerpoint") }
     /// Microsoft PowerPoint (OpenXML)
-    public static var pptx: Self { .init(type: .application, subType: "vnd.openxmlformats-officedocument.presentationml.presentation") }
+    public static var applicationPptx: Self { .init(type: .application, subType: "vnd.openxmlformats-officedocument.presentationml.presentation") }
     /// RAR archive
-    public static var rar: Self { .init(type: .application, subType: "vnd.rar") }
+    public static var applicationRar: Self { .init(type: .application, subType: "vnd.rar") }
     /// Rich Text Format (RTF)
-    public static var rtf: Self { .init(type: .application, subType: "rtf") }
+    public static var applicationRtf: Self { .init(type: .application, subType: "rtf") }
     /// Bourne shell script
-    public static var sh: Self { .init(type: .application, subType: "x-sh") }
+    public static var applicationSh: Self { .init(type: .application, subType: "x-sh") }
     /// Small web format (SWF) or Adobe Flash document
-    public static var swf: Self { .init(type: .application, subType: "x-shockwave-flash") }
+    public static var applicationSwf: Self { .init(type: .application, subType: "x-shockwave-flash") }
     /// Tape Archive (TAR)
-    public static var tar: Self { .init(type: .application, subType: "x-tar") }
+    public static var applicationTar: Self { .init(type: .application, subType: "x-tar") }
     /// Microsoft Visio
-    public static var vsd: Self { .init(type: .application, subType: "vnd.visio") }
+    public static var applicationVsd: Self { .init(type: .application, subType: "vnd.visio") }
     /// XHTML
-    public static var xhtml: Self { .init(type: .application, subType: "xhtml+xml") }
+    public static var applicationXhtml: Self { .init(type: .application, subType: "xhtml+xml") }
     /// Microsoft Excel
-    public static var xls: Self { .init(type: .application, subType: "vnd.ms-excel") }
+    public static var applicationXls: Self { .init(type: .application, subType: "vnd.ms-excel") }
     /// Microsoft Excel (OpenXML)
-    public static var xlsx: Self { .init(type: .application, subType: "vnd.openxmlformats-officedocument.spreadsheetml.sheet") }
+    public static var applicationXlsx: Self { .init(type: .application, subType: "vnd.openxmlformats-officedocument.spreadsheetml.sheet") }
     /// XML
-    public static var xml: Self { .init(type: .application, subType: "xml") }
+    public static var applicationXml: Self { .init(type: .application, subType: "xml") }
     /// ZIP archive
-    public static var zip: Self { .init(type: .application, subType: "zip") }
+    public static var applicationZip: Self { .init(type: .application, subType: "zip") }
     /// 7-zip archive
-    public static var zip7z: Self { .init(type: .application, subType: "x-7z-compressed") }
+    public static var application7z: Self { .init(type: .application, subType: "x-7z-compressed") }
 
     // text
 
     /// Text, (generally ASCII or ISO 8859-n)
-    public static var plainText: Self { .init(type: .text, subType: "plain") }
+    public static var textPlain: Self { .init(type: .text, subType: "plain") }
     /// iCalendar format
-    public static var iCalendar: Self { .init(type: .text, subType: "calendar") }
+    public static var textICalendar: Self { .init(type: .text, subType: "calendar") }
     /// Cascading Style Sheets (CSS)
-    public static var css: Self { .init(type: .text, subType: "css") }
+    public static var textCss: Self { .init(type: .text, subType: "css") }
     /// Comma-separated values (CSV)
-    public static var csv: Self { .init(type: .text, subType: "csv") }
+    public static var textCsv: Self { .init(type: .text, subType: "csv") }
     /// HyperText Markup Language (HTML)
-    public static var html: Self { .init(type: .text, subType: "html") }
+    public static var textHtml: Self { .init(type: .text, subType: "html") }
     /// JavaScript
-    public static var javascript: Self { .init(type: .text, subType: "javascript") }
+    public static var textJavascript: Self { .init(type: .text, subType: "javascript") }
 
     // image formats
 
     /// Windows OS/2 Bitmap Graphics
-    public static var bmp: Self { .init(type: .image, subType: "bmp") }
+    public static var imageBmp: Self { .init(type: .image, subType: "bmp") }
     /// Graphics Interchange Format (GIF)
-    public static var gif: Self { .init(type: .image, subType: "gif") }
+    public static var imageGif: Self { .init(type: .image, subType: "gif") }
     /// Icon format
-    public static var ico: Self { .init(type: .image, subType: "vnd.microsoft.icon") }
+    public static var imageIco: Self { .init(type: .image, subType: "vnd.microsoft.icon") }
     /// JPEG images
-    public static var jpeg: Self { .init(type: .image, subType: "jpeg") }
+    public static var imageJpeg: Self { .init(type: .image, subType: "jpeg") }
     /// Portable Network Graphics
-    public static var png: Self { .init(type: .image, subType: "png") }
+    public static var imagePng: Self { .init(type: .image, subType: "png") }
     /// Scalable Vector Graphics (SVG)
-    public static var svg: Self { .init(type: .image, subType: "svg") }
+    public static var imageSvg: Self { .init(type: .image, subType: "svg") }
     /// Tagged Image File Format (TIFF)
-    public static var tiff: Self { .init(type: .image, subType: "tiff") }
+    public static var imageTiff: Self { .init(type: .image, subType: "tiff") }
     /// WEBP image
-    public static var webp: Self { .init(type: .image, subType: "webp") }
+    public static var imageWebp: Self { .init(type: .image, subType: "webp") }
 
     // audio
 
@@ -268,75 +280,77 @@ extension HBMediaType {
     /// map from extension string to media type
     static let extensionMediaTypeMap: [String: HBMediaType] = [
         "aac": .audioAac,
-        "abw": .abiWord,
-        "arc": .arc,
-        "azw": .amzKindleEBook,
-        "bin": .binary,
-        "bmp": .bmp,
-        "bz": .bzip,
-        "bz2": .bzip2,
-        "csh": .csh,
-        "css": .css,
-        "csv": .csv,
-        "doc": .msword,
-        "docx": .docx,
-        "eot": .eot,
-        "epub": .epub,
-        "gz": .gzip,
-        "gif": .gif,
-        "htm": .html,
-        "html": .html,
-        "ico": .ico,
-        "ics": .iCalendar,
-        "jar": .jar,
-        "jpeg": .jpeg,
-        "jpg": .jpeg,
-        "js": .javascript,
-        "json": .json,
-        "jsonld": .jsonLD,
+        "abw": .applicationAbiWord,
+        "arc": .applicationArc,
+        "azw": .applicationAmzKindleEBook,
+        "bin": .applicationBinary,
+        "bmp": .imageBmp,
+        "bz": .applicationBzip,
+        "bz2": .applicationBzip2,
+        "csh": .applicationCsh,
+        "css": .textCss,
+        "csv": .textCsv,
+        "doc": .applicationMsword,
+        "docx": .applicationDocx,
+        "eot": .applicationEot,
+        "epub": .applicationEpub,
+        "gz": .applicationGzip,
+        "gif": .imageGif,
+        "htm": .textHtml,
+        "html": .textHtml,
+        "ico": .imageIco,
+        "ics": .textICalendar,
+        "jar": .applicationJar,
+        "jpeg": .imageJpeg,
+        "jpg": .imageJpeg,
+        "js": .textJavascript,
+        "json": .applicationJson,
+        "jsonld": .applicationJsonLD,
         "mid": .audioMidi,
         "midi": .audioMidi,
-        "mjs": .javascript,
+        "mjs": .textJavascript,
         "mp3": .audioMpeg,
+        "mp4": .videoMp4,
         "mpeg": .videoMpeg,
-        "mpkg": .mpkg,
-        "odp": .odp,
-        "ods": .ods,
-        "odt": .odt,
+        "mpkg": .applicationMpkg,
+        "odp": .applicationOdp,
+        "ods": .applicationOds,
+        "odt": .applicationOdt,
         "oga": .audioOgg,
         "ogv": .videoOgg,
         "ogx": .applicationOgg,
         "opus": .audioOpus,
         "otf": .fontOtf,
-        "png": .png,
-        "pdf": .pdf,
-        "php": .php,
-        "ppt": .ppt,
-        "pptx": .pptx,
-        "rar": .rar,
-        "rtf": .rtf,
-        "sh": .sh,
-        "svg": .svg,
-        "swf": .swf,
-        "tar": .tar,
-        "tif": .tiff,
-        "tiff": .tiff,
+        "png": .imagePng,
+        "pdf": .applicationPdf,
+        "php": .applicationPhp,
+        "ppt": .applicationPpt,
+        "pptx": .applicationPptx,
+        "rar": .applicationRar,
+        "rtf": .applicationRtf,
+        "sh": .applicationSh,
+        "svg": .imageSvg,
+        "swf": .applicationSwf,
+        "tar": .applicationTar,
+        "tif": .imageTiff,
+        "tiff": .imageTiff,
         "ts": .videoTs,
         "ttf": .fontTtf,
-        "txt": .plainText,
-        "vsd": .vsd,
+        "txt": .textPlain,
+        "vsd": .applicationVsd,
         "wav": .audioWave,
         "weba": .audioWebm,
         "webm": .videoWebm,
-        "webp": .webp,
+        "webp": .imageWebp,
         "woff": .fontWoff,
         "woff2": .fontWoff2,
-        "xhtml": .xhtml,
-        "xls": .xls,
-        "xlsx": .xlsx,
-        "xml": .xml,
-        "zip": .zip,
+        "xhtml": .applicationXhtml,
+        "xls": .applicationXls,
+        "xlsx": .applicationXlsx,
+        "xml": .applicationXml,
+        "zip": .applicationZip,
         "3gp": .video3gp,
         "3g2": .video3g2,
+        "7z": .application7z,
     ]
 }

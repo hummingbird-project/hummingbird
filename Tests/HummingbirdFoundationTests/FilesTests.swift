@@ -199,6 +199,34 @@ class HummingbirdFilesTests: XCTestCase {
         }
     }
 
+    func testCacheControl() throws {
+        let app = HBApplication(testing: .live)
+        let cacheControl: HBCacheControl = .init([
+            (.text, [.maxAge(60 * 60 * 24 * 30)]),
+            (.imageJpeg, [.maxAge(60 * 60 * 24 * 30), .private]),
+        ])
+        app.middleware.add(HBFileMiddleware(".", cacheControl: cacheControl, application: app))
+
+        let text = "Test file contents"
+        let data = Data(text.utf8)
+        let fileURL = URL(fileURLWithPath: "test.txt")
+        XCTAssertNoThrow(try data.write(to: fileURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+        let fileURL2 = URL(fileURLWithPath: "test.jpg")
+        XCTAssertNoThrow(try data.write(to: fileURL2))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL2)) }
+
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/test.txt", method: .GET) { response in
+            XCTAssertEqual(response.headers["cache-control"].first, "max-age=2592000")
+        }
+        app.XCTExecute(uri: "/test.jpg", method: .GET) { response in
+            XCTAssertEqual(response.headers["cache-control"].first, "max-age=2592000, private")
+        }
+    }
+
     func testWrite() throws {
         let filename = "testWrite.txt"
         let app = HBApplication(testing: .live)
