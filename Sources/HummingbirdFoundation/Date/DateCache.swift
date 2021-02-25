@@ -8,7 +8,7 @@ import NIO
 /// update a cached version of the date in the format as detailed in RFC1123 once every second. To
 /// avoid threading issues it is assumed that `currentDate` will only every be accessed on the same
 /// EventLoop that the update is running.
-public class DateCache {
+public class HBDateCache {
     /// Current formatted date
     public var currentDate: String
 
@@ -42,11 +42,11 @@ public class DateCache {
 
 extension HBApplication.EventLoopStorage {
     /// Add `DateCache` to every `EventLoop`
-    public var dateCache: DateCache {
+    public var dateCache: HBDateCache {
         self.extensions.get(\._dateCache)!
     }
 
-    fileprivate var _dateCache: DateCache? {
+    fileprivate var _dateCache: HBDateCache? {
         get { self.extensions.get(\._dateCache) }
         set { self.extensions.set(\._dateCache, value: newValue) }
     }
@@ -58,7 +58,7 @@ extension HBApplication {
         for eventLoop in eventLoopGroup.makeIterator() {
             let storage = self.eventLoopStorage(for: eventLoop)
             if storage._dateCache == nil {
-                storage._dateCache = DateCache(eventLoop: eventLoop)
+                storage._dateCache = HBDateCache(eventLoop: eventLoop)
             }
         }
     }
