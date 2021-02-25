@@ -10,14 +10,16 @@ import NIO
 public struct HBFileMiddleware: HBMiddleware {
     let rootFolder: String
     let fileIO: HBFileIO
+    let cacheControl: HBCacheControl
 
-    public init(_ rootFolder: String = "public", application: HBApplication) {
+    public init(_ rootFolder: String = "public", cacheControl: HBCacheControl = .init([]), application: HBApplication) {
         var rootFolder = rootFolder
         if rootFolder.last == "/" {
             rootFolder = String(rootFolder.dropLast())
         }
         self.rootFolder = rootFolder
         self.fileIO = .init(application: application)
+        self.cacheControl = cacheControl
 
         let workingFolder: String
         if rootFolder.first == "/" {
@@ -104,13 +106,19 @@ public struct HBFileMiddleware: HBMiddleware {
             // content-type
             if let extPointIndex = path.lastIndex(of: ".") {
                 let extIndex = path.index(after: extPointIndex)
-                if let contentType = HBMediaType.getMediaType(for: String(path.suffix(from: extIndex))) {
+                let ext = String(path.suffix(from: extIndex))
+                if let contentType = HBMediaType.getMediaType(forExtension: ext) {
                     headers.add(name: "content-type", value: contentType.description)
                 }
             }
 
             switch request.method {
             case .GET:
+                // cache-control
+                if let cacheControlValue = self.cacheControl.getCacheControlHeader(for: path) {
+                    headers.add(name: "cache-control", value: cacheControlValue)
+                }
+
                 if let rangeHeader = request.headers["Range"].first {
                     guard let range = getRangeFromHeaderValue(rangeHeader) else {
                         return request.failure(.rangeNotSatisfiable)
