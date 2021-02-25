@@ -37,18 +37,45 @@ public struct HBFileMiddleware: HBMiddleware {
         // if next responder returns a 404 then check if file exists
         return next.respond(to: request).flatMapError { error in
             guard let httpError = error as? HBHTTPError, httpError.status == .notFound else {
-                return request.eventLoop.makeFailedFuture(error)
+                return request.failure(error)
             }
 
             guard let path = request.uri.path.removingPercentEncoding else {
-                return request.eventLoop.makeFailedFuture(HBHTTPError(.badRequest))
+                return request.failure(.badRequest)
             }
 
             guard !path.contains("..") else {
-                return request.eventLoop.makeFailedFuture(HBHTTPError(.badRequest))
+                return request.failure(.badRequest)
             }
 
             let fullPath = rootFolder + path
+            let modificationDate: Date?
+            let contentSize: Int?
+            do {
+                let attributes = try FileManager.default.attributesOfItem(atPath: fullPath)
+                modificationDate = attributes[.modificationDate] as? Date
+                contentSize = attributes[.size] as? Int
+            } catch {
+                return request.failure(.notFound)
+            }
+            var headers = HTTPHeaders()
+
+            // conent-length
+            if let contentSize = contentSize {
+                headers.replaceOrAdd(name: "content-length", value: String(describing: contentSize))
+            }
+            // modified-date
+            if let modificationDate = modificationDate {
+                headers.replaceOrAdd(name: "modified-date", value: HBDateCache.rfc1123Formatter.string(from: modificationDate))
+            }
+
+            // content-type
+            if let extPointIndex = path.lastIndex(of: ".") {
+                let extIndex = path.index(after: extPointIndex)
+                if let contentType = HBMediaType.getMediaType(for: String(path.suffix(from: extIndex))) {
+                    headers.add(name: "content-type", value: contentType.description)
+                }
+            }
 
             switch request.method {
             case .GET:
@@ -58,23 +85,25 @@ public struct HBFileMiddleware: HBMiddleware {
                     }
                     return fileIO.loadFile(path: fullPath, range: range, context: request.context)
                         .map { body, fileSize in
-                            var headers: HTTPHeaders = ["accept-ranges": "bytes"]
+                            headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
 
                             let lowerBound = max(range.lowerBound, 0)
                             let upperBound = min(range.upperBound, fileSize - 1)
                             headers.replaceOrAdd(name: "content-range", value: "bytes \(lowerBound)-\(upperBound)/\(fileSize)")
+                            // override content-length set above
+                            headers.replaceOrAdd(name: "content-length", value: String(describing: upperBound - lowerBound + 1))
 
                             return HBResponse(status: .partialContent, headers: headers, body: body)
                         }
                 }
                 return fileIO.loadFile(path: fullPath, context: request.context)
                     .map { body in
-                        let headers: HTTPHeaders = ["accept-ranges": "bytes"]
+                        headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
                         return HBResponse(status: .ok, headers: headers, body: body)
                     }
 
             case .HEAD:
-                return fileIO.headFile(path: fullPath, context: request.context)
+                return request.success(HBResponse(status: .ok, headers: headers, body: .empty))
 
             default:
                 return request.failure(error)
@@ -88,7 +117,7 @@ extension HBFileMiddleware {
     ///
     /// Also supports open ended ranges
     func getRangeFromHeaderValue(_ header: String) -> ClosedRange<Int>? {
-        let groups = matchRegex(header, expression: "^bytes=([\\d]*)-([\\d]*)$")
+        let groups = self.matchRegex(header, expression: "^bytes=([\\d]*)-([\\d]*)$")
         guard groups.count == 3 else { return nil }
 
         if groups[1] == "" {
@@ -106,7 +135,8 @@ extension HBFileMiddleware {
 
     private func matchRegex(_ string: String, expression: String) -> [Substring] {
         guard let regularExpression = try? NSRegularExpression(pattern: expression, options: []),
-              let firstMatch = regularExpression.firstMatch(in: string, range: NSMakeRange(0, string.count)) else {
+              let firstMatch = regularExpression.firstMatch(in: string, range: NSMakeRange(0, string.count))
+        else {
             return []
         }
 

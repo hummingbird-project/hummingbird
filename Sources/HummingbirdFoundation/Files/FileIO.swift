@@ -14,23 +14,6 @@ public struct HBFileIO {
         self.chunkSize = NonBlockingFileIO.defaultChunkSize
     }
 
-    /// Return details about file, without downloading it
-    /// - Parameters:
-    ///   - request: request for file
-    ///   - path: System file path
-    /// - Returns: Response including file details
-    public func headFile(path: String, context: HBRequest.Context) -> EventLoopFuture<HBResponse> {
-        return self.fileIO.openFile(path: path, eventLoop: context.eventLoop).flatMap { handle, region in
-            context.logger.debug("[FileIO] HEAD", metadata: ["file": .string(path)])
-            let headers: HTTPHeaders = ["content-length": region.readableBytes.description]
-            let response = HBResponse(status: .ok, headers: headers, body: .empty)
-            try? handle.close()
-            return context.eventLoop.makeSucceededFuture(response)
-        }.flatMapErrorThrowing { _ in
-            throw HBHTTPError(.notFound)
-        }
-    }
-
     /// Load file and return response body
     ///
     /// Depending on the file size this will return either a response body containing a ByteBuffer or a stream that will provide the
