@@ -17,7 +17,7 @@
     <a title="HBFileMiddleware Structure Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> 0.4.0 Docs</a> (83% documented)</p>
+        <p><a href="../index.html"> 0.5.0 Docs</a> (84% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../search.json">
@@ -147,7 +147,16 @@
 
                 </div>
               </div>
-            <p>Undocumented</p>
+            <p>Middleware for serving static files.</p>
+
+<p>If router returns a 404 ie a route was not found then this middleware will treat the request
+path as a filename relative to the rootFolder (which defaults to &ldquo;public&rdquo;) and checks to see if
+a file exists there. If so the file contents are passed back in the response.</p>
+
+<p>The file middleware supports both HEAD and GET methods and supports parsing of
+&ldquo;if-modified-since&rdquo;, &ldquo;if-none-match&rdquo; and &lsquo;range&quot; headers. It will output &ldquo;content-length&rdquo;,
+&ldquo;modified-date&rdquo;, &ldquo;eTag&rdquo;, &ldquo;content-type&rdquo;, &ldquo;cache-control&rdquo; and &ldquo;content-range&rdquo; headers where
+they are relevant.</p>
 
           </section>
           <section class="section task-group-section">

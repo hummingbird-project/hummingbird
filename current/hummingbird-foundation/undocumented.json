@@ -93,21 +93,14 @@
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Files/FileMiddleware.swift",
-      "line": 10,
-      "symbol": "HBFileMiddleware",
-      "symbol_kind": "source.lang.swift.decl.struct",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Files/FileMiddleware.swift",
-      "line": 15,
+      "line": 25,
       "symbol": "HBFileMiddleware.init(_:cacheControl:application:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Files/FileMiddleware.swift",
-      "line": 38,
+      "line": 48,
       "symbol": "HBFileMiddleware.apply(to:next:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
