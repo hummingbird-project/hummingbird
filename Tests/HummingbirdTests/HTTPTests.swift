@@ -54,6 +54,12 @@ class HTTPTests: XCTestCase {
     }
 
     func testMediaTypeHeaderValues() {
+        XCTAssert(HBMediaType.applicationUrlEncoded.isType(.application))
+        XCTAssert(HBMediaType.audioOgg.isType(.audio))
+        XCTAssert(HBMediaType.videoMp4.isType(.video))
+        XCTAssert(HBMediaType.fontOtf.isType(.font))
+        XCTAssert(HBMediaType.multipartForm.isType(.multipart))
+        XCTAssert(HBMediaType.imageSvg.isType(.image))
         XCTAssert(HBMediaType(from: "image/jpeg")?.isType(.imageJpeg) == true)
         XCTAssert(HBMediaType(from: "text/plain")?.isType(.textPlain) == true)
         XCTAssert(HBMediaType(from: "application/json")?.isType(.applicationJson) == true)

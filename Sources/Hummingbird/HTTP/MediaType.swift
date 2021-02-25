@@ -310,6 +310,7 @@ extension HBMediaType {
         "midi": .audioMidi,
         "mjs": .textJavascript,
         "mp3": .audioMpeg,
+        "mp4": .videoMp4,
         "mpeg": .videoMpeg,
         "mpkg": .applicationMpkg,
         "odp": .applicationOdp,
@@ -350,5 +351,6 @@ extension HBMediaType {
         "zip": .applicationZip,
         "3gp": .video3gp,
         "3g2": .video3g2,
+        "7z": .application7z,
     ]
 }
