@@ -1,26 +1,26 @@
 {
   "warnings": [
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.L6p2Ga7L/hummingbird-auth/Sources/HummingbirdAuth/BasicAuthentication.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.N8swUGcr/hummingbird-auth/Sources/HummingbirdAuth/BasicAuthentication.swift",
       "line": 6,
       "symbol": "BasicAuthentication.username",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.L6p2Ga7L/hummingbird-auth/Sources/HummingbirdAuth/BasicAuthentication.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.N8swUGcr/hummingbird-auth/Sources/HummingbirdAuth/BasicAuthentication.swift",
       "line": 7,
       "symbol": "BasicAuthentication.password",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.L6p2Ga7L/hummingbird-auth/Sources/HummingbirdAuth/BearerAuthentication.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.N8swUGcr/hummingbird-auth/Sources/HummingbirdAuth/BearerAuthentication.swift",
       "line": 5,
       "symbol": "BearerAuthentication.token",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     }
   ],
-  "source_directory": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.L6p2Ga7L/hummingbird-auth"
+  "source_directory": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.N8swUGcr/hummingbird-auth"
 }

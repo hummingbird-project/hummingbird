@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Encoding and Decoding  Reference</title>
+    <link rel="stylesheet" type="text/css" href="css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="js/jquery.min.js" defer></script>
+    <script src="js/jazzy.js" defer></script>
+    
+    <script src="js/lunr.min.js" defer></script>
+    <script src="js/typeahead.jquery.js" defer></script>
+    <script src="js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+    <a title="Encoding and Decoding  Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="index.html"> 0.4.0 Docs</a> (94% documented)</p>
+        <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="img/gh.png"/>View on GitHub</a></p>
+        <p class="header-right">
+          <form role="search" action="search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="index.html"> Reference</a>
+        <img id="carat" src="img/carat.png" />
+        Encoding and Decoding  Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="Guides.html">Guides</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="encoding-and-decoding.html">Encoding and Decoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="error-handling.html">Error Handling</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="extending-hummingbird.html">Extending Hummingbird</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="middleware.html">Middleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="router.html">Router</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Extensions/HBApplication.html">HBApplication</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/HBApplication/XCTTestingSetup.html">– XCTTestingSetup</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Protocols/HBXCT.html">HBXCT</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Structs/HBXCTResponse.html">HBXCTResponse</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            
+            <h1 id='encoding-and-decoding' class='heading'>Encoding and Decoding</h1>
+
+<p>Hummingbird can make use of <code>Codable</code> to decode requests and encode responses. <code>HBApplication</code> has two member variables <code>decoder</code> and <code>encoder</code> which define how requests/responses are decoded/encoded. The <code>decoder</code> must conform to <code>HBRequestDecoder</code> which requires a <code>decode(_:from)</code> function that decodes a <code>HBRequest</code>. </p>
+<pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">protocol</span> <span class="kt">HBRequestDecoder</span> <span class="p">{</span>
+    <span class="kd">func</span> <span class="n">decode</span><span class="o">&lt;</span><span class="kt">T</span><span class="p">:</span> <span class="kt">Decodable</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">type</span><span class="p">:</span> <span class="kt">T</span><span class="o">.</span><span class="k">Type</span><span class="p">,</span> <span class="n">from</span> <span class="nv">request</span><span class="p">:</span> <span class="kt">HBRequest</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">T</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>The <code>encoder</code> must conform to <code>HBResponseEncoder</code> which requires a <code>encode(_:from)</code> function that creates a <code>HBResponse</code> from a <code>Codable</code> value and the original request that generated it.</p>
+<pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">protocol</span> <span class="kt">HBResponseEncoder</span> <span class="p">{</span>
+    <span class="kd">func</span> <span class="n">encode</span><span class="o">&lt;</span><span class="kt">T</span><span class="p">:</span> <span class="kt">Encodable</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">T</span><span class="p">,</span> <span class="n">from</span> <span class="nv">request</span><span class="p">:</span> <span class="kt">HBRequest</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">HBResponse</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>Both of these look very similar to the <code>Encodable</code> and <code>Decodable</code> protocol that come with the <code>Codable</code> system except you have additional information from the <code>HBRequest</code> class on how you might want to decode/encode your data.</p>
+<h2 id='setting-up-hbapplication' class='heading'>Setting up HBApplication</h2>
+
+<p>The default implementations of <code>decoder</code> and <code>encoder</code> are <code>Null</code> implementations that will assert if used. So you have to setup your <code>decoder</code> and <code>encoder</code> before you can use <code>Codable</code> in Hummingbird. <code>HummingbirdFoundation</code> includes two such implementations. <code>JSONEncoder</code> and <code>JSONDecoder</code> have been extended to conform to the relevant protocols so you can have JSON decoding/encoding by adding the following when creating your application</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">app</span> <span class="o">=</span> <span class="kt">HBApplication</span><span class="p">()</span>
+<span class="n">app</span><span class="o">.</span><span class="n">decoder</span> <span class="o">=</span> <span class="kt">JSONDecoder</span><span class="p">()</span>
+<span class="n">app</span><span class="o">.</span><span class="n">encoder</span> <span class="o">=</span> <span class="kt">JSONEncoder</span><span class="p">()</span>
+</code></pre>
+
+<p><code>HummingbirdFoundation</code> also includes a decoder and encoder for url encoded form data. To use this you setup the application as follows</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">app</span> <span class="o">=</span> <span class="kt">HBApplication</span><span class="p">()</span>
+<span class="n">app</span><span class="o">.</span><span class="n">decoder</span> <span class="o">=</span> <span class="kt">URLEncodedFormDecoder</span><span class="p">()</span>
+<span class="n">app</span><span class="o">.</span><span class="n">encoder</span> <span class="o">=</span> <span class="kt">URLEncodedFormEncoder</span><span class="p">()</span>
+</code></pre>
+<h2 id='decoding-requests' class='heading'>Decoding Requests</h2>
+
+<p>Once you have a decoder you can implement decoding in your routes using the <code>HBRequest.decode</code> method in the following manner</p>
+<pre class="highlight swift"><code><span class="kd">struct</span> <span class="kt">User</span><span class="p">:</span> <span class="kt">Decodable</span> <span class="p">{</span>
+    <span class="k">let</span> <span class="nv">email</span><span class="p">:</span> <span class="kt">String</span>
+    <span class="k">let</span> <span class="nv">firstName</span><span class="p">:</span> <span class="kt">String</span>
+    <span class="k">let</span> <span class="nv">surname</span><span class="p">:</span> <span class="kt">String</span>
+<span class="p">}</span>
+<span class="n">app</span><span class="o">.</span><span class="n">router</span><span class="o">.</span><span class="nf">post</span><span class="p">(</span><span class="s">"user"</span><span class="p">)</span> <span class="p">{</span> <span class="n">request</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">HTTPResponseStatus</span><span class="o">&gt;</span> <span class="k">in</span>
+    <span class="c1">// decode user from request</span>
+    <span class="k">guard</span> <span class="k">let</span> <span class="nv">user</span> <span class="o">=</span> <span class="k">try</span><span class="p">?</span> <span class="n">request</span><span class="o">.</span><span class="nf">decode</span><span class="p">(</span><span class="nv">as</span><span class="p">:</span> <span class="kt">User</span><span class="o">.</span><span class="k">self</span><span class="p">)</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="nf">failure</span><span class="p">(</span><span class="o">.</span><span class="n">badRequest</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="c1">// create user and if ok return `.ok` status</span>
+    <span class="k">return</span> <span class="nf">createUser</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="nv">on</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">eventLoop</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">map</span> <span class="p">{</span> <span class="n">_</span> <span class="k">in</span> <span class="o">.</span><span class="n">ok</span> <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>Like the standard <code>Decoder.decode</code> functions <code>HBRequest.decode</code> can throw an error if decoding fails. In this situation when I received a decode error I return a failed <code>EventLoopFuture</code>. I use the function <code>HBRequest.failure</code> to generate the failed <code>EventLoopFuture</code>.</p>
+<h2 id='encoding-responses' class='heading'>Encoding Responses</h2>
+
+<p>To have an object encoded in the response we have to conform it to <code>HBResponseEncodable</code>. This then allows you to create a route handler that returns this object and it will automatically get encoded. If we extend the <code>User</code> object from the above example we can do this</p>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">User</span><span class="p">:</span> <span class="kt">HBResponseEncodable</span> <span class="p">{}</span>
+
+<span class="n">app</span><span class="o">.</span><span class="n">router</span><span class="o">.</span><span class="nf">get</span><span class="p">(</span><span class="s">"user"</span><span class="p">)</span> <span class="p">{</span> <span class="n">request</span> <span class="o">-&gt;</span> <span class="kt">User</span> <span class="k">in</span>
+    <span class="k">let</span> <span class="nv">user</span> <span class="o">=</span> <span class="kt">User</span><span class="p">(</span><span class="nv">email</span><span class="p">:</span> <span class="s">"js@email.com"</span><span class="p">,</span> <span class="nv">name</span><span class="p">:</span> <span class="s">"John Smith"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">user</span>
+<span class="p">}</span>
+</code></pre>
+<h2 id='decoding-encoding-based-on-request-headers' class='heading'>Decoding/Encoding based on Request headers</h2>
+
+<p>Because the full request is supplied to the <code>HBRequestDecoder</code>. You can make decoding decisions based on headers in the request. In the example below we are decoding using either the <code>JSONDecoder</code> or <code>URLEncodedFormDecoder</code> based on the &ldquo;content-type&rdquo; header.</p>
+<pre class="highlight swift"><code><span class="kd">struct</span> <span class="kt">MyRequestDecoder</span><span class="p">:</span> <span class="kt">HBRequestDecoder</span> <span class="p">{</span>
+    <span class="kd">func</span> <span class="n">decode</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">type</span><span class="p">:</span> <span class="kt">T</span><span class="o">.</span><span class="k">Type</span><span class="p">,</span> <span class="n">from</span> <span class="nv">request</span><span class="p">:</span> <span class="kt">HBRequest</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">T</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">Decodable</span> <span class="p">{</span>
+        <span class="k">switch</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s">"content-type"</span><span class="p">]</span><span class="o">.</span><span class="n">first</span> <span class="p">{</span>
+        <span class="k">case</span> <span class="s">"json/application"</span><span class="p">,</span> <span class="s">"application/json; charset=utf-8"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="k">try</span> <span class="kt">JSONDecoder</span><span class="p">()</span><span class="o">.</span><span class="nf">decode</span><span class="p">(</span><span class="n">type</span><span class="p">,</span> <span class="nv">from</span><span class="p">:</span> <span class="n">request</span><span class="p">)</span>
+        <span class="k">case</span> <span class="s">"application/x-www-form-urlencoded"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="k">try</span> <span class="kt">URLEncodedFormDecoder</span><span class="p">()</span><span class="o">.</span><span class="nf">decode</span><span class="p">(</span><span class="n">type</span><span class="p">,</span> <span class="nv">from</span><span class="p">:</span> <span class="n">request</span><span class="p">)</span>
+        <span class="k">default</span><span class="p">:</span>
+            <span class="k">throw</span> <span class="kt">HBHTTPError</span><span class="p">(</span><span class="o">.</span><span class="n">badRequest</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>Using a similar manner you could also create a <code>HBResponseEncoder</code> based on the &ldquo;accepts&rdquo; header in the request.</p>
+
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-02-25)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

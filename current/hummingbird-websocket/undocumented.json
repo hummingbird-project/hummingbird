@@ -1,0 +1,40 @@
+{
+  "warnings": [
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.N8swUGcr/hummingbird-websocket/Sources/HummingbirdWSCore/WebSocket.swift",
+      "line": 11,
+      "symbol": "HBWebSocket.channel",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.N8swUGcr/hummingbird-websocket/Sources/HummingbirdWSCore/WebSocket.swift",
+      "line": 156,
+      "symbol": "HBWebSocket.ReadCallback",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.N8swUGcr/hummingbird-websocket/Sources/HummingbirdWSCore/WebSocket.swift",
+      "line": 157,
+      "symbol": "HBWebSocket.CloseCallback",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.N8swUGcr/hummingbird-websocket/Sources/HummingbirdWSCore/WebSocketData.swift",
+      "line": 6,
+      "symbol": "WebSocketData.text(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.N8swUGcr/hummingbird-websocket/Sources/HummingbirdWSCore/WebSocketData.swift",
+      "line": 7,
+      "symbol": "WebSocketData.binary(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    }
+  ],
+  "source_directory": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.N8swUGcr/hummingbird-websocket"
+}
