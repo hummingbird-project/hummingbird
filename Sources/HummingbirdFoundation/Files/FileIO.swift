@@ -2,7 +2,7 @@ import Hummingbird
 import Logging
 import NIO
 
-/// Manages File loading. Can either stream or load file.
+/// Manages File reading and writing.
 public struct HBFileIO {
     let fileIO: NonBlockingFileIO
     let chunkSize: Int

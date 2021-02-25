@@ -7,6 +7,16 @@ import Foundation
 import Hummingbird
 import NIO
 
+/// Middleware for serving static files.
+///
+/// If router returns a 404 ie a route was not found then this middleware will treat the request
+/// path as a filename relative to the rootFolder (which defaults to "public") and checks to see if
+/// a file exists there. If so the file contents are passed back in the response.
+///
+/// The file middleware supports both HEAD and GET methods and supports parsing of
+/// "if-modified-since", "if-none-match" and 'range" headers. It will output "content-length",
+/// "modified-date", "eTag", "content-type", "cache-control" and "content-range" headers where
+/// they are relevant.
 public struct HBFileMiddleware: HBMiddleware {
     let rootFolder: String
     let fileIO: HBFileIO
