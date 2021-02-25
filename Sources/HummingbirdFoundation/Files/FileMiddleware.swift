@@ -68,7 +68,7 @@ public struct HBFileMiddleware: HBMiddleware {
             if let modificationDate = modificationDate {
                 headers.replaceOrAdd(name: "modified-date", value: HBDateCache.rfc1123Formatter.string(from: modificationDate))
             }
-            
+
             // content-type
             if let extPointIndex = path.lastIndex(of: ".") {
                 let extIndex = path.index(after: extPointIndex)
@@ -117,7 +117,7 @@ extension HBFileMiddleware {
     ///
     /// Also supports open ended ranges
     func getRangeFromHeaderValue(_ header: String) -> ClosedRange<Int>? {
-        let groups = matchRegex(header, expression: "^bytes=([\\d]*)-([\\d]*)$")
+        let groups = self.matchRegex(header, expression: "^bytes=([\\d]*)-([\\d]*)$")
         guard groups.count == 3 else { return nil }
 
         if groups[1] == "" {
@@ -135,7 +135,8 @@ extension HBFileMiddleware {
 
     private func matchRegex(_ string: String, expression: String) -> [Substring] {
         guard let regularExpression = try? NSRegularExpression(pattern: expression, options: []),
-              let firstMatch = regularExpression.firstMatch(in: string, range: NSMakeRange(0, string.count)) else {
+              let firstMatch = regularExpression.firstMatch(in: string, range: NSMakeRange(0, string.count))
+        else {
             return []
         }
 

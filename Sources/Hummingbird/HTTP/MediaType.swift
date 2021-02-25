@@ -50,17 +50,18 @@ public struct HBMediaType: CustomStringConvertible {
     /// Output
     public var description: String {
         if let parameter = self.parameter {
-            return "\(type)/\(subType); \(parameter.name)=\(parameter.value)"
+            return "\(self.type)/\(self.subType); \(parameter.name)=\(parameter.value)"
         } else {
-            return "\(type)/\(subType)"
+            return "\(self.type)/\(self.subType)"
         }
     }
 
     /// Return if media type matches the input
     public func isType(_ type: HBMediaType) -> Bool {
         guard self.type == type.type,
-              (self.subType == type.subType || type.subType == "*"),
-              (type.parameter == nil || (self.parameter?.name == type.parameter?.name && self.parameter?.value == type.parameter?.value)) else {
+              self.subType == type.subType || type.subType == "*",
+              type.parameter == nil || (self.parameter?.name == type.parameter?.name && self.parameter?.value == type.parameter?.value)
+        else {
             return false
         }
         return true
@@ -104,7 +105,7 @@ extension HBMediaType {
     /// AbiWord document
     public static var abiWord: Self { .init(type: .application, subType: "x-abiword") }
     /// Archive document (multiple files embedded)
-    public static var arc: Self { .init(type: .application, subType: "x-freearc")}
+    public static var arc: Self { .init(type: .application, subType: "x-freearc") }
     /// OGG
     public static var applicationOgg: Self { .init(type: .application, subType: "ogg") }
     /// Amazon Kindle eBook format
@@ -116,23 +117,23 @@ extension HBMediaType {
     /// BZip2 archive
     public static var bzip2: Self { .init(type: .application, subType: "x-bzip2") }
     /// C-Shell script
-    public static var csh: Self { .init(type: .application, subType: "x-csh")}
+    public static var csh: Self { .init(type: .application, subType: "x-csh") }
     /// Microsoft Word
-    public static var msword: Self { .init(type: .application, subType: "msword")}
+    public static var msword: Self { .init(type: .application, subType: "msword") }
     /// Microsoft Word (OpenXML)
-    public static var docx: Self { .init(type: .application, subType: "vnd.openxmlformats-officedocument.wordprocessingml.document")}
+    public static var docx: Self { .init(type: .application, subType: "vnd.openxmlformats-officedocument.wordprocessingml.document") }
     /// MS Embedded OpenType fonts
-    public static var eot: Self { .init(type: .application, subType: "vnd.ms-fontobject")}
+    public static var eot: Self { .init(type: .application, subType: "vnd.ms-fontobject") }
     /// Electronic publication (EPUB)
-    public static var epub: Self { .init(type: .application, subType: "application/epub+zip")}
+    public static var epub: Self { .init(type: .application, subType: "application/epub+zip") }
     /// GZip Compressed Archive
-    public static var gzip: Self { .init(type: .application, subType: "gzip")}
+    public static var gzip: Self { .init(type: .application, subType: "gzip") }
     /// Java Archive (JAR)
-    public static var jar: Self { .init(type: .application, subType: "java-archive")}
+    public static var jar: Self { .init(type: .application, subType: "java-archive") }
     /// JSON format
-    public static var json: Self { .init(type: .application, subType: "json")}
+    public static var json: Self { .init(type: .application, subType: "json") }
     /// JSON-LD format
-    public static var jsonLD: Self { .init(type: .application, subType: "ld+json")}
+    public static var jsonLD: Self { .init(type: .application, subType: "ld+json") }
     /// Apple Installer Package
     public static var mpkg: Self { .init(type: .application, subType: "application/vnd.apple.installer+xml") }
     /// URL encoded form data
@@ -198,7 +199,7 @@ extension HBMediaType {
     /// Graphics Interchange Format (GIF)
     public static var gif: Self { .init(type: .image, subType: "gif") }
     /// Icon format
-    public static var ico: Self { .init(type: .image, subType: "vnd.microsoft.icon")}
+    public static var ico: Self { .init(type: .image, subType: "vnd.microsoft.icon") }
     /// JPEG images
     public static var jpeg: Self { .init(type: .image, subType: "jpeg") }
     /// Portable Network Graphics
@@ -336,6 +337,6 @@ extension HBMediaType {
         "xml": .xml,
         "zip": .zip,
         "3gp": .video3gp,
-        "3g2": .video3g2
+        "3g2": .video3g2,
     ]
 }

@@ -37,7 +37,7 @@ class HummingbirdFilesTests: XCTestCase {
             var body = try XCTUnwrap(response.body)
             XCTAssertEqual(body.readString(length: body.readableBytes), text)
             XCTAssertEqual(response.headers["content-type"].first, "image/jpeg")
-       }
+        }
     }
 
     func testReadLargeFile() {
