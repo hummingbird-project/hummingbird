@@ -47,18 +47,18 @@ class HTTPTests: XCTestCase {
     }
 
     func testMediaTypeExtensions() {
-        XCTAssert(HBMediaType.getMediaType(for: "jpg")?.isType(.jpeg) == true)
-        XCTAssert(HBMediaType.getMediaType(for: "txt")?.isType(.plainText) == true)
-        XCTAssert(HBMediaType.getMediaType(for: "html")?.isType(.html) == true)
-        XCTAssert(HBMediaType.getMediaType(for: "css")?.isType(.css) == true)
+        XCTAssert(HBMediaType.getMediaType(forExtension: "jpg")?.isType(.imageJpeg) == true)
+        XCTAssert(HBMediaType.getMediaType(forExtension: "txt")?.isType(.textPlain) == true)
+        XCTAssert(HBMediaType.getMediaType(forExtension: "html")?.isType(.textHtml) == true)
+        XCTAssert(HBMediaType.getMediaType(forExtension: "css")?.isType(.textCss) == true)
     }
 
     func testMediaTypeHeaderValues() {
-        XCTAssert(HBMediaType(from: "image/jpeg")?.isType(.jpeg) == true)
-        XCTAssert(HBMediaType(from: "text/plain")?.isType(.plainText) == true)
-        XCTAssert(HBMediaType(from: "application/json")?.isType(.json) == true)
-        XCTAssert(HBMediaType(from: "application/json; charset=utf8")?.isType(.json) == true)
-        XCTAssert(HBMediaType(from: "application/xml")?.isType(.xml) == true)
+        XCTAssert(HBMediaType(from: "image/jpeg")?.isType(.imageJpeg) == true)
+        XCTAssert(HBMediaType(from: "text/plain")?.isType(.textPlain) == true)
+        XCTAssert(HBMediaType(from: "application/json")?.isType(.applicationJson) == true)
+        XCTAssert(HBMediaType(from: "application/json; charset=utf8")?.isType(.applicationJson) == true)
+        XCTAssert(HBMediaType(from: "application/xml")?.isType(.applicationXml) == true)
         XCTAssert(HBMediaType(from: "audio/ogg")?.isType(.audioOgg) == true)
     }
 
