@@ -192,7 +192,8 @@ class HummingbirdFilesTests: XCTestCase {
         app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-modified-since": modifiedDate!]) { response in
             XCTAssertEqual(response.status, .notModified)
         }
-        let date = try XCTUnwrap(self.rfc1123Formatter.string(from: Date(timeIntervalSinceNow: -1)))
+        // one minute before current date
+        let date = try XCTUnwrap(self.rfc1123Formatter.string(from: Date(timeIntervalSinceNow: -60)))
         app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-modified-since": date]) { response in
             XCTAssertEqual(response.status, .ok)
         }
