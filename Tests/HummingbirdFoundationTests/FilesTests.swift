@@ -124,7 +124,7 @@ class HummingbirdFilesTests: XCTestCase {
         let app = HBApplication(testing: .live)
         app.middleware.add(HBFileMiddleware(".", application: app))
 
-        let buffer = self.randomBuffer(size: 16_200)
+        let buffer = self.randomBuffer(size: 16200)
         let data = Data(buffer: buffer)
         let fileURL = URL(fileURLWithPath: "test.txt")
         XCTAssertNoThrow(try data.write(to: fileURL))
@@ -146,7 +146,7 @@ class HummingbirdFilesTests: XCTestCase {
         let app = HBApplication(testing: .live)
         app.middleware.add(HBFileMiddleware(".", application: app))
 
-        let buffer = self.randomBuffer(size: 16_200)
+        let buffer = self.randomBuffer(size: 16200)
         let data = Data(buffer: buffer)
         let fileURL = URL(fileURLWithPath: "test.txt")
         XCTAssertNoThrow(try data.write(to: fileURL))
@@ -176,7 +176,7 @@ class HummingbirdFilesTests: XCTestCase {
         let app = HBApplication(testing: .live)
         app.middleware.add(HBFileMiddleware(".", application: app))
 
-        let buffer = self.randomBuffer(size: 16_200)
+        let buffer = self.randomBuffer(size: 16200)
         let data = Data(buffer: buffer)
         let fileURL = URL(fileURLWithPath: "test.txt")
         XCTAssertNoThrow(try data.write(to: fileURL))

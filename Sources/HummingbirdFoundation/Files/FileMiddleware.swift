@@ -60,7 +60,7 @@ public struct HBFileMiddleware: HBMiddleware {
             }
             let eTag = createETag([
                 String(describing: modificationDate?.timeIntervalSince1970 ?? 0),
-                String(describing: contentSize ?? 0)
+                String(describing: contentSize ?? 0),
             ])
 
             // construct headers
@@ -89,7 +89,8 @@ public struct HBFileMiddleware: HBMiddleware {
             }
             // verify if-modified-since
             else if let ifModifiedSince = request.headers["if-modified-since"].first,
-               let modificationDate = modificationDate {
+                    let modificationDate = modificationDate
+            {
                 if let ifModifiedSinceDate = HBDateCache.rfc1123Formatter.date(from: ifModifiedSince) {
                     // round modification date of file down to seconds for comparison
                     let modificationDateTimeInterval = modificationDate.timeIntervalSince1970.rounded(.down)
@@ -97,7 +98,6 @@ public struct HBFileMiddleware: HBMiddleware {
                     if modificationDateTimeInterval <= ifModifiedSinceDateTimeInterval {
                         return request.success(HBResponse(status: .notModified, headers: headers))
                     }
-
                 }
             }
 
