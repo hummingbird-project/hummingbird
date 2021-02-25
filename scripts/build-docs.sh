@@ -11,9 +11,27 @@ get_latest_version() {
 }
 
 build_docs() {
-    MODULE_NAME=$1
-    GITHUB_FOLDER=$2
-    DOCS_FOLDER=$3
+    GITHUB_FOLDER=$1
+    DOCS_FOLDER=$2
+    shift 2
+    MODULES=$*
+
+    SOURCEKITTEN_FOLDER="$TEMP_DIR/sourcekitten/$DOCS_FOLDER"
+
+    mkdir -p $SOURCEKITTEN_FOLDER
+
+    SOURCEKITTEN_FILES=""
+    for MODULE in $MODULES;
+    do
+        echo "$MODULE"
+        sourcekitten doc --spm --module-name "$MODULE" > $SOURCEKITTEN_FOLDER/"$MODULE".json
+        if [ -z "$SOURCEKITTEN_FILES" ]; then
+            SOURCEKITTEN_FILES=$SOURCEKITTEN_FOLDER/"$MODULE".json
+        else
+            SOURCEKITTEN_FILES="$SOURCEKITTEN_FILES,$SOURCEKITTEN_FOLDER/"$MODULE".json"
+        fi
+    done
+
     VERSION=$(get_latest_version)
     jazzy \
         --clean \
@@ -21,29 +39,30 @@ build_docs() {
         --author_url https://github.com/adam-fowler \
         --github_url https://github.com/hummingbird-project/"$GITHUB_FOLDER" \
         --module-version "$VERSION" \
-        --module "$MODULE_NAME" \
+        --sourcekitten-sourcefile "$SOURCEKITTEN_FILES" \
         --readme "$CWD"/documentation/readme.md \
-        --documentation "$CWD/documentation/[^r]*.md" \
+        --documentation "documentation/[^r]*.md" \
         --output "$CWD"/docs/"$DOCS_FOLDER"
 }
 
 build_docs_from_other_repo() {
-    GITHUB_FOLDER=$2
+    GITHUB_FOLDER=$1
 
     pushd "$TEMP_DIR"
     git clone https://github.com/hummingbird-project/"$GITHUB_FOLDER"
     cd "$GITHUB_FOLDER"
-    build_docs $1 $2 $3
+    build_docs $*
 
     popd
 }
 
-build_docs Hummingbird hummingbird hummingbird
-build_docs HummingbirdFoundation hummingbird hummingbird-foundation
-build_docs HummingbirdXCT hummingbird hummingbird-xct
+build_docs hummingbird hummingbird Hummingbird
+build_docs hummingbird hummingbird-foundation HummingbirdFoundation
+build_docs hummingbird hummingbird-xct HummingbirdXCT
 
-build_docs_from_other_repo HummingbirdCore hummingbird-core hummingbird-core
-build_docs_from_other_repo HummingbirdAuth hummingbird-auth hummingbird-auth
+build_docs_from_other_repo hummingbird-core hummingbird-core HummingbirdCore
+build_docs_from_other_repo hummingbird-auth hummingbird-auth HummingbirdAuth
+build_docs_from_other_repo hummingbird-websocket hummingbird-websocket HummingbirdWebSocket HummingbirdWSCore
 
 
 rm -rf "$TEMP_DIR"
