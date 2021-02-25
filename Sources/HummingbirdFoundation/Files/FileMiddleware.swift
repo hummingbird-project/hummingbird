@@ -58,15 +58,47 @@ public struct HBFileMiddleware: HBMiddleware {
             } catch {
                 return request.failure(.notFound)
             }
+            let eTag = createETag([
+                String(describing: modificationDate?.timeIntervalSince1970 ?? 0),
+                String(describing: contentSize ?? 0),
+            ])
+
+            // construct headers
             var headers = HTTPHeaders()
 
-            // conent-length
+            // content-length
             if let contentSize = contentSize {
-                headers.replaceOrAdd(name: "content-length", value: String(describing: contentSize))
+                headers.add(name: "content-length", value: String(describing: contentSize))
             }
             // modified-date
             if let modificationDate = modificationDate {
-                headers.replaceOrAdd(name: "modified-date", value: HBDateCache.rfc1123Formatter.string(from: modificationDate))
+                headers.add(name: "modified-date", value: HBDateCache.rfc1123Formatter.string(from: modificationDate))
+            }
+            // eTag (constructed from modification date and content size)
+            headers.add(name: "eTag", value: eTag)
+
+            // verify if-none-match. No need to verify if-match as this is used for state changing
+            // operations. Also the eTag we generate is considered weak.
+            let ifNoneMatch = request.headers["if-none-match"]
+            if ifNoneMatch.count > 0 {
+                for match in ifNoneMatch {
+                    if eTag == match {
+                        return request.success(HBResponse(status: .notModified, headers: headers))
+                    }
+                }
+            }
+            // verify if-modified-since
+            else if let ifModifiedSince = request.headers["if-modified-since"].first,
+                    let modificationDate = modificationDate
+            {
+                if let ifModifiedSinceDate = HBDateCache.rfc1123Formatter.date(from: ifModifiedSince) {
+                    // round modification date of file down to seconds for comparison
+                    let modificationDateTimeInterval = modificationDate.timeIntervalSince1970.rounded(.down)
+                    let ifModifiedSinceDateTimeInterval = ifModifiedSinceDate.timeIntervalSince1970
+                    if modificationDateTimeInterval <= ifModifiedSinceDateTimeInterval {
+                        return request.success(HBResponse(status: .notModified, headers: headers))
+                    }
+                }
             }
 
             // content-type
@@ -116,7 +148,7 @@ extension HBFileMiddleware {
     /// Convert "bytes=value-value" range header into `ClosedRange<Int>`
     ///
     /// Also supports open ended ranges
-    func getRangeFromHeaderValue(_ header: String) -> ClosedRange<Int>? {
+    private func getRangeFromHeaderValue(_ header: String) -> ClosedRange<Int>? {
         let groups = self.matchRegex(header, expression: "^bytes=([\\d]*)-([\\d]*)$")
         guard groups.count == 3 else { return nil }
 
@@ -147,5 +179,32 @@ extension HBFileMiddleware {
             groups.append(string[range])
         }
         return groups
+    }
+
+    private func createETag(_ strings: [String]) -> String {
+        let string = strings.joined(separator: "-")
+        let buffer = Array<UInt8>.init(unsafeUninitializedCapacity: 16) { bytes, size in
+            var index = 0
+            for i in 0..<16 {
+                bytes[i] = 0
+            }
+            for c in string.utf8 {
+                bytes[index] ^= c
+                index += 1
+                if index == 16 {
+                    index = 0
+                }
+            }
+            size = 16
+        }
+
+        return "W/\"\(buffer.hexDigest())\""
+    }
+}
+
+extension Sequence where Element == UInt8 {
+    /// return a hexEncoded string buffer from an array of bytes
+    func hexDigest() -> String {
+        return self.map { String(format: "%02x", $0) }.joined(separator: "")
     }
 }
