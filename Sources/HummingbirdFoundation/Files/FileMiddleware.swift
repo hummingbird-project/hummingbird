@@ -62,13 +62,18 @@ public struct HBFileMiddleware: HBMiddleware {
 
             // conent-length
             if let contentSize = contentSize {
-                headers.replaceOrAdd(name: "content-length", value: String(describing: contentSize))
+                headers.add(name: "content-length", value: String(describing: contentSize))
             }
             // modified-date
             if let modificationDate = modificationDate {
-                headers.replaceOrAdd(name: "modified-date", value: HBDateCache.rfc1123Formatter.string(from: modificationDate))
+                headers.add(name: "modified-date", value: HBDateCache.rfc1123Formatter.string(from: modificationDate))
             }
-
+            // eTag (constructed from modification date and content size)
+            headers.add(name: "eTag", value: eTag([
+                String(describing: modificationDate?.timeIntervalSince1970 ?? 0),
+                String(describing: contentSize ?? 0)
+            ]))
+            
             // content-type
             if let extPointIndex = path.lastIndex(of: ".") {
                 let extIndex = path.index(after: extPointIndex)
@@ -147,5 +152,32 @@ extension HBFileMiddleware {
             groups.append(string[range])
         }
         return groups
+    }
+
+    private func eTag(_ strings: [String]) -> String {
+        let string = strings.joined(separator: "-")
+        let buffer = Array<UInt8>.init(unsafeUninitializedCapacity: 16) { bytes, size in
+            var index = 0
+            for i in 0..<16 {
+                bytes[i] = 0
+            }
+            for c in string.utf8 {
+                bytes[index] ^= c
+                index += 1
+                if index == 16 {
+                    index = 0
+                }
+            }
+            size = 16
+        }
+
+        return buffer.hexDigest()
+    }
+}
+
+extension Sequence where Element == UInt8 {
+    /// return a hexEncoded string buffer from an array of bytes
+    func hexDigest() -> String {
+        return self.map { String(format: "%02x", $0) }.joined(separator: "")
     }
 }

@@ -120,6 +120,28 @@ class HummingbirdFilesTests: XCTestCase {
         }
     }
 
+    func testETag() throws {
+        let app = HBApplication(testing: .live)
+        app.middleware.add(HBFileMiddleware(".", application: app))
+
+        let buffer = self.randomBuffer(size: 16_200)
+        let data = Data(buffer: buffer)
+        let fileURL = URL(fileURLWithPath: "test.txt")
+        XCTAssertNoThrow(try data.write(to: fileURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        var eTag: String?
+        app.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
+            eTag = try XCTUnwrap(response.headers["eTag"].first)
+        }
+        app.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
+            XCTAssertEqual(response.headers["eTag"].first, eTag)
+        }
+    }
+
     func testWrite() throws {
         let filename = "testWrite.txt"
         let app = HBApplication(testing: .live)
