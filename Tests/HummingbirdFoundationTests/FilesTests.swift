@@ -12,6 +12,14 @@ class HummingbirdFilesTests: XCTestCase {
         return ByteBufferAllocator().buffer(bytes: data)
     }
 
+    var rfc1123Formatter: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "EEE, d MMM yyy HH:mm:ss z"
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return formatter
+    }
+
     func testRead() {
         let app = HBApplication(testing: .live)
         app.middleware.add(HBFileMiddleware(".", application: app))
@@ -76,6 +84,7 @@ class HummingbirdFilesTests: XCTestCase {
             let body = try XCTUnwrap(response.body)
             let slice = buffer.getSlice(at: 0, length: 4000)
             XCTAssertEqual(body, slice)
+            XCTAssertEqual(response.headers["content-length"].first, "4000")
             XCTAssertEqual(response.headers["content-range"].first, "bytes 0-3999/326000")
         }
 
@@ -91,6 +100,7 @@ class HummingbirdFilesTests: XCTestCase {
         let app = HBApplication(testing: .live)
         app.middleware.add(HBFileMiddleware(".", application: app))
 
+        let date = Date()
         let text = "Test file contents"
         let data = Data(text.utf8)
         let fileURL = URL(fileURLWithPath: "test.txt")
@@ -104,6 +114,9 @@ class HummingbirdFilesTests: XCTestCase {
             XCTAssertNil(response.body)
             XCTAssertEqual(response.headers["Content-Length"].first, text.utf8.count.description)
             XCTAssertEqual(response.headers["content-type"].first, "text/plain")
+            let responseDateString = try XCTUnwrap(response.headers["modified-date"].first)
+            let responseDate = try XCTUnwrap(self.rfc1123Formatter.date(from: responseDateString))
+            XCTAssert(date < responseDate + 1)
         }
     }
 
