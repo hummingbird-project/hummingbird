@@ -78,7 +78,7 @@ public struct HBFileMiddleware: HBMiddleware {
             headers.add(name: "eTag", value: eTag)
 
             // verify if-none-match. No need to verify if-match as this is used for state changing
-            // operations
+            // operations. Also the eTag we generate is considered weak.
             let ifNoneMatch = request.headers["if-none-match"]
             if ifNoneMatch.count > 0 {
                 for match in ifNoneMatch {
@@ -148,7 +148,7 @@ extension HBFileMiddleware {
     /// Convert "bytes=value-value" range header into `ClosedRange<Int>`
     ///
     /// Also supports open ended ranges
-    func getRangeFromHeaderValue(_ header: String) -> ClosedRange<Int>? {
+    private func getRangeFromHeaderValue(_ header: String) -> ClosedRange<Int>? {
         let groups = self.matchRegex(header, expression: "^bytes=([\\d]*)-([\\d]*)$")
         guard groups.count == 3 else { return nil }
 
@@ -198,7 +198,7 @@ extension HBFileMiddleware {
             size = 16
         }
 
-        return buffer.hexDigest()
+        return "W/\"\(buffer.hexDigest())\""
     }
 }
 
