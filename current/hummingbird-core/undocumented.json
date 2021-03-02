@@ -1,117 +1,117 @@
 {
   "warnings": [
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.qb3Zbe2C/hummingbird-core/Sources/HummingbirdCore/Request/Request.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-core/Sources/HummingbirdCore/Request/Request.swift",
       "line": 6,
       "symbol": "HBHTTPRequest.head",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.qb3Zbe2C/hummingbird-core/Sources/HummingbirdCore/Request/Request.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-core/Sources/HummingbirdCore/Request/Request.swift",
       "line": 7,
       "symbol": "HBHTTPRequest.body",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.qb3Zbe2C/hummingbird-core/Sources/HummingbirdCore/Request/RequestBodyStreamer.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-core/Sources/HummingbirdCore/Request/RequestBodyStreamer.swift",
       "line": 5,
       "symbol": "HBRequestBodyStreamer.StreamerError",
       "symbol_kind": "source.lang.swift.decl.enum",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.qb3Zbe2C/hummingbird-core/Sources/HummingbirdCore/Request/RequestBodyStreamer.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-core/Sources/HummingbirdCore/Request/RequestBodyStreamer.swift",
       "line": 6,
       "symbol": "HBRequestBodyStreamer.StreamerError.bodyDropped",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.qb3Zbe2C/hummingbird-core/Sources/HummingbirdCore/Request/RequestBodyStreamer.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-core/Sources/HummingbirdCore/Request/RequestBodyStreamer.swift",
       "line": 11,
       "symbol": "HBRequestBodyStreamer.FeedInput.byteBuffer(_:)",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.qb3Zbe2C/hummingbird-core/Sources/HummingbirdCore/Request/RequestBodyStreamer.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-core/Sources/HummingbirdCore/Request/RequestBodyStreamer.swift",
       "line": 12,
       "symbol": "HBRequestBodyStreamer.FeedInput.error(_:)",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.qb3Zbe2C/hummingbird-core/Sources/HummingbirdCore/Request/RequestBodyStreamer.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-core/Sources/HummingbirdCore/Request/RequestBodyStreamer.swift",
       "line": 13,
       "symbol": "HBRequestBodyStreamer.FeedInput.end",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.qb3Zbe2C/hummingbird-core/Sources/HummingbirdCore/Request/RequestBodyStreamer.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-core/Sources/HummingbirdCore/Request/RequestBodyStreamer.swift",
       "line": 18,
       "symbol": "HBRequestBodyStreamer.ConsumeOutput.byteBuffer(_:)",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.qb3Zbe2C/hummingbird-core/Sources/HummingbirdCore/Request/RequestBodyStreamer.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-core/Sources/HummingbirdCore/Request/RequestBodyStreamer.swift",
       "line": 19,
       "symbol": "HBRequestBodyStreamer.ConsumeOutput.end",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.qb3Zbe2C/hummingbird-core/Sources/HummingbirdCore/Response/Response.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-core/Sources/HummingbirdCore/Response/Response.swift",
       "line": 6,
       "symbol": "HBHTTPResponse.head",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.qb3Zbe2C/hummingbird-core/Sources/HummingbirdCore/Response/Response.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-core/Sources/HummingbirdCore/Response/Response.swift",
       "line": 7,
       "symbol": "HBHTTPResponse.body",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.qb3Zbe2C/hummingbird-core/Sources/HummingbirdCore/Response/Response.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-core/Sources/HummingbirdCore/Response/Response.swift",
       "line": 9,
       "symbol": "HBHTTPResponse.init(head:body:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.qb3Zbe2C/hummingbird-core/Sources/HummingbirdCore/Response/ResponseBody.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-core/Sources/HummingbirdCore/Response/ResponseBody.swift",
       "line": 24,
       "symbol": "HBResponseBody.StreamResult.byteBuffer(_:)",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.qb3Zbe2C/hummingbird-core/Sources/HummingbirdCore/Response/ResponseBody.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-core/Sources/HummingbirdCore/Response/ResponseBody.swift",
       "line": 25,
       "symbol": "HBResponseBody.StreamResult.end",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.qb3Zbe2C/hummingbird-core/Sources/HummingbirdCore/Response/ResponseBody.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-core/Sources/HummingbirdCore/Response/ResponseBody.swift",
       "line": 31,
       "symbol": "HBResponseBodyStreamer.read(on:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.qb3Zbe2C/hummingbird-core/Sources/HummingbirdCore/Server/ChannelInitializer.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-core/Sources/HummingbirdCore/Server/ChannelInitializer.swift",
       "line": 16,
       "symbol": "HTTP1ChannelInitializer.init(upgraders:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     }
   ],
-  "source_directory": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.qb3Zbe2C/hummingbird-core"
+  "source_directory": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-core"
 }
