@@ -22,6 +22,7 @@ final class ParserTests: XCTestCase {
         XCTAssertNoThrow(try parser.read("T"))
         XCTAssertNoThrow(try parser.read("e"))
         XCTAssertEqual(try parser.read("e"), false)
+        XCTAssertEqual(try parser.read(Set("hgs")), true)
     }
 
     func testReadUntilCharacter() throws {
@@ -90,6 +91,21 @@ final class ParserTests: XCTestCase {
         let decoded = try XCTUnwrap(parser.percentDecode())
 
         XCTAssertEqual(decoded, ",é☺😀併")
+    }
+
+    func testValidate() {
+        let string = "abc,é☺😀併"
+        XCTAssertNotNil(Parser([UInt8](string.utf8), validateUTF8: true))
+    }
+
+    func testSequence() {
+        let string = "abc,é☺😀併 lorem"
+        var string2 = ""
+        let parser = Parser(string)
+        for c in parser {
+            string2 += String(c)
+        }
+        XCTAssertEqual(string, string2)
     }
 }
 
