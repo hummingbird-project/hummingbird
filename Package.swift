@@ -22,9 +22,7 @@ let package = Package(
         .package(url: "https://github.com/hummingbird-project/hummingbird-core.git", from: "0.5.0"),
     ],
     targets: [
-        .target(name: "CURLParser", dependencies: []),
         .target(name: "Hummingbird", dependencies: [
-            .byName(name: "CURLParser"),
             .product(name: "HummingbirdCore", package: "hummingbird-core"),
             .product(name: "Lifecycle", package: "swift-service-lifecycle"),
             .product(name: "LifecycleNIOCompat", package: "swift-service-lifecycle"),

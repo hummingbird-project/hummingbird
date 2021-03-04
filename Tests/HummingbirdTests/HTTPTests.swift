@@ -26,7 +26,7 @@ class HTTPTests: XCTestCase {
 
     func testPath() {
         self.testURI("/hello", \.path, "/hello")
-        self.testURI("localhost:8080", \.path, "/")
+        self.testURI("http://localhost:8080", \.path, "/")
         self.testURI("https://hummingbird.co.uk/users", \.path, "/users")
         self.testURI("https://hummingbird.co.uk/users?id=24", \.path, "/users")
         self.testURI("file:///Users/John.Doe/", \.path, "/Users/John.Doe/")
@@ -34,17 +34,27 @@ class HTTPTests: XCTestCase {
 
     func testQuery() {
         self.testURI("https://hummingbird.co.uk", \.query, nil)
-        self.testURI("https://hummingbird.co.uk?test=true", \.query, "test=true")
-        self.testURI("https://hummingbird.co.uk?single#id", \.query, "single")
+        self.testURI("https://hummingbird.co.uk/?test=true", \.query, "test=true")
+        self.testURI("https://hummingbird.co.uk/hello?single#id", \.query, "single")
+        self.testURI("https://hummingbird.co.uk/hello/?single2#id", \.query, "single2")
         self.testURI("https://hummingbird.co.uk?test1=hello%20rg&test2=true", \.query, "test1=hello%20rg&test2=true")
         self.testURI("https://hummingbird.co.uk?test1=hello%20rg&test2=true", \.queryParameters["test1"], "hello rg")
     }
 
-    func testFragment() {
-        self.testURI("https://hummingbird.co.uk", \.fragment, nil)
-        self.testURI("https://hummingbird.co.uk?#title", \.fragment, "title")
-        self.testURI("https://hummingbird.co.uk?test=false#subheading", \.fragment, "subheading")
+    func testURLPerf() {
+        let urlString = "https://hummingbird.co.uk/test/url?test1=hello%20rg&test2=true"
+        let date = Date()
+        for _ in 0..<10000 {
+            _ = HBURL(urlString).queryParameters
+        }
+        print("\(-date.timeIntervalSinceNow)")
     }
+
+    /*    func testFragment() {
+         self.testURI("https://hummingbird.co.uk", \.fragment, nil)
+         self.testURI("https://hummingbird.co.uk?#title", \.fragment, "title")
+         self.testURI("https://hummingbird.co.uk?test=false#subheading", \.fragment, "subheading")
+     }*/
 
     func testMediaTypeExtensions() {
         XCTAssert(HBMediaType.getMediaType(forExtension: "jpg")?.isType(.imageJpeg) == true)
