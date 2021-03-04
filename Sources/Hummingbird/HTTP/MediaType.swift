@@ -74,7 +74,8 @@ public struct HBMediaType: CustomStringConvertible {
             }
         }
         if let category = category,
-              let subCategory = subCategory {
+           let subCategory = subCategory
+        {
             self.type = category
             self.subType = subCategory.lowercased()
             self.parameter = parameter

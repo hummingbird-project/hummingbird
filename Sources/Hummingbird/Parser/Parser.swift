@@ -640,7 +640,7 @@ extension Unicode.Scalar {
     }
 
     public var isLetterOrNumber: Bool {
-        return isLetter || isNumber
+        return self.isLetter || self.isNumber
     }
 }
 
