@@ -20,31 +20,67 @@ public struct HBMediaType: CustomStringConvertible {
 
     /// Construct `HBMediaType` from header value
     public init?(from header: String) {
-        guard let slashIndex = header.firstIndex(of: "/") else { return nil }
-        let categoryString = header[..<slashIndex]
-        guard let category = Category(rawValue: String(categoryString).lowercased()) else { return nil }
-
-        let subType: String
-        let parameter: (String, String)?
-
-        let afterSlash = header[header.index(after: slashIndex)...]
-        // if there is a character after the alphanumeric data
-        if let subTypeEnd = afterSlash.firstIndex(where: { !($0.isNumber || $0.isLetter) }) {
-            // check character is ;
-            guard afterSlash[subTypeEnd] == ";" else { return nil }
-            subType = String(afterSlash[..<subTypeEnd])
-            let afterSemicolon = afterSlash[afterSlash.index(after: subTypeEnd)...]
-                .drop { $0.isWhitespace }
-            let params = afterSemicolon.split(separator: "=", maxSplits: 1)
-            guard params.count == 2 else { return nil }
-            parameter = (String(params[0]).lowercased(), String(params[1]).lowercased())
-        } else {
-            subType = String(afterSlash)
-            parameter = nil
+        enum State: Equatable {
+            case readingCategory
+            case readingSubCategory
+            case readingParameterKey
+            case readingParameterValue(key: String)
+            case finished
         }
-        self.type = category
-        self.subType = subType.lowercased()
-        self.parameter = parameter
+        var parser = Parser(header)
+        var state = State.readingCategory
+
+        var category: Category?
+        var subCategory: String?
+        var parameter: (String, String)?
+
+        while state != .finished {
+            switch state {
+            case .readingCategory:
+                let categoryString = parser.read(while: \.isLetterOrNumber).string
+                category = Category(rawValue: categoryString.lowercased())
+                guard parser.current() == "/" else { return nil }
+                parser.unsafeAdvance()
+                state = .readingSubCategory
+
+            case .readingSubCategory:
+                subCategory = parser.read(while: \.isLetterOrNumber).string
+                if parser.reachedEnd() {
+                    state = .finished
+                } else {
+                    guard parser.current() == ";" else { return nil }
+                    parser.unsafeAdvance()
+                    parser.read(while: \.isWhitespace)
+                    if parser.reachedEnd() {
+                        state = .finished
+                    } else {
+                        state = .readingParameterKey
+                    }
+                }
+
+            case .readingParameterKey:
+                let key = parser.read(while: \.isLetterOrNumber).string
+                guard parser.current() == "=" else { return nil }
+                state = .readingParameterValue(key: key)
+                parser.unsafeAdvance()
+
+            case .readingParameterValue(let key):
+                let value = parser.readUntilTheEnd().string
+                parameter = (key, value)
+                state = .finished
+
+            case .finished:
+                break
+            }
+        }
+        if let category = category,
+              let subCategory = subCategory {
+            self.type = category
+            self.subType = subCategory.lowercased()
+            self.parameter = parameter
+        } else {
+            return nil
+        }
     }
 
     /// Output
