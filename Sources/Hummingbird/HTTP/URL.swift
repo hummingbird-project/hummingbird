@@ -1,39 +1,3 @@
-import CURLParser
-
-private extension Substring {
-    /// Local copy of removingPercentEncoding so I don't need to include Foundation
-    var removingPercentEncoding: Substring {
-        struct RemovePercentEncodingError: Error {}
-        // if no % characters in string, don't waste time allocating a new string
-        guard self.contains("%") else { return self }
-
-        do {
-            let size = self.utf8.count + 1
-            if #available(macOS 11, *) {
-                let result = try String(unsafeUninitializedCapacity: size) { buffer -> Int in
-                    try self.withCString { cstr -> Int in
-                        let len = urlparser_remove_percent_encoding(cstr, numericCast(self.utf8.count), buffer.baseAddress, size)
-                        guard len > 0 else { throw RemovePercentEncodingError() }
-                        return numericCast(len)
-                    }
-                }
-                return result[...]
-            } else {
-                // allocate buffer size of original string and run remove percent encoding
-                let mem = UnsafeMutablePointer<UInt8>.allocate(capacity: count + 1)
-                try self.withCString { cstr in
-                    let len = urlparser_remove_percent_encoding(cstr, numericCast(self.utf8.count), mem, 1024)
-                    guard len > 0 else { throw RemovePercentEncodingError() }
-                }
-                let result = String(cString: mem)
-                mem.deallocate()
-                return result[...]
-            }
-        } catch {
-            return self
-        }
-    }
-}
 
 public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral {
     public struct Scheme: RawRepresentable, Equatable {
