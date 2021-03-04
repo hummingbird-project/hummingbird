@@ -48,11 +48,11 @@ public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral {
             case readingQuery
             case finished
         }
-        var scheme: Parser? = nil
-        var host: Parser? = nil
-        var port: Parser? = nil
-        var path: Parser? = nil
-        var query: Parser? = nil
+        var scheme: Parser?
+        var host: Parser?
+        var port: Parser?
+        var path: Parser?
+        var query: Parser?
         var state: ParsingState = .readingScheme
 
         var parser = Parser(string)

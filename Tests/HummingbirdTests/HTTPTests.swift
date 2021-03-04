@@ -49,11 +49,12 @@ class HTTPTests: XCTestCase {
         }
         print("\(-date.timeIntervalSinceNow)")
     }
-/*    func testFragment() {
-        self.testURI("https://hummingbird.co.uk", \.fragment, nil)
-        self.testURI("https://hummingbird.co.uk?#title", \.fragment, "title")
-        self.testURI("https://hummingbird.co.uk?test=false#subheading", \.fragment, "subheading")
-    }*/
+
+    /*    func testFragment() {
+         self.testURI("https://hummingbird.co.uk", \.fragment, nil)
+         self.testURI("https://hummingbird.co.uk?#title", \.fragment, "title")
+         self.testURI("https://hummingbird.co.uk?test=false#subheading", \.fragment, "subheading")
+     }*/
 
     func testMediaTypeExtensions() {
         XCTAssert(HBMediaType.getMediaType(forExtension: "jpg")?.isType(.imageJpeg) == true)
