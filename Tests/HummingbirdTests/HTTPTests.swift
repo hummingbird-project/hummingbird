@@ -45,7 +45,7 @@ class HTTPTests: XCTestCase {
         let urlString = "https://hummingbird.co.uk/test/url?test1=hello%20rg&test2=true"
         let date = Date()
         for _ in 0..<10000 {
-            _ = HBURL(urlString)
+            _ = HBURL(urlString).queryParameters
         }
         print("\(-date.timeIntervalSinceNow)")
     }

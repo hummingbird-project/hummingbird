@@ -73,6 +73,8 @@ public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral {
 
     public var description: String { self.string }
 
+    /// Initialize `HBURL` from `String`
+    /// - Parameter string: input string
     public init(_ string: String) {
         enum ParsingState {
             case readingScheme
@@ -151,6 +153,8 @@ public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral {
 }
 
 extension HBParameters {
+    /// Initialize parameters from parser struct
+    /// - Parameter query: parser holding query strings
     init(fromQuery query: Parser?) {
         guard var query = query else {
             self.parameters = [:]
@@ -166,7 +170,7 @@ extension HBParameters {
                     return (key: key.string[...], value: "")
                 } else {
                     let value = query.readUntilTheEnd()
-                    return (key: key.string[...], value: value.string[...].removingPercentEncoding)
+                    return (key: key.string[...], value: value.percentDecode().map { $0[...] } ?? value.string[...])
                 }
             } catch {
                 return (key: query.string[...], value: "")
@@ -175,4 +179,3 @@ extension HBParameters {
         self.parameters = [Substring: Substring].init(queryKeyValues) { lhs, _ in lhs }
     }
 }
-
