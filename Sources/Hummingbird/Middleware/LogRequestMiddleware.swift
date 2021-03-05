@@ -12,9 +12,17 @@ public struct HBLogRequestsMiddleware: HBMiddleware {
 
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
         if self.includeHeaders {
-            request.logger.log(level: self.logLevel, "\(request.headers)")
+            request.logger.log(
+                level: self.logLevel,
+                "\(request.headers)",
+                metadata: ["hb_uri": .string(request.uri.description), "hb_method": .string(request.method.rawValue)]
+            )
         } else {
-            request.logger.log(level: self.logLevel, "")
+            request.logger.log(
+                level: self.logLevel,
+                "",
+                metadata: ["hb_uri": .string(request.uri.description), "hb_method": .string(request.method.rawValue)]
+            )
         }
         return next.respond(to: request)
     }

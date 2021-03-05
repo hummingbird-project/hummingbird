@@ -112,8 +112,6 @@ public final class HBRequest: HBExtensible {
     private static func loggerWithRequestId(_ logger: Logger, uri: String, method: String) -> Logger {
         var logger = logger
         logger[metadataKey: "hb_id"] = .string(String(describing: Self.globalRequestID.add(1)))
-        logger[metadataKey: "hb_uri"] = .string(uri)
-        logger[metadataKey: "hb_method"] = .string(method)
         return logger
     }
 
