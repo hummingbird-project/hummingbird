@@ -32,7 +32,8 @@ public struct HBExtensions<ParentObject> {
         return value
     }
 
-    /// Get extension from a `KeyPath`. If it doesn't exist then create it
+    /// Get extension from a `KeyPath`. If it doesn't exist then create it. Use this with care it may cause race conditions
+    /// especially if used on a global object like `HBApplication`.
     /// - Parameters:
     ///   - key: KeyPath
     ///   - createCB: closure used to create instance of object if it doesn't exist

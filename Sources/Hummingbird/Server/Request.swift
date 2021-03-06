@@ -58,7 +58,7 @@ public final class HBRequest: HBExtensible {
         self.method = head.method
         self.headers = head.headers
         self.body = body
-        self.logger = Self.loggerWithRequestId(application.logger, uri: head.uri, method: head.method.rawValue)
+        self.logger = application.logger.with(metadataKey: "hb_id", value: .string(Self.globalRequestID.add(1).description))
         self.application = application
         self.eventLoop = eventLoop
         self.allocator = allocator
@@ -109,11 +109,13 @@ public final class HBRequest: HBExtensible {
         public var allocator: ByteBufferAllocator
     }
 
-    private static func loggerWithRequestId(_ logger: Logger, uri: String, method: String) -> Logger {
-        var logger = logger
-        logger[metadataKey: "hb_id"] = .string(String(describing: Self.globalRequestID.add(1)))
+    private static let globalRequestID = NIOAtomic<Int>.makeAtomic(value: 0)
+}
+
+extension Logger {
+    func with(metadataKey: String, value: MetadataValue) -> Logger {
+        var logger = self
+        logger[metadataKey: metadataKey] = value
         return logger
     }
-
-    private static let globalRequestID = NIOAtomic<Int>.makeAtomic(value: 0)
 }
