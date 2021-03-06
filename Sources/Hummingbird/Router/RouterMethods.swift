@@ -142,9 +142,18 @@ extension HBRouterMethods {
         switch body {
         case .collate:
             return HBCallbackResponder { request in
-                request.body.consumeBody(on: request.eventLoop).flatMapThrowing { buffer in
-                    request.body = .byteBuffer(buffer)
-                    return try closure(request).response(from: request).apply(patch: request.optionalResponse)
+                if case .byteBuffer(_) = request.body {
+                    do {
+                        let response = try closure(request).response(from: request).apply(patch: request.optionalResponse)
+                        return request.success(response)
+                    } catch {
+                        return request.failure(error)
+                    }
+                } else {
+                    return request.body.consumeBody(on: request.eventLoop).flatMapThrowing { buffer in
+                        request.body = .byteBuffer(buffer)
+                        return try closure(request).response(from: request).apply(patch: request.optionalResponse)
+                    }
                 }
             }
         case .stream:
@@ -166,11 +175,17 @@ extension HBRouterMethods {
         switch body {
         case .collate:
             return HBCallbackResponder { request in
-                request.body.consumeBody(on: request.eventLoop).flatMap { buffer in
-                    request.body = .byteBuffer(buffer)
+                if case .byteBuffer(_) = request.body {
                     return closure(request).responseFuture(from: request)
                         .map { $0.apply(patch: request.optionalResponse) }
                         .hop(to: request.eventLoop)
+                } else {
+                    return request.body.consumeBody(on: request.eventLoop).flatMap { buffer in
+                        request.body = .byteBuffer(buffer)
+                        return closure(request).responseFuture(from: request)
+                            .map { $0.apply(patch: request.optionalResponse) }
+                            .hop(to: request.eventLoop)
+                    }
                 }
             }
         case .stream:
