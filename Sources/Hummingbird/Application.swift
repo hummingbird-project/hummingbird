@@ -97,13 +97,17 @@ public final class HBApplication: HBExtensible {
 
     /// Run application
     public func start() {
+        let promise = self.eventLoopGroup.next().makePromise(of: Void.self)
         self.lifecycle.start { error in
             if let error = error {
                 self.logger.error("Failed starting HummingBird: \(error)")
+                promise.fail(error)
             } else {
                 self.logger.info("HummingBird started successfully")
+                promise.succeed(())
             }
         }
+        try? promise.futureResult.wait()
     }
 
     /// wait while server is running
