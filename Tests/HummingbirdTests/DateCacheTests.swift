@@ -1,6 +1,5 @@
 import Foundation
 import Hummingbird
-import HummingbirdFoundation
 import HummingbirdXCT
 import XCTest
 
