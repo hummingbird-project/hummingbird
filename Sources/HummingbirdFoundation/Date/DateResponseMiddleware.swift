@@ -11,7 +11,7 @@ public struct HBDateResponseMiddleware: HBMiddleware {
     /// Add "Date" header after request has been processed
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
         next.respond(to: request).map { response in
-            response.headers.add(name: "Date", value: request.eventLoopStorage.dateCache.currentDate)
+            response.headers.add(name: "Date", value: HBDateCache.dateCache(for: request.eventLoop).currentDate)
             return response
         }
     }

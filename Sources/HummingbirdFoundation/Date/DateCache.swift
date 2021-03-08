@@ -9,12 +9,26 @@ import NIO
 /// avoid threading issues it is assumed that `currentDate` will only every be accessed on the same
 /// EventLoop that the update is running.
 public class HBDateCache {
+    static func initDateCache(for eventLoop: EventLoop) {
+        assert(eventLoop.inEventLoop)
+        thread.currentValue = HBDateCache(eventLoop: eventLoop)
+    }
+
+    static func dateCache(for eventLoop: EventLoop) -> HBDateCache {
+        assert(eventLoop.inEventLoop)
+        return thread.currentValue!
+    }
+    
+    /// Thread-specific HBDateCache
+    private static let thread: ThreadSpecificVariable<HBDateCache> = .init()
+
     /// Current formatted date
     public var currentDate: String
 
     /// Initialize DateCache to run on a specific `EventLoop`
     /// - Parameter eventLoop: <#eventLoop description#>
     public init(eventLoop: EventLoop) {
+        print("DateCache")
         self.currentDate = Self.formatDate()
         let millisecondsSinceLastSecond = Date().timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1.0) * 1000
         let millisecondsUntilNextSecond = Int64(1000.0 - millisecondsSinceLastSecond)
@@ -56,10 +70,13 @@ extension HBApplication {
     /// Add a `DateCache` for every `EventLoop` in the `EventLoopGroup` associated with the application
     func addDateCaches() {
         for eventLoop in eventLoopGroup.makeIterator() {
-            let storage = self.eventLoopStorage(for: eventLoop)
+            try! eventLoop.submit {
+                HBDateCache.initDateCache(for: eventLoop)
+            }.wait()
+/*            let storage = self.eventLoopStorage(for: eventLoop)
             if storage._dateCache == nil {
                 storage._dateCache = HBDateCache(eventLoop: eventLoop)
-            }
+            }*/
         }
     }
 }
