@@ -40,10 +40,9 @@ extension HBApplication {
 
         /// get `EventLoopStorage` from `EventLoop`
         public func get(for eventLoop: EventLoop) -> EventLoopStorage {
-            guard let storage = eventLoops[eventLoop.key] else {
-                preconditionFailure("EventLoop must be from the Application's EventLoopGroup")
-            }
-            return storage
+            let storage = eventLoops[eventLoop.key]
+            assert(storage != nil, "EventLoop must be from the Application's EventLoopGroup")
+            return storage!
         }
 
         fileprivate let eventLoopGroup: EventLoopGroup
