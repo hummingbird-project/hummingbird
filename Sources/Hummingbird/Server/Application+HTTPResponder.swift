@@ -41,6 +41,7 @@ extension HBApplication {
             // respond to request
             return self.responder.respond(to: request)
                 .map { response in
+                    response.headers.add(name: "Date", value: HBDateCache.currentDate)
                     let responseHead = HTTPResponseHead(version: request.version, status: response.status, headers: response.headers)
                     return HBHTTPResponse(head: responseHead, body: response.body)
                 }
