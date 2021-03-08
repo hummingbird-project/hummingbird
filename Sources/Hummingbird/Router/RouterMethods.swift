@@ -142,7 +142,7 @@ extension HBRouterMethods {
         switch body {
         case .collate:
             return HBCallbackResponder { request in
-                if case .byteBuffer(_) = request.body {
+                if case .byteBuffer = request.body {
                     do {
                         let response = try closure(request).response(from: request).apply(patch: request.optionalResponse)
                         return request.success(response)
@@ -175,7 +175,7 @@ extension HBRouterMethods {
         switch body {
         case .collate:
             return HBCallbackResponder { request in
-                if case .byteBuffer(_) = request.body {
+                if case .byteBuffer = request.body {
                     return closure(request).responseFuture(from: request)
                         .map { $0.apply(patch: request.optionalResponse) }
                         .hop(to: request.eventLoop)

@@ -78,6 +78,8 @@ public final class HBApplication: HBExtensible {
 
         self.addEventLoopStorage()
 
+        HBDateCache.initDateCaches(for: self.eventLoopGroup)
+
         // register application shutdown with lifecycle
         self.lifecycle.registerShutdown(
             label: "Application", .sync(self.shutdownApplication)
@@ -95,13 +97,17 @@ public final class HBApplication: HBExtensible {
 
     /// Run application
     public func start() {
+        let promise = self.eventLoopGroup.next().makePromise(of: Void.self)
         self.lifecycle.start { error in
             if let error = error {
                 self.logger.error("Failed starting HummingBird: \(error)")
+                promise.fail(error)
             } else {
                 self.logger.info("HummingBird started successfully")
+                promise.succeed(())
             }
         }
+        try? promise.futureResult.wait()
     }
 
     /// wait while server is running
@@ -121,6 +127,7 @@ public final class HBApplication: HBExtensible {
 
     /// shutdown eventloop, threadpool and any extensions attached to the Application
     public func shutdownApplication() throws {
+        HBDateCache.shutdownDateCaches(for: self.eventLoopGroup)
         try self.extensions.shutdown()
         try self.threadPool.syncShutdownGracefully()
         if case .createNew = self.eventLoopGroupProvider {
