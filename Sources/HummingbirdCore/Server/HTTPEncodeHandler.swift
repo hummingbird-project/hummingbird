@@ -22,7 +22,7 @@ final class HBHTTPEncodeHandler: ChannelOutboundHandler, RemovableChannelHandler
         }
         // server name
         if let serverName = self.serverName {
-            head.headers.replaceOrAdd(name: "server", value: serverName)
+            head.headers.add(name: "server", value: serverName)
         }
         context.write(self.wrapOutboundOut(.head(head)), promise: nil)
         switch response.body {
