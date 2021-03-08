@@ -22,7 +22,7 @@ public class HBDateCache {
 
     /// Setup date caches (one for each eventLoop)
     static func shutdownDateCaches(for eventLoopGroup: EventLoopGroup) {
-        if let eventLoop = eventLoopGroup as? EmbeddedEventLoop {
+        if eventLoopGroup is EmbeddedEventLoop {
             self.thread.currentValue = nil
             return
         }
