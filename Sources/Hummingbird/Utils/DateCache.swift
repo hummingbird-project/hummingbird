@@ -39,7 +39,6 @@ public class HBDateCache {
     }
 
     /// Initialize DateCache to run on a specific `EventLoop`
-    /// - Parameter eventLoop: <#eventLoop description#>
     private init(eventLoop: EventLoop) {
         assert(eventLoop.inEventLoop)
         var timeVal = timeval.init()
