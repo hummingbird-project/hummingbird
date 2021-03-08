@@ -40,7 +40,7 @@ extension HBApplication {
 
         /// get `EventLoopStorage` from `EventLoop`
         public func get(for eventLoop: EventLoop) -> EventLoopStorage {
-            let storage = eventLoops[eventLoop.key]
+            let storage = self.eventLoops[eventLoop.key]
             assert(storage != nil, "EventLoop must be from the Application's EventLoopGroup")
             return storage!
         }

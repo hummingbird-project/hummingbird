@@ -7,6 +7,7 @@ import NIO
 /// avoid threading issues it is assumed that `currentDate` will only every be accessed on the same
 /// EventLoop that the update is running.
 public class HBDateCache {
+    /// Setup date caches (one for each eventLoop)
     static func initDateCaches(for eventLoopGroup: EventLoopGroup) {
         for eventLoop in eventLoopGroup.makeIterator() {
             try! eventLoop.submit {
@@ -15,14 +16,11 @@ public class HBDateCache {
         }
     }
 
-    static var dateCache: HBDateCache {
-        return thread.currentValue!
-    }
-    
+    /// Current date string stored in DateCache
     public static var currentDate: String {
         return thread.currentValue!._currentDate
     }
-    
+
     /// Initialize DateCache to run on a specific `EventLoop`
     /// - Parameter eventLoop: <#eventLoop description#>
     private init(eventLoop: EventLoop) {
@@ -38,13 +36,16 @@ public class HBDateCache {
         }
     }
 
+    /// Render Epoch seconds as RFC1123 formatted date
+    /// - Parameter epochTime: epoch seconds to render
+    /// - Returns: Formatted date
     public static func formatRFC1123Date(_ epochTime: Int) -> String {
         var epochTime = epochTime
         var timeStruct = tm.init()
         gmtime_r(&epochTime, &timeStruct)
         let year = Int(timeStruct.tm_year + 1900)
-        let day = dayNames[numericCast(timeStruct.tm_wday)]
-        let month = monthNames[numericCast(timeStruct.tm_mon)]
+        let day = self.dayNames[numericCast(timeStruct.tm_wday)]
+        let month = self.monthNames[numericCast(timeStruct.tm_mon)]
         var formatted = day
         formatted.reserveCapacity(30)
         formatted += ", "
@@ -52,16 +53,16 @@ public class HBDateCache {
         formatted += " "
         formatted += month
         formatted += " "
-        formatted += numberNames[year / 100]
-        formatted += numberNames[year % 100]
+        formatted += self.numberNames[year / 100]
+        formatted += self.numberNames[year % 100]
         formatted += " "
-        formatted += numberNames[numericCast(timeStruct.tm_hour)]
+        formatted += self.numberNames[numericCast(timeStruct.tm_hour)]
         formatted += ":"
-        formatted += numberNames[numericCast(timeStruct.tm_min)]
+        formatted += self.numberNames[numericCast(timeStruct.tm_min)]
         formatted += ":"
-        formatted += numberNames[numericCast(timeStruct.tm_sec)]
+        formatted += self.numberNames[numericCast(timeStruct.tm_sec)]
         formatted += " GMT"
-        
+
         return formatted
     }
 
@@ -77,11 +78,11 @@ public class HBDateCache {
     private var _currentDate: String
 
     private static let dayNames = [
-        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
     ]
 
     private static let monthNames = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
     ]
 
     private static let numberNames = [
@@ -94,13 +95,6 @@ public class HBDateCache {
         "60", "61", "62", "63", "64", "65", "66", "67", "68", "69",
         "70", "71", "72", "73", "74", "75", "76", "77", "78", "79",
         "80", "81", "82", "83", "84", "85", "86", "87", "88", "89",
-        "90", "91", "92", "93", "94", "95", "96", "97", "98", "99"
+        "90", "91", "92", "93", "94", "95", "96", "97", "98", "99",
     ]
-
-}
-
-extension HBApplication {
-    public func initDateCaches() {
-        HBDateCache.initDateCaches(for: self.eventLoopGroup)
-    }
 }

@@ -77,7 +77,7 @@ public final class HBApplication: HBExtensible {
         self.server = HBHTTPServer(group: self.eventLoopGroup, configuration: self.configuration.httpServer)
 
         self.addEventLoopStorage()
-        
+
         HBDateCache.initDateCaches(for: self.eventLoopGroup)
 
         // register application shutdown with lifecycle
