@@ -28,7 +28,6 @@ public class HBDateCache {
     /// Initialize DateCache to run on a specific `EventLoop`
     /// - Parameter eventLoop: <#eventLoop description#>
     public init(eventLoop: EventLoop) {
-        print("DateCache")
         self.currentDate = Self.formatDate()
         let millisecondsSinceLastSecond = Date().timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1.0) * 1000
         let millisecondsUntilNextSecond = Int64(1000.0 - millisecondsSinceLastSecond)
