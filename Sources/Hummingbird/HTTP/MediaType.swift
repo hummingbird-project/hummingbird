@@ -27,7 +27,7 @@ public struct HBMediaType: CustomStringConvertible {
             case readingParameterValue(key: String)
             case finished
         }
-        var parser = Parser(header)
+        var parser = HBParser(header)
         var state = State.readingCategory
 
         var category: Category?

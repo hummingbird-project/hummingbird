@@ -9,7 +9,7 @@
 import Foundation
 
 /// Reader object for parsing String buffers
-public struct Parser {
+public struct HBParser {
     public enum Error: Swift.Error {
         case overflow
         case unexpected
@@ -57,9 +57,9 @@ public struct Parser {
 
 // MARK: sub-parsers
 
-extension Parser {
+extension HBParser {
     /// initialise a parser that parses a section of the buffer attached to another parser
-    init(_ parser: Parser, range: Range<Int>) {
+    init(_ parser: HBParser, range: Range<Int>) {
         self.buffer = parser.buffer
         self.index = range.startIndex
         self.range = range
@@ -69,12 +69,12 @@ extension Parser {
     }
 
     /// initialise a parser that parses a section of the buffer attached to this parser
-    func subParser(_ range: Range<Int>) -> Parser {
-        return Parser(self, range: range)
+    func subParser(_ range: Range<Int>) -> HBParser {
+        return HBParser(self, range: range)
     }
 }
 
-public extension Parser {
+public extension HBParser {
     /// Return current character
     /// - Throws: .overflow
     /// - Returns: Current character
@@ -121,7 +121,7 @@ public extension Parser {
     /// - Parameter count: Number of characters to read
     /// - Throws: .overflow
     /// - Returns: The string read from the buffer
-    mutating func read(count: Int) throws -> Parser {
+    mutating func read(count: Int) throws -> HBParser {
         var count = count
         var readEndIndex = self.index
         while count > 0 {
@@ -138,7 +138,7 @@ public extension Parser {
     /// - Parameter until: Unicode.Scalar to read until
     /// - Throws: .overflow if we hit the end of the buffer before reading character
     /// - Returns: String read from buffer
-    @discardableResult mutating func read(until: Unicode.Scalar, throwOnOverflow: Bool = true) throws -> Parser {
+    @discardableResult mutating func read(until: Unicode.Scalar, throwOnOverflow: Bool = true) throws -> HBParser {
         let startIndex = self.index
         while !self.reachedEnd() {
             if unsafeCurrent() == until {
@@ -157,7 +157,7 @@ public extension Parser {
     /// - Parameter characterSet: Unicode.Scalar set to check against
     /// - Throws: .overflow
     /// - Returns: String read from buffer
-    @discardableResult mutating func read(until characterSet: Set<Unicode.Scalar>, throwOnOverflow: Bool = true) throws -> Parser {
+    @discardableResult mutating func read(until characterSet: Set<Unicode.Scalar>, throwOnOverflow: Bool = true) throws -> HBParser {
         let startIndex = self.index
         while !self.reachedEnd() {
             if characterSet.contains(unsafeCurrent()) {
@@ -176,7 +176,7 @@ public extension Parser {
     /// - Parameter until: Function to test
     /// - Throws: .overflow
     /// - Returns: String read from buffer
-    @discardableResult mutating func read(until: (Unicode.Scalar) -> Bool, throwOnOverflow: Bool = true) throws -> Parser {
+    @discardableResult mutating func read(until: (Unicode.Scalar) -> Bool, throwOnOverflow: Bool = true) throws -> HBParser {
         let startIndex = self.index
         while !self.reachedEnd() {
             if until(unsafeCurrent()) {
@@ -195,7 +195,7 @@ public extension Parser {
     /// - Parameter characterSet: Unicode.Scalar set to check against
     /// - Throws: .overflow
     /// - Returns: String read from buffer
-    @discardableResult mutating func read(until keyPath: KeyPath<Unicode.Scalar, Bool>, throwOnOverflow: Bool = true) throws -> Parser {
+    @discardableResult mutating func read(until keyPath: KeyPath<Unicode.Scalar, Bool>, throwOnOverflow: Bool = true) throws -> HBParser {
         let startIndex = self.index
         while !self.reachedEnd() {
             if unsafeCurrent()[keyPath: keyPath] {
@@ -216,7 +216,7 @@ public extension Parser {
     /// - Parameter skipToEnd: Should we set the position to after the found string
     /// - Throws: .overflow, .emptyString
     /// - Returns: String read from buffer
-    @discardableResult mutating func read(untilString: String, throwOnOverflow: Bool = true, skipToEnd: Bool = false) throws -> Parser {
+    @discardableResult mutating func read(untilString: String, throwOnOverflow: Bool = true, skipToEnd: Bool = false) throws -> HBParser {
         var untilString = untilString
         return try untilString.withUTF8 { utf8 in
             guard utf8.count > 0 else { throw Error.emptyString }
@@ -252,7 +252,7 @@ public extension Parser {
 
     /// Read from buffer from current position until the end of the buffer
     /// - Returns: String read from buffer
-    @discardableResult mutating func readUntilTheEnd() -> Parser {
+    @discardableResult mutating func readUntilTheEnd() -> HBParser {
         let startIndex = self.index
         self.index = self.range.endIndex
         return self.subParser(startIndex..<self.index)
@@ -275,7 +275,7 @@ public extension Parser {
     /// Read while character at current position is in supplied set
     /// - Parameter while: character set to check
     /// - Returns: String read from buffer
-    @discardableResult mutating func read(while characterSet: Set<Unicode.Scalar>) -> Parser {
+    @discardableResult mutating func read(while characterSet: Set<Unicode.Scalar>) -> HBParser {
         let startIndex = self.index
         while !self.reachedEnd(),
               characterSet.contains(unsafeCurrent())
@@ -288,7 +288,7 @@ public extension Parser {
     /// Read while character returns true for supplied closure
     /// - Parameter while: character set to check
     /// - Returns: String read from buffer
-    @discardableResult mutating func read(while: (Unicode.Scalar) -> Bool) -> Parser {
+    @discardableResult mutating func read(while: (Unicode.Scalar) -> Bool) -> HBParser {
         let startIndex = self.index
         while !self.reachedEnd(),
               `while`(unsafeCurrent())
@@ -301,7 +301,7 @@ public extension Parser {
     /// Read while character returns true for supplied KeyPath
     /// - Parameter while: character set to check
     /// - Returns: String read from buffer
-    @discardableResult mutating func read(while keyPath: KeyPath<Unicode.Scalar, Bool>) -> Parser {
+    @discardableResult mutating func read(while keyPath: KeyPath<Unicode.Scalar, Bool>) -> HBParser {
         let startIndex = self.index
         while !self.reachedEnd(),
               unsafeCurrent()[keyPath: keyPath]
@@ -314,8 +314,8 @@ public extension Parser {
     /// Split parser into sections separated by character
     /// - Parameter separator: Separator character
     /// - Returns: arrays of sub parsers
-    mutating func split(separator: Unicode.Scalar) -> [Parser] {
-        var subParsers: [Parser] = []
+    mutating func split(separator: Unicode.Scalar) -> [HBParser] {
+        var subParsers: [HBParser] = []
         while !self.reachedEnd() {
             do {
                 let section = try read(until: separator)
@@ -338,7 +338,7 @@ public extension Parser {
 }
 
 /// Public versions of internal functions which include tests for overflow
-public extension Parser {
+public extension HBParser {
     /// Return the character at the current position
     /// - Throws: .overflow
     /// - Returns: Unicode.Scalar
@@ -399,7 +399,7 @@ public extension Parser {
 }
 
 /// extend Parser to conform to Sequence
-extension Parser: Sequence {
+extension HBParser: Sequence {
     public typealias Element = Unicode.Scalar
 
     public __consuming func makeIterator() -> Iterator {
@@ -409,9 +409,9 @@ extension Parser: Sequence {
     public struct Iterator: IteratorProtocol {
         public typealias Element = Unicode.Scalar
 
-        var parser: Parser
+        var parser: HBParser
 
-        init(_ parser: Parser) {
+        init(_ parser: HBParser) {
             self.parser = parser
         }
 
@@ -423,7 +423,7 @@ extension Parser: Sequence {
 }
 
 // internal versions without checks
-private extension Parser {
+private extension HBParser {
     func unsafeCurrent() -> Unicode.Scalar {
         return decodeUTF8Character(at: self.index).0
     }
@@ -448,7 +448,7 @@ private extension Parser {
 }
 
 // UTF8 parsing
-extension Parser {
+extension HBParser {
     func decodeUTF8Character(at index: Int) -> (Unicode.Scalar, Int) {
         var index = index
         let byte1 = UInt32(buffer[index])

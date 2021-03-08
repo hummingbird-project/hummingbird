@@ -29,11 +29,11 @@ public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral {
     /// URL query parameter map
     public var queryParameters: HBParameters { return .init(fromQuery: self._query) }
 
-    private let _scheme: Parser?
-    private let _host: Parser?
-    private let _port: Parser?
-    private let _path: Parser?
-    private let _query: Parser?
+    private let _scheme: HBParser?
+    private let _host: HBParser?
+    private let _port: HBParser?
+    private let _path: HBParser?
+    private let _query: HBParser?
 
     public var description: String { self.string }
 
@@ -48,14 +48,14 @@ public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral {
             case readingQuery
             case finished
         }
-        var scheme: Parser?
-        var host: Parser?
-        var port: Parser?
-        var path: Parser?
-        var query: Parser?
+        var scheme: HBParser?
+        var host: HBParser?
+        var port: HBParser?
+        var path: HBParser?
+        var query: HBParser?
         var state: ParsingState = .readingScheme
 
-        var parser = Parser(string)
+        var parser = HBParser(string)
         while state != .finished {
             if parser.reachedEnd() { break }
             switch state {
@@ -119,12 +119,12 @@ public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral {
 extension HBParameters {
     /// Initialize parameters from parser struct
     /// - Parameter query: parser holding query strings
-    init(fromQuery query: Parser?) {
+    init(fromQuery query: HBParser?) {
         guard var query = query else {
             self.parameters = [:]
             return
         }
-        let queries: [Parser] = query.split(separator: "&")
+        let queries: [HBParser] = query.split(separator: "&")
         let queryKeyValues = queries.map { query -> (key: Substring, value: Substring) in
             do {
                 var query = query
