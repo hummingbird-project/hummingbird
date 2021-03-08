@@ -9,9 +9,26 @@ import NIO
 public class HBDateCache {
     /// Setup date caches (one for each eventLoop)
     static func initDateCaches(for eventLoopGroup: EventLoopGroup) {
+        if let eventLoop = eventLoopGroup as? EmbeddedEventLoop {
+            thread.currentValue = HBDateCache(eventLoop: eventLoop)
+            return
+        }
         for eventLoop in eventLoopGroup.makeIterator() {
             try! eventLoop.submit {
                 thread.currentValue = HBDateCache(eventLoop: eventLoop)
+            }.wait()
+        }
+    }
+
+    /// Setup date caches (one for each eventLoop)
+    static func shutdownDateCaches(for eventLoopGroup: EventLoopGroup) {
+        if let eventLoop = eventLoopGroup as? EmbeddedEventLoop {
+            thread.currentValue = nil
+            return
+        }
+        for eventLoop in eventLoopGroup.makeIterator() {
+            try! eventLoop.submit {
+                thread.currentValue = nil
             }.wait()
         }
     }
@@ -31,9 +48,13 @@ public class HBDateCache {
 
         let millisecondsSinceLastSecond = Double(timeVal.tv_usec) / 1000.0
         let millisecondsUntilNextSecond = Int64(1000.0 - millisecondsSinceLastSecond)
-        eventLoop.scheduleRepeatedTask(initialDelay: .milliseconds(millisecondsUntilNextSecond), delay: .seconds(1)) { _ in
+        task = eventLoop.scheduleRepeatedTask(initialDelay: .milliseconds(millisecondsUntilNextSecond), delay: .seconds(1)) { _ in
             self.updateDate()
         }
+    }
+
+    deinit {
+        task?.cancel()
     }
 
     /// Render Epoch seconds as RFC1123 formatted date
@@ -76,6 +97,7 @@ public class HBDateCache {
 
     /// Current formatted date
     private var _currentDate: String
+    private var task: RepeatedTask?
 
     private static let dayNames = [
         "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",

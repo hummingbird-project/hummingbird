@@ -5,23 +5,20 @@ import HummingbirdXCT
 import XCTest
 
 class HummingbirdDateTests: XCTestCase {
-    func testGetDate() {
-        let app = HBApplication(testing: .embedded)
-        app.addFoundation()
-        app.router.get("date") { request in
-            return request.eventLoopStorage.dateCache.currentDate
-        }
+    func testRFC1123Renderer() {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "EEE, d MMM yyy HH:mm:ss z"
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
 
-        app.XCTStart()
-        defer { app.XCTStop() }
-
-        app.XCTExecute(uri: "/date", method: .GET) { _ in
+        for _ in 0..<1000 {
+            let time = Int.random(in: 1 ... 4*Int(Int32.max))
+            XCTAssertEqual(formatter.string(from: Date(timeIntervalSince1970: Double(time))), HBDateCache.formatRFC1123Date(time))
         }
     }
 
-    func testDateResponseMiddleware() {
+    func testDateHeader() {
         let app = HBApplication(testing: .embedded)
-        app.addFoundation()
         app.router.get("date") { _ in
             return "hello"
         }

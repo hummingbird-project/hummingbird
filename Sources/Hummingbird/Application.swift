@@ -123,6 +123,7 @@ public final class HBApplication: HBExtensible {
 
     /// shutdown eventloop, threadpool and any extensions attached to the Application
     public func shutdownApplication() throws {
+        HBDateCache.shutdownDateCaches(for: self.eventLoopGroup)
         try self.extensions.shutdown()
         try self.threadPool.syncShutdownGracefully()
         if case .createNew = self.eventLoopGroupProvider {
