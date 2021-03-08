@@ -11,7 +11,7 @@ class HummingbirdDateTests: XCTestCase {
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
 
         for _ in 0..<1000 {
-            let time = Int.random(in: 1 ... 4*Int(Int32.max))
+            let time = Int.random(in: 1...4 * Int(Int32.max))
             XCTAssertEqual(formatter.string(from: Date(timeIntervalSince1970: Double(time))), HBDateCache.formatRFC1123Date(time))
         }
     }

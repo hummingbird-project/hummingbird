@@ -10,7 +10,7 @@ public class HBDateCache {
     /// Setup date caches (one for each eventLoop)
     static func initDateCaches(for eventLoopGroup: EventLoopGroup) {
         if let eventLoop = eventLoopGroup as? EmbeddedEventLoop {
-            thread.currentValue = HBDateCache(eventLoop: eventLoop)
+            self.thread.currentValue = HBDateCache(eventLoop: eventLoop)
             return
         }
         for eventLoop in eventLoopGroup.makeIterator() {
@@ -23,7 +23,7 @@ public class HBDateCache {
     /// Setup date caches (one for each eventLoop)
     static func shutdownDateCaches(for eventLoopGroup: EventLoopGroup) {
         if let eventLoop = eventLoopGroup as? EmbeddedEventLoop {
-            thread.currentValue = nil
+            self.thread.currentValue = nil
             return
         }
         for eventLoop in eventLoopGroup.makeIterator() {
@@ -48,7 +48,7 @@ public class HBDateCache {
 
         let millisecondsSinceLastSecond = Double(timeVal.tv_usec) / 1000.0
         let millisecondsUntilNextSecond = Int64(1000.0 - millisecondsSinceLastSecond)
-        task = eventLoop.scheduleRepeatedTask(initialDelay: .milliseconds(millisecondsUntilNextSecond), delay: .seconds(1)) { _ in
+        self.task = eventLoop.scheduleRepeatedTask(initialDelay: .milliseconds(millisecondsUntilNextSecond), delay: .seconds(1)) { _ in
             self.updateDate()
         }
     }
