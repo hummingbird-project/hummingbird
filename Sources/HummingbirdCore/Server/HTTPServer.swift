@@ -72,7 +72,7 @@ public class HBHTTPServer {
 
         let bootstrap = ServerBootstrap(group: self.eventLoopGroup)
             // Specify backlog and enable SO_REUSEADDR for the server itself
-            .serverChannelOption(ChannelOptions.backlog, value: 256)
+            .serverChannelOption(ChannelOptions.backlog, value: numericCast(self.configuration.backlog))
             .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: self.configuration.reuseAddress ? 1 : 0)
             .serverChannelInitializer { channel in
                 channel.pipeline.addHandler(quiesce.makeServerChannelHandler(channel: channel))
@@ -157,6 +157,8 @@ extension HBHTTPServer {
         public let maxUploadSize: Int
         /// Maximum size of buffer for streaming request payloads
         public let maxStreamingBufferSize: Int
+        /// Defines the maximum length for the queue of pending connections
+        public let backlog: Int
         /// Allows socket to be bound to an address that is already in use.
         public let reuseAddress: Bool
         /// Disables the Nagle algorithm for send coalescing.
@@ -178,6 +180,7 @@ extension HBHTTPServer {
             serverName: String? = nil,
             maxUploadSize: Int = 2 * 1024 * 1024,
             maxStreamingBufferSize: Int = 1 * 1024 * 1024,
+            backlog: Int = 256,
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = false,
             withPipeliningAssistance: Bool = false
@@ -186,6 +189,7 @@ extension HBHTTPServer {
             self.serverName = serverName
             self.maxUploadSize = maxUploadSize
             self.maxStreamingBufferSize = maxStreamingBufferSize
+            self.backlog = backlog
             self.reuseAddress = reuseAddress
             self.tcpNoDelay = tcpNoDelay
             self.withPipeliningAssistance = withPipeliningAssistance
