@@ -49,7 +49,6 @@ public class HBRequestBodyStreamer {
     /// - Parameter result: Bytebuffer or end tag
     func feed(_ result: FeedInput) {
         self.eventLoop.assertInEventLoop()
-        guard self.dropped == false else { return }
 
         // queue most have at least one promise on it, or something has gone wrong
         assert(self.queue.last != nil)
@@ -57,6 +56,9 @@ public class HBRequestBodyStreamer {
 
         switch result {
         case .byteBuffer(let byteBuffer):
+            // don't add more ByteBuffers to queue if we are dropped
+            guard self.dropped == false else { return }
+
             self.queue.append(self.eventLoop.makePromise())
 
             self.sizeFed += byteBuffer.readableBytes
@@ -83,7 +85,7 @@ public class HBRequestBodyStreamer {
     }
 
     /// Consume the request body, calling `process` on each buffer until you receive an end tag
-    /// - Returns: EventLoopFuture that will be fulfilled with the full ByteBuffer of the Request
+    /// - Returns: EventLoopFuture that will be fulfilled when all ByteBuffers have been consumed
     /// - Parameters:
     ///   - eventLoop: EventLoop to run on
     ///   - process: Closure to call to process ByteBuffer
@@ -112,22 +114,33 @@ public class HBRequestBodyStreamer {
         return promise.futureResult
     }
 
-    /// Drop the remains of the data to be streamed as we are not interested in it anymore.
-    ///
-    /// This is required to be called as soon as we know we do not need the contents of the
-    /// `HBRequestBodyStreamer`. If we do not drop the data then it can stall the loading
-    /// of the next HTTP request because the back pressure will still consider there to be too
-    /// much data currently being processed
-    public func drop() {
+    /// Consume the request body, but ignore contents
+    /// - Returns: EventLoopFuture that will be fulfilled when all ByteBuffers have been consumed
+    /// - Parameters:
+    ///   - eventLoop: EventLoop to run on
+    func drop() -> EventLoopFuture<Void> {
         self.eventLoop.assertInEventLoop()
-        // empty the queue and succeed each promise
-        guard self.queue.last != nil else { return }
-        while let promise = self.queue.popFirst() {
-            promise.fail(StreamerError.bodyDropped)
-        }
-        self.currentSize = 0
         self.dropped = true
-        self.onConsume?(self)
+        
+        let promise = self.eventLoop.makePromise(of: Void.self)
+        func _dropAll() {
+            self.consume(on: eventLoop).map { output in
+                switch output {
+                case .byteBuffer(_):
+                    _dropAll()
+
+                case .end:
+                    promise.succeed(())
+                }
+            }
+            .cascadeFailure(to: promise)
+        }
+        if self.queue.last != nil {
+            _dropAll()
+        } else {
+            promise.succeed(())
+        }
+        return promise.futureResult
     }
 
     /// Consume what has been fed to the request

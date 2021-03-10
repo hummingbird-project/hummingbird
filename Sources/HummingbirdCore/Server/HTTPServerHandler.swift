@@ -64,13 +64,20 @@ final class HBHTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler 
 
     func writeResponse(context: ChannelHandlerContext, response: HBHTTPResponse, request: HBHTTPRequest, keepAlive: Bool) {
         context.write(self.wrapOutboundOut(response)).whenComplete { _ in
-            if keepAlive == false {
-                context.close(promise: nil)
-                self.closeAfterResponseWritten = false
-            }
             // once we have finished writing the response we can drop the request body
+            // if we are streaming we need to wait until the request has finished streaming
             if case .stream(let streamer) = request.body {
-                streamer.drop()
+                streamer.drop().whenComplete { _ in
+                    if keepAlive == false {
+                        context.close(promise: nil)
+                        self.closeAfterResponseWritten = false
+                    }
+                }
+            } else {
+                if keepAlive == false {
+                    context.close(promise: nil)
+                    self.closeAfterResponseWritten = false
+                }
             }
             self.requestsInProgress -= 1
         }
