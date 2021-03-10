@@ -183,7 +183,7 @@ extension HBHTTPServer {
             backlog: Int = 256,
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = false,
-            withPipeliningAssistance: Bool = false
+            withPipeliningAssistance: Bool = true
         ) {
             self.address = address
             self.serverName = serverName

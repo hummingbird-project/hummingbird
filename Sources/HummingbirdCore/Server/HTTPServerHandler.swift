@@ -45,8 +45,8 @@ final class HBHTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler 
 
         // respond to request
         self.responder.respond(to: request, context: context).whenComplete { result in
-            // should we close the channel after responding
-            let keepAlive = request.head.isKeepAlive && self.closeAfterResponseWritten == false
+            // should we keep the channel open after responding. 
+            let keepAlive = request.head.isKeepAlive && (self.closeAfterResponseWritten == false || self.requestsInProgress > 1)
             var response: HBHTTPResponse
             switch result {
             case .failure(let error):
@@ -68,11 +68,11 @@ final class HBHTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler 
                 context.close(promise: nil)
                 self.closeAfterResponseWritten = false
             }
-            self.requestsInProgress -= 1
             // once we have finished writing the response we can drop the request body
             if case .stream(let streamer) = request.body {
                 streamer.drop()
             }
+            self.requestsInProgress -= 1
         }
     }
 
