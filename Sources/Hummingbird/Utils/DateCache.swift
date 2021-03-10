@@ -54,7 +54,7 @@ public class HBDateCache {
 
     private func shutdown(eventLoop: EventLoop) -> EventLoopFuture<Void> {
         let promise = eventLoop.makePromise(of: Void.self)
-        task.cancel(promise: promise)
+        self.task.cancel(promise: promise)
         return promise.futureResult.map { self.task = nil }
     }
 
