@@ -13,24 +13,24 @@ public class HBDateCache {
             self.thread.currentValue = HBDateCache(eventLoop: eventLoop)
             return
         }
-        for eventLoop in eventLoopGroup.makeIterator() {
-            try! eventLoop.submit {
-                thread.currentValue = HBDateCache(eventLoop: eventLoop)
-            }.wait()
-        }
+        let futures: [EventLoopFuture<Void>] = eventLoopGroup.map { thread.currentValue = HBDateCache(eventLoop: $0) }
+        try! EventLoopFuture.andAllComplete(futures, on: eventLoopGroup.next()).wait()
     }
 
-    /// Setup date caches (one for each eventLoop)
+    /// Shutdown date caches (one for each eventLoop)
     static func shutdownDateCaches(for eventLoopGroup: EventLoopGroup) {
         if eventLoopGroup is EmbeddedEventLoop {
             self.thread.currentValue = nil
             return
         }
-        for eventLoop in eventLoopGroup.makeIterator() {
-            try! eventLoop.submit {
-                thread.currentValue = nil
-            }.wait()
+        let futures: [EventLoopFuture<Void>] = eventLoopGroup.flatMap { eventLoop -> EventLoopFuture<Void> in
+            if let dateCache = thread.currentValue {
+                return dateCache.shutdown(eventLoop: eventLoop)
+            } else {
+                return eventLoop.makeSucceededVoidFuture()
+            }
         }
+        try! EventLoopFuture.andAllComplete(futures, on: eventLoopGroup.next()).wait()
     }
 
     /// Current date string stored in DateCache
@@ -52,8 +52,10 @@ public class HBDateCache {
         }
     }
 
-    deinit {
-        task?.cancel()
+    private func shutdown(eventLoop: EventLoop) -> EventLoopFuture<Void> {
+        let promise = eventLoop.makePromise(of: Void.self)
+        self.task.cancel(promise: promise)
+        return promise.futureResult.map { self.task = nil }
     }
 
     /// Render Epoch seconds as RFC1123 formatted date
@@ -96,7 +98,7 @@ public class HBDateCache {
 
     /// Current formatted date
     private var _currentDate: String
-    private var task: RepeatedTask?
+    private var task: RepeatedTask!
 
     private static let dayNames = [
         "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
