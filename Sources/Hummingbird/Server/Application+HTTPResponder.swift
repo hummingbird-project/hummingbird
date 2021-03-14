@@ -29,7 +29,7 @@ extension HBApplication {
         ///   - request: request
         ///   - context: context from ChannelHandler
         /// - Returns: response
-        public func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> ()) {
+        public func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
             let request = HBRequest(
                 head: request.head,
                 body: request.body,
@@ -45,7 +45,7 @@ extension HBApplication {
                     response.headers.add(name: "Date", value: HBDateCache.currentDate)
                     let responseHead = HTTPResponseHead(version: request.version, status: response.status, headers: response.headers)
                     onComplete(.success(HBHTTPResponse(head: responseHead, body: response.body)))
-                    
+
                 case .failure(let error):
                     // then convert to valid response so this isn't treated as an error further down
                     let response: HBHTTPResponse
