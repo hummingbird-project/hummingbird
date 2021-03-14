@@ -17,7 +17,7 @@
     <a title="Configuration Structure Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../../index.html"> 0.5.0 Docs</a> (83% documented)</p>
+        <p><a href="../../index.html"> 0.6.0 Docs</a> (83% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird-core"><img src="../../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../../search.json">
@@ -246,6 +246,33 @@
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/s:15HummingbirdCore12HBHTTPServerC13ConfigurationV7backlogSivp"></a>
+                    <a name="//apple_ref/swift/Property/backlog" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15HummingbirdCore12HBHTTPServerC13ConfigurationV7backlogSivp">backlog</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Defines the maximum length for the queue of pending connections</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">backlog</span><span class="p">:</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/s:15HummingbirdCore12HBHTTPServerC13ConfigurationV12reuseAddressSbvp"></a>
                     <a name="//apple_ref/swift/Property/reuseAddress" class="dashAnchor"></a>
                     <a class="token" href="#/s:15HummingbirdCore12HBHTTPServerC13ConfigurationV12reuseAddressSbvp">reuseAddress</a>
@@ -327,9 +354,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15HummingbirdCore12HBHTTPServerC13ConfigurationV7address10serverName13maxUploadSize0h15StreamingBufferJ012reuseAddress10tcpNoDelay24withPipeliningAssistanceAeA06HBBindN0O_SSSgS2iS3btcfc"></a>
-                    <a name="//apple_ref/swift/Method/init(address:serverName:maxUploadSize:maxStreamingBufferSize:reuseAddress:tcpNoDelay:withPipeliningAssistance:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15HummingbirdCore12HBHTTPServerC13ConfigurationV7address10serverName13maxUploadSize0h15StreamingBufferJ012reuseAddress10tcpNoDelay24withPipeliningAssistanceAeA06HBBindN0O_SSSgS2iS3btcfc">init(address:<wbr>serverName:<wbr>maxUploadSize:<wbr>maxStreamingBufferSize:<wbr>reuseAddress:<wbr>tcpNoDelay:<wbr>withPipeliningAssistance:<wbr>)</a>
+                    <a name="/s:15HummingbirdCore12HBHTTPServerC13ConfigurationV7address10serverName13maxUploadSize0h15StreamingBufferJ07backlog12reuseAddress10tcpNoDelay24withPipeliningAssistanceAeA06HBBindO0O_SSSgS3iS3btcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(address:serverName:maxUploadSize:maxStreamingBufferSize:backlog:reuseAddress:tcpNoDelay:withPipeliningAssistance:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15HummingbirdCore12HBHTTPServerC13ConfigurationV7address10serverName13maxUploadSize0h15StreamingBufferJ07backlog12reuseAddress10tcpNoDelay24withPipeliningAssistanceAeA06HBBindO0O_SSSgS3iS3btcfc">init(address:<wbr>serverName:<wbr>maxUploadSize:<wbr>maxStreamingBufferSize:<wbr>backlog:<wbr>reuseAddress:<wbr>tcpNoDelay:<wbr>withPipeliningAssistance:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -349,9 +376,10 @@
     <span class="nv">serverName</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">maxUploadSize</span><span class="p">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">,</span>
     <span class="nv">maxStreamingBufferSize</span><span class="p">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">,</span>
+    <span class="nv">backlog</span><span class="p">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
     <span class="nv">reuseAddress</span><span class="p">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="kc">true</span><span class="p">,</span>
     <span class="nv">tcpNoDelay</span><span class="p">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="kc">false</span><span class="p">,</span>
-    <span class="nv">withPipeliningAssistance</span><span class="p">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="kc">false</span>
+    <span class="nv">withPipeliningAssistance</span><span class="p">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="kc">true</span>
 <span class="p">)</span></code></pre>
 
                         </div>
@@ -455,7 +483,7 @@
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-03-02)</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-03-14)</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>

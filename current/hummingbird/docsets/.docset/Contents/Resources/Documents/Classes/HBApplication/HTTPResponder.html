@@ -17,7 +17,7 @@
     <a title="HTTPResponder Structure Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../../index.html"> 0.5.0 Docs</a> (82% documented)</p>
+        <p><a href="../../index.html"> 0.7.0 Docs</a> (83% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="../../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../../search.json">
@@ -75,6 +75,9 @@
                 <a href="../../Classes/HBApplication/HTTPResponder.html">– HTTPResponder</a>
               </li>
               <li class="nav-group-task">
+                <a href="../../Classes/HBDateCache.html">HBDateCache</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../../Classes/HBMiddlewareGroup.html">HBMiddlewareGroup</a>
               </li>
               <li class="nav-group-task">
@@ -121,7 +124,16 @@
                 <a href="../../Extensions/Optional.html">Optional</a>
               </li>
               <li class="nav-group-task">
+                <a href="../../Extensions/Set.html">Set</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../../Extensions/String.html">String</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Extensions/Unicode.html">Unicode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Extensions/Unicode/Scalar.html">– Scalar</a>
               </li>
             </ul>
           </li>
@@ -192,6 +204,15 @@
               </li>
               <li class="nav-group-task">
                 <a href="../../Structs/HBParameters.html">HBParameters</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Structs/HBParser.html">HBParser</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Structs/HBParser/Error.html">– Error</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Structs/HBParser/Iterator.html">– Iterator</a>
               </li>
               <li class="nav-group-task">
                 <a href="../../Structs/HBRouterGroup.html">HBRouterGroup</a>
@@ -301,9 +322,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird13HBApplicationC13HTTPResponderV7respond2to7context3NIO15EventLoopFutureCy0A4Core14HBHTTPResponseVGAL13HBHTTPRequestV_AI21ChannelHandlerContextCtF"></a>
-                    <a name="//apple_ref/swift/Method/respond(to:context:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird13HBApplicationC13HTTPResponderV7respond2to7context3NIO15EventLoopFutureCy0A4Core14HBHTTPResponseVGAL13HBHTTPRequestV_AI21ChannelHandlerContextCtF">respond(to:<wbr>context:<wbr>)</a>
+                    <a name="/s:11Hummingbird13HBApplicationC13HTTPResponderV7respond2to7context10onCompletey0A4Core13HBHTTPRequestV_3NIO21ChannelHandlerContextCys6ResultOyAJ14HBHTTPResponseVs5Error_pGctF"></a>
+                    <a name="//apple_ref/swift/Method/respond(to:context:onComplete:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird13HBApplicationC13HTTPResponderV7respond2to7context10onCompletey0A4Core13HBHTTPRequestV_3NIO21ChannelHandlerContextCys6ResultOyAJ14HBHTTPResponseVs5Error_pGctF">respond(to:<wbr>context:<wbr>onComplete:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -318,7 +339,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">respond</span><span class="p">(</span><span class="n">to</span> <span class="nv">request</span><span class="p">:</span> <span class="kt">HBHTTPRequest</span><span class="p">,</span> <span class="nv">context</span><span class="p">:</span> <span class="kt">ChannelHandlerContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">HBHTTPResponse</span><span class="o">&gt;</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">respond</span><span class="p">(</span><span class="n">to</span> <span class="nv">request</span><span class="p">:</span> <span class="kt">HBHTTPRequest</span><span class="p">,</span> <span class="nv">context</span><span class="p">:</span> <span class="kt">ChannelHandlerContext</span><span class="p">,</span> <span class="nv">onComplete</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Result</span><span class="o">&lt;</span><span class="kt">HBHTTPResponse</span><span class="p">,</span> <span class="kt">Error</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -365,7 +386,7 @@
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-03-02)</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-03-14)</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>

@@ -1,68 +1,75 @@
 {
   "warnings": [
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-auth/Sources/HummingbirdAuth/BasicAuthentication.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.nBPKJDGN/hummingbird-auth/Sources/HummingbirdAuth/BasicAuthentication.swift",
       "line": 6,
       "symbol": "BasicAuthentication.username",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-auth/Sources/HummingbirdAuth/BasicAuthentication.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.nBPKJDGN/hummingbird-auth/Sources/HummingbirdAuth/BasicAuthentication.swift",
       "line": 7,
       "symbol": "BasicAuthentication.password",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-auth/Sources/HummingbirdAuth/BearerAuthentication.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.nBPKJDGN/hummingbird-auth/Sources/HummingbirdAuth/BearerAuthentication.swift",
       "line": 5,
       "symbol": "BearerAuthentication.token",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-auth/Sources/HummingbirdAuth/OTP/Base32.swift",
-      "line": 73,
-      "symbol": "String.init(base32Encoding:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.nBPKJDGN/hummingbird-auth/Sources/HummingbirdAuth/OTP/Base32.swift",
+      "line": 17,
+      "symbol": "Base32",
+      "symbol_kind": "source.lang.swift.decl.enum",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-auth/Sources/HummingbirdAuth/OTP/Base32.swift",
-      "line": 77,
-      "symbol": "String.base32decoded()",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.nBPKJDGN/hummingbird-auth/Sources/HummingbirdAuth/OTP/Base32.swift",
+      "line": 18,
+      "symbol": "Base32.DecodingError",
+      "symbol_kind": "source.lang.swift.decl.enum",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-auth/Sources/HummingbirdAuth/OTP/OTP.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.nBPKJDGN/hummingbird-auth/Sources/HummingbirdAuth/OTP/Base32.swift",
+      "line": 19,
+      "symbol": "Base32.DecodingError.invalidCharacter(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.nBPKJDGN/hummingbird-auth/Sources/HummingbirdAuth/OTP/OTP.swift",
       "line": 6,
       "symbol": "OTPHashFunction.sha1",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-auth/Sources/HummingbirdAuth/OTP/OTP.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.nBPKJDGN/hummingbird-auth/Sources/HummingbirdAuth/OTP/OTP.swift",
       "line": 7,
       "symbol": "OTPHashFunction.sha256",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-auth/Sources/HummingbirdAuth/OTP/OTP.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.nBPKJDGN/hummingbird-auth/Sources/HummingbirdAuth/OTP/OTP.swift",
       "line": 8,
       "symbol": "OTPHashFunction.sha512",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-auth/Sources/HummingbirdAuth/OTP/OTP.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.nBPKJDGN/hummingbird-auth/Sources/HummingbirdAuth/OTP/OTP.swift",
       "line": 139,
       "symbol": "TOTP.timeStep",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     }
   ],
-  "source_directory": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.5JZiLZm7/hummingbird-auth"
+  "source_directory": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.nBPKJDGN/hummingbird-auth"
 }

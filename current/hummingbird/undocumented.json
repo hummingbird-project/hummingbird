@@ -2,261 +2,212 @@
   "warnings": [
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Extensions/Extensions.swift",
-      "line": 83,
+      "line": 84,
       "symbol": "HBExtensible.extensions",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/MediaType.swift",
-      "line": 79,
+      "line": 116,
       "symbol": "HBMediaType.Category.application",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/MediaType.swift",
-      "line": 80,
+      "line": 117,
       "symbol": "HBMediaType.Category.audio",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/MediaType.swift",
-      "line": 81,
+      "line": 118,
       "symbol": "HBMediaType.Category.example",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/MediaType.swift",
-      "line": 82,
+      "line": 119,
       "symbol": "HBMediaType.Category.font",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/MediaType.swift",
-      "line": 83,
+      "line": 120,
       "symbol": "HBMediaType.Category.image",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/MediaType.swift",
-      "line": 84,
+      "line": 121,
       "symbol": "HBMediaType.Category.message",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/MediaType.swift",
-      "line": 85,
+      "line": 122,
       "symbol": "HBMediaType.Category.model",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/MediaType.swift",
-      "line": 86,
+      "line": 123,
       "symbol": "HBMediaType.Category.multipart",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/MediaType.swift",
-      "line": 87,
+      "line": 124,
       "symbol": "HBMediaType.Category.text",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/MediaType.swift",
-      "line": 88,
+      "line": 125,
       "symbol": "HBMediaType.Category.video",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/MediaType.swift",
-      "line": 89,
+      "line": 126,
       "symbol": "HBMediaType.Category.any",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/MediaType.swift",
-      "line": 104,
+      "line": 141,
       "symbol": "HBMediaType.application",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/MediaType.swift",
-      "line": 105,
+      "line": 142,
       "symbol": "HBMediaType.audio",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/MediaType.swift",
-      "line": 106,
+      "line": 143,
       "symbol": "HBMediaType.example",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/MediaType.swift",
-      "line": 107,
+      "line": 144,
       "symbol": "HBMediaType.font",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/MediaType.swift",
-      "line": 108,
+      "line": 145,
       "symbol": "HBMediaType.image",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/MediaType.swift",
-      "line": 109,
+      "line": 146,
       "symbol": "HBMediaType.message",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/MediaType.swift",
-      "line": 110,
+      "line": 147,
       "symbol": "HBMediaType.model",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/MediaType.swift",
-      "line": 111,
+      "line": 148,
       "symbol": "HBMediaType.multipart",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/MediaType.swift",
-      "line": 112,
+      "line": 149,
       "symbol": "HBMediaType.text",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/MediaType.swift",
-      "line": 113,
+      "line": 150,
       "symbol": "HBMediaType.video",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/URL.swift",
-      "line": 11,
+      "line": 2,
+      "symbol": "HBURL",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/URL.swift",
+      "line": 3,
       "symbol": "HBURL.Scheme",
       "symbol_kind": "source.lang.swift.decl.struct",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/URL.swift",
-      "line": 33,
+      "line": 10,
       "symbol": "HBURL.Scheme.http",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/URL.swift",
-      "line": 34,
+      "line": 11,
       "symbol": "HBURL.Scheme.https",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/URL.swift",
-      "line": 35,
+      "line": 12,
       "symbol": "HBURL.Scheme.unix",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/URL.swift",
-      "line": 36,
+      "line": 13,
       "symbol": "HBURL.Scheme.http_unix",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/URL.swift",
-      "line": 37,
+      "line": 14,
       "symbol": "HBURL.Scheme.https_unix",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/URL.swift",
-      "line": 40,
+      "line": 17,
       "symbol": "HBURL.string",
       "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/URL.swift",
-      "line": 41,
-      "symbol": "HBURL.scheme",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/URL.swift",
-      "line": 43,
-      "symbol": "HBURL.host",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/URL.swift",
-      "line": 44,
-      "symbol": "HBURL.port",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/URL.swift",
-      "line": 45,
-      "symbol": "HBURL.path",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/URL.swift",
-      "line": 46,
-      "symbol": "HBURL.query",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/URL.swift",
-      "line": 47,
-      "symbol": "HBURL.fragment",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/URL.swift",
-      "line": 48,
-      "symbol": "HBURL.queryParameters",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/HTTP/URL.swift",
-      "line": 58,
-      "symbol": "HBURL.init(_:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
@@ -382,6 +333,104 @@
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Server/Responder.swift",
       "line": 15,
       "symbol": "HBCallbackResponder.init(callback:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Utils/HBParser.swift",
+      "line": 13,
+      "symbol": "HBParser.Error",
+      "symbol_kind": "source.lang.swift.decl.enum",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Utils/HBParser.swift",
+      "line": 14,
+      "symbol": "HBParser.Error.overflow",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Utils/HBParser.swift",
+      "line": 15,
+      "symbol": "HBParser.Error.unexpected",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Utils/HBParser.swift",
+      "line": 16,
+      "symbol": "HBParser.Error.emptyString",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Utils/HBParser.swift",
+      "line": 17,
+      "symbol": "HBParser.Error.invalidUTF8",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Utils/HBParser.swift",
+      "line": 37,
+      "symbol": "HBParser.init(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Utils/HBParser.swift",
+      "line": 388,
+      "symbol": "HBParser.unsafeAdvance()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Utils/HBParser.swift",
+      "line": 392,
+      "symbol": "HBParser.unsafeAdvance(by:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Utils/HBParser.swift",
+      "line": 620,
+      "symbol": "Unicode.Scalar.isWhitespace",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Utils/HBParser.swift",
+      "line": 624,
+      "symbol": "Unicode.Scalar.isNewline",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Utils/HBParser.swift",
+      "line": 634,
+      "symbol": "Unicode.Scalar.isNumber",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Utils/HBParser.swift",
+      "line": 638,
+      "symbol": "Unicode.Scalar.isLetter",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Utils/HBParser.swift",
+      "line": 642,
+      "symbol": "Unicode.Scalar.isLetterOrNumber",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Utils/HBParser.swift",
+      "line": 648,
+      "symbol": "Set.init(_:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     }
