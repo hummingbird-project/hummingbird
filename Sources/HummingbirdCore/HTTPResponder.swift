@@ -38,7 +38,7 @@ public protocol HBHTTPResponder {
     /// - Parameters:
     ///   - request: HTTP request
     ///   - context: ChannelHandlerContext from channel that request was served on.
-    func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse>
+    func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void)
 
     /// Logger used by responder
     var logger: Logger? { get }

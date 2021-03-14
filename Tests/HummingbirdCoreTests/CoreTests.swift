@@ -27,12 +27,11 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testConnect() {
         struct HelloResponder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
-                let response = HBHTTPResponse(
-                    head: .init(version: .init(major: 1, minor: 1), status: .ok),
-                    body: .byteBuffer(context.channel.allocator.buffer(string: "Hello"))
-                )
-                return context.eventLoop.makeSucceededFuture(response)
+            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
+                let responseHead = HTTPResponseHead(version: .init(major: 1, minor: 1), status: .ok)
+                let responseBody = context.channel.allocator.buffer(string: "Hello")
+                let response = HBHTTPResponse(head: responseHead, body: .byteBuffer(responseBody))
+                onComplete(.success(response))
             }
         }
         let server = HBHTTPServer(group: Self.eventLoopGroup, configuration: .init(address: .hostname(port: 8080)))
@@ -51,15 +50,22 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testConsumeBody() {
         struct Responder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
-                return request.body.consumeBody(on: context.eventLoop).flatMapThrowing { buffer in
-                    guard let buffer = buffer else {
-                        throw HBHTTPError(.badRequest)
+            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
+                request.body.consumeBody(on: context.eventLoop).whenComplete { result in
+                    switch result {
+                    case .success(let buffer):
+                        guard let buffer = buffer else {
+                            onComplete(.failure(HBHTTPError(.badRequest)))
+                            return
+                        }
+                        let response = HBHTTPResponse(
+                            head: .init(version: .init(major: 1, minor: 1), status: .ok),
+                            body: .byteBuffer(buffer)
+                        )
+                        onComplete(.success(response))
+                    case .failure(let error):
+                        onComplete(.failure(error))
                     }
-                    return HBHTTPResponse(
-                        head: .init(version: .init(major: 1, minor: 1), status: .ok),
-                        body: .byteBuffer(buffer)
-                    )
                 }
             }
         }
@@ -82,17 +88,23 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testConsumeAllBody() {
         struct Responder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
+            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
                 var size = 0
-                return request.body.stream!.consumeAll(on: context.eventLoop) { buffer in
+                request.body.stream!.consumeAll(on: context.eventLoop) { buffer in
                     size += buffer.readableBytes
                     return context.eventLoop.makeSucceededFuture(())
                 }
-                .flatMapThrowing { _ in
-                    return HBHTTPResponse(
-                        head: .init(version: .init(major: 1, minor: 1), status: .ok),
-                        body: .byteBuffer(context.channel.allocator.buffer(integer: size))
-                    )
+                .whenComplete { result in
+                    switch result {
+                    case .success:
+                        let response = HBHTTPResponse(
+                            head: .init(version: .init(major: 1, minor: 1), status: .ok),
+                            body: .byteBuffer(context.channel.allocator.buffer(integer: size))
+                        )
+                        onComplete(.success(response))
+                    case .failure(let error):
+                        onComplete(.failure(error))
+                    }
                 }
             }
         }
@@ -115,7 +127,7 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testStreamBody() {
         struct Responder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
+            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
                 let body: HBResponseBody = .streamCallback { _ in
                     return request.body.stream!.consume(on: context.eventLoop).map { output in
                         switch output {
@@ -130,7 +142,7 @@ class HummingBirdCoreTests: XCTestCase {
                     head: .init(version: .init(major: 1, minor: 1), status: .ok),
                     body: body
                 )
-                return context.eventLoop.makeSucceededFuture(response)
+                return onComplete(.success(response))
             }
         }
         let server = HBHTTPServer(group: Self.eventLoopGroup, configuration: .init(address: .hostname(port: 8080), maxStreamingBufferSize: 256 * 1024))
@@ -152,7 +164,7 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testStreamBodySlowProcess() {
         struct Responder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
+            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
                 let body: HBResponseBody = .streamCallback { _ in
                     return request.body.stream!.consume(on: context.eventLoop).flatMap { output in
                         switch output {
@@ -168,7 +180,7 @@ class HummingBirdCoreTests: XCTestCase {
                     head: .init(version: .init(major: 1, minor: 1), status: .ok),
                     body: body
                 )
-                return context.eventLoop.makeSucceededFuture(response)
+                onComplete(.success(response))
             }
         }
         let server = HBHTTPServer(group: Self.eventLoopGroup, configuration: .init(address: .hostname(port: 8080), maxStreamingBufferSize: 256 * 1024))
@@ -201,15 +213,19 @@ class HummingBirdCoreTests: XCTestCase {
             }
         }
         struct Responder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
-                return request.body.consumeBody(on: context.eventLoop).flatMapThrowing { buffer in
-                    guard let buffer = buffer else {
-                        throw HBHTTPError(.badRequest)
+            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
+                request.body.consumeBody(on: context.eventLoop).whenComplete { result in
+                    let result = result.flatMap { buffer -> Result<HBHTTPResponse, Error> in
+                        guard let buffer = buffer else {
+                            return .failure(HBHTTPError(.badRequest))
+                        }
+                        let response = HBHTTPResponse(
+                            head: .init(version: .init(major: 1, minor: 1), status: .ok),
+                            body: .byteBuffer(buffer)
+                        )
+                        return .success(response)
                     }
-                    return HBHTTPResponse(
-                        head: .init(version: .init(major: 1, minor: 1), status: .ok),
-                        body: .byteBuffer(buffer)
-                    )
+                    onComplete(result)
                 }
             }
         }
@@ -244,12 +260,12 @@ class HummingBirdCoreTests: XCTestCase {
             }
         }
         struct Responder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
+            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
                 let response = HBHTTPResponse(
                     head: .init(version: .init(major: 1, minor: 1), status: .accepted),
                     body: .empty
                 )
-                return context.eventLoop.makeSucceededFuture(response)
+                onComplete(.success(response))
             }
         }
         let server = HBHTTPServer(group: Self.eventLoopGroup, configuration: .init(address: .hostname(port: 8080)))
@@ -271,15 +287,19 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testMaxUploadSize() {
         struct Responder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
-                return request.body.consumeBody(on: context.eventLoop).flatMapThrowing { buffer in
-                    guard let buffer = buffer else {
-                        throw HBHTTPError(.badRequest)
+            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
+                request.body.consumeBody(on: context.eventLoop).whenComplete { result in
+                    let result = result.flatMap { buffer -> Result<HBHTTPResponse, Error> in
+                        guard let buffer = buffer else {
+                            return .failure(HBHTTPError(.badRequest))
+                        }
+                        let response = HBHTTPResponse(
+                            head: .init(version: .init(major: 1, minor: 1), status: .ok),
+                            body: .byteBuffer(buffer)
+                        )
+                        return .success(response)
                     }
-                    return HBHTTPResponse(
-                        head: .init(version: .init(major: 1, minor: 1), status: .ok),
-                        body: .byteBuffer(buffer)
-                    )
+                    onComplete(result)
                 }
             }
         }

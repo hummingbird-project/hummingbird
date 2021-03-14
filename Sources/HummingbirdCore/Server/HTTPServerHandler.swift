@@ -44,8 +44,8 @@ final class HBHTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler 
         self.requestsInProgress += 1
 
         // respond to request
-        self.responder.respond(to: request, context: context).whenComplete { result in
-            // should we keep the channel open after responding. 
+        self.responder.respond(to: request, context: context) { result in
+            // should we keep the channel open after responding.
             let keepAlive = request.head.isKeepAlive && (self.closeAfterResponseWritten == false || self.requestsInProgress > 1)
             var response: HBHTTPResponse
             switch result {

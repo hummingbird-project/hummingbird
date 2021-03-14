@@ -121,12 +121,12 @@ public class HBRequestBodyStreamer {
     func drop() -> EventLoopFuture<Void> {
         self.eventLoop.assertInEventLoop()
         self.dropped = true
-        
+
         let promise = self.eventLoop.makePromise(of: Void.self)
         func _dropAll() {
-            self.consume(on: eventLoop).map { output in
+            self.consume(on: self.eventLoop).map { output in
                 switch output {
-                case .byteBuffer(_):
+                case .byteBuffer:
                     _dropAll()
 
                 case .end:
