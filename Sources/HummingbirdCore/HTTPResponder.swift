@@ -5,18 +5,22 @@ import NIO
 ///
 /// This is the core interface to the HummingbirdCore library. You need to provide an object that conforms
 /// to `HBHTTPResponder` when you call `HTTPServer.start`. This object is used to define how
-/// you convert requests to the server into responses
+/// you convert requests to the server into responses.
 ///
-/// This is an example `HBHTTPResponder` that replies with a response with body "Hello"
+/// This is an example `HBHTTPResponder` that replies with a response with body "Hello". Once you
+/// have your response you need to call `onComplete`.
 /// ```
 /// struct HelloResponder: HBHTTPResponder {
-///     func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
-///         let response = HBHTTPResponse(
-///             head: .init(version: .init(major: 1, minor: 1), status: .ok),
-///             body: .byteBuffer(context.channel.allocator.buffer(string: "Hello"))
-///         )
-///         return context.eventLoop.makeSucceededFuture(response)
-///    }
+///     func respond(
+///         to request: HBHTTPRequest,
+///         context: ChannelHandlerContext,
+///         onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void
+///     ) {
+///         let responseHead = HTTPResponseHead(version: .init(major: 1, minor: 1), status: .ok)
+///         let responseBody = context.channel.allocator.buffer(string: "Hello")
+///         let response = HBHTTPResponse(head: responseHead, body: .byteBuffer(responseBody))
+///         onComplete(.success(response))
+///     }
 /// }
 /// ```
 /// The following will start up a server using the above `HelloResponder`.
@@ -34,7 +38,8 @@ public protocol HBHTTPResponder {
     /// Called when HTTP server handler is removed from channel
     func handlerRemoved(context: ChannelHandlerContext)
 
-    /// Returns an EventLoopFuture that will be fullfilled with the response to the request passed in to the function
+    /// Passes request to be responded to and function to call when response is ready. It is required your implementation
+    /// calls `onComplete` otherwise the server will never receive a response
     /// - Parameters:
     ///   - request: HTTP request
     ///   - context: ChannelHandlerContext from channel that request was served on.
