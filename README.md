@@ -8,14 +8,13 @@ HummingbirdCore contains a Swift NIO based HTTP server. When starting the server
 
 ```swift
 struct HelloResponder: HBHTTPResponder {
-    func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
-        let response = HBHTTPResponse(
-            head: .init(version: .init(major: 1, minor: 1), status: .ok),
-            body: .byteBuffer(context.channel.allocator.buffer(string: "Hello"))
-        )
-        return context.eventLoop.makeSucceededFuture(response)
-   }
-}    
+    func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
+        let responseHead = HTTPResponseHead(version: .init(major: 1, minor: 1), status: .ok)
+        let responseBody = context.channel.allocator.buffer(string: "Hello")
+        let response = HBHTTPResponse(head: responseHead, body: .byteBuffer(responseBody))
+        onComplete(.success(response))
+    }
+}
 ```
 
 The following will start up a server using the above `HelloResponder`.
