@@ -29,7 +29,7 @@ extension HBApplication {
         ///   - request: request
         ///   - context: context from ChannelHandler
         /// - Returns: response
-        public func respond(to request: HBHTTPRequest, context: ChannelHandlerContext) -> EventLoopFuture<HBHTTPResponse> {
+        public func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> ()) {
             let request = HBRequest(
                 head: request.head,
                 body: request.body,
@@ -39,13 +39,14 @@ extension HBApplication {
             )
 
             // respond to request
-            return self.responder.respond(to: request)
-                .map { response in
+            self.responder.respond(to: request).whenComplete { result in
+                switch result {
+                case .success(let response):
                     response.headers.add(name: "Date", value: HBDateCache.currentDate)
                     let responseHead = HTTPResponseHead(version: request.version, status: response.status, headers: response.headers)
-                    return HBHTTPResponse(head: responseHead, body: response.body)
-                }
-                .flatMapError { error in
+                    onComplete(.success(HBHTTPResponse(head: responseHead, body: response.body)))
+                    
+                case .failure(let error):
                     // then convert to valid response so this isn't treated as an error further down
                     let response: HBHTTPResponse
                     if let error = error as? HBHTTPResponseError {
@@ -59,8 +60,9 @@ extension HBApplication {
                             body: .empty
                         )
                     }
-                    return request.success(response)
+                    return onComplete(.success(response))
                 }
+            }
         }
     }
 }
