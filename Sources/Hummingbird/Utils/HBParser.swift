@@ -600,7 +600,7 @@ extension HBParser {
 
         guard self.index != self.range.endIndex else { return "" }
         do {
-            if #available(macOS 11, *) {
+            if #available(macOS 11, macCatalyst 14.0, iOS 14.0, tvOS 14.0, *) {
                 return try String(unsafeUninitializedCapacity: range.endIndex - index) { bytes -> Int in
                     return try _percentDecode(self.buffer[self.index..<range.endIndex], bytes)
                 }

@@ -125,6 +125,7 @@ class URLEncodedFormEncoderTests: XCTestCase {
         testForm(test, query: "a[one]=1&a[three]=3&a[two]=2")
     }
 
+    @available(iOS 10.0, tvOS 10.0, *)
     func testDateEncode() {
         struct Test: Codable {
             let d: Date
