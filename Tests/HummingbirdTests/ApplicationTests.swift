@@ -283,7 +283,7 @@ final class ApplicationTests: XCTestCase {
     
     func testDefaultHTTPErrorResponse() throws {
         let app = HBApplication(testing: .embedded)
-        app.router.get("/hello") { request -> String in
+        app.router.get("/hello") { _ -> String in
             return "Hello"
         }
         app.XCTStart()
@@ -298,7 +298,7 @@ final class ApplicationTests: XCTestCase {
     
     func testCustomHTTPErrorResponseHandler() throws {
         let app = HBApplication(testing: .embedded)
-        app.router.get("/hello") { request -> String in
+        app.router.get("/hello") { _ -> String in
             return "Hello"
         }
         app.errorResponseHandler = { (request, httpResponseError) -> EventLoopFuture<HBHTTPResponse> in
@@ -306,7 +306,7 @@ final class ApplicationTests: XCTestCase {
             promise.completeWith(
                 .success(.init(
                     head: .init(version: request.version, status: .imATeapot),
-                    body: .byteBuffer(.init(string: "Custom Error Handling"))
+                    body: .byteBuffer(.init(string: "Custom Error Handling for \(httpResponseError.status)"))
                 ))
             )
             return promise.futureResult
@@ -317,7 +317,7 @@ final class ApplicationTests: XCTestCase {
         app.XCTExecute(uri: "/world", method: .GET) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(response.status, .imATeapot)
-            XCTAssertEqual(String(buffer: body), "Custom Error Handling")
+            XCTAssertEqual(String(buffer: body), "Custom Error Handling for notFound")
         }
     }
 }
