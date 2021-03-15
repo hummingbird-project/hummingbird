@@ -280,7 +280,7 @@ final class ApplicationTests: XCTestCase {
             XCTAssertEqual(string, "Hello")
         }
     }
-    
+
     func testDefaultHTTPErrorResponse() throws {
         let app = HBApplication(testing: .embedded)
         app.router.get("/hello") { _ -> String in
@@ -295,7 +295,7 @@ final class ApplicationTests: XCTestCase {
             XCTAssertTrue(String(buffer: body).isEmpty)
         }
     }
-    
+
     func testCustomHTTPErrorResponseHandler() throws {
         let app = HBApplication(testing: .embedded)
         app.router.get("/hello") { _ -> String in
