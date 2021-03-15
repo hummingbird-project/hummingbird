@@ -1,0 +1,12 @@
+{
+  "warnings": [
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.MISpImGi/hummingbird-mustache/Sources/HummingbirdMustache/Method.swift",
+      "line": 17,
+      "symbol": "HBMustacheMethods.runMethod(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    }
+  ],
+  "source_directory": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.MISpImGi/hummingbird-mustache"
+}

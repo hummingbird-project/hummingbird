@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>HBMustacheMethods Protocol Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Protocol/HBMustacheMethods" class="dashAnchor"></a>
+    <a title="HBMustacheMethods Protocol Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html"> 0.1.0 Docs</a> (97% documented)</p>
+        <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird-mustache"><img src="../img/gh.png"/>View on GitHub</a></p>
+        <p class="header-right">
+          <form role="search" action="../search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html"> Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        HBMustacheMethods Protocol Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/HBMustacheLibrary.html">HBMustacheLibrary</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/HBMustacheTemplate.html">HBMustacheTemplate</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/Array.html">Array</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Dictionary.html">Dictionary</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/FixedWidthInteger.html">FixedWidthInteger</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions.html#/s:Si">Int</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions.html#/s:s5Int16V">Int16</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions.html#/s:s5Int32V">Int32</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions.html#/s:s5Int64V">Int64</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions.html#/s:s4Int8V">Int8</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions.html#/s:s18ReversedCollectionV">ReversedCollection</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Sequence.html">Sequence</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions.html#/s:Sh">Set</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions.html#/s:SS">String</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/StringProtocol.html">StringProtocol</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions.html#/s:Ss">Substring</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions.html#/s:Su">UInt</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions.html#/s:s6UInt16V">UInt16</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions.html#/s:s6UInt32V">UInt32</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions.html#/s:s6UInt64V">UInt64</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions.html#/s:s5UInt8V">UInt8</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols/HBMustacheMethods.html">HBMustacheMethods</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/HBMustacheSequence.html">HBMustacheSequence</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/HBMustacheLambda.html">HBMustacheLambda</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>HBMustacheMethods</h1>
+              <div class="declaration">
+                <div class="language">
+                  
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">protocol</span> <span class="kt">HBMustacheMethods</span></code></pre>
+
+                </div>
+              </div>
+            <p>Objects that can have a methods run on them. Mustache methods are specific to this implementation
+of Mustache. They allow you to process objects before they are rendered.</p>
+
+<p>The syntax for applying methods is <code>{{method(variable)}}</code>. Methods can be applied to both
+variables and sections.</p>
+
+<p>A simple example would be ensuring a string is lowercase.</p>
+<pre class="highlight swift"><code><span class="p">{{</span><span class="nf">lowercased</span><span class="p">(</span><span class="n">myString</span><span class="p">)}}</span>
+</code></pre>
+
+<p>If applying a method to a sequence then the closing element of the sequence should not include the
+method name eg</p>
+<pre class="highlight swift"><code><span class="p">{{</span><span class="err">#</span><span class="nf">reversed</span><span class="p">(</span><span class="n">sequence</span><span class="p">)}}{{</span><span class="o">.</span><span class="p">}}{{\</span><span class="n">sequence</span><span class="p">}}</span>
+</code></pre>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19HummingbirdMustache17HBMustacheMethodsP9runMethodyypSgSSF"></a>
+                    <a name="//apple_ref/swift/Method/runMethod(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19HummingbirdMustache17HBMustacheMethodsP9runMethodyypSgSSF">runMethod(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">runMethod</span><span class="p">(</span><span class="n">_</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Any</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-03-15)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>
