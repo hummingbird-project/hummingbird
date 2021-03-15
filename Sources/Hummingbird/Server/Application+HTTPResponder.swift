@@ -52,6 +52,9 @@ extension HBApplication {
                     if let error = error as? HBHTTPResponseError {
                         // this is a processed error so don't log as Error
                         request.logger.info("Error: \(error)")
+                        if let errorResponseHandler = application.errorResponseHandler {
+                            return errorResponseHandler(request, error).whenComplete(onComplete)
+                        }
                         response = error.response(version: request.version, allocator: request.allocator)
                     } else {
                         request.logger.error("\(error)")

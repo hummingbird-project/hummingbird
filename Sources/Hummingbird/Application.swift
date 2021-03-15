@@ -43,6 +43,8 @@ public final class HBApplication: HBExtensible {
     public var encoder: HBResponseEncoder
     /// decoder used by router
     public var decoder: HBRequestDecoder
+    /// Optional response handler for HBHTTPResponseError
+    public var errorResponseHandler: ((HBRequest, HBHTTPResponseError) -> EventLoopFuture<HBHTTPResponse>)?
 
     /// who provided the eventLoopGroup
     let eventLoopGroupProvider: NIOEventLoopGroupProvider

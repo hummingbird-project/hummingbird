@@ -280,4 +280,44 @@ final class ApplicationTests: XCTestCase {
             XCTAssertEqual(string, "Hello")
         }
     }
+    
+    func testDefaultHTTPErrorResponse() throws {
+        let app = HBApplication(testing: .embedded)
+        app.router.get("/hello") { request -> String in
+            return "Hello"
+        }
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/world", method: .GET) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(response.status, .notFound)
+            XCTAssertTrue(String(buffer: body).isEmpty)
+        }
+    }
+    
+    func testCustomHTTPErrorResponseHandler() throws {
+        let app = HBApplication(testing: .embedded)
+        app.router.get("/hello") { request -> String in
+            return "Hello"
+        }
+        app.errorResponseHandler = { (request, httpResponseError) -> EventLoopFuture<HBHTTPResponse> in
+            let promise = request.eventLoop.makePromise(of: HBHTTPResponse.self)
+            promise.completeWith(
+                .success(.init(
+                    head: .init(version: request.version, status: .imATeapot),
+                    body: .byteBuffer(.init(string: "Custom Error Handling"))
+                ))
+            )
+            return promise.futureResult
+        }
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/world", method: .GET) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(response.status, .imATeapot)
+            XCTAssertEqual(String(buffer: body), "Custom Error Handling")
+        }
+    }
 }
