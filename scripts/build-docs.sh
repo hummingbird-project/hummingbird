@@ -62,6 +62,7 @@ build_docs hummingbird hummingbird-xct HummingbirdXCT
 
 build_docs_from_other_repo hummingbird-core hummingbird-core HummingbirdCore
 build_docs_from_other_repo hummingbird-auth hummingbird-auth HummingbirdAuth
+build_docs_from_other_repo hummingbird-mustache hummingbird-mustache HummingbirdMustache
 build_docs_from_other_repo hummingbird-websocket hummingbird-websocket HummingbirdWebSocket HummingbirdWSCore
 
 

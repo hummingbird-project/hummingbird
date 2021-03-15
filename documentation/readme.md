@@ -6,5 +6,6 @@ Hummingbird is split into multiple modules. Below are links to the documentation
 - [HummingbirdAuth](https://hummingbird-project.github.io/hummingbird/current/hummingbird-auth/index.html)
 - [HummingbirdCore](https://hummingbird-project.github.io/hummingbird/current/hummingbird-core/index.html)
 - [HummingbirdFoundation](https://hummingbird-project.github.io/hummingbird/current/hummingbird-foundation/index.html)
+- [HummingbirdMustache](https://hummingbird-project.github.io/hummingbird/current/hummingbird-mustache/index.html)
 - [HummingbirdWebSocket](https://hummingbird-project.github.io/hummingbird/current/hummingbird-websocket/index.html)
 - [HummingbirdXCT](https://hummingbird-project.github.io/hummingbird/current/hummingbird-xct/index.html)
