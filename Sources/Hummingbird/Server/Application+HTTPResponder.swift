@@ -47,20 +47,13 @@ extension HBApplication {
                     onComplete(.success(HBHTTPResponse(head: responseHead, body: response.body)))
 
                 case .failure(let error):
-                    // then convert to valid response so this isn't treated as an error further down
-                    let response: HBHTTPResponse
                     if let error = error as? HBHTTPResponseError {
                         // this is a processed error so don't log as Error
-                        request.logger.info("Error: \(error)")
-                        response = error.response(version: request.version, allocator: request.allocator)
+                        request.logger.debug("Error: \(error)")
                     } else {
                         request.logger.error("\(error)")
-                        response = HBHTTPResponse(
-                            head: .init(version: request.version, status: .internalServerError),
-                            body: .empty
-                        )
                     }
-                    return onComplete(.success(response))
+                    return onComplete(.failure(error))
                 }
             }
         }
