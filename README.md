@@ -42,6 +42,7 @@ Extensions provided in other repositories include
 | [HummingbirdFluent](https://github.com/hummingbird-project/hummingbird-fluent) | Interface to the Vapor database ORM (uses [FluentKit](https://github.com/vapor/fluent))
 | [HummingbirdRedis](https://github.com/hummingbird-project/hummingbird-redis) | Interface to Redis (uses [RediStack](https://gitlab.com/mordil/RediStack))
 | [HummingbirdWebSocket](https://github.com/hummingbird-project/hummingbird-websocket) | Adds support for WebSocket upgrade to server
+| [HummingbirdMustache](https://github.com/hummingbird-project/hummingbird-mustache) | Mustache templating engine
 
 ## Documentation
 
