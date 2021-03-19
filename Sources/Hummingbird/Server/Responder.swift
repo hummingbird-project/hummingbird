@@ -35,3 +35,27 @@ public struct HBCallbackResponder: HBResponder {
         return self.callback(request)
     }
 }
+
+/// Responder that calls supplied closure
+public struct HBAsyncCallbackResponder: HBResponder {
+    let callback: (HBRequest) async throws -> HBResponse
+
+    public init(callback: @escaping (HBRequest) async throws -> HBResponse) {
+        self.callback = callback
+    }
+
+    /// Return EventLoopFuture that will be fulfilled with response to the request supplied
+    public func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
+        @asyncHandler func respond(to request: HBRequest, promise: EventLoopPromise<HBResponse>) {
+            do {
+                let response = try await callback(request)
+                promise.succeed(response)
+            } catch {
+                promise.fail(error)
+            }
+        }
+        let promise = request.eventLoop.makePromise(of: HBResponse.self)
+        respond(to: request, promise: promise)
+        return promise.futureResult
+    }
+}
