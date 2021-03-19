@@ -17,7 +17,7 @@
     <a title="Extensions  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html"> 0.1.0 Docs</a> (97% documented)</p>
+        <p><a href="index.html"> 0.3.0 Docs</a> (80% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird-mustache"><img src="img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="search.json">
@@ -43,7 +43,16 @@
                 <a href="Classes/HBMustacheLibrary.html">HBMustacheLibrary</a>
               </li>
               <li class="nav-group-task">
+                <a href="Classes/HBMustacheLibrary/ParserError.html">– ParserError</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="Classes/HBMustacheTemplate.html">HBMustacheTemplate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/HBMustacheTemplate/ParserError.html">– ParserError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/HBMustacheTemplate/Error.html">– Error</a>
               </li>
             </ul>
           </li>
@@ -113,10 +122,10 @@
             <a href="Protocols.html">Protocols</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="Protocols/HBMustacheMethods.html">HBMustacheMethods</a>
+                <a href="Protocols/HBMustacheSequence.html">HBMustacheSequence</a>
               </li>
               <li class="nav-group-task">
-                <a href="Protocols/HBMustacheSequence.html">HBMustacheSequence</a>
+                <a href="Protocols/HBMustacheTransformable.html">HBMustacheTransformable</a>
               </li>
             </ul>
           </li>
@@ -125,6 +134,12 @@
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
                 <a href="Structs/HBMustacheLambda.html">HBMustacheLambda</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBParser.html">HBParser</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBParser/Context.html">– Context</a>
               </li>
             </ul>
           </li>
@@ -140,113 +155,6 @@
           <section class="section task-group-section">
             <div class="task-group">
               <ul>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:Sy"></a>
-                    <a name="//apple_ref/swift/Extension/StringProtocol" class="dashAnchor"></a>
-                    <a class="token" href="#/s:Sy">StringProtocol</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                        <a href="Extensions/StringProtocol.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">StringProtocol</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:SS"></a>
-                    <a name="//apple_ref/swift/Extension/String" class="dashAnchor"></a>
-                    <a class="token" href="#/s:SS">String</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">String</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheMethods.html">HBMustacheMethods</a></span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:Ss"></a>
-                    <a name="//apple_ref/swift/Extension/Substring" class="dashAnchor"></a>
-                    <a class="token" href="#/s:Ss">Substring</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Substring</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheMethods.html">HBMustacheMethods</a></span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:Sa"></a>
-                    <a name="//apple_ref/swift/Extension/Array" class="dashAnchor"></a>
-                    <a class="token" href="#/s:Sa">Array</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                        <a href="Extensions/Array.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Array</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheMethods.html">HBMustacheMethods</a></span></code></pre>
-<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Array</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheSequence.html">HBMustacheSequence</a></span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
                 <li class="item">
                   <div>
                     <code>
@@ -267,294 +175,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Dictionary</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheMethods.html">HBMustacheMethods</a></span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:s17FixedWidthIntegerP"></a>
-                    <a name="//apple_ref/swift/Extension/FixedWidthInteger" class="dashAnchor"></a>
-                    <a class="token" href="#/s:s17FixedWidthIntegerP">FixedWidthInteger</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                        <a href="Extensions/FixedWidthInteger.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">FixedWidthInteger</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:Si"></a>
-                    <a name="//apple_ref/swift/Extension/Int" class="dashAnchor"></a>
-                    <a class="token" href="#/s:Si">Int</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Int</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheMethods.html">HBMustacheMethods</a></span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:s4Int8V"></a>
-                    <a name="//apple_ref/swift/Extension/Int8" class="dashAnchor"></a>
-                    <a class="token" href="#/s:s4Int8V">Int8</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Int8</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheMethods.html">HBMustacheMethods</a></span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:s5Int16V"></a>
-                    <a name="//apple_ref/swift/Extension/Int16" class="dashAnchor"></a>
-                    <a class="token" href="#/s:s5Int16V">Int16</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Int16</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheMethods.html">HBMustacheMethods</a></span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:s5Int32V"></a>
-                    <a name="//apple_ref/swift/Extension/Int32" class="dashAnchor"></a>
-                    <a class="token" href="#/s:s5Int32V">Int32</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Int32</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheMethods.html">HBMustacheMethods</a></span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:s5Int64V"></a>
-                    <a name="//apple_ref/swift/Extension/Int64" class="dashAnchor"></a>
-                    <a class="token" href="#/s:s5Int64V">Int64</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Int64</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheMethods.html">HBMustacheMethods</a></span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:Su"></a>
-                    <a name="//apple_ref/swift/Extension/UInt" class="dashAnchor"></a>
-                    <a class="token" href="#/s:Su">UInt</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">UInt</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheMethods.html">HBMustacheMethods</a></span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:s5UInt8V"></a>
-                    <a name="//apple_ref/swift/Extension/UInt8" class="dashAnchor"></a>
-                    <a class="token" href="#/s:s5UInt8V">UInt8</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">UInt8</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheMethods.html">HBMustacheMethods</a></span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:s6UInt16V"></a>
-                    <a name="//apple_ref/swift/Extension/UInt16" class="dashAnchor"></a>
-                    <a class="token" href="#/s:s6UInt16V">UInt16</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">UInt16</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheMethods.html">HBMustacheMethods</a></span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:s6UInt32V"></a>
-                    <a name="//apple_ref/swift/Extension/UInt32" class="dashAnchor"></a>
-                    <a class="token" href="#/s:s6UInt32V">UInt32</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">UInt32</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheMethods.html">HBMustacheMethods</a></span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:s6UInt64V"></a>
-                    <a name="//apple_ref/swift/Extension/UInt64" class="dashAnchor"></a>
-                    <a class="token" href="#/s:s6UInt64V">UInt64</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">UInt64</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheMethods.html">HBMustacheMethods</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Dictionary</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheTransformable.html">HBMustacheTransformable</a></span></code></pre>
 
                         </div>
                       </div>
@@ -581,7 +202,35 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Sequence</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">extension</span> <span class="kt">Sequence</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:Sa"></a>
+                    <a name="//apple_ref/swift/Extension/Array" class="dashAnchor"></a>
+                    <a class="token" href="#/s:Sa">Array</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                        <a href="Extensions/Array.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Array</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheSequence.html">HBMustacheSequence</a></span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Array</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheTransformable.html">HBMustacheTransformable</a></span></code></pre>
 
                         </div>
                       </div>
@@ -640,12 +289,378 @@
                     </section>
                   </div>
                 </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:Sy"></a>
+                    <a name="//apple_ref/swift/Extension/StringProtocol" class="dashAnchor"></a>
+                    <a class="token" href="#/s:Sy">StringProtocol</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                        <a href="Extensions/StringProtocol.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">extension</span> <span class="kt">StringProtocol</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:SS"></a>
+                    <a name="//apple_ref/swift/Extension/String" class="dashAnchor"></a>
+                    <a class="token" href="#/s:SS">String</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">String</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheTransformable.html">HBMustacheTransformable</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:Ss"></a>
+                    <a name="//apple_ref/swift/Extension/Substring" class="dashAnchor"></a>
+                    <a class="token" href="#/s:Ss">Substring</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Substring</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheTransformable.html">HBMustacheTransformable</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:s17FixedWidthIntegerP"></a>
+                    <a name="//apple_ref/swift/Extension/FixedWidthInteger" class="dashAnchor"></a>
+                    <a class="token" href="#/s:s17FixedWidthIntegerP">FixedWidthInteger</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                        <a href="Extensions/FixedWidthInteger.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">extension</span> <span class="kt">FixedWidthInteger</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:Si"></a>
+                    <a name="//apple_ref/swift/Extension/Int" class="dashAnchor"></a>
+                    <a class="token" href="#/s:Si">Int</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Int</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheTransformable.html">HBMustacheTransformable</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:s4Int8V"></a>
+                    <a name="//apple_ref/swift/Extension/Int8" class="dashAnchor"></a>
+                    <a class="token" href="#/s:s4Int8V">Int8</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Int8</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheTransformable.html">HBMustacheTransformable</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:s5Int16V"></a>
+                    <a name="//apple_ref/swift/Extension/Int16" class="dashAnchor"></a>
+                    <a class="token" href="#/s:s5Int16V">Int16</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Int16</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheTransformable.html">HBMustacheTransformable</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:s5Int32V"></a>
+                    <a name="//apple_ref/swift/Extension/Int32" class="dashAnchor"></a>
+                    <a class="token" href="#/s:s5Int32V">Int32</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Int32</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheTransformable.html">HBMustacheTransformable</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:s5Int64V"></a>
+                    <a name="//apple_ref/swift/Extension/Int64" class="dashAnchor"></a>
+                    <a class="token" href="#/s:s5Int64V">Int64</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Int64</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheTransformable.html">HBMustacheTransformable</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:Su"></a>
+                    <a name="//apple_ref/swift/Extension/UInt" class="dashAnchor"></a>
+                    <a class="token" href="#/s:Su">UInt</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">UInt</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheTransformable.html">HBMustacheTransformable</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:s5UInt8V"></a>
+                    <a name="//apple_ref/swift/Extension/UInt8" class="dashAnchor"></a>
+                    <a class="token" href="#/s:s5UInt8V">UInt8</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">UInt8</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheTransformable.html">HBMustacheTransformable</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:s6UInt16V"></a>
+                    <a name="//apple_ref/swift/Extension/UInt16" class="dashAnchor"></a>
+                    <a class="token" href="#/s:s6UInt16V">UInt16</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">UInt16</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheTransformable.html">HBMustacheTransformable</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:s6UInt32V"></a>
+                    <a name="//apple_ref/swift/Extension/UInt32" class="dashAnchor"></a>
+                    <a class="token" href="#/s:s6UInt32V">UInt32</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">UInt32</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheTransformable.html">HBMustacheTransformable</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:s6UInt64V"></a>
+                    <a name="//apple_ref/swift/Extension/UInt64" class="dashAnchor"></a>
+                    <a class="token" href="#/s:s6UInt64V">UInt64</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">UInt64</span><span class="p">:</span> <span class="kt"><a href="Protocols/HBMustacheTransformable.html">HBMustacheTransformable</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
               </ul>
             </div>
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-03-15)</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-03-19)</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>

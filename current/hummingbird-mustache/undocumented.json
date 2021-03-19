@@ -1,12 +1,96 @@
 {
   "warnings": [
     {
-      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.MISpImGi/hummingbird-mustache/Sources/HummingbirdMustache/Method.swift",
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.6NGj9WhW/hummingbird-mustache/Sources/HummingbirdMustache/Parser.swift",
+      "line": 264,
+      "symbol": "HBParser.Context",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.6NGj9WhW/hummingbird-mustache/Sources/HummingbirdMustache/Parser.swift",
+      "line": 265,
+      "symbol": "HBParser.Context.line",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.6NGj9WhW/hummingbird-mustache/Sources/HummingbirdMustache/Parser.swift",
+      "line": 266,
+      "symbol": "HBParser.Context.lineNumber",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.6NGj9WhW/hummingbird-mustache/Sources/HummingbirdMustache/Parser.swift",
+      "line": 267,
+      "symbol": "HBParser.Context.columnNumber",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.6NGj9WhW/hummingbird-mustache/Sources/HummingbirdMustache/Template+Parser.swift",
+      "line": 3,
+      "symbol": "HBMustacheTemplate.ParserError",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.6NGj9WhW/hummingbird-mustache/Sources/HummingbirdMustache/Template+Parser.swift",
+      "line": 4,
+      "symbol": "HBMustacheTemplate.ParserError.context",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.6NGj9WhW/hummingbird-mustache/Sources/HummingbirdMustache/Template+Parser.swift",
+      "line": 5,
+      "symbol": "HBMustacheTemplate.ParserError.error",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.6NGj9WhW/hummingbird-mustache/Sources/HummingbirdMustache/Template+Parser.swift",
+      "line": 8,
+      "symbol": "HBMustacheTemplate.Error",
+      "symbol_kind": "source.lang.swift.decl.enum",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.6NGj9WhW/hummingbird-mustache/Sources/HummingbirdMustache/Template+Parser.swift",
+      "line": 9,
+      "symbol": "HBMustacheTemplate.Error.sectionCloseNameIncorrect",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.6NGj9WhW/hummingbird-mustache/Sources/HummingbirdMustache/Template+Parser.swift",
+      "line": 10,
+      "symbol": "HBMustacheTemplate.Error.unfinishedName",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.6NGj9WhW/hummingbird-mustache/Sources/HummingbirdMustache/Template+Parser.swift",
+      "line": 11,
+      "symbol": "HBMustacheTemplate.Error.expectedSectionEnd",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.6NGj9WhW/hummingbird-mustache/Sources/HummingbirdMustache/Template+Parser.swift",
+      "line": 12,
+      "symbol": "HBMustacheTemplate.Error.invalidSetDelimiter",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.6NGj9WhW/hummingbird-mustache/Sources/HummingbirdMustache/Transform.swift",
       "line": 17,
-      "symbol": "HBMustacheMethods.runMethod(_:)",
+      "symbol": "HBMustacheTransformable.transform(_:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     }
   ],
-  "source_directory": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.MISpImGi/hummingbird-mustache"
+  "source_directory": "/private/var/folders/t1/6xxcksn10bz9hdfp8v01fw8m0000gn/T/tmp.6NGj9WhW/hummingbird-mustache"
 }
