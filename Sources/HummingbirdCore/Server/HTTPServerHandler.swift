@@ -45,20 +45,22 @@ final class HBHTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler 
 
         // respond to request
         self.responder.respond(to: request, context: context) { result in
-            // should we keep the channel open after responding.
-            let keepAlive = request.head.isKeepAlive && (self.closeAfterResponseWritten == false || self.requestsInProgress > 1)
-            var response: HBHTTPResponse
-            switch result {
-            case .failure(let error):
-                response = self.getErrorResponse(context: context, error: error, version: request.head.version)
+            _ = context.eventLoop.submit {
+                // should we keep the channel open after responding.
+                let keepAlive = request.head.isKeepAlive && (self.closeAfterResponseWritten == false || self.requestsInProgress > 1)
+                var response: HBHTTPResponse
+                switch result {
+                case .failure(let error):
+                    response = self.getErrorResponse(context: context, error: error, version: request.head.version)
 
-            case .success(let successfulResponse):
-                response = successfulResponse
+                case .success(let successfulResponse):
+                    response = successfulResponse
+                }
+                if request.head.version.major == 1 {
+                    response.head.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
+                }
+                self.writeResponse(context: context, response: response, request: request, keepAlive: keepAlive)
             }
-            if request.head.version.major == 1 {
-                response.head.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
-            }
-            self.writeResponse(context: context, response: response, request: request, keepAlive: keepAlive)
         }
     }
 
