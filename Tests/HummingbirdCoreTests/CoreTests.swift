@@ -318,4 +318,49 @@ class HummingBirdCoreTests: XCTestCase {
             }
         XCTAssertNoThrow(try future.wait())
     }
+
+    func testEmbeddedChannel() {
+        enum HTTPError: Error {
+            case noHead
+            case illegalBody
+            case noEnd
+        }
+        struct HelloResponder: HBHTTPResponder {
+            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
+                let responseHead = HTTPResponseHead(version: .init(major: 1, minor: 1), status: .ok)
+                let responseBody = context.channel.allocator.buffer(string: "Hello")
+                let response = HBHTTPResponse(head: responseHead, body: .byteBuffer(responseBody))
+                onComplete(.success(response))
+            }
+        }
+        let server = HBHTTPServer(group: Self.eventLoopGroup, configuration: .init(address: .hostname(port: 8080)))
+
+        do {
+            let channel = EmbeddedChannel()
+            try channel.pipeline.addHandlers(
+                server.getChildHandlers(responder: HelloResponder())
+            ).wait()
+
+            // write request
+            let requestHead = HTTPRequestHead(version: .init(major: 1, minor: 1), method: .GET, uri: "/", headers: [:])
+            try channel.writeInbound(HTTPServerRequestPart.head(requestHead))
+            try channel.writeInbound(HTTPServerRequestPart.end(nil))
+
+            // flush
+            channel.flush()
+
+            // read response
+            guard case .head = try channel.readOutbound(as: HTTPServerResponsePart.self) else { throw HTTPError.noHead }
+            var next = try channel.readOutbound(as: HTTPServerResponsePart.self)
+            var buffer = channel.allocator.buffer(capacity: 0)
+            while case .body(let part) = next {
+                guard case .byteBuffer(var b) = part else { throw HTTPError.illegalBody }
+                buffer.writeBuffer(&b)
+                next = try channel.readOutbound(as: HTTPServerResponsePart.self)
+            }
+            guard case .end = next else { throw HTTPError.noEnd }
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
 }
