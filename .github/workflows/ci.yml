@@ -19,6 +19,7 @@ jobs:
     strategy:
       matrix:
         image: ['swift:5.3-bionic', 'swift:5.3-focal', 'swift:5.3-amazonlinux2', 'swift:5.3-centos8']
+    
     container:
       image: ${{ matrix.image }}
     steps:
@@ -26,7 +27,7 @@ jobs:
       uses: actions/checkout@v2
     - name: Test
       run: |
-        swift test --enable-test-discovery  --enable-code-coverage --sanitize=thread
+        swift test --enable-test-discovery --enable-code-coverage --sanitize=thread
     - name: Convert coverage files
       run: |
         llvm-cov export -format="lcov" \
