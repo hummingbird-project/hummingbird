@@ -45,7 +45,7 @@ public struct HBCacheControl {
         guard let mediaType = HBMediaType.getMediaType(forExtension: ext) else { return nil }
         guard let entry = self.entries.first(where: { mediaType.isType($0.mediaType) }) else { return nil }
         return entry.cacheControl
-            .map { $0.description }
+            .map(\.description)
             .joined(separator: ", ")
     }
 

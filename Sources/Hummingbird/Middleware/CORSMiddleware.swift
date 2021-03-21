@@ -62,7 +62,7 @@ public struct HBCORSMiddleware: HBMiddleware {
     ) {
         self.allowOrigin = allowOrigin
         self.allowHeaders = allowHeaders.joined(separator: ", ")
-        self.allowMethods = allowMethods.map { $0.rawValue }.joined(separator: ", ")
+        self.allowMethods = allowMethods.map(\.rawValue).joined(separator: ", ")
         self.allowCredentials = allowCredentials
         self.exposedHeaders = exposedHeaders?.joined(separator: ", ")
         self.maxAge = maxAge.map { String(describing: $0.nanoseconds / 1_000_000_000) }

@@ -19,11 +19,11 @@ public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral {
     /// URL scheme
     public var scheme: Scheme? { return self._scheme.map { .init(rawValue: $0.string) } }
     /// URL host
-    public var host: String? { return self._host.map { $0.string }}
+    public var host: String? { return self._host.map(\.string) }
     /// URL port
     public var port: Int? { return self._port.map { Int($0.string) } ?? nil }
     /// URL path
-    public var path: String { return self._path.map { $0.string } ?? "/" }
+    public var path: String { return self._path.map(\.string) ?? "/" }
     /// URL query
     public var query: String? { return self._query.map { String($0.string) }}
     /// URL query parameter map
