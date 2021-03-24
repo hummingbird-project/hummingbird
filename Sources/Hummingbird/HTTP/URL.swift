@@ -12,6 +12,8 @@ public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral {
         public static var unix: Self { return .init(rawValue: "unix") }
         public static var http_unix: Self { return .init(rawValue: "http_unix") }
         public static var https_unix: Self { return .init(rawValue: "https_unix") }
+        public static var ws: Self { return .init(rawValue: "ws") }
+        public static var wss: Self { return .init(rawValue: "wss") }
     }
 
     public let string: String
