@@ -17,7 +17,7 @@
     <a title="HBMustacheTransformable Protocol Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> 0.3.0 Docs</a> (80% documented)</p>
+        <p><a href="../index.html"> 0.5.2 Docs</a> (91% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird-mustache"><img src="../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../search.json">
@@ -37,6 +37,26 @@
       <nav class="sidebar">
         <ul class="nav-groups">
           <li class="nav-group-name">
+            <a href="../Guides.html">Guides</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../lambdas.html">Lambdas</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../mustache-syntax.html">Mustache Syntax</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../pragmas.html">Pragmas</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../template-inheritance.html">Template Inheritance</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../transforms.html">Transforms</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
             <a href="../Classes.html">Classes</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
@@ -53,6 +73,14 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/HBMustacheTemplate/Error.html">– Error</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/HBMustacheContentTypes.html">HBMustacheContentTypes</a>
               </li>
             </ul>
           </li>
@@ -84,15 +112,6 @@
                 <a href="../Extensions.html#/s:s4Int8V">Int8</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Extensions.html#/s:s18ReversedCollectionV">ReversedCollection</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/Sequence.html">Sequence</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions.html#/s:Sh">Set</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Extensions.html#/s:SS">String</a>
               </li>
               <li class="nav-group-task">
@@ -122,7 +141,7 @@
             <a href="../Protocols.html">Protocols</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="../Protocols/HBMustacheSequence.html">HBMustacheSequence</a>
+                <a href="../Protocols/HBMustacheContentType.html">HBMustacheContentType</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/HBMustacheTransformable.html">HBMustacheTransformable</a>
@@ -156,19 +175,19 @@
 
                 </div>
               </div>
-            <p>Objects that can have a methods run on them. Mustache methods are specific to this implementation
+            <p>Objects that can have a transforms run on them. Mustache transforms are specific to this implementation
 of Mustache. They allow you to process objects before they are rendered.</p>
 
-<p>The syntax for applying methods is <code>{{method(variable)}}</code>. Methods can be applied to both
-variables and sections.</p>
+<p>The syntax for applying transforms is <code>{{transform(variable)}}</code>. Transforms can be applied to both
+variables, sections and inverted sections.</p>
 
 <p>A simple example would be ensuring a string is lowercase.</p>
 <pre class="highlight swift"><code><span class="p">{{</span><span class="nf">lowercased</span><span class="p">(</span><span class="n">myString</span><span class="p">)}}</span>
 </code></pre>
 
-<p>If applying a method to a sequence then the closing element of the sequence should not include the
-method name eg</p>
-<pre class="highlight swift"><code><span class="p">{{</span><span class="err">#</span><span class="nf">reversed</span><span class="p">(</span><span class="n">sequence</span><span class="p">)}}{{</span><span class="o">.</span><span class="p">}}{{\</span><span class="n">sequence</span><span class="p">}}</span>
+<p>If applying a transform to a sequence then the closing element of the sequence should include the
+transform name eg</p>
+<pre class="highlight swift"><code><span class="p">{{</span><span class="err">#</span><span class="nf">reversed</span><span class="p">(</span><span class="n">sequence</span><span class="p">)}}{{</span><span class="o">.</span><span class="p">}}{{\</span><span class="nf">reversed</span><span class="p">(</span><span class="n">sequence</span><span class="p">)}}</span>
 </code></pre>
 
           </section>
@@ -207,7 +226,7 @@ method name eg</p>
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-03-19)</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-03-25)</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>

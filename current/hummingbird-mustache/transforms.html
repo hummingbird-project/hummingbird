@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Structures  Reference</title>
+    <title>Transforms  Reference</title>
     <link rel="stylesheet" type="text/css" href="css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,8 +13,7 @@
     <script src="js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Section/Structures" class="dashAnchor"></a>
-    <a title="Structures  Reference"></a>
+    <a title="Transforms  Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="index.html"> 0.5.2 Docs</a> (91% documented)</p>
@@ -30,7 +29,7 @@
       <p id="breadcrumbs">
         <a href="index.html"> Reference</a>
         <img id="carat" src="img/carat.png" />
-        Structures  Reference
+        Transforms  Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -167,88 +166,100 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>Structures</h1>
-            <p>The following structures are available globally.</p>
+            
+            <h1 id='transforms' class='heading'>Transforms</h1>
 
-          </section>
-          <section class="section task-group-section">
-            <div class="task-group">
-              <ul>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:19HummingbirdMustache16HBMustacheLambdaV"></a>
-                    <a name="//apple_ref/swift/Struct/HBMustacheLambda" class="dashAnchor"></a>
-                    <a class="token" href="#/s:19HummingbirdMustache16HBMustacheLambdaV">HBMustacheLambda</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Lambda function. Can add this to object being rendered to filter contents of objects.</p>
-
-<p>See <a href="http://mustache.github.io/mustache.5.html">http://mustache.github.io/mustache.5.html</a> for more details on
-mustache lambdas. Lambdas work slightly differently in HummingbirdMustache though
-as they are passed a template representing the contained text and not the raw text
-e.g</p>
-<pre class="highlight swift"><code><span class="kd">struct</span> <span class="kt">Object</span> <span class="p">{</span>
-    <span class="k">let</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span>
-    <span class="k">let</span> <span class="nv">wrapped</span><span class="p">:</span> <span class="kt">HBMustacheLambda</span>
-<span class="p">}</span>
-<span class="k">let</span> <span class="nv">willy</span> <span class="o">=</span> <span class="kt">Object</span><span class="p">(</span><span class="nv">name</span><span class="p">:</span> <span class="s">"Willy"</span><span class="p">,</span> <span class="nv">wrapped</span><span class="p">:</span> <span class="o">.</span><span class="nf">init</span><span class="p">({</span> <span class="n">object</span><span class="p">,</span> <span class="n">template</span> <span class="k">in</span>
-    <span class="k">return</span> <span class="s">"&lt;b&gt;</span><span class="se">\(</span><span class="n">template</span><span class="o">.</span><span class="nf">render</span><span class="p">(</span><span class="n">object</span><span class="p">)</span><span class="se">)</span><span class="s">&lt;/b&gt;"</span>
-<span class="p">}))</span>
-<span class="k">let</span> <span class="nv">mustache</span> <span class="o">=</span> <span class="s">"{{#wrapped}}{{name}} is awesome.{{/wrapped}}"</span>
-<span class="k">let</span> <span class="nv">template</span> <span class="o">=</span> <span class="k">try</span> <span class="kt">HBMustacheTemplate</span><span class="p">(</span><span class="nv">string</span><span class="p">:</span> <span class="n">mustache</span><span class="p">)</span>
-<span class="k">let</span> <span class="nv">output</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="nf">render</span><span class="p">(</span><span class="n">willy</span><span class="p">)</span>
-<span class="nf">print</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="c1">// &lt;b&gt;Willy is awesome&lt;/b&gt;</span>
+<p>Transforms are specific to this implementation of Mustache. They are similar to Lambdas but instead of generating rendered text they allow you to transform an object into another. Transforms are formatted as a function call inside a tag eg</p>
+<pre class="highlight plaintext"><code>{{uppercase(string)}}
 </code></pre>
 
-                        <a href="Structs/HBMustacheLambda.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HBMustacheLambda</span></code></pre>
+<p>They can be applied to variable, section and inverted section tags. If you apply them to a section or inverted section tag the transform name should be included in the end section tag as well eg</p>
+<pre class="highlight plaintext"><code>{{#sorted(array)}}{{.}}{{/sorted(array)}}
+</code></pre>
 
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:19HummingbirdMustache8HBParserV"></a>
-                    <a name="//apple_ref/swift/Struct/HBParser" class="dashAnchor"></a>
-                    <a class="token" href="#/s:19HummingbirdMustache8HBParserV">HBParser</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Reader object for parsing String buffers</p>
+<p>The library comes with a series of transforms for the Swift standard objects.</p>
 
-                        <a href="Structs/HBParser.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HBParser</span></code></pre>
+<ul>
+<li>String/Substring
 
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-              </ul>
-            </div>
+<ul>
+<li>capitalized: Return string with first letter capitalized</li>
+<li>lowercase: Return lowercased version of string</li>
+<li>uppercase: Return uppercased version of string</li>
+<li>reversed: Reverse string</li>
+</ul></li>
+<li>Int/UInt/Int8/Int16&hellip;
+
+<ul>
+<li>equalzero: Returns if equal to zero</li>
+<li>plusone: Add one to integer</li>
+<li>minusone: Subtract one from integer</li>
+<li>odd: return if integer is odd</li>
+<li>even: return if integer is even</li>
+</ul></li>
+<li>Array
+
+<ul>
+<li>first: Return first element of array</li>
+<li>last: Return last element of array</li>
+<li>count: Return number of elements in array</li>
+<li>empty: Returns if array is empty</li>
+<li>reversed: Reverse array</li>
+<li>sorted: If the elements of the array are comparable sort them</li>
+</ul></li>
+<li>Dictionary
+
+<ul>
+<li>count: Return number of elements in dictionary</li>
+<li>empty: Returns if dictionary is empty</li>
+<li>enumerated: Return dictionary as array of key, value pairs</li>
+<li>sorted: If the keys are comparable return as array of key, value pairs sorted by key</li>
+</ul></li>
+</ul>
+
+<p>If a transform is applied to an object that doesn&rsquo;t recognise it then <code>nil</code> is returned.</p>
+<h2 id='sequence-context-transforms' class='heading'>Sequence context transforms</h2>
+
+<p>Sequence context transforms are transforms applied to the current position in the sequence. They are formatted as a function that takes no parameter eg</p>
+<pre class="highlight plaintext"><code>{{#array}}{{.}}{{^last()}}, {{/last()}}{{/array}}
+</code></pre>
+
+<p>This will render an array as a comma separated list. The inverted section of the <code>last()</code> transform ensures we don&rsquo;t add a comma after the last element.</p>
+
+<p>The following sequence context transforms are available</p>
+
+<ul>
+<li>first: Is this the first element of the sequence</li>
+<li>last: Is this the last element of the sequence</li>
+<li>index: Returns the index of the element within the sequence</li>
+<li>odd: Returns if the index of the element is odd</li>
+<li>even: Returns if the index of the element is even</li>
+</ul>
+<h2 id='custom-transforms' class='heading'>Custom transforms</h2>
+
+<p>You can add transforms to your own objects. Conform the object to <code><a href="Protocols/HBMustacheTransformable.html">HBMustacheTransformable</a></code> and provide an implementation of the function <code>transform</code>. eg </p>
+<pre class="highlight swift"><code><span class="kd">struct</span> <span class="kt">Object</span><span class="p">:</span> <span class="kt">HBMustacheTransformable</span> <span class="p">{</span>
+    <span class="k">let</span> <span class="nv">either</span><span class="p">:</span> <span class="kt">Bool</span>
+    <span class="k">let</span> <span class="nv">or</span><span class="p">:</span> <span class="kt">Bool</span>
+
+    <span class="kd">func</span> <span class="nf">transform</span><span class="p">(</span><span class="n">_</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Any</span><span class="p">?</span> <span class="p">{</span>
+        <span class="k">switch</span> <span class="n">name</span> <span class="p">{</span>
+        <span class="k">case</span> <span class="s">"eitherOr"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">either</span> <span class="o">||</span> <span class="n">or</span>
+        <span class="k">default</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="kc">nil</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>When we render an instance of this object with <code>either</code> or <code>or</code> set to true using the following template it will render &ldquo;Success&rdquo;.</p>
+<pre class="highlight plaintext"><code>{{#eitherOr(object)}}Success{{/eitherOr(object)}}
+</code></pre>
+
+<p>With this we have got around the fact it is not possible to do logical OR statements in Mustache.</p>
+
           </section>
         </section>
         <section id="footer">

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Structures  Reference</title>
+    <title>Mustache Syntax  Reference</title>
     <link rel="stylesheet" type="text/css" href="css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,8 +13,7 @@
     <script src="js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Section/Structures" class="dashAnchor"></a>
-    <a title="Structures  Reference"></a>
+    <a title="Mustache Syntax  Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="index.html"> 0.5.2 Docs</a> (91% documented)</p>
@@ -30,7 +29,7 @@
       <p id="breadcrumbs">
         <a href="index.html"> Reference</a>
         <img id="carat" src="img/carat.png" />
-        Structures  Reference
+        Mustache Syntax  Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -167,88 +166,44 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>Structures</h1>
-            <p>The following structures are available globally.</p>
+            
+            <h1 id='mustache-syntax' class='heading'>Mustache Syntax</h1>
 
-          </section>
-          <section class="section task-group-section">
-            <div class="task-group">
-              <ul>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:19HummingbirdMustache16HBMustacheLambdaV"></a>
-                    <a name="//apple_ref/swift/Struct/HBMustacheLambda" class="dashAnchor"></a>
-                    <a class="token" href="#/s:19HummingbirdMustache16HBMustacheLambdaV">HBMustacheLambda</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Lambda function. Can add this to object being rendered to filter contents of objects.</p>
+<p>Mustache is a &ldquo;logic-less&rdquo; templating engine. The core language has no flow control statements. Instead it has tags that can be replaced with a value, nothing or a series of values. Below we document all the standard tags</p>
+<h2 id='context' class='heading'>Context</h2>
 
-<p>See <a href="http://mustache.github.io/mustache.5.html">http://mustache.github.io/mustache.5.html</a> for more details on
-mustache lambdas. Lambdas work slightly differently in HummingbirdMustache though
-as they are passed a template representing the contained text and not the raw text
-e.g</p>
-<pre class="highlight swift"><code><span class="kd">struct</span> <span class="kt">Object</span> <span class="p">{</span>
+<p>Mustache renders a template with a context stack. A context is a list of key/value pairs. These can be represented by either a <code>Dictionary</code> or the reflection information from <code>Mirror</code>. For example the following two objects will render in the same way</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">object</span> <span class="o">=</span> <span class="p">[</span><span class="s">"name"</span><span class="p">:</span> <span class="s">"John Smith"</span><span class="p">,</span> <span class="s">"age"</span><span class="p">:</span> <span class="mi">68</span><span class="p">]</span>
+</code></pre>
+<pre class="highlight swift"><code><span class="kd">struct</span> <span class="kt">Person</span> <span class="p">{</span>
     <span class="k">let</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span>
-    <span class="k">let</span> <span class="nv">wrapped</span><span class="p">:</span> <span class="kt">HBMustacheLambda</span>
+    <span class="k">let</span> <span class="nv">age</span><span class="p">:</span> <span class="kt">Int</span>
 <span class="p">}</span>
-<span class="k">let</span> <span class="nv">willy</span> <span class="o">=</span> <span class="kt">Object</span><span class="p">(</span><span class="nv">name</span><span class="p">:</span> <span class="s">"Willy"</span><span class="p">,</span> <span class="nv">wrapped</span><span class="p">:</span> <span class="o">.</span><span class="nf">init</span><span class="p">({</span> <span class="n">object</span><span class="p">,</span> <span class="n">template</span> <span class="k">in</span>
-    <span class="k">return</span> <span class="s">"&lt;b&gt;</span><span class="se">\(</span><span class="n">template</span><span class="o">.</span><span class="nf">render</span><span class="p">(</span><span class="n">object</span><span class="p">)</span><span class="se">)</span><span class="s">&lt;/b&gt;"</span>
-<span class="p">}))</span>
-<span class="k">let</span> <span class="nv">mustache</span> <span class="o">=</span> <span class="s">"{{#wrapped}}{{name}} is awesome.{{/wrapped}}"</span>
-<span class="k">let</span> <span class="nv">template</span> <span class="o">=</span> <span class="k">try</span> <span class="kt">HBMustacheTemplate</span><span class="p">(</span><span class="nv">string</span><span class="p">:</span> <span class="n">mustache</span><span class="p">)</span>
-<span class="k">let</span> <span class="nv">output</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="nf">render</span><span class="p">(</span><span class="n">willy</span><span class="p">)</span>
-<span class="nf">print</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="c1">// &lt;b&gt;Willy is awesome&lt;/b&gt;</span>
+<span class="k">let</span> <span class="nv">object</span> <span class="o">=</span> <span class="kt">Person</span><span class="p">(</span><span class="nv">name</span><span class="p">:</span> <span class="s">"John Smith"</span><span class="p">,</span> <span class="nv">age</span><span class="p">:</span> <span class="mi">68</span><span class="p">)</span>
 </code></pre>
 
-                        <a href="Structs/HBMustacheLambda.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HBMustacheLambda</span></code></pre>
+<p>Initially the stack will consist of the root context object you want to render. When we enter a section tag we push the associated value onto the context stack and when we leave the section we pop that value back off the stack.</p>
+<h2 id='tags' class='heading'>Tags</h2>
 
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:19HummingbirdMustache8HBParserV"></a>
-                    <a name="//apple_ref/swift/Struct/HBParser" class="dashAnchor"></a>
-                    <a class="token" href="#/s:19HummingbirdMustache8HBParserV">HBParser</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Reader object for parsing String buffers</p>
+<p>All tags are surrounded by a double curly bracket <code>{{}}</code>. When a tag has a reference to a key, the key will be searched for from the context at the top of the context stack and the associated value will be output. If the key cannot be found then the next context down will be searched and so on until either a key is found or we have reached the bottom of the stack. If no key is found the output for that value is <code>nil</code>. </p>
 
-                        <a href="Structs/HBParser.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HBParser</span></code></pre>
+<p>A tag can be used to reference a child value from the associated value of a key by using dot notation in a similar manner to Swift. eg in <code>{{main.sub}}</code> the first context is searched for the  <code>main</code> key. If a value is found, that value is used as a context and the key <code>sub</code> is used to search within that context and so on. </p>
 
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-              </ul>
-            </div>
+<p>If you want to only search for values in the context at the top of the stack then prefix the variable name with a &ldquo;.&rdquo; eg <code>{{.key}}</code></p>
+<h2 id='tag-types' class='heading'>Tag types</h2>
+
+<ul>
+<li><code>{{key}}</code>: Render value associated with <code>key</code> as text. By default this is HTML escaped. A <code>nil</code> value is rendered as an empty string.</li>
+<li><code>{{{name}}}</code>: Acts the same as <code>{{name}}</code> except the resultant text is not HTML escaped. You can also use <code>{{&amp;name}}</code> to avoid HTML escaping.</li>
+<li><code>{{#section}}</code>: Section render blocks either render text once or multiple times depending on the value of the key in the current context. A section begins with <code>{{#section}}</code> and end with <code>{{/section}}</code>. If the key represents a <code>Bool</code> value it will only render if it is true. If the key represents an <code>Optional</code> it will only render if the object is non-nil. If the key represents an <code>Array</code> it will then render the internals of the section multiple times, once for each element of the <code>Array</code>. Otherwise it will render with the selected value pushed onto the top of the context stack.</li>
+<li><code>{{^section}}</code>: An inverted section does the opposite of a section. If the key represents a <code>Bool</code> value it will render if it is false. If the key represents an <code>Optional</code> it will render if it is <code>nil</code>. If the key represents a <code>Array</code> it will render if the <code>Array</code> is empty.</li>
+<li><code>{{! comment }}</code>: This is a comment tag and is ignored.</li>
+<li><code>{{&gt; partial}}</code>: A partial tag renders another mustache file, with the current context stack. In Hummingbird Mustache partial tags only work for templates that are a part of a library and the tag is the name of the referenced file without the &ldquo;.mustache&rdquo; extension.</li>
+<li><code>{{=&lt;% %&gt;=}}</code>: The set delimiter tag allows you to change from using the double curly brackets as tag delimiters. In the example the delimiters have been changed to <code>&lt;% %&gt;</code> but you can change them to whatever you like.</li>
+</ul>
+
+<p>You can find out more about the standard Mustache tags in the <a href="https://mustache.github.io/mustache.5.html">Mustache Manual</a>.</p>
+
           </section>
         </section>
         <section id="footer">
