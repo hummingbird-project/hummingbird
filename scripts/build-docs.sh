@@ -2,6 +2,7 @@
 
 set -eux
 
+PROJECT=${1:-}
 CWD=$(pwd)
 TEMP_DIR=$(mktemp -d)
 
@@ -16,6 +17,11 @@ build_docs() {
     shift 2
     MODULES=$*
 
+    if [[ -n "$PROJECT" ]]; then
+        if [[ "$DOCS_FOLDER" != "$PROJECT" ]]; then
+            return
+        fi
+    fi
     SOURCEKITTEN_FOLDER="$TEMP_DIR/sourcekitten/$DOCS_FOLDER"
 
     mkdir -p $SOURCEKITTEN_FOLDER
