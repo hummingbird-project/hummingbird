@@ -22,7 +22,7 @@ extension HBApplication {
         }
 
         /// Logger used by responder
-        public var logger: Logger? { return self.application.logger }
+        public var logger: Logger { return self.application.logger }
 
         /// Return EventLoopFuture that will be fulfilled with the HTTP response for the supplied HTTP request
         /// - Parameters:
@@ -47,12 +47,6 @@ extension HBApplication {
                     onComplete(.success(HBHTTPResponse(head: responseHead, body: response.body)))
 
                 case .failure(let error):
-                    if let error = error as? HBHTTPResponseError {
-                        // this is a processed error so don't log as Error
-                        request.logger.debug("Error: \(error)")
-                    } else {
-                        request.logger.error("\(error)")
-                    }
                     return onComplete(.failure(error))
                 }
             }
