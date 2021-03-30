@@ -8,22 +8,14 @@
     <script src="../js/jquery.min.js" defer></script>
     <script src="../js/jazzy.js" defer></script>
     
-    <script src="../js/lunr.min.js" defer></script>
-    <script src="../js/typeahead.jquery.js" defer></script>
-    <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a name="//apple_ref/swift/Protocol/HBHTTPResponder" class="dashAnchor"></a>
     <a title="HBHTTPResponder Protocol Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> 0.6.1 Docs</a> (83% documented)</p>
+        <p><a href="../index.html"> 0.7.0 Docs</a> (83% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird-core"><img src="../img/gh.png"/>View on GitHub</a></p>
-        <p class="header-right">
-          <form role="search" action="../search.json">
-            <input type="text" placeholder="Search documentation" data-typeahead>
-          </form>
-        </p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -124,7 +116,6 @@
             <h1>HBHTTPResponder</h1>
               <div class="declaration">
                 <div class="language">
-                  
                   <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">protocol</span> <span class="kt">HBHTTPResponder</span></code></pre>
 
                 </div>
@@ -168,7 +159,7 @@ have your response you need to call <code>onComplete</code>.</p>
                     <code>
                     <a name="/s:15HummingbirdCore15HBHTTPResponderP12handlerAdded7contexty3NIO21ChannelHandlerContextC_tF"></a>
                     <a name="//apple_ref/swift/Method/handlerAdded(context:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15HummingbirdCore15HBHTTPResponderP12handlerAdded7contexty3NIO21ChannelHandlerContextC_tF">handlerAdded(context:<wbr>)</a>
+                    <a class="token" href="#/s:15HummingbirdCore15HBHTTPResponderP12handlerAdded7contexty3NIO21ChannelHandlerContextC_tF">handlerAdded(context:)</a>
                     </code>
                       <span class="declaration-note">
                         Default implementation
@@ -202,7 +193,7 @@ have your response you need to call <code>onComplete</code>.</p>
                     <code>
                     <a name="/s:15HummingbirdCore15HBHTTPResponderP14handlerRemoved7contexty3NIO21ChannelHandlerContextC_tF"></a>
                     <a name="//apple_ref/swift/Method/handlerRemoved(context:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15HummingbirdCore15HBHTTPResponderP14handlerRemoved7contexty3NIO21ChannelHandlerContextC_tF">handlerRemoved(context:<wbr>)</a>
+                    <a class="token" href="#/s:15HummingbirdCore15HBHTTPResponderP14handlerRemoved7contexty3NIO21ChannelHandlerContextC_tF">handlerRemoved(context:)</a>
                     </code>
                       <span class="declaration-note">
                         Default implementation
@@ -236,7 +227,7 @@ have your response you need to call <code>onComplete</code>.</p>
                     <code>
                     <a name="/s:15HummingbirdCore15HBHTTPResponderP7respond2to7context10onCompleteyAA13HBHTTPRequestV_3NIO21ChannelHandlerContextCys6ResultOyAA14HBHTTPResponseVs5Error_pGctF"></a>
                     <a name="//apple_ref/swift/Method/respond(to:context:onComplete:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15HummingbirdCore15HBHTTPResponderP7respond2to7context10onCompleteyAA13HBHTTPRequestV_3NIO21ChannelHandlerContextCys6ResultOyAA14HBHTTPResponseVs5Error_pGctF">respond(to:<wbr>context:<wbr>onComplete:<wbr>)</a>
+                    <a class="token" href="#/s:15HummingbirdCore15HBHTTPResponderP7respond2to7context10onCompleteyAA13HBHTTPRequestV_3NIO21ChannelHandlerContextCys6ResultOyAA14HBHTTPResponseVs5Error_pGctF">respond(to:context:onComplete:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -293,9 +284,9 @@ calls <code>onComplete</code> otherwise the server will never receive a response
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15HummingbirdCore15HBHTTPResponderP6logger7Logging6LoggerVSgvp"></a>
+                    <a name="/s:15HummingbirdCore15HBHTTPResponderP6logger7Logging6LoggerVvp"></a>
                     <a name="//apple_ref/swift/Property/logger" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15HummingbirdCore15HBHTTPResponderP6logger7Logging6LoggerVSgvp">logger</a>
+                    <a class="token" href="#/s:15HummingbirdCore15HBHTTPResponderP6logger7Logging6LoggerVvp">logger</a>
                     </code>
                       <span class="declaration-note">
                         Default implementation
@@ -317,7 +308,7 @@ calls <code>onComplete</code> otherwise the server will never receive a response
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -329,8 +320,8 @@ calls <code>onComplete</code> otherwise the server will never receive a response
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-03-19)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-03-30)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>
