@@ -43,8 +43,10 @@ extension HBApplication {
             tcpNoDelay: Bool = false,
             enableHttpPipelining: Bool = true,
             threadPoolSize: Int = 2,
-            logLevel: Logger.Level = .info
+            logLevel: Logger.Level? = nil
         ) {
+            let env = HBEnvironment()
+
             self.address = address
             self.serverName = serverName
             self.maxUploadSize = maxUploadSize
@@ -55,7 +57,14 @@ extension HBApplication {
             self.enableHttpPipelining = enableHttpPipelining
 
             self.threadPoolSize = threadPoolSize
-            self.logLevel = logLevel
+
+            if let logLevel = logLevel {
+                self.logLevel = logLevel
+            } else if let logLevel = env.get("LOG_LEVEL") {
+                self.logLevel = Logger.Level(rawValue: logLevel) ?? .info
+            } else {
+                self.logLevel = .info
+            }
         }
 
         /// return HTTP server configuration

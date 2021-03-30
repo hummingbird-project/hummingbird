@@ -65,7 +65,7 @@ public final class HBApplication: HBExtensible {
         var logger = Logger(label: "HummingBird")
         logger.logLevel = configuration.logLevel
         self.logger = logger
-        
+
         // create eventLoopGroup
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {
