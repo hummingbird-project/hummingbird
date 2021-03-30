@@ -91,11 +91,14 @@ final class HBHTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler 
     }
 
     func getErrorResponse(context: ChannelHandlerContext, error: Error, version: HTTPVersion) -> HBHTTPResponse {
-        self.responder.logger?.error("\(error)")
         switch error {
         case let httpError as HBHTTPResponseError:
+            // this is a processed error so don't log as Error
+            self.responder.logger.debug("Error: \(error)")
             return httpError.response(version: version, allocator: context.channel.allocator)
         default:
+            // this error has not been recognised
+            self.responder.logger.warning("Error: \(error)")
             return HBHTTPResponse(
                 head: .init(version: version, status: .internalServerError),
                 body: .empty
@@ -125,7 +128,7 @@ final class HBHTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler 
             }
 
         default:
-            self.responder.logger?.debug("Unhandled event \(event as? ChannelEvent)")
+            self.responder.logger.debug("Unhandled event \(event as? ChannelEvent)")
             context.fireUserInboundEventTriggered(event)
         }
     }

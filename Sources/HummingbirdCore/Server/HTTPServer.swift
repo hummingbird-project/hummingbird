@@ -91,13 +91,13 @@ public class HBHTTPServer {
             bindFuture = bootstrap.bind(host: host, port: port)
                 .map { channel in
                     self.channel = channel
-                    responder.logger?.info("Server started and listening on \(host):\(port)")
+                    responder.logger.info("Server started and listening on \(host):\(port)")
                 }
         case .unixDomainSocket(let path):
             bindFuture = bootstrap.bind(unixDomainSocketPath: path)
                 .map { channel in
                     self.channel = channel
-                    responder.logger?.info("Server started and listening on socket path \(path)")
+                    responder.logger.info("Server started and listening on socket path \(path)")
                 }
         }
 

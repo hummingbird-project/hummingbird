@@ -46,11 +46,15 @@ public protocol HBHTTPResponder {
     func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void)
 
     /// Logger used by responder
-    var logger: Logger? { get }
+    var logger: Logger { get }
 }
 
 extension HBHTTPResponder {
     public func handlerAdded(context: ChannelHandlerContext) {}
     public func handlerRemoved(context: ChannelHandlerContext) {}
-    public var logger: Logger? { nil }
+    public var logger: Logger { HBNoLog.logger }
+}
+
+private enum HBNoLog {
+    static let logger = Logger(label: "no-log", factory: { _ in SwiftLogNoOpLogHandler() })
 }
