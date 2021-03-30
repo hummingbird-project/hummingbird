@@ -38,7 +38,7 @@ public final class HBApplication: HBExtensible {
     /// Application extensions
     public var extensions: HBExtensions<HBApplication>
     /// Logger
-    public var logger: Logger
+    public let logger: Logger
     /// Encoder used by router
     public var encoder: HBResponseEncoder
     /// decoder used by router
@@ -55,7 +55,6 @@ public final class HBApplication: HBExtensible {
         eventLoopGroupProvider: NIOEventLoopGroupProvider = .createNew
     ) {
         self.lifecycle = ServiceLifecycle()
-        self.logger = Logger(label: "HummingBird")
         self.middleware = HBMiddlewareGroup()
         self.router = TrieRouter()
         self.configuration = configuration
@@ -63,6 +62,10 @@ public final class HBApplication: HBExtensible {
         self.encoder = NullEncoder()
         self.decoder = NullDecoder()
 
+        var logger = Logger(label: "HummingBird")
+        logger.logLevel = configuration.logLevel
+        self.logger = logger
+        
         // create eventLoopGroup
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {

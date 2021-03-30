@@ -1,4 +1,5 @@
 import HummingbirdCore
+import Logging
 
 extension HBApplication {
     // MARK: Configuration
@@ -26,6 +27,8 @@ extension HBApplication {
 
         /// Number of threads to allocate in the application thread pool
         public let threadPoolSize: Int
+        /// logging level
+        public let logLevel: Logger.Level
 
         // MARK: Initialization
 
@@ -39,7 +42,8 @@ extension HBApplication {
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = false,
             enableHttpPipelining: Bool = true,
-            threadPoolSize: Int = 2
+            threadPoolSize: Int = 2,
+            logLevel: Logger.Level = .info
         ) {
             self.address = address
             self.serverName = serverName
@@ -51,6 +55,7 @@ extension HBApplication {
             self.enableHttpPipelining = enableHttpPipelining
 
             self.threadPoolSize = threadPoolSize
+            self.logLevel = logLevel
         }
 
         /// return HTTP server configuration
