@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Array Extension Reference</title>
+    <title>EventLoopGroup Extension Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset='utf-8'>
@@ -10,8 +10,8 @@
     
   </head>
   <body>
-    <a name="//apple_ref/swift/Extension/Array" class="dashAnchor"></a>
-    <a title="Array Extension Reference"></a>
+    <a name="//apple_ref/swift/Extension/EventLoopGroup" class="dashAnchor"></a>
+    <a title="EventLoopGroup Extension Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../index.html"> 0.8.0 Docs</a> (82% documented)</p>
@@ -22,7 +22,7 @@
       <p id="breadcrumbs">
         <a href="../index.html"> Reference</a>
         <img id="carat" src="../img/carat.png" />
-        Array Extension Reference
+        EventLoopGroup Extension Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -228,35 +228,24 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>Array</h1>
+            <h1>EventLoopGroup</h1>
               <div class="declaration">
                 <div class="language">
-                  <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Array</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span> <span class="k">where</span> <span class="kt">Element</span><span class="p">:</span> <span class="kt">Encodable</span></code></pre>
-<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Array</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseEncodable.html">HBResponseEncodable</a></span> <span class="k">where</span> <span class="kt">Element</span><span class="p">:</span> <span class="kt">Encodable</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">EventLoopGroup</span></code></pre>
 
                 </div>
               </div>
-            <p>Extend Array to conform to HBResponseGenerator</p>
-
+            
           </section>
           <section class="section task-group-section">
             <div class="task-group">
-              <div class="task-name-container">
-                <a name="/Available%20where%20%60Element%60:%20%60Encodable%60"></a>
-                <a name="//apple_ref/swift/Section/Available where `Element`: `Encodable`" class="dashAnchor"></a>
-                <div class="section-name-container">
-                  <a class="section-name-link" href="#/Available%20where%20%60Element%60:%20%60Encodable%60"></a>
-                  <h3 class="section-name"><p>Available where <code>Element</code>: <code>Encodable</code></p>
-</h3>
-                </div>
-              </div>
               <ul>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird19HBResponseGeneratorP8response4fromAA0B0CAA9HBRequestC_tKF"></a>
-                    <a name="//apple_ref/swift/Method/response(from:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird19HBResponseGeneratorP8response4fromAA0B0CAA9HBRequestC_tKF">response(from:)</a>
+                    <a name="/s:3NIO14EventLoopGroupP11HummingbirdE3mapySayAA0bC6FutureCyqd__GGqd__AA0bC0_pclF"></a>
+                    <a name="//apple_ref/swift/Method/map(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:3NIO14EventLoopGroupP11HummingbirdE3mapySayAA0bC6FutureCyqd__GGqd__AA0bC0_pclF">map(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -264,13 +253,41 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        
+                        <p>Run closure on every EventLoop in an EventLoopGroup and return results in an array of <code>EventLoopFuture</code>s.</p>
+
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">response</span><span class="p">(</span><span class="n">from</span> <span class="nv">request</span><span class="p">:</span> <span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/HBResponse.html">HBResponse</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">map</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">transform</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">EventLoop</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">]</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:3NIO14EventLoopGroupP11HummingbirdE7flatMapySayAA0bC6FutureCyqd__GGAhA0bC0_pclF"></a>
+                    <a name="//apple_ref/swift/Method/flatMap(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:3NIO14EventLoopGroupP11HummingbirdE7flatMapySayAA0bC6FutureCyqd__GGAhA0bC0_pclF">flatMap(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Run closure returning <code>EventLoopFuture</code> on every EventLoop in an EventLoopGroup and return results in an array of <code>EventLoopFuture</code>s.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">flatMap</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">transform</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">EventLoop</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">]</span></code></pre>
 
                         </div>
                       </div>

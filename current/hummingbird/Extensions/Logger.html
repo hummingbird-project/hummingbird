@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Array Extension Reference</title>
+    <title>Logger Extension Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset='utf-8'>
@@ -10,8 +10,8 @@
     
   </head>
   <body>
-    <a name="//apple_ref/swift/Extension/Array" class="dashAnchor"></a>
-    <a title="Array Extension Reference"></a>
+    <a name="//apple_ref/swift/Extension/Logger" class="dashAnchor"></a>
+    <a title="Logger Extension Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../index.html"> 0.8.0 Docs</a> (82% documented)</p>
@@ -22,7 +22,7 @@
       <p id="breadcrumbs">
         <a href="../index.html"> Reference</a>
         <img id="carat" src="../img/carat.png" />
-        Array Extension Reference
+        Logger Extension Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -228,35 +228,24 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>Array</h1>
+            <h1>Logger</h1>
               <div class="declaration">
                 <div class="language">
-                  <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Array</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span> <span class="k">where</span> <span class="kt">Element</span><span class="p">:</span> <span class="kt">Encodable</span></code></pre>
-<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Array</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseEncodable.html">HBResponseEncodable</a></span> <span class="k">where</span> <span class="kt">Element</span><span class="p">:</span> <span class="kt">Encodable</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Logger</span></code></pre>
 
                 </div>
               </div>
-            <p>Extend Array to conform to HBResponseGenerator</p>
-
+            
           </section>
           <section class="section task-group-section">
             <div class="task-group">
-              <div class="task-name-container">
-                <a name="/Available%20where%20%60Element%60:%20%60Encodable%60"></a>
-                <a name="//apple_ref/swift/Section/Available where `Element`: `Encodable`" class="dashAnchor"></a>
-                <div class="section-name-container">
-                  <a class="section-name-link" href="#/Available%20where%20%60Element%60:%20%60Encodable%60"></a>
-                  <h3 class="section-name"><p>Available where <code>Element</code>: <code>Encodable</code></p>
-</h3>
-                </div>
-              </div>
               <ul>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird19HBResponseGeneratorP8response4fromAA0B0CAA9HBRequestC_tKF"></a>
-                    <a name="//apple_ref/swift/Method/response(from:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird19HBResponseGeneratorP8response4fromAA0B0CAA9HBRequestC_tKF">response(from:)</a>
+                    <a name="/s:7Logging6LoggerV11HummingbirdE4with11metadataKey5valueACSS_AC13MetadataValueOtF"></a>
+                    <a name="//apple_ref/swift/Method/with(metadataKey:value:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging6LoggerV11HummingbirdE4with11metadataKey5valueACSS_AC13MetadataValueOtF">with(metadataKey:value:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -264,13 +253,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        
+                        <p>Undocumented</p>
+
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">response</span><span class="p">(</span><span class="n">from</span> <span class="nv">request</span><span class="p">:</span> <span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/HBResponse.html">HBResponse</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">with</span><span class="p">(</span><span class="nv">metadataKey</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">MetadataValue</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Logger</span></code></pre>
 
                         </div>
                       </div>
