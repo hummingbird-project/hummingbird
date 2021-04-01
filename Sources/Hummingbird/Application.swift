@@ -37,8 +37,8 @@ public final class HBApplication: HBExtensible {
     public var configuration: Configuration
     /// Application extensions
     public var extensions: HBExtensions<HBApplication>
-    /// Logger
-    public let logger: Logger
+    /// Logger. Required to be a var by hummingbird-lambda
+    public var logger: Logger
     /// Encoder used by router
     public var encoder: HBResponseEncoder
     /// decoder used by router
