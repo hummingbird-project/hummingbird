@@ -33,7 +33,7 @@ public final class HBRequest: HBExtensible {
 
     /// Parameters extracted during processing of request URI. These are available to you inside the route handler
     public var parameters: HBParameters {
-        get { self.extensions.get(\.parameters) }
+        get { self.extensions.getOrCreate(\.parameters, .init()) }
         set { self.extensions.set(\.parameters, value: newValue) }
     }
 
