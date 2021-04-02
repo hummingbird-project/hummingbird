@@ -35,7 +35,8 @@ public struct HBParameters {
     ///   - as: type we want returned
     public func require<T: LosslessStringConvertible>(_ s: String, as: T.Type) throws -> T {
         guard let param = self.parameters[s[...]],
-              let result = T(String(param)) else {
+              let result = T(String(param))
+        else {
             throw HBHTTPError(.badRequest)
         }
         return result

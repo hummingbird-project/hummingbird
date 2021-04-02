@@ -15,7 +15,7 @@ final class HandlerTests: XCTestCase {
         let app = HBApplication(testing: .embedded)
         app.decoder = JSONDecoder()
         app.router.post("/hello", use: DecodeTest.self)
-        
+
         app.XCTStart()
         defer { app.XCTStop() }
 
@@ -24,7 +24,7 @@ final class HandlerTests: XCTestCase {
             XCTAssertEqual(String(buffer: body), "Hello Adam")
         }
     }
-    
+
     func testDecodeFutureResponse() {
         struct DecodeTest: HBRequestDecodable {
             let name: String
@@ -35,7 +35,7 @@ final class HandlerTests: XCTestCase {
         let app = HBApplication(testing: .embedded)
         app.decoder = JSONDecoder()
         app.router.put("/hello", use: DecodeTest.self)
-        
+
         app.XCTStart()
         defer { app.XCTStop() }
 
@@ -44,7 +44,7 @@ final class HandlerTests: XCTestCase {
             XCTAssertEqual(String(buffer: body), "Hello Adam")
         }
     }
-    
+
     func testDecodeFail() {
         struct DecodeTest: HBRequestDecodable {
             let name: String
@@ -55,7 +55,7 @@ final class HandlerTests: XCTestCase {
         let app = HBApplication(testing: .embedded)
         app.decoder = JSONDecoder()
         app.router.get("/hello", use: DecodeTest.self)
-        
+
         app.XCTStart()
         defer { app.XCTStop() }
 
@@ -63,21 +63,22 @@ final class HandlerTests: XCTestCase {
             XCTAssertEqual(response.status, .badRequest)
         }
     }
-    
+
     func testEmptyRequest() {
         struct ParameterTest: HBRequestHandler {
             let parameter: Int
             init(from request: HBRequest) throws {
                 self.parameter = try request.parameters.require("test", as: Int.self)
             }
+
             func handle(request: HBRequest) -> String {
-                return "\(parameter)"
+                return "\(self.parameter)"
             }
         }
-        
+
         let app = HBApplication(testing: .embedded)
         app.router.put("/:test", use: ParameterTest.self)
-        
+
         app.XCTStart()
         defer { app.XCTStop() }
 
