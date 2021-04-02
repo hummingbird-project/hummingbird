@@ -1,13 +1,41 @@
-
-public protocol HBRequestHandler: Decodable {
+/// Object for handling requests.
+///
+/// Instead of passing a closure to the router you can provide an object it should try and
+/// create before handling the request
+public protocol HBRequestHandler {
     associatedtype Output
     init(from: HBRequest) throws
     func handle(request: HBRequest) throws -> Output
 }
 
-extension HBRequestHandler {
+/// `HBRequestHandler` which uses `Codable` to initialize it
+///
+/// An example
+/// ```
+/// struct CreateUser: HBRequestDecodable {
+///     let username: String
+///     let password: String
+///     func handle(request: HBRequest) -> EventLoopFuture<HTTPResponseStatus> {
+///         return addUserToDatabase(
+///             name: self.username,
+///             password: self.password
+///         ).map { _ in .ok }
+/// }
+/// application.router.put("user", use: CreateUser.self)
+///
+public protocol HBRequestDecodable: HBRequestHandler, Decodable {}
+
+extension HBRequestDecodable {
+    /// Create using `Codable` interfaces
+    /// - Parameter request: request
+    /// - Throws: HBHTTPError
     public init(from request: HBRequest) throws {
-        self = try request.application.decoder.decode(Self.self, from: request)
+        do {
+            self = try request.application.decoder.decode(Self.self, from: request)
+        } catch {
+            request.logger.debug("Decode Error: \(error)")
+            throw HBHTTPError(.badRequest)
+        }
     }
 }
 
@@ -19,14 +47,8 @@ extension HBRouterMethods {
         body: HBBodyCollation = .collate,
         use handlerType: Handler.Type
     ) -> Self where Handler.Output == Output {
-        return on(path, method: method, body: body) { request -> Output in
-            let handler: Handler
-            do {
-                handler = try Handler.init(from: request)
-            } catch {
-                request.logger.debug("Decode Error: \(error)")
-                throw HBHTTPError(.badRequest)
-            }
+        return self.on(path, method: method, body: body) { request -> Output in
+            let handler = try Handler(from: request)
             return try handler.handle(request: request)
         }
     }
@@ -39,15 +61,9 @@ extension HBRouterMethods {
         body: HBBodyCollation = .collate,
         use handlerType: Handler.Type
     ) -> Self where Handler.Output == EventLoopFuture<Output> {
-        return on(path, method: method, body: body) { request -> EventLoopFuture<Output> in
-            let handler: Handler
+        return self.on(path, method: method, body: body) { request -> EventLoopFuture<Output> in
             do {
-                handler = try Handler.init(from: request)
-            } catch {
-                request.logger.debug("Decode Error: \(error)")
-                return request.failure(.badRequest)
-            }
-            do {
+                let handler = try Handler(from: request)
                 return try handler.handle(request: request)
             } catch {
                 return request.failure(error)
@@ -61,7 +77,7 @@ extension HBRouterMethods {
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
     ) -> Self where Handler.Output == Output {
-        return on(path, method: .GET, body: body, use: handler)
+        return self.on(path, method: .GET, body: body, use: handler)
     }
 
     /// PUT path for closure returning type conforming to HBResponseGenerator
@@ -70,7 +86,7 @@ extension HBRouterMethods {
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
     ) -> Self where Handler.Output == Output {
-        return on(path, method: .PUT, body: body, use: handler)
+        return self.on(path, method: .PUT, body: body, use: handler)
     }
 
     /// POST path for closure returning type conforming to HBResponseGenerator
@@ -79,7 +95,7 @@ extension HBRouterMethods {
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
     ) -> Self where Handler.Output == Output {
-        return on(path, method: .POST, body: body, use: handler)
+        return self.on(path, method: .POST, body: body, use: handler)
     }
 
     /// HEAD path for closure returning type conforming to HBResponseGenerator
@@ -88,7 +104,7 @@ extension HBRouterMethods {
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
     ) -> Self where Handler.Output == Output {
-        return on(path, method: .HEAD, body: body, use: handler)
+        return self.on(path, method: .HEAD, body: body, use: handler)
     }
 
     /// DELETE path for closure returning type conforming to HBResponseGenerator
@@ -97,7 +113,7 @@ extension HBRouterMethods {
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
     ) -> Self where Handler.Output == Output {
-        return on(path, method: .DELETE, body: body, use: handler)
+        return self.on(path, method: .DELETE, body: body, use: handler)
     }
 
     /// PATCH path for closure returning type conforming to HBResponseGenerator
@@ -106,7 +122,7 @@ extension HBRouterMethods {
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
     ) -> Self where Handler.Output == Output {
-        return on(path, method: .PATCH, body: body, use: handler)
+        return self.on(path, method: .PATCH, body: body, use: handler)
     }
 
     /// GET path for closure returning type conforming to ResponseFutureEncodable
@@ -115,7 +131,7 @@ extension HBRouterMethods {
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
     ) -> Self where Handler.Output == EventLoopFuture<Output> {
-        return on(path, method: .GET, body: body, use: handler)
+        return self.on(path, method: .GET, body: body, use: handler)
     }
 
     /// PUT path for closure returning type conforming to ResponseFutureEncodable
@@ -124,7 +140,7 @@ extension HBRouterMethods {
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
     ) -> Self where Handler.Output == EventLoopFuture<Output> {
-        return on(path, method: .PUT, body: body, use: handler)
+        return self.on(path, method: .PUT, body: body, use: handler)
     }
 
     /// POST path for closure returning type conforming to ResponseFutureEncodable
@@ -133,7 +149,7 @@ extension HBRouterMethods {
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
     ) -> Self where Handler.Output == EventLoopFuture<Output> {
-        return on(path, method: .POST, body: body, use: handler)
+        return self.on(path, method: .POST, body: body, use: handler)
     }
 
     /// HEAD path for closure returning type conforming to ResponseFutureEncodable
@@ -142,7 +158,7 @@ extension HBRouterMethods {
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
     ) -> Self where Handler.Output == EventLoopFuture<Output> {
-        return on(path, method: .HEAD, body: body, use: handler)
+        return self.on(path, method: .HEAD, body: body, use: handler)
     }
 
     /// DELETE path for closure returning type conforming to ResponseFutureEncodable
@@ -151,7 +167,7 @@ extension HBRouterMethods {
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
     ) -> Self where Handler.Output == EventLoopFuture<Output> {
-        return on(path, method: .DELETE, body: body, use: handler)
+        return self.on(path, method: .DELETE, body: body, use: handler)
     }
 
     /// PATCH path for closure returning type conforming to ResponseFutureEncodable
@@ -160,5 +176,6 @@ extension HBRouterMethods {
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
     ) -> Self where Handler.Output == EventLoopFuture<Output> {
-        return on(path, method: .PATCH, body: body, use: handler)
-    }}
+        return self.on(path, method: .PATCH, body: body, use: handler)
+    }
+}

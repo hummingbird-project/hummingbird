@@ -22,7 +22,7 @@ public protocol HBRouterMethods {
         body: HBBodyCollation,
         use: @escaping (HBRequest) -> EventLoopFuture<Output>
     ) -> Self
-    
+
     /// add group
     func group(_ path: String) -> HBRouterGroup
 }
