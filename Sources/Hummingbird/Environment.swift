@@ -6,6 +6,9 @@ import Darwin.C
 
 /// Access environment variables
 public struct HBEnvironment: Decodable, ExpressibleByDictionaryLiteral {
+    // shared environment
+    public static let shared: HBEnvironment = .init()
+    
     /// initialize from environment variables
     public init() {
         self.values = Self.getEnvironment()
