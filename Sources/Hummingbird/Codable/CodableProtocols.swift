@@ -33,6 +33,6 @@ struct NullEncoder: HBResponseEncoder {
 /// Default decoder. there is no default decoder path so this generates an error
 struct NullDecoder: HBRequestDecoder {
     func decode<T: Decodable>(_ type: T.Type, from request: HBRequest) throws -> T {
-        preconditionFailure("Application.decoder has not been set")
+        preconditionFailure("HBApplication.decoder has not been set")
     }
 }

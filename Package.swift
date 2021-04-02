@@ -44,6 +44,7 @@ let package = Package(
         // test targets
         .testTarget(name: "HummingbirdTests", dependencies: [
             .byName(name: "Hummingbird"),
+            .byName(name: "HummingbirdFoundation"),
             .byName(name: "HummingbirdXCT"),
         ]),
         .testTarget(name: "HummingbirdFoundationTests", dependencies: [
