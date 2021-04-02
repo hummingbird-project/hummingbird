@@ -9,9 +9,12 @@ public struct HBCookies {
     /// Construct array of cookies from `HBRequest`
     /// - Parameter request: request to get cookies from
     init(from request: HBRequest) {
-        self.map = .init(request.headers["cookie"].compactMap {
-            guard let cookie = HBCookie(from: $0) else { return nil }
-            return (cookie.name, cookie)
+        self.map = .init(request.headers["cookie"].flatMap {
+            return $0.split(separator: ";")
+                .compactMap {
+                    guard let cookie = HBCookie(from: String($0.drop { $0.isWhitespace })) else { return nil }
+                    return (cookie.name, cookie)
+                }
         }) { first, _ in first }
     }
 
