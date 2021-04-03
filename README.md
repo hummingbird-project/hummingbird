@@ -21,7 +21,7 @@ The interface is fairly standard. Anyone who has had experience of Vapor, Expres
 ```swift
 import Hummingbird
 
-let app = Application(configuration: .init(address: .hostname("127.0.0.1", port: 8080)))
+let app = HBApplication(configuration: .init(address: .hostname("127.0.0.1", port: 8080)))
 app.router.get("hello") { request -> String in
     return "Hello"
 }
