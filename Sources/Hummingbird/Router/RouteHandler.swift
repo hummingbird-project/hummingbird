@@ -1,47 +1,37 @@
 /// Object for handling requests.
 ///
 /// Instead of passing a closure to the router you can provide an object it should try and
-/// create before handling the request
-public protocol HBRequestHandler {
+/// create before handling the request. This allows you to separate the extraction of data
+/// from the request and the processing of the request. For example
+/// ```
+/// struct UpdateReminder: HBRouteHandler {
+///     struct Request: Codable {
+///         let description: String
+///         let date: Date
+///     }
+///     let update: Request
+///     let id: String
+///
+///     init(from request: HBRequest) throws {
+///         self.update = try request.decode(as: Request.self)
+///         self.id = try request.parameters.require("id")
+///     }
+///     func handle(request: HBRequest) -> EventLoopFuture<HTTPResponseStatus> {
+///         let reminder = Reminder(id: id, update: update)
+///         return reminder.update(on: request.db)
+///             .map { _ in .ok }
+///     }
+/// }
+/// ```
+public protocol HBRouteHandler {
     associatedtype Output
     init(from: HBRequest) throws
     func handle(request: HBRequest) throws -> Output
 }
 
-/// `HBRequestHandler` which uses `Codable` to initialize it
-///
-/// An example
-/// ```
-/// struct CreateUser: HBRequestDecodable {
-///     let username: String
-///     let password: String
-///     func handle(request: HBRequest) -> EventLoopFuture<HTTPResponseStatus> {
-///         return addUserToDatabase(
-///             name: self.username,
-///             password: self.password
-///         ).map { _ in .ok }
-/// }
-/// application.router.put("user", use: CreateUser.self)
-///
-public protocol HBRequestDecodable: HBRequestHandler, Decodable {}
-
-extension HBRequestDecodable {
-    /// Create using `Codable` interfaces
-    /// - Parameter request: request
-    /// - Throws: HBHTTPError
-    public init(from request: HBRequest) throws {
-        do {
-            self = try request.application.decoder.decode(Self.self, from: request)
-        } catch {
-            request.logger.debug("Decode Error: \(error)")
-            throw HBHTTPError(.badRequest)
-        }
-    }
-}
-
 extension HBRouterMethods {
     /// Add path for `HBRouteHandler` that returns a value conforming to `HBResponseGenerator`
-    @discardableResult public func on<Handler: HBRequestHandler, Output: HBResponseGenerator>(
+    @discardableResult public func on<Handler: HBRouteHandler, Output: HBResponseGenerator>(
         _ path: String,
         method: HTTPMethod,
         body: HBBodyCollation = .collate,
@@ -55,7 +45,7 @@ extension HBRouterMethods {
 
     /// Add path for `HBRouteHandler` that returns an `EventLoopFuture` specialized with a type conforming
     /// to `HBResponseGenerator`
-    @discardableResult func on<Handler: HBRequestHandler, Output: HBResponseGenerator>(
+    @discardableResult func on<Handler: HBRouteHandler, Output: HBResponseGenerator>(
         _ path: String,
         method: HTTPMethod,
         body: HBBodyCollation = .collate,
@@ -72,7 +62,7 @@ extension HBRouterMethods {
     }
 
     /// GET path for closure returning type conforming to HBResponseGenerator
-    @discardableResult public func get<Handler: HBRequestHandler, Output: HBResponseGenerator>(
+    @discardableResult public func get<Handler: HBRouteHandler, Output: HBResponseGenerator>(
         _ path: String = "",
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
@@ -81,7 +71,7 @@ extension HBRouterMethods {
     }
 
     /// PUT path for closure returning type conforming to HBResponseGenerator
-    @discardableResult public func put<Handler: HBRequestHandler, Output: HBResponseGenerator>(
+    @discardableResult public func put<Handler: HBRouteHandler, Output: HBResponseGenerator>(
         _ path: String = "",
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
@@ -90,7 +80,7 @@ extension HBRouterMethods {
     }
 
     /// POST path for closure returning type conforming to HBResponseGenerator
-    @discardableResult public func post<Handler: HBRequestHandler, Output: HBResponseGenerator>(
+    @discardableResult public func post<Handler: HBRouteHandler, Output: HBResponseGenerator>(
         _ path: String = "",
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
@@ -99,7 +89,7 @@ extension HBRouterMethods {
     }
 
     /// HEAD path for closure returning type conforming to HBResponseGenerator
-    @discardableResult public func head<Handler: HBRequestHandler, Output: HBResponseGenerator>(
+    @discardableResult public func head<Handler: HBRouteHandler, Output: HBResponseGenerator>(
         _ path: String = "",
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
@@ -108,7 +98,7 @@ extension HBRouterMethods {
     }
 
     /// DELETE path for closure returning type conforming to HBResponseGenerator
-    @discardableResult public func delete<Handler: HBRequestHandler, Output: HBResponseGenerator>(
+    @discardableResult public func delete<Handler: HBRouteHandler, Output: HBResponseGenerator>(
         _ path: String = "",
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
@@ -117,7 +107,7 @@ extension HBRouterMethods {
     }
 
     /// PATCH path for closure returning type conforming to HBResponseGenerator
-    @discardableResult public func patch<Handler: HBRequestHandler, Output: HBResponseGenerator>(
+    @discardableResult public func patch<Handler: HBRouteHandler, Output: HBResponseGenerator>(
         _ path: String = "",
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
@@ -126,7 +116,7 @@ extension HBRouterMethods {
     }
 
     /// GET path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func get<Handler: HBRequestHandler, Output: HBResponseGenerator>(
+    @discardableResult public func get<Handler: HBRouteHandler, Output: HBResponseGenerator>(
         _ path: String = "",
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
@@ -135,7 +125,7 @@ extension HBRouterMethods {
     }
 
     /// PUT path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func put<Handler: HBRequestHandler, Output: HBResponseGenerator>(
+    @discardableResult public func put<Handler: HBRouteHandler, Output: HBResponseGenerator>(
         _ path: String = "",
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
@@ -144,7 +134,7 @@ extension HBRouterMethods {
     }
 
     /// POST path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func post<Handler: HBRequestHandler, Output: HBResponseGenerator>(
+    @discardableResult public func post<Handler: HBRouteHandler, Output: HBResponseGenerator>(
         _ path: String = "",
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
@@ -153,7 +143,7 @@ extension HBRouterMethods {
     }
 
     /// HEAD path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func head<Handler: HBRequestHandler, Output: HBResponseGenerator>(
+    @discardableResult public func head<Handler: HBRouteHandler, Output: HBResponseGenerator>(
         _ path: String = "",
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
@@ -162,7 +152,7 @@ extension HBRouterMethods {
     }
 
     /// DELETE path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func delete<Handler: HBRequestHandler, Output: HBResponseGenerator>(
+    @discardableResult public func delete<Handler: HBRouteHandler, Output: HBResponseGenerator>(
         _ path: String = "",
         body: HBBodyCollation = .collate,
         use handler: Handler.Type
@@ -171,7 +161,7 @@ extension HBRouterMethods {
     }
 
     /// PATCH path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func patch<Handler: HBRequestHandler, Output: HBResponseGenerator>(
+    @discardableResult public func patch<Handler: HBRouteHandler, Output: HBResponseGenerator>(
         _ path: String = "",
         body: HBBodyCollation = .collate,
         use handler: Handler.Type

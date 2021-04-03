@@ -65,7 +65,7 @@ final class HandlerTests: XCTestCase {
     }
 
     func testEmptyRequest() {
-        struct ParameterTest: HBRequestHandler {
+        struct ParameterTest: HBRouteHandler {
             let parameter: Int
             init(from request: HBRequest) throws {
                 self.parameter = try request.parameters.require("test", as: Int.self)

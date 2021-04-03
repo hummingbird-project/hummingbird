@@ -71,7 +71,12 @@ public final class HBRequest: HBExtensible {
     /// Decode request using decoder stored at `HBApplication.decoder`.
     /// - Parameter type: Type you want to decode to
     public func decode<Type: Decodable>(as type: Type.Type) throws -> Type {
-        return try self.application.decoder.decode(type, from: self)
+        do {
+            return try self.application.decoder.decode(type, from: self)
+        } catch {
+            logger.debug("Decode Error: \(error)")
+            throw HBHTTPError(.badRequest)
+        }
     }
 
     /// Return failed `EventLoopFuture`
