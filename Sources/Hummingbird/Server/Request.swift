@@ -74,7 +74,7 @@ public final class HBRequest: HBExtensible {
         do {
             return try self.application.decoder.decode(type, from: self)
         } catch {
-            logger.debug("Decode Error: \(error)")
+            self.logger.debug("Decode Error: \(error)")
             throw HBHTTPError(.badRequest)
         }
     }
