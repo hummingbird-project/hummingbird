@@ -23,4 +23,3 @@ extension HBRequestDecodable {
         self = try request.decode(as: Self.self)
     }
 }
-
