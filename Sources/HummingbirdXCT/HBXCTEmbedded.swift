@@ -13,9 +13,10 @@ struct HBXCTEmbedded: HBXCT {
     /// Start tests
     func start(application: HBApplication) {
         application.server.addChannelHandler(BreakupHTTPBodyChannelHandler())
+        let server = application.server as! HBHTTPServer
         XCTAssertNoThrow(
             try self.embeddedChannel.pipeline.addHandlers(
-                application.server.getChildHandlers(responder: HBApplication.HTTPResponder(application: application))
+                server.getChildHandlers(responder: HBApplication.HTTPResponder(application: application))
             ).wait()
         )
     }

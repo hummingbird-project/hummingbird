@@ -32,7 +32,7 @@ public final class HBApplication: HBExtensible {
     /// routes requests to requestResponders based on URI
     public var router: HBRouter
     /// http server
-    public var server: HBHTTPServer
+    public var server: HBServer
     /// Configuration
     public var configuration: Configuration
     /// Application extensions
@@ -45,14 +45,35 @@ public final class HBApplication: HBExtensible {
     public var decoder: HBRequestDecoder
 
     /// who provided the eventLoopGroup
-    let eventLoopGroupProvider: NIOEventLoopGroupProvider
+    let sharedEventLoopGroup: Bool
 
     // MARK: Initialization
 
     /// Initialize new Application
-    public init(
+    public convenience init(
         configuration: HBApplication.Configuration = HBApplication.Configuration(),
         eventLoopGroupProvider: NIOEventLoopGroupProvider = .createNew
+    ) {
+        let eventLoopGroup: EventLoopGroup
+        let sharedEventLoopGroup: Bool
+        // create eventLoopGroup
+        switch eventLoopGroupProvider {
+        case .createNew:
+            eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+            sharedEventLoopGroup = false
+        case .shared(let elg):
+            eventLoopGroup = elg
+            sharedEventLoopGroup = true
+        }
+        let server = HBHTTPServer(group: eventLoopGroup, configuration: configuration.httpServer)
+        self.init(configuration: configuration, eventLoopGroup: eventLoopGroup, sharedEventLoopGroup: sharedEventLoopGroup, server: server)
+    }
+
+    public init(
+        configuration: HBApplication.Configuration = HBApplication.Configuration(),
+        eventLoopGroup: EventLoopGroup,
+        sharedEventLoopGroup: Bool,
+        server: HBServer
     ) {
         self.lifecycle = ServiceLifecycle()
         self.middleware = HBMiddlewareGroup()
@@ -67,17 +88,13 @@ public final class HBApplication: HBExtensible {
         self.logger = logger
 
         // create eventLoopGroup
-        self.eventLoopGroupProvider = eventLoopGroupProvider
-        switch eventLoopGroupProvider {
-        case .createNew:
-            self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-        case .shared(let elg):
-            self.eventLoopGroup = elg
-        }
+        self.eventLoopGroup = eventLoopGroup
+        self.sharedEventLoopGroup = sharedEventLoopGroup
+
         self.threadPool = NIOThreadPool(numberOfThreads: configuration.threadPoolSize)
         self.threadPool.start()
 
-        self.server = HBHTTPServer(group: self.eventLoopGroup, configuration: self.configuration.httpServer)
+        self.server = server
 
         self.addEventLoopStorage()
 
@@ -133,7 +150,7 @@ public final class HBApplication: HBExtensible {
         HBDateCache.shutdownDateCaches(for: self.eventLoopGroup)
         try self.extensions.shutdown()
         try self.threadPool.syncShutdownGracefully()
-        if case .createNew = self.eventLoopGroupProvider {
+        if !sharedEventLoopGroup {
             try self.eventLoopGroup.syncShutdownGracefully()
         }
     }
