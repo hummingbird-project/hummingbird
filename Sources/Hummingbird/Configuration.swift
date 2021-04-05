@@ -68,7 +68,7 @@ extension HBApplication {
         }
 
         /// return HTTP server configuration
-        var httpServer: HBHTTPServer.Configuration {
+        var httpServer: HBHTTPServerConfiguration {
             return .init(
                 address: self.address,
                 serverName: self.serverName,
