@@ -42,7 +42,7 @@ extension HBApplication {
             self.responder.respond(to: request).whenComplete { result in
                 switch result {
                 case .success(let response):
-                    response.headers.add(name: "Date", value: HBDateCache.currentDate)
+                    response.headers.add(name: "Date", value: HBDateCache.getDateCache(on: context.eventLoop).currentDate)
                     let responseHead = HTTPResponseHead(version: request.version, status: response.status, headers: response.headers)
                     onComplete(.success(HBHTTPResponse(head: responseHead, body: response.body)))
 
