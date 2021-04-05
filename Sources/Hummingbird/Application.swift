@@ -32,7 +32,7 @@ public final class HBApplication: HBExtensible {
     /// routes requests to requestResponders based on URI
     public var router: HBRouter
     /// http server
-    public var server: HBServer
+    public var server: HBHTTPServer
     /// Configuration
     public var configuration: Configuration
     /// Application extensions
@@ -65,7 +65,7 @@ public final class HBApplication: HBExtensible {
             eventLoopGroup = elg
             sharedEventLoopGroup = true
         }
-        let server = HBHTTPServer(group: eventLoopGroup, configuration: configuration.httpServer)
+        let server = HBPosixHTTPServer(group: eventLoopGroup, configuration: configuration.httpServer)
         self.init(configuration: configuration, eventLoopGroup: eventLoopGroup, sharedEventLoopGroup: sharedEventLoopGroup, server: server)
     }
 
@@ -73,7 +73,7 @@ public final class HBApplication: HBExtensible {
         configuration: HBApplication.Configuration = HBApplication.Configuration(),
         eventLoopGroup: EventLoopGroup,
         sharedEventLoopGroup: Bool,
-        server: HBServer
+        server: HBHTTPServer
     ) {
         self.lifecycle = ServiceLifecycle()
         self.middleware = HBMiddlewareGroup()
