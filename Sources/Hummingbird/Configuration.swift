@@ -68,7 +68,7 @@ extension HBApplication {
         }
 
         /// return HTTP server configuration
-        var httpServer: HBHTTPServerConfiguration {
+        var posixHttpServer: HBPosixHTTPServer.Configuration {
             return .init(
                 address: self.address,
                 serverName: self.serverName,

@@ -49,7 +49,7 @@ public final class HBApplication: HBExtensible {
 
     // MARK: Initialization
 
-    /// Initialize new Application
+    /// Initialize new HBApplication with standard Posix HTTP server
     public convenience init(
         configuration: HBApplication.Configuration = HBApplication.Configuration(),
         eventLoopGroupProvider: NIOEventLoopGroupProvider = .createNew
@@ -65,7 +65,7 @@ public final class HBApplication: HBExtensible {
             eventLoopGroup = elg
             sharedEventLoopGroup = true
         }
-        let server = HBPosixHTTPServer(group: eventLoopGroup, configuration: configuration.httpServer)
+        let server = HBPosixHTTPServer(group: eventLoopGroup, configuration: configuration.posixHttpServer)
         self.init(configuration: configuration, eventLoopGroup: eventLoopGroup, sharedEventLoopGroup: sharedEventLoopGroup, server: server)
     }
 
