@@ -76,12 +76,19 @@ struct HBXCTEmbedded: HBXCT {
     let embeddedChannel: EmbeddedChannel
     let embeddedEventLoop: EmbeddedEventLoop
 
-    struct Server: HBHTTPServer {
-        var configuration: HBHTTPServerConfiguration
+    final class Server: HBHTTPServer {
+        var serverConfiguration: HBHTTPServerConfiguration
         var eventLoopGroup: EventLoopGroup
         var httpChannelInitializer: HBChannelInitializer
         var childChannelHandlers: [() -> RemovableChannelHandler]
 
+        init(group: EventLoopGroup, configuration: HBHTTPServerConfiguration) {
+            self.eventLoopGroup = group
+            self.serverConfiguration = configuration
+            self.childChannelHandlers = []
+            self.httpChannelInitializer = HTTP1ChannelInitializer()
+        }
+        
         func start(responder: HBHTTPResponder) -> EventLoopFuture<Void> {
             return eventLoopGroup.next().makeSucceededVoidFuture()
         }
