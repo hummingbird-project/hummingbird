@@ -147,7 +147,7 @@ public final class HBApplication: HBExtensible {
     public func shutdownApplication() throws {
         try self.extensions.shutdown()
         try self.threadPool.syncShutdownGracefully()
-        if !sharedEventLoopGroup {
+        if !self.sharedEventLoopGroup {
             try self.eventLoopGroup.syncShutdownGracefully()
         }
     }

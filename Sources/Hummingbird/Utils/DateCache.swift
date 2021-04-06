@@ -7,15 +7,14 @@ import NIO
 /// avoid threading issues it is assumed that `currentDate` will only every be accessed on the same
 /// EventLoop that the update is running.
 public class HBDateCache {
-
     /// Current formatted date
     public var currentDate: String
 
     /// return date cache for this thread. If one doesn't exist create one scheduled on EventLoop
     public static func getDateCache(on eventLoop: EventLoop) -> HBDateCache {
         guard let dateCache = thread.currentValue else {
-            thread.currentValue = .init(eventLoop: eventLoop)
-            return thread.currentValue!
+            self.thread.currentValue = .init(eventLoop: eventLoop)
+            return self.thread.currentValue!
         }
         return dateCache
     }
