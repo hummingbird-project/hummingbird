@@ -14,7 +14,6 @@ public class HBDateCache {
     /// return date cache for this thread. If one doesn't exist create one scheduled on EventLoop
     public static func getDateCache(on eventLoop: EventLoop) -> HBDateCache {
         guard let dateCache = thread.currentValue else {
-            print("Datecache")
             thread.currentValue = .init(eventLoop: eventLoop)
             return thread.currentValue!
         }
