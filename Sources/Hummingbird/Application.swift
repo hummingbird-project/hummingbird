@@ -65,7 +65,7 @@ public final class HBApplication: HBExtensible {
             eventLoopGroup = elg
             sharedEventLoopGroup = true
         }
-        let server = HBPosixHTTPServer(group: eventLoopGroup, configuration: configuration.posixHttpServer)
+        let server = HBSocketsHTTPServer(group: eventLoopGroup, configuration: configuration.socketsHttpServer)
         self.init(configuration: configuration, eventLoopGroup: eventLoopGroup, sharedEventLoopGroup: sharedEventLoopGroup, server: server)
     }
 
