@@ -75,32 +75,6 @@ struct HBXCTEmbedded: HBXCT {
 
     let embeddedChannel: EmbeddedChannel
     let embeddedEventLoop: EmbeddedEventLoop
-
-    final class Server: HBHTTPServer {
-        var serverConfiguration: HBHTTPServerConfiguration
-        var eventLoopGroup: EventLoopGroup
-        var httpChannelInitializer: HBChannelInitializer
-        var childChannelHandlers: [() -> RemovableChannelHandler]
-
-        init(group: EventLoopGroup, configuration: HBHTTPServerConfiguration) {
-            self.eventLoopGroup = group
-            self.serverConfiguration = configuration
-            self.childChannelHandlers = []
-            self.httpChannelInitializer = HTTP1ChannelInitializer()
-        }
-        
-        func start(responder: HBHTTPResponder) -> EventLoopFuture<Void> {
-            return eventLoopGroup.next().makeSucceededVoidFuture()
-        }
-        func stop() -> EventLoopFuture<Void> {
-            return eventLoopGroup.next().makeSucceededVoidFuture()
-        }
-        func wait() throws {}
-
-        func addTLSChannelHandler(_ handler: @autoclosure @escaping () -> RemovableChannelHandler) -> HBXCTEmbedded.Server {
-            preconditionFailure("HBXCTEmbedded server does not support TLS")
-        }
-    }
 }
 
 /// Embedded channels pass all the data down immediately. This is not a real world situation so this handler
