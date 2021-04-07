@@ -15,14 +15,6 @@ public class HBHTTPServer {
 
     var quiesce: ServerQuiescingHelper?
 
-    /// Position to place channel handler
-    public enum ChannelPosition {
-        /// before all the HTTP channel handlers. This is primarily used by TLS
-        case beforeHTTP
-        /// after the HTTP channel handlers
-        case afterHTTP
-    }
-
     /// HTTP server errors
     public enum Error: Swift.Error {
         /// waiting on the server while it is not running will throw this
