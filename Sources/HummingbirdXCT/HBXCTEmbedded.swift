@@ -15,7 +15,7 @@ struct HBXCTEmbedded: HBXCT {
         application.server.addChannelHandler(BreakupHTTPBodyChannelHandler())
         XCTAssertNoThrow(
             try self.embeddedChannel.pipeline.addHandlers(
-                application.server.getChildHandlers(responder: HBApplication.HTTPResponder(application: application))
+                application.server.getChildChannelHandlers(responder: HBApplication.HTTPResponder(application: application))
             ).wait()
         )
     }
