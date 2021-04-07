@@ -56,7 +56,7 @@ In the example above if I fail to access the parameter as an `Int` then I throw 
 
 ## Groups
 
-Route handlers can be grouped together in a `HBRouterGroup`.  These allow for you to prefix a series of routes with the same path and more importantly apply middleware to only those routes. The example below is a group that includes five handlers all prefixed with the path "/todos".
+Routes can be grouped together in a `HBRouterGroup`.  These allow for you to prefix a series of routes with the same path and more importantly apply middleware to only those routes. The example below is a group that includes five handlers all prefixed with the path "/todos".
 
 ```swift
 let app = HBApplication()
@@ -68,3 +68,36 @@ app.router.group("/todos")
     .delete(":id", deleteTodo)
 ```
 
+## Route handlers
+
+A route handler `HBRouteHandler` allows you to encapsulate all the components required for a route, and provide separation of the extraction of input parameters from the request and the processing of those parameters. An example could be structrured as follows
+
+```swift
+struct AddOrder: HBRouteHandler {
+    struct Input: Decodable {
+        let name: String
+        let amount: Double
+    }
+    struct Output: HBResponseEncodable {
+        let id: String
+    }
+    let input: Input
+    let user: User
+    
+    init(from request: HBRequest) throws {
+        self.input = try request.decode(as: Input.self)
+        self.user = try request.auth.require(User.self)
+    }
+    func handle(request: HBRequest) -> EventLoopFuture<Output> {
+        let order = Order(user: self.user.id, details: self.input)
+        return order.save(on: request.db)
+            .map { .init(id: order.id) }
+    }
+}
+```
+Here you can see the `AddOrder` route handler encapsulates everything you need to know about the add order route. The `Input` and `Output` structs are defined and any additional input parameters that need extracted from the `HBRequest`. The input parameters are extracted in the `init` and then the request is processed in the `handle` function. In this example we need to decode the `Input` from the `HBRequest` and using the authentication framework from `HummingbirdAuth` we get the authenticated user. 
+
+The following will add the handler to the application
+```swift
+application.router.put("order", use: AddOrder.self)
+```
