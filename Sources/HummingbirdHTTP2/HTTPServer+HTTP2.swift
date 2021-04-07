@@ -15,6 +15,6 @@ extension HBHTTPServer {
         let sslContext = try NIOSSLContext(configuration: tlsConfiguration)
 
         self.httpChannelInitializer = HTTP2UpgradeChannelInitializer()
-        return self.addChannelHandler(NIOSSLServerHandler(context: sslContext), position: .beforeHTTP)
+        return self.addTLSChannelHandler(NIOSSLServerHandler(context: sslContext))
     }
 }

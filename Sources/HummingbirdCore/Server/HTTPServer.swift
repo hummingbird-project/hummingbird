@@ -37,9 +37,19 @@ public class HBHTTPServer {
         self.eventLoopGroup = group
         self.configuration = configuration
         self.quiesce = nil
-        self._additionalChildHandlers = []
+        self.childChannelHandlers = .init()
         // defaults to HTTP1
         self.httpChannelInitializer = HTTP1ChannelInitializer()
+    }
+
+    /// Add TLS handler. Need to provide a closure so new instance of these handlers are
+    /// created for each child channel
+    /// - Parameters:
+    ///   - handler: autoclosure generating handler
+    ///   - position: position to place channel handler
+    @discardableResult public func addTLSChannelHandler(_ handler: @autoclosure @escaping () -> RemovableChannelHandler) -> Self {
+        self.tlsChannelHandler = handler
+        return self
     }
 
     /// Append to list of `ChannelHandler`s to be added to server child channels. Need to provide a closure so new instance of these handlers are
@@ -47,8 +57,8 @@ public class HBHTTPServer {
     /// - Parameters:
     ///   - handler: autoclosure generating handler
     ///   - position: position to place channel handler
-    @discardableResult public func addChannelHandler(_ handler: @autoclosure @escaping () -> RemovableChannelHandler, position: ChannelPosition = .afterHTTP) -> Self {
-        self._additionalChildHandlers.append((handler: handler, position: position))
+    @discardableResult public func addChannelHandler(_ handler: @autoclosure @escaping () -> RemovableChannelHandler) -> Self {
+        self.childChannelHandlers.addHandler(handler())
         return self
     }
 
@@ -57,12 +67,9 @@ public class HBHTTPServer {
     /// - Returns: EventLoopFuture that is fulfilled when server has started
     public func start(responder: HBHTTPResponder) -> EventLoopFuture<Void> {
         func childChannelInitializer(channel: Channel) -> EventLoopFuture<Void> {
-            return channel.pipeline.addHandlers(self.additionalChannelHandlers(at: .beforeHTTP)).flatMap {
-                let childHandlers = self.additionalChannelHandlers(at: .afterHTTP) + [
-                    HBHTTPEncodeHandler(configuration: self.configuration),
-                    HBHTTPDecodeHandler(configuration: self.configuration),
-                    HBHTTPServerHandler(responder: responder),
-                ]
+            let tlsChannelHandler = self.tlsChannelHandler?()
+            return channel.pipeline.addHandlers(tlsChannelHandler.map { [$0] } ?? []).flatMap {
+                let childHandlers = self.getChildChannelHandlers(responder: responder)
                 return self.httpChannelInitializer.initialize(channel: channel, childHandlers: childHandlers, configuration: self.configuration)
             }
         }
@@ -74,6 +81,7 @@ public class HBHTTPServer {
             // Specify backlog and enable SO_REUSEADDR for the server itself
             .serverChannelOption(ChannelOptions.backlog, value: numericCast(self.configuration.backlog))
             .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: self.configuration.reuseAddress ? 1 : 0)
+            .serverChannelOption(ChannelOptions.tcpOption(.tcp_nodelay), value: self.configuration.tcpNoDelay ? 1 : 0)
             .serverChannelInitializer { channel in
                 channel.pipeline.addHandler(quiesce.makeServerChannelHandler(channel: channel))
             }
@@ -81,7 +89,7 @@ public class HBHTTPServer {
             .childChannelInitializer(childChannelInitializer)
 
             .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: self.configuration.reuseAddress ? 1 : 0)
-            .childChannelOption(ChannelOptions.socketOption(.tcp_nodelay), value: self.configuration.tcpNoDelay ? 1 : 0)
+            .childChannelOption(ChannelOptions.tcpOption(.tcp_nodelay), value: self.configuration.tcpNoDelay ? 1 : 0)
             .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
             .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
 
@@ -131,19 +139,17 @@ public class HBHTTPServer {
 
     /// Return array of child handlers added after HTTP handlers. Used by HBApplication.xct
     /// - Parameter responder: final responder to user
-    public func getChildHandlers(responder: HBHTTPResponder) -> [RemovableChannelHandler] {
-        return self.additionalChannelHandlers(at: .afterHTTP) + [
+    public func getChildChannelHandlers(responder: HBHTTPResponder) -> [RemovableChannelHandler] {
+        return self.childChannelHandlers.getHandlers() + [
             HBHTTPEncodeHandler(configuration: self.configuration),
             HBHTTPDecodeHandler(configuration: self.configuration),
             HBHTTPServerHandler(responder: responder),
         ]
     }
 
-    func additionalChannelHandlers(at position: ChannelPosition) -> [RemovableChannelHandler] {
-        return self._additionalChildHandlers.compactMap { if $0.position == position { return $0.handler() }; return nil }
-    }
-
-    private var _additionalChildHandlers: [(handler: () -> RemovableChannelHandler, position: ChannelPosition)]
+    /// list of child channel handlers
+    private var childChannelHandlers: HBHTTPChannelHandlers
+    private var tlsChannelHandler: (() -> RemovableChannelHandler)?
 }
 
 extension HBHTTPServer {
@@ -182,7 +188,7 @@ extension HBHTTPServer {
             maxStreamingBufferSize: Int = 1 * 1024 * 1024,
             backlog: Int = 256,
             reuseAddress: Bool = true,
-            tcpNoDelay: Bool = false,
+            tcpNoDelay: Bool = true,
             withPipeliningAssistance: Bool = true
         ) {
             self.address = address

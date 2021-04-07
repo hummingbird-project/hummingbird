@@ -338,7 +338,7 @@ class HummingBirdCoreTests: XCTestCase {
         do {
             let channel = EmbeddedChannel()
             try channel.pipeline.addHandlers(
-                server.getChildHandlers(responder: HelloResponder())
+                server.getChildChannelHandlers(responder: HelloResponder())
             ).wait()
 
             // write request
