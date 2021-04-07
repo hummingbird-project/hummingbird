@@ -8,14 +8,22 @@
     <script src="../js/jquery.min.js" defer></script>
     <script src="../js/jazzy.js" defer></script>
     
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a name="//apple_ref/swift/Struct/HBParameters" class="dashAnchor"></a>
     <a title="HBParameters Structure Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> 0.8.0 Docs</a> (82% documented)</p>
+        <p><a href="../index.html"> 0.8.1 Docs</a> (82% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="../img/gh.png"/>View on GitHub</a></p>
+        <p class="header-right">
+          <form role="search" action="../search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -110,13 +118,7 @@
                 <a href="../Extensions/EventLoopFuture.html">EventLoopFuture</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Extensions/EventLoopGroup.html">EventLoopGroup</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Extensions/HTTPResponseStatus.html">HTTPResponseStatus</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/Logger.html">Logger</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/Optional.html">Optional</a>
@@ -145,6 +147,9 @@
                 <a href="../Protocols/HBMiddleware.html">HBMiddleware</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Protocols/HBRequestDecodable.html">HBRequestDecodable</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Protocols/HBRequestDecoder.html">HBRequestDecoder</a>
               </li>
               <li class="nav-group-task">
@@ -161,6 +166,9 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/HBRouter.html">HBRouter</a>
@@ -231,6 +239,7 @@
             <h1>HBParameters</h1>
               <div class="declaration">
                 <div class="language">
+                  
                   <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HBParameters</span></code></pre>
 
                 </div>
@@ -246,7 +255,7 @@
                     <code>
                     <a name="/s:11Hummingbird12HBParametersV3getySSSgSSF"></a>
                     <a name="//apple_ref/swift/Method/get(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird12HBParametersV3getySSSgSSF">get(_:)</a>
+                    <a class="token" href="#/s:11Hummingbird12HBParametersV3getySSSgSSF">get(_:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -292,7 +301,7 @@
                     <code>
                     <a name="/s:11Hummingbird12HBParametersV3get_2asxSgSS_xmts25LosslessStringConvertibleRzlF"></a>
                     <a name="//apple_ref/swift/Method/get(_:as:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird12HBParametersV3get_2asxSgSS_xmts25LosslessStringConvertibleRzlF">get(_:as:)</a>
+                    <a class="token" href="#/s:11Hummingbird12HBParametersV3get_2asxSgSS_xmts25LosslessStringConvertibleRzlF">get(_:<wbr>as:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -348,9 +357,113 @@
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/s:11Hummingbird12HBParametersV7requireyS2SKF"></a>
+                    <a name="//apple_ref/swift/Method/require(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird12HBParametersV7requireyS2SKF">require(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Return parameter with specified id</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">require</span><span class="p">(</span><span class="n">_</span> <span class="nv">s</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">String</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>s</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>parameter id</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird12HBParametersV7require_2asxSS_xmtKs25LosslessStringConvertibleRzlF"></a>
+                    <a name="//apple_ref/swift/Method/require(_:as:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird12HBParametersV7require_2asxSS_xmtKs25LosslessStringConvertibleRzlF">require(_:<wbr>as:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Return parameter with specified id as a certain type</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">require</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">s</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">as</span><span class="p">:</span> <span class="kt">T</span><span class="o">.</span><span class="k">Type</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">T</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">LosslessStringConvertible</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>s</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>parameter id</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>as</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>type we want returned</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/s:11Hummingbird12HBParametersVySSSgSScip"></a>
                     <a name="//apple_ref/swift/Method/subscript(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird12HBParametersVySSSgSScip">subscript(_:)</a>
+                    <a class="token" href="#/s:11Hummingbird12HBParametersVySSSgSScip">subscript(_:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -377,7 +490,7 @@
                     <code>
                     <a name="/s:11Hummingbird12HBParametersVySSSgSscip"></a>
                     <a name="//apple_ref/swift/Method/subscript(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird12HBParametersVySSSgSscip">subscript(_:)</a>
+                    <a class="token" href="#/s:11Hummingbird12HBParametersVySSSgSscip">subscript(_:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -426,59 +539,13 @@
                     </section>
                   </div>
                 </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:11Hummingbird12HBParametersV9fromQueryAcA8HBParserVSg_tcfc"></a>
-                    <a name="//apple_ref/swift/Method/init(fromQuery:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird12HBParametersV9fromQueryAcA8HBParserVSg_tcfc">init(fromQuery:)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Initialize parameters from parser struct</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="nf">init</span><span class="p">(</span><span class="n">fromQuery</span> <span class="nv">query</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBParser.html">HBParser</a></span><span class="p">?)</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>query</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>parser holding query strings</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </section>
-                  </div>
-                </li>
               </ul>
             </div>
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-03-30)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-04-07)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>

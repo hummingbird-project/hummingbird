@@ -8,14 +8,22 @@
     <script src="../js/jquery.min.js" defer></script>
     <script src="../js/jazzy.js" defer></script>
     
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a name="//apple_ref/swift/Class/HBRequest" class="dashAnchor"></a>
     <a title="HBRequest Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> 0.8.0 Docs</a> (82% documented)</p>
+        <p><a href="../index.html"> 0.8.1 Docs</a> (82% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="../img/gh.png"/>View on GitHub</a></p>
+        <p class="header-right">
+          <form role="search" action="../search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -110,13 +118,7 @@
                 <a href="../Extensions/EventLoopFuture.html">EventLoopFuture</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Extensions/EventLoopGroup.html">EventLoopGroup</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Extensions/HTTPResponseStatus.html">HTTPResponseStatus</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/Logger.html">Logger</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/Optional.html">Optional</a>
@@ -145,6 +147,9 @@
                 <a href="../Protocols/HBMiddleware.html">HBMiddleware</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Protocols/HBRequestDecodable.html">HBRequestDecodable</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Protocols/HBRequestDecoder.html">HBRequestDecoder</a>
               </li>
               <li class="nav-group-task">
@@ -161,6 +166,9 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/HBRouter.html">HBRouter</a>
@@ -231,6 +239,7 @@
             <h1>HBRequest</h1>
               <div class="declaration">
                 <div class="language">
+                  
                   <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">HBRequest</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/HBExtensible.html">HBExtensible</a></span></code></pre>
 
                 </div>
@@ -592,7 +601,7 @@
                     <code>
                     <a name="/s:11Hummingbird9HBRequestC4head4body11application9eventLoop9allocatorAC8NIOHTTP115HTTPRequestHeadV_0A4Core0B4BodyOAA13HBApplicationC3NIO05EventG0_pAQ19ByteBufferAllocatorVtcfc"></a>
                     <a name="//apple_ref/swift/Method/init(head:body:application:eventLoop:allocator:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird9HBRequestC4head4body11application9eventLoop9allocatorAC8NIOHTTP115HTTPRequestHeadV_0A4Core0B4BodyOAA13HBApplicationC3NIO05EventG0_pAQ19ByteBufferAllocatorVtcfc">init(head:body:application:eventLoop:allocator:)</a>
+                    <a class="token" href="#/s:11Hummingbird9HBRequestC4head4body11application9eventLoop9allocatorAC8NIOHTTP115HTTPRequestHeadV_0A4Core0B4BodyOAA13HBApplicationC3NIO05EventG0_pAQ19ByteBufferAllocatorVtcfc">init(head:<wbr>body:<wbr>application:<wbr>eventLoop:<wbr>allocator:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -705,7 +714,7 @@
                     <code>
                     <a name="/s:11Hummingbird9HBRequestC6decode2asxxm_tKSeRzlF"></a>
                     <a name="//apple_ref/swift/Method/decode(as:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird9HBRequestC6decode2asxxm_tKSeRzlF">decode(as:)</a>
+                    <a class="token" href="#/s:11Hummingbird9HBRequestC6decode2asxxm_tKSeRzlF">decode(as:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -751,7 +760,7 @@
                     <code>
                     <a name="/s:11Hummingbird9HBRequestC7failurey3NIO15EventLoopFutureCyxGs5Error_plF"></a>
                     <a name="//apple_ref/swift/Method/failure(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird9HBRequestC7failurey3NIO15EventLoopFutureCyxGs5Error_plF">failure(_:)</a>
+                    <a class="token" href="#/s:11Hummingbird9HBRequestC7failurey3NIO15EventLoopFutureCyxGs5Error_plF">failure(_:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -778,7 +787,7 @@
                     <code>
                     <a name="/s:11Hummingbird9HBRequestC7failurey3NIO15EventLoopFutureCyxG8NIOHTTP118HTTPResponseStatusOlF"></a>
                     <a name="//apple_ref/swift/Method/failure(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird9HBRequestC7failurey3NIO15EventLoopFutureCyxG8NIOHTTP118HTTPResponseStatusOlF">failure(_:)</a>
+                    <a class="token" href="#/s:11Hummingbird9HBRequestC7failurey3NIO15EventLoopFutureCyxG8NIOHTTP118HTTPResponseStatusOlF">failure(_:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -805,7 +814,7 @@
                     <code>
                     <a name="/s:11Hummingbird9HBRequestC7failure_7message3NIO15EventLoopFutureCyxG8NIOHTTP118HTTPResponseStatusO_SStlF"></a>
                     <a name="//apple_ref/swift/Method/failure(_:message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird9HBRequestC7failure_7message3NIO15EventLoopFutureCyxG8NIOHTTP118HTTPResponseStatusO_SStlF">failure(_:message:)</a>
+                    <a class="token" href="#/s:11Hummingbird9HBRequestC7failure_7message3NIO15EventLoopFutureCyxG8NIOHTTP118HTTPResponseStatusO_SStlF">failure(_:<wbr>message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -832,7 +841,7 @@
                     <code>
                     <a name="/s:11Hummingbird9HBRequestC7successy3NIO15EventLoopFutureCyxGxlF"></a>
                     <a name="//apple_ref/swift/Method/success(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird9HBRequestC7successy3NIO15EventLoopFutureCyxGxlF">success(_:)</a>
+                    <a class="token" href="#/s:11Hummingbird9HBRequestC7successy3NIO15EventLoopFutureCyxGxlF">success(_:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -975,7 +984,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Patches Response via <code><a href="../Classes/HBResponse.html#/s:11Hummingbird10HBResponseC5apply5patchACXDAA9HBRequestC13ResponsePatchCSg_tF">HBResponse.apply(patch:)</a></code></p>
+                        <p>Patches Response via <code>HBResponse.apply(patch:)</code></p>
 
 <p>Allow you to patch the response generated by your route handler via the <code><a href="../Classes/HBRequest.html">HBRequest</a></code> supplied. If your handler is only
 returning the payload you can edit the status and headers via <code>request.response</code> eg.</p>
@@ -1025,40 +1034,13 @@ returning the payload you can edit the status and headers via <code>request.resp
                     </section>
                   </div>
                 </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:11Hummingbird9HBRequestC16optionalResponseAC0D5PatchCSgvp"></a>
-                    <a name="//apple_ref/swift/Property/optionalResponse" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird9HBRequestC16optionalResponseAC0D5PatchCSgvp">optionalResponse</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>return <code><a href="../Classes/HBRequest/ResponsePatch.html">ResponsePatch</a></code> only if it exists. Used internally</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">optionalResponse</span><span class="p">:</span> <span class="kt"><a href="../Classes/HBRequest/ResponsePatch.html">ResponsePatch</a></span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
               </ul>
             </div>
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-03-30)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-04-07)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>

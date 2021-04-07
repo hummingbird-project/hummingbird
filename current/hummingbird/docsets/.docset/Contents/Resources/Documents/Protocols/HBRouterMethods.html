@@ -8,14 +8,22 @@
     <script src="../js/jquery.min.js" defer></script>
     <script src="../js/jazzy.js" defer></script>
     
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a name="//apple_ref/swift/Protocol/HBRouterMethods" class="dashAnchor"></a>
     <a title="HBRouterMethods Protocol Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> 0.8.0 Docs</a> (82% documented)</p>
+        <p><a href="../index.html"> 0.8.1 Docs</a> (82% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="../img/gh.png"/>View on GitHub</a></p>
+        <p class="header-right">
+          <form role="search" action="../search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -110,13 +118,7 @@
                 <a href="../Extensions/EventLoopFuture.html">EventLoopFuture</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Extensions/EventLoopGroup.html">EventLoopGroup</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Extensions/HTTPResponseStatus.html">HTTPResponseStatus</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/Logger.html">Logger</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/Optional.html">Optional</a>
@@ -145,6 +147,9 @@
                 <a href="../Protocols/HBMiddleware.html">HBMiddleware</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Protocols/HBRequestDecodable.html">HBRequestDecodable</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Protocols/HBRequestDecoder.html">HBRequestDecoder</a>
               </li>
               <li class="nav-group-task">
@@ -161,6 +166,9 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/HBRouter.html">HBRouter</a>
@@ -231,6 +239,7 @@
             <h1>HBRouterMethods</h1>
               <div class="declaration">
                 <div class="language">
+                  
                   <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">protocol</span> <span class="kt">HBRouterMethods</span></code></pre>
 
                 </div>
@@ -246,8 +255,11 @@
                     <code>
                     <a name="/s:11Hummingbird15HBRouterMethodsP2on_6method4body3usexSS_8NIOHTTP110HTTPMethodOAA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF"></a>
                     <a name="//apple_ref/swift/Method/on(_:method:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsP2on_6method4body3usexSS_8NIOHTTP110HTTPMethodOAA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">on(_:method:body:use:)</a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsP2on_6method4body3usexSS_8NIOHTTP110HTTPMethodOAA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">on(_:<wbr>method:<wbr>body:<wbr>use:<wbr>)</a>
                     </code>
+                      <span class="declaration-note">
+                        Default implementation
+                      </span>
                   </div>
                   <div class="height-container">
                     <div class="pointer-container"></div>
@@ -257,12 +269,22 @@
                         <p>Add path for closure returning type conforming to ResponseFutureEncodable</p>
 
                       </div>
+                      <h4>Default Implementation</h4>
+                      <div class="default_impl abstract">
+                        <p>Add path for <code>HBRouteHandler</code> that returns a value conforming to <code>HBResponseGenerator</code></p>
+
+                      </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
-<span class="kd">func</span> <span class="n">on</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">method</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span> <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span><span class="p">,</span> <span class="nv">use</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Output</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span></code></pre>
+<span class="kd">func</span> <span class="n">on</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">method</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
+    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span><span class="p">,</span>
+    <span class="nv">use</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
 
                         </div>
                       </div>
@@ -274,7 +296,7 @@
                     <code>
                     <a name="/s:11Hummingbird15HBRouterMethodsP2on_6method4body3usexSS_8NIOHTTP110HTTPMethodOAA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF"></a>
                     <a name="//apple_ref/swift/Method/on(_:method:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsP2on_6method4body3usexSS_8NIOHTTP110HTTPMethodOAA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">on(_:method:body:use:)</a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsP2on_6method4body3usexSS_8NIOHTTP110HTTPMethodOAA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">on(_:<wbr>method:<wbr>body:<wbr>use:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -290,7 +312,459 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
-<span class="kd">func</span> <span class="n">on</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">method</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span> <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span><span class="p">,</span> <span class="nv">use</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Output</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span></code></pre>
+<span class="kd">func</span> <span class="n">on</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">method</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
+    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span><span class="p">,</span>
+    <span class="nv">use</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird15HBRouterMethodsP5groupyAA0B5GroupVSSF"></a>
+                    <a name="//apple_ref/swift/Method/group(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsP5groupyAA0B5GroupVSSF">group(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>add group</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">group</span><span class="p">(</span><span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Structs/HBRouterGroup.html">HBRouterGroup</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE3get_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/get(_:body:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3get_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF">get(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>GET path for closure returning type conforming to HBResponseGenerator</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="k">get</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
+    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="n">_Output</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE3put_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/put(_:body:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3put_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF">put(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>PUT path for closure returning type conforming to HBResponseGenerator</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="n">put</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
+    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="n">_Output</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE4post_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/post(_:body:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4post_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF">post(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>POST path for closure returning type conforming to HBResponseGenerator</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="n">post</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
+    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="n">_Output</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE4head_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/head(_:body:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4head_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF">head(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>HEAD path for closure returning type conforming to HBResponseGenerator</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="n">head</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
+    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="n">_Output</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE6delete_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/delete(_:body:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE6delete_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF">delete(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>DELETE path for closure returning type conforming to HBResponseGenerator</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="n">delete</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
+    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="n">_Output</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE5patch_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/patch(_:body:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE5patch_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF">patch(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>PATCH path for closure returning type conforming to HBResponseGenerator</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="n">patch</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
+    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="n">_Output</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE3get_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/get(_:body:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3get_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF">get(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>GET path for closure returning type conforming to ResponseFutureEncodable</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="k">get</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
+    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="n">_Output</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE3put_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/put(_:body:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3put_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF">put(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>PUT path for closure returning type conforming to ResponseFutureEncodable</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="n">put</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
+    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="n">_Output</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE4post_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/post(_:body:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4post_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF">post(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>POST path for closure returning type conforming to ResponseFutureEncodable</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="n">post</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
+    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="n">_Output</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE4head_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/head(_:body:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4head_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF">head(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>HEAD path for closure returning type conforming to ResponseFutureEncodable</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="n">head</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
+    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="n">_Output</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE6delete_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/delete(_:body:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE6delete_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF">delete(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>DELETE path for closure returning type conforming to ResponseFutureEncodable</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="n">delete</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
+    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="n">_Output</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE5patch_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/patch(_:body:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE5patch_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF">patch(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>PATCH path for closure returning type conforming to ResponseFutureEncodable</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="n">patch</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
+    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="n">_Output</span><span class="o">&gt;</span></code></pre>
 
                         </div>
                       </div>
@@ -302,7 +776,7 @@
                     <code>
                     <a name="/s:11Hummingbird15HBRouterMethodsPAAE3get_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF"></a>
                     <a name="//apple_ref/swift/Method/get(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3get_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">get(_:body:use:)</a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3get_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">get(_:<wbr>body:<wbr>use:<wbr>)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -337,7 +811,7 @@
                     <code>
                     <a name="/s:11Hummingbird15HBRouterMethodsPAAE3put_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF"></a>
                     <a name="//apple_ref/swift/Method/put(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3put_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">put(_:body:use:)</a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3put_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">put(_:<wbr>body:<wbr>use:<wbr>)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -372,7 +846,7 @@
                     <code>
                     <a name="/s:11Hummingbird15HBRouterMethodsPAAE4post_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF"></a>
                     <a name="//apple_ref/swift/Method/post(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4post_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">post(_:body:use:)</a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4post_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">post(_:<wbr>body:<wbr>use:<wbr>)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -407,7 +881,7 @@
                     <code>
                     <a name="/s:11Hummingbird15HBRouterMethodsPAAE4head_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF"></a>
                     <a name="//apple_ref/swift/Method/head(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4head_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">head(_:body:use:)</a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4head_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">head(_:<wbr>body:<wbr>use:<wbr>)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -442,7 +916,7 @@
                     <code>
                     <a name="/s:11Hummingbird15HBRouterMethodsPAAE6delete_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF"></a>
                     <a name="//apple_ref/swift/Method/delete(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE6delete_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">delete(_:body:use:)</a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE6delete_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">delete(_:<wbr>body:<wbr>use:<wbr>)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -477,7 +951,7 @@
                     <code>
                     <a name="/s:11Hummingbird15HBRouterMethodsPAAE5patch_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF"></a>
                     <a name="//apple_ref/swift/Method/patch(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE5patch_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">patch(_:body:use:)</a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE5patch_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">patch(_:<wbr>body:<wbr>use:<wbr>)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -512,7 +986,7 @@
                     <code>
                     <a name="/s:11Hummingbird15HBRouterMethodsPAAE3get_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF"></a>
                     <a name="//apple_ref/swift/Method/get(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3get_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">get(_:body:use:)</a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3get_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">get(_:<wbr>body:<wbr>use:<wbr>)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -547,7 +1021,7 @@
                     <code>
                     <a name="/s:11Hummingbird15HBRouterMethodsPAAE3put_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF"></a>
                     <a name="//apple_ref/swift/Method/put(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3put_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">put(_:body:use:)</a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3put_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">put(_:<wbr>body:<wbr>use:<wbr>)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -582,7 +1056,7 @@
                     <code>
                     <a name="/s:11Hummingbird15HBRouterMethodsPAAE6delete_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF"></a>
                     <a name="//apple_ref/swift/Method/delete(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE6delete_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">delete(_:body:use:)</a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE6delete_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">delete(_:<wbr>body:<wbr>use:<wbr>)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -617,7 +1091,7 @@
                     <code>
                     <a name="/s:11Hummingbird15HBRouterMethodsPAAE4head_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF"></a>
                     <a name="//apple_ref/swift/Method/head(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4head_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">head(_:body:use:)</a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4head_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">head(_:<wbr>body:<wbr>use:<wbr>)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -652,7 +1126,7 @@
                     <code>
                     <a name="/s:11Hummingbird15HBRouterMethodsPAAE4post_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF"></a>
                     <a name="//apple_ref/swift/Method/post(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4post_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">post(_:body:use:)</a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4post_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">post(_:<wbr>body:<wbr>use:<wbr>)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -687,7 +1161,7 @@
                     <code>
                     <a name="/s:11Hummingbird15HBRouterMethodsPAAE5patch_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF"></a>
                     <a name="//apple_ref/swift/Method/patch(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE5patch_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">patch(_:body:use:)</a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE5patch_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">patch(_:<wbr>body:<wbr>use:<wbr>)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -717,79 +1191,13 @@
                     </section>
                   </div>
                 </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE18constructResponder4body3useAA11HBResponder_pAA15HBBodyCollationO_qd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF"></a>
-                    <a name="//apple_ref/swift/Method/constructResponder(body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE18constructResponder4body3useAA11HBResponder_pAA15HBBodyCollationO_qd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">constructResponder(body:use:)</a>
-                    </code>
-                      <span class="declaration-note">
-                        Extension method
-                      </span>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">constructResponder</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span><span class="p">,</span>
-    <span class="n">use</span> <span class="nv">closure</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Protocols/HBResponder.html">HBResponder</a></span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE18constructResponder4body3useAA11HBResponder_pAA15HBBodyCollationO_3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF"></a>
-                    <a name="//apple_ref/swift/Method/constructResponder(body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE18constructResponder4body3useAA11HBResponder_pAA15HBBodyCollationO_3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">constructResponder(body:use:)</a>
-                    </code>
-                      <span class="declaration-note">
-                        Extension method
-                      </span>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">constructResponder</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span><span class="p">,</span>
-    <span class="n">use</span> <span class="nv">closure</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Protocols/HBResponder.html">HBResponder</a></span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
               </ul>
             </div>
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-03-30)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-04-07)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>
