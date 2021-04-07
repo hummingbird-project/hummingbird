@@ -103,20 +103,20 @@ class HummingbirdFilesTests: XCTestCase {
         let date = Date()
         let text = "Test file contents"
         let data = Data(text.utf8)
-        let fileURL = URL(fileURLWithPath: "test.txt")
+        let fileURL = URL(fileURLWithPath: "testHead.txt")
         XCTAssertNoThrow(try data.write(to: fileURL))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
         app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
+        app.XCTExecute(uri: "/testHead.txt", method: .HEAD) { response in
             XCTAssertNil(response.body)
             XCTAssertEqual(response.headers["Content-Length"].first, text.utf8.count.description)
             XCTAssertEqual(response.headers["content-type"].first, "text/plain")
             let responseDateString = try XCTUnwrap(response.headers["modified-date"].first)
             let responseDate = try XCTUnwrap(self.rfc1123Formatter.date(from: responseDateString))
-            XCTAssert(date < responseDate + 1)
+            XCTAssert(date < responseDate + 2 && date > responseDate - 2)
         }
     }
 
