@@ -101,7 +101,7 @@ public struct HTTPHeadersPatch: ExpressibleByDictionaryLiteral {
     ///     names are strongly recommended.
     @inlinable
     public mutating func add<S: Sequence>(contentsOf other: S) where S.Element == (String, String) {
-        addHeaders.add(contentsOf: other)
+        self.addHeaders.add(contentsOf: other)
     }
 
     /// Add a header name/value pair to the block, replacing any previous values for the
