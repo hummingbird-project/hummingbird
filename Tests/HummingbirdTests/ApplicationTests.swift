@@ -280,6 +280,7 @@ final class ApplicationTests: XCTestCase {
         let app = HBApplication(testing: .embedded)
         app.router.delete("/hello") { request -> String in
             request.response.headers.add(name: "test", value: "value")
+            request.response.headers.replaceOrAdd(name: "content-type", value: "application/json")
             request.response.status = .imATeapot
             return "Hello"
         }
@@ -291,6 +292,8 @@ final class ApplicationTests: XCTestCase {
             let string = body.readString(length: body.readableBytes)
             XCTAssertEqual(response.status, .imATeapot)
             XCTAssertEqual(response.headers["test"].first, "value")
+            XCTAssertEqual(response.headers["content-type"].count, 1)
+            XCTAssertEqual(response.headers["content-type"].first, "application/json")
             XCTAssertEqual(string, "Hello")
         }
     }
