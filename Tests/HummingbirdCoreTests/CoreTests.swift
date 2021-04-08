@@ -48,6 +48,26 @@ class HummingBirdCoreTests: XCTestCase {
         XCTAssertNoThrow(try future.wait())
     }
 
+    func testError() {
+        struct ErrorResponder: HBHTTPResponder {
+            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
+                onComplete(.failure(HBHTTPError(.unauthorized)))
+            }
+        }
+        let server = HBHTTPServer(group: Self.eventLoopGroup, configuration: .init(address: .hostname(port: 8080)))
+        XCTAssertNoThrow(try server.start(responder: ErrorResponder()).wait())
+        defer { XCTAssertNoThrow(try server.stop().wait()) }
+
+        let request = try! HTTPClient.Request(
+            url: "http://localhost:\(server.configuration.address.port!)/"
+        )
+        let future = Self.httpClient.execute(request: request).flatMapThrowing { response in
+            XCTAssertEqual(response.status, .unauthorized)
+            XCTAssertEqual(response.headers["content-length"].first, "0")
+        }
+        XCTAssertNoThrow(try future.wait())
+    }
+
     func testConsumeBody() {
         struct Responder: HBHTTPResponder {
             func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {

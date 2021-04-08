@@ -27,6 +27,7 @@ extension HBHTTPResponseError {
             headers.replaceOrAdd(name: "content-length", value: String(describing: buffer.readableBytes))
         } else {
             body = .empty
+            headers.replaceOrAdd(name: "content-length", value: "0")
         }
         let responseHead = HTTPResponseHead(version: version, status: self.status, headers: headers)
         return .init(head: responseHead, body: body)
