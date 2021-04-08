@@ -1,10 +1,21 @@
-// Parser.swift
+//===----------------------------------------------------------------------===//
 //
+// This source file is part of the Hummingbird server framework project
+//
+// Copyright (c) 2021-2021 the Hummingbird authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE.txt for license information
+// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
+
 // Half inspired by Reader class from John Sundell's Ink project
 // https://github.com/JohnSundell/Ink/blob/master/Sources/Ink/Internal/Reader.swift
 // with optimisation working ie removing String and doing my own UTF8 processing inspired by Fabian Fett's work in
 // https://github.com/fabianfett/pure-swift-json/blob/master/Sources/PureSwiftJSONParsing/DocumentReader.swift
-//
 
 import Foundation
 
