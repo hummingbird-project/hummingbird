@@ -256,6 +256,26 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    func testELFOptional() {
+        let app = HBApplication(testing: .embedded)
+        app.router
+            .group("/echo-body")
+            .post { request -> EventLoopFuture<ByteBuffer?> in
+                return request.success(request.body.buffer)
+            }
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        let buffer = self.randomBuffer(size: 64)
+        app.XCTExecute(uri: "/echo-body", method: .POST, body: buffer) { response in
+            XCTAssertEqual(response.status, .ok)
+            XCTAssertEqual(response.body, buffer)
+        }
+        app.XCTExecute(uri: "/echo-body", method: .POST) { response in
+            XCTAssertEqual(response.status, .notFound)
+        }
+    }
+
     func testOptionalCodable() {
         struct Name: HBResponseCodable {
             let first: String
