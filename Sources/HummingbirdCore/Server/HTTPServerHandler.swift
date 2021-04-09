@@ -72,11 +72,11 @@ final class HBHTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler 
             if request.head.version.major == 1 {
                 response.head.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
             }
-            // if we are already running inside the context eventloop don't use `EventLoop.submit`
+            // if we are already running inside the context eventloop don't use `EventLoop.execute`
             if context.eventLoop.inEventLoop {
                 self.writeResponse(context: context, response: response, request: request, keepAlive: keepAlive)
             } else {
-                _ = context.eventLoop.submit {
+                context.eventLoop.execute {
                     self.writeResponse(context: context, response: response, request: request, keepAlive: keepAlive)
                 }
             }
