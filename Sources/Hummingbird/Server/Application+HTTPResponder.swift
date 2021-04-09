@@ -49,7 +49,8 @@ extension HBApplication {
                 body: request.body,
                 application: self.application,
                 eventLoop: context.eventLoop,
-                allocator: context.channel.allocator
+                allocator: context.channel.allocator,
+                remoteAddress: context.remoteAddress
             )
 
             // respond to request

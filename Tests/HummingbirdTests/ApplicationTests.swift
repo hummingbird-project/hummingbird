@@ -294,4 +294,21 @@ final class ApplicationTests: XCTestCase {
             XCTAssertEqual(string, "Hello")
         }
     }
+
+    func testRemoteAddress() throws {
+        let app = HBApplication(testing: .live)
+        app.router.get("/") { request -> String in
+            if case .v4(let address) = request.remoteAddress {
+                return String(describing: address.host)
+            }
+            throw HBHTTPError(.internalServerError)
+        }
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/", method: .GET) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "127.0.0.1")
+        }
+    }
 }

@@ -36,14 +36,16 @@ public final class HBRequest: HBExtensible {
     public var logger: Logger
     /// reference to application
     public var application: HBApplication
-    /// EventLoop request is running on
-    public var eventLoop: EventLoop
-    /// ByteBuffer allocator used by request
-    public var allocator: ByteBufferAllocator
     /// Request extensions
     public var extensions: HBExtensions<HBRequest>
     /// endpoint that services this request
     public var endpointPath: String?
+    /// EventLoop request is running on
+    public var eventLoop: EventLoop
+    /// ByteBuffer allocator used by request
+    public var allocator: ByteBufferAllocator
+    /// IP request came from
+    public var remoteAddress: SocketAddress?
 
     /// Parameters extracted during processing of request URI. These are available to you inside the route handler
     public var parameters: HBParameters {
@@ -65,7 +67,8 @@ public final class HBRequest: HBExtensible {
         body: HBRequestBody,
         application: HBApplication,
         eventLoop: EventLoop,
-        allocator: ByteBufferAllocator
+        allocator: ByteBufferAllocator,
+        remoteAddress: SocketAddress? = nil
     ) {
         self.uri = .init(head.uri)
         self.version = head.version
@@ -74,10 +77,11 @@ public final class HBRequest: HBExtensible {
         self.body = body
         self.logger = application.logger.with(metadataKey: "hb_id", value: .string(Self.globalRequestID.add(1).description))
         self.application = application
-        self.eventLoop = eventLoop
-        self.allocator = allocator
         self.extensions = HBExtensions()
         self.endpointPath = nil
+        self.eventLoop = eventLoop
+        self.allocator = allocator
+        self.remoteAddress = remoteAddress
     }
 
     // MARK: Methods
