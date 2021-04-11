@@ -66,7 +66,7 @@ class HBMemoryPersistDriver: HBPersistDriver {
             return $0
         }
     }
-    
+
     struct Item {
         /// value stored
         let value: Codable

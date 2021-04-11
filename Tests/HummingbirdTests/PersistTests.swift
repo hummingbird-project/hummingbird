@@ -77,7 +77,7 @@ final class PersistTests: XCTestCase {
             return .ok
         }
         app.router.get("/") { request in
-            return request.persist.get(key: "test", as: TestCodable.self).map { $0.map { $0.buffer} }
+            return request.persist.get(key: "test", as: TestCodable.self).map { $0.map(\.buffer) }
         }
         app.XCTStart()
         defer { app.XCTStop() }
