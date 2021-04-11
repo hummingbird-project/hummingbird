@@ -13,37 +13,63 @@
 //===----------------------------------------------------------------------===//
 
 extension HBApplication {
+    /// Framework for storing persistent key/value pairs between mulitple requests
     public struct Persist {
         let driver: HBPersistDriver
 
+        /// Initialise Persist struct
+        /// - Parameters
+        ///   - factory: Persist driver factory
+        ///   - application: reference to application that can be used during persist driver creation
         public init(_ factory: HBPersistDriverFactory, application: HBApplication) {
             self.driver = factory.create(application)
         }
 
-        public func set<Object: Codable>(key: String, value: Object) {
-            self.driver.set(key: key, value: value)
+        /// Set value for key
+        /// - Parameters:
+        ///   - key: key string
+        ///   - value: value
+        /// - Returns: EventLoopFuture for when value has been set
+        public func set<Object: Codable>(key: String, value: Object) -> EventLoopFuture<Void> {
+            return self.driver.set(key: key, value: value)
         }
 
-        public func set<Object: Codable>(key: String, value: Object, expires: TimeAmount) {
-            self.driver.set(key: key, value: value, expires: expires)
+        /// Set value for key that will expire after a certain time
+        /// - Parameters:
+        ///   - key: key string
+        ///   - value: value
+        /// - Returns: EventLoopFuture for when value has been set
+        public func set<Object: Codable>(key: String, value: Object, expires: TimeAmount) -> EventLoopFuture<Void> {
+            return self.driver.set(key: key, value: value, expires: expires)
         }
 
+        /// Get value for key
+        /// - Parameters:
+        ///   - key: key string
+        ///   - type: Type of value
+        /// - Returns: EventLoopFuture that will be filled with value
         public func get<Object: Codable>(key: String, as type: Object.Type) -> EventLoopFuture<Object?> {
             return self.driver.get(key: key, as: type)
         }
 
-        public func remove(key: String) {
-            self.driver.remove(key: key)
+        /// Remove value for key
+        /// - Parameter key: key string
+        public func remove(key: String) -> EventLoopFuture<Void> {
+            return self.driver.remove(key: key)
         }
     }
 
+    /// Accessor for persist framework
     public var persist: Persist { self.extensions.get(\.persist) }
 
+    /// Add persist framework to `HBApplication`.
+    /// - Parameter using: Factory struct that will create the persist driver when required
     public func addPersist(using: HBPersistDriverFactory) {
         self.extensions.set(\.persist, value: .init(using, application: self))
     }
 }
 
 extension HBRequest {
+    /// Accessor for persist framework
     public var persist: HBApplication.Persist { self.application.persist }
 }

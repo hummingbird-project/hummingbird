@@ -22,14 +22,14 @@ class HBMemoryPersistDriver: HBPersistDriver {
         }
     }
 
-    func set<Object: Codable>(key: String, value: Object) {
-        self.eventLoop.execute {
+    func set<Object: Codable>(key: String, value: Object) -> EventLoopFuture<Void> {
+        return self.eventLoop.submit {
             self.values[key] = .init(value: value)
         }
     }
 
-    func set<Object: Codable>(key: String, value: Object, expires: TimeAmount) {
-        self.eventLoop.execute {
+    func set<Object: Codable>(key: String, value: Object, expires: TimeAmount) -> EventLoopFuture<Void> {
+        return self.eventLoop.submit {
             self.values[key] = .init(value: value, expires: expires)
         }
     }
@@ -43,8 +43,8 @@ class HBMemoryPersistDriver: HBPersistDriver {
         }
     }
 
-    func remove(key: String) {
-        self.eventLoop.execute {
+    func remove(key: String) -> EventLoopFuture<Void> {
+        return self.eventLoop.submit {
             self.values[key] = nil
         }
     }

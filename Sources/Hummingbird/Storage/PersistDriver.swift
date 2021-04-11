@@ -17,13 +17,13 @@ import NIO
 /// Protocol for driver supporting persistent Key/Value pairs across requests
 public protocol HBPersistDriver {
     /// set value for key
-    func set<Object: Codable>(key: String, value: Object)
+    func set<Object: Codable>(key: String, value: Object) -> EventLoopFuture<Void>
     /// set value for key with how before the value expires
-    func set<Object: Codable>(key: String, value: Object, expires: TimeAmount)
+    func set<Object: Codable>(key: String, value: Object, expires: TimeAmount) -> EventLoopFuture<Void>
     /// get value for key
     func get<Object: Codable>(key: String, as: Object.Type) -> EventLoopFuture<Object?>
     /// remove value for key
-    func remove(key: String)
+    func remove(key: String) -> EventLoopFuture<Void>
 }
 
 /// Factory class for persist drivers

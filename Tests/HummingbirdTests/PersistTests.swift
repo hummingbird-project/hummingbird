@@ -19,10 +19,9 @@ final class PersistTests: XCTestCase {
     func testSetGet() {
         let app = HBApplication(testing: .live)
         app.addPersist(using: .memory)
-        app.router.put("/") { request -> HTTPResponseStatus in
-            guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
-            request.persist.set(key: "test", value: String(buffer: buffer))
-            return .ok
+        app.router.put("/") { request -> EventLoopFuture<HTTPResponseStatus> in
+            guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
+            return request.persist.set(key: "test", value: String(buffer: buffer)).map { _ in .ok }
         }
         app.router.get("/") { request in
             return request.persist.get(key: "test", as: String.self)
@@ -40,12 +39,12 @@ final class PersistTests: XCTestCase {
     func testExpires() {
         let app = HBApplication(testing: .live)
         app.addPersist(using: .memory)
-        app.router.put("/persist/:tag/:time") { request -> HTTPResponseStatus in
-            let time = try request.parameters.require("time", as: Int.self)
-            let tag = try request.parameters.require("tag")
-            guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
-            request.persist.set(key: tag, value: String(buffer: buffer), expires: .seconds(numericCast(time)))
-            return .ok
+        app.router.put("/persist/:tag/:time") { request -> EventLoopFuture<HTTPResponseStatus> in
+            guard let time = request.parameters.get("time", as: Int.self) else { return request.failure(.badRequest) }
+            guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
+            guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
+            return request.persist.set(key: tag, value: String(buffer: buffer), expires: .seconds(numericCast(time)))
+                .map { _ in .ok}
         }
         app.router.get("/persist/:tag") { request -> EventLoopFuture<String?> in
             guard let tag = request.parameters.get("tag", as: String.self) else { return request.failure(.badRequest) }
@@ -71,10 +70,10 @@ final class PersistTests: XCTestCase {
         }
         let app = HBApplication(testing: .live)
         app.addPersist(using: .memory)
-        app.router.put("/") { request -> HTTPResponseStatus in
-            guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
-            request.persist.set(key: "test", value: TestCodable(buffer: String(buffer: buffer)))
-            return .ok
+        app.router.put("/") { request -> EventLoopFuture<HTTPResponseStatus> in
+            guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
+            return request.persist.set(key: "test", value: TestCodable(buffer: String(buffer: buffer)))
+                .map { _ in .ok }
         }
         app.router.get("/") { request in
             return request.persist.get(key: "test", as: TestCodable.self).map { $0.map(\.buffer) }
@@ -92,20 +91,20 @@ final class PersistTests: XCTestCase {
     func testRemove() {
         let app = HBApplication(testing: .live)
         app.addPersist(using: .memory)
-        app.router.put("/persist/:tag") { request -> HTTPResponseStatus in
-            let tag = try request.parameters.require("tag")
-            guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
-            request.persist.set(key: tag, value: String(buffer: buffer))
-            return .ok
+        app.router.put("/persist/:tag") { request -> EventLoopFuture<HTTPResponseStatus> in
+            guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
+            guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
+            return request.persist.set(key: tag, value: String(buffer: buffer))
+                .map { _ in .ok }
         }
         app.router.get("/persist/:tag") { request -> EventLoopFuture<String?> in
             guard let tag = request.parameters.get("tag", as: String.self) else { return request.failure(.badRequest) }
             return request.persist.get(key: tag, as: String.self)
         }
-        app.router.delete("/persist/:tag") { request -> HTTPResponseStatus in
-            guard let tag = request.parameters.get("tag", as: String.self) else { throw HBHTTPError(.badRequest) }
-            request.persist.remove(key: tag)
-            return .noContent
+        app.router.delete("/persist/:tag") { request -> EventLoopFuture<HTTPResponseStatus> in
+            guard let tag = request.parameters.get("tag", as: String.self) else { return request.failure(.badRequest) }
+            return request.persist.remove(key: tag)
+                .map { _ in .noContent }
         }
         app.XCTStart()
         defer { app.XCTStop() }
