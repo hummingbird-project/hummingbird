@@ -22,24 +22,24 @@ class HBMemoryPersistDriver: HBPersistDriver {
         }
     }
 
-    func set(key: String, value: String) {
+    func set<Object: Codable>(key: String, value: Object) {
         self.eventLoop.execute {
             self.values[key] = .init(value: value)
         }
     }
 
-    func set(key: String, value: String, expires: TimeAmount) {
+    func set<Object: Codable>(key: String, value: Object, expires: TimeAmount) {
         self.eventLoop.execute {
             self.values[key] = .init(value: value, expires: expires)
         }
     }
 
-    func get(key: String) -> EventLoopFuture<String?> {
+    func get<Object: Codable>(key: String, as: Object.Type) -> EventLoopFuture<Object?> {
         return self.eventLoop.submit {
             guard let item = self.values[key] else { return nil }
-            guard let expires = item.epochExpires else { return item.value }
+            guard let expires = item.epochExpires else { return item.value as? Object }
             guard Item.getEpochTime() <= expires else { return nil }
-            return item.value
+            return item.value as? Object
         }
     }
 
@@ -69,16 +69,16 @@ class HBMemoryPersistDriver: HBPersistDriver {
     
     struct Item {
         /// value stored
-        let value: String
+        let value: Codable
         /// epoch time for when item expires
         let epochExpires: Int?
 
-        init(value: String, expires: TimeAmount) {
+        init(value: Codable, expires: TimeAmount) {
             self.value = value
             self.epochExpires = Self.getEpochTime() + Int(expires.nanoseconds / 1_000_000_000)
         }
 
-        init(value: String) {
+        init(value: Codable) {
             self.value = value
             self.epochExpires = nil
         }

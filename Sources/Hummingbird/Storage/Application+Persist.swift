@@ -20,16 +20,16 @@ extension HBApplication {
             self.driver = factory.create(application)
         }
 
-        public func set(key: String, value: String) {
+        public func set<Object: Codable>(key: String, value: Object) {
             self.driver.set(key: key, value: value)
         }
 
-        public func set(key: String, value: String, expires: TimeAmount) {
+        public func set<Object: Codable>(key: String, value: Object, expires: TimeAmount) {
             self.driver.set(key: key, value: value, expires: expires)
         }
 
-        public func get(key: String) -> EventLoopFuture<String?> {
-            return self.driver.get(key: key)
+        public func get<Object: Codable>(key: String, as type: Object.Type) -> EventLoopFuture<Object?> {
+            return self.driver.get(key: key, as: type)
         }
 
         public func remove(key: String) {
