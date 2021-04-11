@@ -30,6 +30,12 @@ public protocol HBPersistDriver {
 public struct HBPersistDriverFactory {
     public let create: (HBApplication) -> HBPersistDriver
 
+    /// Initialize HBPersistDriverFactory
+    /// - Parameter create: HBPersistDriver factory function
+    public init(create: @escaping (HBApplication) -> HBPersistDriver) {
+        self.create = create
+    }
+
     /// In memory driver for persist system
     public static var memory: HBPersistDriverFactory {
         .init(create: { app in HBMemoryPersistDriver(eventLoopGroup: app.eventLoopGroup) })
