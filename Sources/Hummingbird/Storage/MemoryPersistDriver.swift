@@ -16,26 +16,25 @@
 class HBMemoryPersistDriver: HBPersistDriver {
     init(eventLoopGroup: EventLoopGroup) {
         self.values = [:]
-        self.eventLoop = eventLoopGroup.next()
-        self.eventLoop.scheduleRepeatedTask(initialDelay: .hours(1), delay: .hours(1)) { _ in
+        eventLoopGroup.next().scheduleRepeatedTask(initialDelay: .hours(1), delay: .hours(1)) { _ in
             self._tidy()
         }
     }
 
-    func set<Object: Codable>(key: String, value: Object) -> EventLoopFuture<Void> {
-        return self.eventLoop.submit {
+    func set<Object: Codable>(key: String, value: Object, request: HBRequest) -> EventLoopFuture<Void> {
+        return request.eventLoop.submit {
             self.values[key] = .init(value: value)
         }
     }
 
-    func set<Object: Codable>(key: String, value: Object, expires: TimeAmount) -> EventLoopFuture<Void> {
-        return self.eventLoop.submit {
+    func set<Object: Codable>(key: String, value: Object, expires: TimeAmount, request: HBRequest) -> EventLoopFuture<Void> {
+        return request.eventLoop.submit {
             self.values[key] = .init(value: value, expires: expires)
         }
     }
 
-    func get<Object: Codable>(key: String, as: Object.Type) -> EventLoopFuture<Object?> {
-        return self.eventLoop.submit {
+    func get<Object: Codable>(key: String, as: Object.Type, request: HBRequest) -> EventLoopFuture<Object?> {
+        return request.eventLoop.submit {
             guard let item = self.values[key] else { return nil }
             guard let expires = item.epochExpires else { return item.value as? Object }
             guard Item.getEpochTime() <= expires else { return nil }
@@ -43,14 +42,14 @@ class HBMemoryPersistDriver: HBPersistDriver {
         }
     }
 
-    func remove(key: String) -> EventLoopFuture<Void> {
-        return self.eventLoop.submit {
+    func remove(key: String, request: HBRequest) -> EventLoopFuture<Void> {
+        return request.eventLoop.submit {
             self.values[key] = nil
         }
     }
 
-    func tidy() {
-        self.eventLoop.execute {
+    func tidy(on eventLoop: EventLoop) {
+        eventLoop.execute {
             self._tidy()
         }
     }
@@ -91,5 +90,4 @@ class HBMemoryPersistDriver: HBPersistDriver {
     }
 
     var values: [String: Item]
-    let eventLoop: EventLoop
 }

@@ -30,8 +30,8 @@ extension HBApplication {
         ///   - key: key string
         ///   - value: value
         /// - Returns: EventLoopFuture for when value has been set
-        public func set<Object: Codable>(key: String, value: Object) -> EventLoopFuture<Void> {
-            return self.driver.set(key: key, value: value)
+        public func set<Object: Codable>(key: String, value: Object, request: HBRequest) -> EventLoopFuture<Void> {
+            return self.driver.set(key: key, value: value, request: request)
         }
 
         /// Set value for key that will expire after a certain time
@@ -39,8 +39,8 @@ extension HBApplication {
         ///   - key: key string
         ///   - value: value
         /// - Returns: EventLoopFuture for when value has been set
-        public func set<Object: Codable>(key: String, value: Object, expires: TimeAmount) -> EventLoopFuture<Void> {
-            return self.driver.set(key: key, value: value, expires: expires)
+        public func set<Object: Codable>(key: String, value: Object, expires: TimeAmount, request: HBRequest) -> EventLoopFuture<Void> {
+            return self.driver.set(key: key, value: value, expires: expires, request: request)
         }
 
         /// Get value for key
@@ -48,14 +48,14 @@ extension HBApplication {
         ///   - key: key string
         ///   - type: Type of value
         /// - Returns: EventLoopFuture that will be filled with value
-        public func get<Object: Codable>(key: String, as type: Object.Type) -> EventLoopFuture<Object?> {
-            return self.driver.get(key: key, as: type)
+        public func get<Object: Codable>(key: String, as type: Object.Type, request: HBRequest) -> EventLoopFuture<Object?> {
+            return self.driver.get(key: key, as: type, request: request)
         }
 
         /// Remove value for key
         /// - Parameter key: key string
-        public func remove(key: String) -> EventLoopFuture<Void> {
-            return self.driver.remove(key: key)
+        public func remove(key: String, request: HBRequest) -> EventLoopFuture<Void> {
+            return self.driver.remove(key: key, request: request)
         }
     }
 
