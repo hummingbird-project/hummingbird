@@ -38,21 +38,13 @@ extension HBApplication {
 
 extension HBRequest {
     public struct Persist {
-        /// Set value for key
-        /// - Parameters:
-        ///   - key: key string
-        ///   - value: value
-        /// - Returns: EventLoopFuture for when value has been set
-        public func set<Object: Codable>(key: String, value: Object) -> EventLoopFuture<Void> {
-            return self.request.application.persist.driver.set(key: key, value: value, request: self.request)
-        }
-
         /// Set value for key that will expire after a certain time
         /// - Parameters:
         ///   - key: key string
         ///   - value: value
+        ///   - expires: time key/value pair will expire
         /// - Returns: EventLoopFuture for when value has been set
-        public func set<Object: Codable>(key: String, value: Object, expires: TimeAmount) -> EventLoopFuture<Void> {
+        public func set<Object: Codable>(key: String, value: Object, expires: TimeAmount? = nil) -> EventLoopFuture<Void> {
             return self.request.application.persist.driver.set(key: key, value: value, expires: expires, request: self.request)
         }
 
@@ -73,6 +65,7 @@ extension HBRequest {
 
         let request: HBRequest
     }
+
     /// Accessor for persist framework
     public var persist: HBRequest.Persist { .init(request: self) }
 }
