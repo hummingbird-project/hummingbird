@@ -15,8 +15,6 @@
 extension HBApplication {
     /// Framework for storing persistent key/value pairs between mulitple requests
     public struct Persist {
-        let driver: HBPersistDriver
-
         /// Initialise Persist struct
         /// - Parameters
         ///   - factory: Persist driver factory
@@ -25,38 +23,7 @@ extension HBApplication {
             self.driver = factory.create(application)
         }
 
-        /// Set value for key
-        /// - Parameters:
-        ///   - key: key string
-        ///   - value: value
-        /// - Returns: EventLoopFuture for when value has been set
-        public func set<Object: Codable>(key: String, value: Object, on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-            return self.driver.set(key: key, value: value, on: eventLoop)
-        }
-
-        /// Set value for key that will expire after a certain time
-        /// - Parameters:
-        ///   - key: key string
-        ///   - value: value
-        /// - Returns: EventLoopFuture for when value has been set
-        public func set<Object: Codable>(key: String, value: Object, expires: TimeAmount, on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-            return self.driver.set(key: key, value: value, expires: expires, on: eventLoop)
-        }
-
-        /// Get value for key
-        /// - Parameters:
-        ///   - key: key string
-        ///   - type: Type of value
-        /// - Returns: EventLoopFuture that will be filled with value
-        public func get<Object: Codable>(key: String, as type: Object.Type, on eventLoop: EventLoop) -> EventLoopFuture<Object?> {
-            return self.driver.get(key: key, as: type, on: eventLoop)
-        }
-
-        /// Remove value for key
-        /// - Parameter key: key string
-        public func remove(key: String, on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-            return self.driver.remove(key: key, on: eventLoop)
-        }
+        let driver: HBPersistDriver
     }
 
     /// Accessor for persist framework
@@ -70,6 +37,42 @@ extension HBApplication {
 }
 
 extension HBRequest {
+    public struct Persist {
+        /// Set value for key
+        /// - Parameters:
+        ///   - key: key string
+        ///   - value: value
+        /// - Returns: EventLoopFuture for when value has been set
+        public func set<Object: Codable>(key: String, value: Object) -> EventLoopFuture<Void> {
+            return self.request.application.persist.driver.set(key: key, value: value, request: self.request)
+        }
+
+        /// Set value for key that will expire after a certain time
+        /// - Parameters:
+        ///   - key: key string
+        ///   - value: value
+        /// - Returns: EventLoopFuture for when value has been set
+        public func set<Object: Codable>(key: String, value: Object, expires: TimeAmount) -> EventLoopFuture<Void> {
+            return self.request.application.persist.driver.set(key: key, value: value, expires: expires, request: self.request)
+        }
+
+        /// Get value for key
+        /// - Parameters:
+        ///   - key: key string
+        ///   - type: Type of value
+        /// - Returns: EventLoopFuture that will be filled with value
+        public func get<Object: Codable>(key: String, as type: Object.Type) -> EventLoopFuture<Object?> {
+            return self.request.application.persist.driver.get(key: key, as: type, request: self.request)
+        }
+
+        /// Remove value for key
+        /// - Parameter key: key string
+        public func remove(key: String) -> EventLoopFuture<Void> {
+            return self.request.application.persist.driver.remove(key: key, request: self.request)
+        }
+
+        let request: HBRequest
+    }
     /// Accessor for persist framework
-    public var persist: HBApplication.Persist { self.application.persist }
+    public var persist: HBRequest.Persist { .init(request: self) }
 }

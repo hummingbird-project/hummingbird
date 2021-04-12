@@ -21,20 +21,20 @@ class HBMemoryPersistDriver: HBPersistDriver {
         }
     }
 
-    func set<Object: Codable>(key: String, value: Object, on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-        return eventLoop.submit {
+    func set<Object: Codable>(key: String, value: Object, request: HBRequest) -> EventLoopFuture<Void> {
+        return request.eventLoop.submit {
             self.values[key] = .init(value: value)
         }
     }
 
-    func set<Object: Codable>(key: String, value: Object, expires: TimeAmount, on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-        return eventLoop.submit {
+    func set<Object: Codable>(key: String, value: Object, expires: TimeAmount, request: HBRequest) -> EventLoopFuture<Void> {
+        return request.eventLoop.submit {
             self.values[key] = .init(value: value, expires: expires)
         }
     }
 
-    func get<Object: Codable>(key: String, as: Object.Type, on eventLoop: EventLoop) -> EventLoopFuture<Object?> {
-        return eventLoop.submit {
+    func get<Object: Codable>(key: String, as: Object.Type, request: HBRequest) -> EventLoopFuture<Object?> {
+        return request.eventLoop.submit {
             guard let item = self.values[key] else { return nil }
             guard let expires = item.epochExpires else { return item.value as? Object }
             guard Item.getEpochTime() <= expires else { return nil }
@@ -42,8 +42,8 @@ class HBMemoryPersistDriver: HBPersistDriver {
         }
     }
 
-    func remove(key: String, on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-        return eventLoop.submit {
+    func remove(key: String, request: HBRequest) -> EventLoopFuture<Void> {
+        return request.eventLoop.submit {
             self.values[key] = nil
         }
     }

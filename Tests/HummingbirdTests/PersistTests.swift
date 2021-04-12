@@ -21,10 +21,10 @@ final class PersistTests: XCTestCase {
         app.addPersist(using: .memory)
         app.router.put("/") { request -> EventLoopFuture<HTTPResponseStatus> in
             guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
-            return request.persist.set(key: "test", value: String(buffer: buffer), on: request.eventLoop).map { _ in .ok }
+            return request.persist.set(key: "test", value: String(buffer: buffer)).map { _ in .ok }
         }
         app.router.get("/") { request in
-            return request.persist.get(key: "test", as: String.self, on: request.eventLoop)
+            return request.persist.get(key: "test", as: String.self)
         }
         app.XCTStart()
         defer { app.XCTStop() }
@@ -43,12 +43,12 @@ final class PersistTests: XCTestCase {
             guard let time = request.parameters.get("time", as: Int.self) else { return request.failure(.badRequest) }
             guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
             guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
-            return request.persist.set(key: tag, value: String(buffer: buffer), expires: .seconds(numericCast(time)), on: request.eventLoop)
+            return request.persist.set(key: tag, value: String(buffer: buffer), expires: .seconds(numericCast(time)))
                 .map { _ in .ok }
         }
         app.router.get("/persist/:tag") { request -> EventLoopFuture<String?> in
             guard let tag = request.parameters.get("tag", as: String.self) else { return request.failure(.badRequest) }
-            return request.persist.get(key: tag, as: String.self, on: request.eventLoop)
+            return request.persist.get(key: tag, as: String.self)
         }
         app.XCTStart()
         defer { app.XCTStop() }
@@ -72,11 +72,11 @@ final class PersistTests: XCTestCase {
         app.addPersist(using: .memory)
         app.router.put("/") { request -> EventLoopFuture<HTTPResponseStatus> in
             guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
-            return request.persist.set(key: "test", value: TestCodable(buffer: String(buffer: buffer)), on: request.eventLoop)
+            return request.persist.set(key: "test", value: TestCodable(buffer: String(buffer: buffer)))
                 .map { _ in .ok }
         }
         app.router.get("/") { request in
-            return request.persist.get(key: "test", as: TestCodable.self, on: request.eventLoop).map { $0.map(\.buffer) }
+            return request.persist.get(key: "test", as: TestCodable.self).map { $0.map(\.buffer) }
         }
         app.XCTStart()
         defer { app.XCTStop() }
@@ -94,16 +94,16 @@ final class PersistTests: XCTestCase {
         app.router.put("/persist/:tag") { request -> EventLoopFuture<HTTPResponseStatus> in
             guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
             guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
-            return request.persist.set(key: tag, value: String(buffer: buffer), on: request.eventLoop)
+            return request.persist.set(key: tag, value: String(buffer: buffer))
                 .map { _ in .ok }
         }
         app.router.get("/persist/:tag") { request -> EventLoopFuture<String?> in
             guard let tag = request.parameters.get("tag", as: String.self) else { return request.failure(.badRequest) }
-            return request.persist.get(key: tag, as: String.self, on: request.eventLoop)
+            return request.persist.get(key: tag, as: String.self)
         }
         app.router.delete("/persist/:tag") { request -> EventLoopFuture<HTTPResponseStatus> in
             guard let tag = request.parameters.get("tag", as: String.self) else { return request.failure(.badRequest) }
-            return request.persist.remove(key: tag, on: request.eventLoop)
+            return request.persist.remove(key: tag)
                 .map { _ in .noContent }
         }
         app.XCTStart()
