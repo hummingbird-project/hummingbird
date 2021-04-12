@@ -12,13 +12,19 @@
 //
 //===----------------------------------------------------------------------===//
 
+import NIO
+
 /// In memory driver for persist system for storing persistent cross request key/value pairs
 class HBMemoryPersistDriver: HBPersistDriver {
     init(eventLoopGroup: EventLoopGroup) {
         self.values = [:]
-        eventLoopGroup.next().scheduleRepeatedTask(initialDelay: .hours(1), delay: .hours(1)) { _ in
-            self._tidy()
+        self.task = eventLoopGroup.next().scheduleRepeatedTask(initialDelay: .hours(1), delay: .hours(1)) { _ in
+            self.tidy()
         }
+    }
+
+    func shutdown() {
+        self.task?.cancel()
     }
 
     func create<Object: Codable>(key: String, value: Object, expires: TimeAmount? = nil, request: HBRequest) -> EventLoopFuture<Void> {
@@ -48,13 +54,7 @@ class HBMemoryPersistDriver: HBPersistDriver {
         }
     }
 
-    func tidy(on eventLoop: EventLoop) {
-        eventLoop.execute {
-            self._tidy()
-        }
-    }
-
-    private func _tidy() {
+    private func tidy() {
         let currentTime = Item.getEpochTime()
         self.values = self.values.compactMapValues {
             if let expires = $0.epochExpires {
@@ -85,4 +85,5 @@ class HBMemoryPersistDriver: HBPersistDriver {
     }
 
     var values: [String: Item]
+    var task: RepeatedTask?
 }

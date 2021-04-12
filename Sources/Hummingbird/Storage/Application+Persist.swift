@@ -32,7 +32,9 @@ extension HBApplication {
     /// Add persist framework to `HBApplication`.
     /// - Parameter using: Factory struct that will create the persist driver when required
     public func addPersist(using: HBPersistDriverFactory) {
-        self.extensions.set(\.persist, value: .init(using, application: self))
+        self.extensions.set(\.persist, value: .init(using, application: self)) { persist in
+            persist.driver.shutdown()
+        }
     }
 }
 

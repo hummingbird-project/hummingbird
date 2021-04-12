@@ -16,6 +16,8 @@ import NIO
 
 /// Protocol for driver supporting persistent Key/Value pairs across requests
 public protocol HBPersistDriver {
+    /// shutdown driver
+    func shutdown()
     /// set value for key
     func create<Object: Codable>(key: String, value: Object, expires: TimeAmount?, request: HBRequest) -> EventLoopFuture<Void>
     /// set value for key
@@ -24,6 +26,11 @@ public protocol HBPersistDriver {
     func get<Object: Codable>(key: String, as: Object.Type, request: HBRequest) -> EventLoopFuture<Object?>
     /// remove value for key
     func remove(key: String, request: HBRequest) -> EventLoopFuture<Void>
+}
+
+extension HBPersistDriver {
+    /// default implemenation of shutdown()
+    public func shutdown() {}
 }
 
 /// Factory class for persist drivers
