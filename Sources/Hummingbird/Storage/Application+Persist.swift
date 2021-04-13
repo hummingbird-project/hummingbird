@@ -40,6 +40,18 @@ extension HBApplication {
 
 extension HBRequest {
     public struct Persist {
+        /// Set value for key that will expire after a certain time.
+        ///
+        /// Doesn't check to see if key already exists. Some drivers may fail it key already exists
+        /// - Parameters:
+        ///   - key: key string
+        ///   - value: value
+        ///   - expires: time key/value pair will expire
+        /// - Returns: EventLoopFuture for when value has been set
+        public func create<Object: Codable>(key: String, value: Object, expires: TimeAmount? = nil) -> EventLoopFuture<Void> {
+            return self.request.application.persist.driver.create(key: key, value: value, expires: expires, request: self.request)
+        }
+
         /// Set value for key that will expire after a certain time
         /// - Parameters:
         ///   - key: key string

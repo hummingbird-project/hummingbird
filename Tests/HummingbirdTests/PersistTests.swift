@@ -60,6 +60,24 @@ final class PersistTests: XCTestCase {
         }
     }
 
+    func testCreateGet() throws {
+        let app = try createApplication()
+        app.router.put("/create/:tag") { request -> EventLoopFuture<HTTPResponseStatus> in
+            guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
+            guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
+            return request.persist.create(key: tag, value: String(buffer: buffer))
+                .map { _ in .ok }
+        }
+        app.XCTStart()
+        defer { app.XCTStop() }
+        let tag = UUID().uuidString
+        app.XCTExecute(uri: "/create/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
+        app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "Persist")
+        }
+    }
+
     func testSetTwice() throws {
         let app = try createApplication()
         app.XCTStart()
