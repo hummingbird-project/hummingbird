@@ -35,15 +35,20 @@ public struct HBExtensions<ParentObject> {
         self.items = [:]
     }
 
-    /// Get extension from a `KeyPath`
+    /// Get optional extension from a `KeyPath`
     public func get<Type>(_ key: KeyPath<ParentObject, Type>) -> Type? {
         self.items[key]?.value as? Type
     }
 
     /// Get extension from a `KeyPath`
     public func get<Type>(_ key: KeyPath<ParentObject, Type>) -> Type {
-        guard let value = items[key]?.value as? Type else { preconditionFailure("Cannot get extension without having set it") }
+        guard let value = items[key]?.value as? Type else { preconditionFailure("Cannot get extension of type \(Type.self) without having set it") }
         return value
+    }
+
+    /// Return if extension has been set
+    public func exists<Type>(_ key: KeyPath<ParentObject, Type>) -> Bool {
+        self.items[key]?.value != nil
     }
 
     /// Get extension from a `KeyPath`. If it doesn't exist then create it. Use this with care it may cause race conditions
