@@ -112,7 +112,7 @@ final class HBHTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler 
             return httpError.response(version: version, allocator: context.channel.allocator)
         default:
             // this error has not been recognised
-            self.responder.logger.warning("Error: \(error)")
+            self.responder.logger.info("Error: \(error)")
             return HBHTTPResponse(
                 head: .init(version: version, status: .internalServerError),
                 body: .empty
