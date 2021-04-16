@@ -14,6 +14,9 @@
 
 import HummingbirdCore
 import Logging
+#if canImport(Network)
+import Network
+#endif
 
 extension HBApplication {
     // MARK: Configuration
@@ -38,6 +41,10 @@ extension HBApplication {
         public let tcpNoDelay: Bool
         /// Pipelining ensures that only one http request is processed at one time
         public let enableHttpPipelining: Bool
+        #if canImport(Network)
+        /// TLS options for NIO Transport services
+        public let tlsOptions: TSTLSOptions
+        #endif
 
         /// Number of threads to allocate in the application thread pool
         public let threadPoolSize: Int
@@ -69,6 +76,9 @@ extension HBApplication {
             self.reuseAddress = reuseAddress
             self.tcpNoDelay = tcpNoDelay
             self.enableHttpPipelining = enableHttpPipelining
+            #if canImport(Network)
+            self.tlsOptions = .none
+            #endif
 
             self.threadPoolSize = threadPoolSize
 
@@ -81,7 +91,60 @@ extension HBApplication {
             }
         }
 
+        #if canImport(Network)
+        /// Create configuration struct
+        @available(macOS 10.14, iOS 12, tvOS 12, *)
+        public init(
+            address: HBBindAddress = .hostname(),
+            serverName: String? = nil,
+            maxUploadSize: Int = 2 * 1024 * 1024,
+            maxStreamingBufferSize: Int = 1 * 1024 * 1024,
+            backlog: Int = 256,
+            reuseAddress: Bool = true,
+            tcpNoDelay: Bool = false,
+            enableHttpPipelining: Bool = true,
+            threadPoolSize: Int = 2,
+            logLevel: Logger.Level? = nil,
+            tlsOptions: NWProtocolTLS.Options?
+        ) {
+            let env = HBEnvironment()
+
+            self.address = address
+            self.serverName = serverName
+            self.maxUploadSize = maxUploadSize
+            self.maxStreamingBufferSize = maxStreamingBufferSize
+            self.backlog = backlog
+            self.reuseAddress = reuseAddress
+            self.tcpNoDelay = tcpNoDelay
+            self.enableHttpPipelining = enableHttpPipelining
+            self.tlsOptions = .init(tlsOptions)
+
+            self.threadPoolSize = threadPoolSize
+
+            if let logLevel = logLevel {
+                self.logLevel = logLevel
+            } else if let logLevel = env.get("LOG_LEVEL") {
+                self.logLevel = Logger.Level(rawValue: logLevel) ?? .info
+            } else {
+                self.logLevel = .info
+            }
+        }
+        #endif
+
         /// return HTTP server configuration
+        #if canImport(Network)
+        var httpServer: HBHTTPServer.Configuration {
+            return .init(
+                address: self.address,
+                serverName: self.serverName,
+                maxUploadSize: self.maxUploadSize,
+                maxStreamingBufferSize: self.maxStreamingBufferSize,
+                reuseAddress: self.reuseAddress,
+                withPipeliningAssistance: self.enableHttpPipelining,
+                tlsOptions: self.tlsOptions
+            )
+        }
+        #else
         var httpServer: HBHTTPServer.Configuration {
             return .init(
                 address: self.address,
@@ -94,5 +157,6 @@ extension HBApplication {
                 withPipeliningAssistance: self.enableHttpPipelining
             )
         }
+        #endif
     }
 }
