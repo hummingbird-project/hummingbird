@@ -17,6 +17,7 @@ import Lifecycle
 import LifecycleNIOCompat
 import Logging
 import NIO
+import NIOTransportServices
 
 /// Application class. Brings together all the components of Hummingbird together
 ///
@@ -84,7 +85,11 @@ public final class HBApplication: HBExtensible {
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {
         case .createNew:
+            #if os(iOS)
+            self.eventLoopGroup = NIOTSEventLoopGroup()
+            #else
             self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+            #endif
         case .shared(let elg):
             self.eventLoopGroup = elg
         }
