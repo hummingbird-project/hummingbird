@@ -147,7 +147,7 @@ public struct HBFileMiddleware: HBMiddleware {
                     guard let range = getRangeFromHeaderValue(rangeHeader) else {
                         return request.failure(.rangeNotSatisfiable)
                     }
-                    return fileIO.loadFile(path: fullPath, range: range, context: request.context)
+                    return fileIO.loadFile(path: fullPath, range: range, context: request.context, logger: request.logger)
                         .map { body, fileSize in
                             headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
 
@@ -160,7 +160,7 @@ public struct HBFileMiddleware: HBMiddleware {
                             return HBResponse(status: .partialContent, headers: headers, body: body)
                         }
                 }
-                return fileIO.loadFile(path: fullPath, context: request.context)
+                return fileIO.loadFile(path: fullPath, context: request.context, logger: request.logger)
                     .map { body in
                         headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
                         return HBResponse(status: .ok, headers: headers, body: body)
