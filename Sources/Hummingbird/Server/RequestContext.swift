@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// Context that created HBRequest. 
+/// Context that created HBRequest.
 public protocol HBRequestContext {
     /// EventLoop request is running on
     var eventLoop: EventLoop { get }

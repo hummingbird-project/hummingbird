@@ -43,11 +43,11 @@ public final class HBRequest: HBExtensible {
 
     public var context: HBRequestContext
     /// EventLoop request is running on
-    public var eventLoop: EventLoop { context.eventLoop }
+    public var eventLoop: EventLoop { self.context.eventLoop }
     /// ByteBuffer allocator used by request
-    public var allocator: ByteBufferAllocator { context.allocator }
+    public var allocator: ByteBufferAllocator { self.context.allocator }
     /// IP request came from
-    public var remoteAddress: SocketAddress? { context.remoteAddress }
+    public var remoteAddress: SocketAddress? { self.context.remoteAddress }
 
     /// Parameters extracted during processing of request URI. These are available to you inside the route handler
     public var parameters: HBParameters {
