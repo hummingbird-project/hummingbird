@@ -246,7 +246,7 @@ class HummingbirdFilesTests: XCTestCase {
         let app = HBApplication(testing: .live)
         app.router.put("store") { request -> EventLoopFuture<HTTPResponseStatus> in
             let fileIO = HBFileIO(application: request.application)
-            return fileIO.writeFile(contents: request.body, path: filename, context: request.context)
+            return fileIO.writeFile(contents: request.body, path: filename, context: request.context, logger: request.logger)
                 .map { .ok }
         }
 
@@ -269,7 +269,7 @@ class HummingbirdFilesTests: XCTestCase {
         let app = HBApplication(testing: .live)
         app.router.put("store") { request -> EventLoopFuture<HTTPResponseStatus> in
             let fileIO = HBFileIO(application: request.application)
-            return fileIO.writeFile(contents: request.body, path: filename, context: request.context)
+            return fileIO.writeFile(contents: request.body, path: filename, context: request.context, logger: request.logger)
                 .map { .ok }
         }
 
