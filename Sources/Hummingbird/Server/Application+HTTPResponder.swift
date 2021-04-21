@@ -48,9 +48,7 @@ extension HBApplication {
                 head: request.head,
                 body: request.body,
                 application: self.application,
-                eventLoop: context.eventLoop,
-                allocator: context.channel.allocator,
-                remoteAddress: context.remoteAddress
+                context: context
             )
 
             // respond to request
@@ -66,5 +64,12 @@ extension HBApplication {
                 }
             }
         }
+    }
+}
+
+/// Extend ChannelHandlerContext to conform to HBRequestContext so we can create a request with it
+extension ChannelHandlerContext: HBRequestContext {
+    public var allocator: ByteBufferAllocator {
+        return self.channel.allocator
     }
 }

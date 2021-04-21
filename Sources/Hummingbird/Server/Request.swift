@@ -40,12 +40,14 @@ public final class HBRequest: HBExtensible {
     public var extensions: HBExtensions<HBRequest>
     /// endpoint that services this request
     public var endpointPath: String?
+
+    public var context: HBRequestContext
     /// EventLoop request is running on
-    public var eventLoop: EventLoop
+    public var eventLoop: EventLoop { context.eventLoop }
     /// ByteBuffer allocator used by request
-    public var allocator: ByteBufferAllocator
+    public var allocator: ByteBufferAllocator { context.allocator }
     /// IP request came from
-    public var remoteAddress: SocketAddress?
+    public var remoteAddress: SocketAddress? { context.remoteAddress }
 
     /// Parameters extracted during processing of request URI. These are available to you inside the route handler
     public var parameters: HBParameters {
@@ -66,9 +68,7 @@ public final class HBRequest: HBExtensible {
         head: HTTPRequestHead,
         body: HBRequestBody,
         application: HBApplication,
-        eventLoop: EventLoop,
-        allocator: ByteBufferAllocator,
-        remoteAddress: SocketAddress? = nil
+        context: HBRequestContext
     ) {
         self.uri = .init(head.uri)
         self.version = head.version
@@ -79,9 +79,7 @@ public final class HBRequest: HBExtensible {
         self.application = application
         self.extensions = HBExtensions()
         self.endpointPath = nil
-        self.eventLoop = eventLoop
-        self.allocator = allocator
-        self.remoteAddress = remoteAddress
+        self.context = context
     }
 
     // MARK: Methods
@@ -117,25 +115,15 @@ public final class HBRequest: HBExtensible {
         return self.eventLoop.makeSucceededFuture(value)
     }
 
-    /// Return context request is running in
-    public var context: Context {
-        .init(logger: self.logger, eventLoop: self.eventLoop, allocator: self.allocator)
-    }
-
-    /// Context request is running in
-    public struct Context {
-        /// Logger to use
-        public var logger: Logger
-        /// EventLoop request is running on
-        public var eventLoop: EventLoop
-        /// ByteBuffer allocator used by request
-        public var allocator: ByteBufferAllocator
-    }
-
     private static let globalRequestID = NIOAtomic<Int>.makeAtomic(value: 0)
 }
 
 extension Logger {
+    /// Create new Logger with additional metadata value
+    /// - Parameters:
+    ///   - metadataKey: Metadata key
+    ///   - value: Metadata value
+    /// - Returns: Logger
     func with(metadataKey: String, value: MetadataValue) -> Logger {
         var logger = self
         logger[metadataKey: metadataKey] = value
