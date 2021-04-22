@@ -58,6 +58,29 @@ final class AsyncTests: XCTestCase {
             XCTAssertEqual(response.headers["async"].first, "true")
         }
     }
+
+    func testAsyncRouteHandler() {
+        struct AsyncTest: HBAsyncRouteHandler {
+            let name: String
+            init(from request: HBRequest) throws {
+                self.name = try request.parameters.require("name")
+            }
+            func handle(request: HBRequest) async throws -> String {
+                return try await request.success("Hello \(self.name)").get()
+            }
+        }
+        let app = HBApplication(testing: .live)
+        app.router.post("/hello/:name", use: AsyncTest.self)
+
+        app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/hello/Adam", method: .POST) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "Hello Adam")
+        }
+
+    }
 }
 
 #endif // compiler(>=5.5) && $AsyncAwait
