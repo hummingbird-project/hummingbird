@@ -12,26 +12,27 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIOCore
+#if compiler(>=5.5) && $AsyncAwait
 
-/// Protocol for object that produces a response given a request
-///
-/// This is the core protocol for Hummingbird. It defines an object that can respond to a request.
-public protocol HBResponder {
-    /// Return EventLoopFuture that will be fulfilled with response to the request supplied
-    func respond(to request: HBRequest) -> EventLoopFuture<HBResponse>
-}
+import NIO
 
 /// Responder that calls supplied closure
-public struct HBCallbackResponder: HBResponder {
-    let callback: (HBRequest) -> EventLoopFuture<HBResponse>
+@available(macOS 9999, iOS 9999, watchOS 9999, tvOS 9999, *)
+public struct HBAsyncCallbackResponder: HBResponder {
+    let callback: HBRequest async throws -> HBResponse
 
-    public init(callback: @escaping (HBRequest) -> EventLoopFuture<HBResponse>) {
+    public init(callback: @escaping (HBRequest) async throws -> HBResponse) {
         self.callback = callback
     }
 
     /// Return EventLoopFuture that will be fulfilled with response to the request supplied
     public func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
-        return self.callback(request)
+        let promise = request.eventLoop.makePromise(of: HBResponse.self)
+        promise.completeWithAsync {
+            try await callback(request)
+        }
+        return promise.futureResult
     }
 }
+
+#endif
