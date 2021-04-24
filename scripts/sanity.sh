@@ -28,10 +28,10 @@ function replace_acceptable_years() {
 printf "=> Checking format... "
 FIRST_OUT="$(git status --porcelain)"
 if [[ -n "${CI-""}" ]]; then
-  mint run NickLockwood/SwiftFormat@0.47.4 --version
+  printf "(using v$(mint run NickLockwood/SwiftFormat@0.47.4 --version)) "
   mint run NickLockwood/SwiftFormat@0.47.4 . > /dev/null 2>&1
 else
-  swiftformat --version
+  printf "(using v$(swiftformat --version)) "
   swiftformat . > /dev/null 2>&1
 fi
 SECOND_OUT="$(git status --porcelain)"

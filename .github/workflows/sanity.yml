@@ -16,5 +16,6 @@ jobs:
     - name: Install Dependencies
       run: |
         brew install mint
+        mint install NickLockwood/SwiftFormat@0.47.4 --no_link
     - name: run script
       run: ./scripts/sanity.sh
