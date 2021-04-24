@@ -27,7 +27,7 @@ function replace_acceptable_years() {
 
 printf "=> Checking format... "
 FIRST_OUT="$(git status --porcelain)"
-if [[ -n "${GITHUB_TOKEN-""}" ]]; then
+if [[ -n "${CI-""}" ]]; then
   mint run NickLockwood/SwiftFormat@0.47.4 --version
   mint run NickLockwood/SwiftFormat@0.47.4 . > /dev/null 2>&1
 else
