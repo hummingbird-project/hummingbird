@@ -15,6 +15,6 @@ jobs:
         fetch-depth: 1
     - name: Install Dependencies
       run: |
-        swiftformat --version
+        brew install mint
     - name: run script
       run: ./scripts/sanity.sh
