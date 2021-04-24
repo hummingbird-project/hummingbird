@@ -34,7 +34,7 @@ enum HBXCTError: Error {
 /// Protocol for XCT framework.
 public protocol HBXCT {
     /// Called to start testing of application
-    func start(application: HBApplication)
+    func start(application: HBApplication) throws
     /// Called to stop testing of application
     func stop(application: HBApplication)
     /// Execute URL request and provide response

@@ -189,7 +189,7 @@ final class MetricsTests: XCTestCase {
         app.router.get("/hello") { _ -> String in
             return "Hello"
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
         app.XCTExecute(uri: "/hello", method: .GET) { _ in }
 
@@ -207,7 +207,7 @@ final class MetricsTests: XCTestCase {
         app.router.get("/hello") { _ -> String in
             throw HBHTTPError(.badRequest)
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
         app.XCTExecute(uri: "/hello", method: .GET) { _ in }
 
@@ -226,7 +226,7 @@ final class MetricsTests: XCTestCase {
         app.router.get("/hello") { _ -> String in
             return "hello"
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
         app.XCTExecute(uri: "/hello2", method: .GET) { _ in }
 
@@ -244,7 +244,7 @@ final class MetricsTests: XCTestCase {
         app.router.get("/user/:id") { _ -> String in
             throw HBHTTPError(.badRequest)
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
         app.XCTExecute(uri: "/user/765", method: .GET) { _ in }
 

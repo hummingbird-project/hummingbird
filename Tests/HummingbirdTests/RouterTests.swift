@@ -26,7 +26,7 @@ final class RouterTests: XCTestCase {
         }
     }
 
-    func testEndpoint() {
+    func testEndpoint() throws {
         let app = HBApplication(testing: .embedded)
         app.router
             .group("/endpoint")
@@ -36,7 +36,7 @@ final class RouterTests: XCTestCase {
             .put { _ in
                 return "PUT"
             }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/endpoint", method: .GET) { response in
@@ -50,7 +50,7 @@ final class RouterTests: XCTestCase {
         }
     }
 
-    func testGroupMiddleware() {
+    func testGroupMiddleware() throws {
         let app = HBApplication(testing: .embedded)
         app.router
             .group()
@@ -61,7 +61,7 @@ final class RouterTests: XCTestCase {
         app.router.get("/not-group") { _ in
             return "hello"
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/group", method: .GET) { response in
@@ -73,7 +73,7 @@ final class RouterTests: XCTestCase {
         }
     }
 
-    func testEndpointMiddleware() {
+    func testEndpointMiddleware() throws {
         let app = HBApplication(testing: .embedded)
         app.router
             .group("/group")
@@ -81,7 +81,7 @@ final class RouterTests: XCTestCase {
             .head { _ in
                 return "hello"
             }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/group", method: .HEAD) { response in
@@ -89,7 +89,7 @@ final class RouterTests: XCTestCase {
         }
     }
 
-    func testGroupGroupMiddleware() {
+    func testGroupGroupMiddleware() throws {
         let app = HBApplication(testing: .embedded)
         app.router
             .group("/test")
@@ -98,7 +98,7 @@ final class RouterTests: XCTestCase {
             .get { request in
                 return request.success("hello")
             }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/test/group", method: .GET) { response in
@@ -106,13 +106,13 @@ final class RouterTests: XCTestCase {
         }
     }
 
-    func testParameters() {
+    func testParameters() throws {
         let app = HBApplication(testing: .embedded)
         app.router
             .delete("/user/:id") { request -> String? in
                 return request.parameters.get("id", as: String.self)
             }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/user/1234", method: .DELETE) { response in

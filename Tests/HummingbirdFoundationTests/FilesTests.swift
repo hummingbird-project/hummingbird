@@ -34,7 +34,7 @@ class HummingbirdFilesTests: XCTestCase {
         return formatter
     }
 
-    func testRead() {
+    func testRead() throws {
         let app = HBApplication(testing: .live)
         app.middleware.add(HBFileMiddleware(".", application: app))
 
@@ -44,7 +44,7 @@ class HummingbirdFilesTests: XCTestCase {
         XCTAssertNoThrow(try data.write(to: fileURL))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/test.jpg", method: .GET) { response in
@@ -54,7 +54,7 @@ class HummingbirdFilesTests: XCTestCase {
         }
     }
 
-    func testReadLargeFile() {
+    func testReadLargeFile() throws {
         let app = HBApplication(testing: .live)
         app.middleware.add(HBFileMiddleware(".", application: app))
 
@@ -64,7 +64,7 @@ class HummingbirdFilesTests: XCTestCase {
         XCTAssertNoThrow(try data.write(to: fileURL))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/test.txt", method: .GET) { response in
@@ -73,7 +73,7 @@ class HummingbirdFilesTests: XCTestCase {
         }
     }
 
-    func testReadRange() {
+    func testReadRange() throws {
         let app = HBApplication(testing: .live)
         app.middleware.add(HBFileMiddleware(".", application: app))
 
@@ -83,7 +83,7 @@ class HummingbirdFilesTests: XCTestCase {
         XCTAssertNoThrow(try data.write(to: fileURL))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=100-3999"]) { response in
@@ -121,7 +121,7 @@ class HummingbirdFilesTests: XCTestCase {
         XCTAssertNoThrow(try data.write(to: fileURL))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/testHead.txt", method: .HEAD) { response in
@@ -144,7 +144,7 @@ class HummingbirdFilesTests: XCTestCase {
         XCTAssertNoThrow(try data.write(to: fileURL))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         var eTag: String?
@@ -166,7 +166,7 @@ class HummingbirdFilesTests: XCTestCase {
         XCTAssertNoThrow(try data.write(to: fileURL))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         var eTag: String?
@@ -196,7 +196,7 @@ class HummingbirdFilesTests: XCTestCase {
         XCTAssertNoThrow(try data.write(to: fileURL))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         var modifiedDate: String?
@@ -230,7 +230,7 @@ class HummingbirdFilesTests: XCTestCase {
         XCTAssertNoThrow(try data.write(to: fileURL2))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL2)) }
 
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/test.txt", method: .GET) { response in
@@ -250,7 +250,7 @@ class HummingbirdFilesTests: XCTestCase {
                 .map { .ok }
         }
 
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         let buffer = ByteBufferAllocator().buffer(string: "This is a test")
@@ -273,7 +273,7 @@ class HummingbirdFilesTests: XCTestCase {
                 .map { .ok }
         }
 
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         let buffer = self.randomBuffer(size: 400_000)

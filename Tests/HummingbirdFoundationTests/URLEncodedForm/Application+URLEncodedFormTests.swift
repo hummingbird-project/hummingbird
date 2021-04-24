@@ -26,7 +26,7 @@ class HummingBirdURLEncodedTests: XCTestCase {
 
     struct Error: Swift.Error {}
 
-    func testDecode() {
+    func testDecode() throws {
         let app = HBApplication(testing: .embedded)
         app.decoder = URLEncodedFormDecoder()
         app.router.put("/user") { request -> HTTPResponseStatus in
@@ -36,7 +36,7 @@ class HummingBirdURLEncodedTests: XCTestCase {
             XCTAssertEqual(user.age, 25)
             return .ok
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         let body = "name=John%20Smith&email=john.smith%40email.com&age=25"
@@ -45,13 +45,13 @@ class HummingBirdURLEncodedTests: XCTestCase {
         }
     }
 
-    func testEncode() {
+    func testEncode() throws {
         let app = HBApplication(testing: .embedded)
         app.encoder = URLEncodedFormEncoder()
         app.router.get("/user") { _ -> User in
             return User(name: "John Smith", email: "john.smith@email.com", age: 25)
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/user", method: .GET) { response in

@@ -78,8 +78,8 @@ extension HBApplication {
     // MARK: Methods
 
     /// Start tests
-    public func XCTStart() {
-        self.xct.start(application: self)
+    public func XCTStart() throws {
+        try self.xct.start(application: self)
     }
 
     /// Stop tests
