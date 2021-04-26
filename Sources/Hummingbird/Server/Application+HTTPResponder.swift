@@ -66,6 +66,7 @@ extension HBApplication {
         }
     }
 
+    /// Context object for Channel to be provided to HBRequest
     struct ChannelRequestContext: HBRequestContext {
         let channel: Channel
         var eventLoop: EventLoop { return channel.eventLoop }
