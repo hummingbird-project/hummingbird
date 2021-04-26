@@ -36,9 +36,9 @@ public struct HBFileIO {
     ///   - path: System file path
     ///   - context: Context this request is being called in
     /// - Returns: Response body plus file size
-    public func loadFile(path: String, context: HBRequest.Context) -> EventLoopFuture<HBResponseBody> {
+    public func loadFile(path: String, context: HBRequestContext, logger: Logger) -> EventLoopFuture<HBResponseBody> {
         return self.fileIO.openFile(path: path, eventLoop: context.eventLoop).flatMap { handle, region in
-            context.logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
+            logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
 
             let futureResult: EventLoopFuture<HBResponseBody>
             if region.readableBytes > self.chunkSize {
@@ -65,9 +65,9 @@ public struct HBFileIO {
     ///   - range:Range defining how much of the file is to be loaded
     ///   - context: Context this request is being called in
     /// - Returns: Response body plus file size
-    public func loadFile(path: String, range: ClosedRange<Int>, context: HBRequest.Context) -> EventLoopFuture<(HBResponseBody, Int)> {
+    public func loadFile(path: String, range: ClosedRange<Int>, context: HBRequestContext, logger: Logger) -> EventLoopFuture<(HBResponseBody, Int)> {
         return self.fileIO.openFile(path: path, eventLoop: context.eventLoop).flatMap { handle, region in
-            context.logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
+            logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
 
             // work out region to load
             let regionRange = region.readerIndex...region.endIndex
@@ -102,9 +102,9 @@ public struct HBFileIO {
     ///   - eventLoop: EventLoop everything runs on
     ///   - logger: Logger
     /// - Returns: EventLoopFuture fulfilled when everything is done
-    public func writeFile(contents: HBRequestBody, path: String, context: HBRequest.Context) -> EventLoopFuture<Void> {
+    public func writeFile(contents: HBRequestBody, path: String, context: HBRequestContext, logger: Logger) -> EventLoopFuture<Void> {
         return self.fileIO.openFile(path: path, mode: .write, flags: .allowFileCreation(), eventLoop: context.eventLoop).flatMap { handle in
-            context.logger.debug("[FileIO] PUT", metadata: ["file": .string(path)])
+            logger.debug("[FileIO] PUT", metadata: ["file": .string(path)])
             let futureResult: EventLoopFuture<Void>
             switch contents {
             case .byteBuffer(let buffer):
@@ -121,7 +121,7 @@ public struct HBFileIO {
     }
 
     /// Load file as ByteBuffer
-    func loadFile(handle: NIOFileHandle, region: FileRegion, context: HBRequest.Context) -> EventLoopFuture<HBResponseBody> {
+    func loadFile(handle: NIOFileHandle, region: FileRegion, context: HBRequestContext) -> EventLoopFuture<HBResponseBody> {
         return self.fileIO.read(
             fileHandle: handle,
             fromOffset: Int64(region.readerIndex),
@@ -134,7 +134,7 @@ public struct HBFileIO {
     }
 
     /// Return streamer that will load file
-    func streamFile(handle: NIOFileHandle, region: FileRegion, context: HBRequest.Context) -> EventLoopFuture<HBResponseBody> {
+    func streamFile(handle: NIOFileHandle, region: FileRegion, context: HBRequestContext) -> EventLoopFuture<HBResponseBody> {
         let fileStreamer = FileStreamer(
             handle: handle,
             fileRegion: region,

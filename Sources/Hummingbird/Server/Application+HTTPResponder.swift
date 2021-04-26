@@ -48,9 +48,7 @@ extension HBApplication {
                 head: request.head,
                 body: request.body,
                 application: self.application,
-                eventLoop: context.eventLoop,
-                allocator: context.channel.allocator,
-                remoteAddress: context.remoteAddress
+                context: ChannelRequestContext(channel: context.channel)
             )
 
             // respond to request
@@ -66,5 +64,13 @@ extension HBApplication {
                 }
             }
         }
+    }
+
+    /// Context object for Channel to be provided to HBRequest
+    struct ChannelRequestContext: HBRequestContext {
+        let channel: Channel
+        var eventLoop: EventLoop { return self.channel.eventLoop }
+        var allocator: ByteBufferAllocator { return self.channel.allocator }
+        var remoteAddress: SocketAddress? { return self.channel.remoteAddress }
     }
 }
