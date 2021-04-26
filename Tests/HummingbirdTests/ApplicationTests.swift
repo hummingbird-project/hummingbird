@@ -30,7 +30,7 @@ final class ApplicationTests: XCTestCase {
             let buffer = request.allocator.buffer(string: "GET: Hello")
             return request.eventLoop.makeSucceededFuture(buffer)
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/hello", method: .GET) { response in
@@ -41,12 +41,12 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    func testHTTPStatusRoute() {
+    func testHTTPStatusRoute() throws {
         let app = HBApplication(testing: .embedded)
         app.router.get("/accepted") { _ -> HTTPResponseStatus in
             return .accepted
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/accepted", method: .GET) { response in
@@ -54,12 +54,12 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    func testStandardHeaders() {
+    func testStandardHeaders() throws {
         let app = HBApplication(testing: .embedded)
         app.router.get("/hello") { _ in
             return "Hello"
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/hello", method: .GET) { response in
@@ -68,12 +68,12 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    func testServerHeaders() {
+    func testServerHeaders() throws {
         let app = HBApplication(testing: .embedded, configuration: .init(serverName: "Hummingbird"))
         app.router.get("/hello") { _ in
             return "Hello"
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/hello", method: .GET) { response in
@@ -81,12 +81,12 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    func testPostRoute() {
+    func testPostRoute() throws {
         let app = HBApplication(testing: .embedded)
         app.router.post("/hello") { _ -> String in
             return "POST: Hello"
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/hello", method: .POST) { response in
@@ -97,7 +97,7 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    func testMultipleMethods() {
+    func testMultipleMethods() throws {
         let app = HBApplication(testing: .embedded)
         app.router.post("/hello") { _ -> String in
             return "POST"
@@ -105,7 +105,7 @@ final class ApplicationTests: XCTestCase {
         app.router.get("/hello") { _ -> String in
             return "GET"
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/hello", method: .GET) { response in
@@ -118,7 +118,7 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    func testMultipleGroupMethods() {
+    func testMultipleGroupMethods() throws {
         let app = HBApplication(testing: .embedded)
         app.router.group("hello")
             .post { _ -> String in
@@ -127,7 +127,7 @@ final class ApplicationTests: XCTestCase {
             .get { _ -> String in
                 return "GET"
             }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/hello", method: .GET) { response in
@@ -140,13 +140,13 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    func testQueryRoute() {
+    func testQueryRoute() throws {
         let app = HBApplication(testing: .embedded)
         app.router.post("/query") { request -> EventLoopFuture<ByteBuffer> in
             let buffer = request.allocator.buffer(string: request.uri.queryParameters["test"].map { String($0) } ?? "")
             return request.eventLoop.makeSucceededFuture(buffer)
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/query?test=test%20data%C3%A9", method: .POST) { response in
@@ -157,12 +157,12 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    func testArray() {
+    func testArray() throws {
         let app = HBApplication(testing: .embedded)
         app.router.get("array") { _ -> [String] in
             return ["yes", "no"]
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/array", method: .GET) { response in
@@ -171,12 +171,12 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    func testEventLoopFutureArray() {
+    func testEventLoopFutureArray() throws {
         let app = HBApplication(testing: .embedded)
         app.router.patch("array") { request -> EventLoopFuture<[String]> in
             return request.success(["yes", "no"])
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/array", method: .PATCH) { response in
@@ -185,7 +185,7 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    func testResponseBody() {
+    func testResponseBody() throws {
         let app = HBApplication(testing: .embedded)
         app.router
             .group("/echo-body")
@@ -193,7 +193,7 @@ final class ApplicationTests: XCTestCase {
                 let body: HBResponseBody = request.body.buffer.map { .byteBuffer($0) } ?? .empty
                 return .init(status: .ok, headers: [:], body: body)
             }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         let buffer = self.randomBuffer(size: 1_140_000)
@@ -203,7 +203,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     /// Test streaming of requests and streaming of responses by streaming the request body into a response streamer
-    func testStreaming() {
+    func testStreaming() throws {
         let app = HBApplication(testing: .embedded)
         app.router.post("streaming", body: .stream) { request -> HBResponse in
             guard let stream = request.body.stream else { throw HBHTTPError(.badRequest) }
@@ -223,7 +223,7 @@ final class ApplicationTests: XCTestCase {
             }
             return HBResponse(status: .ok, headers: [:], body: .stream(RequestStreamer(stream: stream)))
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         let buffer = self.randomBuffer(size: 640_001)
@@ -236,14 +236,14 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    func testOptional() {
+    func testOptional() throws {
         let app = HBApplication(testing: .embedded)
         app.router
             .group("/echo-body")
             .post { request -> ByteBuffer? in
                 return request.body.buffer
             }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         let buffer = self.randomBuffer(size: 64)
@@ -256,14 +256,14 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    func testELFOptional() {
+    func testELFOptional() throws {
         let app = HBApplication(testing: .embedded)
         app.router
             .group("/echo-body")
             .post { request -> EventLoopFuture<ByteBuffer?> in
                 return request.success(request.body.buffer)
             }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         let buffer = self.randomBuffer(size: 64)
@@ -276,7 +276,7 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    func testOptionalCodable() {
+    func testOptionalCodable() throws {
         struct Name: HBResponseCodable {
             let first: String
             let last: String
@@ -287,7 +287,7 @@ final class ApplicationTests: XCTestCase {
             .patch { _ -> Name? in
                 return Name(first: "john", last: "smith")
             }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/name", method: .PATCH) { response in
@@ -304,7 +304,7 @@ final class ApplicationTests: XCTestCase {
             request.response.status = .imATeapot
             return "Hello"
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/hello", method: .DELETE) { response in
@@ -326,7 +326,7 @@ final class ApplicationTests: XCTestCase {
             }
             throw HBHTTPError(.internalServerError)
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/", method: .GET) { response in

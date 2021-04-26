@@ -30,8 +30,8 @@ struct HBXCTLive: HBXCT {
     }
 
     /// Start tests
-    func start(application: HBApplication) {
-        application.start()
+    func start(application: HBApplication) throws {
+        try application.start()
     }
 
     /// Stop tests

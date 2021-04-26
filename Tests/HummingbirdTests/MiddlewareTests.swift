@@ -17,7 +17,7 @@ import HummingbirdXCT
 import XCTest
 
 final class MiddlewareTests: XCTestCase {
-    func testMiddleware() {
+    func testMiddleware() throws {
         struct TestMiddleware: HBMiddleware {
             func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
                 return next.respond(to: request).map { response in
@@ -31,7 +31,7 @@ final class MiddlewareTests: XCTestCase {
         app.router.get("/hello") { _ -> String in
             return "Hello"
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/hello", method: .GET) { response in
@@ -39,7 +39,7 @@ final class MiddlewareTests: XCTestCase {
         }
     }
 
-    func testMiddlewareOrder() {
+    func testMiddlewareOrder() throws {
         struct TestMiddleware: HBMiddleware {
             let string: String
             func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
@@ -55,7 +55,7 @@ final class MiddlewareTests: XCTestCase {
         app.router.get("/hello") { _ -> String in
             return "Hello"
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/hello", method: .GET) { response in
@@ -65,13 +65,13 @@ final class MiddlewareTests: XCTestCase {
         }
     }
 
-    func testCORSUseOrigin() {
+    func testCORSUseOrigin() throws {
         let app = HBApplication(testing: .embedded)
         app.middleware.add(HBCORSMiddleware())
         app.router.get("/hello") { _ -> String in
             return "Hello"
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/hello", method: .GET, headers: ["origin": "foo.com"]) { response in
@@ -80,13 +80,13 @@ final class MiddlewareTests: XCTestCase {
         }
     }
 
-    func testCORSUseAll() {
+    func testCORSUseAll() throws {
         let app = HBApplication(testing: .embedded)
         app.middleware.add(HBCORSMiddleware(allowOrigin: .all))
         app.router.get("/hello") { _ -> String in
             return "Hello"
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/hello", method: .GET, headers: ["origin": "foo.com"]) { response in
@@ -95,7 +95,7 @@ final class MiddlewareTests: XCTestCase {
         }
     }
 
-    func testCORSOptions() {
+    func testCORSOptions() throws {
         let app = HBApplication(testing: .embedded)
         app.middleware.add(HBCORSMiddleware(
             allowOrigin: .all,
@@ -108,7 +108,7 @@ final class MiddlewareTests: XCTestCase {
         app.router.get("/hello") { _ -> String in
             return "Hello"
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/hello", method: .OPTIONS, headers: ["origin": "foo.com"]) { response in
@@ -125,13 +125,13 @@ final class MiddlewareTests: XCTestCase {
         }
     }
 
-    func testRouteLoggingMiddleware() {
+    func testRouteLoggingMiddleware() throws {
         let app = HBApplication(testing: .embedded)
         app.middleware.add(HBLogRequestsMiddleware(.debug))
         app.router.put("/hello") { request -> EventLoopFuture<String> in
             return request.failure(.badRequest)
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/hello", method: .PUT) { _ in

@@ -26,7 +26,7 @@ class HummingbirdJSONTests: XCTestCase {
 
     struct Error: Swift.Error {}
 
-    func testDecode() {
+    func testDecode() throws {
         let app = HBApplication(testing: .embedded)
         app.decoder = JSONDecoder()
         app.router.put("/user") { request -> HTTPResponseStatus in
@@ -36,7 +36,7 @@ class HummingbirdJSONTests: XCTestCase {
             XCTAssertEqual(user.age, 25)
             return .ok
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         let body = #"{"name": "John Smith", "email": "john.smith@email.com", "age": 25}"#
@@ -45,13 +45,13 @@ class HummingbirdJSONTests: XCTestCase {
         }
     }
 
-    func testEncode() {
+    func testEncode() throws {
         let app = HBApplication(testing: .embedded)
         app.encoder = JSONEncoder()
         app.router.get("/user") { _ -> User in
             return User(name: "John Smith", email: "john.smith@email.com", age: 25)
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/user", method: .GET) { response in
@@ -63,13 +63,13 @@ class HummingbirdJSONTests: XCTestCase {
         }
     }
 
-    func testEncode2() {
+    func testEncode2() throws {
         let app = HBApplication(testing: .embedded)
         app.encoder = JSONEncoder()
         app.router.get("/json") { _ in
             return ["message": "Hello, world!"]
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/json", method: .GET) { response in

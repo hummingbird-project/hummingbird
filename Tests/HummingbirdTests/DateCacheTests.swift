@@ -30,13 +30,13 @@ class HummingbirdDateTests: XCTestCase {
         }
     }
 
-    func testDateHeader() {
+    func testDateHeader() throws {
         let app = HBApplication(testing: .embedded)
         app.router.get("date") { _ in
             return "hello"
         }
 
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/date", method: .GET) { response in

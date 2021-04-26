@@ -50,7 +50,7 @@ final class PersistTests: XCTestCase {
 
     func testSetGet() throws {
         let app = try createApplication()
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
         let tag = UUID().uuidString
         app.XCTExecute(uri: "/persist/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
@@ -68,7 +68,7 @@ final class PersistTests: XCTestCase {
             return request.persist.create(key: tag, value: String(buffer: buffer))
                 .map { _ in .ok }
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
         let tag = UUID().uuidString
         app.XCTExecute(uri: "/create/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
@@ -80,7 +80,7 @@ final class PersistTests: XCTestCase {
 
     func testSetTwice() throws {
         let app = try createApplication()
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         let tag = UUID().uuidString
@@ -96,7 +96,7 @@ final class PersistTests: XCTestCase {
 
     func testExpires() throws {
         let app = try createApplication()
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         let tag1 = UUID().uuidString
@@ -130,7 +130,7 @@ final class PersistTests: XCTestCase {
             guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
             return request.persist.get(key: tag, as: TestCodable.self).map { $0.map(\.buffer) }
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         let tag = UUID().uuidString
@@ -143,7 +143,7 @@ final class PersistTests: XCTestCase {
 
     func testRemove() throws {
         let app = try createApplication()
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         let tag = UUID().uuidString
@@ -156,7 +156,7 @@ final class PersistTests: XCTestCase {
 
     func testExpireAndAdd() throws {
         let app = try createApplication()
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         let tag = UUID().uuidString

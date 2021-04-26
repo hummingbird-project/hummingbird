@@ -63,14 +63,14 @@ class CookieTests: XCTestCase {
         XCTAssertEqual(cookie?.sameSite, .secure)
     }
 
-    func testSetCookie() {
+    func testSetCookie() throws {
         let app = HBApplication(testing: .embedded)
         app.router.post("/") { _ -> HBResponse in
             let response = HBResponse(status: .ok, headers: [:], body: .empty)
             response.setCookie(.init(name: "test", value: "value"))
             return response
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/", method: .POST) { response in
@@ -78,13 +78,13 @@ class CookieTests: XCTestCase {
         }
     }
 
-    func testSetCookieViaRequest() {
+    func testSetCookieViaRequest() throws {
         let app = HBApplication(testing: .embedded)
         app.router.post("/") { request -> String in
             request.response.setCookie(.init(name: "test", value: "value"))
             return "Hello"
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/", method: .POST) { response in
@@ -92,12 +92,12 @@ class CookieTests: XCTestCase {
         }
     }
 
-    func testReadCookieFromRequest() {
+    func testReadCookieFromRequest() throws {
         let app = HBApplication(testing: .embedded)
         app.router.post("/") { request -> String? in
             return request.cookies["test"]?.value
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/", method: .POST, headers: ["cookie": "test=value"]) { response in

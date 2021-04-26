@@ -113,7 +113,7 @@ public final class HBApplication: HBExtensible {
     // MARK: Methods
 
     /// Run application
-    public func start() {
+    public func start() throws {
         let promise = self.eventLoopGroup.next().makePromise(of: Void.self)
         self.lifecycle.start { error in
             if let error = error {
@@ -124,7 +124,7 @@ public final class HBApplication: HBExtensible {
                 promise.succeed(())
             }
         }
-        try? promise.futureResult.wait()
+        try promise.futureResult.wait()
     }
 
     /// wait while server is running

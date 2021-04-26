@@ -19,7 +19,7 @@ import NIOHTTP1
 import XCTest
 
 final class HandlerTests: XCTestCase {
-    func testDecode() {
+    func testDecode() throws {
         struct DecodeTest: HBRequestDecodable {
             let name: String
             func handle(request: HBRequest) -> String {
@@ -30,7 +30,7 @@ final class HandlerTests: XCTestCase {
         app.decoder = JSONDecoder()
         app.router.post("/hello", use: DecodeTest.self)
 
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/hello", method: .POST, body: ByteBufferAllocator().buffer(string: #"{"name": "Adam"}"#)) { response in
@@ -39,7 +39,7 @@ final class HandlerTests: XCTestCase {
         }
     }
 
-    func testDecodeFutureResponse() {
+    func testDecodeFutureResponse() throws {
         struct DecodeTest: HBRequestDecodable {
             let name: String
             func handle(request: HBRequest) -> EventLoopFuture<String> {
@@ -50,7 +50,7 @@ final class HandlerTests: XCTestCase {
         app.decoder = JSONDecoder()
         app.router.put("/hello", use: DecodeTest.self)
 
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/hello", method: .PUT, body: ByteBufferAllocator().buffer(string: #"{"name": "Adam"}"#)) { response in
@@ -59,7 +59,7 @@ final class HandlerTests: XCTestCase {
         }
     }
 
-    func testDecodeFail() {
+    func testDecodeFail() throws {
         struct DecodeTest: HBRequestDecodable {
             let name: String
             func handle(request: HBRequest) -> HTTPResponseStatus {
@@ -70,7 +70,7 @@ final class HandlerTests: XCTestCase {
         app.decoder = JSONDecoder()
         app.router.get("/hello", use: DecodeTest.self)
 
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/hello", method: .GET, body: ByteBufferAllocator().buffer(string: #"{"name2": "Adam"}"#)) { response in
@@ -78,7 +78,7 @@ final class HandlerTests: XCTestCase {
         }
     }
 
-    func testEmptyRequest() {
+    func testEmptyRequest() throws {
         struct ParameterTest: HBRouteHandler {
             let parameter: Int
             init(from request: HBRequest) throws {
@@ -93,7 +93,7 @@ final class HandlerTests: XCTestCase {
         let app = HBApplication(testing: .embedded)
         app.router.put("/:test", use: ParameterTest.self)
 
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/23", method: .PUT) { response in
