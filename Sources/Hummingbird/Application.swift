@@ -17,6 +17,7 @@ import Lifecycle
 import LifecycleNIOCompat
 import Logging
 import NIO
+import NIOTransportServices
 
 /// Application class. Brings together all the components of Hummingbird together
 ///
@@ -84,7 +85,11 @@ public final class HBApplication: HBExtensible {
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {
         case .createNew:
+            #if os(iOS)
+            self.eventLoopGroup = NIOTSEventLoopGroup()
+            #else
             self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+            #endif
         case .shared(let elg):
             self.eventLoopGroup = elg
         }
@@ -94,8 +99,6 @@ public final class HBApplication: HBExtensible {
         self.server = HBHTTPServer(group: self.eventLoopGroup, configuration: self.configuration.httpServer)
 
         self.addEventLoopStorage()
-
-        HBDateCache.initDateCaches(for: self.eventLoopGroup)
 
         // register application shutdown with lifecycle
         self.lifecycle.registerShutdown(
@@ -144,7 +147,6 @@ public final class HBApplication: HBExtensible {
 
     /// shutdown eventloop, threadpool and any extensions attached to the Application
     public func shutdownApplication() throws {
-        HBDateCache.shutdownDateCaches(for: self.eventLoopGroup)
         try self.extensions.shutdown()
         try self.threadPool.syncShutdownGracefully()
         if case .createNew = self.eventLoopGroupProvider {

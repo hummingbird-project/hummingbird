@@ -16,6 +16,7 @@ import AsyncHTTPClient
 import Hummingbird
 import NIO
 import NIOHTTP1
+import NIOTransportServices
 import XCTest
 
 /// Test using a live server and AsyncHTTPClient
@@ -25,8 +26,12 @@ struct HBXCTLive: HBXCT {
             preconditionFailure("Cannot test application bound to unix domain socket")
         }
         self.port = port
-        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        self.client = HTTPClient(eventLoopGroupProvider: .shared(self.eventLoopGroup))
+        #if os(iOS)
+        self.eventLoopGroup = NIOTSEventLoopGroup()
+        #else
+        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        #endif
+        self.client = HTTPClient(eventLoopGroupProvider: .createNew)
     }
 
     /// Start tests
