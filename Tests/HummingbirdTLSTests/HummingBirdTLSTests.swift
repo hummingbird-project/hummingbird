@@ -19,6 +19,7 @@ import Logging
 import NIO
 import NIOHTTP1
 import NIOSSL
+import NIOTransportServices
 import XCTest
 
 class HummingBirdTLSTests: XCTestCase {
@@ -34,14 +35,19 @@ class HummingBirdTLSTests: XCTestCase {
     }
 
     func testConnect() throws {
+        #if os(iOS)
+        let eventLoopGroup = NIOTSEventLoopGroup()
+        #else
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        #endif
+        let clientELG = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
         let server = HBHTTPServer(group: eventLoopGroup, configuration: .init(address: .hostname(port: 8000)))
         try server.addTLS(tlsConfiguration: self.getServerTLSConfiguration())
         try server.start(responder: HelloResponder()).wait()
         defer { XCTAssertNoThrow(try server.stop().wait()) }
 
-        let client = try HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup), configuration: .init(tlsConfiguration: self.getClientTLSConfiguration()))
+        let client = try HTTPClient(eventLoopGroupProvider: .shared(clientELG), configuration: .init(tlsConfiguration: self.getClientTLSConfiguration()))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
         let future = client.get(url: "https://localhost:\(server.configuration.address.port!)/").flatMapThrowing { response in

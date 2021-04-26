@@ -15,6 +15,10 @@
 import NIO
 import NIOExtras
 import NIOHTTP1
+#if canImport(Network)
+import Network
+import NIOTransportServices
+#endif
 
 /// HTTP server class
 public class HBHTTPServer {
@@ -82,22 +86,22 @@ public class HBHTTPServer {
 
         let quiesce = ServerQuiescingHelper(group: self.eventLoopGroup)
         self.quiesce = quiesce
-
-        let bootstrap = ServerBootstrap(group: self.eventLoopGroup)
-            // Specify backlog and enable SO_REUSEADDR for the server itself
-            .serverChannelOption(ChannelOptions.backlog, value: numericCast(self.configuration.backlog))
-            .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: self.configuration.reuseAddress ? 1 : 0)
-            .serverChannelOption(ChannelOptions.tcpOption(.tcp_nodelay), value: self.configuration.tcpNoDelay ? 1 : 0)
-            .serverChannelInitializer { channel in
-                channel.pipeline.addHandler(quiesce.makeServerChannelHandler(channel: channel))
+        #if canImport(Network)
+        let bootstrap: HTTPServerBootstrap
+        if #available(macOS 10.14, iOS 12, tvOS 12, *), let tsBootstrap = self.createTSBootstrap(quiesce: quiesce, childChannelInitializer: childChannelInitializer) {
+            bootstrap = tsBootstrap
+        } else {
+            #if os(iOS) || os(tvOS)
+            responder.logger.warning("Running BSD sockets on iOS or tvOS is not recommended. Please use NIOTSEventLoopGroup, to run with the Network framework")
+            #endif
+            if #available(macOS 10.14, iOS 12, tvOS 12, *), self.configuration.tlsOptions.options != nil {
+                responder.logger.warning("tlsOptions set in Configuration will not be applied to a BSD sockets server. Please use NIOTSEventLoopGroup, to run with the Network framework")
             }
-            // Set the handlers that are applied to the accepted Channels
-            .childChannelInitializer(childChannelInitializer)
-
-            .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: self.configuration.reuseAddress ? 1 : 0)
-            .childChannelOption(ChannelOptions.tcpOption(.tcp_nodelay), value: self.configuration.tcpNoDelay ? 1 : 0)
-            .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
-            .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
+            bootstrap = self.createSocketsBootstrap(quiesce: quiesce, childChannelInitializer: childChannelInitializer)
+        }
+        #else
+        let bootstrap = self.createSocketsBootstrap(quiesce: quiesce, childChannelInitializer: childChannelInitializer)
+        #endif
 
         let bindFuture: EventLoopFuture<Void>
         switch self.configuration.address {
@@ -153,58 +157,63 @@ public class HBHTTPServer {
         ]
     }
 
+    /// create a BSD sockets based bootstrap
+    private func createSocketsBootstrap(quiesce: ServerQuiescingHelper, childChannelInitializer: @escaping (Channel) -> EventLoopFuture<Void>) -> HTTPServerBootstrap {
+        return ServerBootstrap(group: self.eventLoopGroup)
+            // Specify backlog and enable SO_REUSEADDR for the server itself
+            .serverChannelOption(ChannelOptions.backlog, value: numericCast(self.configuration.backlog))
+            .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: self.configuration.reuseAddress ? 1 : 0)
+            .serverChannelOption(ChannelOptions.tcpOption(.tcp_nodelay), value: self.configuration.tcpNoDelay ? 1 : 0)
+            .serverChannelInitializer { channel in
+                channel.pipeline.addHandler(quiesce.makeServerChannelHandler(channel: channel))
+            }
+            // Set the handlers that are applied to the accepted Channels
+            .childChannelInitializer(childChannelInitializer)
+
+            .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: self.configuration.reuseAddress ? 1 : 0)
+            .childChannelOption(ChannelOptions.tcpOption(.tcp_nodelay), value: self.configuration.tcpNoDelay ? 1 : 0)
+            .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
+            .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
+    }
+
+    #if canImport(Network)
+    /// create a NIOTransportServices bootstrap using Network.framework
+    @available(macOS 10.14, iOS 12, tvOS 12, *)
+    private func createTSBootstrap(quiesce: ServerQuiescingHelper, childChannelInitializer: @escaping (Channel) -> EventLoopFuture<Void>) -> HTTPServerBootstrap? {
+        guard let bootstrap = NIOTSListenerBootstrap(validatingGroup: self.eventLoopGroup)?
+            .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: self.configuration.reuseAddress ? 1 : 0)
+            .serverChannelInitializer({ channel in
+                channel.pipeline.addHandler(quiesce.makeServerChannelHandler(channel: channel))
+            })
+            // Set the handlers that are applied to the accepted Channels
+            .childChannelInitializer(childChannelInitializer)
+            .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: self.configuration.reuseAddress ? 1 : 0)
+            .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
+        else {
+            return nil
+        }
+
+        if let tlsOptions = configuration.tlsOptions.options {
+            return bootstrap.tlsOptions(tlsOptions)
+        }
+        return bootstrap
+    }
+    #endif
+
     /// list of child channel handlers
     private var childChannelHandlers: HBHTTPChannelHandlers
     private var tlsChannelHandler: (() -> RemovableChannelHandler)?
 }
 
-extension HBHTTPServer {
-    /// HTTP server configuration
-    public struct Configuration {
-        /// Bind address for server
-        public let address: HBBindAddress
-        /// Server name to return in "server" header
-        public let serverName: String?
-        /// Maximum upload size allowed
-        public let maxUploadSize: Int
-        /// Maximum size of buffer for streaming request payloads
-        public let maxStreamingBufferSize: Int
-        /// Defines the maximum length for the queue of pending connections
-        public let backlog: Int
-        /// Allows socket to be bound to an address that is already in use.
-        public let reuseAddress: Bool
-        /// Disables the Nagle algorithm for send coalescing.
-        public let tcpNoDelay: Bool
-        /// Pipelining ensures that only one http request is processed at one time
-        public let withPipeliningAssistance: Bool
-
-        /// Initialize HTTP server configuration
-        /// - Parameters:
-        ///   - address: Bind address for server
-        ///   - serverName: Server name to return in "server" header
-        ///   - maxUploadSize: Maximum upload size allowed
-        ///   - maxStreamingBufferSize: Maximum size of buffer for streaming request payloads
-        ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
-        ///   - tcpNoDelay: Disables the Nagle algorithm for send coalescing.
-        ///   - withPipeliningAssistance: Pipelining ensures that only one http request is processed at one time
-        public init(
-            address: HBBindAddress = .hostname(),
-            serverName: String? = nil,
-            maxUploadSize: Int = 2 * 1024 * 1024,
-            maxStreamingBufferSize: Int = 1 * 1024 * 1024,
-            backlog: Int = 256,
-            reuseAddress: Bool = true,
-            tcpNoDelay: Bool = true,
-            withPipeliningAssistance: Bool = true
-        ) {
-            self.address = address
-            self.serverName = serverName
-            self.maxUploadSize = maxUploadSize
-            self.maxStreamingBufferSize = maxStreamingBufferSize
-            self.backlog = backlog
-            self.reuseAddress = reuseAddress
-            self.tcpNoDelay = tcpNoDelay
-            self.withPipeliningAssistance = withPipeliningAssistance
-        }
-    }
+/// Protocol for bootstrap.
+protocol HTTPServerBootstrap {
+    func bind(host: String, port: Int) -> EventLoopFuture<Channel>
+    func bind(unixDomainSocketPath: String) -> EventLoopFuture<Channel>
 }
+
+// Extend both `ServerBootstrap` and `NIOTSListenerBootstrap` to conform to `HTTPServerBootstrap`
+extension ServerBootstrap: HTTPServerBootstrap {}
+#if canImport(Network)
+@available(macOS 10.14, iOS 12, tvOS 12, *)
+extension NIOTSListenerBootstrap: HTTPServerBootstrap {}
+#endif
