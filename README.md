@@ -25,7 +25,7 @@ let app = HBApplication(configuration: .init(address: .hostname("127.0.0.1", por
 app.router.get("hello") { request -> String in
     return "Hello"
 }
-app.start()
+try app.start()
 app.wait()
 ```
 
