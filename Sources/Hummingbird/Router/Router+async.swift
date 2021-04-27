@@ -14,6 +14,8 @@
 
 #if compiler(>=5.5) && $AsyncAwait
 
+import _NIOConcurrency
+
 @available(macOS 9999, iOS 9999, watchOS 9999, tvOS 9999, *)
 extension HBRouterMethods {
     /// GET path for closure returning type conforming to ResponseFutureEncodable

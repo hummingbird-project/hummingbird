@@ -13,7 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 #if compiler(>=5.5) && $AsyncAwait
+
 import _Concurrency
+import _NIOConcurrency
 
 /// Middleware using async/await
 @available(macOS 9999, iOS 9999, watchOS 9999, tvOS 9999, *)
