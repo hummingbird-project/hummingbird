@@ -18,25 +18,40 @@ import Network
 
 #if canImport(Network)
 /// Wrapper for NIO transport services TLS options
-public enum TSTLSOptions {
-    @available(macOS 10.14, iOS 12, tvOS 12, *)
-    case some(NWProtocolTLS.Options)
-    case none
-
+public struct TSTLSOptions {
+    /// Initialize TSTLSOptions
     @available(macOS 10.14, iOS 12, tvOS 12, *)
     public init(_ options: NWProtocolTLS.Options?) {
         if let options = options {
-            self = .some(options)
+            self.value = .some(options)
         } else {
-            self = .none
+            self.value = .none
         }
+    }
+    /// TSTLSOptions holding options
+    @available(macOS 10.14, iOS 12, tvOS 12, *)
+    public static func options(_ options: NWProtocolTLS.Options) -> Self {
+        return .init(.some(options))
+    }
+    /// Empty TSTLSOptions
+    public static var none: Self {
+        return .init(.none)
     }
 
     @available(macOS 10.14, iOS 12, tvOS 12, *)
     var options: NWProtocolTLS.Options? {
-        if case .some(let options) = self { return options }
+        if case .some(let options) = value { return options as? NWProtocolTLS.Options }
         return nil
     }
+
+    /// Internal storage for TSTLSOptions. Originally stored a reference to the NWProtocolTLS.Options
+    /// class but we cannot use @available with enum values that hold associated values anymore
+    private enum Internal {
+        case some(Any)
+        case none
+    }
+    private let value: Internal
+    private init(_ value: Internal) { self.value = value }
 }
 #endif
 
