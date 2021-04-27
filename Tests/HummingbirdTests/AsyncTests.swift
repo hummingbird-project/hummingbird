@@ -21,13 +21,13 @@ import XCTest
 
 @available(macOS 9999, iOS 9999, watchOS 9999, tvOS 9999, *)
 final class AsyncTests: XCTestCase {
-    func testAsyncRoute() {
+    func testAsyncRoute() throws {
         let app = HBApplication(testing: .live)
         app.router.get("/hello") { request -> ByteBuffer in
             let buffer = request.allocator.buffer(string: "Async Hello")
             return try await request.eventLoop.makeSucceededFuture(buffer).get()
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/hello", method: .GET) { response in
@@ -38,7 +38,7 @@ final class AsyncTests: XCTestCase {
         }
     }
 
-    func testAsyncMiddleware() {
+    func testAsyncMiddleware() throws {
         struct AsyncTestMiddleware: HBAsyncMiddleware {
             func apply(to request: HBRequest, next: HBResponder) async throws -> HBResponse {
                 let response = try await next.respond(to: request)
@@ -51,7 +51,7 @@ final class AsyncTests: XCTestCase {
         app.router.get("/hello") { _ -> String in
             "hello"
         }
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/hello", method: .GET) { response in
@@ -59,7 +59,7 @@ final class AsyncTests: XCTestCase {
         }
     }
 
-    func testAsyncRouteHandler() {
+    func testAsyncRouteHandler() throws {
         struct AsyncTest: HBAsyncRouteHandler {
             let name: String
             init(from request: HBRequest) throws {
@@ -72,7 +72,7 @@ final class AsyncTests: XCTestCase {
         let app = HBApplication(testing: .live)
         app.router.post("/hello/:name", use: AsyncTest.self)
 
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/hello/Adam", method: .POST) { response in
