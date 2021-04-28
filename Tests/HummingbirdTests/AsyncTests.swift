@@ -65,6 +65,7 @@ final class AsyncTests: XCTestCase {
             init(from request: HBRequest) throws {
                 self.name = try request.parameters.require("name")
             }
+
             func handle(request: HBRequest) async throws -> String {
                 return try await request.success("Hello \(self.name)").get()
             }
@@ -79,7 +80,6 @@ final class AsyncTests: XCTestCase {
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "Hello Adam")
         }
-
     }
 }
 
