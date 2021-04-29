@@ -1,4 +1,7 @@
-FROM swift:5.3-focal
+# ================================
+# Build image
+# ================================
+FROM swift:5.4 as build
 
 WORKDIR /build
 
@@ -12,4 +15,4 @@ RUN swift package resolve
 # Copy entire repo into container
 COPY . .
 
-RUN swift test --sanitize=thread --enable-test-discovery
+RUN swift test --enable-test-discovery --sanitize=thread
