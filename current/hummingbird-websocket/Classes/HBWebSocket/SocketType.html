@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>DecodingError Enumeration Reference</title>
+    <title>SocketType Enumeration Reference</title>
     <link rel="stylesheet" type="text/css" href="../../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../../css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,12 +13,12 @@
     <script src="../../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Enum/DecodingError" class="dashAnchor"></a>
-    <a title="DecodingError Enumeration Reference"></a>
+    <a name="//apple_ref/swift/Enum/SocketType" class="dashAnchor"></a>
+    <a title="SocketType Enumeration Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../../index.html"> 0.3.0 Docs</a> (81% documented)</p>
-        <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird-auth"><img src="../../img/gh.png"/>View on GitHub</a></p>
+        <p><a href="../../index.html"> 0.3.0 Docs</a> (68% documented)</p>
+        <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird-websocket"><img src="../../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../../search.json">
             <input type="text" placeholder="Search documentation" data-typeahead>
@@ -30,26 +30,40 @@
       <p id="breadcrumbs">
         <a href="../../index.html"> Reference</a>
         <img id="carat" src="../../img/carat.png" />
-        DecodingError Enumeration Reference
+        SocketType Enumeration Reference
       </p>
     </div>
     <div class="content-wrapper">
       <nav class="sidebar">
         <ul class="nav-groups">
           <li class="nav-group-name">
+            <a href="../../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../../Classes/HBWebSocket.html">HBWebSocket</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Classes/HBWebSocket/SocketType.html">– SocketType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Classes/WebSocketHandler.html">WebSocketHandler</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
             <a href="../../Enums.html">Enumerations</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="../../Enums/Base32.html">Base32</a>
+                <a href="../../Enums/HBWebSocketClient.html">HBWebSocketClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Enums/Base32/DecodingError.html">– DecodingError</a>
+                <a href="../../Enums/HBWebSocketClient/Error.html">– Error</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Enums/Bcrypt.html">Bcrypt</a>
+                <a href="../../Enums/HBWebSocketClient/Configuration.html">– Configuration</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Enums/OTPHashFunction.html">OTPHashFunction</a>
+                <a href="../../Enums/WebSocketData.html">WebSocketData</a>
               </li>
             </ul>
           </li>
@@ -57,24 +71,13 @@
             <a href="../../Extensions.html">Extensions</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="../../Extensions/HBRequest.html">HBRequest</a>
+                <a href="../../Extensions/HBApplication.html">HBApplication</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Extensions/HBRequest/Auth.html">– Auth</a>
+                <a href="../../Extensions/HBApplication/WebSocket.html">– WebSocket</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Extensions/String.html">String</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="../../Protocols.html">Protocols</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="../../Protocols.html#/s:15HummingbirdAuth17HBAuthenticatableP">HBAuthenticatable</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../../Protocols/HBAuthenticator.html">HBAuthenticator</a>
+                <a href="../../Extensions/HBHTTPServer.html">HBHTTPServer</a>
               </li>
             </ul>
           </li>
@@ -82,16 +85,7 @@
             <a href="../../Structs.html">Structures</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="../../Structs/BasicAuthentication.html">BasicAuthentication</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../../Structs/BearerAuthentication.html">BearerAuthentication</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../../Structs/HOTP.html">HOTP</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../../Structs/TOTP.html">TOTP</a>
+                <a href="../../Structs/HBWebSocketRouterGroup.html">HBWebSocketRouterGroup</a>
               </li>
             </ul>
           </li>
@@ -100,11 +94,11 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>DecodingError</h1>
+            <h1>SocketType</h1>
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">DecodingError</span> <span class="p">:</span> <span class="kt">Swift</span><span class="o">.</span><span class="kt">Error</span><span class="p">,</span> <span class="kt">Equatable</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">SocketType</span></code></pre>
 
                 </div>
               </div>
@@ -117,9 +111,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15HummingbirdAuth6Base32O13DecodingErrorO16invalidCharacteryAEs5UInt8VcAEmF"></a>
-                    <a name="//apple_ref/swift/Element/invalidCharacter(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15HummingbirdAuth6Base32O13DecodingErrorO16invalidCharacteryAEs5UInt8VcAEmF">invalidCharacter(_:<wbr>)</a>
+                    <a name="/s:17HummingbirdWSCore11HBWebSocketC0D4TypeO6clientyA2EmF"></a>
+                    <a name="//apple_ref/swift/Element/client" class="dashAnchor"></a>
+                    <a class="token" href="#/s:17HummingbirdWSCore11HBWebSocketC0D4TypeO6clientyA2EmF">client</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -134,7 +128,34 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">invalidCharacter</span><span class="p">(</span><span class="kt">UInt8</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">client</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:17HummingbirdWSCore11HBWebSocketC0D4TypeO6serveryA2EmF"></a>
+                    <a name="//apple_ref/swift/Element/server" class="dashAnchor"></a>
+                    <a class="token" href="#/s:17HummingbirdWSCore11HBWebSocketC0D4TypeO6serveryA2EmF">server</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">server</span></code></pre>
 
                         </div>
                       </div>
@@ -146,7 +167,7 @@
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-03-19)</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-05-03)</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>

@@ -17,7 +17,7 @@
     <a title="HBRequest Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> 0.9.0 Docs</a> (82% documented)</p>
+        <p><a href="../index.html"> 0.11.0 Docs</a> (83% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../search.json">
@@ -75,6 +75,9 @@
                 <a href="../Classes/HBApplication/HTTPResponder.html">– HTTPResponder</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Classes/HBApplication/Persist.html">– Persist</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Classes/HBDateCache.html">HBDateCache</a>
               </li>
               <li class="nav-group-task">
@@ -84,10 +87,10 @@
                 <a href="../Classes/HBRequest.html">HBRequest</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/HBRequest/Context.html">– Context</a>
+                <a href="../Classes/HBRequest/ResponsePatch.html">– ResponsePatch</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/HBRequest/ResponsePatch.html">– ResponsePatch</a>
+                <a href="../Classes/HBRequest/Persist.html">– Persist</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/HBResponse.html">HBResponse</a>
@@ -145,6 +148,12 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/HBMiddleware.html">HBMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/HBPersistDriver.html">HBPersistDriver</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/HBRequestContext.html">HBRequestContext</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/HBRequestDecodable.html">HBRequestDecodable</a>
@@ -221,6 +230,9 @@
                 <a href="../Structs/HBParser/Iterator.html">– Iterator</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Structs/HBPersistDriverFactory.html">HBPersistDriverFactory</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/HBRouterGroup.html">HBRouterGroup</a>
               </li>
               <li class="nav-group-task">
@@ -228,6 +240,9 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/HBURL/Scheme.html">– Scheme</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HTTPHeadersPatch.html">HTTPHeadersPatch</a>
               </li>
             </ul>
           </li>
@@ -451,60 +466,6 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird9HBRequestC9eventLoop3NIO05EventD0_pvp"></a>
-                    <a name="//apple_ref/swift/Property/eventLoop" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird9HBRequestC9eventLoop3NIO05EventD0_pvp">eventLoop</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>EventLoop request is running on</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:11Hummingbird9HBRequestC9allocator3NIO19ByteBufferAllocatorVvp"></a>
-                    <a name="//apple_ref/swift/Property/allocator" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird9HBRequestC9allocator3NIO19ByteBufferAllocatorVvp">allocator</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>ByteBuffer allocator used by request</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">allocator</span><span class="p">:</span> <span class="kt">ByteBufferAllocator</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
                     <a name="/s:11Hummingbird9HBRequestC10extensionsAA12HBExtensionsVyACGvp"></a>
                     <a name="//apple_ref/swift/Property/extensions" class="dashAnchor"></a>
                     <a class="token" href="#/s:11Hummingbird9HBRequestC10extensionsAA12HBExtensionsVyACGvp">extensions</a>
@@ -559,6 +520,114 @@
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/s:11Hummingbird9HBRequestC7contextAA0B7Context_pvp"></a>
+                    <a name="//apple_ref/swift/Property/context" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird9HBRequestC7contextAA0B7Context_pvp">context</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRequestContext.html">HBRequestContext</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird9HBRequestC9eventLoop3NIO05EventD0_pvp"></a>
+                    <a name="//apple_ref/swift/Property/eventLoop" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird9HBRequestC9eventLoop3NIO05EventD0_pvp">eventLoop</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>EventLoop request is running on</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird9HBRequestC9allocator3NIO19ByteBufferAllocatorVvp"></a>
+                    <a name="//apple_ref/swift/Property/allocator" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird9HBRequestC9allocator3NIO19ByteBufferAllocatorVvp">allocator</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>ByteBuffer allocator used by request</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">allocator</span><span class="p">:</span> <span class="kt">ByteBufferAllocator</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird9HBRequestC13remoteAddress3NIO06SocketD0OSgvp"></a>
+                    <a name="//apple_ref/swift/Property/remoteAddress" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird9HBRequestC13remoteAddress3NIO06SocketD0OSgvp">remoteAddress</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>IP request came from</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">remoteAddress</span><span class="p">:</span> <span class="kt">SocketAddress</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/s:11Hummingbird9HBRequestC10parametersAA12HBParametersVvp"></a>
                     <a name="//apple_ref/swift/Property/parameters" class="dashAnchor"></a>
                     <a class="token" href="#/s:11Hummingbird9HBRequestC10parametersAA12HBParametersVvp">parameters</a>
@@ -599,9 +668,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird9HBRequestC4head4body11application9eventLoop9allocatorAC8NIOHTTP115HTTPRequestHeadV_0A4Core0B4BodyOAA13HBApplicationC3NIO05EventG0_pAQ19ByteBufferAllocatorVtcfc"></a>
-                    <a name="//apple_ref/swift/Method/init(head:body:application:eventLoop:allocator:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird9HBRequestC4head4body11application9eventLoop9allocatorAC8NIOHTTP115HTTPRequestHeadV_0A4Core0B4BodyOAA13HBApplicationC3NIO05EventG0_pAQ19ByteBufferAllocatorVtcfc">init(head:<wbr>body:<wbr>application:<wbr>eventLoop:<wbr>allocator:<wbr>)</a>
+                    <a name="/s:11Hummingbird9HBRequestC4head4body11application7contextAC8NIOHTTP115HTTPRequestHeadV_0A4Core0B4BodyOAA13HBApplicationCAA0B7Context_ptcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(head:body:application:context:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird9HBRequestC4head4body11application7contextAC8NIOHTTP115HTTPRequestHeadV_0A4Core0B4BodyOAA13HBApplicationCAA0B7Context_ptcfc">init(head:<wbr>body:<wbr>application:<wbr>context:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -620,8 +689,7 @@
     <span class="nv">head</span><span class="p">:</span> <span class="kt">HTTPRequestHead</span><span class="p">,</span>
     <span class="nv">body</span><span class="p">:</span> <span class="kt">HBRequestBody</span><span class="p">,</span>
     <span class="nv">application</span><span class="p">:</span> <span class="kt"><a href="../Classes/HBApplication.html">HBApplication</a></span><span class="p">,</span>
-    <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">,</span>
-    <span class="nv">allocator</span><span class="p">:</span> <span class="kt">ByteBufferAllocator</span>
+    <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRequestContext.html">HBRequestContext</a></span>
 <span class="p">)</span></code></pre>
 
                         </div>
@@ -863,61 +931,6 @@
                     </section>
                   </div>
                 </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:11Hummingbird9HBRequestC7contextAC7ContextVvp"></a>
-                    <a name="//apple_ref/swift/Property/context" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird9HBRequestC7contextAC7ContextVvp">context</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Return context request is running in</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/HBRequest/Context.html">Context</a></span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:11Hummingbird9HBRequestC7ContextV"></a>
-                    <a name="//apple_ref/swift/Struct/Context" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird9HBRequestC7ContextV">Context</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Context request is running in</p>
-
-                        <a href="../Classes/HBRequest/Context.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Context</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
               </ul>
             </div>
             <div class="task-group">
@@ -1034,12 +1047,67 @@ returning the payload you can edit the status and headers via <code>request.resp
                     </section>
                   </div>
                 </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird9HBRequestC7PersistV"></a>
+                    <a name="//apple_ref/swift/Struct/Persist" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird9HBRequestC7PersistV">Persist</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                        <a href="../Classes/HBRequest/Persist.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Persist</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird9HBRequestC7persistAC7PersistVvp"></a>
+                    <a name="//apple_ref/swift/Property/persist" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird9HBRequestC7persistAC7PersistVvp">persist</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Accessor for persist framework</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">persist</span><span class="p">:</span> <span class="kt">HBRequest</span><span class="o">.</span><span class="kt"><a href="../Classes/HBRequest/Persist.html">Persist</a></span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
               </ul>
             </div>
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-04-07)</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-05-03)</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>

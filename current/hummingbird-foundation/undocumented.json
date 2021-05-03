@@ -2,105 +2,105 @@
   "warnings": [
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Cookies/Cookie.swift",
-      "line": 5,
+      "line": 19,
       "symbol": "HBCookie.SameSite",
       "symbol_kind": "source.lang.swift.decl.enum",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Cookies/Cookie.swift",
-      "line": 6,
+      "line": 20,
       "symbol": "HBCookie.SameSite.lax",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Cookies/Cookie.swift",
-      "line": 7,
+      "line": 21,
       "symbol": "HBCookie.SameSite.secure",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Cookies/Cookie.swift",
-      "line": 8,
+      "line": 22,
       "symbol": "HBCookie.SameSite.none",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Cookies/Cookie.swift",
-      "line": 161,
+      "line": 175,
       "symbol": "HBCookie.Properties.subscript(_:)",
       "symbol_kind": "source.lang.swift.decl.function.subscript",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Cookies/Cookies.swift",
-      "line": 7,
+      "line": 21,
       "symbol": "HBCookies.CollectionType",
       "symbol_kind": "source.lang.swift.decl.typealias",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Files/CacheControl.swift",
-      "line": 6,
+      "line": 20,
       "symbol": "HBCacheControl.Value",
       "symbol_kind": "source.lang.swift.decl.enum",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Files/CacheControl.swift",
-      "line": 7,
+      "line": 21,
       "symbol": "HBCacheControl.Value.noStore",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Files/CacheControl.swift",
-      "line": 8,
+      "line": 22,
       "symbol": "HBCacheControl.Value.noCache",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Files/CacheControl.swift",
-      "line": 9,
+      "line": 23,
       "symbol": "HBCacheControl.Value.private",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Files/CacheControl.swift",
-      "line": 10,
+      "line": 24,
       "symbol": "HBCacheControl.Value.public",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Files/CacheControl.swift",
-      "line": 11,
+      "line": 25,
       "symbol": "HBCacheControl.Value.maxAge(_:)",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Files/CacheControl.swift",
-      "line": 12,
+      "line": 26,
       "symbol": "HBCacheControl.Value.mustRevalidate",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Files/FileMiddleware.swift",
-      "line": 25,
+      "line": 39,
       "symbol": "HBFileMiddleware.init(_:cacheControl:application:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdFoundation/Files/FileMiddleware.swift",
-      "line": 48,
+      "line": 62,
       "symbol": "HBFileMiddleware.apply(to:next:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"

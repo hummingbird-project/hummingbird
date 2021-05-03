@@ -17,7 +17,7 @@
     <a title="Configuration Structure Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../../index.html"> 0.9.0 Docs</a> (82% documented)</p>
+        <p><a href="../../index.html"> 0.11.0 Docs</a> (83% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="../../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../../search.json">
@@ -75,6 +75,9 @@
                 <a href="../../Classes/HBApplication/HTTPResponder.html">– HTTPResponder</a>
               </li>
               <li class="nav-group-task">
+                <a href="../../Classes/HBApplication/Persist.html">– Persist</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../../Classes/HBDateCache.html">HBDateCache</a>
               </li>
               <li class="nav-group-task">
@@ -84,10 +87,10 @@
                 <a href="../../Classes/HBRequest.html">HBRequest</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Classes/HBRequest/Context.html">– Context</a>
+                <a href="../../Classes/HBRequest/ResponsePatch.html">– ResponsePatch</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Classes/HBRequest/ResponsePatch.html">– ResponsePatch</a>
+                <a href="../../Classes/HBRequest/Persist.html">– Persist</a>
               </li>
               <li class="nav-group-task">
                 <a href="../../Classes/HBResponse.html">HBResponse</a>
@@ -145,6 +148,12 @@
               </li>
               <li class="nav-group-task">
                 <a href="../../Protocols/HBMiddleware.html">HBMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Protocols/HBPersistDriver.html">HBPersistDriver</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Protocols/HBRequestContext.html">HBRequestContext</a>
               </li>
               <li class="nav-group-task">
                 <a href="../../Protocols/HBRequestDecodable.html">HBRequestDecodable</a>
@@ -221,6 +230,9 @@
                 <a href="../../Structs/HBParser/Iterator.html">– Iterator</a>
               </li>
               <li class="nav-group-task">
+                <a href="../../Structs/HBPersistDriverFactory.html">HBPersistDriverFactory</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../../Structs/HBRouterGroup.html">HBRouterGroup</a>
               </li>
               <li class="nav-group-task">
@@ -228,6 +240,9 @@
               </li>
               <li class="nav-group-task">
                 <a href="../../Structs/HBURL/Scheme.html">– Scheme</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Structs/HTTPHeadersPatch.html">HTTPHeadersPatch</a>
               </li>
             </ul>
           </li>
@@ -478,6 +493,33 @@
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/s:11Hummingbird13HBApplicationC13ConfigurationV10tlsOptions0A4Core12TSTLSOptionsOvp"></a>
+                    <a name="//apple_ref/swift/Property/tlsOptions" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird13HBApplicationC13ConfigurationV10tlsOptions0A4Core12TSTLSOptionsOvp">tlsOptions</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>TLS options for NIO Transport services</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">tlsOptions</span><span class="p">:</span> <span class="kt">TSTLSOptions</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/s:11Hummingbird13HBApplicationC13ConfigurationV14threadPoolSizeSivp"></a>
                     <a name="//apple_ref/swift/Property/threadPoolSize" class="dashAnchor"></a>
                     <a class="token" href="#/s:11Hummingbird13HBApplicationC13ConfigurationV14threadPoolSizeSivp">threadPoolSize</a>
@@ -580,12 +622,52 @@
                     </section>
                   </div>
                 </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird13HBApplicationC13ConfigurationV7address10serverName13maxUploadSize0g15StreamingBufferI07backlog12reuseAddress10tcpNoDelay20enableHttpPipelining010threadPoolI08logLevel10tlsOptionsAE0A4Core06HBBindN0O_SSSgS3iS3bSi7Logging6LoggerV0X0OSg7Network13NWProtocolTLSC0Z0CSgtcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(address:serverName:maxUploadSize:maxStreamingBufferSize:backlog:reuseAddress:tcpNoDelay:enableHttpPipelining:threadPoolSize:logLevel:tlsOptions:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird13HBApplicationC13ConfigurationV7address10serverName13maxUploadSize0g15StreamingBufferI07backlog12reuseAddress10tcpNoDelay20enableHttpPipelining010threadPoolI08logLevel10tlsOptionsAE0A4Core06HBBindN0O_SSSgS3iS3bSi7Logging6LoggerV0X0OSg7Network13NWProtocolTLSC0Z0CSgtcfc">init(address:<wbr>serverName:<wbr>maxUploadSize:<wbr>maxStreamingBufferSize:<wbr>backlog:<wbr>reuseAddress:<wbr>tcpNoDelay:<wbr>enableHttpPipelining:<wbr>threadPoolSize:<wbr>logLevel:<wbr>tlsOptions:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Create configuration struct</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@available</span><span class="p">(</span><span class="n">macOS</span> <span class="mf">10.14</span><span class="p">,</span> <span class="n">iOS</span> <span class="mi">12</span><span class="p">,</span> <span class="n">tvOS</span> <span class="mi">12</span><span class="p">,</span> <span class="o">*</span><span class="p">)</span>
+<span class="kd">public</span> <span class="nf">init</span><span class="p">(</span>
+    <span class="nv">address</span><span class="p">:</span> <span class="kt">HBBindAddress</span> <span class="o">=</span> <span class="o">.</span><span class="nf">hostname</span><span class="p">(),</span>
+    <span class="nv">serverName</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">maxUploadSize</span><span class="p">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">,</span>
+    <span class="nv">maxStreamingBufferSize</span><span class="p">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">,</span>
+    <span class="nv">backlog</span><span class="p">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
+    <span class="nv">reuseAddress</span><span class="p">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="nv">tcpNoDelay</span><span class="p">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="kc">false</span><span class="p">,</span>
+    <span class="nv">enableHttpPipelining</span><span class="p">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="nv">threadPoolSize</span><span class="p">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="nv">logLevel</span><span class="p">:</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt">Level</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">tlsOptions</span><span class="p">:</span> <span class="kt">NWProtocolTLS</span><span class="o">.</span><span class="kt">Options</span><span class="p">?</span>
+<span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
               </ul>
             </div>
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-04-07)</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-05-03)</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>

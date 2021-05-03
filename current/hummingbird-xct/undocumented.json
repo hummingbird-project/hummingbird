@@ -2,7 +2,7 @@
   "warnings": [
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/HummingbirdXCT/Application+XCT.swift",
-      "line": 60,
+      "line": 74,
       "symbol": "HBApplication.xct",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"

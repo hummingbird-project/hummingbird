@@ -17,7 +17,7 @@
     <a title="ResponsePatch Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../../index.html"> 0.9.0 Docs</a> (82% documented)</p>
+        <p><a href="../../index.html"> 0.11.0 Docs</a> (83% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="../../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../../search.json">
@@ -75,6 +75,9 @@
                 <a href="../../Classes/HBApplication/HTTPResponder.html">– HTTPResponder</a>
               </li>
               <li class="nav-group-task">
+                <a href="../../Classes/HBApplication/Persist.html">– Persist</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../../Classes/HBDateCache.html">HBDateCache</a>
               </li>
               <li class="nav-group-task">
@@ -84,10 +87,10 @@
                 <a href="../../Classes/HBRequest.html">HBRequest</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Classes/HBRequest/Context.html">– Context</a>
+                <a href="../../Classes/HBRequest/ResponsePatch.html">– ResponsePatch</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Classes/HBRequest/ResponsePatch.html">– ResponsePatch</a>
+                <a href="../../Classes/HBRequest/Persist.html">– Persist</a>
               </li>
               <li class="nav-group-task">
                 <a href="../../Classes/HBResponse.html">HBResponse</a>
@@ -145,6 +148,12 @@
               </li>
               <li class="nav-group-task">
                 <a href="../../Protocols/HBMiddleware.html">HBMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Protocols/HBPersistDriver.html">HBPersistDriver</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Protocols/HBRequestContext.html">HBRequestContext</a>
               </li>
               <li class="nav-group-task">
                 <a href="../../Protocols/HBRequestDecodable.html">HBRequestDecodable</a>
@@ -221,6 +230,9 @@
                 <a href="../../Structs/HBParser/Iterator.html">– Iterator</a>
               </li>
               <li class="nav-group-task">
+                <a href="../../Structs/HBPersistDriverFactory.html">HBPersistDriverFactory</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../../Structs/HBRouterGroup.html">HBRouterGroup</a>
               </li>
               <li class="nav-group-task">
@@ -228,6 +240,9 @@
               </li>
               <li class="nav-group-task">
                 <a href="../../Structs/HBURL/Scheme.html">– Scheme</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Structs/HTTPHeadersPatch.html">HTTPHeadersPatch</a>
               </li>
             </ul>
           </li>
@@ -288,9 +303,9 @@ returning the payload you can edit the status and headers via <code>request.resp
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird9HBRequestC13ResponsePatchC7headers8NIOHTTP111HTTPHeadersVvp"></a>
+                    <a name="/s:11Hummingbird9HBRequestC13ResponsePatchC7headersAA011HTTPHeadersD0Vvp"></a>
                     <a name="//apple_ref/swift/Property/headers" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird9HBRequestC13ResponsePatchC7headers8NIOHTTP111HTTPHeadersVvp">headers</a>
+                    <a class="token" href="#/s:11Hummingbird9HBRequestC13ResponsePatchC7headersAA011HTTPHeadersD0Vvp">headers</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -305,7 +320,7 @@ returning the payload you can edit the status and headers via <code>request.resp
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">headers</span><span class="p">:</span> <span class="kt">HTTPHeaders</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">headers</span><span class="p">:</span> <span class="kt"><a href="../../Structs/HTTPHeadersPatch.html">HTTPHeadersPatch</a></span></code></pre>
 
                         </div>
                       </div>
@@ -317,7 +332,7 @@ returning the payload you can edit the status and headers via <code>request.resp
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-04-07)</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-05-03)</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
