@@ -328,6 +328,55 @@ class HummingBirdCoreTests: XCTestCase {
         XCTAssertNoThrow(try future.wait())
     }
 
+    func testStreamedRequestDrop() {
+        /// Embedded channels pass all the data down immediately. This is not a real world situation so this handler
+        /// can be used to fake TCP/IP data packets coming in arbitrary sizes (well at least for the HTTP body)
+        class BreakupHTTPBodyChannelHandler: ChannelInboundHandler, RemovableChannelHandler {
+            typealias InboundIn = HTTPServerRequestPart
+            typealias InboundOut = HTTPServerRequestPart
+
+            func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+                let part = unwrapInboundIn(data)
+
+                switch part {
+                case .head, .end:
+                    context.fireChannelRead(data)
+                case .body(var buffer):
+                    while buffer.readableBytes > 0 {
+                        let size = min(Int.random(in: 16...8192), buffer.readableBytes)
+                        let slice = buffer.readSlice(length: size)!
+                        context.fireChannelRead(self.wrapInboundOut(.body(slice)))
+                    }
+                }
+            }
+        }
+        struct Responder: HBHTTPResponder {
+            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
+                XCTAssertNotNil(request.body.stream)
+                let response = HBHTTPResponse(
+                    head: .init(version: .init(major: 1, minor: 1), status: .accepted),
+                    body: .empty
+                )
+                onComplete(.success(response))
+            }
+        }
+        let server = HBHTTPServer(group: Self.eventLoopGroup, configuration: .init(address: .hostname(port: 8080)))
+        server.addChannelHandler(BreakupHTTPBodyChannelHandler())
+        XCTAssertNoThrow(try server.start(responder: Responder()).wait())
+        defer { XCTAssertNoThrow(try server.stop().wait()) }
+
+        let buffer = self.randomBuffer(size: 16384)
+        let request = try! HTTPClient.Request(
+            url: "http://localhost:\(server.configuration.address.port!)/",
+            body: .byteBuffer(buffer)
+        )
+        let future = Self.httpClient.execute(request: request)
+            .flatMapThrowing { response in
+                XCTAssertEqual(response.status, .accepted)
+            }
+        XCTAssertNoThrow(try future.wait())
+    }
+
     func testMaxUploadSize() {
         struct Responder: HBHTTPResponder {
             func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {

@@ -28,11 +28,13 @@ public struct TSTLSOptions {
             self.value = .none
         }
     }
+
     /// TSTLSOptions holding options
     @available(macOS 10.14, iOS 12, tvOS 12, *)
     public static func options(_ options: NWProtocolTLS.Options) -> Self {
         return .init(.some(options))
     }
+
     /// Empty TSTLSOptions
     public static var none: Self {
         return .init(.none)
@@ -40,7 +42,7 @@ public struct TSTLSOptions {
 
     @available(macOS 10.14, iOS 12, tvOS 12, *)
     var options: NWProtocolTLS.Options? {
-        if case .some(let options) = value { return options as? NWProtocolTLS.Options }
+        if case .some(let options) = self.value { return options as? NWProtocolTLS.Options }
         return nil
     }
 
@@ -50,6 +52,7 @@ public struct TSTLSOptions {
         case some(Any)
         case none
     }
+
     private let value: Internal
     private init(_ value: Internal) { self.value = value }
 }
