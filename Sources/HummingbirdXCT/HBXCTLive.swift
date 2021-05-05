@@ -36,7 +36,13 @@ struct HBXCTLive: HBXCT {
 
     /// Start tests
     func start(application: HBApplication) throws {
-        try application.start()
+        do {
+            try application.start()
+        } catch {
+            // if start fails then shutdown client
+            try self.client.syncShutdown()
+            throw error
+        }
     }
 
     /// Stop tests
