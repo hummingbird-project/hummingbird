@@ -105,7 +105,7 @@ extension HBApplication {
             enableHttpPipelining: Bool = true,
             threadPoolSize: Int = 2,
             logLevel: Logger.Level? = nil,
-            tlsOptions: NWProtocolTLS.Options?
+            tlsOptions: TSTLSOptions
         ) {
             let env = HBEnvironment()
 
@@ -117,7 +117,7 @@ extension HBApplication {
             self.reuseAddress = reuseAddress
             self.tcpNoDelay = tcpNoDelay
             self.enableHttpPipelining = enableHttpPipelining
-            self.tlsOptions = .init(tlsOptions)
+            self.tlsOptions = tlsOptions
 
             self.threadPoolSize = threadPoolSize
 
