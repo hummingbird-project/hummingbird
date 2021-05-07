@@ -75,7 +75,7 @@ public final class HBRequest: HBExtensible {
         self.method = head.method
         self.headers = head.headers
         self.body = body
-        self.logger = application.logger.with(metadataKey: "hb_id", value: .string(Self.globalRequestID.add(1).description))
+        self.logger = application.logger.with(metadataKey: "hb_id", value: .stringConvertible(Self.globalRequestID.add(1)))
         self.application = application
         self.extensions = HBExtensions()
         self.endpointPath = nil

@@ -29,13 +29,13 @@ public struct HBLogRequestsMiddleware: HBMiddleware {
             request.logger.log(
                 level: self.logLevel,
                 "\(request.headers)",
-                metadata: ["hb_uri": .string(request.uri.description), "hb_method": .string(request.method.rawValue)]
+                metadata: ["hb_uri": .stringConvertible(request.uri), "hb_method": .string(request.method.rawValue)]
             )
         } else {
             request.logger.log(
                 level: self.logLevel,
                 "",
-                metadata: ["hb_uri": .string(request.uri.description), "hb_method": .string(request.method.rawValue)]
+                metadata: ["hb_uri": .stringConvertible(request.uri), "hb_method": .string(request.method.rawValue)]
             )
         }
         return next.respond(to: request)
