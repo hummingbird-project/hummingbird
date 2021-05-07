@@ -411,33 +411,6 @@ class HummingBirdCoreTests: XCTestCase {
         XCTAssertNoThrow(try future.wait())
     }
 
-    #if canImport(Network)
-    @available(macOS 10.14, iOS 12, tvOS 12, *)
-    func testNIOTransportServices() {
-        struct HelloResponder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
-                let responseHead = HTTPResponseHead(version: .init(major: 1, minor: 1), status: .ok)
-                let responseBody = context.channel.allocator.buffer(string: "Hello")
-                let response = HBHTTPResponse(head: responseHead, body: .byteBuffer(responseBody))
-                onComplete(.success(response))
-            }
-        }
-        let eventLoopGroup = NIOTSEventLoopGroup()
-        let server = HBHTTPServer(group: eventLoopGroup, configuration: .init(address: .hostname(port: 8081)))
-        XCTAssertNoThrow(try server.start(responder: HelloResponder()).wait())
-        defer { XCTAssertNoThrow(try server.stop().wait()) }
-
-        let request = try! HTTPClient.Request(
-            url: "http://localhost:\(server.configuration.address.port!)/"
-        )
-        let future = Self.httpClient.execute(request: request).flatMapThrowing { response in
-            var body = try XCTUnwrap(response.body)
-            XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
-        }
-        XCTAssertNoThrow(try future.wait())
-    }
-    #endif
-
     func testEmbeddedChannel() {
         enum HTTPError: Error {
             case noHead
