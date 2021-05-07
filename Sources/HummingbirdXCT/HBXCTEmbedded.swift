@@ -57,8 +57,7 @@ struct HBXCTEmbedded: HBXCT {
             }
             try self.writeInbound(.end(nil))
 
-            // flush
-            self.embeddedChannel.flush()
+            self.embeddedChannel.embeddedEventLoop.run()
 
             // read response
             guard case .head(let head) = try readOutbound() else { throw HBXCTError.noHead }
