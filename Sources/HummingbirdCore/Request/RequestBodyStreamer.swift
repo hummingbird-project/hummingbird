@@ -95,7 +95,9 @@ public class HBRequestBodyStreamer {
     /// - Returns: Returns an EventLoopFuture that will be fulfilled with array of ByteBuffers that has so far been fed to th request body
     ///     and whether we have consumed everything
     public func consume(on eventLoop: EventLoop) -> EventLoopFuture<ConsumeOutput> {
-        self.consume().hop(to: eventLoop)
+        self.eventLoop.flatSubmit {
+            self.consume()
+        }.hop(to: eventLoop)
     }
 
     /// Consume the request body, calling `process` on each buffer until you receive an end tag
@@ -106,7 +108,7 @@ public class HBRequestBodyStreamer {
     public func consumeAll(on eventLoop: EventLoop, _ process: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
         let promise = self.eventLoop.makePromise(of: Void.self)
         func _consumeAll() {
-            self.consume(on: eventLoop).map { output in
+            self.consume().map { output in
                 switch output {
                 case .byteBuffer(let buffer):
                     process(buffer).whenComplete { result in
@@ -124,7 +126,9 @@ public class HBRequestBodyStreamer {
             }
             .cascadeFailure(to: promise)
         }
-        _consumeAll()
+        self.eventLoop.execute {
+            _consumeAll()
+        }
         return promise.futureResult
     }
 
@@ -161,6 +165,7 @@ public class HBRequestBodyStreamer {
     /// - Returns: Returns an EventLoopFuture that will be fulfilled with array of ByteBuffers that has so far been fed to the request body
     ///     and whether we have consumed an end tag
     func consume() -> EventLoopFuture<ConsumeOutput> {
+        self.eventLoop.assertInEventLoop()
         assert(self.queue.first != nil)
         let promise = self.queue.first!
         return promise.futureResult.map { result in
@@ -180,6 +185,7 @@ public class HBRequestBodyStreamer {
     /// Consume the request body until you receive an end tag
     /// - Returns: EventLoopFuture that will be fulfilled with the full ByteBuffer of the Request
     func consumeAll() -> EventLoopFuture<ByteBuffer?> {
+        self.eventLoop.assertInEventLoop()
         let promise = self.eventLoop.makePromise(of: ByteBuffer?.self)
         var completeBuffer: ByteBuffer?
         func _consumeAll() {
