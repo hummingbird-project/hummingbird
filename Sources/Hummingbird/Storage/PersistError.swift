@@ -17,6 +17,7 @@ public struct HBPersistError: Error, Equatable {
     private enum Internal {
         case duplicate
     }
+
     private let value: Internal
     private init(value: Internal) {
         self.value = value

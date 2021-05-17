@@ -19,12 +19,32 @@ public protocol HBPersistDriver {
     /// shutdown driver
     func shutdown()
     /// create key/value pair. If key already exist throw `HBPersistError.duplicate` error
+    /// - Parameters:
+    ///   - key: Key to store value against
+    ///   - value: Codable value to store
+    ///   - expires: If non-nil defines time that value will expire
+    ///   - request: Request making this call
     func create<Object: Codable>(key: String, value: Object, expires: TimeAmount?, request: HBRequest) -> EventLoopFuture<Void>
+
     /// set value for key. If value already exists overwrite it
+    /// - Parameters:
+    ///   - key: Key to store value against
+    ///   - value: Codable value to store
+    ///   - expires: If non-nil defines time that value will expire
+    ///   - request: Request making this call
     func set<Object: Codable>(key: String, value: Object, expires: TimeAmount?, request: HBRequest) -> EventLoopFuture<Void>
+
     /// get value for key
+    /// - Parameters:
+    ///   - key: Key used to look for value
+    ///   - as: Type you want value to be returned as. If it cannot be returned as this value then nil will be returned
+    ///   - request: Request making this call
     func get<Object: Codable>(key: String, as: Object.Type, request: HBRequest) -> EventLoopFuture<Object?>
-    /// remove value for key
+
+    /// remove value associated with key
+    /// - Parameters:
+    ///   - key: Key used to look for value
+    ///   - request: Request making this call
     func remove(key: String, request: HBRequest) -> EventLoopFuture<Void>
 }
 
