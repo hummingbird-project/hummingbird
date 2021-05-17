@@ -29,6 +29,7 @@ class HBMemoryPersistDriver: HBPersistDriver {
 
     func create<Object: Codable>(key: String, value: Object, expires: TimeAmount? = nil, request: HBRequest) -> EventLoopFuture<Void> {
         return request.eventLoop.submit {
+            guard self.values[key] == nil else { throw HBPersistError.duplicate }
             self.values[key] = .init(value: value, expires: expires)
         }
     }

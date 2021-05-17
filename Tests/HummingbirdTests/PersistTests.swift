@@ -78,6 +78,29 @@ final class PersistTests: XCTestCase {
         }
     }
 
+    func testDoubleCreateFail() throws {
+        let app = try createApplication()
+        app.router.put("/create/:tag") { request -> EventLoopFuture<HTTPResponseStatus> in
+            guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
+            guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
+            return request.persist.create(key: tag, value: String(buffer: buffer))
+                .flatMapErrorThrowing { error in
+                    if let error = error as? HBPersistError, error == .duplicate { throw HBHTTPError(.conflict) }
+                    throw error
+                }
+                .map { _ in .ok }
+        }
+        try app.XCTStart()
+        defer { app.XCTStop() }
+        let tag = UUID().uuidString
+        app.XCTExecute(uri: "/create/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { response in
+            XCTAssertEqual(response.status, .ok)
+        }
+        app.XCTExecute(uri: "/create/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { response in
+            XCTAssertEqual(response.status, .conflict)
+        }
+    }
+
     func testSetTwice() throws {
         let app = try createApplication()
         try app.XCTStart()
