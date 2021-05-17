@@ -18,9 +18,9 @@ import NIO
 public protocol HBPersistDriver {
     /// shutdown driver
     func shutdown()
-    /// set value for key
+    /// create key/value pair. If key already exist throw `HBPersistError.duplicate` error
     func create<Object: Codable>(key: String, value: Object, expires: TimeAmount?, request: HBRequest) -> EventLoopFuture<Void>
-    /// set value for key
+    /// set value for key. If value already exists overwrite it
     func set<Object: Codable>(key: String, value: Object, expires: TimeAmount?, request: HBRequest) -> EventLoopFuture<Void>
     /// get value for key
     func get<Object: Codable>(key: String, as: Object.Type, request: HBRequest) -> EventLoopFuture<Object?>
