@@ -50,7 +50,7 @@ struct HBXCTLive: HBXCT {
         XCTAssertNoThrow(_ = try self.client.syncShutdown())
         application.stop()
         application.wait()
-        try? eventLoopGroup.syncShutdownGracefully()
+        try? self.eventLoopGroup.syncShutdownGracefully()
     }
 
     /// Send request and call test callback on the response returned
