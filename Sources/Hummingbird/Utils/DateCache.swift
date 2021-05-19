@@ -33,6 +33,21 @@ public class HBDateCache {
         return dateCache
     }
 
+    static func shutdownDataCaches(eventLoopGroup: EventLoopGroup) -> EventLoopFuture<Void> {
+        var dateCacheShutdownFutures: [EventLoopFuture<Void>] = []
+        for eventLoop in eventLoopGroup.makeIterator() {
+            let future: EventLoopFuture<Void> = eventLoop.flatSubmit {
+                guard let dateCache = thread.currentValue else {
+                    return eventLoop.makeSucceededFuture(())
+                }
+                thread.currentValue = nil
+                return dateCache.shutdown(eventLoop: eventLoop)
+            }
+            dateCacheShutdownFutures.append(future)
+        }
+        return EventLoopFuture.andAllComplete(dateCacheShutdownFutures, on: eventLoopGroup.next())
+    }
+
     /// Initialize DateCache to run on a specific `EventLoop`
     private init(eventLoop: EventLoop) {
         assert(eventLoop.inEventLoop)
@@ -50,7 +65,7 @@ public class HBDateCache {
     private func shutdown(eventLoop: EventLoop) -> EventLoopFuture<Void> {
         let promise = eventLoop.makePromise(of: Void.self)
         self.task.cancel(promise: promise)
-        return promise.futureResult.map { self.task = nil }
+        return promise.futureResult
     }
 
     /// Render Epoch seconds as RFC1123 formatted date
