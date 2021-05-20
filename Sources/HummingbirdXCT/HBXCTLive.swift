@@ -38,7 +38,7 @@ class HBXCTLive: HBXCT {
     func start(application: HBApplication) throws {
         do {
             try application.start()
-            client.connect()
+            self.client.connect()
         } catch {
             // if start fails then shutdown client
             try self.client.syncShutdown()
