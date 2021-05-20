@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import AsyncHTTPClient
 import Foundation
 import Hummingbird
 import HummingbirdFoundation

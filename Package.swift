@@ -18,9 +18,8 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.7.0"),
         .package(url: "https://github.com/apple/swift-nio-http2.git", from: "1.16.1"),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.4.0"),
-        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.2.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "1.0.0-alpha.6"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-core.git", from: "0.9.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-core.git", .branch("hb-test-client")),
     ],
     targets: [
         .target(name: "Hummingbird", dependencies: [
@@ -38,9 +37,9 @@ let package = Package(
         ]),
         .target(name: "HummingbirdXCT", dependencies: [
             .byName(name: "Hummingbird"),
+            .product(name: "HummingbirdCoreXCT", package: "hummingbird-core"),
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
-            .product(name: "AsyncHTTPClient", package: "async-http-client"),
         ]),
         .target(name: "PerformanceTest", dependencies: [
             .byName(name: "Hummingbird"),
