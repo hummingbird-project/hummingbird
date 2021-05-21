@@ -401,9 +401,16 @@
     },
     {
       "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Storage/PersistDriver.swift",
-      "line": 38,
+      "line": 58,
       "symbol": "HBPersistDriverFactory.create",
       "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Developer/server/hummingbird/hummingbird/Sources/Hummingbird/Storage/PersistError.swift",
+      "line": 26,
+      "symbol": "HBPersistError.duplicate",
+      "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {

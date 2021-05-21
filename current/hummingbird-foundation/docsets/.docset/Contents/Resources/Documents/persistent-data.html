@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Persistent Data  Reference</title>
+    <link rel="stylesheet" type="text/css" href="css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="js/jquery.min.js" defer></script>
+    <script src="js/jazzy.js" defer></script>
+    
+    <script src="js/lunr.min.js" defer></script>
+    <script src="js/typeahead.jquery.js" defer></script>
+    <script src="js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+    <a title="Persistent Data  Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="index.html"> 0.11.3 Docs</a> (82% documented)</p>
+        <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="img/gh.png"/>View on GitHub</a></p>
+        <p class="header-right">
+          <form role="search" action="search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="index.html"> Reference</a>
+        <img id="carat" src="img/carat.png" />
+        Persistent Data  Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="Guides.html">Guides</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="encoding-and-decoding.html">Encoding and Decoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="error-handling.html">Error Handling</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="extending-hummingbird.html">Extending Hummingbird</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="middleware.html">Middleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="persistent-data.html">Persistent Data</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="router.html">Router</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Extensions/HBRequest.html">HBRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/HBRequest/ResponsePatch.html">– ResponsePatch</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/HBResponse.html">HBResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/JSONDecoder.html">JSONDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/JSONEncoder.html">JSONEncoder</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Structs/HBCacheControl.html">HBCacheControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBCacheControl/Value.html">– Value</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBCookie.html">HBCookie</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBCookie/SameSite.html">– SameSite</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBCookie/Properties.html">– Properties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBCookies.html">HBCookies</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBFileIO.html">HBFileIO</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBFileMiddleware.html">HBFileMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/URLEncodedFormDecoder.html">URLEncodedFormDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/URLEncodedFormDecoder/DateDecodingStrategy.html">– DateDecodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/URLEncodedFormEncoder.html">URLEncodedFormEncoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/URLEncodedFormEncoder/DateEncodingStrategy.html">– DateEncodingStrategy</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            
+            <h1 id='persistent-data' class='heading'>Persistent data</h1>
+
+<p>If you are looking to store data between requests to your server then the Hummingbird <code>persist</code> framework provides a key/value store. Each key is a string and the value can be any object that conforms to <code>Codable</code>. </p>
+
+<p>To create a new entry you can call <code>create</code></p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">future</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">persist</span><span class="o">.</span><span class="nf">create</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="s">"mykey"</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">MyValue</span><span class="p">)</span>
+</code></pre>
+
+<p>This returns an <code>EventLoopFuture</code> which will succeed once the value has been saved. If there is an entry for the key already then the <code>EventLoopFuture</code> will fail with the error <code>HBPersistError.duplicate</code>.</p>
+
+<p>If you are not concerned about overwriting a previous key/value pair you can use </p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">future</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">persist</span><span class="o">.</span><span class="nf">set</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="s">"mykey"</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">MyValue</span><span class="p">)</span>
+</code></pre>
+
+<p>Both <code>create</code> and <code>set</code> have an <code>expires</code> parameter. With this parameter you can make a key/value pair expire after a certain time period. eg</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">future</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">persist</span><span class="o">.</span><span class="nf">set</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="s">"sessionID"</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">MyValue</span><span class="p">,</span> <span class="nv">expires</span><span class="p">:</span> <span class="o">.</span><span class="nf">hours</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+</code></pre>
+
+<p>To access values in the <code>persist</code> key/value store you use </p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">future</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">persist</span><span class="o">.</span><span class="nf">get</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="s">"mykey"</span><span class="p">,</span> <span class="nv">as</span><span class="p">:</span> <span class="kt">MyValueType</span><span class="o">.</span><span class="k">self</span><span class="p">)</span>
+</code></pre>
+
+<p>This returns an <code>EventLoopFuture</code> which will succeed with the value associated with key or <code>nil</code> if that value doesn&rsquo;t exist or is not of the type requested.</p>
+
+<p>And finally if you want to delete a key you can use</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">future</span> <span class="n">request</span><span class="o">.</span><span class="n">persist</span><span class="o">.</span><span class="nf">remove</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="s">"mykey"</span><span class="p">)</span>
+</code></pre>
+<h2 id='drivers' class='heading'>Drivers</h2>
+
+<p>The <code>persist</code> framework defines an API for storing key/value pairs. You also need a driver for the framework. When configuring your application if you want to use <code>persist</code> you have to add it to the application and indicate what driver you are going to use. <code>Hummingbird</code> comes with a memory based driver which will store these values in the memory of your server. </p>
+<pre class="highlight swift"><code><span class="n">app</span><span class="o">.</span><span class="nf">addPersist</span><span class="p">(</span><span class="nv">using</span><span class="p">:</span> <span class="o">.</span><span class="n">memory</span><span class="p">)</span>
+</code></pre>
+
+<p>If you use the memory based driver the key/value pairs you store will be lost if your server goes down. </p>
+<h2 id='redis' class='heading'>Redis</h2>
+
+<p>You can use Redis to store the <code>persists</code> key/value pairs with the <code>HummingbirdRedis</code> library. You would setup <code>persist</code> to use Redis as follows. To use the Redis driver you need to have setup Redis with Hummingbird as well.</p>
+<pre class="highlight swift"><code><span class="n">app</span><span class="o">.</span><span class="nf">addRedis</span><span class="p">(</span><span class="nv">configuration</span><span class="p">:</span> <span class="o">.</span><span class="nf">init</span><span class="p">(</span><span class="nv">hostname</span><span class="p">:</span> <span class="n">redisHostname</span><span class="p">,</span> <span class="nv">port</span><span class="p">:</span> <span class="mi">6379</span><span class="p">))</span>
+<span class="n">app</span><span class="o">.</span><span class="nf">addPersist</span><span class="p">(</span><span class="nv">using</span><span class="p">:</span> <span class="o">.</span><span class="n">redis</span><span class="p">)</span>
+</code></pre>
+<h2 id='fluent' class='heading'>Fluent</h2>
+
+<p><code>HummingbirdFluent</code> also contains a <code>persist</code> driver for the storing the key/value pairs in a database. To setup the Fluent driver you need to have setup Fluent first. The first time you run with the fluent driver you should ensure you call <code>fluent.migrate()</code> after the <code>addPersist</code> call has been made.</p>
+<pre class="highlight swift"><code><span class="n">app</span><span class="o">.</span><span class="nf">addFluent</span><span class="p">()</span>
+<span class="n">app</span><span class="o">.</span><span class="n">fluent</span><span class="o">.</span><span class="n">databases</span><span class="o">.</span><span class="nf">use</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="nf">addPersist</span><span class="p">(</span><span class="nv">using</span><span class="p">:</span> <span class="o">.</span><span class="nf">fluent</span><span class="p">(</span><span class="n">databaseID</span><span class="p">))</span>
+<span class="k">if</span> <span class="k">Self</span><span class="o">.</span><span class="n">migrate</span> <span class="p">{</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">fluent</span><span class="o">.</span><span class="nf">migrate</span><span class="p">()</span>
+<span class="p">}</span>
+</code></pre>
+
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-05-21)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>
