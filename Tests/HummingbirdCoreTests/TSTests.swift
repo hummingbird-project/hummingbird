@@ -14,8 +14,8 @@
 
 #if canImport(Network)
 
-import AsyncHTTPClient
 import HummingbirdCore
+import HummingbirdCoreXCT
 import Logging
 import Network
 import NIO
@@ -26,19 +26,6 @@ import XCTest
 
 @available(macOS 10.14, iOS 12, tvOS 12, *)
 class TransportServicesTests: XCTestCase {
-    static var eventLoopGroup: EventLoopGroup!
-    static var httpClient: HTTPClient!
-
-    override class func setUp() {
-        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-        self.httpClient = HTTPClient(eventLoopGroupProvider: .shared(self.eventLoopGroup))
-    }
-
-    override class func tearDown() {
-        XCTAssertNoThrow(try self.httpClient.syncShutdown())
-        XCTAssertNoThrow(try self.eventLoopGroup.syncShutdownGracefully())
-    }
-
     func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
         data = data.map { _ in UInt8.random(in: 0...255) }
@@ -60,10 +47,11 @@ class TransportServicesTests: XCTestCase {
         XCTAssertNoThrow(try server.start(responder: HelloResponder()).wait())
         defer { XCTAssertNoThrow(try server.stop().wait()) }
 
-        let request = try! HTTPClient.Request(
-            url: "http://localhost:\(server.configuration.address.port!)/"
-        )
-        let future = Self.httpClient.execute(request: request).flatMapThrowing { response in
+        let client = HBXCTClient(host: "localhost", port: server.configuration.address.port!, eventLoopGroupProvider: .createNew)
+        client.connect()
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+
+        let future = client.get("/").flatMapThrowing { response in
             var body = try XCTUnwrap(response.body)
             XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
         }
@@ -84,13 +72,16 @@ class TransportServicesTests: XCTestCase {
         XCTAssertNoThrow(try server.start(responder: HelloResponder()).wait())
         defer { XCTAssertNoThrow(try server.stop().wait()) }
 
-        let client = try HTTPClient(eventLoopGroupProvider: .shared(Self.eventLoopGroup), configuration: .init(tlsConfiguration: self.getClientTLSConfiguration()))
+        let client = HBXCTClient(
+            host: "localhost",
+            port: server.configuration.address.port!,
+            tlsConfiguration: try self.getClientTLSConfiguration(),
+            eventLoopGroupProvider: .createNew
+        )
+        client.connect()
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
-        let request = try! HTTPClient.Request(
-            url: "https://localhost:\(server.configuration.address.port!)/"
-        )
-        let future = client.execute(request: request).flatMapThrowing { response in
+        let future = client.get("/").flatMapThrowing { response in
             var body = try XCTUnwrap(response.body)
             XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
         }

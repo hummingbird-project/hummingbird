@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import AsyncHTTPClient
 import HummingbirdCore
+import HummingbirdCoreXCT
 import HummingbirdTLS
 import Logging
 import NIO
@@ -40,17 +40,22 @@ class HummingBirdTLSTests: XCTestCase {
         #else
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         #endif
-        let clientELG = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
         let server = HBHTTPServer(group: eventLoopGroup, configuration: .init(address: .hostname(port: 8000)))
         try server.addTLS(tlsConfiguration: self.getServerTLSConfiguration())
         try server.start(responder: HelloResponder()).wait()
         defer { XCTAssertNoThrow(try server.stop().wait()) }
 
-        let client = try HTTPClient(eventLoopGroupProvider: .shared(clientELG), configuration: .init(tlsConfiguration: self.getClientTLSConfiguration()))
+        let client = HBXCTClient(
+            host: "localhost",
+            port: server.configuration.address.port!,
+            tlsConfiguration: try self.getClientTLSConfiguration(),
+            eventLoopGroupProvider: .createNew
+        )
+        client.connect()
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
-        let future = client.get(url: "https://localhost:\(server.configuration.address.port!)/").flatMapThrowing { response in
+        let future = client.get("/").flatMapThrowing { response in
             var body = try XCTUnwrap(response.body)
             XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
         }
