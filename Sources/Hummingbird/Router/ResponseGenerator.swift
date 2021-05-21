@@ -23,6 +23,13 @@ public protocol HBResponseGenerator {
     func response(from request: HBRequest) throws -> HBResponse
 }
 
+extension HBResponseGenerator {
+    /// Generate reponse based on the request this object came from and apply request patches
+    func patchedResponse(from request: HBRequest) throws -> HBResponse {
+        try response(from: request).apply(patch: request.optionalResponse)
+    }
+}
+
 /// Extend Response to conform to ResponseGenerator
 extension HBResponse: HBResponseGenerator {
     /// Return self as the response
@@ -63,13 +70,5 @@ extension Optional: HBResponseGenerator where Wrapped: HBResponseGenerator {
         case .none:
             throw HBHTTPError(.notFound)
         }
-    }
-}
-
-/// Extend EventLoopFuture of a ResponseEncodable to conform to ResponseFutureEncodable
-extension EventLoopFuture where Value: HBResponseGenerator {
-    /// Generate `EventLoopFuture` that will be fulfilled with the response
-    public func responseFuture(from request: HBRequest) -> EventLoopFuture<HBResponse> {
-        return self.flatMapThrowing { try $0.response(from: request) }
     }
 }
