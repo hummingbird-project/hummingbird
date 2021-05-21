@@ -161,7 +161,7 @@ extension HBRouterMethods {
             return HBCallbackResponder { request in
                 if case .byteBuffer = request.body {
                     do {
-                        let response = try closure(request).response(from: request).apply(patch: request.optionalResponse)
+                        let response = try closure(request).patchedResponse(from: request)
                         return request.success(response)
                     } catch {
                         return request.failure(error)
@@ -169,14 +169,14 @@ extension HBRouterMethods {
                 } else {
                     return request.body.consumeBody(on: request.eventLoop).flatMapThrowing { buffer in
                         request.body = .byteBuffer(buffer)
-                        return try closure(request).response(from: request).apply(patch: request.optionalResponse)
+                        return try closure(request).patchedResponse(from: request)
                     }
                 }
             }
         case .stream:
             return HBCallbackResponder { request in
                 do {
-                    let response = try closure(request).response(from: request).apply(patch: request.optionalResponse)
+                    let response = try closure(request).patchedResponse(from: request)
                     return request.success(response)
                 } catch {
                     return request.failure(error)
@@ -193,22 +193,19 @@ extension HBRouterMethods {
         case .collate:
             return HBCallbackResponder { request in
                 if case .byteBuffer = request.body {
-                    return closure(request).responseFuture(from: request)
-                        .map { $0.apply(patch: request.optionalResponse) }
+                    return closure(request).flatMapThrowing { try $0.patchedResponse(from: request) }
                         .hop(to: request.eventLoop)
                 } else {
                     return request.body.consumeBody(on: request.eventLoop).flatMap { buffer in
                         request.body = .byteBuffer(buffer)
-                        return closure(request).responseFuture(from: request)
-                            .map { $0.apply(patch: request.optionalResponse) }
+                        return closure(request).flatMapThrowing { try $0.patchedResponse(from: request) }
                             .hop(to: request.eventLoop)
                     }
                 }
             }
         case .stream:
             return HBCallbackResponder { request in
-                return closure(request).responseFuture(from: request)
-                    .map { $0.apply(patch: request.optionalResponse) }
+                return closure(request).flatMapThrowing { try $0.patchedResponse(from: request) }
                     .hop(to: request.eventLoop)
             }
         }
