@@ -25,39 +25,42 @@ public struct HBMetricsMiddleware: HBMiddleware {
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
         let startTime = DispatchTime.now().uptimeNanoseconds
 
-        return next.respond(to: request).map { response in
-            // need to create dimensions once request has been responded to ensure
-            // we have the correct endpoint path
-            let dimensions: [(String, String)] = [
-                ("hb_uri", request.endpointPath ?? request.uri.path),
-                ("hb_method", request.method.rawValue),
-            ]
-            Counter(label: "hb_requests", dimensions: dimensions).increment()
-            Metrics.Timer(
-                label: "hb_request_duration",
-                dimensions: dimensions,
-                preferredDisplayUnit: .seconds
-            ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
-            return response
-        }
-        .flatMapErrorThrowing { error in
-            // need to create dimensions once request has been responded to ensure
-            // we have the correct endpoint path
-            let dimensions: [(String, String)]
-            // Don't record uri in 404 errors, to avoid spamming of metrics
-            if let endpointPath = request.endpointPath {
-                dimensions = [
-                    ("hb_uri", endpointPath),
+        let responseFuture = next.respond(to: request)
+        responseFuture.whenComplete { result in
+            switch result {
+            case .success:
+                // need to create dimensions once request has been responded to ensure
+                // we have the correct endpoint path
+                let dimensions: [(String, String)] = [
+                    ("hb_uri", request.endpointPath ?? request.uri.path),
                     ("hb_method", request.method.rawValue),
                 ]
                 Counter(label: "hb_requests", dimensions: dimensions).increment()
-            } else {
-                dimensions = [
-                    ("hb_method", request.method.rawValue),
-                ]
+                Metrics.Timer(
+                    label: "hb_request_duration",
+                    dimensions: dimensions,
+                    preferredDisplayUnit: .seconds
+                ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
+
+            case .failure:
+                // need to create dimensions once request has been responded to ensure
+                // we have the correct endpoint path
+                let dimensions: [(String, String)]
+                // Don't record uri in 404 errors, to avoid spamming of metrics
+                if let endpointPath = request.endpointPath {
+                    dimensions = [
+                        ("hb_uri", endpointPath),
+                        ("hb_method", request.method.rawValue),
+                    ]
+                    Counter(label: "hb_requests", dimensions: dimensions).increment()
+                } else {
+                    dimensions = [
+                        ("hb_method", request.method.rawValue),
+                    ]
+                }
+                Counter(label: "hb_errors", dimensions: dimensions).increment()
             }
-            Counter(label: "hb_errors", dimensions: dimensions).increment()
-            throw error
         }
+        return responseFuture
     }
 }
