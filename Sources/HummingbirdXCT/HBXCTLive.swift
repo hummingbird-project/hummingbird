@@ -12,15 +12,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-import AsyncHTTPClient
 import Hummingbird
+import HummingbirdCoreXCT
 import NIO
 import NIOHTTP1
 import NIOTransportServices
 import XCTest
 
 /// Test using a live server and AsyncHTTPClient
-struct HBXCTLive: HBXCT {
+class HBXCTLive: HBXCT {
     init(configuration: HBApplication.Configuration) {
         guard let port = configuration.address.port else {
             preconditionFailure("Cannot test application bound to unix domain socket")
@@ -31,13 +31,14 @@ struct HBXCTLive: HBXCT {
         #else
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         #endif
-        self.client = HTTPClient(eventLoopGroupProvider: .createNew)
+        self.client = HBXCTClient(host: "localhost", port: port, eventLoopGroupProvider: .createNew)
     }
 
     /// Start tests
     func start(application: HBApplication) throws {
         do {
             try application.start()
+            self.client.connect()
         } catch {
             // if start fails then shutdown client
             try self.client.syncShutdown()
@@ -60,19 +61,17 @@ struct HBXCTLive: HBXCT {
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil
     ) -> EventLoopFuture<HBXCTResponse> {
-        let url = "http://localhost:\(port)\(uri)"
-        do {
-            let request = try HTTPClient.Request(url: url, method: method, headers: headers, body: body.map { .byteBuffer($0) })
-            return self.client.execute(request: request)
-                .map { response in
-                    return .init(status: response.status, headers: response.headers, body: response.body)
-                }
-        } catch {
-            return self.eventLoopGroup.next().makeFailedFuture(error)
-        }
+        var headers = headers
+        headers.replaceOrAdd(name: "connection", value: "keep-alive")
+        headers.replaceOrAdd(name: "host", value: "localhost")
+        let request = HBXCTClient.Request(uri, method: method, headers: headers, body: body)
+        return self.client.execute(request)
+            .map { response in
+                return .init(status: response.status, headers: response.headers, body: response.body)
+            }
     }
 
     let eventLoopGroup: EventLoopGroup
-    var port: Int
-    let client: HTTPClient
+    let port: Int
+    let client: HBXCTClient
 }
