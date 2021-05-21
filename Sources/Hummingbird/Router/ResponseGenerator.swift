@@ -72,11 +72,3 @@ extension Optional: HBResponseGenerator where Wrapped: HBResponseGenerator {
         }
     }
 }
-
-/// Extend EventLoopFuture of a ResponseEncodable to conform to ResponseFutureEncodable
-/*extension EventLoopFuture where Value: HBResponseGenerator {
-    /// Generate `EventLoopFuture` that will be fulfilled with the response
-    public func responseFuture(from request: HBRequest) -> EventLoopFuture<HBResponse> {
-        return self.flatMapThrowing { try $0.response(from: request) }
-    }
-}*/
