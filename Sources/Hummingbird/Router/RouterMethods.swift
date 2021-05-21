@@ -37,6 +37,17 @@ public protocol HBRouterMethods {
         use: @escaping (HBRequest) -> EventLoopFuture<Output>
     ) -> Self
 
+    #if compiler(>=5.5) && $AsyncAwait
+    /// Add path for async closure
+    @available(macOS 9999, iOS 9999, watchOS 9999, tvOS 9999, *)
+    @discardableResult func on<Output: HBResponseGenerator>(
+        _ path: String,
+        method: HTTPMethod,
+        body: HBBodyCollation,
+        use: @escaping (HBRequest) async throws -> Output
+    ) -> Self
+    #endif // compiler(>=5.5) && $AsyncAwait
+
     /// add group
     func group(_ path: String) -> HBRouterGroup
 }

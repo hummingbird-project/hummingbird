@@ -14,7 +14,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-log.git", from: "1.4.0"),
         .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.26.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.28.0"),
         .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.7.0"),
         .package(url: "https://github.com/apple/swift-nio-http2.git", from: "1.16.1"),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.4.0"),
@@ -22,19 +22,26 @@ let package = Package(
         .package(url: "https://github.com/hummingbird-project/hummingbird-core.git", .upToNextMinor(from: "0.10.0")),
     ],
     targets: [
-        .target(name: "Hummingbird", dependencies: [
-            .product(name: "HummingbirdCore", package: "hummingbird-core"),
-            .product(name: "Lifecycle", package: "swift-service-lifecycle"),
-            .product(name: "LifecycleNIOCompat", package: "swift-service-lifecycle"),
-            .product(name: "Logging", package: "swift-log"),
-            .product(name: "Metrics", package: "swift-metrics"),
-            .product(name: "NIO", package: "swift-nio"),
-            .product(name: "NIOHTTP1", package: "swift-nio"),
-        ]),
-        .target(name: "HummingbirdFoundation", dependencies: [
-            .byName(name: "Hummingbird"),
-            .product(name: "NIOFoundationCompat", package: "swift-nio"),
-        ]),
+        .target(
+            name: "Hummingbird",
+            dependencies: [
+                .product(name: "HummingbirdCore", package: "hummingbird-core"),
+                .product(name: "Lifecycle", package: "swift-service-lifecycle"),
+                .product(name: "LifecycleNIOCompat", package: "swift-service-lifecycle"),
+                .product(name: "Logging", package: "swift-log"),
+                .product(name: "Metrics", package: "swift-metrics"),
+                .product(name: "NIO", package: "swift-nio"),
+                .product(name: "NIOHTTP1", package: "swift-nio"),
+                .product(name: "_NIOConcurrency", package: "swift-nio"),
+            ]
+        ),
+        .target(
+            name: "HummingbirdFoundation",
+            dependencies: [
+                .byName(name: "Hummingbird"),
+                .product(name: "NIOFoundationCompat", package: "swift-nio"),
+            ]
+        ),
         .target(name: "HummingbirdXCT", dependencies: [
             .byName(name: "Hummingbird"),
             .product(name: "HummingbirdCoreXCT", package: "hummingbird-core"),
