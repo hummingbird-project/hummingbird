@@ -31,7 +31,7 @@ class HBXCTLive: HBXCT {
         #else
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         #endif
-        self.client = HBHTTPClientConnection(host: "localhost", port: port, eventLoopGroupProvider: .createNew)
+        self.client = HBXCTClient(host: "localhost", port: port, eventLoopGroupProvider: .createNew)
     }
 
     /// Start tests
@@ -64,7 +64,7 @@ class HBXCTLive: HBXCT {
         var headers = headers
         headers.replaceOrAdd(name: "connection", value: "keep-alive")
         headers.replaceOrAdd(name: "host", value: "localhost")
-        let request = HBHTTPClient.Request(uri, method: method, headers: headers, body: body)
+        let request = HBXCTClient.Request(uri, method: method, headers: headers, body: body)
         return self.client.execute(request)
             .map { response in
                 return .init(status: response.status, headers: response.headers, body: response.body)
@@ -73,5 +73,5 @@ class HBXCTLive: HBXCT {
 
     let eventLoopGroup: EventLoopGroup
     let port: Int
-    let client: HBHTTPClientConnection
+    let client: HBXCTClient
 }
