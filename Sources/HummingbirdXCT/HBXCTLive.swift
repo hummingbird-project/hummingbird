@@ -65,8 +65,7 @@ class HBXCTLive: HBXCT {
         headers.replaceOrAdd(name: "connection", value: "keep-alive")
         headers.replaceOrAdd(name: "host", value: "localhost")
         let request = HBHTTPClient.Request(uri, method: method, headers: headers, body: body)
-        self.client.execute(request)
-        return self.client.getResponse()
+        return self.client.execute(request)
             .map { response in
                 return .init(status: response.status, headers: response.headers, body: response.body)
             }
