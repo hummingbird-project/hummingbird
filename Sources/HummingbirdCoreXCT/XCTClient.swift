@@ -133,10 +133,18 @@ public class HBXCTClient {
     public func execute(_ request: HBXCTClient.Request) -> EventLoopFuture<HBXCTClient.Response> {
         self.channelPromise.futureResult.flatMap { channel in
             let promise = self.eventLoopGroup.next().makePromise(of: HBXCTClient.Response.self)
-            let task = HTTPTask(request: request, responsePromise: promise)
+            let task = HTTPTask(request: self.cleanupRequest(request), responsePromise: promise)
             channel.writeAndFlush(task, promise: nil)
             return promise.futureResult
         }
+    }
+
+    private func cleanupRequest(_ request: HBXCTClient.Request) -> HBXCTClient.Request {
+        var request = request
+        if let contentLength = request.body.map(\.readableBytes) {
+            request.headers.replaceOrAdd(name: "content-length", value: String(describing: contentLength))
+        }
+        return request
     }
 
     private func getBootstrap() throws -> NIOClientTCPBootstrap {
