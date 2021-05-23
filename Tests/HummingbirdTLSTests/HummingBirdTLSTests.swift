@@ -46,10 +46,10 @@ class HummingBirdTLSTests: XCTestCase {
         try server.start(responder: HelloResponder()).wait()
         defer { XCTAssertNoThrow(try server.stop().wait()) }
 
-        let client = HBXCTClient(
+        let client = try HBXCTClient(
             host: "localhost",
             port: server.configuration.address.port!,
-            tlsConfiguration: try self.getClientTLSConfiguration(),
+            configuration: .init(tlsConfiguration: self.getClientTLSConfiguration()),
             eventLoopGroupProvider: .createNew
         )
         client.connect()

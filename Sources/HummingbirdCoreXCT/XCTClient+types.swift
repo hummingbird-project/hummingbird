@@ -23,6 +23,7 @@ extension HBXCTClient {
         case malformedResponse
         case noResponse
         case tlsSetupFailed
+        case readTimeout
     }
 
     public struct Request {

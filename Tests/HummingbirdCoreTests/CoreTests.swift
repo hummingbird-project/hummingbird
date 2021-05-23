@@ -229,7 +229,12 @@ class HummingBirdCoreTests: XCTestCase {
         XCTAssertNoThrow(try server.start(responder: Responder()).wait())
         defer { XCTAssertNoThrow(try server.stop().wait()) }
 
-        let client = HBXCTClient(host: "localhost", port: server.configuration.address.port!, eventLoopGroupProvider: .createNew)
+        let client = HBXCTClient(
+            host: "localhost",
+            port: server.configuration.address.port!,
+            configuration: .init(timeout: .seconds(120)),
+            eventLoopGroupProvider: .createNew
+        )
         client.connect()
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
@@ -276,7 +281,12 @@ class HummingBirdCoreTests: XCTestCase {
         XCTAssertNoThrow(try server.start(responder: Responder()).wait())
         defer { XCTAssertNoThrow(try server.stop().wait()) }
 
-        let client = HBXCTClient(host: "localhost", port: server.configuration.address.port!, eventLoopGroupProvider: .createNew)
+        let client = HBXCTClient(
+            host: "localhost",
+            port: server.configuration.address.port!,
+            configuration: .init(timeout: .seconds(120)),
+            eventLoopGroupProvider: .createNew
+        )
         client.connect()
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 

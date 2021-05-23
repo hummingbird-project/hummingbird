@@ -25,10 +25,22 @@ public class HBXCTClient {
     let eventLoopGroupProvider: NIOEventLoopGroupProvider
     let host: String
     let port: Int
-    let tlsConfiguration: TLSConfiguration?
+    let configuration: Configuration
 
+    /// HBXCT configuration
     public struct Configuration {
-        let tlsConfiguration: TLSConfiguration?
+        public init(
+            tlsConfiguration: TLSConfiguration? = nil,
+            timeout: TimeAmount = .seconds(5)
+        ) {
+            self.tlsConfiguration = tlsConfiguration
+            self.timeout = timeout
+        }
+
+        /// TLS confguration
+        public let tlsConfiguration: TLSConfiguration?
+        /// read timeout. If connection has no read events for indicated time throw timeout error
+        public let timeout: TimeAmount
     }
 
     /// Initialize HBXCTClient
@@ -40,7 +52,7 @@ public class HBXCTClient {
     public init(
         host: String,
         port: Int,
-        tlsConfiguration: TLSConfiguration? = nil,
+        configuration: Configuration = .init(),
         eventLoopGroupProvider: NIOEventLoopGroupProvider
     ) {
         self.eventLoopGroupProvider = eventLoopGroupProvider
@@ -53,7 +65,7 @@ public class HBXCTClient {
         self.channelPromise = self.eventLoopGroup.next().makePromise()
         self.host = host
         self.port = port
-        self.tlsConfiguration = tlsConfiguration
+        self.configuration = configuration
     }
 
     /// connect to HTTP server
@@ -65,6 +77,7 @@ public class HBXCTClient {
                     return channel.pipeline.addHTTPClientHandlers()
                         .flatMap {
                             let handlers: [ChannelHandler] = [
+                                IdleStateHandler(readTimeout: self.configuration.timeout),
                                 HTTPClientRequestSerializer(),
                                 HTTPClientResponseHandler(),
                                 HTTPTaskHandler(),
@@ -127,7 +140,7 @@ public class HBXCTClient {
     }
 
     private func getBootstrap() throws -> NIOClientTCPBootstrap {
-        if let tlsConfiguration = tlsConfiguration {
+        if let tlsConfiguration = self.configuration.tlsConfiguration {
             let sslContext = try NIOSSLContext(configuration: tlsConfiguration)
             let tlsProvider = try NIOSSLClientTLSProvider<ClientBootstrap>(context: sslContext, serverHostname: host)
             let bootstrap = NIOClientTCPBootstrap(ClientBootstrap(group: self.eventLoopGroup), tls: tlsProvider)
@@ -251,6 +264,21 @@ public class HBXCTClient {
                 task.responsePromise.fail(error)
             }
             context.close(promise: nil)
+        }
+
+        func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
+            switch event {
+            case let evt as IdleStateHandler.IdleStateEvent where evt == .read:
+                // The remote peer half-closed the channel. At this time, any
+                // outstanding response will be written before the channel is
+                // closed, and if we are idle we will close the channel immediately.
+                // if error caught, pass to all tasks in progress and close channel
+                while let task = self.queue.popFirst() {
+                    task.responsePromise.fail(HBXCTClient.Error.readTimeout)
+                }
+            default:
+                context.fireUserInboundEventTriggered(event)
+            }
         }
     }
 }
