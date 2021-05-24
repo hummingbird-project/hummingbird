@@ -57,26 +57,26 @@ final class HBHTTPDecodeHandler: ChannelDuplexHandler, RemovableChannelHandler {
             let request = HBHTTPRequest(head: head, body: .stream(streamer))
             streamer.feed(.byteBuffer(buffer))
             streamer.feed(.byteBuffer(part))
-            context.fireChannelRead(self.wrapInboundOut(request))
             self.state = .streamingBody(streamer)
+            context.fireChannelRead(self.wrapInboundOut(request))
 
         case (.body(let part), .streamingBody(let streamer)):
             streamer.feed(.byteBuffer(part))
             self.state = .streamingBody(streamer)
 
         case (.end, .head(let head)):
+            self.state = .idle
             let request = HBHTTPRequest(head: head, body: .byteBuffer(nil))
             context.fireChannelRead(self.wrapInboundOut(request))
-            self.state = .idle
 
         case (.end, .body(let head, let buffer)):
+            self.state = .idle
             let request = HBHTTPRequest(head: head, body: .byteBuffer(buffer))
             context.fireChannelRead(self.wrapInboundOut(request))
-            self.state = .idle
 
         case (.end, .streamingBody(let streamer)):
-            streamer.feed(.end)
             self.state = .idle
+            streamer.feed(.end)
 
         case (.end, .error):
             self.state = .idle
