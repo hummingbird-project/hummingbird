@@ -33,7 +33,7 @@ public class HBDateCache {
         return dateCache
     }
 
-    static func shutdownDataCaches(eventLoopGroup: EventLoopGroup) -> EventLoopFuture<Void> {
+    static func shutdownDateCaches(eventLoopGroup: EventLoopGroup) -> EventLoopFuture<Void> {
         var dateCacheShutdownFutures: [EventLoopFuture<Void>] = []
         for eventLoop in eventLoopGroup.makeIterator() {
             let future: EventLoopFuture<Void> = eventLoop.flatSubmit {

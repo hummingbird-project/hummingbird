@@ -106,7 +106,7 @@ public final class HBApplication: HBExtensible {
         )
 
         self.lifecycle.registerShutdown(
-            label: "DateCache", .eventLoopFuture { HBDateCache.shutdownDataCaches(eventLoopGroup: self.eventLoopGroup) }
+            label: "DateCache", .eventLoopFuture { HBDateCache.shutdownDateCaches(eventLoopGroup: self.eventLoopGroup) }
         )
 
         // register server startup and shutdown with lifecycle
