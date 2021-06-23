@@ -14,8 +14,13 @@
 
 import NIO
 
+public protocol HBStreamerProtocol {
+    func consume(on eventLoop: EventLoop) -> EventLoopFuture<HBRequestBodyStreamer.ConsumeOutput>
+    func consumeAll(on eventLoop: EventLoop, _ process: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void>
+}
+
 /// Request body streamer. `HBHTTPDecodeHandler` feeds this with ByteBuffers while the Router consumes them
-public class HBRequestBodyStreamer {
+public class HBRequestBodyStreamer: HBStreamerProtocol {
     public enum StreamerError: Swift.Error {
         case bodyDropped
     }
@@ -207,5 +212,38 @@ public class HBRequestBodyStreamer {
         }
         _consumeAll()
         return promise.futureResult
+    }
+}
+
+/// Streamer class initialized with a single ByteBuffer.
+///
+/// Required for the situation where the user wants to stream but has been provided
+/// with a single ByteBuffer
+class HBByteBufferStreamer: HBStreamerProtocol {
+    var byteBuffer: ByteBuffer
+
+    init(_ byteBuffer: ByteBuffer) {
+        self.byteBuffer = byteBuffer
+    }
+
+    func consume(on eventLoop: EventLoop) -> EventLoopFuture<HBRequestBodyStreamer.ConsumeOutput> {
+        return eventLoop.submit {
+            guard let output = self.byteBuffer.readSlice(length: self.byteBuffer.readableBytes) else {
+                return .end
+            }
+            if output.readableBytes == 0 {
+                return .end
+            }
+            return .byteBuffer(output)
+        }
+    }
+
+    func consumeAll(on eventLoop: EventLoop, _ process: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
+        return eventLoop.flatSubmit {
+            guard let output = self.byteBuffer.readSlice(length: self.byteBuffer.readableBytes) else {
+                return eventLoop.makeSucceededVoidFuture()
+            }
+            return process(output)
+        }
     }
 }
