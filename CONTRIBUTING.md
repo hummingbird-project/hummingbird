@@ -26,8 +26,8 @@ Remember the requirements for Hummingbird and HummingbirdCore (No Foundation and
 
 Please keep your PRs to a minimal number of changes. If a PR is large try to split it up into smaller PRs. Don't move code around unnecessarily it makes comparing old with new very hard.
 
-The main development branch of the repository is  `main`. 
+The main development branch of the repository is  `main`.
 
 ### Formatting
 
-We use Nick Lockwood's SwiftFormat for formatting code. PRs will not be accepted if they haven't be formatted. The current version of SwiftFormat we are using is v0.47.4.
+We use Nick Lockwood's SwiftFormat for formatting code. PRs will not be accepted if they haven't be formatted. The current version of SwiftFormat we are using is v0.47.13.
