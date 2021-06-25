@@ -26,7 +26,7 @@ Remember the requirements for Hummingbird and HummingbirdCore (No Foundation and
 
 Please keep your PRs to a minimal number of changes. If a PR is large try to split it up into smaller PRs. Don't move code around unnecessarily it makes comparing old with new very hard.
 
-The main development branch of the repository is  `main`. 
+The main development branch of the repository is  `main`.
 
 ### Formatting
 
