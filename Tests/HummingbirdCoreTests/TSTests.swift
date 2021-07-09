@@ -171,7 +171,11 @@ class TransportServicesTests: XCTestCase {
         let caCertificate = try NIOSSLCertificate(bytes: [UInt8](caCertificateData.utf8), format: .pem)
         let certificate = try NIOSSLCertificate(bytes: [UInt8](clientCertificateData.utf8), format: .pem)
         let privateKey = try NIOSSLPrivateKey(bytes: [UInt8](clientPrivateKeyData.utf8), format: .pem)
-        return TLSConfiguration.forClient(trustRoots: .certificates([caCertificate]), certificateChain: [.certificate(certificate)], privateKey: .privateKey(privateKey))
+        var tlsConfig = TLSConfiguration.makeClientConfiguration()
+        tlsConfig.trustRoots = .certificates([caCertificate])
+        tlsConfig.certificateChain = [.certificate(certificate)]
+        tlsConfig.privateKey = .privateKey(privateKey)
+        return tlsConfig
     }
 }
 
