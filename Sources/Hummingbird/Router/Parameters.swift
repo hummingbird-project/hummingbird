@@ -71,7 +71,12 @@ public struct HBParameters {
     public subscript(_ s: Substring) -> String? {
         return self.parameters[s].map { String($0) }
     }
+ }
 
-    /// number of parameters
-    public var count: Int { return self.parameters.count }
+extension HBParameters: Collection {
+    public typealias Index = Dictionary<Substring, Substring>.Index
+    public var startIndex: Index { self.parameters.startIndex }
+    public var endIndex: Index { self.parameters.endIndex }
+    public subscript(_ index: Index) -> Dictionary<Substring, Substring>.Element { return parameters[index] }
+    public func index(after index: Index) -> Index { parameters.index(after: index) }
 }
