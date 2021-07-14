@@ -120,4 +120,20 @@ final class RouterTests: XCTestCase {
             XCTAssertEqual(String(buffer: body), "1234")
         }
     }
+
+    func testParameterCollection() throws {
+        let app = HBApplication(testing: .embedded)
+        app.router
+            .delete("/user/:username/:id") { request -> String? in
+                XCTAssertEqual(request.parameters.count, 2)
+                return request.parameters.get("id", as: String.self)
+            }
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/user/john/1234", method: .DELETE) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "1234")
+        }
+    }
 }
