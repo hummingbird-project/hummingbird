@@ -12,20 +12,22 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5) && $AsyncAwait
+#if compiler(>=5.5)
 
 import Hummingbird
 import HummingbirdXCT
 import NIOHTTP1
 import XCTest
 
-@available(macOS 9999, iOS 9999, watchOS 9999, tvOS 9999, *)
+@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
 final class AsyncTests: XCTestCase {
+    func getBuffer(request: HBRequest) async -> ByteBuffer {
+        return request.allocator.buffer(string: "Async Hello")
+    }
     func testAsyncRoute() throws {
         let app = HBApplication(testing: .live)
         app.router.get("/hello") { request -> ByteBuffer in
-            let buffer = request.allocator.buffer(string: "Async Hello")
-            return try await request.eventLoop.makeSucceededFuture(buffer).get()
+            return await self.getBuffer(request: request)
         }
         try app.XCTStart()
         defer { app.XCTStop() }
@@ -83,4 +85,4 @@ final class AsyncTests: XCTestCase {
     }
 }
 
-#endif // compiler(>=5.5) && $AsyncAwait
+#endif // compiler(>=5.5)

@@ -12,16 +12,16 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5) && $AsyncAwait
+#if compiler(>=5.5)
 
-@available(macOS 9999, iOS 9999, watchOS 9999, tvOS 9999, *)
+@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
 public protocol HBAsyncRouteHandler: HBRouteHandler where _Output == EventLoopFuture<_Output2> {
     associatedtype _Output2
     init(from: HBRequest) throws
     func handle(request: HBRequest) async throws -> _Output2
 }
 
-@available(macOS 9999, iOS 9999, watchOS 9999, tvOS 9999, *)
+@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
 extension HBAsyncRouteHandler {
     public func handle(request: HBRequest) throws -> EventLoopFuture<_Output2> {
         let promise = request.eventLoop.makePromise(of: _Output2.self)
@@ -32,4 +32,4 @@ extension HBAsyncRouteHandler {
     }
 }
 
-#endif // compiler(>=5.5) && $AsyncAwait
+#endif // compiler(>=5.5)
