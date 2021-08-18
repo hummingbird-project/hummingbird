@@ -27,7 +27,7 @@ public protocol HBAsyncMiddleware: HBMiddleware {
 extension HBAsyncMiddleware {
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
         let promise = request.eventLoop.makePromise(of: HBResponse.self)
-        promise.completeWithAsync {
+        promise.completeWithTask {
             return try await apply(to: request, next: next)
         }
         return promise.futureResult

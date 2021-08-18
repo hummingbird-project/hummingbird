@@ -24,6 +24,7 @@ final class AsyncTests: XCTestCase {
     func getBuffer(request: HBRequest) async -> ByteBuffer {
         return request.allocator.buffer(string: "Async Hello")
     }
+
     func testAsyncRoute() throws {
         let app = HBApplication(testing: .live)
         app.router.get("/hello") { request -> ByteBuffer in

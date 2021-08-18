@@ -25,7 +25,7 @@ public protocol HBAsyncRouteHandler: HBRouteHandler where _Output == EventLoopFu
 extension HBAsyncRouteHandler {
     public func handle(request: HBRequest) throws -> EventLoopFuture<_Output2> {
         let promise = request.eventLoop.makePromise(of: _Output2.self)
-        promise.completeWithAsync {
+        promise.completeWithTask {
             try await handle(request: request)
         }
         return promise.futureResult

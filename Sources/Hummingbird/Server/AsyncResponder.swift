@@ -28,7 +28,7 @@ public struct HBAsyncCallbackResponder: HBResponder {
     /// Return EventLoopFuture that will be fulfilled with response to the request supplied
     public func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
         let promise = request.eventLoop.makePromise(of: HBResponse.self)
-        promise.completeWithAsync {
+        promise.completeWithTask {
             try await callback(request)
         }
         return promise.futureResult
