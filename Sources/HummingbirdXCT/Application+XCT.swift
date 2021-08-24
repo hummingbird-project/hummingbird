@@ -59,6 +59,7 @@ extension HBApplication {
     ///   - configuration: configuration of application
     public convenience init(testing: XCTTestingSetup, configuration: HBApplication.Configuration = .init()) {
         let xct: HBXCT
+        let configuration = configuration.with(address: .hostname("localhost", port: 0))
         switch testing {
         case .embedded:
             xct = HBXCTEmbedded()

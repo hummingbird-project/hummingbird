@@ -355,17 +355,23 @@ final class ApplicationTests: XCTestCase {
     func testRemoteAddress() throws {
         let app = HBApplication(testing: .live)
         app.router.get("/") { request -> String in
-            if case .v4(let address) = request.remoteAddress {
+            switch request.remoteAddress {
+            case .v4(let address):
                 return String(describing: address.host)
+            case .v6(let address):
+                return String(describing: address.host)
+            default:
+                throw HBHTTPError(.internalServerError)
             }
-            throw HBHTTPError(.internalServerError)
         }
         try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/", method: .GET) { response in
+            XCTAssertEqual(response.status, .ok)
             let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(String(buffer: body), "127.0.0.1")
+            let address = String(buffer: body)
+            XCTAssert(address == "127.0.0.1" || address == "::1")
         }
     }
 }

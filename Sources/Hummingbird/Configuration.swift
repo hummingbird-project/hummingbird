@@ -131,6 +131,33 @@ extension HBApplication {
         }
         #endif
 
+        /// Create new configuration struct with updated values
+        public func with(
+            address: HBBindAddress? = nil,
+            serverName: String? = nil,
+            maxUploadSize: Int? = nil,
+            maxStreamingBufferSize: Int? = nil,
+            backlog: Int? = nil,
+            reuseAddress: Bool? = nil,
+            tcpNoDelay: Bool? = nil,
+            enableHttpPipelining: Bool? = nil,
+            threadPoolSize: Int? = nil,
+            logLevel: Logger.Level? = nil
+        ) -> Self {
+            return Configuration(
+                address: address ?? self.address,
+                serverName: serverName ?? self.serverName,
+                maxUploadSize: maxUploadSize ?? self.maxUploadSize,
+                maxStreamingBufferSize: maxStreamingBufferSize ?? self.maxStreamingBufferSize,
+                backlog: backlog ?? self.backlog,
+                reuseAddress: reuseAddress ?? self.reuseAddress,
+                tcpNoDelay: tcpNoDelay ?? self.tcpNoDelay,
+                enableHttpPipelining: enableHttpPipelining ?? self.enableHttpPipelining,
+                threadPoolSize: threadPoolSize ?? self.threadPoolSize,
+                logLevel: logLevel ?? self.logLevel
+            )
+        }
+
         /// return HTTP server configuration
         #if canImport(Network)
         var httpServer: HBHTTPServer.Configuration {

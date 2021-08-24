@@ -26,6 +26,7 @@ public struct HBXCTResponse {
 
 /// Errors thrown by XCT framework.
 enum HBXCTError: Error {
+    case notStarted
     case noHead
     case illegalBody
     case noEnd
