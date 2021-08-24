@@ -157,6 +157,15 @@ public class HBHTTPServer {
         ]
     }
 
+    public var port: Int? {
+        if self.channel != nil {
+            return self.channel?.localAddress?.port
+        } else if self.configuration.address.port != 0 {
+            return self.configuration.address.port
+        }
+        return nil
+    }
+
     /// create a BSD sockets based bootstrap
     private func createSocketsBootstrap(quiesce: ServerQuiescingHelper, childChannelInitializer: @escaping (Channel) -> EventLoopFuture<Void>) -> HTTPServerBootstrap {
         return ServerBootstrap(group: self.eventLoopGroup)

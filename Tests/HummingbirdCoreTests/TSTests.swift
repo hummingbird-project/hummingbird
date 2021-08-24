@@ -43,11 +43,11 @@ class TransportServicesTests: XCTestCase {
 
     func testConnect() {
         let eventLoopGroup = NIOTSEventLoopGroup()
-        let server = HBHTTPServer(group: eventLoopGroup, configuration: .init(address: .hostname(port: 8081)))
+        let server = HBHTTPServer(group: eventLoopGroup, configuration: .init(address: .hostname(port: 0)))
         XCTAssertNoThrow(try server.start(responder: HelloResponder()).wait())
         defer { XCTAssertNoThrow(try server.stop().wait()) }
 
-        let client = HBXCTClient(host: "localhost", port: server.configuration.address.port!, eventLoopGroupProvider: .createNew)
+        let client = HBXCTClient(host: "localhost", port: server.port!, eventLoopGroupProvider: .createNew)
         client.connect()
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
@@ -65,7 +65,7 @@ class TransportServicesTests: XCTestCase {
             serverIdentity: .p12(filename: p12Path, password: "MyPassword")
         ))
         let configuration = HBHTTPServer.Configuration(
-            address: .hostname(port: 8082),
+            address: .hostname(port: 0),
             tlsOptions: tlsOptions
         )
         let server = HBHTTPServer(group: eventLoopGroup, configuration: configuration)
@@ -74,7 +74,7 @@ class TransportServicesTests: XCTestCase {
 
         let client = try HBXCTClient(
             host: "localhost",
-            port: server.configuration.address.port!,
+            port: server.port!,
             configuration: .init(tlsConfiguration: self.getClientTLSConfiguration()),
             eventLoopGroupProvider: .createNew
         )
