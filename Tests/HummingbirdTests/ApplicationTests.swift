@@ -223,6 +223,18 @@ final class ApplicationTests: XCTestCase {
             }
             return HBResponse(status: .ok, headers: [:], body: .stream(RequestStreamer(stream: stream)))
         }
+        app.router.post("size", options: .streamBody) { request -> EventLoopFuture<String> in
+            guard let stream = request.body.stream else {
+                return request.failure(.badRequest)
+            }
+            var size = 0
+            return stream.consumeAll(on: request.eventLoop) { buffer in
+                size += buffer.readableBytes
+                return request.success(())
+            }
+            .map { _ in size.description }
+        }
+
         try app.XCTStart()
         defer { app.XCTStop() }
 
@@ -233,6 +245,10 @@ final class ApplicationTests: XCTestCase {
         }
         app.XCTExecute(uri: "/streaming", method: .POST) { response in
             XCTAssertEqual(response.status, .badRequest)
+        }
+        app.XCTExecute(uri: "/size", method: .POST, body: buffer) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "640001")
         }
     }
 

@@ -101,3 +101,33 @@ The following will add the handler to the application
 ```swift
 application.router.put("order", use: AddOrder.self)
 ```
+
+## Streaming request body
+
+By default Hummingbird will collate the contents of your request body into one ByteBuffer. You can access this via `HBRequest.body.buffer`. If you'd prefer to stream the content of the request body, you can add a `.streamBody` option to the route handler to receive a streaming body instead of a single `ByteBuffer`. Inside the route handler you can access this stream via `HBRequest.body.stream`. The request body parts are then accessed either via `consume` function which will return everything that has been streamed so far or a `consumeAll` function which takes a closure processing each part. Here is an example which reads the request buffer and returns it size
+```swift
+application.router.post("size", options: .streamBody) { request -> EventLoopFuture<String> in
+    guard let stream = request.body.stream else { 
+        return request.failure(.badRequest)
+    }
+    var size = 0
+    return stream.consumeAll(on: request.eventLoop) { buffer in
+        size += buffer.readableBytes
+        return request.eventLoop.makeSucceededFuture(())
+    }
+    .map { size.description }
+}
+```
+
+## Editing response in handler
+
+The standard way to provide a custom response from a route handler is to return a `HBResponse` from that handler. This method loses a lot of the automation of encoding responses, generating the correct status code etc. 
+
+There is another method though that allows you to edit a response even when returning something other than a `HBResponse`. First you need to flag your route to say it is editing the response using the option `.editResponse`. Once you have set this option you can edit your response via `HBRequest.response`. This allows you to add new headers, replace generated headers or set the status code. Below is a route replacing the generated `content-type` header and setting the status code.
+```swift
+application.router.post("test", options: .editResponse) { request -> String in
+    request.response.headers.replaceOrAdd(name: "content-type", value: "application/json")
+    request.response.status = .accepted
+    return #"{"test": "value"}"#
+}
+```
