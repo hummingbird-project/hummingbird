@@ -63,7 +63,7 @@ class HBXCTLive: HBXCT {
         headers.replaceOrAdd(name: "host", value: "localhost")
         let request = HBXCTClient.Request(uri, method: method, headers: headers, body: body)
         guard let client = self.client else {
-            return eventLoopGroup.next().makeFailedFuture(HBXCTError.notStarted)
+            return self.eventLoopGroup.next().makeFailedFuture(HBXCTError.notStarted)
         }
         return client.execute(request)
             .map { response in

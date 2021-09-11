@@ -41,8 +41,10 @@ public struct HBExtensions<ParentObject> {
     }
 
     /// Get extension from a `KeyPath`
-    public func get<Type>(_ key: KeyPath<ParentObject, Type>) -> Type {
-        guard let value = items[key]?.value as? Type else { preconditionFailure("Cannot get extension of type \(Type.self) without having set it") }
+    public func get<Type>(_ key: KeyPath<ParentObject, Type>, error: StaticString? = nil) -> Type {
+        guard let value = items[key]?.value as? Type else {
+            preconditionFailure(error?.description ?? "Cannot get extension of type \(Type.self) without having set it")
+        }
         return value
     }
 
