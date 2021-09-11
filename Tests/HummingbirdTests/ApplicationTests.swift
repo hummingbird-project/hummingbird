@@ -205,7 +205,7 @@ final class ApplicationTests: XCTestCase {
     /// Test streaming of requests and streaming of responses by streaming the request body into a response streamer
     func testStreaming() throws {
         let app = HBApplication(testing: .embedded)
-        app.router.post("streaming", body: .stream) { request -> HBResponse in
+        app.router.post("streaming", options: .streamBody) { request -> HBResponse in
             guard let stream = request.body.stream else { throw HBHTTPError(.badRequest) }
             struct RequestStreamer: HBResponseBodyStreamer {
                 let stream: HBStreamerProtocol
@@ -239,7 +239,7 @@ final class ApplicationTests: XCTestCase {
     /// Test streaming of requests and streaming of responses by streaming the request body into a response streamer
     func testStreamingSmallBuffer() throws {
         let app = HBApplication(testing: .embedded)
-        app.router.post("streaming", body: .stream) { request -> HBResponse in
+        app.router.post("streaming", options: .streamBody) { request -> HBResponse in
             guard let stream = request.body.stream else { throw HBHTTPError(.badRequest) }
             struct RequestStreamer: HBResponseBodyStreamer {
                 let stream: HBStreamerProtocol
@@ -332,7 +332,7 @@ final class ApplicationTests: XCTestCase {
 
     func testEditResponse() throws {
         let app = HBApplication(testing: .embedded)
-        app.router.delete("/hello") { request -> String in
+        app.router.delete("/hello", options: .editResponse) { request -> String in
             request.response.headers.add(name: "test", value: "value")
             request.response.headers.replaceOrAdd(name: "content-type", value: "application/json")
             request.response.status = .imATeapot
