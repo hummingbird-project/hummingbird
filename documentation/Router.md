@@ -104,7 +104,7 @@ application.router.put("order", use: AddOrder.self)
 
 ## Streaming request body
 
-By default Hummingbird will collate the contents of your request body into one ByteBuffer. You can access this via `HBRequest.body.buffer`. If you'd prefer to stream the content of the request body, you can add a `.streamBody` option to the route handler to receive a streaming body instead of a single `ByteBuffer`. Inside the route handler you can access this stream via `HBRequest.body.stream`. The request body parts are then accessed either via `consume` function which will return everything that has been streamed so far or a `consumeAll` function which takes a closure processing each part. Here is an example which reads the request buffer and returns it size
+By default Hummingbird will collate the contents of your request body into one ByteBuffer. You can access this via `HBRequest.body.buffer`. If you'd prefer to stream the content of the request body, you can add a `.streamBody` option to the route handler to receive a streaming body instead of a single `ByteBuffer`. Inside the route handler you access this stream via `HBRequest.body.stream`. The request body parts are then accessed either via `consume` function which will return everything that has been streamed so far or a `consumeAll` function which takes a closure processing each part. Here is an example which reads the request buffer and returns it size
 ```swift
 application.router.post("size", options: .streamBody) { request -> EventLoopFuture<String> in
     guard let stream = request.body.stream else { 
