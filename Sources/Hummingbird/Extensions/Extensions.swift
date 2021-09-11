@@ -53,19 +53,6 @@ public struct HBExtensions<ParentObject> {
         self.items[key]?.value != nil
     }
 
-    /// Get extension from a `KeyPath`. If it doesn't exist then create it. Use this with care it may cause race conditions
-    /// especially if used on a global object like `HBApplication`.
-    /// - Parameters:
-    ///   - key: KeyPath
-    ///   - createCB: closure used to create instance of object if it doesn't exist
-    public mutating func getOrCreate<Type>(_ key: KeyPath<ParentObject, Type>, _ createCB: @autoclosure () -> Type) -> Type {
-        guard let value = items[key]?.value as? Type else {
-            self.set(key, value: createCB())
-            return self.items[key]!.value as! Type
-        }
-        return value
-    }
-
     /// Set extension for a `KeyPath`
     /// - Parameters:
     ///   - key: KeyPath
