@@ -57,10 +57,10 @@ public struct HBRouterGroup: HBRouterMethods {
     @discardableResult public func on<Output: HBResponseGenerator>(
         _ path: String = "",
         method: HTTPMethod,
-        body: HBBodyCollation = .collate,
+        options: HBRouterMethodOptions = [],
         use closure: @escaping (HBRequest) throws -> Output
     ) -> Self {
-        let responder = constructResponder(body: body, use: closure)
+        let responder = constructResponder(options: options, use: closure)
         let path = self.combinePaths(self.path, path)
         self.router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         return self
@@ -70,10 +70,10 @@ public struct HBRouterGroup: HBRouterMethods {
     @discardableResult public func on<Output: HBResponseGenerator>(
         _ path: String = "",
         method: HTTPMethod,
-        body: HBBodyCollation = .collate,
+        options: HBRouterMethodOptions = [],
         use closure: @escaping (HBRequest) -> EventLoopFuture<Output>
     ) -> Self {
-        let responder = constructResponder(body: body, use: closure)
+        let responder = constructResponder(options: options, use: closure)
         let path = self.combinePaths(self.path, path)
         self.router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         return self

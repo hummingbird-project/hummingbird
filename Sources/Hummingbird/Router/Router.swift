@@ -58,10 +58,10 @@ extension HBRouter {
     @discardableResult public func on<Output: HBResponseGenerator>(
         _ path: String,
         method: HTTPMethod,
-        body: HBBodyCollation = .collate,
+        options: HBRouterMethodOptions = [],
         use closure: @escaping (HBRequest) throws -> Output
     ) -> Self {
-        let responder = constructResponder(body: body, use: closure)
+        let responder = constructResponder(options: options, use: closure)
         add(path, method: method, responder: responder)
         return self
     }
@@ -70,10 +70,10 @@ extension HBRouter {
     @discardableResult public func on<Output: HBResponseGenerator>(
         _ path: String,
         method: HTTPMethod,
-        body: HBBodyCollation = .collate,
+        options: HBRouterMethodOptions = [],
         use closure: @escaping (HBRequest) -> EventLoopFuture<Output>
     ) -> Self {
-        let responder = constructResponder(body: body, use: closure)
+        let responder = constructResponder(options: options, use: closure)
         add(path, method: method, responder: responder)
         return self
     }

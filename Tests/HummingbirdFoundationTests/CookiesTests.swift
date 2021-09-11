@@ -80,7 +80,7 @@ class CookieTests: XCTestCase {
 
     func testSetCookieViaRequest() throws {
         let app = HBApplication(testing: .embedded)
-        app.router.post("/") { request -> String in
+        app.router.post("/", options: .editResponse) { request -> String in
             request.response.setCookie(.init(name: "test", value: "value"))
             return "Hello"
         }

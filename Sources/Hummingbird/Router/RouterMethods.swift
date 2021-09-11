@@ -15,9 +15,16 @@
 import NIO
 import NIOHTTP1
 
-public enum HBBodyCollation {
-    case collate
-    case stream
+public struct HBRouterMethodOptions: OptionSet {
+    public let rawValue: Int
+    public init(rawValue: Int) {
+        self.rawValue = rawValue
+    }
+
+    /// don't collate the request body, all handler to stream it
+    public static var streamBody: HBRouterMethodOptions = .init(rawValue: 1 << 0)
+    /// allow handler to edit response via `request.response`
+    public static var editResponse: HBRouterMethodOptions = .init(rawValue: 1 << 1)
 }
 
 public protocol HBRouterMethods {
@@ -25,7 +32,7 @@ public protocol HBRouterMethods {
     @discardableResult func on<Output: HBResponseGenerator>(
         _ path: String,
         method: HTTPMethod,
-        body: HBBodyCollation,
+        options: HBRouterMethodOptions,
         use: @escaping (HBRequest) throws -> Output
     ) -> Self
 
@@ -33,7 +40,7 @@ public protocol HBRouterMethods {
     @discardableResult func on<Output: HBResponseGenerator>(
         _ path: String,
         method: HTTPMethod,
-        body: HBBodyCollation,
+        options: HBRouterMethodOptions,
         use: @escaping (HBRequest) -> EventLoopFuture<Output>
     ) -> Self
 
@@ -45,120 +52,134 @@ extension HBRouterMethods {
     /// GET path for closure returning type conforming to HBResponseGenerator
     @discardableResult public func get<Output: HBResponseGenerator>(
         _ path: String = "",
-        body: HBBodyCollation = .collate,
+        options: HBRouterMethodOptions = [],
         use handler: @escaping (HBRequest) throws -> Output
     ) -> Self {
-        return on(path, method: .GET, body: body, use: handler)
+        return on(path, method: .GET, options: options, use: handler)
     }
 
     /// PUT path for closure returning type conforming to HBResponseGenerator
     @discardableResult public func put<Output: HBResponseGenerator>(
         _ path: String = "",
-        body: HBBodyCollation = .collate,
+        options: HBRouterMethodOptions = [],
         use handler: @escaping (HBRequest) throws -> Output
     ) -> Self {
-        return on(path, method: .PUT, body: body, use: handler)
+        return on(path, method: .PUT, options: options, use: handler)
     }
 
     /// POST path for closure returning type conforming to HBResponseGenerator
     @discardableResult public func post<Output: HBResponseGenerator>(
         _ path: String = "",
-        body: HBBodyCollation = .collate,
+        options: HBRouterMethodOptions = [],
         use handler: @escaping (HBRequest) throws -> Output
     ) -> Self {
-        return on(path, method: .POST, body: body, use: handler)
+        return on(path, method: .POST, options: options, use: handler)
     }
 
     /// HEAD path for closure returning type conforming to HBResponseGenerator
     @discardableResult public func head<Output: HBResponseGenerator>(
         _ path: String = "",
-        body: HBBodyCollation = .collate,
+        options: HBRouterMethodOptions = [],
         use handler: @escaping (HBRequest) throws -> Output
     ) -> Self {
-        return on(path, method: .HEAD, body: body, use: handler)
+        return on(path, method: .HEAD, options: options, use: handler)
     }
 
     /// DELETE path for closure returning type conforming to HBResponseGenerator
     @discardableResult public func delete<Output: HBResponseGenerator>(
         _ path: String = "",
-        body: HBBodyCollation = .collate,
+        options: HBRouterMethodOptions = [],
         use handler: @escaping (HBRequest) throws -> Output
     ) -> Self {
-        return on(path, method: .DELETE, body: body, use: handler)
+        return on(path, method: .DELETE, options: options, use: handler)
     }
 
     /// PATCH path for closure returning type conforming to HBResponseGenerator
     @discardableResult public func patch<Output: HBResponseGenerator>(
         _ path: String = "",
-        body: HBBodyCollation = .collate,
+        options: HBRouterMethodOptions = [],
         use handler: @escaping (HBRequest) throws -> Output
     ) -> Self {
-        return on(path, method: .PATCH, body: body, use: handler)
+        return on(path, method: .PATCH, options: options, use: handler)
     }
 
     /// GET path for closure returning type conforming to ResponseFutureEncodable
     @discardableResult public func get<Output: HBResponseGenerator>(
         _ path: String = "",
-        body: HBBodyCollation = .collate,
+        options: HBRouterMethodOptions = [],
         use handler: @escaping (HBRequest) -> EventLoopFuture<Output>
     ) -> Self {
-        return on(path, method: .GET, body: body, use: handler)
+        return on(path, method: .GET, options: options, use: handler)
     }
 
     /// PUT path for closure returning type conforming to ResponseFutureEncodable
     @discardableResult public func put<Output: HBResponseGenerator>(
         _ path: String = "",
-        body: HBBodyCollation = .collate,
+        options: HBRouterMethodOptions = [],
         use handler: @escaping (HBRequest) -> EventLoopFuture<Output>
     ) -> Self {
-        return on(path, method: .PUT, body: body, use: handler)
+        return on(path, method: .PUT, options: options, use: handler)
     }
 
     /// POST path for closure returning type conforming to ResponseFutureEncodable
     @discardableResult public func delete<Output: HBResponseGenerator>(
         _ path: String = "",
-        body: HBBodyCollation = .collate,
+        options: HBRouterMethodOptions = [],
         use handler: @escaping (HBRequest) -> EventLoopFuture<Output>
     ) -> Self {
-        return on(path, method: .DELETE, body: body, use: handler)
+        return on(path, method: .DELETE, options: options, use: handler)
     }
 
     /// HEAD path for closure returning type conforming to ResponseFutureEncodable
     @discardableResult public func head<Output: HBResponseGenerator>(
         _ path: String = "",
-        body: HBBodyCollation = .collate,
+        options: HBRouterMethodOptions = [],
         use handler: @escaping (HBRequest) -> EventLoopFuture<Output>
     ) -> Self {
-        return on(path, method: .HEAD, body: body, use: handler)
+        return on(path, method: .HEAD, options: options, use: handler)
     }
 
     /// DELETE path for closure returning type conforming to ResponseFutureEncodable
     @discardableResult public func post<Output: HBResponseGenerator>(
         _ path: String = "",
-        body: HBBodyCollation = .collate,
+        options: HBRouterMethodOptions = [],
         use handler: @escaping (HBRequest) -> EventLoopFuture<Output>
     ) -> Self {
-        return on(path, method: .POST, body: body, use: handler)
+        return on(path, method: .POST, options: options, use: handler)
     }
 
     /// PATCH path for closure returning type conforming to ResponseFutureEncodable
     @discardableResult public func patch<Output: HBResponseGenerator>(
         _ path: String = "",
-        body: HBBodyCollation = .collate,
+        options: HBRouterMethodOptions = [],
         use handler: @escaping (HBRequest) -> EventLoopFuture<Output>
     ) -> Self {
-        return on(path, method: .PATCH, body: body, use: handler)
+        return on(path, method: .PATCH, options: options, use: handler)
     }
 }
 
 extension HBRouterMethods {
     func constructResponder<Output: HBResponseGenerator>(
-        body: HBBodyCollation,
+        options: HBRouterMethodOptions,
         use closure: @escaping (HBRequest) throws -> Output
     ) -> HBResponder {
-        switch body {
-        case .collate:
+        if options.contains(.streamBody) {
             return HBCallbackResponder { request in
+                if options.contains(.editResponse) {
+                    request.response = .init()
+                }
+                do {
+                    let response = try closure(request).patchedResponse(from: request)
+                    return request.success(response)
+                } catch {
+                    return request.failure(error)
+                }
+            }
+        } else {
+            return HBCallbackResponder { request in
+                if options.contains(.editResponse) {
+                    request.response = .init()
+                }
                 if case .byteBuffer = request.body {
                     do {
                         let response = try closure(request).patchedResponse(from: request)
@@ -173,25 +194,26 @@ extension HBRouterMethods {
                     }
                 }
             }
-        case .stream:
-            return HBCallbackResponder { request in
-                do {
-                    let response = try closure(request).patchedResponse(from: request)
-                    return request.success(response)
-                } catch {
-                    return request.failure(error)
-                }
-            }
         }
     }
 
     func constructResponder<Output: HBResponseGenerator>(
-        body: HBBodyCollation,
+        options: HBRouterMethodOptions,
         use closure: @escaping (HBRequest) -> EventLoopFuture<Output>
     ) -> HBResponder {
-        switch body {
-        case .collate:
+        if options.contains(.streamBody) {
             return HBCallbackResponder { request in
+                if options.contains(.editResponse) {
+                    request.response = .init()
+                }
+                return closure(request).flatMapThrowing { try $0.patchedResponse(from: request) }
+                    .hop(to: request.eventLoop)
+            }
+        } else {
+            return HBCallbackResponder { request in
+                if options.contains(.editResponse) {
+                    request.response = .init()
+                }
                 if case .byteBuffer = request.body {
                     return closure(request).flatMapThrowing { try $0.patchedResponse(from: request) }
                         .hop(to: request.eventLoop)
@@ -202,11 +224,6 @@ extension HBRouterMethods {
                             .hop(to: request.eventLoop)
                     }
                 }
-            }
-        case .stream:
-            return HBCallbackResponder { request in
-                return closure(request).flatMapThrowing { try $0.patchedResponse(from: request) }
-                    .hop(to: request.eventLoop)
             }
         }
     }
