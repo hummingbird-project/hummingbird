@@ -22,9 +22,9 @@ public struct HBRouterMethodOptions: OptionSet {
     }
 
     /// don't collate the request body, all handler to stream it
-    public static var streamBody: HBRouterMethodOptions = .init(rawValue: 1<<0)
+    public static var streamBody: HBRouterMethodOptions = .init(rawValue: 1 << 0)
     /// allow handler to edit response via `request.response`
-    public static var editResponse: HBRouterMethodOptions = .init(rawValue: 1<<1)
+    public static var editResponse: HBRouterMethodOptions = .init(rawValue: 1 << 1)
 }
 
 public protocol HBRouterMethods {
