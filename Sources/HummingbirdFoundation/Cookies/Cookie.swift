@@ -115,7 +115,7 @@ public struct HBCookie: CustomStringConvertible {
 
     /// Construct cookie from cookie header value
     /// - Parameter header: cookie header value
-    init?(from header: String) {
+    internal init?(from header: Substring) {
         let elements = header.split(separator: ";")
         guard elements.count > 0 else { return nil }
         let keyValue = elements[0].split(separator: "=", maxSplits: 1)
@@ -135,6 +135,11 @@ public struct HBCookie: CustomStringConvertible {
             }
         }
         self.properties = properties
+    }
+
+    internal static func getName<S: StringProtocol>(from header: S) -> S.SubSequence? {
+        guard let equals = header.firstIndex(of: "=") else { return nil }
+        return header[..<equals]
     }
 
     /// Output cookie string
