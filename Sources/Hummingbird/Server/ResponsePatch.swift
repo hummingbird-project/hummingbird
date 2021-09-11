@@ -44,7 +44,8 @@ extension HBRequest {
         get {
             self.extensions.get(
                 \.response,
-                error: "Cannot edit response via HBRequest.response on a route with the .editResponse option set")
+                error: "Cannot edit response via HBRequest.response on a route with the .editResponse option set"
+            )
         }
         set { self.extensions.set(\.response, value: newValue) }
     }
