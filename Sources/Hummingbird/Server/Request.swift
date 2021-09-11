@@ -54,7 +54,7 @@ public final class HBRequest: HBExtensible {
         get {
             self.extensions.get(
                 \.parameters,
-                error: "Cannot access request parameters on a route not extracting parameters from the URI."
+                error: "Cannot access HBRequest.parameters on a route not extracting parameters from the URI."
             )
         }
         set { self.extensions.set(\.parameters, value: newValue) }
