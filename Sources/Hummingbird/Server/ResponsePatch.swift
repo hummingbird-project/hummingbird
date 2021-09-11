@@ -41,7 +41,11 @@ extension HBRequest {
 
     /// Allows you to edit the status and headers of the response
     public var response: ResponsePatch {
-        get { self.extensions.get(\.response) }
+        get {
+            self.extensions.get(
+                \.response,
+                error: "Cannot edit response via HBRequest.response on a route with the .editResponse option set")
+        }
         set { self.extensions.set(\.response, value: newValue) }
     }
 
