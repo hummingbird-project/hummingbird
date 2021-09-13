@@ -39,12 +39,15 @@ extension HBRequest {
         }
     }
 
-    /// Allows you to edit the status and headers of the response
+    /// Allows you to edit the status and headers of the response.
+    ///
+    /// `HBRequest.response` is only available within route handlers that have had the option `.editResponse`.
+    /// Trying to access it outside of one of these will cause the application to crash
     public var response: ResponsePatch {
         get {
             self.extensions.get(
                 \.response,
-                error: "Cannot edit response via HBRequest.response on a route with the .editResponse option set"
+                error: "Cannot edit response via HBRequest.response outside of a route with the .editResponse option set"
             )
         }
         set { self.extensions.set(\.response, value: newValue) }
