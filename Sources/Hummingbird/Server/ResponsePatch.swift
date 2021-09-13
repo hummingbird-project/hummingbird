@@ -58,7 +58,7 @@ extension HBRequest {
 
 extension HBResponse {
     /// apply `HBRequest.ResponsePatch` to `HBResponse`
-    func apply(patch: HBRequest.ResponsePatch?) -> Self {
+    mutating func apply(patch: HBRequest.ResponsePatch?) -> Self {
         guard let patch = patch else { return self }
         if let status = patch.status {
             self.status = status
