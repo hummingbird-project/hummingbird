@@ -33,7 +33,7 @@ public struct HBRequest: HBExtensible {
     /// Body of HTTP request
     public var body: HBRequestBody
     /// Logger to use
-    public var logger: Logger { self._internal.logger }
+    public var logger: Logger
     /// reference to application
     public var application: HBApplication { self._internal.application }
     /// Request extensions
@@ -84,20 +84,12 @@ public struct HBRequest: HBExtensible {
             version: head.version,
             method: head.method,
             headers: head.headers,
-            logger: application.logger.with(metadataKey: "hb_id", value: .stringConvertible(Self.globalRequestID.add(1))),
             application: application,
             context: context
         )
-//        self.uri = .init(head.uri)
-//        self.version = head.version
-//        self.method = head.method
-//        self.headers = head.headers
         self.body = body
-//        self.logger = application.logger.with(metadataKey: "hb_id", value: .stringConvertible(Self.globalRequestID.add(1)))
-//        self.application = application
+        self.logger = application.logger.with(metadataKey: "hb_id", value: .stringConvertible(Self.globalRequestID.add(1)))
         self.extensions = HBExtensions()
-//        self.endpointPath = nil
-//        self.context = context
     }
 
     // MARK: Methods
@@ -136,12 +128,11 @@ public struct HBRequest: HBExtensible {
     /// Store all the read-only values of the request in a class to avoid copying them
     /// everytime we pass the `HBRequest` struct about
     class _Internal {
-        internal init(uri: HBURL, version: HTTPVersion, method: HTTPMethod, headers: HTTPHeaders, logger: Logger, application: HBApplication, context: HBRequestContext, endpointPath: String? = nil) {
+        internal init(uri: HBURL, version: HTTPVersion, method: HTTPMethod, headers: HTTPHeaders, application: HBApplication, context: HBRequestContext, endpointPath: String? = nil) {
             self.uri = uri
             self.version = version
             self.method = method
             self.headers = headers
-            self.logger = logger
             self.application = application
             self.context = context
             self.endpointPath = endpointPath
@@ -155,8 +146,6 @@ public struct HBRequest: HBExtensible {
         let method: HTTPMethod
         /// Request HTTP headers
         let headers: HTTPHeaders
-        /// Logger to use
-        let logger: Logger
         /// reference to application
         let application: HBApplication
         /// request context
