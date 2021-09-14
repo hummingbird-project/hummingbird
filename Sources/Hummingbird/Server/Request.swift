@@ -22,39 +22,6 @@ import NIOHTTP1
 public struct HBRequest: HBExtensible {
     // MARK: Member variables
 
-    class Internal {
-        internal init(uri: HBURL, version: HTTPVersion, method: HTTPMethod, headers: HTTPHeaders, logger: Logger, application: HBApplication, context: HBRequestContext, endpointPath: String? = nil) {
-            self.uri = uri
-            self.version = version
-            self.method = method
-            self.headers = headers
-            self.logger = logger
-            self.application = application
-            self.context = context
-            self.endpointPath = endpointPath
-        }
-
-        /// URI path
-        let uri: HBURL
-        /// HTTP version
-        let version: HTTPVersion
-        /// Request HTTP method
-        let method: HTTPMethod
-        /// Request HTTP headers
-        let headers: HTTPHeaders
-        /// Logger to use
-        let logger: Logger
-        /// reference to application
-        let application: HBApplication
-        /// request context
-        let context: HBRequestContext
-        /// Endpoint path. This is stored a var so it can be edited by the router. In theory this could
-        /// be accessed on multiple thread/tasks at the same point but it is only ever edited by router
-        var endpointPath: String?
-    }
-
-    private var _internal: Internal
-
     /// URI path
     public var uri: HBURL { self._internal.uri }
     /// HTTP version
@@ -71,12 +38,6 @@ public struct HBRequest: HBExtensible {
     public var application: HBApplication { self._internal.application }
     /// Request extensions
     public var extensions: HBExtensions<HBRequest>
-    /// endpoint that services this request.
-    internal var endpointPath: String? {
-        get { self._internal.endpointPath }
-        set { self._internal.endpointPath = newValue }
-    }
-
     /// Request context (eventLoop, bytebuffer allocator and remote address)
     public var context: HBRequestContext { self._internal.context }
     /// EventLoop request is running on
@@ -95,6 +56,12 @@ public struct HBRequest: HBExtensible {
             )
         }
         set { self.extensions.set(\.parameters, value: newValue) }
+    }
+
+    /// endpoint that services this request.
+    internal var endpointPath: String? {
+        get { self._internal.endpointPath }
+        set { self._internal.endpointPath = newValue }
     }
 
     // MARK: Initialization
@@ -165,6 +132,41 @@ public struct HBRequest: HBExtensible {
     public func success<T>(_ value: T) -> EventLoopFuture<T> {
         return self.eventLoop.makeSucceededFuture(value)
     }
+
+    /// Store all the read-only values of the request in a class to avoid copying them
+    /// everytime we pass the `HBRequest` struct about
+    class _Internal {
+        internal init(uri: HBURL, version: HTTPVersion, method: HTTPMethod, headers: HTTPHeaders, logger: Logger, application: HBApplication, context: HBRequestContext, endpointPath: String? = nil) {
+            self.uri = uri
+            self.version = version
+            self.method = method
+            self.headers = headers
+            self.logger = logger
+            self.application = application
+            self.context = context
+            self.endpointPath = endpointPath
+        }
+
+        /// URI path
+        let uri: HBURL
+        /// HTTP version
+        let version: HTTPVersion
+        /// Request HTTP method
+        let method: HTTPMethod
+        /// Request HTTP headers
+        let headers: HTTPHeaders
+        /// Logger to use
+        let logger: Logger
+        /// reference to application
+        let application: HBApplication
+        /// request context
+        let context: HBRequestContext
+        /// Endpoint path. This is stored a var so it can be edited by the router. In theory this could
+        /// be accessed on multiple thread/tasks at the same point but it is only ever edited by router
+        var endpointPath: String?
+    }
+
+    private var _internal: _Internal
 
     private static let globalRequestID = NIOAtomic<Int>.makeAtomic(value: 0)
 }
