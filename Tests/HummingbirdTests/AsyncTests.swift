@@ -44,7 +44,7 @@ final class AsyncTests: XCTestCase {
     func testAsyncMiddleware() throws {
         struct AsyncTestMiddleware: HBAsyncMiddleware {
             func apply(to request: HBRequest, next: HBResponder) async throws -> HBResponse {
-                let response = try await next.respond(to: request)
+                var response = try await next.respond(to: request)
                 response.headers.add(name: "async", value: "true")
                 return response
             }

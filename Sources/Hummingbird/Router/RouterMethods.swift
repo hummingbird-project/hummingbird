@@ -50,7 +50,7 @@ public protocol HBRouterMethods {
     @discardableResult func on<Output: HBResponseGenerator>(
         _ path: String,
         method: HTTPMethod,
-        body: HBBodyCollation,
+        options: HBRouterMethodOptions,
         use: @escaping (HBRequest) async throws -> Output
     ) -> Self
     #endif // compiler(>=5.5)
