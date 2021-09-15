@@ -111,6 +111,7 @@ public struct HBCORSMiddleware: HBMiddleware {
         } else {
             // if not OPTIONS then run rest of middleware chain and add origin value at the end
             return next.respond(to: request).map { response in
+                var response = response
                 response.headers.add(name: "access-control-allow-origin", value: self.allowOrigin.value(for: request) ?? "")
                 if case .originBased = self.allowOrigin {
                     response.headers.add(name: "vary", value: "Origin")

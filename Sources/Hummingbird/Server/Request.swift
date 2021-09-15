@@ -19,35 +19,33 @@ import NIOConcurrencyHelpers
 import NIOHTTP1
 
 /// Holds all the values required to process a request
-public final class HBRequest: HBExtensible {
+public struct HBRequest: HBExtensible {
     // MARK: Member variables
 
     /// URI path
-    public var uri: HBURL
+    public var uri: HBURL { self._internal.uri }
     /// HTTP version
-    public var version: HTTPVersion
+    public var version: HTTPVersion { self._internal.version }
     /// Request HTTP method
-    public var method: HTTPMethod
+    public var method: HTTPMethod { self._internal.method }
     /// Request HTTP headers
-    public var headers: HTTPHeaders
+    public var headers: HTTPHeaders { self._internal.headers }
     /// Body of HTTP request
     public var body: HBRequestBody
     /// Logger to use
     public var logger: Logger
     /// reference to application
-    public var application: HBApplication
+    public var application: HBApplication { self._internal.application }
     /// Request extensions
     public var extensions: HBExtensions<HBRequest>
-    /// endpoint that services this request
-    public var endpointPath: String?
-
-    public var context: HBRequestContext
+    /// Request context (eventLoop, bytebuffer allocator and remote address)
+    public var context: HBRequestContext { self._internal.context }
     /// EventLoop request is running on
-    public var eventLoop: EventLoop { self.context.eventLoop }
+    public var eventLoop: EventLoop { self._internal.context.eventLoop }
     /// ByteBuffer allocator used by request
-    public var allocator: ByteBufferAllocator { self.context.allocator }
+    public var allocator: ByteBufferAllocator { self._internal.context.allocator }
     /// IP request came from
-    public var remoteAddress: SocketAddress? { self.context.remoteAddress }
+    public var remoteAddress: SocketAddress? { self._internal.context.remoteAddress }
 
     /// Parameters extracted during processing of request URI. These are available to you inside the route handler
     public var parameters: HBParameters {
@@ -58,6 +56,12 @@ public final class HBRequest: HBExtensible {
             )
         }
         set { self.extensions.set(\.parameters, value: newValue) }
+    }
+
+    /// endpoint that services this request.
+    internal var endpointPath: String? {
+        get { self._internal.endpointPath }
+        set { self._internal.endpointPath = newValue }
     }
 
     // MARK: Initialization
@@ -75,16 +79,17 @@ public final class HBRequest: HBExtensible {
         application: HBApplication,
         context: HBRequestContext
     ) {
-        self.uri = .init(head.uri)
-        self.version = head.version
-        self.method = head.method
-        self.headers = head.headers
+        self._internal = .init(
+            uri: .init(head.uri),
+            version: head.version,
+            method: head.method,
+            headers: head.headers,
+            application: application,
+            context: context
+        )
         self.body = body
         self.logger = application.logger.with(metadataKey: "hb_id", value: .stringConvertible(Self.globalRequestID.add(1)))
-        self.application = application
         self.extensions = HBExtensions()
-        self.endpointPath = nil
-        self.context = context
     }
 
     // MARK: Methods
@@ -119,6 +124,38 @@ public final class HBRequest: HBExtensible {
     public func success<T>(_ value: T) -> EventLoopFuture<T> {
         return self.eventLoop.makeSucceededFuture(value)
     }
+
+    /// Store all the read-only values of the request in a class to avoid copying them
+    /// everytime we pass the `HBRequest` struct about
+    class _Internal {
+        internal init(uri: HBURL, version: HTTPVersion, method: HTTPMethod, headers: HTTPHeaders, application: HBApplication, context: HBRequestContext, endpointPath: String? = nil) {
+            self.uri = uri
+            self.version = version
+            self.method = method
+            self.headers = headers
+            self.application = application
+            self.context = context
+            self.endpointPath = endpointPath
+        }
+
+        /// URI path
+        let uri: HBURL
+        /// HTTP version
+        let version: HTTPVersion
+        /// Request HTTP method
+        let method: HTTPMethod
+        /// Request HTTP headers
+        let headers: HTTPHeaders
+        /// reference to application
+        let application: HBApplication
+        /// request context
+        let context: HBRequestContext
+        /// Endpoint path. This is stored a var so it can be edited by the router. In theory this could
+        /// be accessed on multiple thread/tasks at the same point but it is only ever edited by router
+        var endpointPath: String?
+    }
+
+    private var _internal: _Internal
 
     private static let globalRequestID = NIOAtomic<Int>.makeAtomic(value: 0)
 }

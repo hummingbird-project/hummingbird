@@ -17,7 +17,7 @@ import NIO
 import NIOHTTP1
 
 /// Holds all the required to generate a HTTP Response
-public final class HBResponse: HBExtensible {
+public struct HBResponse: HBExtensible {
     /// response status
     public var status: HTTPResponseStatus
     /// response headers

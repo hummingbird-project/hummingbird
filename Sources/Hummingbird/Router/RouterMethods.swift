@@ -165,6 +165,7 @@ extension HBRouterMethods {
     ) -> HBResponder {
         if options.contains(.streamBody) {
             return HBCallbackResponder { request in
+                var request = request
                 if options.contains(.editResponse) {
                     request.response = .init()
                 }
@@ -177,6 +178,7 @@ extension HBRouterMethods {
             }
         } else {
             return HBCallbackResponder { request in
+                var request = request
                 if options.contains(.editResponse) {
                     request.response = .init()
                 }
@@ -203,6 +205,7 @@ extension HBRouterMethods {
     ) -> HBResponder {
         if options.contains(.streamBody) {
             return HBCallbackResponder { request in
+                var request = request
                 if options.contains(.editResponse) {
                     request.response = .init()
                 }
@@ -211,6 +214,7 @@ extension HBRouterMethods {
             }
         } else {
             return HBCallbackResponder { request in
+                var request = request
                 if options.contains(.editResponse) {
                     request.response = .init()
                 }

@@ -45,6 +45,7 @@ struct TrieRouter: HBRouter {
         guard let result = trie.getValueAndParameters(path) else {
             return request.eventLoop.makeFailedFuture(HBHTTPError(.notFound))
         }
+        var request = request
         if result.parameters.count > 0 {
             request.parameters = result.parameters
         }

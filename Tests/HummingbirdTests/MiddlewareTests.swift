@@ -21,6 +21,7 @@ final class MiddlewareTests: XCTestCase {
         struct TestMiddleware: HBMiddleware {
             func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
                 return next.respond(to: request).map { response in
+                    var response = response
                     response.headers.replaceOrAdd(name: "middleware", value: "TestMiddleware")
                     return response
                 }
@@ -44,6 +45,7 @@ final class MiddlewareTests: XCTestCase {
             let string: String
             func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
                 return next.respond(to: request).map { response in
+                    var response = response
                     response.headers.add(name: "middleware", value: string)
                     return response
                 }

@@ -66,7 +66,7 @@ class CookieTests: XCTestCase {
     func testSetCookie() throws {
         let app = HBApplication(testing: .embedded)
         app.router.post("/") { _ -> HBResponse in
-            let response = HBResponse(status: .ok, headers: [:], body: .empty)
+            var response = HBResponse(status: .ok, headers: [:], body: .empty)
             response.setCookie(.init(name: "test", value: "value"))
             return response
         }
