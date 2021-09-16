@@ -17,8 +17,6 @@
 // with optimisation working ie removing String and doing my own UTF8 processing inspired by Fabian Fett's work in
 // https://github.com/fabianfett/pure-swift-json/blob/master/Sources/PureSwiftJSONParsing/DocumentReader.swift
 
-import Foundation
-
 /// Reader object for parsing String buffers
 public struct HBParser {
     public enum Error: Swift.Error {

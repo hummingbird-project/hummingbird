@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIO
+import NIOCore
 
 /// Applied to `HBRequest` before it is dealt with by the router. Middleware passes the processed request onto the next responder
 /// (either the next middleware or the router) by calling `next.apply(to: request)`. If you want to shortcut the request you

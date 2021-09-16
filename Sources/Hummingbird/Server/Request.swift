@@ -14,7 +14,7 @@
 
 import HummingbirdCore
 import Logging
-import NIO
+import NIOCore
 import NIOConcurrencyHelpers
 import NIOHTTP1
 

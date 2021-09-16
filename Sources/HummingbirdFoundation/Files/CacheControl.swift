@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
-import NIO
 
 /// Associates cache control values with filename
 public struct HBCacheControl {

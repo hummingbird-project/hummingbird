@@ -12,14 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if os(Linux)
-import Glibc
-#else
-import Darwin.C
-#endif
 import Foundation
 import Hummingbird
-import NIO
+import NIOCore
 
 /// Middleware for serving static files.
 ///

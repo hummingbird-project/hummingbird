@@ -14,7 +14,8 @@
 
 import Hummingbird
 import Logging
-import NIO
+import NIOCore
+import NIOPosix
 
 /// Manages File reading and writing.
 public struct HBFileIO {

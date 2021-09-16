@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import HummingbirdCore
-import NIO
 import NIOHTTP1
 
 /// Holds all the required to generate a HTTP Response

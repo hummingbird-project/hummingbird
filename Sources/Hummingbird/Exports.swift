@@ -13,5 +13,5 @@
 //===----------------------------------------------------------------------===//
 
 @_exported import HummingbirdCore
-@_exported import NIO
+@_exported import NIOCore
 @_exported import NIOHTTP1

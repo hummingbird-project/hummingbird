@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIO
+import NIOCore
 
 /// Protocol for driver supporting persistent Key/Value pairs across requests
 public protocol HBPersistDriver {

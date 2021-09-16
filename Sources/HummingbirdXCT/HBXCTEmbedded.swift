@@ -13,7 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
-import NIO
+import NIOCore
+import NIOEmbedded
 import NIOHTTP1
 import XCTest
 

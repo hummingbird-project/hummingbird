@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIO
-
 /// protocol for encoders generating a Response
 public protocol HBResponseEncoder {
     /// Encode value returned by handler to request
