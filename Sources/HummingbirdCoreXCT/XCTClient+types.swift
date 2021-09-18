@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import NIO
+import NIOCore
 import NIOHTTP1
 
 /// HTTP client types

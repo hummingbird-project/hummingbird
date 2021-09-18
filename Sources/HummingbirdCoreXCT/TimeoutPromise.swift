@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIO
+import NIOCore
 
 public struct TimeoutPromise {
     let task: Scheduled<Void>

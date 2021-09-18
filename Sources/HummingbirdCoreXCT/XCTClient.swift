@@ -12,8 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIO
+import NIOCore
 import NIOHTTP1
+import NIOPosix
 import NIOSSL
 
 /// Bare bones HTTP client that connects to one Server.

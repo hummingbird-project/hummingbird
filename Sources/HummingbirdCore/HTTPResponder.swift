@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Logging
-import NIO
+import NIOCore
 
 /// Protocol for objects generating a `HBHTTPResponse` from a `HBHTTPRequest`.
 ///

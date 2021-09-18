@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIO
+import NIOCore
 
 /// Request Body. Either a ByteBuffer or a ByteBuffer streamer
 public enum HBRequestBody {

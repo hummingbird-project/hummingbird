@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIO
+import NIOCore
 
 public protocol HBStreamerProtocol {
     func consume(on eventLoop: EventLoop) -> EventLoopFuture<HBRequestBodyStreamer.ConsumeOutput>

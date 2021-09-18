@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIO
+import NIOCore
 
 /// Stores channel handlers used in HTTP server
 struct HBHTTPChannelHandlers {

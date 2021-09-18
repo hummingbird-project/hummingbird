@@ -12,9 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIO
+import NIOCore
 import NIOExtras
 import NIOHTTP1
+import NIOPosix
 #if canImport(Network)
 import Network
 import NIOTransportServices

@@ -15,8 +15,10 @@
 import HummingbirdCore
 import HummingbirdCoreXCT
 import Logging
-import NIO
+import NIOCore
+import NIOEmbedded
 import NIOHTTP1
+import NIOPosix
 import NIOTransportServices
 #if canImport(Network)
 import Network

@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIO
+import NIOCore
 import NIOHTTP1
 
 /// HTTPServer child channel initializer protocol

@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIO
+import NIOCore
 import NIOHTTP1
 
 /// Channel handler for decoding HTTP parts into a HTTP request

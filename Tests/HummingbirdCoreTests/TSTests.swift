@@ -18,7 +18,7 @@ import HummingbirdCore
 import HummingbirdCoreXCT
 import Logging
 import Network
-import NIO
+import NIOCore
 import NIOHTTP1
 import NIOSSL
 import NIOTransportServices

@@ -23,26 +23,28 @@ let package = Package(
     targets: [
         .target(name: "HummingbirdCore", dependencies: [
             .product(name: "Logging", package: "swift-log"),
-            .product(name: "NIO", package: "swift-nio"),
+            .product(name: "NIOCore", package: "swift-nio"),
             .product(name: "NIOExtras", package: "swift-nio-extras"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
+            .product(name: "NIOPosix", package: "swift-nio"),
             .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
         ]),
         .target(name: "HummingbirdCoreXCT", dependencies: [
-            .product(name: "NIO", package: "swift-nio"),
+            .product(name: "NIOCore", package: "swift-nio"),
             .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
+            .product(name: "NIOPosix", package: "swift-nio"),
             .product(name: "NIOSSL", package: "swift-nio-ssl"),
         ]),
         .target(name: "HummingbirdHTTP2", dependencies: [
             .byName(name: "HummingbirdCore"),
-            .product(name: "NIO", package: "swift-nio"),
+            .product(name: "NIOCore", package: "swift-nio"),
             .product(name: "NIOHTTP2", package: "swift-nio-http2"),
             .product(name: "NIOSSL", package: "swift-nio-ssl"),
         ]),
         .target(name: "HummingbirdTLS", dependencies: [
             .byName(name: "HummingbirdCore"),
-            .product(name: "NIO", package: "swift-nio"),
+            .product(name: "NIOCore", package: "swift-nio"),
             .product(name: "NIOSSL", package: "swift-nio-ssl"),
         ]),
         // test targets
@@ -52,6 +54,7 @@ let package = Package(
             [
                 .byName(name: "HummingbirdCore"),
                 .byName(name: "HummingbirdCoreXCT"),
+                .product(name: "NIOEmbedded", package: "swift-nio"),
             ],
             resources: [.process("Certificates")]
         ),

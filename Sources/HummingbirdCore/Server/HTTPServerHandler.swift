@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Logging
-import NIO
+import NIOCore
 import NIOHTTP1
 
 /// Channel handler for responding to a request and returning a response

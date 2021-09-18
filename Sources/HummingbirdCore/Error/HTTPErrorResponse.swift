@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIO
+import NIOCore
 import NIOHTTP1
 
 /// An error that is capable of generating an HTTP response
