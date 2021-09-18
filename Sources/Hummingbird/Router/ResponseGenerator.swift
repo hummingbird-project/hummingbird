@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIO
 import NIOHTTP1
 
 /// Object that can generate a `Response`.

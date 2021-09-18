@@ -16,7 +16,8 @@ import HummingbirdCore
 import Lifecycle
 import LifecycleNIOCompat
 import Logging
-import NIO
+import NIOCore
+import NIOPosix
 import NIOTransportServices
 
 /// Application class. Brings together all the components of Hummingbird together

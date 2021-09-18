@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import HummingbirdCore
-import NIO
+import NIOCore
 import NIOHTTP1
 
 /// Used to group together routes under a single path. Additional middleware can be added to the endpoint and each route can add a

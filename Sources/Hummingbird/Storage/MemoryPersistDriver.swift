@@ -12,7 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIO
+#if os(Linux)
+import Glibc
+#else
+import Darwin.C
+#endif
+import NIOCore
 
 /// In memory driver for persist system for storing persistent cross request key/value pairs
 class HBMemoryPersistDriver: HBPersistDriver {

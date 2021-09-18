@@ -14,6 +14,7 @@
 
 import Hummingbird
 import HummingbirdFoundation
+import NIOPosix
 
 // get environment
 let hostname = HBEnvironment.shared.get("SERVER_HOSTNAME") ?? "127.0.0.1"

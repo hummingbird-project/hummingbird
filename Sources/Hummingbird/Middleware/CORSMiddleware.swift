@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIO
+import NIOCore
 
 /// Middleware implementing Cross-Origin Resource Sharing (CORS) headers.
 ///

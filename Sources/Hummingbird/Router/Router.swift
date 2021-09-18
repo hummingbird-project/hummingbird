@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import HummingbirdCore
-import NIO
+import NIOCore
 import NIOHTTP1
 
 /// Directs Requests to handlers based on the request uri.

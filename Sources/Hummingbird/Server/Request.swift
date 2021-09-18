@@ -14,8 +14,8 @@
 
 import HummingbirdCore
 import Logging
-import NIO
 import NIOConcurrencyHelpers
+import NIOCore
 import NIOHTTP1
 
 /// Holds all the values required to process a request
