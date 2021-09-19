@@ -35,8 +35,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ['swift:5.4-bionic', 'swift:5.4-focal', 'swift:5.4-amazonlinux2', 'swift:5.4-centos8']
-    
+        image:
+          - 'swift:5.4-bionic'
+          - 'swift:5.4-focal'
+          - 'swift:5.4-amazonlinux2'
+          - 'swift:5.4-centos8'
+          - 'swiftlang/swift:nightly-5.5-focal'
     container:
       image: ${{ matrix.image }}
     steps:
