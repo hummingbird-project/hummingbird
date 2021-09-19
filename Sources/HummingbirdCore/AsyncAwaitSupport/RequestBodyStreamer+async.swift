@@ -19,11 +19,13 @@ import NIOCore
 
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
 extension HBStreamerProtocol {
+    /// AsyncSequence of ByteBuffers version of streamed Request body
     public var sequence: HBRequestBodyStreamerSequence { return .init(streamer: self) }
 }
 
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
 extension HBRequestBodyStreamer {
+    /// Consume what has been fed to the request so far
     public func consume() async throws -> HBRequestBodyStreamer.ConsumeOutput {
         return try await self.eventLoop.flatSubmit {
             self.consume()
@@ -33,6 +35,7 @@ extension HBRequestBodyStreamer {
 
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
 extension HBByteBufferStreamer {
+    /// Consume what has been fed to the request so far
     public func consume() -> HBRequestBodyStreamer.ConsumeOutput {
         guard let output = self.byteBuffer.readSlice(length: self.byteBuffer.readableBytes) else {
             return .end
@@ -44,6 +47,7 @@ extension HBByteBufferStreamer {
     }
 }
 
+/// AsyncSequence providing ByteBuffers from a request body stream
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
 public struct HBRequestBodyStreamerSequence: AsyncSequence {
     public typealias Element = ByteBuffer
