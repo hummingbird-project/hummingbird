@@ -20,7 +20,13 @@ import NIOHTTP1
 import XCTest
 
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
-final class AsyncTests: XCTestCase {
+final class AsyncAwaitTests: XCTestCase {
+    func randomBuffer(size: Int) -> ByteBuffer {
+        var data = [UInt8](repeating: 0, count: size)
+        data = data.map { _ in UInt8.random(in: 0...255) }
+        return ByteBufferAllocator().buffer(bytes: data)
+    }
+
     func getBuffer(request: HBRequest) async -> ByteBuffer {
         return request.allocator.buffer(string: "Async Hello")
     }
@@ -82,6 +88,30 @@ final class AsyncTests: XCTestCase {
         app.XCTExecute(uri: "/hello/Adam", method: .POST) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "Hello Adam")
+        }
+    }
+    
+    /// Test streaming of requests via AsyncSequence
+    func testStreaming() throws {
+        let app = HBApplication(testing: .live)
+        app.router.post("size", options: .streamBody) { request -> String in
+            guard let stream = request.body.stream else {
+                throw HBHTTPError(.badRequest)
+            }
+            var size = 0
+            for try await buffer in stream.sequence {
+                size += buffer.readableBytes
+            }
+            return size.description
+        }
+
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        let buffer = self.randomBuffer(size: 530_001)
+        app.XCTExecute(uri: "/size", method: .POST, body: buffer) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "530001")
         }
     }
 }
