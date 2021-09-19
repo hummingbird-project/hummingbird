@@ -1,7 +1,7 @@
 # ================================
 # Build image
 # ================================
-FROM swift:5.4 as build
+FROM swiftlang/swift:nightly-focal as build
 
 WORKDIR /build
 
