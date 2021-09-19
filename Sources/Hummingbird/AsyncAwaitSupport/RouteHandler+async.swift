@@ -14,6 +14,7 @@
 
 #if compiler(>=5.5)
 
+/// Route Handler using async/await methods
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
 public protocol HBAsyncRouteHandler: HBRouteHandler where _Output == EventLoopFuture<_Output2> {
     associatedtype _Output2
