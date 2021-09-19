@@ -90,7 +90,7 @@ final class AsyncAwaitTests: XCTestCase {
             XCTAssertEqual(String(buffer: body), "Hello Adam")
         }
     }
-    
+
     /// Test streaming of requests via AsyncSequence
     func testStreaming() throws {
         let app = HBApplication(testing: .live)
