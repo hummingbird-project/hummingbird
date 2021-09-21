@@ -43,6 +43,7 @@ Extensions provided in other repositories include
 | [HummingbirdRedis](https://github.com/hummingbird-project/hummingbird-redis) | Interface to Redis (uses [RediStack](https://gitlab.com/mordil/RediStack))
 | [HummingbirdWebSocket](https://github.com/hummingbird-project/hummingbird-websocket) | Adds support for WebSocket upgrade to server
 | [HummingbirdMustache](https://github.com/hummingbird-project/hummingbird-mustache) | Mustache templating engine
+| [HummingbirdLambda](https://github.com/hummingbird-project/hummingbird-lambda) | Run hummmingbird inside an AWS Lambda
 
 ## Documentation
 
