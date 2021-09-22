@@ -14,7 +14,6 @@
 
 #if compiler(>=5.5) && canImport(_Concurrency)
 
-import _Concurrency
 import _NIOConcurrency
 
 /// Middleware using async/await
