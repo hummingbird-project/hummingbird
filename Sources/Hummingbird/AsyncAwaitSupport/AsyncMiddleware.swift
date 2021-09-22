@@ -12,9 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5)
+#if compiler(>=5.5) && canImport(_Concurrency)
 
-import _Concurrency
 import _NIOConcurrency
 
 /// Middleware using async/await
@@ -42,4 +41,4 @@ extension HBResponder {
     }
 }
 
-#endif // compiler(>=5.5)
+#endif // compiler(>=5.5) && canImport(_Concurrency)
