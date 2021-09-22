@@ -18,12 +18,12 @@ public protocol HBStreamerProtocol {
     func consume(on eventLoop: EventLoop) -> EventLoopFuture<HBRequestBodyStreamer.ConsumeOutput>
     func consumeAll(on eventLoop: EventLoop, _ process: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void>
 
-    #if compiler(>=5.5)
+    #if compiler(>=5.5) && canImport(_Concurrency)
 
     @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
     func consume() async throws -> HBRequestBodyStreamer.ConsumeOutput
 
-    #endif // compiler(>=5.5)
+    #endif // compiler(>=5.5) && canImport(_Concurrency)
 }
 
 /// Request body streamer. `HBHTTPDecodeHandler` feeds this with ByteBuffers while the Router consumes them
