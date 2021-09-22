@@ -6,11 +6,13 @@ on:
     - main
     paths:
     - '**.swift'
+    - '**.yml'
   pull_request:
     branches:
     - main
     paths:
     - '**.swift'
+    - '**.yml'
   workflow_dispatch:
 
 jobs:
@@ -37,10 +39,10 @@ jobs:
       matrix:
         image:
           - 'swift:5.4-bionic'
-          - 'swift:5.4-focal'
-          - 'swift:5.4-amazonlinux2'
-          - 'swift:5.4-centos8'
-          - 'swiftlang/swift:nightly-5.5-focal'
+          - 'swift:5.5-bionic'
+          - 'swift:5.5-focal'
+          - 'swift:5.5-amazonlinux2'
+          - 'swift:5.5-centos8'
     
     container:
       image: ${{ matrix.image }}
