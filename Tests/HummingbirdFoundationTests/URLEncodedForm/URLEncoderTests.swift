@@ -165,4 +165,13 @@ class URLEncodedFormEncoderTests: XCTestCase {
         let test = Test(a: data)
         self.testForm(test, query: "a=VGVzdGluZw%3D%3D")
     }
+
+    func testOptional() {
+        struct Test: Encodable, Equatable {
+            let name: String
+            let age: Int?
+        }
+        let test = Test(name: "John", age: nil)
+        self.testForm(test, query: "name=John")
+    }
 }
