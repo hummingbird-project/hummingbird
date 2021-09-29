@@ -89,6 +89,7 @@ class HTTPTests: XCTestCase {
         XCTAssert(HBMediaType(from: "application/json")?.isType(.applicationJson) == true)
         XCTAssert(HBMediaType(from: "application/json; charset=utf8")?.isType(.applicationJson) == true)
         XCTAssert(HBMediaType(from: "application/xml")?.isType(.applicationXml) == true)
+        XCTAssert(HBMediaType(from: "multipart/form-data")?.isType(.multipartForm) == true)
         XCTAssert(HBMediaType(from: "audio/ogg")?.isType(.audioOgg) == true)
     }
 

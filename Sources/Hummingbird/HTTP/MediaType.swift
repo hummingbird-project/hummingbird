@@ -51,14 +51,14 @@ public struct HBMediaType: CustomStringConvertible {
         while state != .finished {
             switch state {
             case .readingCategory:
-                let categoryString = parser.read(while: \.isLetterOrNumber).string
+                let categoryString = parser.read(while: { !Self.tSpecial.contains($0) }).string
                 category = Category(rawValue: categoryString.lowercased())
                 guard parser.current() == "/" else { return nil }
                 parser.unsafeAdvance()
                 state = .readingSubCategory
 
             case .readingSubCategory:
-                subCategory = parser.read(while: \.isLetterOrNumber).string
+                subCategory = parser.read(while: { !Self.tSpecial.contains($0) }).string
                 if parser.reachedEnd() {
                     state = .finished
                 } else {
@@ -148,6 +148,8 @@ public struct HBMediaType: CustomStringConvertible {
             }
         }
     }
+
+    static let tSpecial = Set<Unicode.Scalar>(["(", ")", "<", ">", "@", ",", ";", ":", "\\", "\"", "/", "[", "]", "?", ".", "="])
 }
 
 extension HBMediaType {
