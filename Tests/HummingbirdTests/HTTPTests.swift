@@ -64,12 +64,6 @@ class HTTPTests: XCTestCase {
         print("\(-date.timeIntervalSinceNow)")
     }
 
-    /*    func testFragment() {
-         self.testURI("https://hummingbird.co.uk", \.fragment, nil)
-         self.testURI("https://hummingbird.co.uk?#title", \.fragment, "title")
-         self.testURI("https://hummingbird.co.uk?test=false#subheading", \.fragment, "subheading")
-     }*/
-
     func testMediaTypeExtensions() {
         XCTAssert(HBMediaType.getMediaType(forExtension: "jpg")?.isType(.imageJpeg) == true)
         XCTAssert(HBMediaType.getMediaType(forExtension: "txt")?.isType(.textPlain) == true)
@@ -97,6 +91,9 @@ class HTTPTests: XCTestCase {
         let mediaType = HBMediaType(from: "application/json; charset=utf8")
         XCTAssertEqual(mediaType?.parameter?.name, "charset")
         XCTAssertEqual(mediaType?.parameter?.value, "utf8")
+        let mediaType2 = HBMediaType(from: "multipart/form-data; boundary=\"---{}hello\"")
+        XCTAssertEqual(mediaType2?.parameter?.name, "boundary")
+        XCTAssertEqual(mediaType2?.parameter?.value, "---{}hello")
     }
 
     func testInvalidMediaTypes() {

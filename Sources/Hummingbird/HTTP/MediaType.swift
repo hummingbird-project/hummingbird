@@ -73,13 +73,23 @@ public struct HBMediaType: CustomStringConvertible {
                 }
 
             case .readingParameterKey:
-                let key = parser.read(while: \.isLetterOrNumber).string
+                let key = parser.read(while: { !Self.tSpecial.contains($0) }).string
                 guard parser.current() == "=" else { return nil }
                 state = .readingParameterValue(key: key)
                 parser.unsafeAdvance()
 
             case .readingParameterValue(let key):
-                let value = parser.readUntilTheEnd().string
+                let value: String
+                if parser.current() == "\"" {
+                    parser.unsafeAdvance()
+                    do {
+                        value = try parser.read(until: "\"").string
+                    } catch {
+                        return nil
+                    }
+                } else {
+                    value = parser.readUntilTheEnd().string
+                }
                 parameter = (key, value)
                 state = .finished
 

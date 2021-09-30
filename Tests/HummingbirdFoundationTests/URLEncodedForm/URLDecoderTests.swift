@@ -189,7 +189,7 @@ class URLDecodedFormDecoderTests: XCTestCase {
         let test = Test(forename: "John", surname: "Smith", age: 23)
         self.testForm(test, query: "name[first]=John&name[second]=Smith&age=23")
     }
-    
+
     func testOptional() {
         struct Test: Decodable, Equatable {
             let name: String
