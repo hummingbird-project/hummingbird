@@ -260,7 +260,6 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
     }
 
     func errorCaught(context: ChannelHandlerContext, error: Error) {
-        self.propagatedError = error
         switch self.state {
         case .streamingBody(let streamer):
             // request has already been forwarded, have to pass error via streamer
@@ -268,6 +267,9 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
             // only set state to error if already streaming a request body. Don't want to feed
             // additional ByteBuffers to streamer if error has been set
             self.state = .error
+        case .idle:
+            // don't propagate errors when state is idle
+            break
         default:
             self.propagatedError = error
         }
