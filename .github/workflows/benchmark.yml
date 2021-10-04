@@ -1,11 +1,11 @@
 name: Benchmark
 
 on:
-  push:
-  workflow_dispatch:
+  pull_request:
 
 jobs:
-  linux:
+  Benchmark:
+    #if: ${{ github.event.issue.pull_request }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -38,28 +38,34 @@ jobs:
         cd wrk
         make WITH_OPENSSL=/usr
     - name: Build hummingbird base
+      env:
+        SERVER_PORT: 8080
       run: |
         cd base
         swift build -c release
-        SERVER_PORT=8080
         swift run -c release &
     - name: Build hummingbird current
+      env:
+        SERVER_PORT: 8081
       run: |
         cd current
         swift build -c release
-        SERVER_PORT=8081
         swift run -c release &
     - name: Profile Base
       run: |
         sleep 5
         cd wrk
         ./wrk -t 8 -d 5s -c 128 http://localhost:8080 > /dev/null
-        result1=$(./wrk -t 8 -d 15s -c 128 http://localhost:8080)
-        echo $result1
+        echo RESULT_BASE=$(./wrk -t 8 -d 15s -c 128 http://localhost:8080) >> $GITHUB_ENV
     - name: Profile Current
       run: |
         sleep 5
         cd wrk
         ./wrk -t 8 -d 5s -c 128 http://localhost:8081 > /dev/null
-        result1=$(./wrk -t 8 -d 15s -c 128 http://localhost:8081)
-        echo $result1
+        echo RESULT_CURRENT=$(./wrk -t 8 -d 15s -c 128 http://localhost:8081) >> $GITHUB_ENV
+    - name: Output results
+      #uses: uses: peter-evans/create-or-update-comment@v1
+      #with: issue-number: ${{ github.event.issue.number }}
+      run: |
+        echo $RESULT_BASE
+        echo $RESULT_CURRENT
