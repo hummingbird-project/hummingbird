@@ -67,5 +67,5 @@ jobs:
       #uses: uses: peter-evans/create-or-update-comment@v1
       #with: issue-number: ${{ github.event.issue.number }}
       run: |
-        echo $RESULT_BASE
-        echo $RESULT_CURRENT
+        echo "$RESULT_BASE"
+        echo "$RESULT_CURRENT"
