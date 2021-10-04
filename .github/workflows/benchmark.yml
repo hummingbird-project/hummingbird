@@ -15,11 +15,16 @@ jobs:
     container:
       image: ${{ matrix.image }}
     steps:
-    - name: Checkout
+    - name: Checkout hummingbird
       uses: actions/checkout@v2
       with:
-        path: hummingbird
-    - name: Checkout
+        path: current
+    - name: Checkout hummingbird main
+      uses: actions/checkout@v2
+      with:
+        ref: main
+        path: base
+    - name: Checkout WRK
       uses: actions/checkout@v2
       with:
         repository: wg/wrk
@@ -27,20 +32,32 @@ jobs:
     - name: Install dependencies
       run: |
         apt-get update -qq
-        apt-get install -q -y unzip
+        apt-get install -q -y unzip libssl-dev
     - name: Build wrk
       run: |
         cd wrk
-        make
-    - name: Build hummingbird
+        make WITH_OPENSSL=/usr
+    - name: Build hummingbird base
       run: |
-        cd hummingbird
+        cd base
         swift build -c release
-    - name: Profile
+    - name: Build hummingbird current
       run: |
-        cd hummingbird
+        cd current
+        swift build -c release
+    - name: Profile Base
+      run: |
+        cd base
         swift run -c release &
         sleep 5
         cd ../wrk
-        ./wrk -t 8 -d 15s -c 128 http://localhost:8080
-        kill %1
+        result1=$(./wrk -t 8 -d 15s -c 128 http://localhost:8080)
+        echo $result1
+    - name: Profile Current
+      run: |
+        cd current
+        swift run -c release &
+        sleep 5
+        cd ../wrk
+        result1=$(./wrk -t 8 -d 15s -c 128 http://localhost:8080)
+        echo $result1
