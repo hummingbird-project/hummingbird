@@ -41,23 +41,25 @@ jobs:
       run: |
         cd base
         swift build -c release
+        SERVER_PORT=8080
+        swift run -c release &
     - name: Build hummingbird current
       run: |
         cd current
         swift build -c release
+        SERVER_PORT=8081
+        swift run -c release &
     - name: Profile Base
       run: |
-        cd base
-        swift run -c release &
         sleep 5
-        cd ../wrk
+        cd wrk
+        ./wrk -t 8 -d 5s -c 128 http://localhost:8080 > /dev/null
         result1=$(./wrk -t 8 -d 15s -c 128 http://localhost:8080)
         echo $result1
     - name: Profile Current
       run: |
-        cd current
-        swift run -c release &
         sleep 5
-        cd ../wrk
-        result1=$(./wrk -t 8 -d 15s -c 128 http://localhost:8080)
+        cd wrk
+        ./wrk -t 8 -d 5s -c 128 http://localhost:8081 > /dev/null
+        result1=$(./wrk -t 8 -d 15s -c 128 http://localhost:8081)
         echo $result1
