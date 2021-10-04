@@ -52,20 +52,24 @@ jobs:
         swift build -c release
         swift run -c release &
     - name: Profile Base
+      id: profile-base
       run: |
         sleep 5
         cd wrk
         ./wrk -t 8 -d 5s -c 128 http://localhost:8080 > /dev/null
-        echo RESULT_BASE=$(./wrk -t 8 -d 15s -c 128 http://localhost:8080) >> $GITHUB_ENV
+        RESULTS=$(./wrk -t 8 -d 15s -c 128 http://localhost:8080)
+        echo ::set-output name=results::$RESULTS
     - name: Profile Current
+      id: profile-current
       run: |
         sleep 5
         cd wrk
         ./wrk -t 8 -d 5s -c 128 http://localhost:8081 > /dev/null
-        echo RESULT_CURRENT=$(./wrk -t 8 -d 15s -c 128 http://localhost:8081) >> $GITHUB_ENV
+        RESULTS=$(./wrk -t 8 -d 15s -c 128 http://localhost:8081)
+        echo ::set-output name=results::$RESULTS
     - name: Output results
       #uses: uses: peter-evans/create-or-update-comment@v1
       #with: issue-number: ${{ github.event.issue.number }}
       run: |
-        echo "$RESULT_BASE"
-        echo "$RESULT_CURRENT"
+        echo "${{ steps.profile-base.outputs.body }}"
+        echo "${{ steps.profile-current.outputs.body }}"
