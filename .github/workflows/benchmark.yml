@@ -1,0 +1,95 @@
+name: Benchmark
+
+on:
+  issue_comment:
+
+jobs:
+  Benchmark:
+    if: ${{ github.event.issue.pull_request && github.event.comment.body == 'benchmark'}}
+    runs-on: ubuntu-latest
+    container:
+      image: 'swift:5.5'
+    steps:
+    - name: Update comment
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        issue-number: ${{ github.event.issue.number }}
+        comment-id: ${{ github.event.comment.id }}
+        edit-mode: replace
+        body: "Calculating benchmarks..."
+    - name: Checkout hummingbird
+      uses: actions/checkout@v2
+      with:
+        path: current
+    - name: Checkout hummingbird main
+      uses: actions/checkout@v2
+      with:
+        ref: main
+        path: base
+    - name: Checkout WRK
+      uses: actions/checkout@v2
+      with:
+        repository: wg/wrk
+        path: wrk
+    - name: Install dependencies
+      run: |
+        apt-get update -qq
+        apt-get install -q -y unzip libssl-dev
+    - name: Build wrk
+      run: |
+        cd wrk
+        make WITH_OPENSSL=/usr
+    - name: Build hummingbird base
+      env:
+        SERVER_PORT: 8080
+      run: |
+        cd base
+        swift build -c release
+        swift run -c release &
+    - name: Build hummingbird current
+      env:
+        SERVER_PORT: 8081
+      run: |
+        cd current
+        swift build -c release
+        swift run -c release &
+    - name: Profile Base
+      id: profile-base
+      run: |
+        sleep 5
+        cd wrk
+        ./wrk -t 8 -d 5s -c 128 http://localhost:8080 > /dev/null
+        RESULTS=$(./wrk -t 8 -d 15s -c 128 http://localhost:8080)
+        RESULTS="${RESULTS//'%'/'%25'}"
+        echo ::set-output name=results::$RESULTS
+    - name: Profile Current
+      id: profile-current
+      run: |
+        sleep 5
+        cd wrk
+        ./wrk -t 8 -d 5s -c 128 http://localhost:8081 > /dev/null
+        RESULTS=$(./wrk -t 8 -d 15s -c 128 http://localhost:8081)
+        RESULTS="${RESULTS//'%'/'%25'}"
+        echo ::set-output name=results::$RESULTS
+    - name: Results Message
+      id: results-message
+      env:
+        RESULTS_BASE: ${{ steps.profile-base.outputs.results }}
+        RESULTS_CURRENT: ${{ steps.profile-current.outputs.results }}
+      run: |
+        # Construct comment
+        BODY="## Base benchmark%0A"
+        BODY="${BODY}${RESULTS_BASE}%0A"
+        BODY="${BODY}## Current benchmark%0A"
+        BODY="${BODY}${RESULTS_CURRENT}%0A"
+        # escape content
+        BODY="${BODY//$'\n'/'%0A'}"
+        BODY="${BODY//$'\r'/'%0D'}"
+        echo ::set-output name=body::$BODY
+    - name: Update comment
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        issue-number: ${{ github.event.issue.number }}
+        comment-id: ${{ github.event.comment.id }}
+        edit-mode: replace
+        body: ${{ steps.results-message.outputs.body }}
