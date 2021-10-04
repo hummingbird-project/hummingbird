@@ -1,11 +1,16 @@
+# Failed attempt at creating benchmarking action
+# Issues to resolve
+# - Cannot get ref for pull request. GITHUB_REF is for main branch
+# - Cannot edit output of wrk to replace newlines with 0xA
 name: Benchmark
 
 on:
   issue_comment:
+    types: [created, edited]
 
 jobs:
   Benchmark:
-    if: ${{ github.event.issue.pull_request && github.event.comment.body == 'benchmark'}}
+    if: ${{ github.event.issue.pull_request && github.event.comment.body == '@hb-benchmark' }}
     runs-on: ubuntu-latest
     container:
       image: 'swift:5.5'
@@ -21,7 +26,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         path: current
-    - name: Checkout hummingbird main
+    - name: Checkout hummingbird base
       uses: actions/checkout@v2
       with:
         ref: main
@@ -60,7 +65,6 @@ jobs:
         cd wrk
         ./wrk -t 8 -d 5s -c 128 http://localhost:8080 > /dev/null
         RESULTS=$(./wrk -t 8 -d 15s -c 128 http://localhost:8080)
-        RESULTS="${RESULTS//'%'/'%25'}"
         echo ::set-output name=results::$RESULTS
     - name: Profile Current
       id: profile-current
@@ -69,7 +73,6 @@ jobs:
         cd wrk
         ./wrk -t 8 -d 5s -c 128 http://localhost:8081 > /dev/null
         RESULTS=$(./wrk -t 8 -d 15s -c 128 http://localhost:8081)
-        RESULTS="${RESULTS//'%'/'%25'}"
         echo ::set-output name=results::$RESULTS
     - name: Results Message
       id: results-message
@@ -82,9 +85,6 @@ jobs:
         BODY="${BODY}${RESULTS_BASE}%0A"
         BODY="${BODY}## Current benchmark%0A"
         BODY="${BODY}${RESULTS_CURRENT}%0A"
-        # escape content
-        BODY="${BODY//$'\n'/'%0A'}"
-        BODY="${BODY//$'\r'/'%0D'}"
         echo ::set-output name=body::$BODY
     - name: Update comment
       uses: peter-evans/create-or-update-comment@v1
