@@ -32,3 +32,15 @@ jobs:
       run: |
         cd wrk
         make
+    - name: Build hummingbird
+      run: |
+        cd hummingbird
+        swift build -c release
+    - name: Profile
+      run: |
+        cd hummingbird
+        swift run -c release &
+        sleep 5
+        cd ../wrk
+        ./wrk -t 8 -d 15s -c 128 http://localhost:8080
+        kill %1
