@@ -1,0 +1,30 @@
+name: Benchmark
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image:
+          - 'swift:5.5-bionic'
+
+    container:
+      image: ${{ matrix.image }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        path: hummingbird
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        repository: wg/wrk
+        path: wrk
+    - name: Build wrk
+      run: |
+        cd wrk
+        make
