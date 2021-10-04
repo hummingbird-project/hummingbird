@@ -1,20 +1,22 @@
 name: Benchmark
 
 on:
-  pull_request:
+  issue_comment:
 
 jobs:
   Benchmark:
-    #if: ${{ github.event.issue.pull_request }}
+    if: ${{ github.event.issue.pull_request && github.event.comment.body == 'benchmark'}}
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        image:
-          - 'swift:5.5-bionic'
-
     container:
-      image: ${{ matrix.image }}
+      image: 'swift:5.5'
     steps:
+    - name: Update comment
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        issue-number: ${{ github.event.issue.number }}
+        comment-id: ${{ github.event.comment.id }}
+        edit-mode: replace
+        body: "Calculating benchmarks..."
     - name: Checkout hummingbird
       uses: actions/checkout@v2
       with:
@@ -58,6 +60,7 @@ jobs:
         cd wrk
         ./wrk -t 8 -d 5s -c 128 http://localhost:8080 > /dev/null
         RESULTS=$(./wrk -t 8 -d 15s -c 128 http://localhost:8080)
+        RESULTS="${RESULTS//'%'/'%25'}"
         echo ::set-output name=results::$RESULTS
     - name: Profile Current
       id: profile-current
@@ -66,10 +69,27 @@ jobs:
         cd wrk
         ./wrk -t 8 -d 5s -c 128 http://localhost:8081 > /dev/null
         RESULTS=$(./wrk -t 8 -d 15s -c 128 http://localhost:8081)
+        RESULTS="${RESULTS//'%'/'%25'}"
         echo ::set-output name=results::$RESULTS
-    - name: Output results
-      #uses: uses: peter-evans/create-or-update-comment@v1
-      #with: issue-number: ${{ github.event.issue.number }}
+    - name: Results Message
+      id: results-message
+      env:
+        RESULTS_BASE: ${{ steps.profile-base.outputs.results }}
+        RESULTS_CURRENT: ${{ steps.profile-current.outputs.results }}
       run: |
-        echo "${{ steps.profile-base.outputs.body }}"
-        echo "${{ steps.profile-current.outputs.body }}"
+        # Construct comment
+        BODY="## Base benchmark%0A"
+        BODY="${BODY}${RESULTS_BASE}%0A"
+        BODY="${BODY}## Current benchmark%0A"
+        BODY="${BODY}${RESULTS_CURRENT}%0A"
+        # escape content
+        BODY="${BODY//$'\n'/'%0A'}"
+        BODY="${BODY//$'\r'/'%0D'}"
+        echo ::set-output name=body::$BODY
+    - name: Update comment
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        issue-number: ${{ github.event.issue.number }}
+        comment-id: ${{ github.event.comment.id }}
+        edit-mode: replace
+        body: ${{ steps.results-message.outputs.body }}
