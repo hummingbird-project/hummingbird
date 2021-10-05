@@ -174,14 +174,23 @@ extension HBRouterMethods {
         options: HBRouterMethodOptions,
         use closure: @escaping (HBRequest) throws -> Output
     ) -> HBResponder {
+        // generate response from request. Moved repeated code into internal function
+        func _respond(request: HBRequest) throws -> HBResponse {
+            var request = request
+            let response: HBResponse
+            if options.contains(.editResponse) {
+                request.response = .init()
+                response = try closure(request).patchedResponse(from: request)
+            } else {
+                response = try closure(request).response(from: request)
+            }
+            return response
+        }
+
         if options.contains(.streamBody) {
             return HBCallbackResponder { request in
-                var request = request
-                if options.contains(.editResponse) {
-                    request.response = .init()
-                }
                 do {
-                    let response = try closure(request).patchedResponse(from: request)
+                    let response = try _respond(request: request)
                     return request.success(response)
                 } catch {
                     return request.failure(error)
@@ -189,21 +198,18 @@ extension HBRouterMethods {
             }
         } else {
             return HBCallbackResponder { request in
-                var request = request
-                if options.contains(.editResponse) {
-                    request.response = .init()
-                }
                 if case .byteBuffer = request.body {
                     do {
-                        let response = try closure(request).patchedResponse(from: request)
+                        let response = try _respond(request: request)
                         return request.success(response)
                     } catch {
                         return request.failure(error)
                     }
                 } else {
                     return request.body.consumeBody(on: request.eventLoop).flatMapThrowing { buffer in
+                        var request = request
                         request.body = .byteBuffer(buffer)
-                        return try closure(request).patchedResponse(from: request)
+                        return try _respond(request: request)
                     }
                 }
             }
@@ -214,29 +220,32 @@ extension HBRouterMethods {
         options: HBRouterMethodOptions,
         use closure: @escaping (HBRequest) -> EventLoopFuture<Output>
     ) -> HBResponder {
+        // generate response from request. Moved repeated code into internal function
+        func _respond(request: HBRequest) -> EventLoopFuture<HBResponse> {
+            var request = request
+            let responseFuture: EventLoopFuture<HBResponse>
+            if options.contains(.editResponse) {
+                request.response = .init()
+                responseFuture = closure(request).flatMapThrowing { try $0.patchedResponse(from: request) }
+            } else {
+                responseFuture = closure(request).flatMapThrowing { try $0.response(from: request) }
+            }
+            return responseFuture.hop(to: request.eventLoop)
+        }
+
         if options.contains(.streamBody) {
             return HBCallbackResponder { request in
-                var request = request
-                if options.contains(.editResponse) {
-                    request.response = .init()
-                }
-                return closure(request).flatMapThrowing { try $0.patchedResponse(from: request) }
-                    .hop(to: request.eventLoop)
+                return _respond(request: request)
             }
         } else {
             return HBCallbackResponder { request in
                 var request = request
-                if options.contains(.editResponse) {
-                    request.response = .init()
-                }
                 if case .byteBuffer = request.body {
-                    return closure(request).flatMapThrowing { try $0.patchedResponse(from: request) }
-                        .hop(to: request.eventLoop)
+                    return _respond(request: request)
                 } else {
                     return request.body.consumeBody(on: request.eventLoop).flatMap { buffer in
                         request.body = .byteBuffer(buffer)
-                        return closure(request).flatMapThrowing { try $0.patchedResponse(from: request) }
-                            .hop(to: request.eventLoop)
+                        return _respond(request: request)
                     }
                 }
             }

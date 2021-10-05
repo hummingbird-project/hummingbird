@@ -368,6 +368,28 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    func testEditResponseFuture() throws {
+        let app = HBApplication(testing: .embedded)
+        app.router.delete("/hello", options: .editResponse) { request -> EventLoopFuture<String> in
+            request.response.headers.add(name: "test", value: "value")
+            request.response.headers.replaceOrAdd(name: "content-type", value: "application/json")
+            request.response.status = .imATeapot
+            return request.success("Hello")
+        }
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/hello", method: .DELETE) { response in
+            var body = try XCTUnwrap(response.body)
+            let string = body.readString(length: body.readableBytes)
+            XCTAssertEqual(response.status, .imATeapot)
+            XCTAssertEqual(response.headers["test"].first, "value")
+            XCTAssertEqual(response.headers["content-type"].count, 1)
+            XCTAssertEqual(response.headers["content-type"].first, "application/json")
+            XCTAssertEqual(string, "Hello")
+        }
+    }
+
     func testRemoteAddress() throws {
         let app = HBApplication(testing: .live)
         app.router.get("/") { request -> String in
