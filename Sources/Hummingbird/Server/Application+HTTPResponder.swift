@@ -50,12 +50,13 @@ extension HBApplication {
                 context: ChannelRequestContext(channel: context.channel)
             )
             let httpVersion = request.version
+            let dateCache = self.application.dateCache
             // respond to request
             self.responder.respond(to: request).whenComplete { result in
                 switch result {
                 case .success(let response):
                     var response = response
-                    response.headers.add(name: "Date", value: HBDateCache.getDateCache(on: context.eventLoop).currentDate)
+                    response.headers.add(name: "Date", value: dateCache.currentDate)
                     let responseHead = HTTPResponseHead(version: httpVersion, status: response.status, headers: response.headers)
                     onComplete(.success(HBHTTPResponse(head: responseHead, body: response.body)))
 

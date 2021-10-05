@@ -22,11 +22,48 @@ import NIOPosix
 /// avoid threading issues it is assumed that `currentDate` will only every be accessed on the same
 /// EventLoop that the update is running.
 public final class HBDateCache {
-    /// Current formatted date
-    public var currentDate: String
+    /// to avoid threading issue we store the Date inside a class. Instead of updating date string
+    /// we update the class which should be a single reference update and thread safe to read
+    class DateStorage {
+        var value: String
+        init(_ value: String) { self.value = value }
+    }
 
+    /// Current formatted date
+    public var currentDate: String { return dateStorage.value }
+
+    /// Storage for date
+    var dateStorage: DateStorage
+
+    /// Initialize date cache
+    init() {
+        self.dateStorage = .init(Self.getDate())
+    }
+
+    /// delete date cache, cancel update date task
+    deinit {
+        self.stop()
+    }
+
+    func start(on eventLoop: EventLoop) {
+        var timeVal = timeval.init()
+        gettimeofday(&timeVal, nil)
+        self.dateStorage = .init(Self.formatRFC1123Date(timeVal.tv_sec))
+
+        let millisecondsSinceLastSecond = Double(timeVal.tv_usec) / 1000.0
+        let millisecondsUntilNextSecond = Int64(1000.0 - millisecondsSinceLastSecond)
+        self.task = eventLoop.scheduleRepeatedTask(initialDelay: .milliseconds(millisecondsUntilNextSecond), delay: .seconds(1)) { _ in
+            self.dateStorage = .init(Self.getDate())
+        }
+
+    }
+
+    func stop() {
+        self.task?.cancel()
+        self.task = nil
+    }
     /// return date cache for this thread. If one doesn't exist create one scheduled on EventLoop
-    public static func getDateCache(on eventLoop: EventLoop) -> HBDateCache {
+    /*public static func getDateCache(on eventLoop: EventLoop) -> HBDateCache {
         guard let dateCache = thread.currentValue else {
             self.thread.currentValue = .init(eventLoop: eventLoop)
             return self.thread.currentValue!
@@ -47,10 +84,10 @@ public final class HBDateCache {
             dateCacheShutdownFutures.append(future)
         }
         return EventLoopFuture.andAllComplete(dateCacheShutdownFutures, on: eventLoopGroup.next())
-    }
+    }*/
 
     /// Initialize DateCache to run on a specific `EventLoop`
-    private init(eventLoop: EventLoop) {
+    /*private init(eventLoop: EventLoop) {
         assert(eventLoop.inEventLoop)
         var timeVal = timeval.init()
         gettimeofday(&timeVal, nil)
@@ -61,7 +98,7 @@ public final class HBDateCache {
         self.task = eventLoop.scheduleRepeatedTask(initialDelay: .milliseconds(millisecondsUntilNextSecond), delay: .seconds(1)) { _ in
             self.updateDate()
         }
-    }
+    }*/
 
     private func shutdown(eventLoop: EventLoop) -> EventLoopFuture<Void> {
         let promise = eventLoop.makePromise(of: Void.self)
@@ -99,9 +136,9 @@ public final class HBDateCache {
         return formatted
     }
 
-    private func updateDate() {
+    private static func getDate() -> String {
         let epochTime = time(nil)
-        self.currentDate = Self.formatRFC1123Date(epochTime)
+        return Self.formatRFC1123Date(epochTime)
     }
 
     /// Thread-specific HBDateCache

@@ -62,6 +62,8 @@ public final class HBApplication: HBExtensible {
 
     /// who provided the eventLoopGroup
     let eventLoopGroupProvider: NIOEventLoopGroupProvider
+    /// date cache
+    let dateCache: HBDateCache
 
     // MARK: Initialization
 
@@ -77,6 +79,7 @@ public final class HBApplication: HBExtensible {
         self.extensions = HBExtensions()
         self.encoder = NullEncoder()
         self.decoder = NullDecoder()
+        self.dateCache = HBDateCache()
 
         var logger = Logger(label: "HummingBird")
         logger.logLevel = configuration.logLevel
@@ -106,8 +109,10 @@ public final class HBApplication: HBExtensible {
             label: "Application", .sync(self.shutdownApplication)
         )
 
-        self.lifecycle.registerShutdown(
-            label: "DateCache", .eventLoopFuture { HBDateCache.shutdownDateCaches(eventLoopGroup: self.eventLoopGroup) }
+        self.lifecycle.register(
+            label: "Date Cache",
+            start: .sync { self.dateCache.start(on: self.eventLoopGroup.next()) },
+            shutdown: .sync(self.dateCache.stop)
         )
 
         // register server startup and shutdown with lifecycle
