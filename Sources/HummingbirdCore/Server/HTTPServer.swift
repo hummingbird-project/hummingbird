@@ -22,7 +22,7 @@ import NIOTransportServices
 #endif
 
 /// HTTP server class
-public class HBHTTPServer {
+public final class HBHTTPServer {
     /// EventLoopGroup used by server
     public let eventLoopGroup: EventLoopGroup
     /// Server configuration

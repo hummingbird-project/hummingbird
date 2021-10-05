@@ -27,7 +27,7 @@ public protocol HBStreamerProtocol {
 }
 
 /// Request body streamer. `HBHTTPDecodeHandler` feeds this with ByteBuffers while the Router consumes them
-public class HBRequestBodyStreamer: HBStreamerProtocol {
+public final class HBRequestBodyStreamer: HBStreamerProtocol {
     public enum StreamerError: Swift.Error {
         case bodyDropped
     }
@@ -226,7 +226,7 @@ public class HBRequestBodyStreamer: HBStreamerProtocol {
 ///
 /// Required for the situation where the user wants to stream but has been provided
 /// with a single ByteBuffer
-class HBByteBufferStreamer: HBStreamerProtocol {
+final class HBByteBufferStreamer: HBStreamerProtocol {
     var byteBuffer: ByteBuffer
 
     init(_ byteBuffer: ByteBuffer) {
