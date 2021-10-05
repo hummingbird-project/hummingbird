@@ -159,7 +159,7 @@ public struct HBFileIO {
     }
 
     /// class used to stream files
-    class FileStreamer: HBResponseBodyStreamer {
+    final class FileStreamer: HBResponseBodyStreamer {
         let chunkSize: Int
         let handle: NIOFileHandle
         var fileOffset: Int

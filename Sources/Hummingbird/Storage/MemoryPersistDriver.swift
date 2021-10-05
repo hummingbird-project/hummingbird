@@ -20,7 +20,7 @@ import Darwin.C
 import NIOCore
 
 /// In memory driver for persist system for storing persistent cross request key/value pairs
-class HBMemoryPersistDriver: HBPersistDriver {
+final class HBMemoryPersistDriver: HBPersistDriver {
     init(eventLoopGroup: EventLoopGroup) {
         self.values = [:]
         self.task = eventLoopGroup.next().scheduleRepeatedTask(initialDelay: .hours(1), delay: .hours(1)) { _ in

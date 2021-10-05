@@ -21,7 +21,7 @@ import NIOPosix
 /// update a cached version of the date in the format as detailed in RFC1123 once every second. To
 /// avoid threading issues it is assumed that `currentDate` will only every be accessed on the same
 /// EventLoop that the update is running.
-public class HBDateCache {
+public final class HBDateCache {
     /// Current formatted date
     public var currentDate: String
 

@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Group of middleware that can be used to create a responder chain. Each middleware calls the next one
-public class HBMiddlewareGroup {
+public final class HBMiddlewareGroup {
     var middlewares: [HBMiddleware]
 
     public init() {

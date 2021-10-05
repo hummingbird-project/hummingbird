@@ -127,7 +127,7 @@ public struct HBRequest: HBExtensible {
 
     /// Store all the read-only values of the request in a class to avoid copying them
     /// everytime we pass the `HBRequest` struct about
-    class _Internal {
+    final class _Internal {
         internal init(uri: HBURL, version: HTTPVersion, method: HTTPMethod, headers: HTTPHeaders, application: HBApplication, context: HBRequestContext, endpointPath: String? = nil) {
             self.uri = uri
             self.version = version

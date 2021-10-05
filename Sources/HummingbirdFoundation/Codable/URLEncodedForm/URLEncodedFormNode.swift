@@ -135,7 +135,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
         }
     }
 
-    class Map: Equatable {
+    final class Map: Equatable {
         var values: [String: URLEncodedFormNode]
         init(values: [String: URLEncodedFormNode] = [:]) {
             self.values = values
@@ -150,7 +150,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
         }
     }
 
-    class Array: Equatable {
+    final class Array: Equatable {
         var values: [URLEncodedFormNode]
         init(values: [URLEncodedFormNode] = []) {
             self.values = values

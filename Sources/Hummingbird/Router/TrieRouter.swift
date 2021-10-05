@@ -97,7 +97,7 @@ struct RouterPathTrie<Value> {
     }
 
     /// Trie Node. Each node represents one component of a URI path
-    class Node {
+    final class Node {
         let key: RouterPath.Element
         var children: [Node]
         var value: Value?

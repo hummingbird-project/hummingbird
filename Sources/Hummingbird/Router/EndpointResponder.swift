@@ -16,7 +16,7 @@ import NIOCore
 import NIOHTTP1
 
 /// Responder that chooses the next responder to call based on the request method
-class HBEndpointResponder: HBResponder {
+final class HBEndpointResponder: HBResponder {
     init(path: String) {
         self.path = path
         self.methods = [:]

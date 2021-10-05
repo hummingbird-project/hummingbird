@@ -27,7 +27,7 @@ extension HBRequest {
     ///     return "hello"
     /// }
     /// ```
-    public class ResponsePatch {
+    public final class ResponsePatch {
         /// patch status of reponse
         public var status: HTTPResponseStatus?
         /// headers to add to response

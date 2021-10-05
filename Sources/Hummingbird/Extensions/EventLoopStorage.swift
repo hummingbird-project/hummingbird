@@ -33,7 +33,7 @@ extension HBApplication {
     /// ```
     /// You can access the extension via `HBApplication.eventLoopStorage(for: eventLoop).myVar` or
     /// if you have an `HBRequest` you can access the extension via `HBRequest.eventLoopStorage.myVar`.
-    public class EventLoopStorage {
+    public final class EventLoopStorage {
         /// Allows you tp extend `EventLoopStorage`
         public var extensions: HBExtensions<EventLoopStorage>
         init() {
