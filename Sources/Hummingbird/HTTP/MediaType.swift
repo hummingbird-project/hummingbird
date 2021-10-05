@@ -108,6 +108,11 @@ public struct HBMediaType: CustomStringConvertible {
         }
     }
 
+    /// Return media type with new parameter
+    public func withParameter(name: String, value: String) -> HBMediaType {
+        return .init(type: self.type, subType: self.subType, parameter: (name, value))
+    }
+    
     /// Output
     public var description: String {
         if let parameter = self.parameter {

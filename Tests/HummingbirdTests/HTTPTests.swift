@@ -94,6 +94,9 @@ class HTTPTests: XCTestCase {
         let mediaType2 = HBMediaType(from: "multipart/form-data; boundary=\"---{}hello\"")
         XCTAssertEqual(mediaType2?.parameter?.name, "boundary")
         XCTAssertEqual(mediaType2?.parameter?.value, "---{}hello")
+        let mediaType3 = HBMediaType.multipartForm.withParameter(name: "boundary", value: "----{}hello")
+        XCTAssertEqual(mediaType3.parameter?.name, "boundary")
+        XCTAssertEqual(mediaType3.parameter?.value, "----{}hello")
     }
 
     func testInvalidMediaTypes() {
