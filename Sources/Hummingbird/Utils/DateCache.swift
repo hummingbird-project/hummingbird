@@ -30,7 +30,7 @@ public final class HBDateCache {
     }
 
     /// Current formatted date
-    public var currentDate: String { return dateStorage.value }
+    public var currentDate: String { return self.dateStorage.value }
 
     /// Storage for date
     var dateStorage: DateStorage
@@ -55,50 +55,12 @@ public final class HBDateCache {
         self.task = eventLoop.scheduleRepeatedTask(initialDelay: .milliseconds(millisecondsUntilNextSecond), delay: .seconds(1)) { _ in
             self.dateStorage = .init(Self.getDate())
         }
-
     }
 
     func stop() {
         self.task?.cancel()
         self.task = nil
     }
-    /// return date cache for this thread. If one doesn't exist create one scheduled on EventLoop
-    /*public static func getDateCache(on eventLoop: EventLoop) -> HBDateCache {
-        guard let dateCache = thread.currentValue else {
-            self.thread.currentValue = .init(eventLoop: eventLoop)
-            return self.thread.currentValue!
-        }
-        return dateCache
-    }
-
-    static func shutdownDateCaches(eventLoopGroup: EventLoopGroup) -> EventLoopFuture<Void> {
-        var dateCacheShutdownFutures: [EventLoopFuture<Void>] = []
-        for eventLoop in eventLoopGroup.makeIterator() {
-            let future: EventLoopFuture<Void> = eventLoop.flatSubmit {
-                guard let dateCache = thread.currentValue else {
-                    return eventLoop.makeSucceededFuture(())
-                }
-                thread.currentValue = nil
-                return dateCache.shutdown(eventLoop: eventLoop)
-            }
-            dateCacheShutdownFutures.append(future)
-        }
-        return EventLoopFuture.andAllComplete(dateCacheShutdownFutures, on: eventLoopGroup.next())
-    }*/
-
-    /// Initialize DateCache to run on a specific `EventLoop`
-    /*private init(eventLoop: EventLoop) {
-        assert(eventLoop.inEventLoop)
-        var timeVal = timeval.init()
-        gettimeofday(&timeVal, nil)
-        self.currentDate = Self.formatRFC1123Date(timeVal.tv_sec)
-
-        let millisecondsSinceLastSecond = Double(timeVal.tv_usec) / 1000.0
-        let millisecondsUntilNextSecond = Int64(1000.0 - millisecondsSinceLastSecond)
-        self.task = eventLoop.scheduleRepeatedTask(initialDelay: .milliseconds(millisecondsUntilNextSecond), delay: .seconds(1)) { _ in
-            self.updateDate()
-        }
-    }*/
 
     private func shutdown(eventLoop: EventLoop) -> EventLoopFuture<Void> {
         let promise = eventLoop.makePromise(of: Void.self)
