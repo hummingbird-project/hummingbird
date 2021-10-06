@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if DEBUG
+
 import Hummingbird
 import NIOCore
 import NIOHTTP1
@@ -101,3 +103,5 @@ extension HBApplication {
         }.wait())
     }
 }
+
+#endif //DEBUG
