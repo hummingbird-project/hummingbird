@@ -70,17 +70,17 @@ public final class HBApplication: HBExtensible {
         configuration: HBApplication.Configuration = HBApplication.Configuration(),
         eventLoopGroupProvider: NIOEventLoopGroupProvider = .createNew
     ) {
-        self.lifecycle = ServiceLifecycle()
+        var logger = Logger(label: "HummingBird")
+        logger.logLevel = configuration.logLevel
+        self.logger = logger
+
+        self.lifecycle = ServiceLifecycle(configuration: .init(logger: self.logger))
         self.middleware = HBMiddlewareGroup()
         self.router = TrieRouter()
         self.configuration = configuration
         self.extensions = HBExtensions()
         self.encoder = NullEncoder()
         self.decoder = NullDecoder()
-
-        var logger = Logger(label: "HummingBird")
-        logger.logLevel = configuration.logLevel
-        self.logger = logger
 
         // create eventLoopGroup
         self.eventLoopGroupProvider = eventLoopGroupProvider
