@@ -16,7 +16,7 @@
 (
 # this sub-shell is where the actual test is run
 set -eu
-set -x
+#set -x
 set -o pipefail
 
 test="$1"
