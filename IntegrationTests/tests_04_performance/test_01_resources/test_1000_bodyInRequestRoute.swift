@@ -1,12 +1,12 @@
-//===----------------------------------------------------------------------===//
+///===----------------------------------------------------------------------===//
 //
-// This source file is part of the SwiftNIO open source project
+// This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2020-2021 Apple Inc. and the SwiftNIO project authors
+// Copyright (c) 2021-2021 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
-// See CONTRIBUTORS.txt for the list of SwiftNIO project authors
+// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -19,7 +19,7 @@ import NIO
 func run(identifier: String) {
     do {
         let setup = try Setup { app in
-            app.router.get { _ -> HTTPResponseStatus in
+            app.router.post { _ -> HTTPResponseStatus in
                 return .ok
             }
         }
@@ -27,7 +27,7 @@ func run(identifier: String) {
         measure(identifier: identifier) {
             let iterations = 1000
             for _ in 0..<iterations {
-                let future = setup.client.get("/")
+                let future = setup.client.post("/", body: ByteBuffer(string: "Hello, world!"))
                 _ = try? future.wait()
             }
             return iterations
