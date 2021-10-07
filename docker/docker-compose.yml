@@ -13,4 +13,6 @@ services:
       - MAX_ALLOCS_ALLOWED_1000_basicRoute=62000
       - MAX_ALLOCS_ALLOWED_1000_bodyInRequestRoute=65000
       - MAX_ALLOCS_ALLOWED_1000_bodyInResponseRoute=61000
+      - MAX_ALLOCS_ALLOWED_1000_coreBasicRoute=47000
+      - MAX_ALLOCS_ALLOWED_1000_largeBodyInRequest=128000
     command: /bin/bash -xcl "./IntegrationTests/run-tests.sh $${INTEGRATION_TESTS_ARG-}"

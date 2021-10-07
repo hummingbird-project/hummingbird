@@ -43,3 +43,33 @@ class Setup {
         try? self.elg.syncShutdownGracefully()
     }
 }
+
+class CoreSetup {
+    let elg: EventLoopGroup
+    let server: HBHTTPServer
+    let client: HBXCTClient
+
+    init(_ responder: HBHTTPResponder) throws {
+        self.elg = MultiThreadedEventLoopGroup(numberOfThreads: 4)
+        self.server = HBHTTPServer(
+            group: self.elg,
+            configuration: .init()
+        )
+        try self.server.start(responder: responder).wait()
+
+        self.client = HBXCTClient(host: "localhost", port: self.server.port!, eventLoopGroupProvider: .createNew)
+        self.client.connect()
+    }
+
+    deinit {
+        try? self.client.syncShutdown()
+        try? self.server.stop().wait()
+        try? self.elg.syncShutdownGracefully()
+    }
+}
+
+func randomBuffer(size: Int) -> ByteBuffer {
+    var data = [UInt8](repeating: 0, count: size)
+    data = data.map { _ in UInt8.random(in: 0...255) }
+    return ByteBufferAllocator().buffer(bytes: data)
+}
