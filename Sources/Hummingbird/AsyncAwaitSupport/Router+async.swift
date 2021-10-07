@@ -76,32 +76,17 @@ extension HBRouterMethods {
         options: HBRouterMethodOptions = [],
         use closure: @escaping (HBRequest) async throws -> Output
     ) -> HBResponder {
-        if options.contains(.streamBody) {
-            return HBAsyncCallbackResponder { request in
-                var request = request
-                if options.contains(.editResponse) {
-                    request.response = .init()
-                }
-                let response = try await closure(request).patchedResponse(from: request)
-                return response
+        return HBAsyncCallbackResponder { request in
+            var request = request
+            if case .stream = request.body, !options.contains(.streamBody) {
+                let buffer = try await request.body.consumeBody(on: request.eventLoop).get()
+                request.body = .byteBuffer(buffer)
             }
-        } else {
-            return HBAsyncCallbackResponder { request in
-                var request = request
-                if options.contains(.editResponse) {
-                    request.response = .init()
-                }
-                if case .byteBuffer = request.body {
-                    do {
-                        let response = try await closure(request).patchedResponse(from: request)
-                        return response
-                    }
-                } else {
-                    let buffer = try await request.body.consumeBody(on: request.eventLoop).get()
-                    request.body = .byteBuffer(buffer)
-                    let response = try await closure(request).patchedResponse(from: request)
-                    return response
-                }
+            if options.contains(.editResponse) {
+                request.response = .init()
+                return try await closure(request).patchedResponse(from: request)
+            } else {
+                return try await closure(request).response(from: request)
             }
         }
     }

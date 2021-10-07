@@ -176,9 +176,9 @@ extension HBRouterMethods {
     ) -> HBResponder {
         // generate response from request. Moved repeated code into internal function
         func _respond(request: HBRequest) throws -> HBResponse {
-            var request = request
             let response: HBResponse
             if options.contains(.editResponse) {
+                var request = request
                 request.response = .init()
                 response = try closure(request).patchedResponse(from: request)
             } else {
