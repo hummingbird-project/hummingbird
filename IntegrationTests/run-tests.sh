@@ -18,7 +18,7 @@ set -eu
 shopt -s nullglob
 
 here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-tmp=$(mktemp -d /tmp/.swift-nio-http1-server-sh-tests_XXXXXX)
+tmp=$(mktemp -d /tmp/.swift-hb-http1-server-sh-tests_XXXXXX)
 
 # start_time
 function time_diff_to_now() {
