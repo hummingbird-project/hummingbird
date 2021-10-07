@@ -1,4 +1,4 @@
-///===----------------------------------------------------------------------===//
+/// ===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
 //
@@ -36,4 +36,3 @@ func run(identifier: String) {
         print(error)
     }
 }
-

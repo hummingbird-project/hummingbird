@@ -21,19 +21,19 @@ class Setup {
     let app: HBApplication
     let client: HBXCTClient
 
-    init(_ configure: (HBApplication) -> ()) throws {
+    init(_ configure: (HBApplication) -> Void) throws {
         self.elg = MultiThreadedEventLoopGroup(numberOfThreads: 4)
         self.app = HBApplication(
-            configuration: .init(logLevel: .error), 
-            eventLoopGroupProvider: .shared(elg)
+            configuration: .init(logLevel: .error),
+            eventLoopGroupProvider: .shared(self.elg)
         )
         self.app.logger.logLevel = .error
-        configure(app)
+        configure(self.app)
 
-        try app.start()
+        try self.app.start()
 
-        self.client = HBXCTClient(host: "localhost", port: app.server.port!, eventLoopGroupProvider: .createNew)
-        client.connect()
+        self.client = HBXCTClient(host: "localhost", port: self.app.server.port!, eventLoopGroupProvider: .createNew)
+        self.client.connect()
     }
 
     deinit {
