@@ -8,21 +8,13 @@
     <script src="js/jquery.min.js" defer></script>
     <script src="js/jazzy.js" defer></script>
     
-    <script src="js/lunr.min.js" defer></script>
-    <script src="js/typeahead.jquery.js" defer></script>
-    <script src="js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a title="Encoding and Decoding  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html"> 0.11.3 Docs</a> (83% documented)</p>
+        <p><a href="index.html"> 0.13.3 Docs</a> (83% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="img/gh.png"/>View on GitHub</a></p>
-        <p class="header-right">
-          <form role="search" action="search.json">
-            <input type="text" placeholder="Search documentation" data-typeahead>
-          </form>
-        </p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -77,6 +69,9 @@
                 <a href="Classes/HBApplication/HTTPResponder.html">– HTTPResponder</a>
               </li>
               <li class="nav-group-task">
+                <a href="Classes/HBApplication.html#/s:11Hummingbird13HBApplicationC21ChannelRequestContextV">– ChannelRequestContext</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="Classes/HBApplication/Persist.html">– Persist</a>
               </li>
               <li class="nav-group-task">
@@ -84,26 +79,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="Classes/HBMiddlewareGroup.html">HBMiddlewareGroup</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/HBRequest.html">HBRequest</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/HBRequest/ResponsePatch.html">– ResponsePatch</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/HBRequest/Persist.html">– Persist</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/HBResponse.html">HBResponse</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="Enums.html">Enumerations</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="Enums/HBBodyCollation.html">HBBodyCollation</a>
               </li>
             </ul>
           </li>
@@ -120,10 +95,16 @@
                 <a href="Extensions/Dictionary.html">Dictionary</a>
               </li>
               <li class="nav-group-task">
-                <a href="Extensions/EventLoopFuture.html">EventLoopFuture</a>
+                <a href="Extensions/EventLoopGroup.html">EventLoopGroup</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/HTTPHeaders.html">HTTPHeaders</a>
               </li>
               <li class="nav-group-task">
                 <a href="Extensions/HTTPResponseStatus.html">HTTPResponseStatus</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/Logger.html">Logger</a>
               </li>
               <li class="nav-group-task">
                 <a href="Extensions/Optional.html">Optional</a>
@@ -238,7 +219,22 @@
                 <a href="Structs/HBPersistError.html">HBPersistError</a>
               </li>
               <li class="nav-group-task">
+                <a href="Structs/HBRequest.html">HBRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBRequest/ResponsePatch.html">– ResponsePatch</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBRequest/Persist.html">– Persist</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBResponse.html">HBResponse</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="Structs/HBRouterGroup.html">HBRouterGroup</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a>
               </li>
               <li class="nav-group-task">
                 <a href="Structs/HBURL.html">HBURL</a>
@@ -259,19 +255,19 @@
             
             <h1 id='encoding-and-decoding' class='heading'>Encoding and Decoding</h1>
 
-<p>Hummingbird can make use of <code>Codable</code> to decode requests and encode responses. <code><a href="Classes/HBApplication.html">HBApplication</a></code> has two member variables <code>decoder</code> and <code>encoder</code> which define how requests/responses are decoded/encoded. The <code>decoder</code> must conform to <code><a href="Protocols/HBRequestDecoder.html">HBRequestDecoder</a></code> which requires a <code>decode(_:from)</code> function that decodes a <code><a href="Classes/HBRequest.html">HBRequest</a></code>. </p>
+<p>Hummingbird can make use of <code>Codable</code> to decode requests and encode responses. <code><a href="Classes/HBApplication.html">HBApplication</a></code> has two member variables <code>decoder</code> and <code>encoder</code> which define how requests/responses are decoded/encoded. The <code>decoder</code> must conform to <code><a href="Protocols/HBRequestDecoder.html">HBRequestDecoder</a></code> which requires a <code>decode(_:from)</code> function that decodes a <code><a href="Structs/HBRequest.html">HBRequest</a></code>. </p>
 <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">protocol</span> <span class="kt">HBRequestDecoder</span> <span class="p">{</span>
     <span class="kd">func</span> <span class="n">decode</span><span class="o">&lt;</span><span class="kt">T</span><span class="p">:</span> <span class="kt">Decodable</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">type</span><span class="p">:</span> <span class="kt">T</span><span class="o">.</span><span class="k">Type</span><span class="p">,</span> <span class="n">from</span> <span class="nv">request</span><span class="p">:</span> <span class="kt">HBRequest</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">T</span>
 <span class="p">}</span>
 </code></pre>
 
-<p>The <code>encoder</code> must conform to <code><a href="Protocols/HBResponseEncoder.html">HBResponseEncoder</a></code> which requires a <code>encode(_:from)</code> function that creates a <code><a href="Classes/HBResponse.html">HBResponse</a></code> from a <code>Codable</code> value and the original request that generated it.</p>
+<p>The <code>encoder</code> must conform to <code><a href="Protocols/HBResponseEncoder.html">HBResponseEncoder</a></code> which requires a <code>encode(_:from)</code> function that creates a <code><a href="Structs/HBResponse.html">HBResponse</a></code> from a <code>Codable</code> value and the original request that generated it.</p>
 <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">protocol</span> <span class="kt">HBResponseEncoder</span> <span class="p">{</span>
     <span class="kd">func</span> <span class="n">encode</span><span class="o">&lt;</span><span class="kt">T</span><span class="p">:</span> <span class="kt">Encodable</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">T</span><span class="p">,</span> <span class="n">from</span> <span class="nv">request</span><span class="p">:</span> <span class="kt">HBRequest</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">HBResponse</span>
 <span class="p">}</span>
 </code></pre>
 
-<p>Both of these look very similar to the <code>Encodable</code> and <code>Decodable</code> protocol that come with the <code>Codable</code> system except you have additional information from the <code><a href="Classes/HBRequest.html">HBRequest</a></code> class on how you might want to decode/encode your data.</p>
+<p>Both of these look very similar to the <code>Encodable</code> and <code>Decodable</code> protocol that come with the <code>Codable</code> system except you have additional information from the <code><a href="Structs/HBRequest.html">HBRequest</a></code> class on how you might want to decode/encode your data.</p>
 <h2 id='setting-up-hbapplication' class='heading'>Setting up HBApplication</h2>
 
 <p>The default implementations of <code>decoder</code> and <code>encoder</code> are <code>Null</code> implementations that will assert if used. So you have to setup your <code>decoder</code> and <code>encoder</code> before you can use <code>Codable</code> in Hummingbird. <code>HummingbirdFoundation</code> includes two such implementations. <code>JSONEncoder</code> and <code>JSONDecoder</code> have been extended to conform to the relevant protocols so you can have JSON decoding/encoding by adding the following when creating your application</p>
@@ -337,8 +333,8 @@
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-05-21)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-10-11)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>

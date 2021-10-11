@@ -8,21 +8,13 @@
     <script src="js/jquery.min.js" defer></script>
     <script src="js/jazzy.js" defer></script>
     
-    <script src="js/lunr.min.js" defer></script>
-    <script src="js/typeahead.jquery.js" defer></script>
-    <script src="js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a title="Router  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html"> 0.11.3 Docs</a> (83% documented)</p>
+        <p><a href="index.html"> 0.13.3 Docs</a> (83% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="img/gh.png"/>View on GitHub</a></p>
-        <p class="header-right">
-          <form role="search" action="search.json">
-            <input type="text" placeholder="Search documentation" data-typeahead>
-          </form>
-        </p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -77,6 +69,9 @@
                 <a href="Classes/HBApplication/HTTPResponder.html">– HTTPResponder</a>
               </li>
               <li class="nav-group-task">
+                <a href="Classes/HBApplication.html#/s:11Hummingbird13HBApplicationC21ChannelRequestContextV">– ChannelRequestContext</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="Classes/HBApplication/Persist.html">– Persist</a>
               </li>
               <li class="nav-group-task">
@@ -84,26 +79,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="Classes/HBMiddlewareGroup.html">HBMiddlewareGroup</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/HBRequest.html">HBRequest</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/HBRequest/ResponsePatch.html">– ResponsePatch</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/HBRequest/Persist.html">– Persist</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/HBResponse.html">HBResponse</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="Enums.html">Enumerations</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="Enums/HBBodyCollation.html">HBBodyCollation</a>
               </li>
             </ul>
           </li>
@@ -120,10 +95,16 @@
                 <a href="Extensions/Dictionary.html">Dictionary</a>
               </li>
               <li class="nav-group-task">
-                <a href="Extensions/EventLoopFuture.html">EventLoopFuture</a>
+                <a href="Extensions/EventLoopGroup.html">EventLoopGroup</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/HTTPHeaders.html">HTTPHeaders</a>
               </li>
               <li class="nav-group-task">
                 <a href="Extensions/HTTPResponseStatus.html">HTTPResponseStatus</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/Logger.html">Logger</a>
               </li>
               <li class="nav-group-task">
                 <a href="Extensions/Optional.html">Optional</a>
@@ -238,7 +219,22 @@
                 <a href="Structs/HBPersistError.html">HBPersistError</a>
               </li>
               <li class="nav-group-task">
+                <a href="Structs/HBRequest.html">HBRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBRequest/ResponsePatch.html">– ResponsePatch</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBRequest/Persist.html">– Persist</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBResponse.html">HBResponse</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="Structs/HBRouterGroup.html">HBRouterGroup</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a>
               </li>
               <li class="nav-group-task">
                 <a href="Structs/HBURL.html">HBURL</a>
@@ -279,7 +275,7 @@
 <p>There are shortcuts for <code>put</code>, <code>post</code>, <code>head</code>, <code>patch</code> and <code>delete</code> as well.</p>
 <h2 id='response-generators' class='heading'>Response generators</h2>
 
-<p>Route handlers are required to return either a type conforming to the <code><a href="Protocols/HBResponseGenerator.html">HBResponseGenerator</a></code> protocol or an <code>EventLoopFuture</code> of a type conforming to <code><a href="Protocols/HBResponseGenerator.html">HBResponseGenerator</a></code>. An <code>EventLoopFuture</code> is an object that will fulfilled with their value at a later date in an asynchronous manner. The <code><a href="Protocols/HBResponseGenerator.html">HBResponseGenerator</a></code> protocol requires an object to be able to generate an <code><a href="Classes/HBResponse.html">HBResponse</a></code>. For example <code>String</code> has been extended to conform to <code><a href="Protocols/HBResponseGenerator.html">HBResponseGenerator</a></code> by returning an <code><a href="Classes/HBResponse.html">HBResponse</a></code> with status <code>.ok</code>,  a content-type header of <code>text-plain</code> and a body holding the contents of the <code>String</code>. </p>
+<p>Route handlers are required to return either a type conforming to the <code><a href="Protocols/HBResponseGenerator.html">HBResponseGenerator</a></code> protocol or an <code>EventLoopFuture</code> of a type conforming to <code><a href="Protocols/HBResponseGenerator.html">HBResponseGenerator</a></code>. An <code>EventLoopFuture</code> is an object that will fulfilled with their value at a later date in an asynchronous manner. The <code><a href="Protocols/HBResponseGenerator.html">HBResponseGenerator</a></code> protocol requires an object to be able to generate an <code><a href="Structs/HBResponse.html">HBResponse</a></code>. For example <code>String</code> has been extended to conform to <code><a href="Protocols/HBResponseGenerator.html">HBResponseGenerator</a></code> by returning an <code><a href="Structs/HBResponse.html">HBResponse</a></code> with status <code>.ok</code>,  a content-type header of <code>text-plain</code> and a body holding the contents of the <code>String</code>. </p>
 <pre class="highlight swift"><code><span class="c1">/// Extend String to conform to ResponseGenerator</span>
 <span class="kd">extension</span> <span class="kt">String</span><span class="p">:</span> <span class="kt">HBResponseGenerator</span> <span class="p">{</span>
     <span class="c1">/// Generate response holding string</span>
@@ -295,7 +291,7 @@
 <p>It is also possible to extend <code>Codable</code> objects to generate <code>HBResponses</code> by conforming these objects to <code><a href="Protocols/HBResponseEncodable.html">HBResponseEncodable</a></code>. The object will use <code><a href="Classes/HBApplication.html#/s:11Hummingbird13HBApplicationC7encoderAA17HBResponseEncoder_pvp">HBApplication.encoder</a></code> to encode these objects. If an object conforms to <code><a href="Protocols/HBResponseEncodable.html">HBResponseEncodable</a></code> then also so do arrays of these objects and dictionaries.</p>
 <h2 id='parameters' class='heading'>Parameters</h2>
 
-<p>You can extract parameters out of the URI by prefixing the path with a colon. This indicates that this path section is a parameter. The parameter name is the string following the colon. You can get access to the parameters extracted from the URI with <code><a href="Classes/HBRequest.html#/s:11Hummingbird9HBRequestC10parametersAA12HBParametersVvp">HBRequest.parameters</a></code>. If there are no URI parameters in the path, accessing <code><a href="Classes/HBRequest.html#/s:11Hummingbird9HBRequestC10parametersAA12HBParametersVvp">HBRequest.parameters</a></code> will cause a crash, so don&rsquo;t use it if you haven&rsquo;t specified a parameter in the route path. This example extracts an id from the URI and uses it to return a specific user. so &ldquo;/user/56&rdquo; will return user with id 56. </p>
+<p>You can extract parameters out of the URI by prefixing the path with a colon. This indicates that this path section is a parameter. The parameter name is the string following the colon. You can get access to the parameters extracted from the URI with <code><a href="Structs/HBRequest.html#/s:11Hummingbird9HBRequestV10parametersAA12HBParametersVvp">HBRequest.parameters</a></code>. If there are no URI parameters in the path, accessing <code><a href="Structs/HBRequest.html#/s:11Hummingbird9HBRequestV10parametersAA12HBParametersVvp">HBRequest.parameters</a></code> will cause a crash, so don&rsquo;t use it if you haven&rsquo;t specified a parameter in the route path. This example extracts an id from the URI and uses it to return a specific user. so &ldquo;/user/56&rdquo; will return user with id 56. </p>
 <pre class="highlight swift"><code><span class="k">let</span> <span class="nv">app</span> <span class="o">=</span> <span class="kt">HBApplication</span><span class="p">()</span>
 <span class="n">app</span><span class="o">.</span><span class="n">router</span><span class="o">.</span><span class="nf">get</span><span class="p">(</span><span class="s">"/user/:id"</span><span class="p">)</span> <span class="p">{</span> <span class="n">request</span> <span class="k">in</span>
     <span class="k">let</span> <span class="nv">id</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="nf">get</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="nv">as</span><span class="p">:</span> <span class="kt">Int</span><span class="o">.</span><span class="k">self</span><span class="p">)</span> <span class="k">else</span> <span class="p">{</span> <span class="k">throw</span> <span class="kt">HBHTTPError</span><span class="p">(</span><span class="o">.</span><span class="n">badRequest</span><span class="p">)</span> <span class="p">}</span>
@@ -341,17 +337,43 @@
 <span class="p">}</span>
 </code></pre>
 
-<p>Here you can see the <code>AddOrder</code> route handler encapsulates everything you need to know about the add order route. The <code>Input</code> and <code>Output</code> structs are defined and any additional input parameters that need extracted from the <code><a href="Classes/HBRequest.html">HBRequest</a></code>. The input parameters are extracted in the <code>init</code> and then the request is processed in the <code>handle</code> function. In this example we need to decode the <code>Input</code> from the <code><a href="Classes/HBRequest.html">HBRequest</a></code> and using the authentication framework from <code>HummingbirdAuth</code> we get the authenticated user. </p>
+<p>Here you can see the <code>AddOrder</code> route handler encapsulates everything you need to know about the add order route. The <code>Input</code> and <code>Output</code> structs are defined and any additional input parameters that need extracted from the <code><a href="Structs/HBRequest.html">HBRequest</a></code>. The input parameters are extracted in the <code>init</code> and then the request is processed in the <code>handle</code> function. In this example we need to decode the <code>Input</code> from the <code><a href="Structs/HBRequest.html">HBRequest</a></code> and using the authentication framework from <code>HummingbirdAuth</code> we get the authenticated user. </p>
 
 <p>The following will add the handler to the application</p>
 <pre class="highlight swift"><code><span class="n">application</span><span class="o">.</span><span class="n">router</span><span class="o">.</span><span class="nf">put</span><span class="p">(</span><span class="s">"order"</span><span class="p">,</span> <span class="nv">use</span><span class="p">:</span> <span class="kt">AddOrder</span><span class="o">.</span><span class="k">self</span><span class="p">)</span>
+</code></pre>
+<h2 id='streaming-request-body' class='heading'>Streaming request body</h2>
+
+<p>By default Hummingbird will collate the contents of your request body into one ByteBuffer. You can access this via <code>HBRequest.body.buffer</code>. If you&rsquo;d prefer to stream the content of the request body, you can add a <code>.streamBody</code> option to the route handler to receive a streaming body instead of a single <code>ByteBuffer</code>. Inside the route handler you access this stream via <code>HBRequest.body.stream</code>. The request body parts are then accessed either via <code>consume</code> function which will return everything that has been streamed so far or a <code>consumeAll</code> function which takes a closure processing each part. Here is an example which reads the request buffer and returns it size</p>
+<pre class="highlight swift"><code><span class="n">application</span><span class="o">.</span><span class="n">router</span><span class="o">.</span><span class="nf">post</span><span class="p">(</span><span class="s">"size"</span><span class="p">,</span> <span class="nv">options</span><span class="p">:</span> <span class="o">.</span><span class="n">streamBody</span><span class="p">)</span> <span class="p">{</span> <span class="n">request</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">String</span><span class="o">&gt;</span> <span class="k">in</span>
+    <span class="k">guard</span> <span class="k">let</span> <span class="nv">stream</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">stream</span> <span class="k">else</span> <span class="p">{</span> 
+        <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="nf">failure</span><span class="p">(</span><span class="o">.</span><span class="n">badRequest</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">var</span> <span class="nv">size</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">stream</span><span class="o">.</span><span class="nf">consumeAll</span><span class="p">(</span><span class="nv">on</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">eventLoop</span><span class="p">)</span> <span class="p">{</span> <span class="n">buffer</span> <span class="k">in</span>
+        <span class="n">size</span> <span class="o">+=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">readableBytes</span>
+        <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="n">eventLoop</span><span class="o">.</span><span class="nf">makeSucceededFuture</span><span class="p">(())</span>
+    <span class="p">}</span>
+    <span class="o">.</span><span class="n">map</span> <span class="p">{</span> <span class="n">size</span><span class="o">.</span><span class="n">description</span> <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+<h2 id='editing-response-in-handler' class='heading'>Editing response in handler</h2>
+
+<p>The standard way to provide a custom response from a route handler is to return a <code><a href="Structs/HBResponse.html">HBResponse</a></code> from that handler. This method loses a lot of the automation of encoding responses, generating the correct status code etc. </p>
+
+<p>There is another method though that allows you to edit a response even when returning something other than a <code><a href="Structs/HBResponse.html">HBResponse</a></code>. First you need to flag your route to say it is editing the response using the option <code>.editResponse</code>. Once you have set this option you can edit your response via <code><a href="Structs/HBRequest.html#/s:11Hummingbird9HBRequestV8responseAC13ResponsePatchCvp">HBRequest.response</a></code>. This allows you to add new headers, replace generated headers or set the status code. Below is a route replacing the generated <code>content-type</code> header and setting the status code.</p>
+<pre class="highlight swift"><code><span class="n">application</span><span class="o">.</span><span class="n">router</span><span class="o">.</span><span class="nf">post</span><span class="p">(</span><span class="s">"test"</span><span class="p">,</span> <span class="nv">options</span><span class="p">:</span> <span class="o">.</span><span class="n">editResponse</span><span class="p">)</span> <span class="p">{</span> <span class="n">request</span> <span class="o">-&gt;</span> <span class="kt">String</span> <span class="k">in</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="nf">replaceOrAdd</span><span class="p">(</span><span class="nv">name</span><span class="p">:</span> <span class="s">"content-type"</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="s">"application/json"</span><span class="p">)</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="o">.</span><span class="n">accepted</span>
+    <span class="k">return</span> <span class="err">#</span><span class="s">"{"</span><span class="n">test</span><span class="s">": "</span><span class="n">value</span><span class="s">"}"</span><span class="err">#</span>
+<span class="p">}</span>
 </code></pre>
 
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-05-21)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-10-11)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>

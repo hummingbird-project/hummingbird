@@ -8,22 +8,14 @@
     <script src="../js/jquery.min.js" defer></script>
     <script src="../js/jazzy.js" defer></script>
     
-    <script src="../js/lunr.min.js" defer></script>
-    <script src="../js/typeahead.jquery.js" defer></script>
-    <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a name="//apple_ref/swift/Protocol/HBRouterMethods" class="dashAnchor"></a>
     <a title="HBRouterMethods Protocol Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> 0.11.3 Docs</a> (83% documented)</p>
+        <p><a href="../index.html"> 0.13.3 Docs</a> (83% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="../img/gh.png"/>View on GitHub</a></p>
-        <p class="header-right">
-          <form role="search" action="../search.json">
-            <input type="text" placeholder="Search documentation" data-typeahead>
-          </form>
-        </p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -78,6 +70,9 @@
                 <a href="../Classes/HBApplication/HTTPResponder.html">– HTTPResponder</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Classes/HBApplication.html#/s:11Hummingbird13HBApplicationC21ChannelRequestContextV">– ChannelRequestContext</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Classes/HBApplication/Persist.html">– Persist</a>
               </li>
               <li class="nav-group-task">
@@ -85,26 +80,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/HBMiddlewareGroup.html">HBMiddlewareGroup</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBRequest.html">HBRequest</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBRequest/ResponsePatch.html">– ResponsePatch</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBRequest/Persist.html">– Persist</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBResponse.html">HBResponse</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="../Enums.html">Enumerations</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="../Enums/HBBodyCollation.html">HBBodyCollation</a>
               </li>
             </ul>
           </li>
@@ -121,10 +96,16 @@
                 <a href="../Extensions/Dictionary.html">Dictionary</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Extensions/EventLoopFuture.html">EventLoopFuture</a>
+                <a href="../Extensions/EventLoopGroup.html">EventLoopGroup</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/HTTPHeaders.html">HTTPHeaders</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/HTTPResponseStatus.html">HTTPResponseStatus</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Logger.html">Logger</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/Optional.html">Optional</a>
@@ -239,7 +220,22 @@
                 <a href="../Structs/HBPersistError.html">HBPersistError</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Structs/HBRequest.html">HBRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBRequest/ResponsePatch.html">– ResponsePatch</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBRequest/Persist.html">– Persist</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBResponse.html">HBResponse</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/HBRouterGroup.html">HBRouterGroup</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/HBURL.html">HBURL</a>
@@ -260,7 +256,6 @@
             <h1>HBRouterMethods</h1>
               <div class="declaration">
                 <div class="language">
-                  
                   <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">protocol</span> <span class="kt">HBRouterMethods</span></code></pre>
 
                 </div>
@@ -274,9 +269,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsP2on_6method4body3usexSS_8NIOHTTP110HTTPMethodOAA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF"></a>
-                    <a name="//apple_ref/swift/Method/on(_:method:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsP2on_6method4body3usexSS_8NIOHTTP110HTTPMethodOAA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">on(_:<wbr>method:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsP2on_6method7options3usexSS_8NIOHTTP110HTTPMethodOAA0B13MethodOptionsVqd__AA9HBRequestVKctAA19HBResponseGeneratorRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/on(_:method:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsP2on_6method7options3usexSS_8NIOHTTP110HTTPMethodOAA0B13MethodOptionsVqd__AA9HBRequestVKctAA19HBResponseGeneratorRd__lF">on(_:method:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Default implementation
@@ -292,7 +287,8 @@
                       </div>
                       <h4>Default Implementation</h4>
                       <div class="default_impl abstract">
-                        <p>Add path for <code>HBRouteHandler</code> that returns a value conforming to <code>HBResponseGenerator</code></p>
+                        <p>Add path for <code>HBRouteHandler</code> that returns an <code>EventLoopFuture</code> specialized with a type conforming
+to <code>HBResponseGenerator</code></p>
 
                       </div>
                       <div class="declaration">
@@ -300,12 +296,7 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
-<span class="kd">func</span> <span class="n">on</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
-    <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
-    <span class="nv">method</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span><span class="p">,</span>
-    <span class="nv">use</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
+<span class="kd">func</span> <span class="n">on</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">method</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span> <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span><span class="p">,</span> <span class="nv">use</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Structs/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Output</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span></code></pre>
 
                         </div>
                       </div>
@@ -315,9 +306,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsP2on_6method4body3usexSS_8NIOHTTP110HTTPMethodOAA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF"></a>
-                    <a name="//apple_ref/swift/Method/on(_:method:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsP2on_6method4body3usexSS_8NIOHTTP110HTTPMethodOAA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">on(_:<wbr>method:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsP2on_6method7options3usexSS_8NIOHTTP110HTTPMethodOAA0B13MethodOptionsV7NIOCore15EventLoopFutureCyqd__GAA9HBRequestVctAA19HBResponseGeneratorRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/on(_:method:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsP2on_6method7options3usexSS_8NIOHTTP110HTTPMethodOAA0B13MethodOptionsV7NIOCore15EventLoopFutureCyqd__GAA9HBRequestVctAA19HBResponseGeneratorRd__lF">on(_:method:options:use:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -333,12 +324,7 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
-<span class="kd">func</span> <span class="n">on</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
-    <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
-    <span class="nv">method</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span><span class="p">,</span>
-    <span class="nv">use</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
+<span class="kd">func</span> <span class="n">on</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">method</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span> <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span><span class="p">,</span> <span class="nv">use</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Structs/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Output</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span></code></pre>
 
                         </div>
                       </div>
@@ -350,7 +336,7 @@
                     <code>
                     <a name="/s:11Hummingbird15HBRouterMethodsP5groupyAA0B5GroupVSSF"></a>
                     <a name="//apple_ref/swift/Method/group(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsP5groupyAA0B5GroupVSSF">group(_:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsP5groupyAA0B5GroupVSSF">group(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -375,9 +361,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE3get_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF"></a>
-                    <a name="//apple_ref/swift/Method/get(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3get_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF">get(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE3get_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/get(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3get_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF">get(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -398,7 +384,7 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="k">get</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
     <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="n">_Output</span></code></pre>
 
@@ -410,9 +396,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE3put_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF"></a>
-                    <a name="//apple_ref/swift/Method/put(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3put_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF">put(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE3put_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/put(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3put_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF">put(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -433,7 +419,7 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="n">put</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
     <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="n">_Output</span></code></pre>
 
@@ -445,9 +431,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE4post_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF"></a>
-                    <a name="//apple_ref/swift/Method/post(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4post_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF">post(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE4post_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/post(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4post_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF">post(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -468,7 +454,7 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="n">post</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
     <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="n">_Output</span></code></pre>
 
@@ -480,9 +466,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE4head_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF"></a>
-                    <a name="//apple_ref/swift/Method/head(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4head_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF">head(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE4head_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/head(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4head_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF">head(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -503,7 +489,7 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="n">head</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
     <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="n">_Output</span></code></pre>
 
@@ -515,9 +501,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE6delete_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF"></a>
-                    <a name="//apple_ref/swift/Method/delete(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE6delete_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF">delete(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE6delete_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/delete(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE6delete_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF">delete(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -538,7 +524,7 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="n">delete</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
     <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="n">_Output</span></code></pre>
 
@@ -550,9 +536,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE5patch_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF"></a>
-                    <a name="//apple_ref/swift/Method/patch(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE5patch_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF">patch(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE5patch_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/patch(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE5patch_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7_OutputQyd__Rsd_0_r0_lF">patch(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -573,7 +559,7 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="n">patch</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
     <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="n">_Output</span></code></pre>
 
@@ -585,9 +571,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE3get_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF"></a>
-                    <a name="//apple_ref/swift/Method/get(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3get_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF">get(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE3get_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7NIOCore15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/get(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3get_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7NIOCore15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF">get(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -608,7 +594,7 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="k">get</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
     <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="n">_Output</span><span class="o">&gt;</span></code></pre>
 
@@ -620,9 +606,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE3put_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF"></a>
-                    <a name="//apple_ref/swift/Method/put(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3put_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF">put(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE3put_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7NIOCore15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/put(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3put_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7NIOCore15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF">put(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -643,7 +629,7 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="n">put</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
     <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="n">_Output</span><span class="o">&gt;</span></code></pre>
 
@@ -655,9 +641,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE4post_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF"></a>
-                    <a name="//apple_ref/swift/Method/post(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4post_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF">post(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE4post_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7NIOCore15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/post(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4post_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7NIOCore15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF">post(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -678,7 +664,7 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="n">post</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
     <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="n">_Output</span><span class="o">&gt;</span></code></pre>
 
@@ -690,9 +676,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE4head_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF"></a>
-                    <a name="//apple_ref/swift/Method/head(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4head_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF">head(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE4head_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7NIOCore15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/head(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4head_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7NIOCore15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF">head(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -713,7 +699,7 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="n">head</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
     <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="n">_Output</span><span class="o">&gt;</span></code></pre>
 
@@ -725,9 +711,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE6delete_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF"></a>
-                    <a name="//apple_ref/swift/Method/delete(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE6delete_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF">delete(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE6delete_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7NIOCore15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/delete(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE6delete_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7NIOCore15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF">delete(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -748,7 +734,7 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="n">delete</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
     <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="n">_Output</span><span class="o">&gt;</span></code></pre>
 
@@ -760,9 +746,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE5patch_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF"></a>
-                    <a name="//apple_ref/swift/Method/patch(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE5patch_4body3usexSS_AA15HBBodyCollationOqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_3NIO15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF">patch(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE5patch_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7NIOCore15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/patch(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE5patch_7options3usexSS_AA0B13MethodOptionsVqd__mtAA14HBRouteHandlerRd__AA19HBResponseGeneratorRd_0_7NIOCore15EventLoopFutureCyqd_0_G7_OutputRtd__r0_lF">patch(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -783,7 +769,7 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="n">patch</span><span class="o">&lt;</span><span class="kt">Handler</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBRouteHandler.html">HBRouteHandler</a></span><span class="p">,</span> <span class="nv">_Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
     <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kt">Handler</span><span class="o">.</span><span class="k">Type</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="k">where</span> <span class="kt">Handler</span><span class="o">.</span><span class="n">_Output</span> <span class="o">==</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="n">_Output</span><span class="o">&gt;</span></code></pre>
 
@@ -795,9 +781,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE3get_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF"></a>
-                    <a name="//apple_ref/swift/Method/get(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3get_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">get(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE3get_7options3usexSS_AA0B13MethodOptionsVqd__AA9HBRequestVKctAA19HBResponseGeneratorRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/get(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3get_7options3usexSS_AA0B13MethodOptionsVqd__AA9HBRequestVKctAA19HBResponseGeneratorRd__lF">get(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -818,8 +804,8 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="k">get</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
-    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Structs/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
 
                         </div>
@@ -830,9 +816,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE3put_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF"></a>
-                    <a name="//apple_ref/swift/Method/put(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3put_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">put(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE3put_7options3usexSS_AA0B13MethodOptionsVqd__AA9HBRequestVKctAA19HBResponseGeneratorRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/put(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3put_7options3usexSS_AA0B13MethodOptionsVqd__AA9HBRequestVKctAA19HBResponseGeneratorRd__lF">put(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -853,8 +839,8 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="n">put</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
-    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Structs/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
 
                         </div>
@@ -865,9 +851,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE4post_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF"></a>
-                    <a name="//apple_ref/swift/Method/post(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4post_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">post(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE4post_7options3usexSS_AA0B13MethodOptionsVqd__AA9HBRequestVKctAA19HBResponseGeneratorRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/post(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4post_7options3usexSS_AA0B13MethodOptionsVqd__AA9HBRequestVKctAA19HBResponseGeneratorRd__lF">post(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -888,8 +874,8 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="n">post</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
-    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Structs/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
 
                         </div>
@@ -900,9 +886,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE4head_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF"></a>
-                    <a name="//apple_ref/swift/Method/head(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4head_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">head(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE4head_7options3usexSS_AA0B13MethodOptionsVqd__AA9HBRequestVKctAA19HBResponseGeneratorRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/head(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4head_7options3usexSS_AA0B13MethodOptionsVqd__AA9HBRequestVKctAA19HBResponseGeneratorRd__lF">head(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -923,8 +909,8 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="n">head</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
-    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Structs/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
 
                         </div>
@@ -935,9 +921,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE6delete_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF"></a>
-                    <a name="//apple_ref/swift/Method/delete(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE6delete_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">delete(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE6delete_7options3usexSS_AA0B13MethodOptionsVqd__AA9HBRequestVKctAA19HBResponseGeneratorRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/delete(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE6delete_7options3usexSS_AA0B13MethodOptionsVqd__AA9HBRequestVKctAA19HBResponseGeneratorRd__lF">delete(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -958,8 +944,8 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="n">delete</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
-    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Structs/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
 
                         </div>
@@ -970,9 +956,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE5patch_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF"></a>
-                    <a name="//apple_ref/swift/Method/patch(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE5patch_4body3usexSS_AA15HBBodyCollationOqd__AA9HBRequestCKctAA19HBResponseGeneratorRd__lF">patch(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE5patch_7options3usexSS_AA0B13MethodOptionsVqd__AA9HBRequestVKctAA19HBResponseGeneratorRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/patch(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE5patch_7options3usexSS_AA0B13MethodOptionsVqd__AA9HBRequestVKctAA19HBResponseGeneratorRd__lF">patch(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -993,8 +979,8 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="n">patch</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
-    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Structs/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
 
                         </div>
@@ -1005,9 +991,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE3get_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF"></a>
-                    <a name="//apple_ref/swift/Method/get(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3get_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">get(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE3get_7options3usexSS_AA0B13MethodOptionsV7NIOCore15EventLoopFutureCyqd__GAA9HBRequestVctAA19HBResponseGeneratorRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/get(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3get_7options3usexSS_AA0B13MethodOptionsV7NIOCore15EventLoopFutureCyqd__GAA9HBRequestVctAA19HBResponseGeneratorRd__lF">get(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -1028,8 +1014,8 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="k">get</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
-    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Structs/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
 
                         </div>
@@ -1040,9 +1026,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE3put_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF"></a>
-                    <a name="//apple_ref/swift/Method/put(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3put_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">put(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE3put_7options3usexSS_AA0B13MethodOptionsV7NIOCore15EventLoopFutureCyqd__GAA9HBRequestVctAA19HBResponseGeneratorRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/put(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE3put_7options3usexSS_AA0B13MethodOptionsV7NIOCore15EventLoopFutureCyqd__GAA9HBRequestVctAA19HBResponseGeneratorRd__lF">put(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -1063,8 +1049,8 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="n">put</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
-    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Structs/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
 
                         </div>
@@ -1075,9 +1061,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE6delete_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF"></a>
-                    <a name="//apple_ref/swift/Method/delete(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE6delete_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">delete(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE6delete_7options3usexSS_AA0B13MethodOptionsV7NIOCore15EventLoopFutureCyqd__GAA9HBRequestVctAA19HBResponseGeneratorRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/delete(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE6delete_7options3usexSS_AA0B13MethodOptionsV7NIOCore15EventLoopFutureCyqd__GAA9HBRequestVctAA19HBResponseGeneratorRd__lF">delete(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -1098,8 +1084,8 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="n">delete</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
-    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Structs/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
 
                         </div>
@@ -1110,9 +1096,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE4head_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF"></a>
-                    <a name="//apple_ref/swift/Method/head(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4head_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">head(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE4head_7options3usexSS_AA0B13MethodOptionsV7NIOCore15EventLoopFutureCyqd__GAA9HBRequestVctAA19HBResponseGeneratorRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/head(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4head_7options3usexSS_AA0B13MethodOptionsV7NIOCore15EventLoopFutureCyqd__GAA9HBRequestVctAA19HBResponseGeneratorRd__lF">head(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -1133,8 +1119,8 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="n">head</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
-    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Structs/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
 
                         </div>
@@ -1145,9 +1131,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE4post_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF"></a>
-                    <a name="//apple_ref/swift/Method/post(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4post_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">post(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE4post_7options3usexSS_AA0B13MethodOptionsV7NIOCore15EventLoopFutureCyqd__GAA9HBRequestVctAA19HBResponseGeneratorRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/post(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE4post_7options3usexSS_AA0B13MethodOptionsV7NIOCore15EventLoopFutureCyqd__GAA9HBRequestVctAA19HBResponseGeneratorRd__lF">post(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -1168,8 +1154,8 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="n">post</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
-    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Structs/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
 
                         </div>
@@ -1180,9 +1166,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE5patch_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF"></a>
-                    <a name="//apple_ref/swift/Method/patch(_:body:use:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE5patch_4body3usexSS_AA15HBBodyCollationO3NIO15EventLoopFutureCyqd__GAA9HBRequestCctAA19HBResponseGeneratorRd__lF">patch(_:<wbr>body:<wbr>use:<wbr>)</a>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE5patch_7options3usexSS_AA0B13MethodOptionsV7NIOCore15EventLoopFutureCyqd__GAA9HBRequestVctAA19HBResponseGeneratorRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/patch(_:options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE5patch_7options3usexSS_AA0B13MethodOptionsV7NIOCore15EventLoopFutureCyqd__GAA9HBRequestVctAA19HBResponseGeneratorRd__lF">patch(_:options:use:)</a>
                     </code>
                       <span class="declaration-note">
                         Extension method
@@ -1203,9 +1189,75 @@
                           <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="n">patch</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/HBBodyCollation.html">HBBodyCollation</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">collate</span><span class="p">,</span>
-    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="n">use</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Structs/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE18constructResponder7options3useAA11HBResponder_pAA0B13MethodOptionsV_qd__AA9HBRequestVKctAA19HBResponseGeneratorRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/constructResponder(options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE18constructResponder7options3useAA11HBResponder_pAA0B13MethodOptionsV_qd__AA9HBRequestVKctAA19HBResponseGeneratorRd__lF">constructResponder(options:use:)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">constructResponder</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span><span class="p">,</span>
+    <span class="n">use</span> <span class="nv">closure</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Structs/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Protocols/HBResponder.html">HBResponder</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird15HBRouterMethodsPAAE18constructResponder7options3useAA11HBResponder_pAA0B13MethodOptionsV_7NIOCore15EventLoopFutureCyqd__GAA9HBRequestVctAA19HBResponseGeneratorRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/constructResponder(options:use:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird15HBRouterMethodsPAAE18constructResponder7options3useAA11HBResponder_pAA0B13MethodOptionsV_7NIOCore15EventLoopFutureCyqd__GAA9HBRequestVctAA19HBResponseGeneratorRd__lF">constructResponder(options:use:)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">constructResponder</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponseGenerator.html">HBResponseGenerator</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="nv">options</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a></span><span class="p">,</span>
+    <span class="n">use</span> <span class="nv">closure</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Structs/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Protocols/HBResponder.html">HBResponder</a></span></code></pre>
 
                         </div>
                       </div>
@@ -1217,8 +1269,8 @@
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-05-21)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-10-11)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>

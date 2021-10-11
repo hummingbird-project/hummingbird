@@ -8,22 +8,14 @@
     <script src="../js/jquery.min.js" defer></script>
     <script src="../js/jazzy.js" defer></script>
     
-    <script src="../js/lunr.min.js" defer></script>
-    <script src="../js/typeahead.jquery.js" defer></script>
-    <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a name="//apple_ref/swift/Extension/Array" class="dashAnchor"></a>
     <a title="Array Extension Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> 0.6.1 Docs</a> (91% documented)</p>
+        <p><a href="../index.html"> 1.0.1 Docs</a> (82% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird-mustache"><img src="../img/gh.png"/>View on GitHub</a></p>
-        <p class="header-right">
-          <form role="search" action="../search.json">
-            <input type="text" placeholder="Search documentation" data-typeahead>
-          </form>
-        </p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -74,6 +66,9 @@
               <li class="nav-group-task">
                 <a href="../Classes/HBMustacheTemplate/Error.html">– Error</a>
               </li>
+              <li class="nav-group-task">
+                <a href="../Classes/HBMustacheTemplate.html#/s:19HummingbirdMustache18HBMustacheTemplateC11ParserStateV">– ParserState</a>
+              </li>
             </ul>
           </li>
           <li class="nav-group-name">
@@ -112,10 +107,16 @@
                 <a href="../Extensions.html#/s:s4Int8V">Int8</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Extensions/Mirror.html">Mirror</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Extensions/NSNull.html">NSNull</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Extensions.html#/s:SS">String</a>
+                <a href="../Extensions/Sequence.html">Sequence</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/String.html">String</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/StringProtocol.html">StringProtocol</a>
@@ -150,6 +151,9 @@
                 <a href="../Protocols/HBMustacheCustomRenderable.html">HBMustacheCustomRenderable</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Protocols/HBMustacheParent.html">HBMustacheParent</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Protocols/HBMustacheTransformable.html">HBMustacheTransformable</a>
               </li>
             </ul>
@@ -176,8 +180,8 @@
             <h1>Array</h1>
               <div class="declaration">
                 <div class="language">
-                  
                   <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Array</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBMustacheTransformable.html">HBMustacheTransformable</a></span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Array</span><span class="p">:</span> <span class="kt">HBComparableSequence</span> <span class="k">where</span> <span class="kt">Element</span><span class="p">:</span> <span class="kt">Comparable</span></code></pre>
 
                 </div>
               </div>
@@ -191,7 +195,7 @@
                     <code>
                     <a name="/s:Sa19HummingbirdMustacheE9transformyypSgSSF"></a>
                     <a name="//apple_ref/swift/Method/transform(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:Sa19HummingbirdMustacheE9transformyypSgSSF">transform(_:<wbr>)</a>
+                    <a class="token" href="#/s:Sa19HummingbirdMustacheE9transformyypSgSSF">transform(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -241,11 +245,51 @@ with comparable elements <code>sorted</code>.</p>
                 </li>
               </ul>
             </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Available%20where%20%60Element%60:%20%60Comparable%60"></a>
+                <a name="//apple_ref/swift/Section/Available where `Element`: `Comparable`" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/Available%20where%20%60Element%60:%20%60Comparable%60"></a>
+                  <h3 class="section-name"><p>Available where <code>Element</code>: <code>Comparable</code></p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:Sa19HummingbirdMustacheSLRzlE19comparableTransformyypSgSSF"></a>
+                    <a name="//apple_ref/swift/Method/comparableTransform(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:Sa19HummingbirdMustacheSLRzlE19comparableTransformyypSgSSF">comparableTransform(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">comparableTransform</span><span class="p">(</span><span class="n">_</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Any</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-05-21)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-10-11)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>

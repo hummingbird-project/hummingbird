@@ -8,21 +8,13 @@
     <script src="js/jquery.min.js" defer></script>
     <script src="js/jazzy.js" defer></script>
     
-    <script src="js/lunr.min.js" defer></script>
-    <script src="js/typeahead.jquery.js" defer></script>
-    <script src="js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a title="Router  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html"> 0.11.3 Docs</a> (94% documented)</p>
+        <p><a href="index.html"> 0.13.3 Docs</a> (94% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="img/gh.png"/>View on GitHub</a></p>
-        <p class="header-right">
-          <form role="search" action="search.json">
-            <input type="text" placeholder="Search documentation" data-typeahead>
-          </form>
-        </p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -180,12 +172,38 @@
 <p>The following will add the handler to the application</p>
 <pre class="highlight swift"><code><span class="n">application</span><span class="o">.</span><span class="n">router</span><span class="o">.</span><span class="nf">put</span><span class="p">(</span><span class="s">"order"</span><span class="p">,</span> <span class="nv">use</span><span class="p">:</span> <span class="kt">AddOrder</span><span class="o">.</span><span class="k">self</span><span class="p">)</span>
 </code></pre>
+<h2 id='streaming-request-body' class='heading'>Streaming request body</h2>
+
+<p>By default Hummingbird will collate the contents of your request body into one ByteBuffer. You can access this via <code>HBRequest.body.buffer</code>. If you&rsquo;d prefer to stream the content of the request body, you can add a <code>.streamBody</code> option to the route handler to receive a streaming body instead of a single <code>ByteBuffer</code>. Inside the route handler you access this stream via <code>HBRequest.body.stream</code>. The request body parts are then accessed either via <code>consume</code> function which will return everything that has been streamed so far or a <code>consumeAll</code> function which takes a closure processing each part. Here is an example which reads the request buffer and returns it size</p>
+<pre class="highlight swift"><code><span class="n">application</span><span class="o">.</span><span class="n">router</span><span class="o">.</span><span class="nf">post</span><span class="p">(</span><span class="s">"size"</span><span class="p">,</span> <span class="nv">options</span><span class="p">:</span> <span class="o">.</span><span class="n">streamBody</span><span class="p">)</span> <span class="p">{</span> <span class="n">request</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">String</span><span class="o">&gt;</span> <span class="k">in</span>
+    <span class="k">guard</span> <span class="k">let</span> <span class="nv">stream</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">stream</span> <span class="k">else</span> <span class="p">{</span> 
+        <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="nf">failure</span><span class="p">(</span><span class="o">.</span><span class="n">badRequest</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">var</span> <span class="nv">size</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">stream</span><span class="o">.</span><span class="nf">consumeAll</span><span class="p">(</span><span class="nv">on</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">eventLoop</span><span class="p">)</span> <span class="p">{</span> <span class="n">buffer</span> <span class="k">in</span>
+        <span class="n">size</span> <span class="o">+=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">readableBytes</span>
+        <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="n">eventLoop</span><span class="o">.</span><span class="nf">makeSucceededFuture</span><span class="p">(())</span>
+    <span class="p">}</span>
+    <span class="o">.</span><span class="n">map</span> <span class="p">{</span> <span class="n">size</span><span class="o">.</span><span class="n">description</span> <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+<h2 id='editing-response-in-handler' class='heading'>Editing response in handler</h2>
+
+<p>The standard way to provide a custom response from a route handler is to return a <code>HBResponse</code> from that handler. This method loses a lot of the automation of encoding responses, generating the correct status code etc. </p>
+
+<p>There is another method though that allows you to edit a response even when returning something other than a <code>HBResponse</code>. First you need to flag your route to say it is editing the response using the option <code>.editResponse</code>. Once you have set this option you can edit your response via <code>HBRequest.response</code>. This allows you to add new headers, replace generated headers or set the status code. Below is a route replacing the generated <code>content-type</code> header and setting the status code.</p>
+<pre class="highlight swift"><code><span class="n">application</span><span class="o">.</span><span class="n">router</span><span class="o">.</span><span class="nf">post</span><span class="p">(</span><span class="s">"test"</span><span class="p">,</span> <span class="nv">options</span><span class="p">:</span> <span class="o">.</span><span class="n">editResponse</span><span class="p">)</span> <span class="p">{</span> <span class="n">request</span> <span class="o">-&gt;</span> <span class="kt">String</span> <span class="k">in</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="nf">replaceOrAdd</span><span class="p">(</span><span class="nv">name</span><span class="p">:</span> <span class="s">"content-type"</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="s">"application/json"</span><span class="p">)</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="o">.</span><span class="n">accepted</span>
+    <span class="k">return</span> <span class="err">#</span><span class="s">"{"</span><span class="n">test</span><span class="s">": "</span><span class="n">value</span><span class="s">"}"</span><span class="err">#</span>
+<span class="p">}</span>
+</code></pre>
 
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-05-21)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-10-11)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>

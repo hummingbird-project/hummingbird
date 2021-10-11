@@ -8,22 +8,14 @@
     <script src="../js/jquery.min.js" defer></script>
     <script src="../js/jazzy.js" defer></script>
     
-    <script src="../js/lunr.min.js" defer></script>
-    <script src="../js/typeahead.jquery.js" defer></script>
-    <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a name="//apple_ref/swift/Protocol/HBPersistDriver" class="dashAnchor"></a>
     <a title="HBPersistDriver Protocol Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> 0.11.3 Docs</a> (83% documented)</p>
+        <p><a href="../index.html"> 0.13.3 Docs</a> (83% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="../img/gh.png"/>View on GitHub</a></p>
-        <p class="header-right">
-          <form role="search" action="../search.json">
-            <input type="text" placeholder="Search documentation" data-typeahead>
-          </form>
-        </p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -78,6 +70,9 @@
                 <a href="../Classes/HBApplication/HTTPResponder.html">– HTTPResponder</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Classes/HBApplication.html#/s:11Hummingbird13HBApplicationC21ChannelRequestContextV">– ChannelRequestContext</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Classes/HBApplication/Persist.html">– Persist</a>
               </li>
               <li class="nav-group-task">
@@ -85,26 +80,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/HBMiddlewareGroup.html">HBMiddlewareGroup</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBRequest.html">HBRequest</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBRequest/ResponsePatch.html">– ResponsePatch</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBRequest/Persist.html">– Persist</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBResponse.html">HBResponse</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="../Enums.html">Enumerations</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="../Enums/HBBodyCollation.html">HBBodyCollation</a>
               </li>
             </ul>
           </li>
@@ -121,10 +96,16 @@
                 <a href="../Extensions/Dictionary.html">Dictionary</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Extensions/EventLoopFuture.html">EventLoopFuture</a>
+                <a href="../Extensions/EventLoopGroup.html">EventLoopGroup</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/HTTPHeaders.html">HTTPHeaders</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/HTTPResponseStatus.html">HTTPResponseStatus</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Logger.html">Logger</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/Optional.html">Optional</a>
@@ -239,7 +220,22 @@
                 <a href="../Structs/HBPersistError.html">HBPersistError</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Structs/HBRequest.html">HBRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBRequest/ResponsePatch.html">– ResponsePatch</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBRequest/Persist.html">– Persist</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBResponse.html">HBResponse</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/HBRouterGroup.html">HBRouterGroup</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/HBURL.html">HBURL</a>
@@ -260,7 +256,6 @@
             <h1>HBPersistDriver</h1>
               <div class="declaration">
                 <div class="language">
-                  
                   <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">protocol</span> <span class="kt">HBPersistDriver</span></code></pre>
 
                 </div>
@@ -309,9 +304,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBPersistDriverP6create3key5value7expires7request3NIO15EventLoopFutureCyytGSS_qd__AI10TimeAmountVSgAA9HBRequestCtSeRd__SERd__lF"></a>
+                    <a name="/s:11Hummingbird15HBPersistDriverP6create3key5value7expires7request7NIOCore15EventLoopFutureCyytGSS_qd__AI10TimeAmountVSgAA9HBRequestVtSeRd__SERd__lF"></a>
                     <a name="//apple_ref/swift/Method/create(key:value:expires:request:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBPersistDriverP6create3key5value7expires7request3NIO15EventLoopFutureCyytGSS_qd__AI10TimeAmountVSgAA9HBRequestCtSeRd__SERd__lF">create(key:<wbr>value:<wbr>expires:<wbr>request:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird15HBPersistDriverP6create3key5value7expires7request7NIOCore15EventLoopFutureCyytGSS_qd__AI10TimeAmountVSgAA9HBRequestVtSeRd__SERd__lF">create(key:value:expires:request:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -326,7 +321,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">create</span><span class="o">&lt;</span><span class="kt">Object</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">Object</span><span class="p">,</span> <span class="nv">expires</span><span class="p">:</span> <span class="kt">TimeAmount</span><span class="p">?,</span> <span class="nv">request</span><span class="p">:</span> <span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Void</span><span class="o">&gt;</span> <span class="k">where</span> <span class="kt">Object</span> <span class="p">:</span> <span class="kt">Decodable</span><span class="p">,</span> <span class="kt">Object</span> <span class="p">:</span> <span class="kt">Encodable</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">create</span><span class="o">&lt;</span><span class="kt">Object</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">Object</span><span class="p">,</span> <span class="nv">expires</span><span class="p">:</span> <span class="kt">TimeAmount</span><span class="p">?,</span> <span class="nv">request</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Void</span><span class="o">&gt;</span> <span class="k">where</span> <span class="kt">Object</span> <span class="p">:</span> <span class="kt">Decodable</span><span class="p">,</span> <span class="kt">Object</span> <span class="p">:</span> <span class="kt">Encodable</span></code></pre>
 
                         </div>
                       </div>
@@ -391,9 +386,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBPersistDriverP3set3key5value7expires7request3NIO15EventLoopFutureCyytGSS_qd__AI10TimeAmountVSgAA9HBRequestCtSeRd__SERd__lF"></a>
+                    <a name="/s:11Hummingbird15HBPersistDriverP3set3key5value7expires7request7NIOCore15EventLoopFutureCyytGSS_qd__AI10TimeAmountVSgAA9HBRequestVtSeRd__SERd__lF"></a>
                     <a name="//apple_ref/swift/Method/set(key:value:expires:request:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBPersistDriverP3set3key5value7expires7request3NIO15EventLoopFutureCyytGSS_qd__AI10TimeAmountVSgAA9HBRequestCtSeRd__SERd__lF">set(key:<wbr>value:<wbr>expires:<wbr>request:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird15HBPersistDriverP3set3key5value7expires7request7NIOCore15EventLoopFutureCyytGSS_qd__AI10TimeAmountVSgAA9HBRequestVtSeRd__SERd__lF">set(key:value:expires:request:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -408,7 +403,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="k">set</span><span class="o">&lt;</span><span class="kt">Object</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">Object</span><span class="p">,</span> <span class="nv">expires</span><span class="p">:</span> <span class="kt">TimeAmount</span><span class="p">?,</span> <span class="nv">request</span><span class="p">:</span> <span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Void</span><span class="o">&gt;</span> <span class="k">where</span> <span class="kt">Object</span> <span class="p">:</span> <span class="kt">Decodable</span><span class="p">,</span> <span class="kt">Object</span> <span class="p">:</span> <span class="kt">Encodable</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="k">set</span><span class="o">&lt;</span><span class="kt">Object</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">Object</span><span class="p">,</span> <span class="nv">expires</span><span class="p">:</span> <span class="kt">TimeAmount</span><span class="p">?,</span> <span class="nv">request</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Void</span><span class="o">&gt;</span> <span class="k">where</span> <span class="kt">Object</span> <span class="p">:</span> <span class="kt">Decodable</span><span class="p">,</span> <span class="kt">Object</span> <span class="p">:</span> <span class="kt">Encodable</span></code></pre>
 
                         </div>
                       </div>
@@ -473,9 +468,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBPersistDriverP3get3key2as7request3NIO15EventLoopFutureCyqd__SgGSS_qd__mAA9HBRequestCtSeRd__SERd__lF"></a>
+                    <a name="/s:11Hummingbird15HBPersistDriverP3get3key2as7request7NIOCore15EventLoopFutureCyqd__SgGSS_qd__mAA9HBRequestVtSeRd__SERd__lF"></a>
                     <a name="//apple_ref/swift/Method/get(key:as:request:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBPersistDriverP3get3key2as7request3NIO15EventLoopFutureCyqd__SgGSS_qd__mAA9HBRequestCtSeRd__SERd__lF">get(key:<wbr>as:<wbr>request:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird15HBPersistDriverP3get3key2as7request7NIOCore15EventLoopFutureCyqd__SgGSS_qd__mAA9HBRequestVtSeRd__SERd__lF">get(key:as:request:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -490,7 +485,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="k">get</span><span class="o">&lt;</span><span class="kt">Object</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">as</span><span class="p">:</span> <span class="kt">Object</span><span class="o">.</span><span class="k">Type</span><span class="p">,</span> <span class="nv">request</span><span class="p">:</span> <span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Object</span><span class="p">?</span><span class="o">&gt;</span> <span class="k">where</span> <span class="kt">Object</span> <span class="p">:</span> <span class="kt">Decodable</span><span class="p">,</span> <span class="kt">Object</span> <span class="p">:</span> <span class="kt">Encodable</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="k">get</span><span class="o">&lt;</span><span class="kt">Object</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">as</span><span class="p">:</span> <span class="kt">Object</span><span class="o">.</span><span class="k">Type</span><span class="p">,</span> <span class="nv">request</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Object</span><span class="p">?</span><span class="o">&gt;</span> <span class="k">where</span> <span class="kt">Object</span> <span class="p">:</span> <span class="kt">Decodable</span><span class="p">,</span> <span class="kt">Object</span> <span class="p">:</span> <span class="kt">Encodable</span></code></pre>
 
                         </div>
                       </div>
@@ -543,9 +538,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird15HBPersistDriverP6remove3key7request3NIO15EventLoopFutureCyytGSS_AA9HBRequestCtF"></a>
+                    <a name="/s:11Hummingbird15HBPersistDriverP6remove3key7request7NIOCore15EventLoopFutureCyytGSS_AA9HBRequestVtF"></a>
                     <a name="//apple_ref/swift/Method/remove(key:request:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird15HBPersistDriverP6remove3key7request3NIO15EventLoopFutureCyytGSS_AA9HBRequestCtF">remove(key:<wbr>request:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird15HBPersistDriverP6remove3key7request7NIOCore15EventLoopFutureCyytGSS_AA9HBRequestVtF">remove(key:request:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -560,7 +555,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">remove</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">request</span><span class="p">:</span> <span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Void</span><span class="o">&gt;</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">remove</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">request</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRequest.html">HBRequest</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Void</span><span class="o">&gt;</span></code></pre>
 
                         </div>
                       </div>
@@ -603,8 +598,8 @@
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-05-21)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-10-11)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>

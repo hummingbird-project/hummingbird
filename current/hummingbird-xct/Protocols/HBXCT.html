@@ -8,22 +8,14 @@
     <script src="../js/jquery.min.js" defer></script>
     <script src="../js/jazzy.js" defer></script>
     
-    <script src="../js/lunr.min.js" defer></script>
-    <script src="../js/typeahead.jquery.js" defer></script>
-    <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a name="//apple_ref/swift/Protocol/HBXCT" class="dashAnchor"></a>
     <a title="HBXCT Protocol Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> 0.11.3 Docs</a> (94% documented)</p>
+        <p><a href="../index.html"> 0.13.3 Docs</a> (94% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="../img/gh.png"/>View on GitHub</a></p>
-        <p class="header-right">
-          <form role="search" action="../search.json">
-            <input type="text" placeholder="Search documentation" data-typeahead>
-          </form>
-        </p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -94,7 +86,6 @@
             <h1>HBXCT</h1>
               <div class="declaration">
                 <div class="language">
-                  
                   <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">protocol</span> <span class="kt">HBXCT</span></code></pre>
 
                 </div>
@@ -110,7 +101,7 @@
                     <code>
                     <a name="/s:14HummingbirdXCT5HBXCTP5start11applicationy0A013HBApplicationC_tKF"></a>
                     <a name="//apple_ref/swift/Method/start(application:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:14HummingbirdXCT5HBXCTP5start11applicationy0A013HBApplicationC_tKF">start(application:<wbr>)</a>
+                    <a class="token" href="#/s:14HummingbirdXCT5HBXCTP5start11applicationy0A013HBApplicationC_tKF">start(application:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -137,7 +128,7 @@
                     <code>
                     <a name="/s:14HummingbirdXCT5HBXCTP4stop11applicationy0A013HBApplicationC_tF"></a>
                     <a name="//apple_ref/swift/Method/stop(application:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:14HummingbirdXCT5HBXCTP4stop11applicationy0A013HBApplicationC_tF">stop(application:<wbr>)</a>
+                    <a class="token" href="#/s:14HummingbirdXCT5HBXCTP4stop11applicationy0A013HBApplicationC_tF">stop(application:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -162,9 +153,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:14HummingbirdXCT5HBXCTP7execute3uri6method7headers4body3NIO15EventLoopFutureCyAA13HBXCTResponseVGSS_8NIOHTTP110HTTPMethodOAO11HTTPHeadersVAI10ByteBufferVSgtF"></a>
+                    <a name="/s:14HummingbirdXCT5HBXCTP7execute3uri6method7headers4body7NIOCore15EventLoopFutureCyAA13HBXCTResponseVGSS_8NIOHTTP110HTTPMethodOAO11HTTPHeadersVAI10ByteBufferVSgtF"></a>
                     <a name="//apple_ref/swift/Method/execute(uri:method:headers:body:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:14HummingbirdXCT5HBXCTP7execute3uri6method7headers4body3NIO15EventLoopFutureCyAA13HBXCTResponseVGSS_8NIOHTTP110HTTPMethodOAO11HTTPHeadersVAI10ByteBufferVSgtF">execute(uri:<wbr>method:<wbr>headers:<wbr>body:<wbr>)</a>
+                    <a class="token" href="#/s:14HummingbirdXCT5HBXCTP7execute3uri6method7headers4body7NIOCore15EventLoopFutureCyAA13HBXCTResponseVGSS_8NIOHTTP110HTTPMethodOAO11HTTPHeadersVAI10ByteBufferVSgtF">execute(uri:method:headers:body:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -179,12 +170,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">execute</span><span class="p">(</span>
-    <span class="nv">uri</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
-    <span class="nv">method</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
-    <span class="nv">headers</span><span class="p">:</span> <span class="kt">HTTPHeaders</span><span class="p">,</span>
-    <span class="nv">body</span><span class="p">:</span> <span class="kt">ByteBuffer</span><span class="p">?</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt"><a href="../Structs/HBXCTResponse.html">HBXCTResponse</a></span><span class="o">&gt;</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">execute</span><span class="p">(</span><span class="nv">uri</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">method</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span> <span class="nv">headers</span><span class="p">:</span> <span class="kt">HTTPHeaders</span><span class="p">,</span> <span class="nv">body</span><span class="p">:</span> <span class="kt">ByteBuffer</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt"><a href="../Structs/HBXCTResponse.html">HBXCTResponse</a></span><span class="o">&gt;</span></code></pre>
 
                         </div>
                       </div>
@@ -194,9 +180,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:14HummingbirdXCT5HBXCTP14eventLoopGroup3NIO05EventeF0_pvp"></a>
+                    <a name="/s:14HummingbirdXCT5HBXCTP14eventLoopGroup7NIOCore05EventeF0_pvp"></a>
                     <a name="//apple_ref/swift/Property/eventLoopGroup" class="dashAnchor"></a>
-                    <a class="token" href="#/s:14HummingbirdXCT5HBXCTP14eventLoopGroup3NIO05EventeF0_pvp">eventLoopGroup</a>
+                    <a class="token" href="#/s:14HummingbirdXCT5HBXCTP14eventLoopGroup7NIOCore05EventeF0_pvp">eventLoopGroup</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -223,8 +209,8 @@
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-05-21)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-10-11)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>

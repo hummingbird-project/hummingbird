@@ -8,22 +8,14 @@
     <script src="../js/jquery.min.js" defer></script>
     <script src="../js/jazzy.js" defer></script>
     
-    <script src="../js/lunr.min.js" defer></script>
-    <script src="../js/typeahead.jquery.js" defer></script>
-    <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a name="//apple_ref/swift/Class/HBWebSocket" class="dashAnchor"></a>
     <a title="HBWebSocket Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> 0.3.1 Docs</a> (68% documented)</p>
+        <p><a href="../index.html"> 0.4.0 Docs</a> (70% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird-websocket"><img src="../img/gh.png"/>View on GitHub</a></p>
-        <p class="header-right">
-          <form role="search" action="../search.json">
-            <input type="text" placeholder="Search documentation" data-typeahead>
-          </form>
-        </p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -79,6 +71,15 @@
               <li class="nav-group-task">
                 <a href="../Extensions/HBHTTPServer.html">HBHTTPServer</a>
               </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/HBRequest.html">HBRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/HBResponse.html">HBResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/WebSocketErrorCode.html">WebSocketErrorCode</a>
+              </li>
             </ul>
           </li>
           <li class="nav-group-name">
@@ -97,7 +98,6 @@
             <h1>HBWebSocket</h1>
               <div class="declaration">
                 <div class="language">
-                  
                   <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">HBWebSocket</span></code></pre>
 
                 </div>
@@ -139,9 +139,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:17HummingbirdWSCore11HBWebSocketC7channel3NIO7Channel_pvp"></a>
+                    <a name="/s:17HummingbirdWSCore11HBWebSocketC7channel7NIOCore7Channel_pvp"></a>
                     <a name="//apple_ref/swift/Property/channel" class="dashAnchor"></a>
-                    <a class="token" href="#/s:17HummingbirdWSCore11HBWebSocketC7channel3NIO7Channel_pvp">channel</a>
+                    <a class="token" href="#/s:17HummingbirdWSCore11HBWebSocketC7channel7NIOCore7Channel_pvp">channel</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -166,9 +166,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:17HummingbirdWSCore11HBWebSocketC7channel4typeAC3NIO7Channel_p_AC0D4TypeOtcfc"></a>
+                    <a name="/s:17HummingbirdWSCore11HBWebSocketC7channel4typeAC7NIOCore7Channel_p_AC0D4TypeOtcfc"></a>
                     <a name="//apple_ref/swift/Method/init(channel:type:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:17HummingbirdWSCore11HBWebSocketC7channel4typeAC3NIO7Channel_p_AC0D4TypeOtcfc">init(channel:<wbr>type:<wbr>)</a>
+                    <a class="token" href="#/s:17HummingbirdWSCore11HBWebSocketC7channel4typeAC7NIOCore7Channel_p_AC0D4TypeOtcfc">init(channel:type:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -195,7 +195,7 @@
                     <code>
                     <a name="/s:17HummingbirdWSCore11HBWebSocketC6onReadyyyAA03WebD4DataO_ACtcF"></a>
                     <a name="//apple_ref/swift/Method/onRead(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:17HummingbirdWSCore11HBWebSocketC6onReadyyyAA03WebD4DataO_ACtcF">onRead(_:<wbr>)</a>
+                    <a class="token" href="#/s:17HummingbirdWSCore11HBWebSocketC6onReadyyyAA03WebD4DataO_ACtcF">onRead(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -222,7 +222,7 @@
                     <code>
                     <a name="/s:17HummingbirdWSCore11HBWebSocketC6onPongyyyACcF"></a>
                     <a name="//apple_ref/swift/Method/onPong(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:17HummingbirdWSCore11HBWebSocketC6onPongyyyACcF">onPong(_:<wbr>)</a>
+                    <a class="token" href="#/s:17HummingbirdWSCore11HBWebSocketC6onPongyyyACcF">onPong(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -249,7 +249,7 @@
                     <code>
                     <a name="/s:17HummingbirdWSCore11HBWebSocketC7onCloseyyyACcF"></a>
                     <a name="//apple_ref/swift/Method/onClose(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:17HummingbirdWSCore11HBWebSocketC7onCloseyyyACcF">onClose(_:<wbr>)</a>
+                    <a class="token" href="#/s:17HummingbirdWSCore11HBWebSocketC7onCloseyyyACcF">onClose(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -274,9 +274,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:17HummingbirdWSCore11HBWebSocketC5write_7promiseyAA03WebD4DataO_3NIO16EventLoopPromiseVyytGSgtF"></a>
+                    <a name="/s:17HummingbirdWSCore11HBWebSocketC5write_7promiseyAA03WebD4DataO_7NIOCore16EventLoopPromiseVyytGSgtF"></a>
                     <a name="//apple_ref/swift/Method/write(_:promise:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:17HummingbirdWSCore11HBWebSocketC5write_7promiseyAA03WebD4DataO_3NIO16EventLoopPromiseVyytGSgtF">write(_:<wbr>promise:<wbr>)</a>
+                    <a class="token" href="#/s:17HummingbirdWSCore11HBWebSocketC5write_7promiseyAA03WebD4DataO_7NIOCore16EventLoopPromiseVyytGSgtF">write(_:promise:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -332,9 +332,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:17HummingbirdWSCore11HBWebSocketC5close4code7promisey06NIOWebD003WebD9ErrorCodeO_3NIO16EventLoopPromiseVyytGSgtF"></a>
+                    <a name="/s:17HummingbirdWSCore11HBWebSocketC5close4code7promisey06NIOWebD003WebD9ErrorCodeO_7NIOCore16EventLoopPromiseVyytGSgtF"></a>
                     <a name="//apple_ref/swift/Method/close(code:promise:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:17HummingbirdWSCore11HBWebSocketC5close4code7promisey06NIOWebD003WebD9ErrorCodeO_3NIO16EventLoopPromiseVyytGSgtF">close(code:<wbr>promise:<wbr>)</a>
+                    <a class="token" href="#/s:17HummingbirdWSCore11HBWebSocketC5close4code7promisey06NIOWebD003WebD9ErrorCodeO_7NIOCore16EventLoopPromiseVyytGSgtF">close(code:promise:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -390,9 +390,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:17HummingbirdWSCore11HBWebSocketC8sendPing7promisey3NIO16EventLoopPromiseVyytGSg_tF"></a>
+                    <a name="/s:17HummingbirdWSCore11HBWebSocketC8sendPing7promisey7NIOCore16EventLoopPromiseVyytGSg_tF"></a>
                     <a name="//apple_ref/swift/Method/sendPing(promise:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:17HummingbirdWSCore11HBWebSocketC8sendPing7promisey3NIO16EventLoopPromiseVyytGSg_tF">sendPing(promise:<wbr>)</a>
+                    <a class="token" href="#/s:17HummingbirdWSCore11HBWebSocketC8sendPing7promisey7NIOCore16EventLoopPromiseVyytGSg_tF">sendPing(promise:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -417,9 +417,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:17HummingbirdWSCore11HBWebSocketC16initiateAutoPing8intervaly3NIO10TimeAmountV_tF"></a>
+                    <a name="/s:17HummingbirdWSCore11HBWebSocketC16initiateAutoPing8intervaly7NIOCore10TimeAmountV_tF"></a>
                     <a name="//apple_ref/swift/Method/initiateAutoPing(interval:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:17HummingbirdWSCore11HBWebSocketC16initiateAutoPing8intervaly3NIO10TimeAmountV_tF">initiateAutoPing(interval:<wbr>)</a>
+                    <a class="token" href="#/s:17HummingbirdWSCore11HBWebSocketC16initiateAutoPing8intervaly7NIOCore10TimeAmountV_tF">initiateAutoPing(interval:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -527,8 +527,8 @@
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-05-21)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-10-11)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>

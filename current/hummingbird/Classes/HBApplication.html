@@ -8,22 +8,14 @@
     <script src="../js/jquery.min.js" defer></script>
     <script src="../js/jazzy.js" defer></script>
     
-    <script src="../js/lunr.min.js" defer></script>
-    <script src="../js/typeahead.jquery.js" defer></script>
-    <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a name="//apple_ref/swift/Class/HBApplication" class="dashAnchor"></a>
     <a title="HBApplication Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> 0.11.3 Docs</a> (83% documented)</p>
+        <p><a href="../index.html"> 0.13.3 Docs</a> (83% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="../img/gh.png"/>View on GitHub</a></p>
-        <p class="header-right">
-          <form role="search" action="../search.json">
-            <input type="text" placeholder="Search documentation" data-typeahead>
-          </form>
-        </p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -78,6 +70,9 @@
                 <a href="../Classes/HBApplication/HTTPResponder.html">– HTTPResponder</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Classes/HBApplication.html#/s:11Hummingbird13HBApplicationC21ChannelRequestContextV">– ChannelRequestContext</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Classes/HBApplication/Persist.html">– Persist</a>
               </li>
               <li class="nav-group-task">
@@ -85,26 +80,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/HBMiddlewareGroup.html">HBMiddlewareGroup</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBRequest.html">HBRequest</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBRequest/ResponsePatch.html">– ResponsePatch</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBRequest/Persist.html">– Persist</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBResponse.html">HBResponse</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="../Enums.html">Enumerations</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="../Enums/HBBodyCollation.html">HBBodyCollation</a>
               </li>
             </ul>
           </li>
@@ -121,10 +96,16 @@
                 <a href="../Extensions/Dictionary.html">Dictionary</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Extensions/EventLoopFuture.html">EventLoopFuture</a>
+                <a href="../Extensions/EventLoopGroup.html">EventLoopGroup</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/HTTPHeaders.html">HTTPHeaders</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/HTTPResponseStatus.html">HTTPResponseStatus</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Logger.html">Logger</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/Optional.html">Optional</a>
@@ -239,7 +220,22 @@
                 <a href="../Structs/HBPersistError.html">HBPersistError</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Structs/HBRequest.html">HBRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBRequest/ResponsePatch.html">– ResponsePatch</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBRequest/Persist.html">– Persist</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBResponse.html">HBResponse</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/HBRouterGroup.html">HBRouterGroup</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/HBURL.html">HBURL</a>
@@ -260,7 +256,6 @@
             <h1>HBApplication</h1>
               <div class="declaration">
                 <div class="language">
-                  
                   <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">HBApplication</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/HBExtensible.html">HBExtensible</a></span></code></pre>
 
                 </div>
@@ -323,9 +318,9 @@ start the server and <code>wait</code> to wait until the server is stopped.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird13HBApplicationC14eventLoopGroup3NIO05EventdE0_pvp"></a>
+                    <a name="/s:11Hummingbird13HBApplicationC14eventLoopGroup7NIOCore05EventdE0_pvp"></a>
                     <a name="//apple_ref/swift/Property/eventLoopGroup" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird13HBApplicationC14eventLoopGroup3NIO05EventdE0_pvp">eventLoopGroup</a>
+                    <a class="token" href="#/s:11Hummingbird13HBApplicationC14eventLoopGroup7NIOCore05EventdE0_pvp">eventLoopGroup</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -350,9 +345,9 @@ start the server and <code>wait</code> to wait until the server is stopped.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird13HBApplicationC10threadPool3NIO09NIOThreadD0Cvp"></a>
+                    <a name="/s:11Hummingbird13HBApplicationC10threadPool8NIOPosix09NIOThreadD0Cvp"></a>
                     <a name="//apple_ref/swift/Property/threadPool" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird13HBApplicationC10threadPool3NIO09NIOThreadD0Cvp">threadPool</a>
+                    <a class="token" href="#/s:11Hummingbird13HBApplicationC10threadPool8NIOPosix09NIOThreadD0Cvp">threadPool</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -606,9 +601,9 @@ start the server and <code>wait</code> to wait until the server is stopped.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird13HBApplicationC13configuration22eventLoopGroupProviderA2C13ConfigurationV_3NIO08NIOEventefG0Otcfc"></a>
+                    <a name="/s:11Hummingbird13HBApplicationC13configuration22eventLoopGroupProviderA2C13ConfigurationV_7NIOCore08NIOEventefG0Otcfc"></a>
                     <a name="//apple_ref/swift/Method/init(configuration:eventLoopGroupProvider:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird13HBApplicationC13configuration22eventLoopGroupProviderA2C13ConfigurationV_3NIO08NIOEventefG0Otcfc">init(configuration:<wbr>eventLoopGroupProvider:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird13HBApplicationC13configuration22eventLoopGroupProviderA2C13ConfigurationV_7NIOCore08NIOEventefG0Otcfc">init(configuration:eventLoopGroupProvider:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -860,7 +855,7 @@ start the server and <code>wait</code> to wait until the server is stopped.</p>
 </code></pre>
 
 <p>You can access the extension via <code>HBApplication.eventLoopStorage(for: eventLoop).myVar</code> or
-if you have an <code><a href="../Classes/HBRequest.html">HBRequest</a></code> you can access the extension via <code>HBRequest.eventLoopStorage.myVar</code>.</p>
+if you have an <code><a href="../Structs/HBRequest.html">HBRequest</a></code> you can access the extension via <code>HBRequest.eventLoopStorage.myVar</code>.</p>
 
                         <a href="../Classes/HBApplication/EventLoopStorage.html" class="slightly-smaller">See more</a>
                       </div>
@@ -868,7 +863,7 @@ if you have an <code><a href="../Classes/HBRequest.html">HBRequest</a></code> yo
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">EventLoopStorage</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">EventLoopStorage</span></code></pre>
 
                         </div>
                       </div>
@@ -934,9 +929,9 @@ if you have an <code><a href="../Classes/HBRequest.html">HBRequest</a></code> yo
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird13HBApplicationC16eventLoopStorage3forAC05EventdE0C3NIO0gD0_p_tF"></a>
+                    <a name="/s:11Hummingbird13HBApplicationC16eventLoopStorage3forAC05EventdE0C7NIOCore0gD0_p_tF"></a>
                     <a name="//apple_ref/swift/Method/eventLoopStorage(for:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird13HBApplicationC16eventLoopStorage3forAC05EventdE0C3NIO0gD0_p_tF">eventLoopStorage(for:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird13HBApplicationC16eventLoopStorage3forAC05EventdE0C7NIOCore0gD0_p_tF">eventLoopStorage(for:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1031,6 +1026,33 @@ if you have an <code><a href="../Classes/HBRequest.html">HBRequest</a></code> yo
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/s:11Hummingbird13HBApplicationC21ChannelRequestContextV"></a>
+                    <a name="//apple_ref/swift/Struct/ChannelRequestContext" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird13HBApplicationC21ChannelRequestContextV">ChannelRequestContext</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Context object for Channel to be provided to HBRequest</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">struct</span> <span class="kt">ChannelRequestContext</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/HBRequestContext.html">HBRequestContext</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/s:11Hummingbird13HBApplicationC7PersistV"></a>
                     <a name="//apple_ref/swift/Struct/Persist" class="dashAnchor"></a>
                     <a class="token" href="#/s:11Hummingbird13HBApplicationC7PersistV">Persist</a>
@@ -1088,7 +1110,7 @@ if you have an <code><a href="../Classes/HBRequest.html">HBRequest</a></code> yo
                     <code>
                     <a name="/s:11Hummingbird13HBApplicationC10addPersist5usingyAA22HBPersistDriverFactoryV_tF"></a>
                     <a name="//apple_ref/swift/Method/addPersist(using:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird13HBApplicationC10addPersist5usingyAA22HBPersistDriverFactoryV_tF">addPersist(using:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird13HBApplicationC10addPersist5usingyAA22HBPersistDriverFactoryV_tF">addPersist(using:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1134,8 +1156,8 @@ if you have an <code><a href="../Classes/HBRequest.html">HBRequest</a></code> yo
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-05-21)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-10-11)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>

@@ -8,22 +8,14 @@
     <script src="../js/jquery.min.js" defer></script>
     <script src="../js/jazzy.js" defer></script>
     
-    <script src="../js/lunr.min.js" defer></script>
-    <script src="../js/typeahead.jquery.js" defer></script>
-    <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a name="//apple_ref/swift/Struct/HBParser" class="dashAnchor"></a>
     <a title="HBParser Structure Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> 0.11.3 Docs</a> (83% documented)</p>
+        <p><a href="../index.html"> 0.13.3 Docs</a> (83% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="../img/gh.png"/>View on GitHub</a></p>
-        <p class="header-right">
-          <form role="search" action="../search.json">
-            <input type="text" placeholder="Search documentation" data-typeahead>
-          </form>
-        </p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -78,6 +70,9 @@
                 <a href="../Classes/HBApplication/HTTPResponder.html">– HTTPResponder</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Classes/HBApplication.html#/s:11Hummingbird13HBApplicationC21ChannelRequestContextV">– ChannelRequestContext</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Classes/HBApplication/Persist.html">– Persist</a>
               </li>
               <li class="nav-group-task">
@@ -85,26 +80,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/HBMiddlewareGroup.html">HBMiddlewareGroup</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBRequest.html">HBRequest</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBRequest/ResponsePatch.html">– ResponsePatch</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBRequest/Persist.html">– Persist</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBResponse.html">HBResponse</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="../Enums.html">Enumerations</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="../Enums/HBBodyCollation.html">HBBodyCollation</a>
               </li>
             </ul>
           </li>
@@ -121,10 +96,16 @@
                 <a href="../Extensions/Dictionary.html">Dictionary</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Extensions/EventLoopFuture.html">EventLoopFuture</a>
+                <a href="../Extensions/EventLoopGroup.html">EventLoopGroup</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/HTTPHeaders.html">HTTPHeaders</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/HTTPResponseStatus.html">HTTPResponseStatus</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Logger.html">Logger</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/Optional.html">Optional</a>
@@ -239,7 +220,22 @@
                 <a href="../Structs/HBPersistError.html">HBPersistError</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Structs/HBRequest.html">HBRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBRequest/ResponsePatch.html">– ResponsePatch</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBRequest/Persist.html">– Persist</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBResponse.html">HBResponse</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/HBRouterGroup.html">HBRouterGroup</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/HBURL.html">HBURL</a>
@@ -260,7 +256,6 @@
             <h1>HBParser</h1>
               <div class="declaration">
                 <div class="language">
-                  
                   <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HBParser</span></code></pre>
 <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">HBParser</span><span class="p">:</span> <span class="kt">Sequence</span></code></pre>
 
@@ -305,7 +300,7 @@
                     <code>
                     <a name="/s:11Hummingbird8HBParserV_12validateUTF8ACSgx_SbtcSlRzs5UInt8V7ElementRtzlufc"></a>
                     <a name="//apple_ref/swift/Method/init(_:validateUTF8:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird8HBParserV_12validateUTF8ACSgx_SbtcSlRzs5UInt8V7ElementRtzlufc">init(_:<wbr>validateUTF8:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV_12validateUTF8ACSgx_SbtcSlRzs5UInt8V7ElementRtzlufc">init(_:validateUTF8:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -351,7 +346,7 @@
                     <code>
                     <a name="/s:11Hummingbird8HBParserVyACSScfc"></a>
                     <a name="//apple_ref/swift/Method/init(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird8HBParserVyACSScfc">init(_:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserVyACSScfc">init(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -443,6 +438,60 @@
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/s:11Hummingbird8HBParserV_5rangeA2C_SnySiGtcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(_:range:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV_5rangeA2C_SnySiGtcfc">init(_:range:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>initialise a parser that parses a section of the buffer attached to another parser</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="nf">init</span><span class="p">(</span><span class="n">_</span> <span class="nv">parser</span><span class="p">:</span> <span class="kt">HBParser</span><span class="p">,</span> <span class="nv">range</span><span class="p">:</span> <span class="kt">Range</span><span class="o">&lt;</span><span class="kt">Int</span><span class="o">&gt;</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird8HBParserV9subParseryACSnySiGF"></a>
+                    <a name="//apple_ref/swift/Method/subParser(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV9subParseryACSnySiGF">subParser(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>initialise a parser that parses a section of the buffer attached to this parser</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">subParser</span><span class="p">(</span><span class="n">_</span> <span class="nv">range</span><span class="p">:</span> <span class="kt">Range</span><span class="o">&lt;</span><span class="kt">Int</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">HBParser</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/s:11Hummingbird8HBParserV9characters7UnicodeO6ScalarVyKF"></a>
                     <a name="//apple_ref/swift/Method/character()" class="dashAnchor"></a>
                     <a class="token" href="#/s:11Hummingbird8HBParserV9characters7UnicodeO6ScalarVyKF">character()</a>
@@ -481,7 +530,7 @@
                     <code>
                     <a name="/s:11Hummingbird8HBParserV4readySbs7UnicodeO6ScalarVKF"></a>
                     <a name="//apple_ref/swift/Method/read(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird8HBParserV4readySbs7UnicodeO6ScalarVKF">read(_:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV4readySbs7UnicodeO6ScalarVKF">read(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -536,7 +585,7 @@
                     <code>
                     <a name="/s:11Hummingbird8HBParserV4readySbShys7UnicodeO6ScalarVGKF"></a>
                     <a name="//apple_ref/swift/Method/read(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird8HBParserV4readySbShys7UnicodeO6ScalarVGKF">read(_:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV4readySbShys7UnicodeO6ScalarVGKF">read(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -591,7 +640,7 @@
                     <code>
                     <a name="/s:11Hummingbird8HBParserV4readySbSSKF"></a>
                     <a name="//apple_ref/swift/Method/read(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird8HBParserV4readySbSSKF">read(_:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV4readySbSSKF">read(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -646,7 +695,7 @@
                     <code>
                     <a name="/s:11Hummingbird8HBParserV4read5countACSi_tKF"></a>
                     <a name="//apple_ref/swift/Method/read(count:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird8HBParserV4read5countACSi_tKF">read(count:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV4read5countACSi_tKF">read(count:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -701,7 +750,7 @@
                     <code>
                     <a name="/s:11Hummingbird8HBParserV4read5until15throwOnOverflowACs7UnicodeO6ScalarV_SbtKF"></a>
                     <a name="//apple_ref/swift/Method/read(until:throwOnOverflow:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird8HBParserV4read5until15throwOnOverflowACs7UnicodeO6ScalarV_SbtKF">read(until:<wbr>throwOnOverflow:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV4read5until15throwOnOverflowACs7UnicodeO6ScalarV_SbtKF">read(until:throwOnOverflow:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -757,7 +806,7 @@
                     <code>
                     <a name="/s:11Hummingbird8HBParserV4read5until15throwOnOverflowACShys7UnicodeO6ScalarVG_SbtKF"></a>
                     <a name="//apple_ref/swift/Method/read(until:throwOnOverflow:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird8HBParserV4read5until15throwOnOverflowACShys7UnicodeO6ScalarVG_SbtKF">read(until:<wbr>throwOnOverflow:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV4read5until15throwOnOverflowACShys7UnicodeO6ScalarVG_SbtKF">read(until:throwOnOverflow:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -813,7 +862,7 @@
                     <code>
                     <a name="/s:11Hummingbird8HBParserV4read5until15throwOnOverflowACSbs7UnicodeO6ScalarVXE_SbtKF"></a>
                     <a name="//apple_ref/swift/Method/read(until:throwOnOverflow:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird8HBParserV4read5until15throwOnOverflowACSbs7UnicodeO6ScalarVXE_SbtKF">read(until:<wbr>throwOnOverflow:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV4read5until15throwOnOverflowACSbs7UnicodeO6ScalarVXE_SbtKF">read(until:throwOnOverflow:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -869,7 +918,7 @@
                     <code>
                     <a name="/s:11Hummingbird8HBParserV4read5until15throwOnOverflowACs7KeyPathCys7UnicodeO6ScalarVSbG_SbtKF"></a>
                     <a name="//apple_ref/swift/Method/read(until:throwOnOverflow:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird8HBParserV4read5until15throwOnOverflowACs7KeyPathCys7UnicodeO6ScalarVSbG_SbtKF">read(until:<wbr>throwOnOverflow:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV4read5until15throwOnOverflowACs7KeyPathCys7UnicodeO6ScalarVSbG_SbtKF">read(until:throwOnOverflow:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -925,7 +974,7 @@
                     <code>
                     <a name="/s:11Hummingbird8HBParserV4read11untilString15throwOnOverflow9skipToEndACSS_S2btKF"></a>
                     <a name="//apple_ref/swift/Method/read(untilString:throwOnOverflow:skipToEnd:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird8HBParserV4read11untilString15throwOnOverflow9skipToEndACSS_S2btKF">read(untilString:<wbr>throwOnOverflow:<wbr>skipToEnd:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV4read11untilString15throwOnOverflow9skipToEndACSS_S2btKF">read(untilString:throwOnOverflow:skipToEnd:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1037,7 +1086,7 @@
                     <code>
                     <a name="/s:11Hummingbird8HBParserV4read5whileSis7UnicodeO6ScalarV_tF"></a>
                     <a name="//apple_ref/swift/Method/read(while:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird8HBParserV4read5whileSis7UnicodeO6ScalarV_tF">read(while:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV4read5whileSis7UnicodeO6ScalarV_tF">read(while:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1088,7 +1137,7 @@
                     <code>
                     <a name="/s:11Hummingbird8HBParserV4read5whileACShys7UnicodeO6ScalarVG_tF"></a>
                     <a name="//apple_ref/swift/Method/read(while:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird8HBParserV4read5whileACShys7UnicodeO6ScalarVG_tF">read(while:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV4read5whileACShys7UnicodeO6ScalarVG_tF">read(while:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1139,7 +1188,7 @@
                     <code>
                     <a name="/s:11Hummingbird8HBParserV4read5whileACSbs7UnicodeO6ScalarVXE_tF"></a>
                     <a name="//apple_ref/swift/Method/read(while:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird8HBParserV4read5whileACSbs7UnicodeO6ScalarVXE_tF">read(while:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV4read5whileACSbs7UnicodeO6ScalarVXE_tF">read(while:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1190,7 +1239,7 @@
                     <code>
                     <a name="/s:11Hummingbird8HBParserV4read5whileACs7KeyPathCys7UnicodeO6ScalarVSbG_tF"></a>
                     <a name="//apple_ref/swift/Method/read(while:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird8HBParserV4read5whileACs7KeyPathCys7UnicodeO6ScalarVSbG_tF">read(while:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV4read5whileACs7KeyPathCys7UnicodeO6ScalarVSbG_tF">read(while:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1241,7 +1290,7 @@
                     <code>
                     <a name="/s:11Hummingbird8HBParserV5split9separatorSayACGs7UnicodeO6ScalarV_tF"></a>
                     <a name="//apple_ref/swift/Method/split(separator:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird8HBParserV5split9separatorSayACGs7UnicodeO6ScalarV_tF">split(separator:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV5split9separatorSayACGs7UnicodeO6ScalarV_tF">split(separator:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1390,7 +1439,7 @@
                     <code>
                     <a name="/s:11Hummingbird8HBParserV7advance2byySi_tKF"></a>
                     <a name="//apple_ref/swift/Method/advance(by:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird8HBParserV7advance2byySi_tKF">advance(by:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV7advance2byySi_tKF">advance(by:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1473,7 +1522,7 @@
                     <code>
                     <a name="/s:11Hummingbird8HBParserV7retreat2byySi_tKF"></a>
                     <a name="//apple_ref/swift/Method/retreat(by:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird8HBParserV7retreat2byySi_tKF">retreat(by:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV7retreat2byySi_tKF">retreat(by:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1551,7 +1600,7 @@
                     <code>
                     <a name="/s:11Hummingbird8HBParserV13unsafeAdvance2byySi_tF"></a>
                     <a name="//apple_ref/swift/Method/unsafeAdvance(by:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird8HBParserV13unsafeAdvance2byySi_tF">unsafeAdvance(by:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV13unsafeAdvance2byySi_tF">unsafeAdvance(by:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1655,6 +1704,141 @@
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/s:11Hummingbird8HBParserV19decodeUTF8Character2ats7UnicodeO6ScalarV_SitSi_tF"></a>
+                    <a name="//apple_ref/swift/Method/decodeUTF8Character(at:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV19decodeUTF8Character2ats7UnicodeO6ScalarV_SitSi_tF">decodeUTF8Character(at:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">decodeUTF8Character</span><span class="p">(</span><span class="n">at</span> <span class="nv">index</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="kt">Unicode</span><span class="o">.</span><span class="kt">Scalar</span><span class="p">,</span> <span class="kt">Int</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird8HBParserV17skipUTF8Character2atS2i_tF"></a>
+                    <a name="//apple_ref/swift/Method/skipUTF8Character(at:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV17skipUTF8Character2atS2i_tF">skipUTF8Character(at:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">skipUTF8Character</span><span class="p">(</span><span class="n">at</span> <span class="nv">index</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird8HBParserV20backOneUTF8Character2atS2i_tF"></a>
+                    <a name="//apple_ref/swift/Method/backOneUTF8Character(at:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV20backOneUTF8Character2atS2i_tF">backOneUTF8Character(at:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">backOneUTF8Character</span><span class="p">(</span><span class="n">at</span> <span class="nv">index</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird8HBParserV21validateUTF8Character2ats7UnicodeO6ScalarVSg_SitSi_tF"></a>
+                    <a name="//apple_ref/swift/Method/validateUTF8Character(at:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV21validateUTF8Character2ats7UnicodeO6ScalarVSg_SitSi_tF">validateUTF8Character(at:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>same as <code>decodeUTF8Character</code> but adds extra validation, so we can make assumptions later on in decode and skip</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">validateUTF8Character</span><span class="p">(</span><span class="n">at</span> <span class="nv">index</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="kt">Unicode</span><span class="o">.</span><span class="kt">Scalar</span><span class="p">?,</span> <span class="kt">Int</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird8HBParserV12validateUTF8SbyF"></a>
+                    <a name="//apple_ref/swift/Method/validateUTF8()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird8HBParserV12validateUTF8SbyF">validateUTF8()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>return if the buffer is valid UTF8</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">validateUTF8</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/s:11Hummingbird8HBParserV13percentDecodeSSSgyF"></a>
                     <a name="//apple_ref/swift/Method/percentDecode()" class="dashAnchor"></a>
                     <a class="token" href="#/s:11Hummingbird8HBParserV13percentDecodeSSSgyF">percentDecode()</a>
@@ -1684,8 +1868,8 @@
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-05-21)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-10-11)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>

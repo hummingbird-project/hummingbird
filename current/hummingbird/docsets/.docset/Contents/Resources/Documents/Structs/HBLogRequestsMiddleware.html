@@ -8,22 +8,14 @@
     <script src="../js/jquery.min.js" defer></script>
     <script src="../js/jazzy.js" defer></script>
     
-    <script src="../js/lunr.min.js" defer></script>
-    <script src="../js/typeahead.jquery.js" defer></script>
-    <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a name="//apple_ref/swift/Struct/HBLogRequestsMiddleware" class="dashAnchor"></a>
     <a title="HBLogRequestsMiddleware Structure Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> 0.11.3 Docs</a> (83% documented)</p>
+        <p><a href="../index.html"> 0.13.3 Docs</a> (83% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="../img/gh.png"/>View on GitHub</a></p>
-        <p class="header-right">
-          <form role="search" action="../search.json">
-            <input type="text" placeholder="Search documentation" data-typeahead>
-          </form>
-        </p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -78,6 +70,9 @@
                 <a href="../Classes/HBApplication/HTTPResponder.html">– HTTPResponder</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Classes/HBApplication.html#/s:11Hummingbird13HBApplicationC21ChannelRequestContextV">– ChannelRequestContext</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Classes/HBApplication/Persist.html">– Persist</a>
               </li>
               <li class="nav-group-task">
@@ -85,26 +80,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/HBMiddlewareGroup.html">HBMiddlewareGroup</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBRequest.html">HBRequest</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBRequest/ResponsePatch.html">– ResponsePatch</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBRequest/Persist.html">– Persist</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBResponse.html">HBResponse</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="../Enums.html">Enumerations</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="../Enums/HBBodyCollation.html">HBBodyCollation</a>
               </li>
             </ul>
           </li>
@@ -121,10 +96,16 @@
                 <a href="../Extensions/Dictionary.html">Dictionary</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Extensions/EventLoopFuture.html">EventLoopFuture</a>
+                <a href="../Extensions/EventLoopGroup.html">EventLoopGroup</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/HTTPHeaders.html">HTTPHeaders</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/HTTPResponseStatus.html">HTTPResponseStatus</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Logger.html">Logger</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/Optional.html">Optional</a>
@@ -239,7 +220,22 @@
                 <a href="../Structs/HBPersistError.html">HBPersistError</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Structs/HBRequest.html">HBRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBRequest/ResponsePatch.html">– ResponsePatch</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBRequest/Persist.html">– Persist</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBResponse.html">HBResponse</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/HBRouterGroup.html">HBRouterGroup</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/HBURL.html">HBURL</a>
@@ -260,7 +256,6 @@
             <h1>HBLogRequestsMiddleware</h1>
               <div class="declaration">
                 <div class="language">
-                  
                   <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HBLogRequestsMiddleware</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/HBMiddleware.html">HBMiddleware</a></span></code></pre>
 
                 </div>
@@ -276,7 +271,7 @@
                     <code>
                     <a name="/s:11Hummingbird23HBLogRequestsMiddlewareV_14includeHeadersAC7Logging6LoggerV5LevelO_Sbtcfc"></a>
                     <a name="//apple_ref/swift/Method/init(_:includeHeaders:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird23HBLogRequestsMiddlewareV_14includeHeadersAC7Logging6LoggerV5LevelO_Sbtcfc">init(_:<wbr>includeHeaders:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird23HBLogRequestsMiddlewareV_14includeHeadersAC7Logging6LoggerV5LevelO_Sbtcfc">init(_:includeHeaders:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -301,9 +296,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird23HBLogRequestsMiddlewareV5apply2to4next3NIO15EventLoopFutureCyAA10HBResponseCGAA9HBRequestC_AA11HBResponder_ptF"></a>
+                    <a name="/s:11Hummingbird23HBLogRequestsMiddlewareV5apply2to4next7NIOCore15EventLoopFutureCyAA10HBResponseVGAA9HBRequestV_AA11HBResponder_ptF"></a>
                     <a name="//apple_ref/swift/Method/apply(to:next:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird23HBLogRequestsMiddlewareV5apply2to4next3NIO15EventLoopFutureCyAA10HBResponseCGAA9HBRequestC_AA11HBResponder_ptF">apply(to:<wbr>next:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird23HBLogRequestsMiddlewareV5apply2to4next7NIOCore15EventLoopFutureCyAA10HBResponseVGAA9HBRequestV_AA11HBResponder_ptF">apply(to:next:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -318,7 +313,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">apply</span><span class="p">(</span><span class="n">to</span> <span class="nv">request</span><span class="p">:</span> <span class="kt"><a href="../Classes/HBRequest.html">HBRequest</a></span><span class="p">,</span> <span class="nv">next</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponder.html">HBResponder</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt"><a href="../Classes/HBResponse.html">HBResponse</a></span><span class="o">&gt;</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">apply</span><span class="p">(</span><span class="n">to</span> <span class="nv">request</span><span class="p">:</span> <span class="kt"><a href="../Structs/HBRequest.html">HBRequest</a></span><span class="p">,</span> <span class="nv">next</span><span class="p">:</span> <span class="kt"><a href="../Protocols/HBResponder.html">HBResponder</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt"><a href="../Structs/HBResponse.html">HBResponse</a></span><span class="o">&gt;</span></code></pre>
 
                         </div>
                       </div>
@@ -330,8 +325,8 @@
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-05-21)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-10-11)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>

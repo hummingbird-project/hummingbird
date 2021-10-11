@@ -8,22 +8,14 @@
     <script src="../js/jquery.min.js" defer></script>
     <script src="../js/jazzy.js" defer></script>
     
-    <script src="../js/lunr.min.js" defer></script>
-    <script src="../js/typeahead.jquery.js" defer></script>
-    <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a name="//apple_ref/swift/Struct/HBMediaType" class="dashAnchor"></a>
     <a title="HBMediaType Structure Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> 0.11.3 Docs</a> (83% documented)</p>
+        <p><a href="../index.html"> 0.13.3 Docs</a> (83% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="../img/gh.png"/>View on GitHub</a></p>
-        <p class="header-right">
-          <form role="search" action="../search.json">
-            <input type="text" placeholder="Search documentation" data-typeahead>
-          </form>
-        </p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -78,6 +70,9 @@
                 <a href="../Classes/HBApplication/HTTPResponder.html">– HTTPResponder</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Classes/HBApplication.html#/s:11Hummingbird13HBApplicationC21ChannelRequestContextV">– ChannelRequestContext</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Classes/HBApplication/Persist.html">– Persist</a>
               </li>
               <li class="nav-group-task">
@@ -85,26 +80,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/HBMiddlewareGroup.html">HBMiddlewareGroup</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBRequest.html">HBRequest</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBRequest/ResponsePatch.html">– ResponsePatch</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBRequest/Persist.html">– Persist</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/HBResponse.html">HBResponse</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="../Enums.html">Enumerations</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="../Enums/HBBodyCollation.html">HBBodyCollation</a>
               </li>
             </ul>
           </li>
@@ -121,10 +96,16 @@
                 <a href="../Extensions/Dictionary.html">Dictionary</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Extensions/EventLoopFuture.html">EventLoopFuture</a>
+                <a href="../Extensions/EventLoopGroup.html">EventLoopGroup</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/HTTPHeaders.html">HTTPHeaders</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/HTTPResponseStatus.html">HTTPResponseStatus</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Logger.html">Logger</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/Optional.html">Optional</a>
@@ -239,7 +220,22 @@
                 <a href="../Structs/HBPersistError.html">HBPersistError</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Structs/HBRequest.html">HBRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBRequest/ResponsePatch.html">– ResponsePatch</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBRequest/Persist.html">– Persist</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBResponse.html">HBResponse</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/HBRouterGroup.html">HBRouterGroup</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HBRouterMethodOptions.html">HBRouterMethodOptions</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/HBURL.html">HBURL</a>
@@ -260,7 +256,6 @@
             <h1>HBMediaType</h1>
               <div class="declaration">
                 <div class="language">
-                  
                   <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HBMediaType</span> <span class="p">:</span> <span class="kt">CustomStringConvertible</span></code></pre>
 
                 </div>
@@ -357,7 +352,7 @@
                     <code>
                     <a name="/s:11Hummingbird11HBMediaTypeV4type03subC09parameterA2C8CategoryO_S2S_SStSgtcfc"></a>
                     <a name="//apple_ref/swift/Method/init(type:subType:parameter:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird11HBMediaTypeV4type03subC09parameterA2C8CategoryO_S2S_SStSgtcfc">init(type:<wbr>subType:<wbr>parameter:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird11HBMediaTypeV4type03subC09parameterA2C8CategoryO_S2S_SStSgtcfc">init(type:subType:parameter:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -415,7 +410,7 @@
                     <code>
                     <a name="/s:11Hummingbird11HBMediaTypeV4fromACSgSS_tcfc"></a>
                     <a name="//apple_ref/swift/Method/init(from:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird11HBMediaTypeV4fromACSgSS_tcfc">init(from:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird11HBMediaTypeV4fromACSgSS_tcfc">init(from:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -431,6 +426,33 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">?(</span><span class="n">from</span> <span class="nv">header</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird11HBMediaTypeV13withParameter4name5valueACSS_SStF"></a>
+                    <a name="//apple_ref/swift/Method/withParameter(name:value:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird11HBMediaTypeV13withParameter4name5valueACSS_SStF">withParameter(name:value:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Return media type with new parameter</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">withParameter</span><span class="p">(</span><span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">HBMediaType</span></code></pre>
 
                         </div>
                       </div>
@@ -469,7 +491,7 @@
                     <code>
                     <a name="/s:11Hummingbird11HBMediaTypeV02isC0ySbACF"></a>
                     <a name="//apple_ref/swift/Method/isType(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird11HBMediaTypeV02isC0ySbACF">isType(_:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird11HBMediaTypeV02isC0ySbACF">isType(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -496,7 +518,7 @@
                     <code>
                     <a name="/s:11Hummingbird11HBMediaTypeV08getMediaC012forExtensionACSgSS_tFZ"></a>
                     <a name="//apple_ref/swift/Method/getMediaType(forExtension:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird11HBMediaTypeV08getMediaC012forExtensionACSgSS_tFZ">getMediaType(forExtension:<wbr>)</a>
+                    <a class="token" href="#/s:11Hummingbird11HBMediaTypeV08getMediaC012forExtensionACSgSS_tFZ">getMediaType(forExtension:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2783,13 +2805,40 @@
                     </section>
                   </div>
                 </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:11Hummingbird11HBMediaTypeV014extensionMediaC3MapSDySSACGvpZ"></a>
+                    <a name="//apple_ref/swift/Variable/extensionMediaTypeMap" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird11HBMediaTypeV014extensionMediaC3MapSDySSACGvpZ">extensionMediaTypeMap</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>map from extension string to media type</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="k">let</span> <span class="nv">extensionMediaTypeMap</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">HBMediaType</span><span class="p">]</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
               </ul>
             </div>
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-05-21)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-10-11)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>
