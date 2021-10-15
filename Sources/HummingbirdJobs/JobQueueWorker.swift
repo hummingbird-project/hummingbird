@@ -103,22 +103,17 @@ class HBJobQueueWorker {
 
     /// execute single job
     func executeJob(_ queuedJob: HBQueuedJob, eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void> {
-        logger.trace("Executing job", metadata: [
-            "hb_job_id": .stringConvertible(queuedJob.id),
-            "hb_job_type": .string(String(describing: type(of: queuedJob.job))),
-        ])
+        var logger = logger
+        logger[metadataKey: "hb_job_id"] = .stringConvertible(queuedJob.id)
+        logger[metadataKey: "hb_job_type"] = .string(String(describing: type(of: queuedJob.job.job)))
+
+        logger.debug("Executing job")
         return self.executeJob(queuedJob, attemptNumber: 0, eventLoop: eventLoop, logger: logger).always { result in
             switch result {
             case .success:
-                logger.trace("Completed job", metadata: [
-                    "hb_job_id": .stringConvertible(queuedJob.id),
-                    "hb_job_type": .string(String(describing: type(of: queuedJob.job))),
-                ])
+                logger.debug("Completed job")
             case .failure:
-                logger.error("Failed to complete job", metadata: [
-                    "hb_job_id": .stringConvertible(queuedJob.id),
-                    "hb_job_type": .string(String(describing: type(of: queuedJob.job))),
-                ])
+                logger.error("Failed to complete job")
             }
         }
     }
@@ -134,8 +129,6 @@ class HBJobQueueWorker {
                 logger.trace(
                     "Retrying job",
                     metadata: [
-                        "hb_job_id": .stringConvertible(queuedJob.id),
-                        "hb_job_type": .string(String(describing: type(of: queuedJob.job))),
                         "hb_job_attempt": .stringConvertible(attemptNumber + 1),
                     ]
                 )
