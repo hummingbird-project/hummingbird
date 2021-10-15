@@ -12,6 +12,19 @@
 //
 //===----------------------------------------------------------------------===//
 
-enum JobQueueError: Error {
-    case decodeJobFailed
+/// Job Queue Error type
+public struct JobQueueError: Error, Equatable {
+    /// failed to decode job. Possibly because it hasn't been registered or data that was expected
+    /// is not available
+    public static var decodeJobFailed: Self { .init(.decodeJobFailed) }
+
+    private enum QueueError {
+        case decodeJobFailed
+    }
+
+    private let error: QueueError
+
+    private init(_ error: QueueError) {
+        self.error = error
+    }
 }

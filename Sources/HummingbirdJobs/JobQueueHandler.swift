@@ -43,8 +43,11 @@ public struct HBJobQueueId: Hashable, ExpressibleByStringLiteral {
 }
 
 extension HBApplication {
+    /// Handles the array of JobQueues.
     public class JobQueueHandler {
+        /// Job queue id
         public typealias QueueKey = HBJobQueueId
+        /// The default JobQueue setup at initialisation
         public var queue: HBJobQueue { self.queues[.default]! }
 
         init(queue: HBJobQueueFactory, application: HBApplication, numWorkers: Int) {
@@ -54,10 +57,22 @@ extension HBApplication {
             self.registerQueue(.default, queue: queue, numWorkers: numWorkers)
         }
 
+        /// Return queue given a job queue id.
+        ///
+        /// It is assumed the job queue has been setup and if the queue doesn't
+        /// exist will crash the application
+        /// - Parameter id: Job queue id
+        /// - Returns: Job queue
         public func queues(_ id: QueueKey) -> HBJobQueue {
             return self.queues[id]!
         }
 
+        /// Register a job queue under an id
+        ///
+        /// - Parameters:
+        ///   - id: Job queue id
+        ///   - queueFactory: Job queue factory
+        ///   - numWorkers: Number of workers you want servicing this job queue
         public func registerQueue(_ id: QueueKey, queue queueFactory: HBJobQueueFactory, numWorkers: Int = 1) {
             let queue = queueFactory.create(self.application)
             self.queues[id] = queue
@@ -94,8 +109,13 @@ extension HBApplication {
         private var workers: [HBJobQueueWorker]
     }
 
+    /// Job queue handler
     public var jobs: JobQueueHandler { self.extensions.get(\.jobs) }
 
+    /// Initialisation for Job queue system
+    /// - Parameters:
+    ///   - using: Default job queue driver
+    ///   - numWorkers: Number of workers that will service the default queue
     public func addJobs(using: HBJobQueueFactory, numWorkers: Int = 1) {
         self.extensions.set(\.jobs, value: .init(queue: using, application: self, numWorkers: numWorkers))
         self.lifecycle.register(

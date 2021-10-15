@@ -140,39 +140,6 @@ final class HummingbirdJobsTests: XCTestCase {
         wait(for: [TestJob.expectation], timeout: 1)
     }
 
-    func testOnError() throws {
-        struct FailedError: Error {}
-
-        struct TestJob: HBJob {
-            static let name = "test"
-            static let maxRetryCount: Int = 2
-            static let expectation = XCTestExpectation(description: "Jobs Completed")
-            static let errorExpectation = XCTestExpectation(description: "Jobs Errored")
-            func execute(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void> {
-                Self.expectation.fulfill()
-                return eventLoop.makeFailedFuture(FailedError())
-            }
-
-            func onError(_ error: Error, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void> {
-                Self.errorExpectation.fulfill()
-                return eventLoop.makeFailedFuture(error)
-            }
-        }
-        TestJob.expectation.expectedFulfillmentCount = 3
-        TestJob.errorExpectation.expectedFulfillmentCount = 1
-
-        let app = HBApplication(testing: .live)
-        app.logger.logLevel = .trace
-        app.addJobs(using: .memory)
-
-        try app.start()
-        defer { app.stop() }
-
-        app.jobs.queue.enqueue(TestJob(), on: app.eventLoopGroup.next())
-
-        wait(for: [TestJob.expectation, TestJob.errorExpectation], timeout: 1)
-    }
-
     func testShutdown() throws {
         let app = HBApplication(testing: .live)
         app.logger.logLevel = .trace

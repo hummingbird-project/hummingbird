@@ -16,27 +16,23 @@ import Foundation
 import Logging
 import NIO
 
+/// Protocol for job description
+///
+/// For a job to be decodable, it has to be registered. Call `MyJob.register()` to register a job.
 public protocol HBJob: Codable {
-    /// Job name
+    /// Unique Job name
     static var name: String { get }
 
-    /// maximum times this job should be retried
+    /// Maximum times this job should be retried if it fails
     static var maxRetryCount: Int { get }
 
     /// Execute job
-    /// - Parameter eventLoop: EventLoop to run job on
+    /// - Returns: EventLoopFuture that is fulfulled when job is done
     func execute(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void>
 
-    /// If the job fails after all retry attempts then this is called
-    /// - Parameter eventLoop: EventLoop to run on
-    func onError(_ error: Error, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void>
 }
 
 extension HBJob {
-    public func onError(_ error: Error, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void> {
-        return eventLoop.makeFailedFuture(error)
-    }
-
     /// maximum times this job should be retried
     public static var maxRetryCount: Int { return 1 }
 

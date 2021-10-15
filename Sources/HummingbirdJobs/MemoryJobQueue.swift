@@ -14,24 +14,35 @@
 
 import NIOCore
 
+/// In memory implementation of job queue driver. Stores jobs in a circular buffer
 public class HBMemoryJobQueue: HBJobQueue {
     public let eventLoop: EventLoop
 
+    /// queue of jobs
     var queue: CircularBuffer<HBQueuedJob>
+    /// queue of workers waiting for a new job
     var waitingQueue: CircularBuffer<EventLoopPromise<Void>>
 
-    public init(eventLoopGroup: EventLoopGroup) {
-        self.eventLoop = eventLoopGroup.next()
+    /// Initialise In memory job queue
+    /// - Parameter eventLoopGroup: EventLoop to run access to queue
+    public init(eventLoop: EventLoop) {
+        self.eventLoop = eventLoop
         self.queue = .init(initialCapacity: 16)
         self.waitingQueue = .init(initialCapacity: 4)
     }
 
+    /// Shutdown queue
     public func shutdown() {
         self.waitingQueue.forEach {
             $0.fail(self.shutdownError)
         }
     }
 
+    /// Push job onto queue
+    /// - Parameters:
+    ///   - job: Job
+    ///   - eventLoop: Eventloop to run process on (ignored in this case)
+    /// - Returns: Queued job
     public func push(_ job: HBJob, on eventLoop: EventLoop) -> EventLoopFuture<HBQueuedJob> {
         return self.eventLoop.submit { () -> HBQueuedJob in
             let queuedJob = HBQueuedJob(job)
@@ -43,6 +54,9 @@ public class HBMemoryJobQueue: HBJobQueue {
         }
     }
 
+    /// Pop job off queue
+    /// - Parameter eventLoop: Eventloop to run process on (ignored in this case)
+    /// - Returns: Queued Job if available
     public func pop(on eventLoop: EventLoop) -> EventLoopFuture<HBQueuedJob?> {
         self.eventLoop.flatSubmit {
             if self.waitingQueue.count > 0 || self.queue.count == 0 {

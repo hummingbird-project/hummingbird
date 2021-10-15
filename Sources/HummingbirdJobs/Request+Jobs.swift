@@ -15,7 +15,13 @@
 import Hummingbird
 
 extension HBRequest {
+    /// Provides easy access to Job Queue system
     public struct Jobs {
+        /// Enqueue job onto queue
+        /// - Parameters:
+        ///   - job: Job to enqueue
+        ///   - queue: queue to add job to
+        /// - Returns: Job identifier
         public func enqueue(job: HBJob, on queue: HBApplication.JobQueueHandler.QueueKey = .default) -> EventLoopFuture<JobIdentifier> {
             self.request.application.jobs.queues(queue).enqueue(job, on: self.request.eventLoop)
         }
@@ -23,5 +29,6 @@ extension HBRequest {
         let request: HBRequest
     }
 
+    /// Job queue system
     public var jobs: Jobs { .init(request: self) }
 }

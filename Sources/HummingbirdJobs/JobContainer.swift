@@ -14,6 +14,7 @@
 
 import Foundation
 
+/// Holder for all data related to a job
 public struct HBJobContainer: Codable {
     /// Time created
     public let createdAt: Date
@@ -46,7 +47,7 @@ public struct HBJobContainer: Codable {
     }
 }
 
-/// queued job. Includes job, plus addition information
+/// Queued job. Includes job, plus the id for the job
 public struct HBQueuedJob {
     /// Job id
     public let id: JobIdentifier

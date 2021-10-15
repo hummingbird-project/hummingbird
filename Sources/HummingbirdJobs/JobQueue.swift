@@ -24,22 +24,31 @@ public struct JobIdentifier: CustomStringConvertible {
         self.id = UUID().uuidString
     }
 
+    /// Initialize JobIdentifier from String
+    /// - Parameter value: string value
     public init(_ value: String) {
         self.id = value
     }
 
+    /// String description of Identifier
     public var description: String { self.id }
 }
 
-/// Job queue protocol
+/// Job queue protocol.
+///
+/// Defines how to push and pop jobs off a queue
 public protocol HBJobQueue: AnyObject {
-    /// - Parameter job: job descriptor
+    /// Process to run at initialisation of Job Queue
+    /// - Returns: When queue initialisation is finished
+    func onInit(on: EventLoop) -> EventLoopFuture<Void>
+    /// Push Job onto queue
+    /// - Returns: Queued job information
     func push(_ job: HBJob, on: EventLoop) -> EventLoopFuture<HBQueuedJob>
     /// Pop job off queue. Future will wait until a job is available
+    /// - Returns: Queued job information
     func pop(on: EventLoop) -> EventLoopFuture<HBQueuedJob?>
-    /// Process to run at initialisation
-    func onInit(on: EventLoop) -> EventLoopFuture<Void>
-    /// finished
+    /// This is called to say job has finished processing and it can be deleted
+    /// - Returns: When deletion of job has finished
     func finished(jobId: JobIdentifier, on: EventLoop) -> EventLoopFuture<Void>
     /// shutdown queue
     func shutdown()
@@ -48,17 +57,23 @@ public protocol HBJobQueue: AnyObject {
 }
 
 extension HBJobQueue {
-    /// default finished does nothing
+    /// Default implememtatoin of `finish`. Does nothing
+    /// - Parameters:
+    ///   - jobId: Job Identifier
+    ///   - eventLoop: EventLoop to run process on
+    /// - Returns: When deletion of job has finished. In this case immediately
     public func finished(jobId: JobIdentifier, on eventLoop: EventLoop) -> EventLoopFuture<Void> {
         return eventLoop.makeSucceededVoidFuture()
     }
 
-    /// default finished does nothing
+    /// Default implementation of `onInit`. Does nothing
+    /// - Parameter eventLoop: EventLoop to run process on
+    /// - Returns: When initialisation has finished. In this case immediately
     public func onInit(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
         return eventLoop.makeSucceededVoidFuture()
     }
 
-    /// default shutdown does nothing
+    /// Default implementation of `shutdown`. Does nothing
     public func shutdown() {}
 
     public var shutdownError: Error { return HBJobQueueShutdownError() }
@@ -72,24 +87,26 @@ extension HBJobQueue {
         return self.push(job, on: eventLoop).map(\.id)
     }
 
-    /// time amount between each poll of queue
+    /// Queue workers poll the queue to get the latest jobs off the queue. This indicates the time amount
+    /// between each poll of the queue
     public var pollTime: TimeAmount { .milliseconds(100) }
 }
 
-/// Factory class for persist drivers
+/// Factory class for Job Queue drivers
 public struct HBJobQueueFactory {
-    public let create: (HBApplication) -> HBJobQueue
+    let create: (HBApplication) -> HBJobQueue
 
-    /// Initialize HBPersistDriverFactory
-    /// - Parameter create: HBPersistDriver factory function
+    /// Initialize HBJobQueueFactory
+    /// - Parameter create: Job Queue factory function
     public init(create: @escaping (HBApplication) -> HBJobQueue) {
         self.create = create
     }
 
-    /// In memory driver for persist system
+    /// In memory driver for Job Queue system
     public static var memory: HBJobQueueFactory {
-        .init(create: { app in HBMemoryJobQueue(eventLoopGroup: app.eventLoopGroup) })
+        .init(create: { app in HBMemoryJobQueue(eventLoop: app.eventLoopGroup.next()) })
     }
 }
 
+/// Error type for when a job queue is being shutdown
 struct HBJobQueueShutdownError: Error {}

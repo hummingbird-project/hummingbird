@@ -15,6 +15,9 @@
 import Logging
 import NIOCore
 
+/// Job queue worker. Pops job off the queue and runs it. Once the job is complete goes to
+/// pop off a new job from the queue. If no job exists then if will poll the queue at regular
+/// intervals until a job is available
 class HBJobQueueWorker {
     let queue: HBJobQueue
     let eventLoop: EventLoop
@@ -31,10 +34,12 @@ class HBJobQueueWorker {
         self.logger = logger
     }
 
+    /// start worker
     func start() {
         self.executeNextJob()
     }
 
+    /// shutdown worker. Waits until current job is complete
     func shutdown() -> EventLoopFuture<Void> {
         return self.eventLoop.flatSubmit {
             self.isShutdown = true
@@ -42,7 +47,7 @@ class HBJobQueueWorker {
         }
     }
 
-    /// execute next task on the queue. Once that task is complete this cal
+    /// execute next job on the queue. Once that job is complete call this function again
     func executeNextJob() {
         self.eventLoop.execute {
             self.pop(on: self.eventLoop)
@@ -76,6 +81,7 @@ class HBJobQueueWorker {
         }
     }
 
+    /// pop job off queue, or wait until a job is available and then pop that job off the queue
     func pop(on eventLoop: EventLoop) -> EventLoopFuture<HBQueuedJob> {
         let promise = eventLoop.makePromise(of: HBQueuedJob.self)
 
@@ -124,7 +130,7 @@ class HBJobQueueWorker {
         return job.execute(on: eventLoop, logger: logger)
             .flatMapError { error in
                 guard attemptNumber < type(of: job).maxRetryCount else {
-                    return job.onError(error, on: eventLoop, logger: logger)
+                    return eventLoop.makeFailedFuture(error)
                 }
                 logger.trace(
                     "Retrying job",
