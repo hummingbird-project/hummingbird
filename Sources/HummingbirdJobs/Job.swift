@@ -37,10 +37,10 @@ extension HBJob {
     }
 
     /// maximum times this job should be retried
-    static var maxRetryCount: Int { return 1 }
+    public static var maxRetryCount: Int { return 1 }
 
     /// register job
-    static func register() {
+    public static func register() {
         HBJobRegister.register(job: Self.self)
     }
 }
