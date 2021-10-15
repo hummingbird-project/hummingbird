@@ -20,7 +20,7 @@ import XCTest
 final class HummingbirdJobsTests: XCTestCase {
     func testBasic() throws {
         struct TestJob: HBJob {
-            static let name = "test"
+            static let name = "testBasic"
             static let expectation = XCTestExpectation(description: "Jobs Completed")
 
             let value: Int
@@ -31,7 +31,7 @@ final class HummingbirdJobsTests: XCTestCase {
                 }.futureResult
             }
         }
-        HBJobRegister.register(job: TestJob.self)
+        TestJob.register()
         TestJob.expectation.expectedFulfillmentCount = 10
 
         let app = HBApplication(testing: .live)
@@ -57,7 +57,7 @@ final class HummingbirdJobsTests: XCTestCase {
 
     func testMultipleWorkers() throws {
         struct TestJob: HBJob {
-            static let name = "test"
+            static let name = "testMultipleWorkers"
             static let expectation = XCTestExpectation(description: "Jobs Completed")
 
             let value: Int
@@ -68,7 +68,7 @@ final class HummingbirdJobsTests: XCTestCase {
                 }.futureResult
             }
         }
-        HBJobRegister.register(job: TestJob.self)
+        TestJob.register()
         TestJob.expectation.expectedFulfillmentCount = 10
 
         let app = HBApplication(testing: .live)
@@ -96,7 +96,7 @@ final class HummingbirdJobsTests: XCTestCase {
         struct FailedError: Error {}
 
         struct TestJob: HBJob {
-            static let name = "test"
+            static let name = "testErrorRetryCount"
             static let maxRetryCount = 3
             static let expectation = XCTestExpectation(description: "Jobs Completed")
             func execute(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void> {
@@ -104,6 +104,7 @@ final class HummingbirdJobsTests: XCTestCase {
                 return eventLoop.makeFailedFuture(FailedError())
             }
         }
+        TestJob.register()
         TestJob.expectation.expectedFulfillmentCount = 4
         let app = HBApplication(testing: .live)
         app.logger.logLevel = .trace
@@ -119,13 +120,14 @@ final class HummingbirdJobsTests: XCTestCase {
 
     func testSecondQueue() throws {
         struct TestJob: HBJob {
-            static let name = "test"
+            static let name = "testSecondQueue"
             static let expectation = XCTestExpectation(description: "Jobs Completed")
             func execute(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void> {
                 Self.expectation.fulfill()
                 return eventLoop.makeSucceededVoidFuture()
             }
         }
+        TestJob.register()
         TestJob.expectation.expectedFulfillmentCount = 1
         let app = HBApplication(testing: .live)
         app.logger.logLevel = .trace
@@ -151,17 +153,18 @@ final class HummingbirdJobsTests: XCTestCase {
 
     func testShutdownJob() throws {
         class TestJob: HBJob {
-            static let name = "test"
-            var started: Bool = false
-            var finished: Bool = false
+            static let name = "testShutdownJob"
+            static var started: Bool = false
+            static var finished: Bool = false
             func execute(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void> {
-                self.started = true
+                Self.started = true
                 let job = eventLoop.scheduleTask(in: .milliseconds(500)) {
-                    self.finished = true
+                    Self.finished = true
                 }
                 return job.futureResult
             }
         }
+        TestJob.register()
 
         let app = HBApplication(testing: .live)
         app.logger.logLevel = .trace
@@ -174,13 +177,13 @@ final class HummingbirdJobsTests: XCTestCase {
         app.stop()
         app.wait()
 
-        XCTAssertTrue(job.started)
-        XCTAssertTrue(job.finished)
+        XCTAssertTrue(TestJob.started)
+        XCTAssertTrue(TestJob.finished)
     }
 
     func testJobSerialization() throws {
         struct TestJob: HBJob, Equatable {
-            static let name = "test"
+            static let name = "testJobSerialization"
             let value: Int
             func execute(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void> {
                 return eventLoop.makeSucceededVoidFuture()

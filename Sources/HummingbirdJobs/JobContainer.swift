@@ -48,7 +48,7 @@ public struct HBJobContainer: Codable {
 }
 
 /// Queued job. Includes job, plus the id for the job
-public struct HBQueuedJob {
+public struct HBQueuedJob: Codable {
     /// Job id
     public let id: JobIdentifier
     /// Job data

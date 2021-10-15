@@ -17,7 +17,7 @@ import Hummingbird
 import Logging
 
 /// Identifier for Job
-public struct JobIdentifier: CustomStringConvertible {
+public struct JobIdentifier: CustomStringConvertible, Codable {
     let id: String
 
     init() {
@@ -28,6 +28,16 @@ public struct JobIdentifier: CustomStringConvertible {
     /// - Parameter value: string value
     public init(_ value: String) {
         self.id = value
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        self.id = try container.decode(String.self)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(self.id)
     }
 
     /// String description of Identifier
