@@ -51,7 +51,7 @@ public protocol HBJobQueue: AnyObject {
     /// - Returns: When deletion of job has finished
     func finished(jobId: JobIdentifier, on: EventLoop) -> EventLoopFuture<Void>
     /// shutdown queue
-    func shutdown()
+    func shutdown(on: EventLoop) -> EventLoopFuture<Void>
     /// time amount between each poll of queue
     var pollTime: TimeAmount { get }
 }
@@ -74,7 +74,9 @@ extension HBJobQueue {
     }
 
     /// Default implementation of `shutdown`. Does nothing
-    public func shutdown() {}
+    public func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
+        return eventLoop.makeSucceededVoidFuture()
+    }
 
     public var shutdownError: Error { return HBJobQueueShutdownError() }
 

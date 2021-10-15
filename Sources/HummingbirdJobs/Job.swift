@@ -29,7 +29,6 @@ public protocol HBJob: Codable {
     /// Execute job
     /// - Returns: EventLoopFuture that is fulfulled when job is done
     func execute(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void>
-
 }
 
 extension HBJob {

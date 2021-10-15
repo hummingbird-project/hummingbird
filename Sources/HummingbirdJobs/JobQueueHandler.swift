@@ -93,13 +93,13 @@ extension HBApplication {
         }
 
         func shutdown() -> EventLoopFuture<Void> {
+            let eventLoop = self.application.eventLoopGroup.next()
             // shutdown all workers
             let shutdownFutures: [EventLoopFuture<Void>] = self.workers.map { $0.shutdown() }
-            return EventLoopFuture.andAllComplete(shutdownFutures, on: self.application.eventLoopGroup.next()).map {
+            return EventLoopFuture.andAllComplete(shutdownFutures, on: eventLoop).flatMap {
                 // shutdown all queues
-                self.queues.forEach {
-                    $0.value.shutdown()
-                }
+                let shutdownFutures: [EventLoopFuture<Void>] = self.queues.values.map { $0.shutdown(on: eventLoop) }
+                return EventLoopFuture.andAllComplete(shutdownFutures, on: eventLoop)
             }
         }
 
