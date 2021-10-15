@@ -126,10 +126,10 @@ class HBJobQueueWorker {
     /// execute single job, retrying if it fails
     func executeJob(_ queuedJob: HBQueuedJob, attemptNumber: Int, eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void> {
         let job = queuedJob.job.job
-        return job.execute(on: eventLoop)
+        return job.execute(on: eventLoop, logger: logger)
             .flatMapError { error in
                 guard attemptNumber < type(of: job).maxRetryCount else {
-                    return job.onError(error, on: eventLoop)
+                    return job.onError(error, on: eventLoop, logger: logger)
                 }
                 logger.trace(
                     "Retrying job",

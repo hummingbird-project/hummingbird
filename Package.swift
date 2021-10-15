@@ -39,6 +39,7 @@ let package = Package(
         ]),
         .target(name: "HummingbirdJobs", dependencies: [
             .byName(name: "Hummingbird"),
+            .product(name: "Logging", package: "swift-log"),
         ]),
         .target(name: "HummingbirdXCT", dependencies: [
             .byName(name: "Hummingbird"),

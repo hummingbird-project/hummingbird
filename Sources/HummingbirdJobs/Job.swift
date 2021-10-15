@@ -14,6 +14,7 @@
 
 import Foundation
 import NIO
+import Logging
 
 public protocol HBJob: Codable {
     /// Job name
@@ -24,15 +25,15 @@ public protocol HBJob: Codable {
 
     /// Execute job
     /// - Parameter eventLoop: EventLoop to run job on
-    func execute(on eventLoop: EventLoop) -> EventLoopFuture<Void>
+    func execute(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void>
 
     /// If the job fails after all retry attempts then this is called
     /// - Parameter eventLoop: EventLoop to run on
-    func onError(_ error: Error, on eventLoop: EventLoop) -> EventLoopFuture<Void>
+    func onError(_ error: Error, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void>
 }
 
 extension HBJob {
-    public func onError(_ error: Error, on eventLoop: EventLoop) -> EventLoopFuture<Void> {
+    public func onError(_ error: Error, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void> {
         return eventLoop.makeFailedFuture(error)
     }
 
