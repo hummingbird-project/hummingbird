@@ -9,6 +9,7 @@ let package = Package(
     products: [
         .library(name: "Hummingbird", targets: ["Hummingbird"]),
         .library(name: "HummingbirdFoundation", targets: ["HummingbirdFoundation"]),
+        .library(name: "HummingbirdJobs", targets: ["HummingbirdJobs"]),
         .library(name: "HummingbirdXCT", targets: ["HummingbirdXCT"]),
         .executable(name: "PerformanceTest", targets: ["PerformanceTest"]),
     ],
