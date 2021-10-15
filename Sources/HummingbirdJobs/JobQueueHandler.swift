@@ -68,7 +68,7 @@ extension HBApplication {
         }
 
         func start() {
-            let eventLoop = application.eventLoopGroup.next()
+            let eventLoop = self.application.eventLoopGroup.next()
             let initFutures = self.queues.values.map { $0.onInit(on: eventLoop) }
             EventLoopFuture.andAllComplete(initFutures, on: eventLoop).whenComplete { _ in
                 self.workers.forEach {

@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import NIO
 import Logging
+import NIO
 
 public protocol HBJob: Codable {
     /// Job name
