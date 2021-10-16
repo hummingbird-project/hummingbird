@@ -111,11 +111,13 @@ public final class HBApplication: HBExtensible {
         )
 
         // register server startup and shutdown with lifecycle
-        self.lifecycle.register(
-            label: "HTTP Server",
-            start: .eventLoopFuture { self.server.start(responder: HTTPResponder(application: self)) },
-            shutdown: .eventLoopFuture(self.server.stop)
-        )
+        if !configuration.noHTTPServer {
+            self.lifecycle.register(
+                label: "HTTP Server",
+                start: .eventLoopFuture { self.server.start(responder: HTTPResponder(application: self)) },
+                shutdown: .eventLoopFuture(self.server.stop)
+            )
+        }
     }
 
     // MARK: Methods

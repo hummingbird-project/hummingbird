@@ -9,6 +9,7 @@ let package = Package(
     products: [
         .library(name: "Hummingbird", targets: ["Hummingbird"]),
         .library(name: "HummingbirdFoundation", targets: ["HummingbirdFoundation"]),
+        .library(name: "HummingbirdJobs", targets: ["HummingbirdJobs"]),
         .library(name: "HummingbirdXCT", targets: ["HummingbirdXCT"]),
         .executable(name: "PerformanceTest", targets: ["PerformanceTest"]),
     ],
@@ -36,6 +37,10 @@ let package = Package(
             .product(name: "NIOPosix", package: "swift-nio"),
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
         ]),
+        .target(name: "HummingbirdJobs", dependencies: [
+            .byName(name: "Hummingbird"),
+            .product(name: "Logging", package: "swift-log"),
+        ]),
         .target(name: "HummingbirdXCT", dependencies: [
             .byName(name: "Hummingbird"),
             .product(name: "HummingbirdCoreXCT", package: "hummingbird-core"),
@@ -57,6 +62,10 @@ let package = Package(
         ]),
         .testTarget(name: "HummingbirdFoundationTests", dependencies: [
             .byName(name: "HummingbirdFoundation"),
+            .byName(name: "HummingbirdXCT"),
+        ]),
+        .testTarget(name: "HummingbirdJobsTests", dependencies: [
+            .byName(name: "HummingbirdJobs"),
             .byName(name: "HummingbirdXCT"),
         ]),
     ]

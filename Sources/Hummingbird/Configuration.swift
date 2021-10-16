@@ -48,6 +48,8 @@ extension HBApplication {
 
         /// Number of threads to allocate in the application thread pool
         public let threadPoolSize: Int
+        /// don't run the HTTP server
+        public let noHTTPServer: Bool
         /// logging level
         public let logLevel: Logger.Level
 
@@ -64,7 +66,8 @@ extension HBApplication {
             tcpNoDelay: Bool = false,
             enableHttpPipelining: Bool = true,
             threadPoolSize: Int = 2,
-            logLevel: Logger.Level? = nil
+            logLevel: Logger.Level? = nil,
+            noHTTPServer: Bool = false
         ) {
             let env = HBEnvironment()
 
@@ -81,6 +84,7 @@ extension HBApplication {
             #endif
 
             self.threadPoolSize = threadPoolSize
+            self.noHTTPServer = noHTTPServer
 
             if let logLevel = logLevel {
                 self.logLevel = logLevel
@@ -105,6 +109,7 @@ extension HBApplication {
             enableHttpPipelining: Bool = true,
             threadPoolSize: Int = 2,
             logLevel: Logger.Level? = nil,
+            noHTTPServer: Bool = false,
             tlsOptions: TSTLSOptions
         ) {
             let env = HBEnvironment()
@@ -120,6 +125,7 @@ extension HBApplication {
             self.tlsOptions = tlsOptions
 
             self.threadPoolSize = threadPoolSize
+            self.noHTTPServer = noHTTPServer
 
             if let logLevel = logLevel {
                 self.logLevel = logLevel
