@@ -221,7 +221,6 @@ final class HummingbirdJobsTests: XCTestCase {
         app.addJobs(using: .memory)
 
         try app.start()
-        defer { app.stop() }
 
         app.jobs.queue.enqueue(TestJob1(), on: app.eventLoopGroup.next())
         app.jobs.queue.enqueue(TestJob2(value: "test"), on: app.eventLoopGroup.next())
@@ -229,6 +228,9 @@ final class HummingbirdJobsTests: XCTestCase {
         // stall to give job chance to start running
         Thread.sleep(forTimeInterval: 0.1)
 
+        app.stop()
+        app.wait()
+        
         XCTAssertEqual(TestJob2.value, "test")
     }
 }
