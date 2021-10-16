@@ -152,7 +152,7 @@ final class HummingbirdJobsTests: XCTestCase {
     }
 
     func testShutdownJob() throws {
-        class TestJob: HBJob {
+        struct TestJob: HBJob {
             static let name = "testShutdownJob"
             static var started: Bool = false
             static var finished: Bool = false
@@ -195,6 +195,41 @@ final class HummingbirdJobsTests: XCTestCase {
         let data = try JSONEncoder().encode(queuedJob)
         let queuedJob2 = try JSONDecoder().decode(HBJobContainer.self, from: data)
         XCTAssertEqual(queuedJob2.job as? TestJob, job)
+    }
+
+    /// test job fails to decode but queue continues to process
+    func testFailToDecode() throws {
+        struct TestJob1: HBJob {
+            static let name = "testFailToDecode"
+            func execute(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void> {
+                return eventLoop.makeSucceededVoidFuture()
+            }
+        }
+        struct TestJob2: HBJob {
+            static let name = "testFailToDecode"
+            static var value: String?
+            let value: String
+            func execute(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void> {
+                Self.value = self.value
+                return eventLoop.makeSucceededVoidFuture()
+            }
+        }
+        TestJob2.register()
+
+        let app = HBApplication(testing: .live)
+        app.logger.logLevel = .trace
+        app.addJobs(using: .memory)
+
+        try app.start()
+        defer { app.stop() }
+
+        app.jobs.queue.enqueue(TestJob1(), on: app.eventLoopGroup.next())
+        app.jobs.queue.enqueue(TestJob2(value: "test"), on: app.eventLoopGroup.next())
+
+        // stall to give job chance to start running
+        Thread.sleep(forTimeInterval: 0.1)
+
+        XCTAssertEqual(TestJob2.value, "test")
     }
 }
 
