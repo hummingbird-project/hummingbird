@@ -69,6 +69,9 @@ public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral {
         var path: HBParser?
         var query: HBParser?
         var state: ParsingState = .readingScheme
+        if string.first == "/" {
+            state = .readingPath
+        }
 
         var parser = HBParser(string)
         while state != .finished {
