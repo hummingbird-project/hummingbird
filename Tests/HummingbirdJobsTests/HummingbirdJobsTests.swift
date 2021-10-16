@@ -230,7 +230,7 @@ final class HummingbirdJobsTests: XCTestCase {
 
         app.stop()
         app.wait()
-        
+
         XCTAssertEqual(TestJob2.value, "test")
     }
 }
