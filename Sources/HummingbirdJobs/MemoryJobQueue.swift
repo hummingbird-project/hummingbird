@@ -33,7 +33,7 @@ public class HBMemoryJobQueue: HBJobQueue {
     }
 
     /// Shutdown queue
-    public func shutdown() -> EventLoopFuture<Void> {
+    public func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
         self.eventLoop.submit {
             self.waitingQueue.forEach {
                 $0.fail(self.shutdownError)
