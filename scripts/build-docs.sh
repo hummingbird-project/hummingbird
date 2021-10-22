@@ -64,6 +64,7 @@ build_docs_from_other_repo() {
 
 build_docs hummingbird hummingbird Hummingbird
 build_docs hummingbird hummingbird-foundation HummingbirdFoundation
+build_docs hummingbird hummingbird-jobs HummingbirdJobs
 build_docs hummingbird hummingbird-xct HummingbirdXCT
 
 build_docs_from_other_repo hummingbird-core hummingbird-core HummingbirdCore
