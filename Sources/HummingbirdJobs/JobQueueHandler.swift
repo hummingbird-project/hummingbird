@@ -73,7 +73,7 @@ extension HBApplication {
         ///   - id: Job queue id
         ///   - queueFactory: Job queue factory
         ///   - numWorkers: Number of workers you want servicing this job queue
-        public func registerQueue(_ id: QueueKey, queue queueFactory: HBJobQueueFactory, numWorkers: Int = 1) {
+        public func registerQueue(_ id: QueueKey, queue queueFactory: HBJobQueueFactory, numWorkers: Int) {
             let queue = queueFactory.create(self.application)
             self.queues[id] = queue
             for _ in 0..<numWorkers {
@@ -116,7 +116,7 @@ extension HBApplication {
     /// - Parameters:
     ///   - using: Default job queue driver
     ///   - numWorkers: Number of workers that will service the default queue
-    public func addJobs(using: HBJobQueueFactory, numWorkers: Int = 1) {
+    public func addJobs(using: HBJobQueueFactory, numWorkers: Int) {
         self.extensions.set(\.jobs, value: .init(queue: using, application: self, numWorkers: numWorkers))
         self.lifecycle.register(
             label: "Jobs",

@@ -33,7 +33,7 @@ public protocol HBJob: Codable {
 
 extension HBJob {
     /// maximum times this job should be retried
-    public static var maxRetryCount: Int { return 1 }
+    public static var maxRetryCount: Int { return 0 }
 
     /// register job
     public static func register() {

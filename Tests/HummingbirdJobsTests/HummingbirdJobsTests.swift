@@ -36,7 +36,7 @@ final class HummingbirdJobsTests: XCTestCase {
 
         let app = HBApplication(testing: .live)
         app.logger.logLevel = .trace
-        app.addJobs(using: .memory)
+        app.addJobs(using: .memory, numWorkers: 1)
 
         try app.start()
         defer { app.stop() }
@@ -108,7 +108,7 @@ final class HummingbirdJobsTests: XCTestCase {
         TestJob.expectation.expectedFulfillmentCount = 4
         let app = HBApplication(testing: .live)
         app.logger.logLevel = .trace
-        app.addJobs(using: .memory)
+        app.addJobs(using: .memory, numWorkers: 1)
 
         try app.start()
         defer { app.stop() }
@@ -131,8 +131,8 @@ final class HummingbirdJobsTests: XCTestCase {
         TestJob.expectation.expectedFulfillmentCount = 1
         let app = HBApplication(testing: .live)
         app.logger.logLevel = .trace
-        app.addJobs(using: .memory)
-        app.jobs.registerQueue(.test, queue: .memory)
+        app.addJobs(using: .memory, numWorkers: 1)
+        app.jobs.registerQueue(.test, queue: .memory, numWorkers: 1)
 
         try app.start()
         defer { app.stop() }
@@ -145,7 +145,7 @@ final class HummingbirdJobsTests: XCTestCase {
     func testShutdown() throws {
         let app = HBApplication(testing: .live)
         app.logger.logLevel = .trace
-        app.addJobs(using: .memory)
+        app.addJobs(using: .memory, numWorkers: 1)
         try app.start()
         app.stop()
         app.wait()
@@ -168,7 +168,7 @@ final class HummingbirdJobsTests: XCTestCase {
 
         let app = HBApplication(testing: .live)
         app.logger.logLevel = .trace
-        app.addJobs(using: .memory)
+        app.addJobs(using: .memory, numWorkers: 1)
         try app.start()
         let job = TestJob()
         app.jobs.queue.enqueue(job, on: app.eventLoopGroup.next())
@@ -218,7 +218,7 @@ final class HummingbirdJobsTests: XCTestCase {
 
         let app = HBApplication(testing: .live)
         app.logger.logLevel = .trace
-        app.addJobs(using: .memory)
+        app.addJobs(using: .memory, numWorkers: 1)
 
         try app.start()
 
@@ -232,6 +232,38 @@ final class HummingbirdJobsTests: XCTestCase {
         app.wait()
 
         XCTAssertEqual(TestJob2.value, "test")
+    }
+
+    /// test access via `HBRequest`
+    func testAccessViaRequest() throws {
+        struct TestJob: HBJob {
+            static let name = "testBasic"
+            static let expectation = XCTestExpectation(description: "Jobs Completed")
+
+            func execute(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void> {
+                Self.expectation.fulfill()
+                return eventLoop.makeSucceededVoidFuture()
+            }
+        }
+        TestJob.register()
+        TestJob.expectation.expectedFulfillmentCount = 1
+
+        let app = HBApplication(testing: .live)
+        app.logger.logLevel = .trace
+        app.addJobs(using: .memory, numWorkers: 1)
+
+        app.router.get("/job") { request -> EventLoopFuture<HTTPResponseStatus> in
+            return request.jobs.enqueue(job: TestJob()).map { _ in .ok }
+        }
+
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/job", method: .GET) { response in
+            XCTAssertEqual(response.status, .ok)
+        }
+
+        wait(for: [TestJob.expectation], timeout: 5)
     }
 }
 
