@@ -296,7 +296,7 @@ final class HummingbirdJobsTests: XCTestCase {
         app.jobs.queue.enqueue(TestAsyncJob(), on: app.eventLoopGroup.next())
 
         wait(for: [TestAsyncJob.expectation], timeout: 5)
-     }
+    }
 
     #endif // compiler(>=5.5) && canImport(_Concurrency)
 }
