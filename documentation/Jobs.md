@@ -18,7 +18,7 @@ Before you can start adding or processing jobs you need to add a jobs driver to 
             numWorkers: 0
         )
 ```
-In this example I called `addJob` with `numWorkers` set to `0`. This means I can add jobs but they will not be processed. To get another server to process these jobs, I should run a separate app on that server which connects to the same Redis queue but with the `numWorkers` set to a non-zero value.
+In this example I called `addJob` with `numWorkers` set to `0`. This means I can add jobs but they will not be processed. To get another server to process these jobs, I should run a separate version of the app which connects to the same Redis queue but with the `numWorkers` set to the number of threads you want to process the jobs on the queue.
 
 ## Creating a Job
 
