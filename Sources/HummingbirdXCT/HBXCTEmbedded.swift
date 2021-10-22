@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if DEBUG
+
 import Hummingbird
 import NIOCore
 import NIOEmbedded
@@ -112,3 +114,5 @@ class BreakupHTTPBodyChannelHandler: ChannelInboundHandler, RemovableChannelHand
         }
     }
 }
+
+#endif

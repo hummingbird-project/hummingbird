@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if DEBUG
+
 import Hummingbird
 
 /// Response structure returned by XCT testing framework
@@ -48,3 +50,5 @@ public protocol HBXCT {
     /// EventLoopGroup used by XCT framework
     var eventLoopGroup: EventLoopGroup { get }
 }
+
+#endif
