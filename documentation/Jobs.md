@@ -1,6 +1,6 @@
 # Jobs
 
-HummingbirdJobs allows you to offload work your server would be doing to another server. You can setup jobs to use different drivers for storing and job metadata. The module comes with a driver that stores jobs in local memory and uses your current server to process the jobs, but there is also an implementation that comes with the HummingbirdRedis package that stores jobs in a Redis database. 
+HummingbirdJobs allows you to offload work your server would be doing to another server. You can setup jobs to use different drivers for storing job metadata. The module comes with a driver that stores jobs in local memory and uses your current server to process the jobs, but there is also an implementation that comes with the HummingbirdRedis package that stores jobs in a Redis database. 
 
 ## Setting up Jobs
 
@@ -63,7 +63,7 @@ Once you have the new queue id you can register your new queue with this id
 ```swift
 app.jobs.registerQueue(.newQueue, queue: .redis(configuration: .init(queueKey: "_myNewJobsQueue")))
 ```
-Then when add jobs you add the queue id to the `enqueue` function
+Then when adding jobs you add the queue id to the `enqueue` function
 ```swift
 request.jobs.enqueue(job: job, queue: .newQueue)
 ```
