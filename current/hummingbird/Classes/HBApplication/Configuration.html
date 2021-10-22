@@ -14,7 +14,7 @@
     <a title="Configuration Structure Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../../index.html"> 0.13.3 Docs</a> (83% documented)</p>
+        <p><a href="../../index.html"> 0.14.2 Docs</a> (84% documented)</p>
         <p class="header-right"><a href="https://github.com/hummingbird-project/hummingbird"><img src="../../img/gh.png"/>View on GitHub</a></p>
       </div>
     </header>
@@ -39,6 +39,9 @@
               </li>
               <li class="nav-group-task">
                 <a href="../../extending-hummingbird.html">Extending Hummingbird</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../jobs.html">Jobs</a>
               </li>
               <li class="nav-group-task">
                 <a href="../../middleware.html">Middleware</a>
@@ -548,6 +551,33 @@
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/s:11Hummingbird13HBApplicationC13ConfigurationV12noHTTPServerSbvp"></a>
+                    <a name="//apple_ref/swift/Property/noHTTPServer" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird13HBApplicationC13ConfigurationV12noHTTPServerSbvp">noHTTPServer</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>don&rsquo;t run the HTTP server</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">noHTTPServer</span><span class="p">:</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/s:11Hummingbird13HBApplicationC13ConfigurationV8logLevel7Logging6LoggerV0E0Ovp"></a>
                     <a name="//apple_ref/swift/Property/logLevel" class="dashAnchor"></a>
                     <a class="token" href="#/s:11Hummingbird13HBApplicationC13ConfigurationV8logLevel7Logging6LoggerV0E0Ovp">logLevel</a>
@@ -588,9 +618,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird13HBApplicationC13ConfigurationV7address10serverName13maxUploadSize0g15StreamingBufferI07backlog12reuseAddress10tcpNoDelay20enableHttpPipelining010threadPoolI08logLevelAE0A4Core06HBBindN0O_SSSgS3iS3bSi7Logging6LoggerV0X0OSgtcfc"></a>
-                    <a name="//apple_ref/swift/Method/init(address:serverName:maxUploadSize:maxStreamingBufferSize:backlog:reuseAddress:tcpNoDelay:enableHttpPipelining:threadPoolSize:logLevel:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird13HBApplicationC13ConfigurationV7address10serverName13maxUploadSize0g15StreamingBufferI07backlog12reuseAddress10tcpNoDelay20enableHttpPipelining010threadPoolI08logLevelAE0A4Core06HBBindN0O_SSSgS3iS3bSi7Logging6LoggerV0X0OSgtcfc">init(address:serverName:maxUploadSize:maxStreamingBufferSize:backlog:reuseAddress:tcpNoDelay:enableHttpPipelining:threadPoolSize:logLevel:)</a>
+                    <a name="/s:11Hummingbird13HBApplicationC13ConfigurationV7address10serverName13maxUploadSize0g15StreamingBufferI07backlog12reuseAddress10tcpNoDelay20enableHttpPipelining010threadPoolI08logLevel12noHTTPServerAE0A4Core06HBBindN0O_SSSgS3iS3bSi7Logging6LoggerV0X0OSgSbtcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(address:serverName:maxUploadSize:maxStreamingBufferSize:backlog:reuseAddress:tcpNoDelay:enableHttpPipelining:threadPoolSize:logLevel:noHTTPServer:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird13HBApplicationC13ConfigurationV7address10serverName13maxUploadSize0g15StreamingBufferI07backlog12reuseAddress10tcpNoDelay20enableHttpPipelining010threadPoolI08logLevel12noHTTPServerAE0A4Core06HBBindN0O_SSSgS3iS3bSi7Logging6LoggerV0X0OSgSbtcfc">init(address:serverName:maxUploadSize:maxStreamingBufferSize:backlog:reuseAddress:tcpNoDelay:enableHttpPipelining:threadPoolSize:logLevel:noHTTPServer:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -615,7 +645,8 @@
     <span class="nv">tcpNoDelay</span><span class="p">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="kc">false</span><span class="p">,</span>
     <span class="nv">enableHttpPipelining</span><span class="p">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="kc">true</span><span class="p">,</span>
     <span class="nv">threadPoolSize</span><span class="p">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
-    <span class="nv">logLevel</span><span class="p">:</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt">Level</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
+    <span class="nv">logLevel</span><span class="p">:</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt">Level</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">noHTTPServer</span><span class="p">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="kc">false</span>
 <span class="p">)</span></code></pre>
 
                         </div>
@@ -626,9 +657,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11Hummingbird13HBApplicationC13ConfigurationV7address10serverName13maxUploadSize0g15StreamingBufferI07backlog12reuseAddress10tcpNoDelay20enableHttpPipelining010threadPoolI08logLevel10tlsOptionsAE0A4Core06HBBindN0O_SSSgS3iS3bSi7Logging6LoggerV0X0OSgAQ12TSTLSOptionsVtcfc"></a>
-                    <a name="//apple_ref/swift/Method/init(address:serverName:maxUploadSize:maxStreamingBufferSize:backlog:reuseAddress:tcpNoDelay:enableHttpPipelining:threadPoolSize:logLevel:tlsOptions:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11Hummingbird13HBApplicationC13ConfigurationV7address10serverName13maxUploadSize0g15StreamingBufferI07backlog12reuseAddress10tcpNoDelay20enableHttpPipelining010threadPoolI08logLevel10tlsOptionsAE0A4Core06HBBindN0O_SSSgS3iS3bSi7Logging6LoggerV0X0OSgAQ12TSTLSOptionsVtcfc">init(address:serverName:maxUploadSize:maxStreamingBufferSize:backlog:reuseAddress:tcpNoDelay:enableHttpPipelining:threadPoolSize:logLevel:tlsOptions:)</a>
+                    <a name="/s:11Hummingbird13HBApplicationC13ConfigurationV7address10serverName13maxUploadSize0g15StreamingBufferI07backlog12reuseAddress10tcpNoDelay20enableHttpPipelining010threadPoolI08logLevel12noHTTPServer10tlsOptionsAE0A4Core06HBBindN0O_SSSgS3iS3bSi7Logging6LoggerV0X0OSgSbAR12TSTLSOptionsVtcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(address:serverName:maxUploadSize:maxStreamingBufferSize:backlog:reuseAddress:tcpNoDelay:enableHttpPipelining:threadPoolSize:logLevel:noHTTPServer:tlsOptions:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:11Hummingbird13HBApplicationC13ConfigurationV7address10serverName13maxUploadSize0g15StreamingBufferI07backlog12reuseAddress10tcpNoDelay20enableHttpPipelining010threadPoolI08logLevel12noHTTPServer10tlsOptionsAE0A4Core06HBBindN0O_SSSgS3iS3bSi7Logging6LoggerV0X0OSgSbAR12TSTLSOptionsVtcfc">init(address:serverName:maxUploadSize:maxStreamingBufferSize:backlog:reuseAddress:tcpNoDelay:enableHttpPipelining:threadPoolSize:logLevel:noHTTPServer:tlsOptions:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -655,6 +686,7 @@
     <span class="nv">enableHttpPipelining</span><span class="p">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="kc">true</span><span class="p">,</span>
     <span class="nv">threadPoolSize</span><span class="p">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
     <span class="nv">logLevel</span><span class="p">:</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt">Level</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">noHTTPServer</span><span class="p">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="kc">false</span><span class="p">,</span>
     <span class="nv">tlsOptions</span><span class="p">:</span> <span class="kt">TSTLSOptions</span>
 <span class="p">)</span></code></pre>
 
@@ -706,7 +738,7 @@
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-10-11)</p>
+          <p>&copy; 2021 <a class="link" href="https://github.com/adam-fowler" target="_blank" rel="external">Adam Fowler</a>. All rights reserved. (Last updated: 2021-10-22)</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
