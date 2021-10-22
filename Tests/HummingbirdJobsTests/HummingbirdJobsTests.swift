@@ -234,6 +234,7 @@ final class HummingbirdJobsTests: XCTestCase {
         XCTAssertEqual(TestJob2.value, "test")
     }
 
+
     /// test access via `HBRequest`
     func testAccessViaRequest() throws {
         struct TestJob: HBJob {
@@ -265,6 +266,39 @@ final class HummingbirdJobsTests: XCTestCase {
 
         wait(for: [TestJob.expectation], timeout: 5)
     }
+
+    #if compiler(>=5.5) && canImport(_Concurrency)
+
+    @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+    func testAsyncJob() throws {
+        struct TestAsyncJob: HBAsyncJob {
+            static let name = "testAsyncJob"
+            static let expectation = XCTestExpectation(description: "Jobs Completed")
+
+            func execute(logger: Logger) async throws {
+                try await Task.sleep(nanoseconds: 1_000_000)
+                Self.expectation.fulfill()
+            }
+        }
+
+        TestAsyncJob.register()
+        TestAsyncJob.expectation.expectedFulfillmentCount = 3
+
+        let app = HBApplication(testing: .live)
+        app.logger.logLevel = .trace
+        app.addJobs(using: .memory, numWorkers: 2)
+
+        try app.start()
+        defer { app.stop() }
+
+        app.jobs.queue.enqueue(TestAsyncJob(), on: app.eventLoopGroup.next())
+        app.jobs.queue.enqueue(TestAsyncJob(), on: app.eventLoopGroup.next())
+        app.jobs.queue.enqueue(TestAsyncJob(), on: app.eventLoopGroup.next())
+
+        wait(for: [TestAsyncJob.expectation], timeout: 5)
+     }
+
+    #endif // compiler(>=5.5) && canImport(_Concurrency)
 }
 
 extension HBJobQueueId {

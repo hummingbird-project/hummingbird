@@ -25,7 +25,7 @@ extension HBJobQueue {
     ///   - maxRetryCount: Number of times you should retry job
     /// - Returns: ID for job
     @discardableResult public func enqueue(_ job: HBJob, on eventLoop: EventLoop) async throws -> JobIdentifier {
-        return self.push(job, on: eventLoop).map(\.id).get()
+        return try await self.push(job, on: eventLoop).map(\.id).get()
     }
 }
 
