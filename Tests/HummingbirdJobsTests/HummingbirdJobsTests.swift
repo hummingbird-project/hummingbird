@@ -234,7 +234,6 @@ final class HummingbirdJobsTests: XCTestCase {
         XCTAssertEqual(TestJob2.value, "test")
     }
 
-
     /// test access via `HBRequest`
     func testAccessViaRequest() throws {
         struct TestJob: HBJob {
