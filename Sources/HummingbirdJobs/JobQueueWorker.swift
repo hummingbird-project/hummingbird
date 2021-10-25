@@ -52,6 +52,7 @@ class HBJobQueueWorker {
         self.eventLoop.execute {
             self.pop(on: self.eventLoop)
                 .whenComplete { result in
+                    guard self.isShutdown == false else { return }
                     self.promise = self.eventLoop.makePromise()
                     switch result {
                     case .success(let queuedJob):
