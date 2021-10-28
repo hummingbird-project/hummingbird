@@ -21,13 +21,13 @@ import XCTest
 
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
 final class AsyncAwaitTests: XCTestCase {
-    func randomBuffer(size: Int) -> ByteBuffer {
+    static func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
         data = data.map { _ in UInt8.random(in: 0...255) }
         return ByteBufferAllocator().buffer(bytes: data)
     }
 
-    func getBuffer(request: HBRequest) async -> ByteBuffer {
+    static func getBuffer(request: HBRequest) async -> ByteBuffer {
         return request.allocator.buffer(string: "Async Hello")
     }
 
@@ -38,7 +38,7 @@ final class AsyncAwaitTests: XCTestCase {
         #endif
         let app = HBApplication(testing: .live)
         app.router.get("/hello") { request -> ByteBuffer in
-            return await self.getBuffer(request: request)
+            return await Self.getBuffer(request: request)
         }
         try app.XCTStart()
         defer { app.XCTStop() }
@@ -124,7 +124,7 @@ final class AsyncAwaitTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        let buffer = self.randomBuffer(size: 530_001)
+        let buffer = Self.randomBuffer(size: 530_001)
         app.XCTExecute(uri: "/size", method: .POST, body: buffer) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "530001")
