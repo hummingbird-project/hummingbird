@@ -58,7 +58,7 @@ public struct HBRouterGroup: HBRouterMethods {
         _ path: String = "",
         method: HTTPMethod,
         options: HBRouterMethodOptions = [],
-        use closure: @escaping (HBRequest) throws -> Output
+        use closure: @escaping @Sendable (HBRequest) throws -> Output
     ) -> Self {
         let responder = constructResponder(options: options, use: closure)
         let path = self.combinePaths(self.path, path)
@@ -71,7 +71,7 @@ public struct HBRouterGroup: HBRouterMethods {
         _ path: String = "",
         method: HTTPMethod,
         options: HBRouterMethodOptions = [],
-        use closure: @escaping (HBRequest) -> EventLoopFuture<Output>
+        use closure: @escaping @Sendable (HBRequest) -> EventLoopFuture<Output>
     ) -> Self {
         let responder = constructResponder(options: options, use: closure)
         let path = self.combinePaths(self.path, path)

@@ -16,7 +16,10 @@ import NIOCore
 import NIOHTTP1
 
 /// Responder that chooses the next responder to call based on the request method
-final class HBEndpointResponder: HBResponder {
+///
+/// Construction of HBEndpointResponder occurs in non-concurrent code. After that they are
+/// read-only
+final class HBEndpointResponder: HBResponder, @unchecked Sendable {
     init(path: String) {
         self.path = path
         self.methods = [:]
@@ -36,6 +39,6 @@ final class HBEndpointResponder: HBResponder {
         self.methods[method.rawValue] = responder
     }
 
-    var methods: [String: HBResponder]
-    var path: String
+    private var methods: [String: HBResponder]
+    private(set) var path: String
 }

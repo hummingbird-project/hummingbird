@@ -40,7 +40,7 @@ import NIOCore
 ///     }
 /// }
 /// ```
-public protocol HBMiddleware {
+public protocol HBMiddleware: Sendable {
     func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse>
 }
 

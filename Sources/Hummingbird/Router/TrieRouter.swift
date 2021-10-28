@@ -56,7 +56,7 @@ struct TrieRouter: HBRouter {
 }
 
 /// URI Path Trie
-struct RouterPathTrie<Value> {
+struct RouterPathTrie<Value>: Sendable {
     var root: Node
 
     init() {
@@ -97,7 +97,10 @@ struct RouterPathTrie<Value> {
     }
 
     /// Trie Node. Each node represents one component of a URI path
-    final class Node {
+    ///
+    /// Construction of TriNodes occurs in non-concurrent code. After that they are
+    /// read-only
+    final class Node: @unchecked Sendable {
         let key: RouterPath.Element
         var children: [Node]
         var value: Value?

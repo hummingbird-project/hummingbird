@@ -13,20 +13,20 @@
 //===----------------------------------------------------------------------===//
 
 /// Define media type of file
-public struct HBMediaType: CustomStringConvertible {
+public struct HBMediaType: CustomStringConvertible, Sendable {
     /// general category
     public let type: Category
     /// exact kind of data specified
     public let subType: String
     /// optional parameter
-    public let parameter: (name: String, value: String)?
+    public let parameter: Parameter?
 
     /// Initialize `HBMediaType`
     /// - Parameters:
     ///   - type: category
     ///   - subType: specific kind of data
     ///   - parameter: additional parameter
-    public init(type: Category, subType: String = "*", parameter: (String, String)? = nil) {
+    public init(type: Category, subType: String = "*", parameter: Parameter? = nil) {
         self.type = type
         self.subType = subType
         self.parameter = parameter
@@ -46,7 +46,7 @@ public struct HBMediaType: CustomStringConvertible {
 
         var category: Category?
         var subCategory: String?
-        var parameter: (String, String)?
+        var parameter: Parameter?
 
         while state != .finished {
             switch state {
@@ -90,7 +90,7 @@ public struct HBMediaType: CustomStringConvertible {
                 } else {
                     value = parser.readUntilTheEnd().string
                 }
-                parameter = (key, value)
+                parameter = .init(name: key, value: value)
                 state = .finished
 
             case .finished:
@@ -110,7 +110,7 @@ public struct HBMediaType: CustomStringConvertible {
 
     /// Return media type with new parameter
     public func withParameter(name: String, value: String) -> HBMediaType {
-        return .init(type: self.type, subType: self.subType, parameter: (name, value))
+        return .init(type: self.type, subType: self.subType, parameter: .init(name: name, value: value))
     }
 
     /// Output
@@ -141,7 +141,7 @@ public struct HBMediaType: CustomStringConvertible {
     }
 
     /// Media type categories
-    public enum Category: String, Equatable {
+    public enum Category: String, Equatable, Sendable {
         case application
         case audio
         case example
@@ -161,6 +161,17 @@ public struct HBMediaType: CustomStringConvertible {
             default:
                 return lhs.rawValue == rhs.rawValue
             }
+        }
+    }
+
+    /// Media type parameter
+    public struct Parameter: Sendable {
+        public let name: String
+        public let value: String
+
+        public init(name: String, value: String) {
+            self.name = name
+            self.value = value
         }
     }
 

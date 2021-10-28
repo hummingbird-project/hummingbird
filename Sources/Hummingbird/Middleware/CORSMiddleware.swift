@@ -22,7 +22,7 @@ import NIOCore
 /// "access-control-allow-origin" header
 public struct HBCORSMiddleware: HBMiddleware {
     /// Defines what origins are allowed
-    public enum AllowOrigin {
+    public enum AllowOrigin: Sendable {
         case none
         case all
         case originBased

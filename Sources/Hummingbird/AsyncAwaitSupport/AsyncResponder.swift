@@ -19,9 +19,9 @@ import NIO
 /// Responder that calls supplied closure
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
 public struct HBAsyncCallbackResponder: HBResponder {
-    let callback: (HBRequest) async throws -> HBResponse
+    let callback: @Sendable (HBRequest) async throws -> HBResponse
 
-    public init(callback: @escaping (HBRequest) async throws -> HBResponse) {
+    public init(callback: @escaping @Sendable (HBRequest) async throws -> HBResponse) {
         self.callback = callback
     }
 

@@ -17,8 +17,10 @@ import Logging
 import NIOCore
 import NIOPosix
 
+extension NonBlockingFileIO: @unchecked Sendable {}
+
 /// Manages File reading and writing.
-public struct HBFileIO {
+public struct HBFileIO: Sendable {
     let fileIO: NonBlockingFileIO
     let chunkSize: Int
 

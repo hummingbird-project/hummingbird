@@ -19,6 +19,7 @@ import NIOCore
 import NIOHTTP1
 
 extension Logger: @unchecked Sendable {}
+extension Logger.Level: @unchecked Sendable {}
 
 /// Holds all the values required to process a request
 public struct HBRequest: HBSendableExtensible, Sendable {
