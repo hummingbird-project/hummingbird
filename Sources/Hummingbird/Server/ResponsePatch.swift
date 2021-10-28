@@ -27,7 +27,8 @@ extension HBRequest {
     ///     return "hello"
     /// }
     /// ```
-    public final class ResponsePatch {
+    /// Setting this to @unchecked Sendable is a little irresponsible as it could be the cause of a
+    public final class ResponsePatch: @unchecked Sendable {
         /// patch status of reponse
         public var status: HTTPResponseStatus?
         /// headers to add to response

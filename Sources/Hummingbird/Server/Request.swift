@@ -18,8 +18,10 @@ import NIOConcurrencyHelpers
 import NIOCore
 import NIOHTTP1
 
+extension Logger: @unchecked Sendable {}
+
 /// Holds all the values required to process a request
-public struct HBRequest: HBExtensible {
+public struct HBRequest: HBSendableExtensible, Sendable {
     // MARK: Member variables
 
     /// URI path
@@ -37,7 +39,7 @@ public struct HBRequest: HBExtensible {
     /// reference to application
     public var application: HBApplication { self._internal.application }
     /// Request extensions
-    public var extensions: HBExtensions<HBRequest>
+    public var extensions: HBSendableExtensions<HBRequest>
     /// Request context (eventLoop, bytebuffer allocator and remote address)
     public var context: HBRequestContext { self._internal.context }
     /// EventLoop request is running on
@@ -89,7 +91,7 @@ public struct HBRequest: HBExtensible {
         )
         self.body = body
         self.logger = application.logger.with(metadataKey: "hb_id", value: .stringConvertible(Self.globalRequestID.add(1)))
-        self.extensions = HBExtensions()
+        self.extensions = .init()
     }
 
     // MARK: Methods
@@ -127,7 +129,7 @@ public struct HBRequest: HBExtensible {
 
     /// Store all the read-only values of the request in a class to avoid copying them
     /// everytime we pass the `HBRequest` struct about
-    final class _Internal {
+    final class _Internal: @unchecked Sendable {
         internal init(uri: HBURL, version: HTTPVersion, method: HTTPMethod, headers: HTTPHeaders, application: HBApplication, context: HBRequestContext, endpointPath: String? = nil) {
             self.uri = uri
             self.version = version

@@ -160,7 +160,9 @@ public struct HBFileIO {
     }
 
     /// class used to stream files
-    final class FileStreamer: HBResponseBodyStreamer {
+    ///
+    /// Setting to @unchecked Sendable given the access is fixed to one EventLoop
+    final class FileStreamer: HBResponseBodyStreamer, @unchecked Sendable {
         let chunkSize: Int
         let handle: NIOFileHandle
         var fileOffset: Int

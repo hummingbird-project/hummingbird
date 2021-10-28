@@ -18,7 +18,7 @@
 // https://github.com/fabianfett/pure-swift-json/blob/master/Sources/PureSwiftJSONParsing/DocumentReader.swift
 
 /// Reader object for parsing String buffers
-public struct HBParser {
+public struct HBParser: Sendable {
     public enum Error: Swift.Error {
         case overflow
         case unexpected

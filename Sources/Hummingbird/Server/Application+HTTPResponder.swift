@@ -67,7 +67,10 @@ extension HBApplication {
     }
 
     /// Context object for Channel to be provided to HBRequest
-    struct ChannelRequestContext: HBRequestContext {
+    ///
+    /// Can set this to @unchecked Sendable as the elements of a `Channel` accessed are
+    /// never changed during the processing of a `HBRequest`
+    struct ChannelRequestContext: HBRequestContext, @unchecked Sendable {
         let channel: Channel
         var eventLoop: EventLoop { return self.channel.eventLoop }
         var allocator: ByteBufferAllocator { return self.channel.allocator }
