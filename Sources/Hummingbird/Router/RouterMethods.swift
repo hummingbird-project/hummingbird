@@ -28,13 +28,8 @@ public struct HBRouterMethodOptions: OptionSet, HBSendable {
 }
 
 public protocol HBRouterMethods {
-    #if swift(>=5.5) && canImport(_Concurrency)
-    typealias Handler<Output> = @Sendable (HBRequest) throws -> Output
-    typealias FutureHandler<Output> = @Sendable (HBRequest) -> EventLoopFuture<Output>
-    #else
     typealias Handler<Output> = (HBRequest) throws -> Output
     typealias FutureHandler<Output> = (HBRequest) -> EventLoopFuture<Output>
-    #endif
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
     @discardableResult func on<Output: HBResponseGenerator>(
@@ -53,13 +48,16 @@ public protocol HBRouterMethods {
     ) -> Self
 
     #if compiler(>=5.5) && canImport(_Concurrency)
+    
+    typealias AsyncHandler<Output> = @Sendable (HBRequest) async throws -> Output
+
     /// Add path for async closure
     @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
     @discardableResult func on<Output: HBResponseGenerator>(
         _ path: String,
         method: HTTPMethod,
         options: HBRouterMethodOptions,
-        use: @escaping @Sendable (HBRequest) async throws -> Output
+        use: @escaping AsyncHandler<Output>
     ) -> Self
     #endif // compiler(>=5.5) && canImport(_Concurrency)
 

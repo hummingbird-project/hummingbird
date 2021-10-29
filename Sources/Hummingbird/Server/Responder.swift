@@ -24,11 +24,7 @@ public protocol HBResponder: HBSendable {
 
 /// Responder that calls supplied closure
 public struct HBCallbackResponder: HBResponder {
-    #if swift(>=5.5) && canImport(_Concurrency)
-    public typealias Callback = @Sendable (HBRequest) -> EventLoopFuture<HBResponse>
-    #else
     public typealias Callback = (HBRequest) -> EventLoopFuture<HBResponse>
-    #endif
     
     let callback: Callback
 
@@ -41,3 +37,10 @@ public struct HBCallbackResponder: HBResponder {
         return self.callback(request)
     }
 }
+
+#if swift(>=5.5) && canImport(_Concurrency)
+
+/// Use @unchecked here to avoid pushing the Sendable checks into the non-async code
+extension HBCallbackResponder: @unchecked HBSendable {}
+
+#endif
