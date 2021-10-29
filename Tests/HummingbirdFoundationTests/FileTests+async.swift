@@ -79,4 +79,3 @@ class HummingbirdAsyncFilesTests: XCTestCase {
 }
 
 #endif // compiler(>=5.5) && canImport(_Concurrency)
-
