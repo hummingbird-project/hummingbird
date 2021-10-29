@@ -12,12 +12,20 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// Context that created HBRequest.
-public protocol HBRequestContext: HBSendable {
-    /// EventLoop request is running on
-    var eventLoop: EventLoop { get }
-    /// ByteBuffer allocator used by request
-    var allocator: ByteBufferAllocator { get }
-    /// Connected host address
-    var remoteAddress: SocketAddress? { get }
-}
+import Logging
+import NIOHTTP1
+
+#if swift(>=5.5) && canImport(_Concurrency)
+
+// imported symbols that need Sendable conformance
+// from Logging
+extension Logger: @unchecked HBSendable {}
+extension Logger.Level: @unchecked HBSendable {}
+// from NIOCore
+// from NIOHTTP1
+extension HTTPVersion: @unchecked HBSendable {}
+extension HTTPMethod: @unchecked HBSendable {}
+extension HTTPHeaders: @unchecked HBSendable {}
+extension HTTPResponseStatus: @unchecked Sendable {}
+
+#endif

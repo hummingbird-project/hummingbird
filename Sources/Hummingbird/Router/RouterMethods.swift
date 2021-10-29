@@ -15,7 +15,7 @@
 import NIOCore
 import NIOHTTP1
 
-public struct HBRouterMethodOptions: OptionSet, Sendable {
+public struct HBRouterMethodOptions: OptionSet, HBSendable {
     public let rawValue: Int
     public init(rawValue: Int) {
         self.rawValue = rawValue
@@ -28,12 +28,20 @@ public struct HBRouterMethodOptions: OptionSet, Sendable {
 }
 
 public protocol HBRouterMethods {
+    #if swift(>=5.5) && canImport(_Concurrency)
+    typealias Handler<Output> = @Sendable (HBRequest) throws -> Output
+    typealias FutureHandler<Output> = @Sendable (HBRequest) -> EventLoopFuture<Output>
+    #else
+    typealias Handler<Output> = (HBRequest) throws -> Output
+    typealias FutureHandler<Output> = (HBRequest) -> EventLoopFuture<Output>
+    #endif
+
     /// Add path for closure returning type conforming to ResponseFutureEncodable
     @discardableResult func on<Output: HBResponseGenerator>(
         _ path: String,
         method: HTTPMethod,
         options: HBRouterMethodOptions,
-        use: @escaping @Sendable (HBRequest) throws -> Output
+        use: @escaping Handler<Output>
     ) -> Self
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
@@ -41,7 +49,7 @@ public protocol HBRouterMethods {
         _ path: String,
         method: HTTPMethod,
         options: HBRouterMethodOptions,
-        use: @escaping @Sendable (HBRequest) -> EventLoopFuture<Output>
+        use: @escaping FutureHandler<Output>
     ) -> Self
 
     #if compiler(>=5.5) && canImport(_Concurrency)
@@ -64,7 +72,7 @@ extension HBRouterMethods {
     @discardableResult public func get<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping @Sendable (HBRequest) throws -> Output
+        use handler: @escaping Handler<Output>
     ) -> Self {
         return on(path, method: .GET, options: options, use: handler)
     }
@@ -73,7 +81,7 @@ extension HBRouterMethods {
     @discardableResult public func put<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping @Sendable (HBRequest) throws -> Output
+        use handler: @escaping Handler<Output>
     ) -> Self {
         return on(path, method: .PUT, options: options, use: handler)
     }
@@ -82,7 +90,7 @@ extension HBRouterMethods {
     @discardableResult public func post<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping @Sendable (HBRequest) throws -> Output
+        use handler: @escaping Handler<Output>
     ) -> Self {
         return on(path, method: .POST, options: options, use: handler)
     }
@@ -91,7 +99,7 @@ extension HBRouterMethods {
     @discardableResult public func head<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping @Sendable (HBRequest) throws -> Output
+        use handler: @escaping Handler<Output>
     ) -> Self {
         return on(path, method: .HEAD, options: options, use: handler)
     }
@@ -100,7 +108,7 @@ extension HBRouterMethods {
     @discardableResult public func delete<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping @Sendable (HBRequest) throws -> Output
+        use handler: @escaping Handler<Output>
     ) -> Self {
         return on(path, method: .DELETE, options: options, use: handler)
     }
@@ -109,7 +117,7 @@ extension HBRouterMethods {
     @discardableResult public func patch<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping @Sendable (HBRequest) throws -> Output
+        use handler: @escaping Handler<Output>
     ) -> Self {
         return on(path, method: .PATCH, options: options, use: handler)
     }
@@ -118,7 +126,7 @@ extension HBRouterMethods {
     @discardableResult public func get<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping @Sendable (HBRequest) -> EventLoopFuture<Output>
+        use handler: @escaping FutureHandler<Output>
     ) -> Self {
         return on(path, method: .GET, options: options, use: handler)
     }
@@ -127,7 +135,7 @@ extension HBRouterMethods {
     @discardableResult public func put<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping @Sendable (HBRequest) -> EventLoopFuture<Output>
+        use handler: @escaping FutureHandler<Output>
     ) -> Self {
         return on(path, method: .PUT, options: options, use: handler)
     }
@@ -136,7 +144,7 @@ extension HBRouterMethods {
     @discardableResult public func delete<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping @Sendable (HBRequest) -> EventLoopFuture<Output>
+        use handler: @escaping FutureHandler<Output>
     ) -> Self {
         return on(path, method: .DELETE, options: options, use: handler)
     }
@@ -145,7 +153,7 @@ extension HBRouterMethods {
     @discardableResult public func head<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping @Sendable (HBRequest) -> EventLoopFuture<Output>
+        use handler: @escaping FutureHandler<Output>
     ) -> Self {
         return on(path, method: .HEAD, options: options, use: handler)
     }
@@ -154,7 +162,7 @@ extension HBRouterMethods {
     @discardableResult public func post<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping @Sendable (HBRequest) -> EventLoopFuture<Output>
+        use handler: @escaping FutureHandler<Output>
     ) -> Self {
         return on(path, method: .POST, options: options, use: handler)
     }
@@ -163,34 +171,38 @@ extension HBRouterMethods {
     @discardableResult public func patch<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping @Sendable (HBRequest) -> EventLoopFuture<Output>
+        use handler: @escaping FutureHandler<Output>
     ) -> Self {
         return on(path, method: .PATCH, options: options, use: handler)
     }
 }
 
 extension HBRouterMethods {
+    // generate response from request. Moved repeated code into private function
+    private static func respond<Output: HBResponseGenerator>(
+        request: HBRequest,
+        options: HBRouterMethodOptions,
+        use closure: @escaping Handler<Output>
+    ) throws -> HBResponse {
+        let response: HBResponse
+        if options.contains(.editResponse) {
+            var request = request
+            request.response = .init()
+            response = try closure(request).patchedResponse(from: request)
+        } else {
+            response = try closure(request).response(from: request)
+        }
+        return response
+    }
+    
     func constructResponder<Output: HBResponseGenerator>(
         options: HBRouterMethodOptions,
-        use closure: @escaping @Sendable (HBRequest) throws -> Output
+        use closure: @escaping Handler<Output>
     ) -> HBResponder {
-        // generate response from request. Moved repeated code into internal function
-        @Sendable func _respond(request: HBRequest) throws -> HBResponse {
-            let response: HBResponse
-            if options.contains(.editResponse) {
-                var request = request
-                request.response = .init()
-                response = try closure(request).patchedResponse(from: request)
-            } else {
-                response = try closure(request).response(from: request)
-            }
-            return response
-        }
-
         if options.contains(.streamBody) {
             return HBCallbackResponder { request in
                 do {
-                    let response = try _respond(request: request)
+                    let response = try Self.respond(request: request, options: options, use: closure)
                     return request.success(response)
                 } catch {
                     return request.failure(error)
@@ -200,7 +212,7 @@ extension HBRouterMethods {
             return HBCallbackResponder { request in
                 if case .byteBuffer = request.body {
                     do {
-                        let response = try _respond(request: request)
+                        let response = try Self.respond(request: request, options: options, use: closure)
                         return request.success(response)
                     } catch {
                         return request.failure(error)
@@ -209,43 +221,47 @@ extension HBRouterMethods {
                     return request.body.consumeBody(on: request.eventLoop).flatMapThrowing { buffer in
                         var request = request
                         request.body = .byteBuffer(buffer)
-                        return try _respond(request: request)
+                        return try Self.respond(request: request, options: options, use: closure)
                     }
                 }
             }
         }
     }
 
+    // generate response from request. Moved repeated code into internal function
+    private static func respond<Output: HBResponseGenerator>(
+        request: HBRequest,
+        options: HBRouterMethodOptions,
+        use closure: @escaping FutureHandler<Output>
+    ) -> EventLoopFuture<HBResponse> {
+        var request = request
+        let responseFuture: EventLoopFuture<HBResponse>
+        if options.contains(.editResponse) {
+            request.response = .init()
+            responseFuture = closure(request).flatMapThrowing { try $0.patchedResponse(from: request) }
+        } else {
+            responseFuture = closure(request).flatMapThrowing { try $0.response(from: request) }
+        }
+        return responseFuture.hop(to: request.eventLoop)
+    }
+
     func constructResponder<Output: HBResponseGenerator>(
         options: HBRouterMethodOptions,
-        use closure: @escaping @Sendable (HBRequest) -> EventLoopFuture<Output>
+        use closure: @escaping FutureHandler<Output>
     ) -> HBResponder {
-        // generate response from request. Moved repeated code into internal function
-        @Sendable func _respond(request: HBRequest) -> EventLoopFuture<HBResponse> {
-            var request = request
-            let responseFuture: EventLoopFuture<HBResponse>
-            if options.contains(.editResponse) {
-                request.response = .init()
-                responseFuture = closure(request).flatMapThrowing { try $0.patchedResponse(from: request) }
-            } else {
-                responseFuture = closure(request).flatMapThrowing { try $0.response(from: request) }
-            }
-            return responseFuture.hop(to: request.eventLoop)
-        }
-
         if options.contains(.streamBody) {
             return HBCallbackResponder { request in
-                return _respond(request: request)
+                return Self.respond(request: request, options: options, use: closure)
             }
         } else {
             return HBCallbackResponder { request in
                 var request = request
                 if case .byteBuffer = request.body {
-                    return _respond(request: request)
+                    return Self.respond(request: request, options: options, use: closure)
                 } else {
                     return request.body.consumeBody(on: request.eventLoop).flatMap { buffer in
                         request.body = .byteBuffer(buffer)
-                        return _respond(request: request)
+                        return Self.respond(request: request, options: options, use: closure)
                     }
                 }
             }

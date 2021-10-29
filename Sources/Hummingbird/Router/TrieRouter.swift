@@ -56,7 +56,7 @@ struct TrieRouter: HBRouter {
 }
 
 /// URI Path Trie
-struct RouterPathTrie<Value>: Sendable {
+struct RouterPathTrie<Value>: HBSendable {
     var root: Node
 
     init() {
@@ -100,7 +100,7 @@ struct RouterPathTrie<Value>: Sendable {
     ///
     /// Construction of TriNodes occurs in non-concurrent code. After that they are
     /// read-only
-    final class Node: @unchecked Sendable {
+    final class Node {
         let key: RouterPath.Element
         var children: [Node]
         var value: Value?
@@ -132,3 +132,9 @@ struct RouterPathTrie<Value>: Sendable {
         }
     }
 }
+
+#if swift(>=5.5) && canImport(_Concurrency)
+/// Construction of HBEndpointResponder occurs in non-concurrent code. After that they are
+/// read-only
+extension RouterPathTrie.Node: @unchecked HBSendable {}
+#endif

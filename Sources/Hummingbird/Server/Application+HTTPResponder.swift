@@ -67,13 +67,16 @@ extension HBApplication {
     }
 
     /// Context object for Channel to be provided to HBRequest
-    ///
-    /// Can set this to @unchecked Sendable as the elements of a `Channel` accessed are
-    /// never changed during the processing of a `HBRequest`
-    struct ChannelRequestContext: HBRequestContext, @unchecked Sendable {
+    struct ChannelRequestContext: HBRequestContext {
         let channel: Channel
         var eventLoop: EventLoop { return self.channel.eventLoop }
         var allocator: ByteBufferAllocator { return self.channel.allocator }
         var remoteAddress: SocketAddress? { return self.channel.remoteAddress }
     }
 }
+
+#if swift(>=5.5) && canImport(_Concurrency)
+/// Can set this to @unchecked Sendable as the elements of a `Channel` accessed are
+/// never changed during the processing of a `HBRequest`
+extension HBApplication.ChannelRequestContext: @unchecked HBSendable {}
+#endif

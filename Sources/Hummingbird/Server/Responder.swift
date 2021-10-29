@@ -17,16 +17,22 @@ import NIOCore
 /// Protocol for object that produces a response given a request
 ///
 /// This is the core protocol for Hummingbird. It defines an object that can respond to a request.
-public protocol HBResponder: Sendable {
+public protocol HBResponder: HBSendable {
     /// Return EventLoopFuture that will be fulfilled with response to the request supplied
     func respond(to request: HBRequest) -> EventLoopFuture<HBResponse>
 }
 
 /// Responder that calls supplied closure
 public struct HBCallbackResponder: HBResponder {
-    let callback: @Sendable (HBRequest) -> EventLoopFuture<HBResponse>
+    #if swift(>=5.5) && canImport(_Concurrency)
+    public typealias Callback = @Sendable (HBRequest) -> EventLoopFuture<HBResponse>
+    #else
+    public typealias Callback = (HBRequest) -> EventLoopFuture<HBResponse>
+    #endif
+    
+    let callback: Callback
 
-    public init(callback: @escaping @Sendable (HBRequest) -> EventLoopFuture<HBResponse>) {
+    public init(callback: @escaping Callback) {
         self.callback = callback
     }
 

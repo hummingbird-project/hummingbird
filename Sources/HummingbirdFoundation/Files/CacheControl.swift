@@ -15,8 +15,8 @@
 import Hummingbird
 
 /// Associates cache control values with filename
-public struct HBCacheControl: Sendable {
-    public enum Value: CustomStringConvertible, Sendable {
+public struct HBCacheControl: HBSendable {
+    public enum Value: CustomStringConvertible, HBSendable {
         case noStore
         case noCache
         case `private`
@@ -62,7 +62,7 @@ public struct HBCacheControl: Sendable {
             .joined(separator: ", ")
     }
 
-    private struct Entry: Sendable {
+    private struct Entry: HBSendable {
         let mediaType: HBMediaType
         let cacheControl: [Value]
     }

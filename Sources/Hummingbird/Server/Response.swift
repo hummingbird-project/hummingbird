@@ -15,11 +15,8 @@
 import HummingbirdCore
 import NIOHTTP1
 
-extension HTTPResponseStatus: @unchecked Sendable {}
-extension HTTPHeaders: @unchecked Sendable {}
-
 /// Holds all the required to generate a HTTP Response
-public struct HBResponse: HBSendableExtensible, Sendable {
+public struct HBResponse: HBSendableExtensible, HBSendable {
     /// response status
     public var status: HTTPResponseStatus
     /// response headers

@@ -59,7 +59,7 @@ extension HBRouter {
         _ path: String,
         method: HTTPMethod,
         options: HBRouterMethodOptions = [],
-        use closure: @escaping @Sendable (HBRequest) throws -> Output
+        use closure: @escaping Handler<Output>
     ) -> Self {
         let responder = constructResponder(options: options, use: closure)
         add(path, method: method, responder: responder)
@@ -71,7 +71,7 @@ extension HBRouter {
         _ path: String,
         method: HTTPMethod,
         options: HBRouterMethodOptions = [],
-        use closure: @escaping @Sendable (HBRequest) -> EventLoopFuture<Output>
+        use closure: @escaping FutureHandler<Output>
     ) -> Self {
         let responder = constructResponder(options: options, use: closure)
         add(path, method: method, responder: responder)

@@ -37,7 +37,7 @@
 ///     }
 /// }
 /// ```
-public protocol HBRouteHandler: Sendable {
+public protocol HBRouteHandler: HBSendable {
     associatedtype _Output
     init(from: HBRequest) throws
     func handle(request: HBRequest) throws -> _Output

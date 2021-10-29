@@ -12,12 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// Context that created HBRequest.
-public protocol HBRequestContext: HBSendable {
-    /// EventLoop request is running on
-    var eventLoop: EventLoop { get }
-    /// ByteBuffer allocator used by request
-    var allocator: ByteBufferAllocator { get }
-    /// Connected host address
-    var remoteAddress: SocketAddress? { get }
-}
+import NIOPosix
+
+#if swift(>=5.5) && canImport(_Concurrency)
+
+// imported symbols that need Sendable conformance
+// from NIOPosix
+extension NonBlockingFileIO: @unchecked Sendable {}
+
+#endif

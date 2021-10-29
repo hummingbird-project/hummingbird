@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Store for parameters key, value pairs extracted from URI
-public struct HBParameters: Sendable {
+public struct HBParameters: HBSendable {
     internal var parameters: [Substring: Substring]
 
     init() {

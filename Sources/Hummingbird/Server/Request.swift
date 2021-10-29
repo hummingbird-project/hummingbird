@@ -18,11 +18,8 @@ import NIOConcurrencyHelpers
 import NIOCore
 import NIOHTTP1
 
-extension Logger: @unchecked Sendable {}
-extension Logger.Level: @unchecked Sendable {}
-
 /// Holds all the values required to process a request
-public struct HBRequest: HBSendableExtensible, Sendable {
+public struct HBRequest: HBSendableExtensible, HBSendable {
     // MARK: Member variables
 
     /// URI path
@@ -130,7 +127,7 @@ public struct HBRequest: HBSendableExtensible, Sendable {
 
     /// Store all the read-only values of the request in a class to avoid copying them
     /// everytime we pass the `HBRequest` struct about
-    final class _Internal: @unchecked Sendable {
+    final class _Internal {
         internal init(uri: HBURL, version: HTTPVersion, method: HTTPMethod, headers: HTTPHeaders, application: HBApplication, context: HBRequestContext, endpointPath: String? = nil) {
             self.uri = uri
             self.version = version
@@ -181,3 +178,7 @@ extension HBRequest: CustomStringConvertible {
         "uri: \(self.uri), version: \(self.version), method: \(self.method), headers: \(self.headers), body: \(self.body)"
     }
 }
+
+#if swift(>=5.5) && canImport(_Concurrency)
+extension HBRequest._Internal: @unchecked HBSendable {}
+#endif

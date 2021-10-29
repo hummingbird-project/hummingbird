@@ -93,21 +93,19 @@ public protocol HBExtensible {
 }
 
 /// Version of `HBExtensions` that requires all extensions are sendable
-///
-/// This is @unchecked Sendable as the PartialKeyPath in the item dictionary is not Sendable
-public struct HBSendableExtensions<ParentObject>: @unchecked Sendable {
+public struct HBSendableExtensions<ParentObject> {
     /// Initialize extensions
     public init() {
         self.items = [:]
     }
 
     /// Get optional extension from a `KeyPath`
-    public func get<Type: Sendable>(_ key: KeyPath<ParentObject, Type>) -> Type? {
+    public func get<Type: HBSendable>(_ key: KeyPath<ParentObject, Type>) -> Type? {
         self.items[key]?.value as? Type
     }
 
     /// Get extension from a `KeyPath`
-    public func get<Type: Sendable>(_ key: KeyPath<ParentObject, Type>, error: StaticString? = nil) -> Type {
+    public func get<Type: HBSendable>(_ key: KeyPath<ParentObject, Type>, error: StaticString? = nil) -> Type {
         guard let value = items[key]?.value as? Type else {
             preconditionFailure(error?.description ?? "Cannot get extension of type \(Type.self) without having set it")
         }
@@ -115,7 +113,7 @@ public struct HBSendableExtensions<ParentObject>: @unchecked Sendable {
     }
 
     /// Return if extension has been set
-    public func exists<Type: Sendable>(_ key: KeyPath<ParentObject, Type>) -> Bool {
+    public func exists<Type: HBSendable>(_ key: KeyPath<ParentObject, Type>) -> Bool {
         self.items[key]?.value != nil
     }
 
@@ -124,7 +122,7 @@ public struct HBSendableExtensions<ParentObject>: @unchecked Sendable {
     ///   - key: KeyPath
     ///   - value: value to store in extension
     ///   - shutdownCallback: closure to call when extensions are shutsdown
-    public mutating func set<Type: Sendable>(_ key: KeyPath<ParentObject, Type>, value: Type) {
+    public mutating func set<Type: HBSendable>(_ key: KeyPath<ParentObject, Type>, value: Type) {
         self.items[key] = .init(
             value: value
         )
@@ -142,3 +140,7 @@ public protocol HBSendableExtensible {
     var extensions: HBSendableExtensions<Self> { get set }
 }
 
+#if swift(>=5.5) && canImport(_Concurrency)
+/// Conform to @unchecked Sendable as the PartialKeyPath in the item dictionary is not Sendable
+extension HBSendableExtensions: @unchecked HBSendable {}
+#endif

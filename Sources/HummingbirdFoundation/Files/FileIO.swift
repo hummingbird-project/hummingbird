@@ -17,10 +17,8 @@ import Logging
 import NIOCore
 import NIOPosix
 
-extension NonBlockingFileIO: @unchecked Sendable {}
-
 /// Manages File reading and writing.
-public struct HBFileIO: Sendable {
+public struct HBFileIO: HBSendable {
     let fileIO: NonBlockingFileIO
     let chunkSize: Int
 
@@ -162,9 +160,7 @@ public struct HBFileIO: Sendable {
     }
 
     /// class used to stream files
-    ///
-    /// Setting to @unchecked Sendable given the access is fixed to one EventLoop
-    final class FileStreamer: HBResponseBodyStreamer, @unchecked Sendable {
+    final class FileStreamer: HBResponseBodyStreamer {
         let chunkSize: Int
         let handle: NIOFileHandle
         var fileOffset: Int
@@ -202,3 +198,8 @@ public struct HBFileIO: Sendable {
         }
     }
 }
+
+#if swift(>=5.5) && canImport(_Concurrency)
+/// Setting to @unchecked Sendable given the access is fixed to one EventLoop
+extension HBFileIO.FileStreamer: @unchecked HBSendable {}
+#endif

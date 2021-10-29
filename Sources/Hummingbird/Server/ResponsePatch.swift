@@ -27,8 +27,7 @@ extension HBRequest {
     ///     return "hello"
     /// }
     /// ```
-    /// Setting this to @unchecked Sendable is a little irresponsible as it could be the cause of a
-    public final class ResponsePatch: @unchecked Sendable {
+    public final class ResponsePatch {
         /// patch status of reponse
         public var status: HTTPResponseStatus?
         /// headers to add to response
@@ -153,3 +152,8 @@ extension HTTPHeaders {
         }
     }
 }
+
+#if swift(>=5.5) && canImport(_Concurrency)
+/// Setting this to @unchecked Sendable is a little irresponsible. 
+extension HBRequest.ResponsePatch: @unchecked HBSendable {}
+#endif
