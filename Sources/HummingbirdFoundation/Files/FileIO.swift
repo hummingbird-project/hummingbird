@@ -36,14 +36,15 @@ public struct HBFileIO {
     /// - Parameters:
     ///   - path: System file path
     ///   - context: Context this request is being called in
-    /// - Returns: Response body plus file size
+    /// - Returns: Response body
     public func loadFile(path: String, context: HBRequestContext, logger: Logger) -> EventLoopFuture<HBResponseBody> {
         return self.fileIO.openFile(path: path, eventLoop: context.eventLoop).flatMap { handle, region in
             logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
 
             let futureResult: EventLoopFuture<HBResponseBody>
             if region.readableBytes > self.chunkSize {
-                futureResult = streamFile(handle: handle, region: region, context: context)
+                let stream = streamFile(handle: handle, region: region, context: context)
+                futureResult = context.eventLoop.makeSucceededFuture(stream)
             } else {
                 futureResult = loadFile(handle: handle, region: region, context: context)
                 // only close file handle for load, as streamer hasn't loaded data at this point
@@ -78,8 +79,8 @@ public struct HBFileIO {
 
             let futureResult: EventLoopFuture<(HBResponseBody, Int)>
             if loadRegion.readableBytes > self.chunkSize {
-                futureResult = streamFile(handle: handle, region: loadRegion, context: context)
-                    .map { ($0, region.readableBytes) }
+                let stream = streamFile(handle: handle, region: loadRegion, context: context)
+                futureResult = context.eventLoop.makeSucceededFuture((stream, region.readableBytes))
             } else {
                 futureResult = loadFile(handle: handle, region: loadRegion, context: context)
                     .map { ($0, region.readableBytes) }
@@ -135,7 +136,7 @@ public struct HBFileIO {
     }
 
     /// Return streamer that will load file
-    func streamFile(handle: NIOFileHandle, region: FileRegion, context: HBRequestContext) -> EventLoopFuture<HBResponseBody> {
+    func streamFile(handle: NIOFileHandle, region: FileRegion, context: HBRequestContext) -> HBResponseBody {
         let fileStreamer = FileStreamer(
             handle: handle,
             fileRegion: region,
@@ -143,7 +144,7 @@ public struct HBFileIO {
             chunkSize: self.chunkSize,
             allocator: context.allocator
         )
-        return context.eventLoop.makeSucceededFuture(.stream(fileStreamer))
+        return .stream(fileStreamer)
     }
 
     /// write byte buffer to file
