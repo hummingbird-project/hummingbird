@@ -36,7 +36,7 @@ public struct HBFileIO {
     /// - Parameters:
     ///   - path: System file path
     ///   - context: Context this request is being called in
-    /// - Returns: Response body plus file size
+    /// - Returns: Response body
     public func loadFile(path: String, context: HBRequestContext, logger: Logger) -> EventLoopFuture<HBResponseBody> {
         return self.fileIO.openFile(path: path, eventLoop: context.eventLoop).flatMap { handle, region in
             logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
