@@ -64,31 +64,31 @@ class URLEncodedFormNodeTests: XCTestCase {
     func testSimple() {
         let values = "one=1&two=2&three=3"
         let encoded: URLEncodedFormNode = ["one": "1", "two": "2", "three": "3"]
-        testDecodeEncode(values, encoded: encoded)
+        self.testDecodeEncode(values, encoded: encoded)
     }
 
     func testArray() {
         let values = "array[]=1&array[]=2&array[]=3&array[]=6"
         let encoded: URLEncodedFormNode = ["array": ["1", "2", "3", "6"]]
-        testDecodeEncode(values, encoded: encoded)
+        self.testDecodeEncode(values, encoded: encoded)
     }
 
     func testMap() {
         let values = "map[one]=1&map[two]=2&map[three]=3&map[six]=6"
         let encoded: URLEncodedFormNode = ["map": ["one": "1", "two": "2", "three": "3", "six": "6"]]
-        testDecodeEncode(values, encoded: encoded)
+        self.testDecodeEncode(values, encoded: encoded)
     }
 
     func testMapArray() {
         let values = "map[numbers][]=1&map[numbers][]=2"
         let encoded: URLEncodedFormNode = ["map": ["numbers": ["1", "2"]]]
-        testDecodeEncode(values, encoded: encoded)
+        self.testDecodeEncode(values, encoded: encoded)
     }
 
     func testMapMap() {
         let values = "map[numbers][one]=1&map[numbers][two]=2"
         let encoded: URLEncodedFormNode = ["map": ["numbers": ["one": "1", "two": "2"]]]
-        testDecodeEncode(values, encoded: encoded)
+        self.testDecodeEncode(values, encoded: encoded)
     }
 
     func testPlusSign() {
