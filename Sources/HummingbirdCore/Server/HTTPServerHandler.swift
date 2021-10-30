@@ -86,12 +86,12 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
         case (.end, .head(let head)):
             self.state = .idle
             let request = HBHTTPRequest(head: head, body: .byteBuffer(nil))
-            readRequest(context: context, request: request)
+            self.readRequest(context: context, request: request)
 
         case (.end, .body(let head, let buffer)):
             self.state = .idle
             let request = HBHTTPRequest(head: head, body: .byteBuffer(buffer))
-            readRequest(context: context, request: request)
+            self.readRequest(context: context, request: request)
 
         case (.end, .streamingBody(let streamer)):
             self.state = .idle
