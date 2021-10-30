@@ -46,7 +46,7 @@ class URLEncodedFormEncoderTests: XCTestCase {
             }
         }
         let test = Test(a: "Testing", b: 42)
-        testForm(test, query: "A=Testing&B=42")
+        self.testForm(test, query: "A=Testing&B=42")
     }
 
     func testNumbers() {
@@ -66,7 +66,7 @@ class URLEncodedFormEncoderTests: XCTestCase {
             let d: Double
         }
         let test = Test(b: true, i: 34, i8: 23, i16: 9, i32: -6872, i64: 23, u: 0, u8: 255, u16: 7673, u32: 88222, u64: 234, f: -1.1, d: 8)
-        testForm(test, query: "b=true&i=34&i8=23&i16=9&i32=-6872&i64=23&u=0&u8=255&u16=7673&u32=88222&u64=234&f=-1.1&d=8.0")
+        self.testForm(test, query: "b=true&i=34&i8=23&i16=9&i32=-6872&i64=23&u=0&u8=255&u16=7673&u32=88222&u64=234&f=-1.1&d=8.0")
     }
 
     func testNumberArrays() {
@@ -86,7 +86,7 @@ class URLEncodedFormEncoderTests: XCTestCase {
             let d: [Double]
         }
         let test = Test(b: [true], i: [34], i8: [23], i16: [9], i32: [-6872], i64: [23], u: [0], u8: [255], u16: [7673], u32: [88222], u64: [234], f: [-1.1], d: [8])
-        testForm(test, query: "b[]=true&i[]=34&i8[]=23&i16[]=9&i32[]=-6872&i64[]=23&u[]=0&u8[]=255&u16[]=7673&u32[]=88222&u64[]=234&f[]=-1.1&d[]=8.0")
+        self.testForm(test, query: "b[]=true&i[]=34&i8[]=23&i16[]=9&i32[]=-6872&i64[]=23&u[]=0&u8[]=255&u16[]=7673&u32[]=88222&u64[]=234&f[]=-1.1&d[]=8.0")
     }
 
     func testStringSpecialCharactersEncode() {
@@ -94,7 +94,7 @@ class URLEncodedFormEncoderTests: XCTestCase {
             let a: String
         }
         let test = Test(a: "adam+!@£$%^&*()_=")
-        testForm(test, query: "a=adam%2B%21%40%C2%A3%24%25%5E%26%2A%28%29_%3D")
+        self.testForm(test, query: "a=adam%2B%21%40%C2%A3%24%25%5E%26%2A%28%29_%3D")
     }
 
     func testContainingStructureEncode() {
@@ -106,7 +106,7 @@ class URLEncodedFormEncoderTests: XCTestCase {
             let t: Test
         }
         let test = Test2(t: Test(a: 42, b: "Life"))
-        testForm(test, query: "t[a]=42&t[b]=Life")
+        self.testForm(test, query: "t[a]=42&t[b]=Life")
     }
 
     func testEnumEncode() {
@@ -120,7 +120,7 @@ class URLEncodedFormEncoderTests: XCTestCase {
         }
         let test = Test(a: .second)
         // NB enum names don't change to rawValue (not sure how to fix)
-        testForm(test, query: "a=second")
+        self.testForm(test, query: "a=second")
     }
 
     func testArrayEncode() {
@@ -128,7 +128,7 @@ class URLEncodedFormEncoderTests: XCTestCase {
             let a: [Int]
         }
         let test = Test(a: [9, 8, 7, 6])
-        testForm(test, query: "a[]=9&a[]=8&a[]=7&a[]=6")
+        self.testForm(test, query: "a[]=9&a[]=8&a[]=7&a[]=6")
     }
 
     func testDictionaryEncode() {
@@ -136,7 +136,7 @@ class URLEncodedFormEncoderTests: XCTestCase {
             let a: [String: Int]
         }
         let test = Test(a: ["one": 1, "two": 2, "three": 3])
-        testForm(test, query: "a[one]=1&a[three]=3&a[two]=2")
+        self.testForm(test, query: "a[one]=1&a[three]=3&a[two]=2")
     }
 
     @available(iOS 10.0, tvOS 10.0, *)
@@ -145,10 +145,10 @@ class URLEncodedFormEncoderTests: XCTestCase {
             let d: Date
         }
         let test = Test(d: Date(timeIntervalSinceReferenceDate: 2_387_643))
-        testForm(test, query: "d=2387643.0")
-        testForm(test, query: "d=980694843000.0", encoder: .init(dateEncodingStrategy: .millisecondsSince1970))
-        testForm(test, query: "d=980694843.0", encoder: .init(dateEncodingStrategy: .secondsSince1970))
-        testForm(test, query: "d=2001-01-28T15%3A14%3A03Z", encoder: .init(dateEncodingStrategy: .iso8601))
+        self.testForm(test, query: "d=2387643.0")
+        self.testForm(test, query: "d=980694843000.0", encoder: .init(dateEncodingStrategy: .millisecondsSince1970))
+        self.testForm(test, query: "d=980694843.0", encoder: .init(dateEncodingStrategy: .secondsSince1970))
+        self.testForm(test, query: "d=2001-01-28T15%3A14%3A03Z", encoder: .init(dateEncodingStrategy: .iso8601))
 
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")

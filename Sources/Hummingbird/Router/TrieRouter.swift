@@ -113,7 +113,7 @@ struct RouterPathTrie<Value> {
                 return child
             }
             let node = Node(key: key, output: output)
-            children.append(node)
+            self.children.append(node)
             return node
         }
 
