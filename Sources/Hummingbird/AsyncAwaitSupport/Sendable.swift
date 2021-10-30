@@ -25,7 +25,5 @@ extension Logger.Level: @unchecked HBSendable {}
 // from NIOHTTP1
 extension HTTPVersion: @unchecked HBSendable {}
 extension HTTPMethod: @unchecked HBSendable {}
-extension HTTPHeaders: @unchecked HBSendable {}
-extension HTTPResponseStatus: @unchecked Sendable {}
 
 #endif
