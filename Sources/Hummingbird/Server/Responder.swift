@@ -25,7 +25,7 @@ public protocol HBResponder: HBSendable {
 /// Responder that calls supplied closure
 public struct HBCallbackResponder: HBResponder {
     public typealias Callback = (HBRequest) -> EventLoopFuture<HBResponse>
-    
+
     let callback: Callback
 
     public init(callback: @escaping Callback) {

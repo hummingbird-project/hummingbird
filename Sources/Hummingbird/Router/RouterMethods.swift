@@ -48,7 +48,7 @@ public protocol HBRouterMethods {
     ) -> Self
 
     #if compiler(>=5.5) && canImport(_Concurrency)
-    
+
     typealias AsyncHandler<Output> = @Sendable (HBRequest) async throws -> Output
 
     /// Add path for async closure
@@ -192,7 +192,7 @@ extension HBRouterMethods {
         }
         return response
     }
-    
+
     func constructResponder<Output: HBResponseGenerator>(
         options: HBRouterMethodOptions,
         use closure: @escaping Handler<Output>
