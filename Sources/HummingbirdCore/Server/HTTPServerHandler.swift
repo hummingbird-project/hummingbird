@@ -157,11 +157,7 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
     }
 
     func writeResponse(context: ChannelHandlerContext, response: HBHTTPResponse, streamer: HBRequestBodyStreamer?, keepAlive: Bool) {
-        self.writeHTTPParts(context: context, response: response).whenComplete { result in
-            var keepAlive = keepAlive
-            if case .failure = result {
-                keepAlive = false
-            }
+        self.writeHTTPParts(context: context, response: response).whenComplete { _ in
             // once we have finished writing the response we can drop the request body
             // if we are streaming we need to wait until the request has finished streaming
             if let streamer = streamer {
@@ -212,16 +208,21 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
         switch response.body {
         case .byteBuffer(let buffer):
             context.write(self.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: nil)
-            return context.writeAndFlush(self.wrapOutboundOut(.end(nil)))
+            context.writeAndFlush(self.wrapOutboundOut(.end(nil)), promise: nil)
+            // don't use error from writeAndFlush so return static version instead of allocating
+            // a new EventLoopFuture.
+            return context.eventLoop.makeSucceededVoidFuture()
         case .stream(let streamer):
             return streamer.write(on: context.eventLoop) { buffer in
                 context.write(self.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: nil)
             }
             .flatAlways { _ in
-                return context.writeAndFlush(self.wrapOutboundOut(.end(nil)))
+                context.writeAndFlush(self.wrapOutboundOut(.end(nil)), promise: nil)
+                return context.eventLoop.makeSucceededVoidFuture()
             }
         case .empty:
-            return context.writeAndFlush(self.wrapOutboundOut(.end(nil)))
+            context.writeAndFlush(self.wrapOutboundOut(.end(nil)), promise: nil)
+            return context.eventLoop.makeSucceededVoidFuture()
         }
     }
 
