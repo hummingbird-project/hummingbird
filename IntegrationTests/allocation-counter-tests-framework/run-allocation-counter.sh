@@ -40,7 +40,7 @@ function hooked_package_swift_start() {
     shift 2
 
     cat <<"EOF"
-// swift-tools-version:5.0
+// swift-tools-version:5.3
 import PackageDescription
 
 let package = Package(
