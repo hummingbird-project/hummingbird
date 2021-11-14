@@ -53,6 +53,7 @@ class HTTPTests: XCTestCase {
         self.testURI("https://hummingbird.co.uk/hello/?single2#id", \.query, "single2")
         self.testURI("https://hummingbird.co.uk?test1=hello%20rg&test2=true", \.query, "test1=hello%20rg&test2=true")
         self.testURI("https://hummingbird.co.uk?test1=hello%20rg&test2=true", \.queryParameters["test1"], "hello rg")
+        self.testURI("www.mydomain.ru/search?text=банан", \.queryParameters["text"], "банан")
     }
 
     func testURLPerf() {
