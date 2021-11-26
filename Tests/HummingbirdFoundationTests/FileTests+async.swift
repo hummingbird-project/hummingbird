@@ -29,6 +29,10 @@ class HummingbirdAsyncFilesTests: XCTestCase {
     }
 
     func testRead() throws {
+        #if os(macOS)
+        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+        #endif
         let app = HBApplication(testing: .live)
         app.router.get("test.jpg") { request -> HBResponse in
             let fileIO = HBFileIO(application: request.application)
@@ -50,6 +54,10 @@ class HummingbirdAsyncFilesTests: XCTestCase {
     }
 
     func testWrite() throws {
+        #if os(macOS)
+        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+        #endif
         let filename = "testWrite.txt"
         let app = HBApplication(testing: .live)
         app.router.put("store") { request -> HTTPResponseStatus in
