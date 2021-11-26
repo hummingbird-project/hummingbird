@@ -50,6 +50,10 @@ final class AsyncPersistTests: XCTestCase {
     }
 
     func testSetGet() throws {
+        #if os(macOS)
+        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+        #endif
         let app = try createApplication()
         try app.XCTStart()
         defer { app.XCTStop() }
@@ -62,6 +66,10 @@ final class AsyncPersistTests: XCTestCase {
     }
 
     func testCreateGet() throws {
+        #if os(macOS)
+        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+        #endif
         let app = try createApplication()
         app.router.put("/create/:tag") { request -> HTTPResponseStatus in
             guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
@@ -80,6 +88,10 @@ final class AsyncPersistTests: XCTestCase {
     }
 
     func testDoubleCreateFail() throws {
+        #if os(macOS)
+        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+        #endif
         let app = try createApplication()
         app.router.put("/create/:tag") { request -> HTTPResponseStatus in
             guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
@@ -103,6 +115,10 @@ final class AsyncPersistTests: XCTestCase {
     }
 
     func testSetTwice() throws {
+        #if os(macOS)
+        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+        #endif
         let app = try createApplication()
         try app.XCTStart()
         defer { app.XCTStop() }
@@ -119,6 +135,10 @@ final class AsyncPersistTests: XCTestCase {
     }
 
     func testExpires() throws {
+        #if os(macOS)
+        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+        #endif
         let app = try createApplication()
         try app.XCTStart()
         defer { app.XCTStop() }
@@ -139,6 +159,10 @@ final class AsyncPersistTests: XCTestCase {
     }
 
     func testCodable() throws {
+        #if os(macOS)
+        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+        #endif
         struct TestCodable: Codable {
             let buffer: String
         }
@@ -166,6 +190,10 @@ final class AsyncPersistTests: XCTestCase {
     }
 
     func testRemove() throws {
+        #if os(macOS)
+        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+        #endif
         let app = try createApplication()
         try app.XCTStart()
         defer { app.XCTStop() }
@@ -179,6 +207,10 @@ final class AsyncPersistTests: XCTestCase {
     }
 
     func testExpireAndAdd() throws {
+        #if os(macOS)
+        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+        #endif
         let app = try createApplication()
         try app.XCTStart()
         defer { app.XCTStop() }

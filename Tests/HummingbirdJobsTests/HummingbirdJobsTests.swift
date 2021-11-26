@@ -270,6 +270,10 @@ final class HummingbirdJobsTests: XCTestCase {
 
     @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
     func testAsyncJob() throws {
+        #if os(macOS)
+        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+        #endif
         struct TestAsyncJob: HBAsyncJob {
             static let name = "testAsyncJob"
             static let expectation = XCTestExpectation(description: "Jobs Completed")
