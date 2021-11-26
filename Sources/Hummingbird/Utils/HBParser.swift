@@ -68,13 +68,13 @@ public struct HBParser {
 
 extension HBParser {
     /// initialise a parser that parses a section of the buffer attached to another parser
-    init(_ parser: HBParser, range: Range<Int>) {
+    private init(_ parser: HBParser, range: Range<Int>) {
         self.buffer = parser.buffer
         self.index = range.startIndex
         self.range = range
 
         precondition(range.startIndex >= 0 && range.endIndex <= self.buffer.endIndex)
-        precondition(self.buffer[range.startIndex] & 0xC0 != 0x80) // check we arent in the middle of a UTF8 character
+        precondition(range.startIndex == self.buffer.endIndex || self.buffer[range.startIndex] & 0xC0 != 0x80) // check we arent in the middle of a UTF8 character
     }
 
     /// initialise a parser that parses a section of the buffer attached to this parser

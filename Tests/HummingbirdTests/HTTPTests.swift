@@ -43,6 +43,7 @@ class HTTPTests: XCTestCase {
         self.testURI("http://localhost:8080", \.path, "/")
         self.testURI("https://hummingbird.co.uk/users", \.path, "/users")
         self.testURI("https://hummingbird.co.uk/users?id=24", \.path, "/users")
+        self.testURI("https://hummingbird.co.uk/users?", \.path, "/users")
         self.testURI("file:///Users/John.Doe/", \.path, "/Users/John.Doe/")
     }
 
