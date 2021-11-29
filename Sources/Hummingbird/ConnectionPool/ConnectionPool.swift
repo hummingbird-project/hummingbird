@@ -143,11 +143,14 @@ public final class HBConnectionPool<Connection: HBConnection> {
     }
     
     private func _release(connection: Connection, logger: Logger) {
-        if let waitingPromise = self.waitingQueue.popFirst() {
-            waitingPromise.succeed(connection)
-        } else if closeState == .open {
+        switch self.closeState {
+        case .open:
+            if let waitingPromise = self.waitingQueue.popFirst() {
+                waitingPromise.succeed(connection)
+            }
             self.availableQueue.append(connection)
-        } else {
+
+        case .closed, .closing:
             _ = connection.close(logger: logger)
         }
     }
