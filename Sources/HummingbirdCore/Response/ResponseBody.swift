@@ -29,7 +29,7 @@ public enum HBResponseBody {
     /// point is should return `'end`.
     ///
     /// - Parameter closure: Closure called whenever a new ByteBuffer is needed
-    public static func stream(_ streamer: HBByteBufferStreamer) -> Self {
+    public static func stream(_ streamer: HBStreamerProtocol) -> Self {
         .stream(ResponseByteBufferStreamer(streamer: streamer))
     }
 
@@ -74,7 +74,7 @@ extension HBResponseBodyStreamer {
 
 /// Response body that you can feed ByteBuffers
 struct ResponseByteBufferStreamer: HBResponseBodyStreamer {
-    let streamer: HBByteBufferStreamer
+    let streamer: HBStreamerProtocol
 
     /// Read ByteBuffer from streamer.
     ///

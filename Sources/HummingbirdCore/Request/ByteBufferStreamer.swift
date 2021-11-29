@@ -21,7 +21,14 @@ public enum HBStreamerOutput {
 }
 
 public protocol HBStreamerProtocol {
+    /// Consume what has been fed to the streamer
+    /// - Parameter eventLoop: EventLoop to return future on
+    /// - Returns: Returns an EventLoopFuture that will be fulfilled with array of ByteBuffers that has so far been fed to the request body
+    ///     and whether we have consumed everything
     func consume(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput>
+
+    /// Consume ByteBuffers until you receive an end tag
+    /// - Returns: EventLoopFuture that will be fulfilled when all buffers are consumed
     func consumeAll(on eventLoop: EventLoop, _ process: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void>
 
     #if compiler(>=5.5) && canImport(_Concurrency)
@@ -207,7 +214,7 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
     }
 
     /// Consume the request body until you receive an end tag
-    /// - Returns: EventLoopFuture that will be fulfilled with the full ByteBuffer of the Request
+    /// - Returns: EventLoopFuture that will be fulfilled when all buffers are consumed
     func consumeAll() -> EventLoopFuture<ByteBuffer?> {
         self.eventLoop.assertInEventLoop()
         let promise = self.eventLoop.makePromise(of: ByteBuffer?.self)
