@@ -42,6 +42,7 @@ final class ConnectionPoolTests: XCTestCase {
     
     static override func setUp() {
         eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        logger.logLevel = .trace
     }
     
     static override func tearDown() {
@@ -160,6 +161,7 @@ final class ConnectionPoolTests: XCTestCase {
         let eventLoop = Self.eventLoopGroup.next()
         let pool = HBConnectionPool<ConnectionCounter>(maxConnections: 4, eventLoop: eventLoop)
         let c = try pool.request(logger: Self.logger).wait()
+        pool.release(connection: c, logger: Self.logger)
         c.isClosed = true
         _ = try pool.request(logger: Self.logger).wait()
         XCTAssertEqual(ConnectionCounter.deletedCounter, 1)

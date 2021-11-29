@@ -124,7 +124,7 @@ public final class HBConnectionPool<Connection: HBConnection> {
         }
         while let connection = availableQueue.popFirst() {
             if connection.isClosed {
-                logger.trace("Prune connection")
+                logger.trace("Prune connection: \(Connection.self)")
                 numConnections -= 1
             } else {
                 return eventLoop.makeSucceededFuture(connection)
@@ -133,7 +133,7 @@ public final class HBConnectionPool<Connection: HBConnection> {
         
         if numConnections < maxConnections {
             numConnections += 1
-            logger.trace("Make connection")
+            logger.trace("Make connection: \(Connection.self)")
             return Connection.make(on: eventLoop, logger: logger)
         } else {
             let promise = eventLoop.makePromise(of: Connection.self)
@@ -158,6 +158,7 @@ public final class HBConnectionPool<Connection: HBConnection> {
     private func _close(logger: Logger) -> EventLoopFuture<Void> {
         switch self.closeState {
         case .open:
+            logger.debug("Closing \(Self.self)")
             // remove waiting connections
             while let waiting = waitingQueue.popFirst() {
                 waiting.fail(HBConnectionPoolError.poolClosed)
