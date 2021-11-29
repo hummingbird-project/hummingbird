@@ -153,7 +153,7 @@ public struct HBFileIO {
     }
 
     /// write output of streamer to file
-    func writeFile(stream: HBRequestBodyStreamer, handle: NIOFileHandle, on eventLoop: EventLoop) -> EventLoopFuture<Void> {
+    func writeFile(stream: HBByteBufferStreamer, handle: NIOFileHandle, on eventLoop: EventLoop) -> EventLoopFuture<Void> {
         return stream.consumeAll(on: eventLoop) { buffer in
             return self.fileIO.write(fileHandle: handle, buffer: buffer, eventLoop: eventLoop)
         }
@@ -177,7 +177,7 @@ public struct HBFileIO {
             self.allocator = allocator
         }
 
-        func read(on eventLoop: EventLoop) -> EventLoopFuture<HBResponseBody.StreamResult> {
+        func read(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput> {
             let bytesLeft = self.endOffset - self.fileOffset
             let bytesToRead = min(self.chunkSize, bytesLeft)
             if bytesToRead > 0 {
