@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
 @testable import Hummingbird
+import Logging
 import NIOPosix
 import XCTest
 
@@ -22,10 +22,10 @@ final class ConnectionPoolTests: XCTestCase {
         static func make(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Connection> {
             return eventLoop.makeSucceededFuture(.init(eventLoop: eventLoop))
         }
-        
+
         let eventLoop: EventLoop
         var isClosed: Bool
-        
+
         init(eventLoop: EventLoop) {
             self.eventLoop = eventLoop
             self.isClosed = false
@@ -33,22 +33,22 @@ final class ConnectionPoolTests: XCTestCase {
 
         func close(logger: Logger) -> EventLoopFuture<Void> {
             self.isClosed = true
-            return eventLoop.makeSucceededVoidFuture()
+            return self.eventLoop.makeSucceededVoidFuture()
         }
     }
-    
+
     static var logger = Logger(label: "ConnectionPoolTests")
     static var eventLoopGroup: EventLoopGroup!
-    
-    static override func setUp() {
-        eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-        logger.logLevel = .trace
+
+    override static func setUp() {
+        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        self.logger.logLevel = .trace
     }
-    
-    static override func tearDown() {
-        XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+
+    override static func tearDown() {
+        XCTAssertNoThrow(try self.eventLoopGroup.syncShutdownGracefully())
     }
-    
+
     func testRequestRelease() throws {
         let eventLoop = Self.eventLoopGroup.next()
         let pool = HBConnectionPool<Connection>(maxConnections: 4, eventLoop: eventLoop)
@@ -59,7 +59,7 @@ final class ConnectionPoolTests: XCTestCase {
             return pool.close(logger: Self.logger)
         }.wait()
     }
-    
+
     func testWaiting() throws {
         let eventLoop = Self.eventLoopGroup.next()
         let pool = HBConnectionPool<Connection>(maxConnections: 1, eventLoop: eventLoop)
@@ -73,25 +73,26 @@ final class ConnectionPoolTests: XCTestCase {
         pool.release(connection: c2, logger: Self.logger)
         try pool.close(logger: Self.logger).wait()
     }
-    
+
     func testMultiRequestRelease() throws {
         /// connection that keeps count of instance
         final class ConnectionCounter: HBConnection {
             static func make(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<ConnectionCounter> {
                 return eventLoop.makeSucceededFuture(.init(eventLoop: eventLoop))
             }
+
             static var counter: Int = 0
             static var deletedCounter: Int = 0
-            
+
             let eventLoop: EventLoop
             var isClosed: Bool
-            
+
             init(eventLoop: EventLoop) {
                 self.eventLoop = eventLoop
                 self.isClosed = false
                 Self.counter += 1
             }
-            
+
             deinit {
                 Self.deletedCounter += 1
             }
@@ -128,25 +129,26 @@ final class ConnectionPoolTests: XCTestCase {
         wait(for: [expectation], timeout: 1.0)
         XCTAssertEqual(ConnectionCounter.counter, 4)
     }
-    
+
     func testCheckCloseFlag() throws {
         /// connection that keeps count of instance
         final class ConnectionCounter: HBConnection {
             static func make(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<ConnectionCounter> {
                 return eventLoop.makeSucceededFuture(.init(eventLoop: eventLoop))
             }
+
             static var counter: Int = 0
             static var deletedCounter: Int = 0
-            
+
             let eventLoop: EventLoop
             var isClosed: Bool
-            
+
             init(eventLoop: EventLoop) {
                 self.eventLoop = eventLoop
                 self.isClosed = false
                 Self.counter += 1
             }
-            
+
             deinit {
                 Self.deletedCounter += 1
             }
@@ -169,7 +171,7 @@ final class ConnectionPoolTests: XCTestCase {
 
         try pool.close(logger: Self.logger).wait()
     }
-    
+
     func testClosing() throws {
         let eventLoop = Self.eventLoopGroup.next()
         let pool = HBConnectionPool<Connection>(maxConnections: 1, eventLoop: eventLoop)
@@ -182,7 +184,7 @@ final class ConnectionPoolTests: XCTestCase {
             XCTFail()
         }
     }
-    
+
     func testWaitingClosing() throws {
         let eventLoop = Self.eventLoopGroup.next()
         let pool = HBConnectionPool<Connection>(maxConnections: 1, eventLoop: eventLoop)
