@@ -19,7 +19,7 @@ public enum HBRequestBody {
     /// Static ByteBuffer
     case byteBuffer(ByteBuffer?)
     /// ByteBuffer streamer
-    case stream(HBRequestBodyStreamer)
+    case stream(HBByteBufferStreamer)
 
     /// Return as ByteBuffer
     public var buffer: ByteBuffer? {
@@ -40,7 +40,7 @@ public enum HBRequestBody {
             guard let buffer = buffer else {
                 return nil
             }
-            return HBByteBufferStreamer(buffer)
+            return HBStaticStreamer(buffer)
         }
     }
 

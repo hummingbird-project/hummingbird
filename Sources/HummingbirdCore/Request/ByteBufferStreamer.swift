@@ -14,20 +14,26 @@
 
 import NIOCore
 
+/// Values returned when we consume the contents of the streamer
+public enum HBStreamerOutput {
+    case byteBuffer(ByteBuffer)
+    case end
+}
+
 public protocol HBStreamerProtocol {
-    func consume(on eventLoop: EventLoop) -> EventLoopFuture<HBRequestBodyStreamer.ConsumeOutput>
+    func consume(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput>
     func consumeAll(on eventLoop: EventLoop, _ process: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void>
 
     #if compiler(>=5.5) && canImport(_Concurrency)
 
     @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
-    func consume() async throws -> HBRequestBodyStreamer.ConsumeOutput
+    func consume() async throws -> HBStreamerOutput
 
     #endif // compiler(>=5.5) && canImport(_Concurrency)
 }
 
 /// Request body streamer. `HBHTTPDecodeHandler` feeds this with ByteBuffers while the Router consumes them
-public final class HBRequestBodyStreamer: HBStreamerProtocol {
+public final class HBByteBufferStreamer: HBStreamerProtocol {
     public enum StreamerError: Swift.Error {
         case bodyDropped
     }
@@ -39,18 +45,12 @@ public final class HBRequestBodyStreamer: HBStreamerProtocol {
         case end
     }
 
-    /// Values returned when we consume the contents of the streamer
-    public enum ConsumeOutput {
-        case byteBuffer(ByteBuffer)
-        case end
-    }
-
     /// Queue of promises for each ByteBuffer fed to the streamer. Last entry is always waiting for the next buffer or end tag
-    var queue: CircularBuffer<EventLoopPromise<ConsumeOutput>>
+    var queue: CircularBuffer<EventLoopPromise<HBStreamerOutput>>
     /// EventLoop everything is running on
     let eventLoop: EventLoop
     /// called every time a ByteBuffer is consumed
-    var onConsume: ((HBRequestBodyStreamer) -> Void)?
+    var onConsume: ((HBByteBufferStreamer) -> Void)?
     /// maximum allowed size to upload
     let maxSize: Int
     /// current size in memory
@@ -60,7 +60,7 @@ public final class HBRequestBodyStreamer: HBStreamerProtocol {
     /// has request streamer data been dropped
     var dropped: Bool
 
-    init(eventLoop: EventLoop, maxSize: Int) {
+    public init(eventLoop: EventLoop, maxSize: Int) {
         self.queue = .init(initialCapacity: 8)
         self.queue.append(eventLoop.makePromise())
         self.eventLoop = eventLoop
@@ -73,7 +73,19 @@ public final class HBRequestBodyStreamer: HBStreamerProtocol {
 
     /// Feed a ByteBuffer to the request
     /// - Parameter result: Bytebuffer or end tag
-    func feed(_ result: FeedInput) {
+    public func feed(_ result: FeedInput) {
+        if self.eventLoop.inEventLoop {
+            self._feed(result)
+        } else {
+            self.eventLoop.execute {
+                self._feed(result)
+            }
+        }
+    }
+
+    /// Feed a ByteBuffer to the request
+    /// - Parameter result: Bytebuffer or end tag
+    private func _feed(_ result: FeedInput) {
         self.eventLoop.assertInEventLoop()
 
         // queue most have at least one promise on it, or something has gone wrong
@@ -106,7 +118,7 @@ public final class HBRequestBodyStreamer: HBStreamerProtocol {
     /// - Parameter eventLoop: EventLoop to return future on
     /// - Returns: Returns an EventLoopFuture that will be fulfilled with array of ByteBuffers that has so far been fed to th request body
     ///     and whether we have consumed everything
-    public func consume(on eventLoop: EventLoop) -> EventLoopFuture<ConsumeOutput> {
+    public func consume(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput> {
         self.eventLoop.flatSubmit {
             self.consume()
         }.hop(to: eventLoop)
@@ -176,7 +188,7 @@ public final class HBRequestBodyStreamer: HBStreamerProtocol {
     /// Consume what has been fed to the request
     /// - Returns: Returns an EventLoopFuture that will be fulfilled with array of ByteBuffers that has so far been fed to the request body
     ///     and whether we have consumed an end tag
-    func consume() -> EventLoopFuture<ConsumeOutput> {
+    func consume() -> EventLoopFuture<HBStreamerOutput> {
         self.eventLoop.assertInEventLoop()
         assert(self.queue.first != nil)
         let promise = self.queue.first!
@@ -226,14 +238,14 @@ public final class HBRequestBodyStreamer: HBStreamerProtocol {
 ///
 /// Required for the situation where the user wants to stream but has been provided
 /// with a single ByteBuffer
-final class HBByteBufferStreamer: HBStreamerProtocol {
+final class HBStaticStreamer: HBStreamerProtocol {
     var byteBuffer: ByteBuffer
 
     init(_ byteBuffer: ByteBuffer) {
         self.byteBuffer = byteBuffer
     }
 
-    func consume(on eventLoop: EventLoop) -> EventLoopFuture<HBRequestBodyStreamer.ConsumeOutput> {
+    func consume(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput> {
         return eventLoop.submit {
             guard let output = self.byteBuffer.readSlice(length: self.byteBuffer.readableBytes) else {
                 return .end

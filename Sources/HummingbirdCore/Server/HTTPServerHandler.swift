@@ -30,7 +30,7 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
         case idle
         case head(HTTPRequestHead)
         case body(HTTPRequestHead, ByteBuffer)
-        case streamingBody(HBRequestBodyStreamer)
+        case streamingBody(HBByteBufferStreamer)
         case error
     }
 
@@ -72,7 +72,7 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
             self.state = .body(head, part)
 
         case (.body(let part), .body(let head, let buffer)):
-            let streamer = HBRequestBodyStreamer(eventLoop: context.eventLoop, maxSize: self.configuration.maxUploadSize)
+            let streamer = HBByteBufferStreamer(eventLoop: context.eventLoop, maxSize: self.configuration.maxUploadSize)
             let request = HBHTTPRequest(head: head, body: .stream(streamer))
             streamer.feed(.byteBuffer(buffer))
             streamer.feed(.byteBuffer(part))
@@ -110,7 +110,7 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
     }
 
     func readRequest(context: ChannelHandlerContext, request: HBHTTPRequest) {
-        let streamer: HBRequestBodyStreamer?
+        let streamer: HBByteBufferStreamer?
         if case .stream(let s) = request.body {
             streamer = s
         } else {
@@ -156,7 +156,7 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
         }
     }
 
-    func writeResponse(context: ChannelHandlerContext, response: HBHTTPResponse, streamer: HBRequestBodyStreamer?, keepAlive: Bool) {
+    func writeResponse(context: ChannelHandlerContext, response: HBHTTPResponse, streamer: HBByteBufferStreamer?, keepAlive: Bool) {
         self.writeHTTPParts(context: context, response: response).whenComplete { _ in
             // once we have finished writing the response we can drop the request body
             // if we are streaming we need to wait until the request has finished streaming

@@ -22,7 +22,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
     - name: SPM tests
-      run: swift test --enable-code-coverage --sanitize=thread
+      run: swift test --enable-code-coverage
     - name: Convert coverage files
       run: |
         xcrun llvm-cov export -format "lcov" \

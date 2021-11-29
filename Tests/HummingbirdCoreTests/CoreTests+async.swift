@@ -42,22 +42,29 @@ final class HummingBirdCoreAsyncTests: XCTestCase {
         return ByteBufferAllocator().buffer(bytes: data)
     }
 
-    func testStreamBody() {
+    func testStreamBody() throws {
+        #if os(macOS)
+        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+        guard ProcessInfo.processInfo.environment["CI"] != "true" else { throw XCTSkip() }
+        #endif
         struct Responder: HBHTTPResponder {
             func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
-                let allocator = context.channel.allocator
+                let streamer = HBByteBufferStreamer(eventLoop: context.eventLoop, maxSize: 1024 * 2048)
                 Task {
-                    var responseBuffer = allocator.buffer(capacity: 0)
-                    for try await buffer in request.body.stream!.sequence {
-                        var buffer = buffer
-                        responseBuffer.writeBuffer(&buffer)
+                    do {
+                        for try await buffer in request.body.stream!.sequence {
+                            streamer.feed(.byteBuffer(buffer))
+                        }
+                        streamer.feed(.end)
+                    } catch {
+                        streamer.feed(.error(error))
                     }
-                    let response = HBHTTPResponse(
-                        head: .init(version: .init(major: 1, minor: 1), status: .ok),
-                        body: .byteBuffer(responseBuffer)
-                    )
-                    onComplete(.success(response))
                 }
+                let response = HBHTTPResponse(
+                    head: .init(version: .init(major: 1, minor: 1), status: .ok),
+                    body: .stream(streamer)
+                )
+                onComplete(.success(response))
             }
         }
         let server = HBHTTPServer(group: Self.eventLoopGroup, configuration: .init(address: .hostname(port: 0), maxStreamingBufferSize: 256 * 1024))

@@ -23,9 +23,9 @@ extension HBStreamerProtocol {
 }
 
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
-extension HBRequestBodyStreamer {
+extension HBByteBufferStreamer {
     /// Consume what has been fed to the request so far
-    public func consume() async throws -> HBRequestBodyStreamer.ConsumeOutput {
+    public func consume() async throws -> HBStreamerOutput {
         return try await self.eventLoop.flatSubmit {
             self.consume()
         }.get()
@@ -33,9 +33,9 @@ extension HBRequestBodyStreamer {
 }
 
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
-extension HBByteBufferStreamer {
+extension HBStaticStreamer {
     /// Consume what has been fed to the request so far
-    public func consume() -> HBRequestBodyStreamer.ConsumeOutput {
+    public func consume() -> HBStreamerOutput {
         guard let output = self.byteBuffer.readSlice(length: self.byteBuffer.readableBytes) else {
             return .end
         }
