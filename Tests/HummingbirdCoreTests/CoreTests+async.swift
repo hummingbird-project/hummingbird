@@ -49,11 +49,11 @@ final class HummingBirdCoreAsyncTests: XCTestCase {
         #endif
         struct Responder: HBHTTPResponder {
             func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
-                let streamer = HBByteBufferStreamer(eventLoop: context.eventLoop, maxSize: 1024 * 2048)
+                let streamer = HBByteBufferStreamer(eventLoop: context.eventLoop, maxSize: 1024 * 2048, maxStreamingBufferSize: 32 * 1024)
                 Task {
                     do {
                         for try await buffer in request.body.stream!.sequence {
-                            streamer.feed(.byteBuffer(buffer))
+                            try await streamer.feed(buffer: buffer).get()
                         }
                         streamer.feed(.end)
                     } catch {

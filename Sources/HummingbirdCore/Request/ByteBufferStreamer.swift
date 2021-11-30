@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import NIOCore
 
 /// Values returned when we consume the contents of the streamer
@@ -54,12 +55,16 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
 
     /// Queue of promises for each ByteBuffer fed to the streamer. Last entry is always waiting for the next buffer or end tag
     var queue: CircularBuffer<EventLoopPromise<HBStreamerOutput>>
+    /// back pressure promise
+    var backPressurePromise: EventLoopPromise<Void>?
     /// EventLoop everything is running on
     let eventLoop: EventLoop
     /// called every time a ByteBuffer is consumed
     var onConsume: ((HBByteBufferStreamer) -> Void)?
     /// maximum allowed size to upload
     let maxSize: Int
+    /// maximum size currently being streamed before back pressure is applied
+    let maxStreamingBufferSize: Int
     /// current size in memory
     var currentSize: Int
     /// bytes fed to streamer so far
@@ -67,15 +72,43 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
     /// has request streamer data been dropped
     var dropped: Bool
 
-    public init(eventLoop: EventLoop, maxSize: Int) {
-        self.queue = .init(initialCapacity: 8)
+    public init(eventLoop: EventLoop, maxSize: Int, maxStreamingBufferSize: Int? = nil) {
+        self.queue = .init()
+        self.backPressurePromise = nil
         self.queue.append(eventLoop.makePromise())
         self.eventLoop = eventLoop
         self.sizeFed = 0
         self.currentSize = 0
         self.maxSize = maxSize
+        self.maxStreamingBufferSize = maxStreamingBufferSize ?? maxSize
         self.onConsume = nil
         self.dropped = false
+    }
+
+    /// Feed a ByteBuffer to the request, while applying back pressure
+    /// - Parameter result: Bytebuffer or end tag
+    public func feed(buffer: ByteBuffer) -> EventLoopFuture<Void> {
+        if self.eventLoop.inEventLoop {
+            return self._feed(buffer: buffer)
+        } else {
+            return self.eventLoop.flatSubmit {
+                self._feed(buffer: buffer)
+            }
+        }
+    }
+
+    /// Feed a ByteBuffer to the request
+    /// - Parameter result: Bytebuffer or end tag
+    private func _feed(buffer: ByteBuffer) -> EventLoopFuture<Void> {
+        self.eventLoop.assertInEventLoop()
+        if let backPressurePromise = backPressurePromise {
+            return backPressurePromise.futureResult.always { _ in
+                self._feed(.byteBuffer(buffer))
+            }
+        } else {
+            self._feed(.byteBuffer(buffer))
+            return self.eventLoop.makeSucceededVoidFuture()
+        }
     }
 
     /// Feed a ByteBuffer to the request
@@ -108,7 +141,9 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
 
             self.sizeFed += byteBuffer.readableBytes
             self.currentSize += byteBuffer.readableBytes
-
+            if self.currentSize > self.maxStreamingBufferSize {
+                self.backPressurePromise = self.eventLoop.makePromise()
+            }
             if self.sizeFed > self.maxSize {
                 promise.fail(HBHTTPError(.payloadTooLarge))
             } else {
@@ -205,6 +240,9 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
             switch result {
             case .byteBuffer(let buffer):
                 self.currentSize -= buffer.readableBytes
+                if self.currentSize < self.maxStreamingBufferSize {
+                    self.backPressurePromise?.succeed(())
+                }
             case .end:
                 assert(self.currentSize == 0)
             }
