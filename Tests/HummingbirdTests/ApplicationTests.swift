@@ -69,7 +69,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testServerHeaders() throws {
-        let app = HBApplication(testing: .embedded, configuration: .init(serverName: "Hummingbird"))
+        let app = HBApplication(testing: .embedded, configuration: .init(serverName: "TestServer"))
         app.router.get("/hello") { _ in
             return "Hello"
         }
@@ -77,7 +77,7 @@ final class ApplicationTests: XCTestCase {
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/hello", method: .GET) { response in
-            XCTAssertEqual(response.headers["server"].first, "Hummingbird")
+            XCTAssertEqual(response.headers["server"].first, "TestServer")
         }
     }
 

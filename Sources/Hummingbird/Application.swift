@@ -70,7 +70,7 @@ public final class HBApplication: HBExtensible {
         configuration: HBApplication.Configuration = HBApplication.Configuration(),
         eventLoopGroupProvider: NIOEventLoopGroupProvider = .createNew
     ) {
-        var logger = Logger(label: "HummingBird")
+        var logger = Logger(label: configuration.serverName ?? "HummingBird")
         logger.logLevel = configuration.logLevel
         self.logger = logger
 
