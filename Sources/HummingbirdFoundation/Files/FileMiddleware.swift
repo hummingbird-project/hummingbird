@@ -30,8 +30,20 @@ public struct HBFileMiddleware: HBMiddleware {
     let rootFolder: String
     let fileIO: HBFileIO
     let cacheControl: HBCacheControl
+    let searchForIndexHtml: Bool
 
-    public init(_ rootFolder: String = "public", cacheControl: HBCacheControl = .init([]), application: HBApplication) {
+    /// Create HBFileMiddleware
+    /// - Parameters:
+    ///   - rootFolder: Root folder to look for files
+    ///   - cacheControl: What cache control headers to include in response
+    ///   - indexHtml: Should we look for index.html in folders
+    ///   - application: Application we are attaching to
+    public init(
+        _ rootFolder: String = "public",
+        cacheControl: HBCacheControl = .init([]),
+        searchForIndexHtml: Bool = false,
+        application: HBApplication
+    ) {
         var rootFolder = rootFolder
         if rootFolder.last == "/" {
             rootFolder = String(rootFolder.dropLast())
@@ -39,6 +51,7 @@ public struct HBFileMiddleware: HBMiddleware {
         self.rootFolder = rootFolder
         self.fileIO = .init(application: application)
         self.cacheControl = cacheControl
+        self.searchForIndexHtml = searchForIndexHtml
 
         let workingFolder: String
         if rootFolder.first == "/" {
@@ -55,6 +68,7 @@ public struct HBFileMiddleware: HBMiddleware {
     }
 
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
+        struct IsDirectoryError: Error {}
         // if next responder returns a 404 then check if file exists
         return next.respond(to: request).flatMapError { error in
             guard let httpError = error as? HBHTTPError, httpError.status == .notFound else {
@@ -69,13 +83,27 @@ public struct HBFileMiddleware: HBMiddleware {
                 return request.failure(.badRequest)
             }
 
-            let fullPath = rootFolder + path
+            var fullPath = rootFolder + path
             let modificationDate: Date?
             let contentSize: Int?
             do {
                 let attributes = try FileManager.default.attributesOfItem(atPath: fullPath)
-                modificationDate = attributes[.modificationDate] as? Date
-                contentSize = attributes[.size] as? Int
+                // if file is a directory seach and `searchForIndexHtml` is set to true
+                // then search for index.html in directory
+                if let fileType = attributes[.type] as? FileAttributeType, fileType == .typeDirectory {
+                    guard searchForIndexHtml else { throw IsDirectoryError() }
+                    if path.last == "/" {
+                        fullPath += "index.html"
+                    } else {
+                        fullPath += "/index.html"
+                    }
+                    let attributes = try FileManager.default.attributesOfItem(atPath: fullPath)
+                    modificationDate = attributes[.modificationDate] as? Date
+                    contentSize = attributes[.size] as? Int
+                } else {
+                    modificationDate = attributes[.modificationDate] as? Date
+                    contentSize = attributes[.size] as? Int
+                }
             } catch {
                 return request.failure(.notFound)
             }
