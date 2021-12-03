@@ -69,8 +69,8 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
     var currentSize: Int
     /// bytes fed to streamer so far
     var sizeFed: Int
-    /// has request streamer data been dropped
-    var dropped: Bool
+    /// is request streamer finished
+    var isFinished: Bool
 
     public init(eventLoop: EventLoop, maxSize: Int, maxStreamingBufferSize: Int? = nil) {
         self.queue = .init()
@@ -82,7 +82,7 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
         self.maxSize = maxSize
         self.maxStreamingBufferSize = maxStreamingBufferSize ?? maxSize
         self.onConsume = nil
-        self.dropped = false
+        self.isFinished = false
     }
 
     /// Feed a ByteBuffer to the request, while applying back pressure
@@ -134,10 +134,8 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
 
         switch result {
         case .byteBuffer(let byteBuffer):
-            // don't add more ByteBuffers to queue if we are dropped
-            guard self.dropped == false else { return }
-
-            self.queue.append(self.eventLoop.makePromise())
+            // don't add more ByteBuffers to queue if we are finished
+            guard self.isFinished == false else { return }
 
             self.sizeFed += byteBuffer.readableBytes
             self.currentSize += byteBuffer.readableBytes
@@ -145,13 +143,18 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
                 self.backPressurePromise = self.eventLoop.makePromise()
             }
             if self.sizeFed > self.maxSize {
+                self.isFinished = true
                 promise.fail(HBHTTPError(.payloadTooLarge))
             } else {
+                self.queue.append(self.eventLoop.makePromise())
                 promise.succeed(.byteBuffer(byteBuffer))
             }
         case .error(let error):
+            self.isFinished = true
             promise.fail(error)
         case .end:
+            guard self.isFinished == false else { return }
+            self.isFinished = true
             promise.succeed(.end)
         }
     }
@@ -174,9 +177,9 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
     public func consumeAll(on eventLoop: EventLoop, _ process: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
         let promise = self.eventLoop.makePromise(of: Void.self)
         func _consumeAll() {
-            self.consume().map { output in
-                switch output {
-                case .byteBuffer(let buffer):
+            self.consume().whenComplete { result in
+                switch result {
+                case .success(.byteBuffer(let buffer)):
                     process(buffer).whenComplete { result in
                         switch result {
                         case .failure(let error):
@@ -186,11 +189,13 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
                         }
                     }
 
-                case .end:
+                case .success(.end):
                     promise.succeed(())
+
+                case .failure(let error):
+                    promise.fail(error)
                 }
             }
-            .cascadeFailure(to: promise)
         }
         self.eventLoop.execute {
             _consumeAll()
@@ -204,7 +209,7 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
     ///   - eventLoop: EventLoop to run on
     func drop() -> EventLoopFuture<Void> {
         self.eventLoop.assertInEventLoop()
-        self.dropped = true
+        self.isFinished = true
 
         let promise = self.eventLoop.makePromise(of: Void.self)
         func _dropAll() {
@@ -258,9 +263,9 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
         let promise = self.eventLoop.makePromise(of: ByteBuffer?.self)
         var completeBuffer: ByteBuffer?
         func _consumeAll() {
-            self.consume().map { output in
-                switch output {
-                case .byteBuffer(var buffer):
+            self.consume().whenComplete { result in
+                switch result {
+                case .success(.byteBuffer(var buffer)):
                     if completeBuffer != nil {
                         completeBuffer!.writeBuffer(&buffer)
                     } else {
@@ -268,11 +273,13 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
                     }
                     _consumeAll()
 
-                case .end:
+                case .success(.end):
                     promise.succeed(completeBuffer)
+
+                case .failure(let error):
+                    promise.fail(error)
                 }
             }
-            .cascadeFailure(to: promise)
         }
         _consumeAll()
         return promise.futureResult
