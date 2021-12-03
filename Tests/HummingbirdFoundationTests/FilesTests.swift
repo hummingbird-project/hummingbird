@@ -240,6 +240,25 @@ class HummingbirdFilesTests: XCTestCase {
         }
     }
 
+    func testIndexHtml() throws {
+        let app = HBApplication(testing: .live)
+        app.middleware.add(HBFileMiddleware(".", searchForIndexHtml: true, application: app))
+
+        let text = "Test file contents"
+        let data = Data(text.utf8)
+        let fileURL = URL(fileURLWithPath: "index.html")
+        XCTAssertNoThrow(try data.write(to: fileURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/", method: .GET) { response in
+            var body = try XCTUnwrap(response.body)
+            XCTAssertEqual(body.readString(length: body.readableBytes), text)
+        }
+    }
+
     func testWrite() throws {
         let filename = "testWrite.txt"
         let app = HBApplication(testing: .live)
