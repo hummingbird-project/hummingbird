@@ -56,3 +56,25 @@ public enum HBRequestBody {
         }
     }
 }
+
+extension HBRequestBody: CustomStringConvertible {
+    public var description: String {
+        let maxOutput = 256
+        switch self {
+        case .byteBuffer(let buffer):
+            guard var buffer2 = buffer else { return "empty" }
+            if let string = buffer2.readString(length: min(maxOutput, buffer2.readableBytes), encoding: .utf8) {
+                if buffer2.readableBytes > 0 {
+                    return "\"\(string)...\""
+                } else {
+                    return "\"\(string)\""
+                }
+            } else {
+                return "\(buffer!.readableBytes) bytes"
+            }
+
+        case .stream(_):
+            return "byte stream"
+        }
+    }
+}

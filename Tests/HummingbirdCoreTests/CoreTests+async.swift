@@ -18,6 +18,7 @@ import HummingbirdCore
 import HummingbirdCoreXCT
 import NIOCore
 import NIOPosix
+import NIOTransportServices
 import XCTest
 
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)

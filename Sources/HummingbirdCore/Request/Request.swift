@@ -20,3 +20,9 @@ public struct HBHTTPRequest {
     public var head: HTTPRequestHead
     public var body: HBRequestBody
 }
+
+extension HBHTTPRequest: CustomStringConvertible {
+    public var description: String {
+        "Head: \(head), body: \(body)"
+    }
+}

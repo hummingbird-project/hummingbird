@@ -25,3 +25,9 @@ public struct HBHTTPResponse {
         self.body = body
     }
 }
+
+extension HBHTTPResponse: CustomStringConvertible {
+    public var description: String {
+        "Head: \(head), body: \(body)"
+    }
+}

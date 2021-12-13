@@ -44,6 +44,32 @@ public enum HBResponseBody {
     }
 }
 
+extension HBResponseBody: CustomStringConvertible {
+    public var description: String {
+        let maxOutput = 256
+        switch self {
+        case .empty:
+            return "empty"
+
+        case .byteBuffer(let buffer):
+            var buffer2 = buffer
+            if let string = buffer2.readString(length: min(maxOutput, buffer2.readableBytes), encoding: .utf8) {
+                if buffer2.readableBytes > 0 {
+                    return "\"\(string)...\""
+                } else {
+                    return "\"\(string)\""
+                }
+            } else {
+                return "\(buffer.readableBytes) bytes"
+            }
+
+        case .stream(_):
+            return "byte stream"
+        }
+
+    }
+}
+
 /// Object supplying ByteBuffers for a response body
 public protocol HBResponseBodyStreamer {
     func read(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput>
