@@ -573,4 +573,10 @@ class HummingBirdCoreTests: XCTestCase {
             XCTFail("\(error)")
         }
     }
+
+    func testBodyDescription() {
+        XCTAssertEqual(HBRequestBody.byteBuffer(nil).description, "empty")
+        XCTAssertEqual(HBRequestBody.byteBuffer(randomBuffer(size: 64)).description, "64 bytes")
+        XCTAssertEqual(HBRequestBody.byteBuffer(.init(string: "Test String")).description, "\"Test String\"")
+    }
 }

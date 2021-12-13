@@ -63,7 +63,8 @@ extension HBRequestBody: CustomStringConvertible {
         switch self {
         case .byteBuffer(let buffer):
             guard var buffer2 = buffer else { return "empty" }
-            if let string = buffer2.readString(length: min(maxOutput, buffer2.readableBytes), encoding: .utf8) {
+            if let string = buffer2.readString(length: min(maxOutput, buffer2.readableBytes)),
+               string.allSatisfy(\.isASCII)  {
                 if buffer2.readableBytes > 0 {
                     return "\"\(string)...\""
                 } else {

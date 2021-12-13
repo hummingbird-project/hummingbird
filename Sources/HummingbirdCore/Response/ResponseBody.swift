@@ -53,7 +53,8 @@ extension HBResponseBody: CustomStringConvertible {
 
         case .byteBuffer(let buffer):
             var buffer2 = buffer
-            if let string = buffer2.readString(length: min(maxOutput, buffer2.readableBytes), encoding: .utf8) {
+            if let string = buffer2.readString(length: min(maxOutput, buffer2.readableBytes)),
+               string.allSatisfy(\.isASCII) {
                 if buffer2.readableBytes > 0 {
                     return "\"\(string)...\""
                 } else {
