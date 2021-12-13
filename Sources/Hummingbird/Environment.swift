@@ -97,3 +97,9 @@ public struct HBEnvironment: Decodable, ExpressibleByDictionaryLiteral {
 
     var values: [String: String]
 }
+
+extension HBEnvironment: CustomStringConvertible {
+    public var description: String {
+        String(describing: self.values)
+    }
+}

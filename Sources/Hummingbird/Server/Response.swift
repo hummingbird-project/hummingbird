@@ -39,3 +39,9 @@ public struct HBResponse: HBExtensible {
         self.extensions = HBExtensions()
     }
 }
+
+extension HBResponse: CustomStringConvertible {
+    public var description: String {
+        "status: \(self.status), headers: \(self.headers), body: \(self.body)"
+    }
+}

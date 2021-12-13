@@ -172,3 +172,9 @@ extension Logger {
         return logger
     }
 }
+
+extension HBRequest: CustomStringConvertible {
+    public var description: String {
+        "uri: \(self.uri), version: \(self.version), method: \(self.method), headers: \(self.headers), body: \(self.body)"
+    }
+}

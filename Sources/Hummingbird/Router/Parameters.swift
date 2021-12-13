@@ -80,3 +80,9 @@ extension HBParameters: Collection {
     public subscript(_ index: Index) -> Dictionary<Substring, Substring>.Element { return self.parameters[index] }
     public func index(after index: Index) -> Index { self.parameters.index(after: index) }
 }
+
+extension HBParameters: CustomStringConvertible {
+    public var description: String {
+        String(describing: self.parameters)
+    }
+}
