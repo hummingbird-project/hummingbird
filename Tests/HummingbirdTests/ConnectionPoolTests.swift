@@ -32,6 +32,7 @@ final class ConnectionPoolTests: XCTestCase {
             return self.eventLoop.makeSucceededVoidFuture()
         }
     }
+
     struct ConnectionSource: HBConnectionSource {
         func makeConnection(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Connection> {
             return eventLoop.makeSucceededFuture(.init(eventLoop: eventLoop))
@@ -108,7 +109,7 @@ final class ConnectionPoolTests: XCTestCase {
                 return eventLoop.makeSucceededFuture(.init(eventLoop: eventLoop))
             }
         }
-       let expectation = XCTestExpectation()
+        let expectation = XCTestExpectation()
         expectation.expectedFulfillmentCount = 1
         let eventLoop = Self.eventLoopGroup.next()
         let pool = HBConnectionPool(source: CounterConnectionSource(), maxConnections: 4, eventLoop: eventLoop)
