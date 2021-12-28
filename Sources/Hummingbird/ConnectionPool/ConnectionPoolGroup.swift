@@ -38,10 +38,43 @@ public class HBConnectionPoolGroup<Connection: HBConnection> {
         self.pools = pools
     }
 
+    /// Request a connection, run a process and then release the connection
+    /// - Parameters:
+    ///   - eventLoop: event loop to find associated connection pool
+    ///   -logger: Logger used for logging
+    ///   - process: Closure to run while we have the connection 
+    public func lease<NewValue>(
+        on eventLoop: EventLoop, 
+        logger: Logger, 
+        process: @escaping (Connection)->EventLoopFuture<NewValue>
+    ) -> EventLoopFuture<NewValue> {
+        let pool = getConnectionPool(on: eventLoop)
+        return pool.lease(logger: logger, process: process)
+    }
+
+    /// Request a connection
+    /// - Parameters:
+    ///   - eventLoop: event loop to find associated connection pool
+    ///   - logger: Logger used for logging
+    /// - Returns: Returns a connection when available
+    public func request(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Connection> {
+        let pool = getConnectionPool(on: eventLoop)
+        return pool.request(logger: logger)
+    }
+
+    /// Release a connection back onto the pool
+    /// - Parameters:
+    ///   - eventLoop: event loop to find associated connection pool
+    ///   - logger: Logger used for logging
+    public func release(connection: Connection, on eventLoop: EventLoop, logger: Logger) {
+        let pool = getConnectionPool(on: eventLoop)
+        pool.release(connection: connection, logger: logger)
+    }
+
     /// Return Connection Pool associated with EventLoopGroup
-    public func getConnectionPool(for eventLoop: EventLoop) -> HBConnectionPool<Connection> {
+    public func getConnectionPool(on eventLoop: EventLoop) -> HBConnectionPool<Connection> {
         let pool = self.pools[eventLoop.key]
-        precondition(pool != nil, "No connection pool exists for EventLoop")
+        assert(pool != nil, "No connection pool available for event loop")
         return pool!
     }
 

@@ -204,4 +204,29 @@ final class ConnectionPoolTests: XCTestCase {
             XCTFail()
         }
     }
+
+    func testConnectionPoolGroup() throws {
+        let eventLoop = Self.eventLoopGroup.next()
+        let poolGroup = HBConnectionPoolGroup<Connection>(maxConnections: 4, eventLoopGroup: Self.eventLoopGroup, logger: Self.logger)
+        let c = try poolGroup.request(on: eventLoop, logger: Self.logger).wait()
+        poolGroup.release(connection: c, on: eventLoop, logger: Self.logger)
+        try eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
+            XCTAssertEqual(poolGroup.getConnectionPool(on: eventLoop).availableQueue.count, 1)
+            return poolGroup.close()
+        }.wait()
+    }
+
+    func testConnectionPoolGroupLease() throws {
+        let eventLoop = Self.eventLoopGroup.next()
+        let poolGroup = HBConnectionPoolGroup<Connection>(maxConnections: 4, eventLoopGroup: Self.eventLoopGroup, logger: Self.logger)
+        let result = try poolGroup.lease(on: eventLoop, logger: Self.logger) { connection in
+            return eventLoop.makeSucceededFuture(poolGroup.getConnectionPool(on: eventLoop).numConnections)
+        }.wait()
+        XCTAssertEqual(result, 1)
+        try eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
+            XCTAssertEqual(poolGroup.getConnectionPool(on: eventLoop).availableQueue.count, 1)
+            return poolGroup.close()
+        }.wait()
+    }
+
 }
