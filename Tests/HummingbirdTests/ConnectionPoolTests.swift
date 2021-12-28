@@ -158,18 +158,23 @@ final class ConnectionPoolTests: XCTestCase {
                 return eventLoop.makeSucceededVoidFuture()
             }
         }
-        let expectation = XCTestExpectation()
-        expectation.expectedFulfillmentCount = 1
         let eventLoop = Self.eventLoopGroup.next()
-        let pool = HBConnectionPool<ConnectionCounter>(maxConnections: 4, eventLoop: eventLoop)
-        let c = try pool.request(logger: Self.logger).wait()
-        pool.release(connection: c, logger: Self.logger)
-        c.isClosed = true
-        _ = try pool.request(logger: Self.logger).wait()
-        XCTAssertEqual(ConnectionCounter.deletedCounter, 1)
-        XCTAssertEqual(ConnectionCounter.counter, 2)
-
-        try pool.close(logger: Self.logger).wait()
+        // run everything on same EventLoop so we can guarantee everything runs immediately
+        try eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
+            let pool = HBConnectionPool<ConnectionCounter>(maxConnections: 4, eventLoop: eventLoop)
+            return pool.request(logger: Self.logger)
+                .flatMap { c -> EventLoopFuture<ConnectionCounter> in
+                    pool.release(connection: c, logger: Self.logger)
+                    // close connection
+                    c.isClosed = true
+                    return pool.request(logger: Self.logger)
+                }.map { _ -> Void in
+                    XCTAssertEqual(ConnectionCounter.deletedCounter, 1)
+                    XCTAssertEqual(ConnectionCounter.counter, 2)
+                }.flatMap { () -> EventLoopFuture<Void> in
+                    return pool.close(logger: Self.logger)
+                }
+        }.wait()
     }
 
     func testClosing() throws {
