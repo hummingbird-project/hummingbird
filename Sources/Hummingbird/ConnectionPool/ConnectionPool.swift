@@ -108,6 +108,21 @@ public final class HBConnectionPool<Connection: HBConnection> {
         }
     }
 
+    /// Request a connection, run a process and then release the connection
+    /// - Parameters:
+    ///   -logger: Logger used for logging
+    ///   - process: Closure to run while we have the connection 
+    public func lease<NewValue>(
+        logger: Logger, 
+        process: @escaping (Connection)->EventLoopFuture<NewValue>
+    ) -> EventLoopFuture<NewValue> {
+        return self.request(logger: logger).flatMap { connection in
+            process(connection).always { _ in
+                self.release(connection: connection, logger: logger)
+            }
+        }
+    }
+
     /// Close connection pool
     /// - Parameter logger: Logger used for logging
     /// - Returns: Returns when close is complete
