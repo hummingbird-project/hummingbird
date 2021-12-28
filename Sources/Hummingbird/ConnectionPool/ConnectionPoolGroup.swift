@@ -42,13 +42,13 @@ public class HBConnectionPoolGroup<Connection: HBConnection> {
     /// - Parameters:
     ///   - eventLoop: event loop to find associated connection pool
     ///   -logger: Logger used for logging
-    ///   - process: Closure to run while we have the connection 
+    ///   - process: Closure to run while we have the connection
     public func lease<NewValue>(
-        on eventLoop: EventLoop, 
-        logger: Logger, 
-        process: @escaping (Connection)->EventLoopFuture<NewValue>
+        on eventLoop: EventLoop,
+        logger: Logger,
+        process: @escaping (Connection) -> EventLoopFuture<NewValue>
     ) -> EventLoopFuture<NewValue> {
-        let pool = getConnectionPool(on: eventLoop)
+        let pool = self.getConnectionPool(on: eventLoop)
         return pool.lease(logger: logger, process: process)
     }
 
@@ -58,7 +58,7 @@ public class HBConnectionPoolGroup<Connection: HBConnection> {
     ///   - logger: Logger used for logging
     /// - Returns: Returns a connection when available
     public func request(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Connection> {
-        let pool = getConnectionPool(on: eventLoop)
+        let pool = self.getConnectionPool(on: eventLoop)
         return pool.request(logger: logger)
     }
 
@@ -67,7 +67,7 @@ public class HBConnectionPoolGroup<Connection: HBConnection> {
     ///   - eventLoop: event loop to find associated connection pool
     ///   - logger: Logger used for logging
     public func release(connection: Connection, on eventLoop: EventLoop, logger: Logger) {
-        let pool = getConnectionPool(on: eventLoop)
+        let pool = self.getConnectionPool(on: eventLoop)
         pool.release(connection: connection, logger: logger)
     }
 
