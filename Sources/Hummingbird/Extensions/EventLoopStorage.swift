@@ -89,7 +89,7 @@ extension HBRequest {
     }
 }
 
-private extension EventLoop {
+extension EventLoop {
     typealias Key = ObjectIdentifier
     var key: Key {
         ObjectIdentifier(self)
