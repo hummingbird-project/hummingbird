@@ -19,10 +19,6 @@ import XCTest
 
 final class ConnectionPoolTests: XCTestCase {
     final class Connection: HBConnection {
-        static func make(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Connection> {
-            return eventLoop.makeSucceededFuture(.init(eventLoop: eventLoop))
-        }
-
         let eventLoop: EventLoop
         var isClosed: Bool
 
@@ -34,6 +30,11 @@ final class ConnectionPoolTests: XCTestCase {
         func close(logger: Logger) -> EventLoopFuture<Void> {
             self.isClosed = true
             return self.eventLoop.makeSucceededVoidFuture()
+        }
+    }
+    struct ConnectionSource: HBConnectionSource {
+        func makeConnection(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Connection> {
+            return eventLoop.makeSucceededFuture(.init(eventLoop: eventLoop))
         }
     }
 
@@ -51,7 +52,7 @@ final class ConnectionPoolTests: XCTestCase {
 
     func testRequestRelease() throws {
         let eventLoop = Self.eventLoopGroup.next()
-        let pool = HBConnectionPool<Connection>(maxConnections: 4, eventLoop: eventLoop)
+        let pool = HBConnectionPool(source: ConnectionSource(), maxConnections: 4, eventLoop: eventLoop)
         let c = try pool.request(logger: Self.logger).wait()
         pool.release(connection: c, logger: Self.logger)
         try eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
@@ -62,7 +63,7 @@ final class ConnectionPoolTests: XCTestCase {
 
     func testWaiting() throws {
         let eventLoop = Self.eventLoopGroup.next()
-        let pool = HBConnectionPool<Connection>(maxConnections: 1, eventLoop: eventLoop)
+        let pool = HBConnectionPool(source: ConnectionSource(), maxConnections: 1, eventLoop: eventLoop)
         let c = try pool.request(logger: Self.logger).wait()
         let c2Future = pool.request(logger: Self.logger)
         eventLoop.execute {
@@ -102,10 +103,15 @@ final class ConnectionPoolTests: XCTestCase {
                 return eventLoop.makeSucceededVoidFuture()
             }
         }
-        let expectation = XCTestExpectation()
+        struct CounterConnectionSource: HBConnectionSource {
+            func makeConnection(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<ConnectionCounter> {
+                return eventLoop.makeSucceededFuture(.init(eventLoop: eventLoop))
+            }
+        }
+       let expectation = XCTestExpectation()
         expectation.expectedFulfillmentCount = 1
         let eventLoop = Self.eventLoopGroup.next()
-        let pool = HBConnectionPool<ConnectionCounter>(maxConnections: 4, eventLoop: eventLoop)
+        let pool = HBConnectionPool(source: CounterConnectionSource(), maxConnections: 4, eventLoop: eventLoop)
         let futures: [EventLoopFuture<Void>] = (0..<100).map { _ -> EventLoopFuture<Void> in
             let task = Self.eventLoopGroup.next().flatScheduleTask(in: .microseconds(Int64.random(in: 0..<5000))) { () -> EventLoopFuture<Void> in
                 pool.request(logger: Self.logger).flatMap { connection -> EventLoopFuture<Void> in
@@ -158,10 +164,15 @@ final class ConnectionPoolTests: XCTestCase {
                 return eventLoop.makeSucceededVoidFuture()
             }
         }
+        struct CounterConnectionSource: HBConnectionSource {
+            func makeConnection(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<ConnectionCounter> {
+                return eventLoop.makeSucceededFuture(.init(eventLoop: eventLoop))
+            }
+        }
         let eventLoop = Self.eventLoopGroup.next()
         // run everything on same EventLoop so we can guarantee everything runs immediately
         try eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
-            let pool = HBConnectionPool<ConnectionCounter>(maxConnections: 4, eventLoop: eventLoop)
+            let pool = HBConnectionPool(source: CounterConnectionSource(), maxConnections: 4, eventLoop: eventLoop)
             return pool.request(logger: Self.logger)
                 .flatMap { c -> EventLoopFuture<ConnectionCounter> in
                     pool.release(connection: c, logger: Self.logger)
@@ -179,7 +190,7 @@ final class ConnectionPoolTests: XCTestCase {
 
     func testClosing() throws {
         let eventLoop = Self.eventLoopGroup.next()
-        let pool = HBConnectionPool<Connection>(maxConnections: 1, eventLoop: eventLoop)
+        let pool = HBConnectionPool(source: ConnectionSource(), maxConnections: 1, eventLoop: eventLoop)
         try pool.close(logger: Self.logger).wait()
         do {
             _ = try pool.request(logger: Self.logger).wait()
@@ -192,7 +203,7 @@ final class ConnectionPoolTests: XCTestCase {
 
     func testWaitingClosing() throws {
         let eventLoop = Self.eventLoopGroup.next()
-        let pool = HBConnectionPool<Connection>(maxConnections: 1, eventLoop: eventLoop)
+        let pool = HBConnectionPool(source: ConnectionSource(), maxConnections: 1, eventLoop: eventLoop)
         _ = try pool.request(logger: Self.logger).wait()
         let c2Future = pool.request(logger: Self.logger)
         try pool.close(logger: Self.logger).wait()
@@ -207,7 +218,7 @@ final class ConnectionPoolTests: XCTestCase {
 
     func testConnectionPoolGroup() throws {
         let eventLoop = Self.eventLoopGroup.next()
-        let poolGroup = HBConnectionPoolGroup<Connection>(maxConnections: 4, eventLoopGroup: Self.eventLoopGroup, logger: Self.logger)
+        let poolGroup = HBConnectionPoolGroup(source: ConnectionSource(), maxConnections: 4, eventLoopGroup: Self.eventLoopGroup, logger: Self.logger)
         let c = try poolGroup.request(on: eventLoop, logger: Self.logger).wait()
         poolGroup.release(connection: c, on: eventLoop, logger: Self.logger)
         try eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
@@ -218,7 +229,7 @@ final class ConnectionPoolTests: XCTestCase {
 
     func testConnectionPoolGroupLease() throws {
         let eventLoop = Self.eventLoopGroup.next()
-        let poolGroup = HBConnectionPoolGroup<Connection>(maxConnections: 4, eventLoopGroup: Self.eventLoopGroup, logger: Self.logger)
+        let poolGroup = HBConnectionPoolGroup(source: ConnectionSource(), maxConnections: 4, eventLoopGroup: Self.eventLoopGroup, logger: Self.logger)
         let result = try poolGroup.lease(on: eventLoop, logger: Self.logger) { _ in
             return eventLoop.makeSucceededFuture(poolGroup.getConnectionPool(on: eventLoop).numConnections)
         }.wait()

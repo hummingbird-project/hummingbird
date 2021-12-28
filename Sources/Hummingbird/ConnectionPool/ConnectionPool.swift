@@ -22,13 +22,6 @@ public enum HBConnectionPoolError: Error {
 
 /// Protocol describing a single connection
 public protocol HBConnection: AnyObject {
-    /// Create a new connection
-    /// - Parameters:
-    ///     - eventLoop: EventLoop to use when creating new connection
-    ///     - logger: Logger used for logging
-    /// - Returns: Returns new connection
-    static func make(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Self>
-
     /// Close connection.
     ///
     /// This should not be called directly. Instead connection should be closed via `HBConnectionPool.release`
@@ -41,8 +34,19 @@ public protocol HBConnection: AnyObject {
     var isClosed: Bool { get }
 }
 
+public protocol HBConnectionSource {
+    associatedtype Connection: HBConnection
+
+    /// Create a new connection
+    /// - Parameters:
+    ///     - eventLoop: EventLoop to use when creating new connection
+    ///     - logger: Logger used for logging
+    /// - Returns: Returns new connection
+    func makeConnection(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Connection>
+}
+
 /// Connection Pool
-public final class HBConnectionPool<Connection: HBConnection> {
+public final class HBConnectionPool<Source: HBConnectionSource> {
     /// Connection Pool close state
     enum CloseState: Equatable {
         case open
@@ -50,6 +54,8 @@ public final class HBConnectionPool<Connection: HBConnection> {
         case closed
     }
 
+    /// connection source
+    public let source: Source
     /// EventLoop connections are attached to
     public let eventLoop: EventLoop
     /// Maximum number of connections allowed
@@ -60,9 +66,9 @@ public final class HBConnectionPool<Connection: HBConnection> {
     public var isClosed: Bool { self.closeState != .open }
 
     /// Connections available
-    var availableQueue: CircularBuffer<Connection>
+    var availableQueue: CircularBuffer<Source.Connection>
     /// Promises waiting for a connection
-    var waitingQueue: CircularBuffer<EventLoopPromise<Connection>>
+    var waitingQueue: CircularBuffer<EventLoopPromise<Source.Connection>>
     var closeState: CloseState
 
     /// Create `HBConnectionPool`
@@ -70,9 +76,11 @@ public final class HBConnectionPool<Connection: HBConnection> {
     ///   - maxConnections: Maximum number of connections allowed
     ///   - eventLoop: EventLoop connection pool is attached to
     public init(
+        source: Source,
         maxConnections: Int,
         eventLoop: EventLoop
     ) {
+        self.source = source
         self.eventLoop = eventLoop
         self.availableQueue = .init(initialCapacity: maxConnections)
         self.waitingQueue = .init()
@@ -88,7 +96,7 @@ public final class HBConnectionPool<Connection: HBConnection> {
     /// Request a connection
     /// - Parameter logger: Logger used for logging
     /// - Returns: Returns a connection when available
-    public func request(logger: Logger) -> EventLoopFuture<Connection> {
+    public func request(logger: Logger) -> EventLoopFuture<Source.Connection> {
         if self.eventLoop.inEventLoop {
             return self._request(logger: logger)
         } else {
@@ -100,7 +108,7 @@ public final class HBConnectionPool<Connection: HBConnection> {
     /// - Parameters:
     ///   - connection: connection to release
     ///   - logger: Logger used for logging
-    public func release(connection: Connection, logger: Logger) {
+    public func release(connection: Source.Connection, logger: Logger) {
         if self.eventLoop.inEventLoop {
             self._release(connection: connection, logger: logger)
         } else {
@@ -114,7 +122,7 @@ public final class HBConnectionPool<Connection: HBConnection> {
     ///   - process: Closure to run while we have the connection
     public func lease<NewValue>(
         logger: Logger,
-        process: @escaping (Connection) -> EventLoopFuture<NewValue>
+        process: @escaping (Source.Connection) -> EventLoopFuture<NewValue>
     ) -> EventLoopFuture<NewValue> {
         return self.request(logger: logger).flatMap { connection in
             process(connection).always { _ in
@@ -134,13 +142,13 @@ public final class HBConnectionPool<Connection: HBConnection> {
         }
     }
 
-    private func _request(logger: Logger) -> EventLoopFuture<Connection> {
+    private func _request(logger: Logger) -> EventLoopFuture<Source.Connection> {
         guard !self.isClosed else {
             return self.eventLoop.makeFailedFuture(HBConnectionPoolError.poolClosed)
         }
         while let connection = availableQueue.popFirst() {
             if connection.isClosed {
-                logger.trace("Prune connection: \(Connection.self)")
+                logger.trace("Prune connection: \(Source.Connection.self)")
                 self.numConnections -= 1
             } else {
                 return self.eventLoop.makeSucceededFuture(connection)
@@ -149,16 +157,16 @@ public final class HBConnectionPool<Connection: HBConnection> {
 
         if self.numConnections < self.maxConnections {
             self.numConnections += 1
-            logger.trace("Make connection: \(Connection.self)")
-            return Connection.make(on: self.eventLoop, logger: logger)
+            logger.trace("Make connection: \(Source.Connection.self)")
+            return self.source.makeConnection(on: self.eventLoop, logger: logger)
         } else {
-            let promise = self.eventLoop.makePromise(of: Connection.self)
+            let promise = self.eventLoop.makePromise(of: Source.Connection.self)
             self.waitingQueue.append(promise)
             return promise.futureResult
         }
     }
 
-    private func _release(connection: Connection, logger: Logger) {
+    private func _release(connection: Source.Connection, logger: Logger) {
         switch self.closeState {
         case .open:
             if let waitingPromise = self.waitingQueue.popFirst() {
