@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2022 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -48,7 +48,7 @@ extension HBConnectionPool {
     }
 }
 
-@available( macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
 extension HBConnectionPoolGroup {
     /// Request a connection, run a process and then release the connection
     /// - Parameters:
@@ -57,7 +57,7 @@ extension HBConnectionPoolGroup {
     ///   - process: Closure to run while we have the connection
     public func lease<NewValue>(
         on eventLoop: EventLoop,
-        logger: Logger, 
+        logger: Logger,
         process: @escaping (Source.Connection) async throws -> NewValue
     ) async throws -> NewValue {
         let pool = self.getConnectionPool(on: eventLoop)
