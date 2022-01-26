@@ -25,10 +25,8 @@ public protocol HBConnection: AnyObject {
     /// Close connection.
     ///
     /// This should not be called directly. Instead connection should be closed via `HBConnectionPool.release`
-    /// - Parameters:
-    ///     - logger: Logger used for logging
     /// - Returns: Returns when closed
-    func close(logger: Logger) -> EventLoopFuture<Void>
+    func close() -> EventLoopFuture<Void>
 
     /// Is connection closed
     var isClosed: Bool { get }
@@ -175,7 +173,7 @@ public final class HBConnectionPool<Source: HBConnectionSource> {
             self.availableQueue.append(connection)
 
         case .closed, .closing:
-            _ = connection.close(logger: logger)
+            _ = connection.close()
         }
     }
 
@@ -189,7 +187,7 @@ public final class HBConnectionPool<Source: HBConnectionSource> {
             }
 
             // close available connections
-            let closeFutures: [EventLoopFuture<Void>] = self.availableQueue.map { $0.close(logger: logger) }
+            let closeFutures: [EventLoopFuture<Void>] = self.availableQueue.map { $0.close() }
             let future = EventLoopFuture.andAllSucceed(closeFutures, on: self.eventLoop)
 
             // empty available queue

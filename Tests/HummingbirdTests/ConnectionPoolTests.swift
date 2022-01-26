@@ -27,7 +27,7 @@ final class ConnectionPoolTests: XCTestCase {
             self.isClosed = false
         }
 
-        func close(logger: Logger) -> EventLoopFuture<Void> {
+        func close() -> EventLoopFuture<Void> {
             self.isClosed = true
             return self.eventLoop.makeSucceededVoidFuture()
         }
@@ -99,7 +99,7 @@ final class ConnectionPoolTests: XCTestCase {
                 Self.deletedCounter += 1
             }
 
-            func close(logger: Logger) -> EventLoopFuture<Void> {
+            func close() -> EventLoopFuture<Void> {
                 self.isClosed = true
                 return eventLoop.makeSucceededVoidFuture()
             }
@@ -160,7 +160,7 @@ final class ConnectionPoolTests: XCTestCase {
                 Self.deletedCounter += 1
             }
 
-            func close(logger: Logger) -> EventLoopFuture<Void> {
+            func close() -> EventLoopFuture<Void> {
                 self.isClosed = true
                 return eventLoop.makeSucceededVoidFuture()
             }
