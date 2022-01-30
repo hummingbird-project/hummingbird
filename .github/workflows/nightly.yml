@@ -12,7 +12,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
     - name: SPM tests
-      run: swift test --sanitize=thread
+      run: swift test
   linux:
     runs-on: ubuntu-latest
     strategy:
