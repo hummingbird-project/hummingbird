@@ -22,7 +22,7 @@ which swiftformat > /dev/null 2>&1 || (echo "swiftformat not installed. You can 
 
 function replace_acceptable_years() {
     # this needs to replace all acceptable forms with 'YEARS'
-    sed -e 's/20[0-9][0-9]-20[0=9][0-9]/YEARS/' -e 's/20[0-9][0-9]/YEARS/' -e '/^#!/ d'
+    sed -e 's/20[12][78901]-20[12][8901]/YEARS/' -e 's/20[12][8901]/YEARS/' -e '/^#!/ d'
 }
 
 printf "=> Checking format... "
