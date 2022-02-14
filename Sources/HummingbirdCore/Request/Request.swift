@@ -23,6 +23,6 @@ public struct HBHTTPRequest {
 
 extension HBHTTPRequest: CustomStringConvertible {
     public var description: String {
-        "Head: \(head), body: \(body)"
+        "Head: \(self.head), body: \(self.body)"
     }
 }

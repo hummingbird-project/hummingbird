@@ -248,7 +248,7 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
             }
 
         default:
-            self.responder.logger.debug("Unhandled event \(event as? ChannelEvent)")
+            self.responder.logger.debug("Unhandled event \(event)")
             context.fireUserInboundEventTriggered(event)
         }
     }

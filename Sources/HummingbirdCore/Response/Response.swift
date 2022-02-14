@@ -28,6 +28,6 @@ public struct HBHTTPResponse {
 
 extension HBHTTPResponse: CustomStringConvertible {
     public var description: String {
-        "Head: \(head), body: \(body)"
+        "Head: \(self.head), body: \(self.body)"
     }
 }

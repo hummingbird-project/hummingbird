@@ -54,7 +54,8 @@ extension HBResponseBody: CustomStringConvertible {
         case .byteBuffer(let buffer):
             var buffer2 = buffer
             if let string = buffer2.readString(length: min(maxOutput, buffer2.readableBytes)),
-               string.allSatisfy(\.isASCII) {
+               string.allSatisfy(\.isASCII)
+            {
                 if buffer2.readableBytes > 0 {
                     return "\"\(string)...\""
                 } else {
@@ -64,10 +65,9 @@ extension HBResponseBody: CustomStringConvertible {
                 return "\(buffer.readableBytes) bytes"
             }
 
-        case .stream(_):
+        case .stream:
             return "byte stream"
         }
-
     }
 }
 

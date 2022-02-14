@@ -32,16 +32,20 @@ public class HBXCTClient {
     public struct Configuration {
         public init(
             tlsConfiguration: TLSConfiguration? = nil,
-            timeout: TimeAmount = .seconds(5)
+            timeout: TimeAmount = .seconds(5),
+            serverName: String? = nil
         ) {
             self.tlsConfiguration = tlsConfiguration
             self.timeout = timeout
+            self.serverName = serverName
         }
 
         /// TLS confguration
         public let tlsConfiguration: TLSConfiguration?
         /// read timeout. If connection has no read events for indicated time throw timeout error
         public let timeout: TimeAmount
+        /// server name
+        public let serverName: String?
     }
 
     /// Initialize HBXCTClient
@@ -151,7 +155,7 @@ public class HBXCTClient {
     private func getBootstrap() throws -> NIOClientTCPBootstrap {
         if let tlsConfiguration = self.configuration.tlsConfiguration {
             let sslContext = try NIOSSLContext(configuration: tlsConfiguration)
-            let tlsProvider = try NIOSSLClientTLSProvider<ClientBootstrap>(context: sslContext, serverHostname: host)
+            let tlsProvider = try NIOSSLClientTLSProvider<ClientBootstrap>(context: sslContext, serverHostname: self.configuration.serverName ?? self.host)
             let bootstrap = NIOClientTCPBootstrap(ClientBootstrap(group: self.eventLoopGroup), tls: tlsProvider)
             bootstrap.enableTLS()
             return bootstrap
