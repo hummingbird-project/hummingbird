@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ['nightly-bionic', 'nightly-focal', 'nightly-centos8', 'nightly-amazonlinux2']
+        image: ['nightly-5.6-bionic', 'nightly-5.6-focal', 'nightly-5.6-centos8', 'nightly-5.6-amazonlinux2']
     
     container:
       image: swiftlang/swift:${{ matrix.image }}
