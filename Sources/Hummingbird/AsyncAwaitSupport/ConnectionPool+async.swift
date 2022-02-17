@@ -88,7 +88,7 @@ public protocol HBConnectionAsyncSource: HBConnectionSource {
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
 public extension HBConnectionAsyncSource {
     func makeConnection(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Connection> {
-        let promise = eventLoop.makePromise(Connection.self)
+        let promise = eventLoop.makePromise(of: Connection.self)
         promise.completeWithTask {
             return try await makeConnection(on: eventLoop, logger: logger)
         }
