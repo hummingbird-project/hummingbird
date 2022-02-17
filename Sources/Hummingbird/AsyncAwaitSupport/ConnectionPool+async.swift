@@ -81,12 +81,28 @@ extension HBConnectionPoolGroup {
 }
 
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
-public protocol HBConnectionAsyncSource: HBConnectionSource {
+public protocol HBAsyncConnection: HBConnection {
+    func close() async throws
+}
+
+@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+public extension HBAsyncConnection {
+    func close(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
+        let promise = eventLoop.makePromise(of: Void.self)
+        promise.completeWithTask {
+            return try await self.close()
+        }
+        return promise.futureResult
+    }
+}
+
+@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+public protocol HBAsyncConnectionSource: HBConnectionSource where Connection: HBAsyncConnection {
     func makeConnection(on eventLoop: EventLoop, logger: Logger) async throws -> Connection
 }
 
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
-public extension HBConnectionAsyncSource {
+public extension HBAsyncConnectionSource {
     func makeConnection(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Connection> {
         let promise = eventLoop.makePromise(of: Connection.self)
         promise.completeWithTask {
