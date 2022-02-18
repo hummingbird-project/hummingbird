@@ -19,23 +19,21 @@ import XCTest
 
 final class ConnectionPoolTests: XCTestCase {
     final class Connection: HBConnection {
-        let eventLoop: EventLoop
         var isClosed: Bool
 
-        init(eventLoop: EventLoop) {
-            self.eventLoop = eventLoop
+        init() {
             self.isClosed = false
         }
 
-        func close() -> EventLoopFuture<Void> {
+        func close(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
             self.isClosed = true
-            return self.eventLoop.makeSucceededVoidFuture()
+            return eventLoop.makeSucceededVoidFuture()
         }
     }
 
     struct ConnectionSource: HBConnectionSource {
         func makeConnection(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Connection> {
-            return eventLoop.makeSucceededFuture(.init(eventLoop: eventLoop))
+            return eventLoop.makeSucceededFuture(.init())
         }
     }
 
@@ -79,18 +77,12 @@ final class ConnectionPoolTests: XCTestCase {
     func testMultiRequestRelease() throws {
         /// connection that keeps count of instance
         final class ConnectionCounter: HBConnection {
-            static func make(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<ConnectionCounter> {
-                return eventLoop.makeSucceededFuture(.init(eventLoop: eventLoop))
-            }
-
             static var counter: Int = 0
             static var deletedCounter: Int = 0
 
-            let eventLoop: EventLoop
             var isClosed: Bool
 
-            init(eventLoop: EventLoop) {
-                self.eventLoop = eventLoop
+            init() {
                 self.isClosed = false
                 Self.counter += 1
             }
@@ -99,14 +91,14 @@ final class ConnectionPoolTests: XCTestCase {
                 Self.deletedCounter += 1
             }
 
-            func close() -> EventLoopFuture<Void> {
+            func close(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
                 self.isClosed = true
                 return eventLoop.makeSucceededVoidFuture()
             }
         }
         struct CounterConnectionSource: HBConnectionSource {
             func makeConnection(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<ConnectionCounter> {
-                return eventLoop.makeSucceededFuture(.init(eventLoop: eventLoop))
+                return eventLoop.makeSucceededFuture(.init())
             }
         }
         let expectation = XCTestExpectation()
@@ -160,7 +152,7 @@ final class ConnectionPoolTests: XCTestCase {
                 Self.deletedCounter += 1
             }
 
-            func close() -> EventLoopFuture<Void> {
+            func close(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
                 self.isClosed = true
                 return eventLoop.makeSucceededVoidFuture()
             }
