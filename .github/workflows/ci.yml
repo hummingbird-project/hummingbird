@@ -22,7 +22,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
     - name: SPM tests
-      run: swift test --enable-code-coverage --sanitize=thread
+      run: swift test --enable-code-coverage
     - name: Convert coverage files
       run: |
         xcrun llvm-cov export -format "lcov" \
@@ -38,11 +38,9 @@ jobs:
     strategy:
       matrix:
         image:
-          - 'swift:5.4-bionic'
-          - 'swift:5.5-bionic'
-          - 'swift:5.5-focal'
-          - 'swift:5.5-amazonlinux2'
-          - 'swift:5.5-centos8'
+          - 'swift:5.4'
+          - 'swift:5.5'
+          - 'swift:5.6'
     
     container:
       image: ${{ matrix.image }}
@@ -51,7 +49,7 @@ jobs:
       uses: actions/checkout@v2
     - name: Test
       run: |
-        swift test --enable-test-discovery --enable-code-coverage
+        swift test --enable-code-coverage
     - name: Convert coverage files
       run: |
         llvm-cov export -format="lcov" \
