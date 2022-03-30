@@ -14,8 +14,13 @@
 
 #if compiler(>=5.5) && canImport(_Concurrency)
 
+#if compiler(>=5.6)
+@preconcurrency import Logging
+@preconcurrency import NIOCore
+#else
 import Logging
-import NIO
+import NIOCore
+#endif
 
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
 extension HBConnectionPool {
@@ -23,7 +28,7 @@ extension HBConnectionPool {
     /// - Parameters:
     ///   -logger: Logger used for logging
     ///   - process: Closure to run while we have the connection
-    public func lease<NewValue>(logger: Logger, process: @escaping (Source.Connection) async throws -> NewValue) async throws -> NewValue {
+    public func lease<NewValue>(logger: Logger, process: @Sendable @escaping (Source.Connection) async throws -> NewValue) async throws -> NewValue {
         return try await self.lease(logger: logger) { connection in
             let promise = self.eventLoop.makePromise(of: NewValue.self)
             promise.completeWithTask {
@@ -58,7 +63,7 @@ extension HBConnectionPoolGroup {
     public func lease<NewValue>(
         on eventLoop: EventLoop,
         logger: Logger,
-        process: @escaping (Source.Connection) async throws -> NewValue
+        process: @Sendable @escaping (Source.Connection) async throws -> NewValue
     ) async throws -> NewValue {
         let pool = self.getConnectionPool(on: eventLoop)
         return try await pool.lease(logger: logger, process: process)
@@ -97,7 +102,7 @@ public extension HBAsyncConnection {
 }
 
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
-public protocol HBAsyncConnectionSource: HBConnectionSource where Connection: HBAsyncConnection {
+public protocol HBAsyncConnectionSource: HBConnectionSource, HBSendable where Connection: HBAsyncConnection {
     func makeConnection(on eventLoop: EventLoop, logger: Logger) async throws -> Connection
 }
 

@@ -21,7 +21,7 @@ public enum HBConnectionPoolError: Error {
 }
 
 /// Protocol describing a single connection
-public protocol HBConnection: AnyObject {
+public protocol HBConnection: AnyObject, HBSendable {
     /// Close connection.
     ///
     /// This should not be called directly. Instead connection should be closed via `HBConnectionPool.release`

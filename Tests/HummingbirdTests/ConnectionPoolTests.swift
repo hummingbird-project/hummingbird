@@ -16,17 +16,35 @@
 import Logging
 import NIOPosix
 import XCTest
+#if compiler(>=5.6)
+@preconcurrency import NIOConcurrencyHelpers
+@preconcurrency import NIOCore
+#else
+import NIOConcurrencyHelpers
+import NIOCore
+#endif
+
+struct AtomicValue<Value: NIOAtomicPrimitive>: HBSendable {
+    private let value: NIOAtomic<Value>
+
+    init(_ value: Value) {
+        self.value = NIOAtomic<Value>.makeAtomic(value: value)
+    }
+    func get() -> Value { return value.load() }
+    func set(_ newValue: Value) { value.store(newValue) }
+}
 
 final class ConnectionPoolTests: XCTestCase {
     final class Connection: HBConnection {
-        var isClosed: Bool
+        var isClosed: Bool { return _isClosed.load() }
+        private let _isClosed: NIOAtomic<Bool>
 
         init() {
-            self.isClosed = false
+            self._isClosed = NIOAtomic<Bool>.makeAtomic(value: false)
         }
 
         func close(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-            self.isClosed = true
+            self._isClosed.store(true)
             return eventLoop.makeSucceededVoidFuture()
         }
     }
@@ -80,10 +98,11 @@ final class ConnectionPoolTests: XCTestCase {
             static var counter: Int = 0
             static var deletedCounter: Int = 0
 
-            var isClosed: Bool
+            var isClosed: Bool { return _isClosed.load() }
+            private let _isClosed: NIOAtomic<Bool>
 
             init() {
-                self.isClosed = false
+                self._isClosed = NIOAtomic<Bool>.makeAtomic(value: false)
                 Self.counter += 1
             }
 
@@ -92,7 +111,7 @@ final class ConnectionPoolTests: XCTestCase {
             }
 
             func close(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-                self.isClosed = true
+                self._isClosed.store(true)
                 return eventLoop.makeSucceededVoidFuture()
             }
         }
@@ -140,11 +159,15 @@ final class ConnectionPoolTests: XCTestCase {
             static var deletedCounter: Int = 0
 
             let eventLoop: EventLoop
-            var isClosed: Bool
+            var isClosed: Bool { 
+                get {return _isClosed.load() }
+                set { _isClosed.store(newValue)}
+            }
+            private let _isClosed: NIOAtomic<Bool>
 
             init(eventLoop: EventLoop) {
                 self.eventLoop = eventLoop
-                self.isClosed = false
+                self._isClosed = NIOAtomic<Bool>.makeAtomic(value: false)
                 Self.counter += 1
             }
 
@@ -153,7 +176,7 @@ final class ConnectionPoolTests: XCTestCase {
             }
 
             func close(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-                self.isClosed = true
+                self._isClosed.store(true)
                 return eventLoop.makeSucceededVoidFuture()
             }
         }
