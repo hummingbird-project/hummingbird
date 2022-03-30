@@ -30,13 +30,14 @@ struct AtomicValue<Value: NIOAtomicPrimitive>: HBSendable {
     init(_ value: Value) {
         self.value = NIOAtomic<Value>.makeAtomic(value: value)
     }
-    func get() -> Value { return value.load() }
-    func set(_ newValue: Value) { value.store(newValue) }
+
+    func get() -> Value { return self.value.load() }
+    func set(_ newValue: Value) { self.value.store(newValue) }
 }
 
 final class ConnectionPoolTests: XCTestCase {
     final class Connection: HBConnection {
-        var isClosed: Bool { return _isClosed.load() }
+        var isClosed: Bool { return self._isClosed.load() }
         private let _isClosed: NIOAtomic<Bool>
 
         init() {
@@ -98,7 +99,7 @@ final class ConnectionPoolTests: XCTestCase {
             static var counter: Int = 0
             static var deletedCounter: Int = 0
 
-            var isClosed: Bool { return _isClosed.load() }
+            var isClosed: Bool { return self._isClosed.load() }
             private let _isClosed: NIOAtomic<Bool>
 
             init() {
@@ -159,10 +160,11 @@ final class ConnectionPoolTests: XCTestCase {
             static var deletedCounter: Int = 0
 
             let eventLoop: EventLoop
-            var isClosed: Bool { 
-                get {return _isClosed.load() }
-                set { _isClosed.store(newValue)}
+            var isClosed: Bool {
+                get { return self._isClosed.load() }
+                set { self._isClosed.store(newValue) }
             }
+
             private let _isClosed: NIOAtomic<Bool>
 
             init(eventLoop: EventLoop) {

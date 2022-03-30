@@ -12,10 +12,18 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if compiler(>=5.6)
+#if os(Linux)
+@preconcurrency import Glibc
+#else
+@preconcurrency import Darwin.C
+#endif
+#else
 #if os(Linux)
 import Glibc
 #else
 import Darwin.C
+#endif
 #endif
 
 /// Access environment variables
