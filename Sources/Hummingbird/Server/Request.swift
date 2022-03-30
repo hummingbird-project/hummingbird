@@ -13,10 +13,16 @@
 //===----------------------------------------------------------------------===//
 
 import HummingbirdCore
-import Logging
 import NIOConcurrencyHelpers
+#if compiler(>=5.6)
+@preconcurrency import Logging
+@preconcurrency import NIOCore
+@preconcurrency import NIOHTTP1
+#else
+import Logging
 import NIOCore
 import NIOHTTP1
+#endif
 
 /// Holds all the values required to process a request
 public struct HBRequest: HBSendableExtensible, HBSendable {
@@ -179,6 +185,6 @@ extension HBRequest: CustomStringConvertible {
     }
 }
 
-#if swift(>=5.5) && canImport(_Concurrency)
+#if compiler(>=5.6)
 extension HBRequest._Internal: @unchecked HBSendable {}
 #endif

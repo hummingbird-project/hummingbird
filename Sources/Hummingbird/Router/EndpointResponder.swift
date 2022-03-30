@@ -40,7 +40,7 @@ final class HBEndpointResponder: HBResponder {
     private(set) var path: String
 }
 
-#if swift(>=5.5) && canImport(_Concurrency)
+#if compiler(>=5.6)
 /// Construction of HBEndpointResponder occurs in non-concurrent code. After that they are
 /// read-only
 extension HBEndpointResponder: @unchecked HBSendable {}

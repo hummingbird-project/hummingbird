@@ -199,7 +199,7 @@ public struct HBFileIO: HBSendable {
     }
 }
 
-#if swift(>=5.5) && canImport(_Concurrency)
+#if compiler(>=5.6)
 /// Setting to @unchecked Sendable given the access is fixed to one EventLoop
 extension HBFileIO.FileStreamer: @unchecked HBSendable {}
 #endif

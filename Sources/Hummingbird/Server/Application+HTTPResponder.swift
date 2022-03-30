@@ -75,7 +75,7 @@ extension HBApplication {
     }
 }
 
-#if swift(>=5.5) && canImport(_Concurrency)
+#if compiler(>=5.6)
 /// Can set this to @unchecked Sendable as the elements of a `Channel` accessed are
 /// never changed during the processing of a `HBRequest`
 extension HBApplication.ChannelRequestContext: @unchecked HBSendable {}

@@ -153,7 +153,7 @@ extension HTTPHeaders {
     }
 }
 
-#if swift(>=5.5) && canImport(_Concurrency)
+#if compiler(>=5.6)
 /// Setting this to @unchecked Sendable is a little irresponsible.
 extension HBRequest.ResponsePatch: @unchecked HBSendable {}
 #endif

@@ -14,7 +14,7 @@
 
 import NIOPosix
 
-#if swift(>=5.5) && canImport(_Concurrency)
+#if compiler(>=5.6)
 
 // imported symbols that need Sendable conformance
 // from NIOPosix

@@ -133,7 +133,7 @@ struct RouterPathTrie<Value>: HBSendable {
     }
 }
 
-#if swift(>=5.5) && canImport(_Concurrency)
+#if compiler(>=5.6)
 /// Construction of HBEndpointResponder occurs in non-concurrent code. After that they are
 /// read-only
 extension RouterPathTrie.Node: @unchecked HBSendable {}

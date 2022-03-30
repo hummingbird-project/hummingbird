@@ -38,9 +38,7 @@ public struct HBCallbackResponder: HBResponder {
     }
 }
 
-#if swift(>=5.5) && canImport(_Concurrency)
-
+#if compiler(>=5.6)
 /// Use @unchecked here to avoid pushing the Sendable checks into the non-async code
 extension HBCallbackResponder: @unchecked HBSendable {}
-
 #endif

@@ -12,7 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if compiler(>=5.6)
+@preconcurrency import Logging
+#else
 import Logging
+#endif
 
 /// Middleware outputting to log for every call to server
 public struct HBLogRequestsMiddleware: HBMiddleware {

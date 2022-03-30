@@ -140,7 +140,7 @@ public protocol HBSendableExtensible {
     var extensions: HBSendableExtensions<Self> { get set }
 }
 
-#if swift(>=5.5) && canImport(_Concurrency)
+#if compiler(>=5.6)
 /// Conform to @unchecked Sendable as the PartialKeyPath in the item dictionary is not Sendable
 extension HBSendableExtensions: @unchecked HBSendable {}
 #endif

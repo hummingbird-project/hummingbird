@@ -13,7 +13,11 @@
 //===----------------------------------------------------------------------===//
 
 import HummingbirdCore
+#if compiler(>=5.6)
+@preconcurrency import NIOHTTP1
+#else
 import NIOHTTP1
+#endif
 
 /// Holds all the required to generate a HTTP Response
 public struct HBResponse: HBSendableExtensible, HBSendable {
