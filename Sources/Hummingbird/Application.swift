@@ -39,7 +39,7 @@ public final class HBApplication: HBExtensible {
     // MARK: Member variables
 
     /// server lifecycle, controls initialization and shutdown of application
-    public let lifecycle: ServiceLifecycle
+    public let lifecycle: ComponentLifecycle
     /// event loop group used by application
     public let eventLoopGroup: EventLoopGroup
     /// thread pool used by application
@@ -75,7 +75,7 @@ public final class HBApplication: HBExtensible {
         logger.logLevel = configuration.logLevel
         self.logger = logger
 
-        self.lifecycle = ServiceLifecycle(configuration: .init(logger: self.logger))
+        self.lifecycle = ComponentLifecycle(label: logger.label, logger: logger)
         self.middleware = HBMiddlewareGroup()
         self.router = TrieRouter()
         self.configuration = configuration
