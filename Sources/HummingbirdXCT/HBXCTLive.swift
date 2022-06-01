@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if DEBUG
-
 import Hummingbird
 import HummingbirdCoreXCT
 import NIOCore
@@ -77,5 +75,3 @@ class HBXCTLive: HBXCT {
     let eventLoopGroup: EventLoopGroup
     var client: HBXCTClient?
 }
-
-#endif
