@@ -195,31 +195,32 @@ extension HBFileMiddleware {
     ///
     /// Also supports open ended ranges
     private func getRangeFromHeaderValue(_ header: String) -> ClosedRange<Int>? {
-        let groups = matchRegex(header, expression: "^bytes=([\\d]*)-([\\d]*)$")
+        let groups = self.matchRegex(header, expression: "^bytes=([\\d]*)-([\\d]*)$")
         guard groups.count == 3 else { return nil }
 
         if groups[1] == "" {
             guard let upperBound = Int(groups[2]) else { return nil }
-            return Int.min ... upperBound
+            return Int.min...upperBound
         } else if groups[2] == "" {
             guard let lowerBound = Int(groups[1]) else { return nil }
-            return lowerBound ... Int.max
+            return lowerBound...Int.max
         } else {
             guard let lowerBound = Int(groups[1]),
                   let upperBound = Int(groups[2]) else { return nil }
-            return lowerBound ... upperBound
+            return lowerBound...upperBound
         }
     }
 
     private func matchRegex(_ string: String, expression: String) -> [Substring] {
         guard let regularExpression = try? NSRegularExpression(pattern: expression, options: []),
-              let firstMatch = regularExpression.firstMatch(in: string, range: NSMakeRange(0, string.count)) else {
+              let firstMatch = regularExpression.firstMatch(in: string, range: NSMakeRange(0, string.count))
+        else {
             return []
         }
 
         var groups: [Substring] = []
         groups.reserveCapacity(firstMatch.numberOfRanges)
-        for i in 0 ..< firstMatch.numberOfRanges {
+        for i in 0..<firstMatch.numberOfRanges {
             guard let range = Range(firstMatch.range(at: i), in: string) else { continue }
             groups.append(string[range])
         }
@@ -230,7 +231,7 @@ extension HBFileMiddleware {
         let string = strings.joined(separator: "-")
         let buffer = Array<UInt8>.init(unsafeUninitializedCapacity: 16) { bytes, size in
             var index = 0
-            for i in 0 ..< 16 {
+            for i in 0..<16 {
                 bytes[i] = 0
             }
             for c in string.utf8 {
@@ -250,6 +251,6 @@ extension HBFileMiddleware {
 extension Sequence where Element == UInt8 {
     /// return a hexEncoded string buffer from an array of bytes
     func hexDigest() -> String {
-        return map { String(format: "%02x", $0) }.joined(separator: "")
+        return self.map { String(format: "%02x", $0) }.joined(separator: "")
     }
 }
