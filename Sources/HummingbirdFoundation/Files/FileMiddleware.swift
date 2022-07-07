@@ -27,7 +27,7 @@ import NIOCore
 /// "modified-date", "eTag", "content-type", "cache-control" and "content-range" headers where
 /// they are relevant.
 public struct HBFileMiddleware: HBMiddleware {
-    let rootFolder: String
+    let rootFolder: URL
     let fileIO: HBFileIO
     let cacheControl: HBCacheControl
     let searchForIndexHtml: Bool
@@ -48,23 +48,12 @@ public struct HBFileMiddleware: HBMiddleware {
         if rootFolder.last == "/" {
             rootFolder = String(rootFolder.dropLast())
         }
-        self.rootFolder = rootFolder
-        self.fileIO = .init(application: application)
+        self.rootFolder = URL(fileURLWithPath: rootFolder)
+        fileIO = .init(application: application)
         self.cacheControl = cacheControl
         self.searchForIndexHtml = searchForIndexHtml
 
-        let workingFolder: String
-        if rootFolder.first == "/" {
-            workingFolder = rootFolder
-        } else {
-            if let cwd = getcwd(nil, Int(PATH_MAX)) {
-                workingFolder = String(cString: cwd)
-                free(cwd)
-            } else {
-                workingFolder = "."
-            }
-        }
-        application.logger.info("FileMiddleware serving from \(workingFolder)/\(rootFolder)")
+        application.logger.info("FileMiddleware serving from \(rootFolder)")
     }
 
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
@@ -83,21 +72,17 @@ public struct HBFileMiddleware: HBMiddleware {
                 return request.failure(.badRequest)
             }
 
-            var fullPath = rootFolder + path
+            var fullPath = rootFolder.appendingPathComponent(path)
             let modificationDate: Date?
             let contentSize: Int?
             do {
-                let attributes = try FileManager.default.attributesOfItem(atPath: fullPath)
+                let attributes = try FileManager.default.attributesOfItem(atPath: fullPath.relativePath)
                 // if file is a directory seach and `searchForIndexHtml` is set to true
                 // then search for index.html in directory
                 if let fileType = attributes[.type] as? FileAttributeType, fileType == .typeDirectory {
                     guard searchForIndexHtml else { throw IsDirectoryError() }
-                    if path.last == "/" {
-                        fullPath += "index.html"
-                    } else {
-                        fullPath += "/index.html"
-                    }
-                    let attributes = try FileManager.default.attributesOfItem(atPath: fullPath)
+                    fullPath = fullPath.appendingPathComponent("index.html")
+                    let attributes = try FileManager.default.attributesOfItem(atPath: fullPath.relativePath)
                     modificationDate = attributes[.modificationDate] as? Date
                     contentSize = attributes[.size] as? Int
                 } else {
@@ -138,8 +123,7 @@ public struct HBFileMiddleware: HBMiddleware {
             }
             // verify if-modified-since
             else if let ifModifiedSince = request.headers["if-modified-since"].first,
-                    let modificationDate = modificationDate
-            {
+                    let modificationDate = modificationDate {
                 if let ifModifiedSinceDate = HBDateCache.rfc1123Formatter.date(from: ifModifiedSince) {
                     // round modification date of file down to seconds for comparison
                     let modificationDateTimeInterval = modificationDate.timeIntervalSince1970.rounded(.down)
@@ -170,7 +154,7 @@ public struct HBFileMiddleware: HBMiddleware {
                     guard let range = getRangeFromHeaderValue(rangeHeader) else {
                         return request.failure(.rangeNotSatisfiable)
                     }
-                    return fileIO.loadFile(path: fullPath, range: range, context: request.context, logger: request.logger)
+                    return fileIO.loadFile(path: fullPath.relativePath, range: range, context: request.context, logger: request.logger)
                         .map { body, fileSize in
                             headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
 
@@ -183,7 +167,7 @@ public struct HBFileMiddleware: HBMiddleware {
                             return HBResponse(status: .partialContent, headers: headers, body: body)
                         }
                 }
-                return fileIO.loadFile(path: fullPath, context: request.context, logger: request.logger)
+                return fileIO.loadFile(path: fullPath.relativePath, context: request.context, logger: request.logger)
                     .map { body in
                         headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
                         return HBResponse(status: .ok, headers: headers, body: body)
@@ -204,32 +188,31 @@ extension HBFileMiddleware {
     ///
     /// Also supports open ended ranges
     private func getRangeFromHeaderValue(_ header: String) -> ClosedRange<Int>? {
-        let groups = self.matchRegex(header, expression: "^bytes=([\\d]*)-([\\d]*)$")
+        let groups = matchRegex(header, expression: "^bytes=([\\d]*)-([\\d]*)$")
         guard groups.count == 3 else { return nil }
 
         if groups[1] == "" {
             guard let upperBound = Int(groups[2]) else { return nil }
-            return Int.min...upperBound
+            return Int.min ... upperBound
         } else if groups[2] == "" {
             guard let lowerBound = Int(groups[1]) else { return nil }
-            return lowerBound...Int.max
+            return lowerBound ... Int.max
         } else {
             guard let lowerBound = Int(groups[1]),
                   let upperBound = Int(groups[2]) else { return nil }
-            return lowerBound...upperBound
+            return lowerBound ... upperBound
         }
     }
 
     private func matchRegex(_ string: String, expression: String) -> [Substring] {
         guard let regularExpression = try? NSRegularExpression(pattern: expression, options: []),
-              let firstMatch = regularExpression.firstMatch(in: string, range: NSMakeRange(0, string.count))
-        else {
+              let firstMatch = regularExpression.firstMatch(in: string, range: NSMakeRange(0, string.count)) else {
             return []
         }
 
         var groups: [Substring] = []
         groups.reserveCapacity(firstMatch.numberOfRanges)
-        for i in 0..<firstMatch.numberOfRanges {
+        for i in 0 ..< firstMatch.numberOfRanges {
             guard let range = Range(firstMatch.range(at: i), in: string) else { continue }
             groups.append(string[range])
         }
@@ -240,7 +223,7 @@ extension HBFileMiddleware {
         let string = strings.joined(separator: "-")
         let buffer = Array<UInt8>.init(unsafeUninitializedCapacity: 16) { bytes, size in
             var index = 0
-            for i in 0..<16 {
+            for i in 0 ..< 16 {
                 bytes[i] = 0
             }
             for c in string.utf8 {
@@ -260,6 +243,6 @@ extension HBFileMiddleware {
 extension Sequence where Element == UInt8 {
     /// return a hexEncoded string buffer from an array of bytes
     func hexDigest() -> String {
-        return self.map { String(format: "%02x", $0) }.joined(separator: "")
+        return map { String(format: "%02x", $0) }.joined(separator: "")
     }
 }
