@@ -44,16 +44,23 @@ public struct HBFileMiddleware: HBMiddleware {
         searchForIndexHtml: Bool = false,
         application: HBApplication
     ) {
-        var rootFolder = rootFolder
-        if rootFolder.last == "/" {
-            rootFolder = String(rootFolder.dropLast())
-        }
         self.rootFolder = URL(fileURLWithPath: rootFolder)
         fileIO = .init(application: application)
         self.cacheControl = cacheControl
         self.searchForIndexHtml = searchForIndexHtml
 
-        application.logger.info("FileMiddleware serving from \(rootFolder)")
+        let workingFolder: String
+        if rootFolder.first == "/" {
+            workingFolder = ""
+        } else {
+            if let cwd = getcwd(nil, Int(PATH_MAX)) {
+                workingFolder = String(cString: cwd) + "/"
+                free(cwd)
+            } else {
+                workingFolder = "./"
+            }
+        }
+        application.logger.info("FileMiddleware serving from \(workingFolder)\(rootFolder)")
     }
 
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
