@@ -45,7 +45,7 @@ public struct HBFileMiddleware: HBMiddleware {
         application: HBApplication
     ) {
         self.rootFolder = URL(fileURLWithPath: rootFolder)
-        fileIO = .init(application: application)
+        self.fileIO = .init(application: application)
         self.cacheControl = cacheControl
         self.searchForIndexHtml = searchForIndexHtml
 
@@ -130,7 +130,8 @@ public struct HBFileMiddleware: HBMiddleware {
             }
             // verify if-modified-since
             else if let ifModifiedSince = request.headers["if-modified-since"].first,
-                    let modificationDate = modificationDate {
+                    let modificationDate = modificationDate
+            {
                 if let ifModifiedSinceDate = HBDateCache.rfc1123Formatter.date(from: ifModifiedSince) {
                     // round modification date of file down to seconds for comparison
                     let modificationDateTimeInterval = modificationDate.timeIntervalSince1970.rounded(.down)

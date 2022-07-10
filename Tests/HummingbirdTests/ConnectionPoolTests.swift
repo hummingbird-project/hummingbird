@@ -172,7 +172,7 @@ final class ConnectionPoolTests: XCTestCase {
                     // close connection
                     c.isClosed = true
                     return pool.request(logger: Self.logger)
-                }.map { _ -> Void in
+                }.map { _ in
                     XCTAssertEqual(ConnectionCounter.deletedCounter, 1)
                     XCTAssertEqual(ConnectionCounter.counter, 2)
                 }.flatMap { () -> EventLoopFuture<Void> in
