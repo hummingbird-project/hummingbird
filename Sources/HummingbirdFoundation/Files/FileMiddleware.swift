@@ -27,7 +27,7 @@ import NIOCore
 /// "modified-date", "eTag", "content-type", "cache-control" and "content-range" headers where
 /// they are relevant.
 public struct HBFileMiddleware: HBMiddleware {
-    let rootFolder: String
+    let rootFolder: URL
     let fileIO: HBFileIO
     let cacheControl: HBCacheControl
     let searchForIndexHtml: Bool
@@ -44,27 +44,23 @@ public struct HBFileMiddleware: HBMiddleware {
         searchForIndexHtml: Bool = false,
         application: HBApplication
     ) {
-        var rootFolder = rootFolder
-        if rootFolder.last == "/" {
-            rootFolder = String(rootFolder.dropLast())
-        }
-        self.rootFolder = rootFolder
+        self.rootFolder = URL(fileURLWithPath: rootFolder)
         self.fileIO = .init(application: application)
         self.cacheControl = cacheControl
         self.searchForIndexHtml = searchForIndexHtml
 
         let workingFolder: String
         if rootFolder.first == "/" {
-            workingFolder = rootFolder
+            workingFolder = ""
         } else {
             if let cwd = getcwd(nil, Int(PATH_MAX)) {
-                workingFolder = String(cString: cwd)
+                workingFolder = String(cString: cwd) + "/"
                 free(cwd)
             } else {
-                workingFolder = "."
+                workingFolder = "./"
             }
         }
-        application.logger.info("FileMiddleware serving from \(workingFolder)/\(rootFolder)")
+        application.logger.info("FileMiddleware serving from \(workingFolder)\(rootFolder)")
     }
 
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
@@ -83,21 +79,17 @@ public struct HBFileMiddleware: HBMiddleware {
                 return request.failure(.badRequest)
             }
 
-            var fullPath = rootFolder + path
+            var fullPath = rootFolder.appendingPathComponent(path)
             let modificationDate: Date?
             let contentSize: Int?
             do {
-                let attributes = try FileManager.default.attributesOfItem(atPath: fullPath)
+                let attributes = try FileManager.default.attributesOfItem(atPath: fullPath.relativePath)
                 // if file is a directory seach and `searchForIndexHtml` is set to true
                 // then search for index.html in directory
                 if let fileType = attributes[.type] as? FileAttributeType, fileType == .typeDirectory {
                     guard searchForIndexHtml else { throw IsDirectoryError() }
-                    if path.last == "/" {
-                        fullPath += "index.html"
-                    } else {
-                        fullPath += "/index.html"
-                    }
-                    let attributes = try FileManager.default.attributesOfItem(atPath: fullPath)
+                    fullPath = fullPath.appendingPathComponent("index.html")
+                    let attributes = try FileManager.default.attributesOfItem(atPath: fullPath.relativePath)
                     modificationDate = attributes[.modificationDate] as? Date
                     contentSize = attributes[.size] as? Int
                 } else {
@@ -170,7 +162,7 @@ public struct HBFileMiddleware: HBMiddleware {
                     guard let range = getRangeFromHeaderValue(rangeHeader) else {
                         return request.failure(.rangeNotSatisfiable)
                     }
-                    return fileIO.loadFile(path: fullPath, range: range, context: request.context, logger: request.logger)
+                    return fileIO.loadFile(path: fullPath.relativePath, range: range, context: request.context, logger: request.logger)
                         .map { body, fileSize in
                             headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
 
@@ -183,7 +175,7 @@ public struct HBFileMiddleware: HBMiddleware {
                             return HBResponse(status: .partialContent, headers: headers, body: body)
                         }
                 }
-                return fileIO.loadFile(path: fullPath, context: request.context, logger: request.logger)
+                return fileIO.loadFile(path: fullPath.relativePath, context: request.context, logger: request.logger)
                     .map { body in
                         headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
                         return HBResponse(status: .ok, headers: headers, body: body)

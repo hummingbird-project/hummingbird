@@ -144,7 +144,7 @@ public struct HBCookie: CustomStringConvertible {
 
     /// Output cookie string
     public var description: String {
-        var output: String = "\(self.name)=\(self.value)"
+        var output = "\(self.name)=\(self.value)"
         for property in self.properties.table {
             if property.value == "" {
                 output += "; \(property.key)"
