@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import HummingbirdCore
 import Lifecycle
 import LifecycleNIOCompat
@@ -19,7 +20,6 @@ import Logging
 import NIOCore
 import NIOPosix
 import NIOTransportServices
-import Foundation
 
 /// Application class. Brings together all the components of Hummingbird together
 ///
@@ -125,7 +125,6 @@ public final class HBApplication: HBExtensible {
 
     /// Run application
     public func start() throws {
-
         var shouldKeepRunning = true
         var startError: Error?
         self.lifecycle.start { error in
