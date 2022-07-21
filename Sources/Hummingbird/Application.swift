@@ -134,7 +134,7 @@ public final class HBApplication: HBExtensible {
         }
 
         let loop = RunLoop.current
-        while shouldKeepRunning && loop.run(mode: .default, before: Date()) {}
+        while shouldKeepRunning, loop.run(mode: .default, before: Date()) {}
 
         if let error = startError {
             self.logger.error("Failed starting HummingBird: \(error)")
