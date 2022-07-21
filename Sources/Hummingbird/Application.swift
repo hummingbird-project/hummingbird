@@ -86,11 +86,11 @@ public final class HBApplication: HBExtensible {
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {
         case .createNew:
-            #if os(iOS)
-            self.eventLoopGroup = NIOTSEventLoopGroup()
-            #else
-            self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-            #endif
+            if #available(macOS 10.14, iOS 12.0, *) {
+                self.eventLoopGroup = NIOTSEventLoopGroup()
+            } else {
+                self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+            }
         case .shared(let elg):
             self.eventLoopGroup = elg
         }
