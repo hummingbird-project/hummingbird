@@ -19,6 +19,7 @@ import Logging
 import NIOCore
 import NIOPosix
 import NIOTransportServices
+import Foundation
 
 /// Application class. Brings together all the components of Hummingbird together
 ///
@@ -124,17 +125,22 @@ public final class HBApplication: HBExtensible {
 
     /// Run application
     public func start() throws {
-        let promise = self.eventLoopGroup.next().makePromise(of: Void.self)
+
+        var shouldKeepRunning = true
+        var startError: Error?
         self.lifecycle.start { error in
-            if let error = error {
-                self.logger.error("Failed starting HummingBird: \(error)")
-                promise.fail(error)
-            } else {
-                self.logger.info("HummingBird started successfully")
-                promise.succeed(())
-            }
+            shouldKeepRunning = false
+            startError = error
         }
-        try promise.futureResult.wait()
+
+        let loop = RunLoop.current
+        while shouldKeepRunning && loop.run(mode: .default, before: Date()) {}
+
+        if let error = startError {
+            self.logger.error("Failed starting HummingBird: \(error)")
+            throw error
+        }
+        self.logger.info("HummingBird started successfully")
     }
 
     /// wait while server is running
