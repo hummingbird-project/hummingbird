@@ -125,7 +125,7 @@ public final class HBApplication: HBExtensible {
 
     /// Run application
     public func start() throws {
-    var startError: Error?
+        var startError: Error?
         let startSemaphore = DispatchSemaphore(value: 0)
 
         self.lifecycle.start { error in
