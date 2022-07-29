@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Dispatch
 import HummingbirdCore
 import Lifecycle
 import LifecycleNIOCompat
@@ -124,17 +125,15 @@ public final class HBApplication: HBExtensible {
 
     /// Run application
     public func start() throws {
-        let promise = self.eventLoopGroup.next().makePromise(of: Void.self)
+        var startError: Error?
+        let startSemaphore = DispatchSemaphore(value: 0)
+
         self.lifecycle.start { error in
-            if let error = error {
-                self.logger.error("Failed starting HummingBird: \(error)")
-                promise.fail(error)
-            } else {
-                self.logger.info("HummingBird started successfully")
-                promise.succeed(())
-            }
+            startError = error
+            startSemaphore.signal()
         }
-        try promise.futureResult.wait()
+        startSemaphore.wait()
+        try startError.map { throw $0 }
     }
 
     /// wait while server is running
