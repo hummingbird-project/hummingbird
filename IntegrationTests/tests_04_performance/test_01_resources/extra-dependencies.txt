@@ -1,0 +1,1 @@
+.package(url: "https://github.com/hummingbird-project/hummingbird-core.git", .branch("main"))

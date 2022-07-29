@@ -10,9 +10,9 @@ services:
   integration-tests:
     <<: *common
     environment:
-      - MAX_ALLOCS_ALLOWED_1000_basicRoute=61000
-      - MAX_ALLOCS_ALLOWED_1000_bodyInRequestRoute=64000
-      - MAX_ALLOCS_ALLOWED_1000_bodyInResponseRoute=60000
-      - MAX_ALLOCS_ALLOWED_1000_coreBasicRoute=47000
-      - MAX_ALLOCS_ALLOWED_1000_largeBodyInRequest=127000
+      - MAX_ALLOCS_ALLOWED_1000_basicRoute=56000
+      - MAX_ALLOCS_ALLOWED_1000_bodyInRequestRoute=59000
+      - MAX_ALLOCS_ALLOWED_1000_bodyInResponseRoute=55000
+      - MAX_ALLOCS_ALLOWED_1000_coreBasicRoute=42000
+      - MAX_ALLOCS_ALLOWED_1000_largeBodyInRequest=112000
     command: /bin/bash -xcl "./IntegrationTests/run-tests.sh $${INTEGRATION_TESTS_ARG-}"

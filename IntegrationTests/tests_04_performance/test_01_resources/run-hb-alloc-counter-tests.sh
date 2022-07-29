@@ -40,7 +40,8 @@ fi
 "$here/../../allocation-counter-tests-framework/run-allocation-counter.sh" \
     -p "$here/../../.." \
     -m ".product(name: \"Hummingbird\", package: \"hummingbird\")" \
-    -m ".product(name: \"HummingbirdXCT\", package: \"hummingbird\")" \
+    -m ".product(name: \"HummingbirdCoreXCT\", package: \"hummingbird-core\")" \
     -s "$here/shared.swift" \
     -t "$tmp_dir" \
+    -d "$here/extra-dependencies.txt" \
     "${tests_to_run[@]}"
