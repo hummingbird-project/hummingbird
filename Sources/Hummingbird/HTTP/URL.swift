@@ -161,3 +161,7 @@ extension HBParameters {
         self.parameters = [Substring: Substring].init(queryKeyValues) { lhs, _ in lhs }
     }
 }
+
+#if swift(>=5.6)
+extension HBURL: Sendable {}
+#endif

@@ -122,3 +122,7 @@ public struct HBJobQueueFactory {
 
 /// Error type for when a job queue is being shutdown
 struct HBJobQueueShutdownError: Error {}
+
+#if swift(>=5.6)
+extension JobIdentifier: Sendable {}
+#endif
