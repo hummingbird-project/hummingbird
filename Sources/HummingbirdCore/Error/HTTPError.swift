@@ -16,7 +16,7 @@ import NIOCore
 import NIOHTTP1
 
 /// Default HTTP error. Provides an HTTP status and a message is so desired
-public struct HBHTTPError: Error, HBHTTPResponseError {
+public struct HBHTTPError: Error, HBHTTPResponseError, HBSendable {
     /// status code for the error
     public let status: HTTPResponseStatus
     /// any addiitional headers required

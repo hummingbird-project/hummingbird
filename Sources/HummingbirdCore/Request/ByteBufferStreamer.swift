@@ -16,12 +16,12 @@ import Foundation
 import NIOCore
 
 /// Values returned when we consume the contents of the streamer
-public enum HBStreamerOutput {
+public enum HBStreamerOutput: HBSendable {
     case byteBuffer(ByteBuffer)
     case end
 }
 
-public protocol HBStreamerProtocol {
+public protocol HBStreamerProtocol: HBSendable {
     /// Consume what has been fed to the streamer
     /// - Parameter eventLoop: EventLoop to return future on
     /// - Returns: Returns an EventLoopFuture that will be fulfilled with array of ByteBuffers that has so far been fed to the request body
@@ -41,6 +41,8 @@ public protocol HBStreamerProtocol {
 }
 
 /// Request body streamer. `HBHTTPDecodeHandler` feeds this with ByteBuffers while the Router consumes them
+///
+/// Can set as @unchecked Sendable as interface functions are only allowed to run on same EventLoop
 public final class HBByteBufferStreamer: HBStreamerProtocol {
     public enum StreamerError: Swift.Error {
         case bodyDropped
@@ -318,3 +320,8 @@ final class HBStaticStreamer: HBStreamerProtocol {
         }
     }
 }
+
+#if compiler(>=5.6)
+extension HBByteBufferStreamer: @unchecked Sendable {}
+extension HBStaticStreamer: @unchecked Sendable {}
+#endif

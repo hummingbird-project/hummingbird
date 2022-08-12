@@ -14,8 +14,14 @@
 
 import NIOCore
 
+#if compiler(>=5.6)
+public typealias HBStreamCallback = @Sendable (EventLoop) -> EventLoopFuture<HBStreamerOutput>
+#else
+public typealias HBStreamCallback = (EventLoop) -> EventLoopFuture<HBStreamerOutput>
+#endif
+
 /// Response body. Can be a single ByteBuffer, a stream of ByteBuffers or empty
-public enum HBResponseBody {
+public enum HBResponseBody: HBSendable {
     /// Body stored as a single ByteBuffer
     case byteBuffer(ByteBuffer)
     /// Streamer object supplying byte buffers
@@ -39,7 +45,7 @@ public enum HBResponseBody {
     /// point is should return `'end`.
     ///
     /// - Parameter closure: Closure called whenever a new ByteBuffer is needed
-    public static func streamCallback(_ closure: @escaping (EventLoop) -> EventLoopFuture<HBStreamerOutput>) -> Self {
+    public static func streamCallback(_ closure: @escaping HBStreamCallback) -> Self {
         .stream(ResponseBodyStreamerCallback(closure: closure))
     }
 }
@@ -72,7 +78,7 @@ extension HBResponseBody: CustomStringConvertible {
 }
 
 /// Object supplying ByteBuffers for a response body
-public protocol HBResponseBodyStreamer {
+public protocol HBResponseBodyStreamer: HBSendable {
     func read(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput>
 }
 
@@ -115,7 +121,7 @@ struct ResponseByteBufferStreamer: HBResponseBodyStreamer {
 
 struct ResponseBodyStreamerCallback: HBResponseBodyStreamer {
     /// Closure called whenever a new ByteBuffer is needed
-    let closure: (EventLoop) -> EventLoopFuture<HBStreamerOutput>
+    let closure: HBStreamCallback
 
     /// Read ByteBuffer from streamer.
     ///

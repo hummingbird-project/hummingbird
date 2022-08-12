@@ -15,19 +15,8 @@
 import NIOCore
 import NIOHTTP1
 
-/// HTTP response
-public struct HBHTTPResponse: HBSendable {
-    public var head: HTTPResponseHead
-    public var body: HBResponseBody
-
-    public init(head: HTTPResponseHead, body: HBResponseBody) {
-        self.head = head
-        self.body = body
-    }
-}
-
-extension HBHTTPResponse: CustomStringConvertible {
-    public var description: String {
-        "Head: \(self.head), body: \(self.body)"
-    }
-}
+#if swift(>=5.6)
+public typealias HBSendable = Swift.Sendable
+#else
+public typealias HBSendable = Any
+#endif

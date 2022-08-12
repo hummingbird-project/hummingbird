@@ -15,7 +15,7 @@
 import NIOCore
 
 /// Request Body. Either a ByteBuffer or a ByteBuffer streamer
-public enum HBRequestBody {
+public enum HBRequestBody: HBSendable {
     /// Static ByteBuffer
     case byteBuffer(ByteBuffer?)
     /// ByteBuffer streamer
