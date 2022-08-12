@@ -658,3 +658,7 @@ extension Set where Element == Unicode.Scalar {
         self = Set(string.unicodeScalars)
     }
 }
+
+#if swift(>=5.6)
+extension HBParser: Sendable {}
+#endif

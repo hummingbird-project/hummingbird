@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Atomics
 import HummingbirdCore
 import Logging
 import NIOConcurrencyHelpers
@@ -88,7 +89,7 @@ public struct HBRequest: HBExtensible {
             context: context
         )
         self.body = body
-        self.logger = application.logger.with(metadataKey: "hb_id", value: .stringConvertible(Self.globalRequestID.add(1)))
+        self.logger = application.logger.with(metadataKey: "hb_id", value: .stringConvertible(Self.globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)))
         self.extensions = HBExtensions()
     }
 
@@ -157,7 +158,7 @@ public struct HBRequest: HBExtensible {
 
     private var _internal: _Internal
 
-    private static let globalRequestID = NIOAtomic<Int>.makeAtomic(value: 0)
+    private static let globalRequestID = ManagedAtomic(0)
 }
 
 extension Logger {
