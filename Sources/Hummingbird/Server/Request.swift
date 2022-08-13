@@ -20,7 +20,7 @@ import NIOCore
 import NIOHTTP1
 
 /// Holds all the values required to process a request
-public struct HBRequest: HBExtensible {
+public struct HBRequest: HBSendableExtensible {
     // MARK: Member variables
 
     /// URI path
@@ -38,7 +38,7 @@ public struct HBRequest: HBExtensible {
     /// reference to application
     public var application: HBApplication { self._internal.application }
     /// Request extensions
-    public var extensions: HBExtensions<HBRequest>
+    public var extensions: HBSendableExtensions<HBRequest>
     /// Request context (eventLoop, bytebuffer allocator and remote address)
     public var context: HBRequestContext { self._internal.context }
     /// EventLoop request is running on
@@ -90,7 +90,7 @@ public struct HBRequest: HBExtensible {
         )
         self.body = body
         self.logger = application.logger.with(metadataKey: "hb_id", value: .stringConvertible(Self.globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)))
-        self.extensions = HBExtensions()
+        self.extensions = .init()
     }
 
     // MARK: Methods
@@ -190,3 +190,8 @@ extension HBRequest: CustomStringConvertible {
         "uri: \(self.uri), version: \(self.version), method: \(self.method), headers: \(self.headers), body: \(self.body)"
     }
 }
+
+#if compiler(>=5.6)
+extension HBRequest: Sendable {}
+extension HBRequest._Internal: @unchecked Sendable {}
+#endif
