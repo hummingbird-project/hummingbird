@@ -114,3 +114,7 @@ extension HBParameters: CustomStringConvertible {
         String(describing: self.parameters)
     }
 }
+
+#if swift(>=5.6)
+extension HBParameters: Sendable {}
+#endif
