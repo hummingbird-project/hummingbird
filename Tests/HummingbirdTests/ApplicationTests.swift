@@ -157,6 +157,22 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    func testMultipleQueriesRoute() throws {
+        let app = HBApplication(testing: .embedded)
+        app.router.post("/add") { request -> String in
+            return request.uri.queryParameters.getAll("value", as: Int.self).reduce(0,+).description
+        }
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/add?value=3&value=45&value=7", method: .POST) { response in
+            var body = try XCTUnwrap(response.body)
+            let string = body.readString(length: body.readableBytes)
+            XCTAssertEqual(response.status, .ok)
+            XCTAssertEqual(string, "55")
+        }
+    }
+
     func testArray() throws {
         let app = HBApplication(testing: .embedded)
         app.router.get("array") { _ -> [String] in
