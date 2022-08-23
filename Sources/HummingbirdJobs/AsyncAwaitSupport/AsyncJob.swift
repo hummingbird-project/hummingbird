@@ -12,18 +12,18 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5) && canImport(_Concurrency)
+#if compiler(>=5.5.2) && canImport(_Concurrency)
 
 import NIOCore
 
 /// Job with asynchronous handler
-@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 public protocol HBAsyncJob: HBJob {
     /// Execute job
     func execute(logger: Logger) async throws
 }
 
-@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension HBAsyncJob {
     func execute(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void> {
         let promise = eventLoop.makePromise(of: Void.self)

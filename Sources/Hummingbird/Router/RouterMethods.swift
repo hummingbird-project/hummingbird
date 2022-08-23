@@ -44,9 +44,9 @@ public protocol HBRouterMethods {
         use: @escaping (HBRequest) -> EventLoopFuture<Output>
     ) -> Self
 
-    #if compiler(>=5.5) && canImport(_Concurrency)
+    #if compiler(>=5.5.2) && canImport(_Concurrency)
     /// Add path for async closure
-    @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     @discardableResult func on<Output: HBResponseGenerator>(
         _ path: String,
         method: HTTPMethod,
