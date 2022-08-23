@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2022 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -139,7 +139,7 @@ extension HBParameters {
     /// - Parameter query: parser holding query strings
     init(fromQuery query: HBParser?) {
         guard var query = query else {
-            self.parameters = [:]
+            self.parameters = .init()
             return
         }
         let queries: [HBParser] = query.split(separator: "&")
@@ -158,7 +158,7 @@ extension HBParameters {
                 return (key: query.string[...], value: "")
             }
         }
-        self.parameters = [Substring: Substring].init(queryKeyValues) { lhs, _ in lhs }
+        self.parameters = .init(queryKeyValues)
     }
 }
 

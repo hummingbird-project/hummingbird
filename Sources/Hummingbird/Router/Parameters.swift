@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2022 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -14,10 +14,11 @@
 
 /// Store for parameters key, value pairs extracted from URI
 public struct HBParameters {
-    internal var parameters: [Substring: Substring]
+    public typealias Collection = FlatDictionary<Substring, Substring>
+    internal var parameters: Collection
 
     init() {
-        self.parameters = [:]
+        self.parameters = .init()
     }
 
     /// Return parameter with specified id
@@ -56,6 +57,33 @@ public struct HBParameters {
         return result
     }
 
+    /// Return parameter with specified id
+    /// - Parameter s: parameter id
+    public func getAll(_ s: String) -> [String] {
+        return self.parameters.getAll(for: s[...]).map { String($0) }
+    }
+
+    /// Return parameter with specified id as a certain type
+    /// - Parameters:
+    ///   - s: parameter id
+    ///   - as: type we want returned
+    public func getAll<T: LosslessStringConvertible>(_ s: String, as: T.Type) -> [T] {
+        return self.parameters.getAll(for: s[...]).compactMap { T(String($0)) }
+    }
+
+    /// Return parameter with specified id as a certain type
+    /// - Parameters:
+    ///   - s: parameter id
+    ///   - as: type we want returned
+    public func requireAll<T: LosslessStringConvertible>(_ s: String, as: T.Type) throws -> [T] {
+        return try self.parameters.getAll(for: s[...]).compactMap {
+            guard let result = T(String($0)) else {
+                throw HBHTTPError(.badRequest)
+            }
+            return result
+        }
+    }
+
     /// Set parameter
     /// - Parameters:
     ///   - s: parameter id
@@ -74,10 +102,10 @@ public struct HBParameters {
 }
 
 extension HBParameters: Collection {
-    public typealias Index = Dictionary<Substring, Substring>.Index
+    public typealias Index = Collection.Index
     public var startIndex: Index { self.parameters.startIndex }
     public var endIndex: Index { self.parameters.endIndex }
-    public subscript(_ index: Index) -> Dictionary<Substring, Substring>.Element { return self.parameters[index] }
+    public subscript(_ index: Index) -> Collection.Element { return self.parameters[index] }
     public func index(after index: Index) -> Index { self.parameters.index(after: index) }
 }
 
