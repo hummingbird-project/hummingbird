@@ -32,9 +32,9 @@ public protocol HBStreamerProtocol: HBSendable {
     /// - Returns: EventLoopFuture that will be fulfilled when all buffers are consumed
     func consumeAll(on eventLoop: EventLoop, _ process: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void>
 
-    #if compiler(>=5.5) && canImport(_Concurrency)
+    #if compiler(>=5.5.2) && canImport(_Concurrency)
 
-    @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     func consume() async throws -> HBStreamerOutput
 
     #endif // compiler(>=5.5) && canImport(_Concurrency)

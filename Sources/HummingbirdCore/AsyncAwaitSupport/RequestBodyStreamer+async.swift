@@ -12,17 +12,17 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5) && canImport(_Concurrency)
+#if compiler(>=5.5.2) && canImport(_Concurrency)
 
 import NIOCore
 
-@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension HBStreamerProtocol {
     /// AsyncSequence of ByteBuffers version of streamed Request body
     public var sequence: HBRequestBodyStreamerSequence { return .init(streamer: self) }
 }
 
-@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension HBByteBufferStreamer {
     /// Consume what has been fed to the request so far
     public func consume() async throws -> HBStreamerOutput {
@@ -32,7 +32,7 @@ extension HBByteBufferStreamer {
     }
 }
 
-@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension HBStaticStreamer {
     /// Consume what has been fed to the request so far
     public func consume() -> HBStreamerOutput {
@@ -47,7 +47,7 @@ extension HBStaticStreamer {
 }
 
 /// AsyncSequence providing ByteBuffers from a request body stream
-@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 public struct HBRequestBodyStreamerSequence: AsyncSequence {
     public typealias Element = ByteBuffer
 
