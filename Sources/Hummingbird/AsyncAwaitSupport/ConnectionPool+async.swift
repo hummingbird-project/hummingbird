@@ -12,12 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5) && canImport(_Concurrency)
+#if compiler(>=5.5.2) && canImport(_Concurrency)
 
 import Logging
 import NIO
 
-@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension HBConnectionPool {
     /// Request a connection, run a process and then release the connection
     /// - Parameters:
@@ -48,7 +48,7 @@ extension HBConnectionPool {
     }
 }
 
-@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension HBConnectionPoolGroup {
     /// Request a connection, run a process and then release the connection
     /// - Parameters:
@@ -80,12 +80,12 @@ extension HBConnectionPoolGroup {
     }
 }
 
-@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 public protocol HBAsyncConnection: HBConnection {
     func close() async throws
 }
 
-@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 public extension HBAsyncConnection {
     func close(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
         let promise = eventLoop.makePromise(of: Void.self)
@@ -96,12 +96,12 @@ public extension HBAsyncConnection {
     }
 }
 
-@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 public protocol HBAsyncConnectionSource: HBConnectionSource where Connection: HBAsyncConnection {
     func makeConnection(on eventLoop: EventLoop, logger: Logger) async throws -> Connection
 }
 
-@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 public extension HBAsyncConnectionSource {
     func makeConnection(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Connection> {
         let promise = eventLoop.makePromise(of: Connection.self)

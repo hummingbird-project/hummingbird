@@ -12,11 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5) && canImport(_Concurrency)
+#if compiler(>=5.5.2) && canImport(_Concurrency)
 
 import NIOCore
 
-@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension HBRouterMethods {
     /// GET path for closure returning type conforming to ResponseFutureEncodable
     @discardableResult public func get<Output: HBResponseGenerator>(
@@ -92,7 +92,7 @@ extension HBRouterMethods {
     }
 }
 
-@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension HBRouter {
     /// Add path for closure returning type conforming to ResponseFutureEncodable
     @discardableResult public func on<Output: HBResponseGenerator>(
@@ -107,7 +107,7 @@ extension HBRouter {
     }
 }
 
-@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension HBRouterGroup {
     /// Add path for closure returning type conforming to ResponseFutureEncodable
     @discardableResult public func on<Output: HBResponseGenerator>(

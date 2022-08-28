@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5) && canImport(_Concurrency)
+#if compiler(>=5.5.2) && canImport(_Concurrency)
 
 import Foundation
 import Hummingbird
@@ -20,7 +20,7 @@ import HummingbirdFoundation
 import HummingbirdXCT
 import XCTest
 
-@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 class HummingbirdAsyncFilesTests: XCTestCase {
     func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
