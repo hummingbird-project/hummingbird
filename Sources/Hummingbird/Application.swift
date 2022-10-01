@@ -97,17 +97,17 @@ public final class HBApplication: HBExtensible {
         }
 
         // create lifecycle
-        let lifecycle: LifecycleTasksContainer
+        let lifecycleTasksContainer: LifecycleTasksContainer
 
         switch serviceLifecycleProvider {
         case .shared(let parentLifecycle):
             self.lifecycle = parentLifecycle
             let componentLifecycle = ComponentLifecycle(label: self.logger.label, logger: self.logger)
-            lifecycle = componentLifecycle
+            lifecycleTasksContainer = componentLifecycle
             self.lifecycle.register(componentLifecycle)
         case .createNew:
             let serviceLifecycle = ServiceLifecycle(configuration: .init(logger: self.logger))
-            lifecycle = serviceLifecycle
+            lifecycleTasksContainer = serviceLifecycle
             self.lifecycle = serviceLifecycle
         }
 
@@ -119,17 +119,17 @@ public final class HBApplication: HBExtensible {
         self.addEventLoopStorage()
 
         // register application shutdown with lifecycle
-        lifecycle.registerShutdown(
+        lifecycleTasksContainer.registerShutdown(
             label: "Application", .sync(self.shutdownApplication)
         )
 
-        lifecycle.registerShutdown(
+        lifecycleTasksContainer.registerShutdown(
             label: "DateCache", .eventLoopFuture { HBDateCache.shutdownDateCaches(eventLoopGroup: self.eventLoopGroup) }
         )
 
         // register server startup and shutdown with lifecycle
         if !configuration.noHTTPServer {
-            lifecycle.register(
+            lifecycleTasksContainer.register(
                 label: "HTTP Server",
                 start: .eventLoopFuture { self.server.start(responder: HTTPResponder(application: self)) },
                 shutdown: .eventLoopFuture(self.server.stop)
