@@ -69,13 +69,13 @@ public final class HBApplication: HBExtensible {
     /// Initialize new Application
     public init(
         configuration: HBApplication.Configuration = HBApplication.Configuration(),
-        eventLoopGroupProvider: NIOEventLoopGroupProvider = .createNew
+        eventLoopGroupProvider: NIOEventLoopGroupProvider = .createNew,
+        serviceLifecycleProvider: ServiceLifecycleProvider = .createNew
     ) {
         var logger = Logger(label: configuration.serverName ?? "HummingBird")
         logger.logLevel = configuration.logLevel
         self.logger = logger
 
-        self.lifecycle = ServiceLifecycle(configuration: .init(logger: self.logger))
         self.middleware = HBMiddlewareGroup()
         self.router = TrieRouter()
         self.configuration = configuration
@@ -95,6 +95,22 @@ public final class HBApplication: HBExtensible {
         case .shared(let elg):
             self.eventLoopGroup = elg
         }
+
+        // create lifecycle
+        let lifecycleTasksContainer: LifecycleTasksContainer
+
+        switch serviceLifecycleProvider {
+        case .shared(let parentLifecycle):
+            self.lifecycle = parentLifecycle
+            let componentLifecycle = ComponentLifecycle(label: self.logger.label, logger: self.logger)
+            lifecycleTasksContainer = componentLifecycle
+            self.lifecycle.register(componentLifecycle)
+        case .createNew:
+            let serviceLifecycle = ServiceLifecycle(configuration: .init(logger: self.logger))
+            lifecycleTasksContainer = serviceLifecycle
+            self.lifecycle = serviceLifecycle
+        }
+
         self.threadPool = NIOThreadPool(numberOfThreads: configuration.threadPoolSize)
         self.threadPool.start()
 
@@ -103,17 +119,17 @@ public final class HBApplication: HBExtensible {
         self.addEventLoopStorage()
 
         // register application shutdown with lifecycle
-        self.lifecycle.registerShutdown(
+        lifecycleTasksContainer.registerShutdown(
             label: "Application", .sync(self.shutdownApplication)
         )
 
-        self.lifecycle.registerShutdown(
+        lifecycleTasksContainer.registerShutdown(
             label: "DateCache", .eventLoopFuture { HBDateCache.shutdownDateCaches(eventLoopGroup: self.eventLoopGroup) }
         )
 
         // register server startup and shutdown with lifecycle
         if !configuration.noHTTPServer {
-            self.lifecycle.register(
+            lifecycleTasksContainer.register(
                 label: "HTTP Server",
                 start: .eventLoopFuture { self.server.start(responder: HTTPResponder(application: self)) },
                 shutdown: .eventLoopFuture(self.server.stop)
