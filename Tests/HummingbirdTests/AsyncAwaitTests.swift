@@ -36,7 +36,7 @@ final class AsyncAwaitTests: XCTestCase {
         // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
         guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
         #endif
-        let app = HBApplication(testing: .live)
+        let app = HBApplication(testing: .asyncTest)
         app.router.get("/hello") { request -> ByteBuffer in
             return await self.getBuffer(request: request)
         }
@@ -63,7 +63,7 @@ final class AsyncAwaitTests: XCTestCase {
                 return response
             }
         }
-        let app = HBApplication(testing: .live)
+        let app = HBApplication(testing: .asyncTest)
         app.middleware.add(AsyncTestMiddleware())
         app.router.get("/hello") { _ -> String in
             "hello"
@@ -91,7 +91,7 @@ final class AsyncAwaitTests: XCTestCase {
                 return try await request.success("Hello \(self.name)").get()
             }
         }
-        let app = HBApplication(testing: .live)
+        let app = HBApplication(testing: .asyncTest)
         app.router.post("/hello/:name", use: AsyncTest.self)
 
         try app.XCTStart()
@@ -109,7 +109,7 @@ final class AsyncAwaitTests: XCTestCase {
         // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
         guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
         #endif
-        let app = HBApplication(testing: .live)
+        let app = HBApplication(testing: .asyncTest)
         app.router.post("size", options: .streamBody) { request -> String in
             guard let stream = request.body.stream else {
                 throw HBHTTPError(.badRequest)
