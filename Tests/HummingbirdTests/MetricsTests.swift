@@ -19,7 +19,7 @@ import NIOConcurrencyHelpers
 import XCTest
 
 internal final class TestMetrics: MetricsFactory {
-    private let lock = Lock()
+    private let lock = NIOLock()
     var counters = [String: CounterHandler]()
     var recorders = [String: RecorderHandler]()
     var timers = [String: TimerHandler]()
@@ -71,7 +71,7 @@ internal class TestCounter: CounterHandler, Equatable {
     let label: String
     let dimensions: [(String, String)]
 
-    let lock = Lock()
+    let lock = NIOLock()
     var values = [(Date, Int64)]()
 
     init(label: String, dimensions: [(String, String)]) {
@@ -105,7 +105,7 @@ internal class TestRecorder: RecorderHandler, Equatable {
     let dimensions: [(String, String)]
     let aggregate: Bool
 
-    let lock = Lock()
+    let lock = NIOLock()
     var values = [(Date, Double)]()
 
     init(label: String, dimensions: [(String, String)], aggregate: Bool) {
@@ -138,7 +138,7 @@ internal class TestTimer: TimerHandler, Equatable {
     var displayUnit: TimeUnit?
     let dimensions: [(String, String)]
 
-    let lock = Lock()
+    let lock = NIOLock()
     var values = [(Date, Int64)]()
 
     init(label: String, dimensions: [(String, String)]) {
