@@ -14,26 +14,61 @@
 
 import NIOCore
 
-public struct TimeoutPromise {
+public struct TimeoutPromise<Value> {
     let task: Scheduled<Void>
-    let promise: EventLoopPromise<Void>
+    public let promise: EventLoopPromise<Value>
 
-    public init(eventLoop: EventLoop, timeout: TimeAmount) {
-        let promise = eventLoop.makePromise(of: Void.self)
+    /// Create TimeoutPromise
+    internal init(eventLoop: EventLoop, deadline: NIODeadline, file: StaticString, line: UInt) {
+        let promise = eventLoop.makePromise(of: Value.self, file: file, line: line)
         self.promise = promise
-        self.task = eventLoop.scheduleTask(in: timeout) { promise.fail(ChannelError.connectTimeout(timeout)) }
+        self.task = eventLoop.scheduleTask(deadline: deadline) { promise.fail(ChannelError.connectTimeout(.seconds(1))) }
     }
 
-    public func succeed() {
-        self.promise.succeed(())
+    /// Deliver a successful result to the associated `EventLoopFuture<Value>` object.
+    ///
+    /// - parameters:
+    ///     - value: The successful result of the operation.
+    @inlinable
+    public func succeed(_ value: Value) {
+        self.promise.succeed(value)
     }
 
+    /// Deliver an error to the associated `EventLoopFuture<Value>` object.
+    ///
+    /// - parameters:
+    ///      - error: The error from the operation.
+    @inlinable
     public func fail(_ error: Error) {
         self.promise.fail(error)
     }
 
-    public func wait() throws {
-        try self.promise.futureResult.wait()
-        self.task.cancel()
+    /// Complete the promise with the passed in `EventLoopFuture<Value>`.
+    ///
+    /// This method is equivalent to invoking `future.cascade(to: promise)`,
+    /// but sometimes may read better than its cascade counterpart.
+    ///
+    /// - parameters:
+    ///     - future: The future whose value will be used to succeed or fail this promise.
+    @inlinable
+    public func completeWith(_ future: EventLoopFuture<Value>) {
+        self.promise.completeWith(future)
+    }
+
+    @inlinable
+    public var futureResult: EventLoopFuture<Value> { self.promise.futureResult }
+}
+
+extension EventLoop {
+    /// Creates and returns a new `TimeoutPromise` that will be notified using this `EventLoop`
+    /// or fail if it runs past the timeout
+    public func makeTimeoutPromise<Value>(of: Value.Type, timeout: TimeAmount, file: StaticString = #file, line: UInt = #line) -> TimeoutPromise<Value> {
+        .init(eventLoop: self, deadline: .now() + timeout, file: file, line: line)
+    }
+
+    /// Creates and returns a new `TimeoutPromise` that will be notified using this `EventLoop`
+    /// or fail it is runs past the deadline
+    public func makeTimeoutPromise<Value>(of: Value.Type, deadline: NIODeadline, file: StaticString = #file, line: UInt = #line) -> TimeoutPromise<Value> {
+        .init(eventLoop: self, deadline: deadline, file: file, line: line)
     }
 }

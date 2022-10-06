@@ -254,9 +254,9 @@ class HummingBirdCoreTests: XCTestCase {
                         switch output {
                         case .byteBuffer(let buffer):
                             // delay processing of buffer
-                            return context.eventLoop.scheduleTask(in: .milliseconds(Int64.random(in: 0..<200))) { .byteBuffer(buffer) }.futureResult
+                            return eventLoop.scheduleTask(in: .milliseconds(Int64.random(in: 0..<200))) { .byteBuffer(buffer) }.futureResult
                         case .end:
-                            return context.eventLoop.makeSucceededFuture(.end)
+                            return eventLoop.makeSucceededFuture(.end)
                         }
                     }
                 }
@@ -520,14 +520,14 @@ class HummingBirdCoreTests: XCTestCase {
         client.connect()
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
-        let timeoutPromise = TimeoutPromise(eventLoop: Self.eventLoopGroup.next(), timeout: .seconds(5))
+        let timeoutPromise = Self.eventLoopGroup.next().makeTimeoutPromise(of: Void.self, timeout: .seconds(5))
         _ = client.get("/", headers: ["connection": "close"])
         client.channelPromise.futureResult.whenSuccess { channel in
             channel.closeFuture.whenSuccess { _ in
-                timeoutPromise.succeed()
+                timeoutPromise.succeed(())
             }
         }
-        XCTAssertNoThrow(try timeoutPromise.wait())
+        XCTAssertNoThrow(try timeoutPromise.futureResult.wait())
     }
 
     /// Test we can run with an embedded channel. HummingbirdXCT uses this quite a lot

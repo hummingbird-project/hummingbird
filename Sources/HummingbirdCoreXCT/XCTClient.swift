@@ -32,7 +32,7 @@ public class HBXCTClient {
     public struct Configuration {
         public init(
             tlsConfiguration: TLSConfiguration? = nil,
-            timeout: TimeAmount = .seconds(5),
+            timeout: TimeAmount = .seconds(15),
             serverName: String? = nil
         ) {
             self.tlsConfiguration = tlsConfiguration
@@ -82,7 +82,6 @@ public class HBXCTClient {
                     return channel.pipeline.addHTTPClientHandlers()
                         .flatMap {
                             let handlers: [ChannelHandler] = [
-                                IdleStateHandler(readTimeout: self.configuration.timeout),
                                 HTTPClientRequestSerializer(),
                                 HTTPClientResponseHandler(),
                                 HTTPTaskHandler(),
@@ -137,8 +136,8 @@ public class HBXCTClient {
     /// Execute request to server. Return `EventLoopFuture` that will be fulfilled with HTTP response
     public func execute(_ request: HBXCTClient.Request) -> EventLoopFuture<HBXCTClient.Response> {
         self.channelPromise.futureResult.flatMap { channel in
-            let promise = self.eventLoopGroup.next().makePromise(of: HBXCTClient.Response.self)
-            let task = HTTPTask(request: self.cleanupRequest(request), responsePromise: promise)
+            let promise = self.eventLoopGroup.next().makeTimeoutPromise(of: HBXCTClient.Response.self, timeout: self.configuration.timeout)
+            let task = HTTPTask(request: self.cleanupRequest(request), responsePromise: promise.promise)
             channel.writeAndFlush(task, promise: nil)
             return promise.futureResult
         }
