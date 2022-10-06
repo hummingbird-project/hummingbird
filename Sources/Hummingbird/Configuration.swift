@@ -55,7 +55,21 @@ extension HBApplication {
 
         // MARK: Initialization
 
-        /// Create configuration struct
+        /// Initialize HBApplication configuration
+        /// 
+        /// - Parameters:
+        ///   - address: Bind address for server
+        ///   - serverName: Server name to return in "server" header
+        ///   - maxUploadSize: Maximum upload size allowed
+        ///   - maxStreamingBufferSize: Maximum size of buffer for streaming request payloads
+        ///   - backlog: the maximum length for the queue of pending connections.  If a connection request arrives with the queue full,
+        ///         the client may receive an error with an indication of ECONNREFUSE
+        ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
+        ///   - tcpNoDelay: Disables the Nagle algorithm for send coalescing.
+        ///   - enableHttpPipelining: Pipelining ensures that only one http request is processed at one time
+        ///   - threadPoolSize: Number of threads in application thread pool
+        ///   - logLevel: Logging level
+        ///   - noHTTPServer: Don't start up the HTTP server.
         public init(
             address: HBBindAddress = .hostname(),
             serverName: String? = nil,
@@ -96,16 +110,26 @@ extension HBApplication {
         }
 
         #if canImport(Network)
-        /// Create configuration struct
+        /// Initialize HBApplication configuration
+        /// 
+        /// - Parameters:
+        ///   - address: Bind address for server
+        ///   - serverName: Server name to return in "server" header
+        ///   - maxUploadSize: Maximum upload size allowed
+        ///   - maxStreamingBufferSize: Maximum size of buffer for streaming request payloads
+        ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
+        ///   - enableHttpPipelining: Pipelining ensures that only one http request is processed at one time
+        ///   - threadPoolSize: Number of threads in application thread pool
+        ///   - logLevel: Logging level
+        ///   - noHTTPServer: Don't start up the HTTP server.
+        ///   - tlsOptions: TLS options for when you are using NIOTransportServices
         @available(macOS 10.14, iOS 12, tvOS 12, *)
         public init(
             address: HBBindAddress = .hostname(),
             serverName: String? = nil,
             maxUploadSize: Int = 2 * 1024 * 1024,
             maxStreamingBufferSize: Int = 1 * 1024 * 1024,
-            backlog: Int = 256,
             reuseAddress: Bool = true,
-            tcpNoDelay: Bool = false,
             enableHttpPipelining: Bool = true,
             threadPoolSize: Int = 2,
             logLevel: Logger.Level? = nil,
@@ -118,9 +142,9 @@ extension HBApplication {
             self.serverName = serverName
             self.maxUploadSize = maxUploadSize
             self.maxStreamingBufferSize = maxStreamingBufferSize
-            self.backlog = backlog
+            self.backlog = 256 // not used by Network framework
             self.reuseAddress = reuseAddress
-            self.tcpNoDelay = tcpNoDelay
+            self.tcpNoDelay = true // not used by Network framework
             self.enableHttpPipelining = enableHttpPipelining
             self.tlsOptions = tlsOptions
 
