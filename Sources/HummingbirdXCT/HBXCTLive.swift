@@ -36,9 +36,9 @@ class HBXCTLive: HBXCT {
         do {
             try application.start()
             let client = HBXCTClient(
-                host: "localhost", 
-                port: application.server.port!, 
-                configuration: .init(timeout: self.timeout), 
+                host: "localhost",
+                port: application.server.port!,
+                configuration: .init(timeout: self.timeout),
                 eventLoopGroupProvider: .createNew
             )
             client.connect()

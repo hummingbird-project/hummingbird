@@ -34,6 +34,7 @@ struct HBXCTError: Error, Equatable {
         case noEnd
         case timeout
     }
+
     private let value: _Internal
     private init(_ value: _Internal) {
         self.value = value
