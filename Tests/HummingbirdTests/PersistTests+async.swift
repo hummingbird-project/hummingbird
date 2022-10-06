@@ -20,7 +20,7 @@ import XCTest
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 final class AsyncPersistTests: XCTestCase {
     func createApplication() throws -> HBApplication {
-        let app = HBApplication(testing: .asyncTest)
+        let app = HBApplication(testing: .live)
         // add persist
         app.addPersist(using: .memory)
 
