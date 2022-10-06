@@ -22,19 +22,25 @@ import XCTest
 
 /// Test using a live server and AsyncHTTPClient
 class HBXCTLive: HBXCT {
-    init(configuration: HBApplication.Configuration) {
+    init(configuration: HBApplication.Configuration, timeout: TimeAmount) {
         #if os(iOS)
         self.eventLoopGroup = NIOTSEventLoopGroup()
         #else
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         #endif
+        self.timeout = timeout
     }
 
     /// Start tests
     func start(application: HBApplication) throws {
         do {
             try application.start()
-            let client = HBXCTClient(host: "localhost", port: application.server.port!, eventLoopGroupProvider: .createNew)
+            let client = HBXCTClient(
+                host: "localhost", 
+                port: application.server.port!, 
+                configuration: .init(timeout: self.timeout), 
+                eventLoopGroupProvider: .createNew
+            )
             client.connect()
             self.client = client
         } catch {
@@ -74,4 +80,5 @@ class HBXCTLive: HBXCT {
 
     let eventLoopGroup: EventLoopGroup
     var client: HBXCTClient?
+    let timeout: TimeAmount
 }

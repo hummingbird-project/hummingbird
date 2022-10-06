@@ -59,18 +59,18 @@ extension HBApplication {
     /// - Parameters:
     ///   - testing: indicates which type of testing framework we want
     ///   - configuration: configuration of application
-    public convenience init(testing: XCTTestingSetup, configuration: HBApplication.Configuration = .init()) {
+    public convenience init(testing: XCTTestingSetup, configuration: HBApplication.Configuration = .init(), timeout: TimeAmount = .seconds(15)) {
         let xct: HBXCT
         let configuration = configuration.with(address: .hostname("localhost", port: 0))
         switch testing {
         case .embedded:
             xct = HBXCTEmbedded()
         case .live:
-            xct = HBXCTLive(configuration: configuration)
+            xct = HBXCTLive(configuration: configuration, timeout: timeout)
         case .asyncTest:
             #if compiler(>=5.5.2) && canImport(_Concurrency)
             if #available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *) {
-                xct = HBXCTAsyncTesting()
+                xct = HBXCTAsyncTesting(timeout: timeout)
             } else {
                 fatalError("XCTTestingSetup.asyncTest is not supported on your platform")
             }
