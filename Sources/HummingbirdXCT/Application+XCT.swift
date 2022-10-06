@@ -70,7 +70,7 @@ extension HBApplication {
         case .asyncTest:
             #if compiler(>=5.5.2) && canImport(_Concurrency)
             if #available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *) {
-                xct = HBXCTAsyncEmbedded()
+                xct = HBXCTAsyncTesting()
             } else {
                 fatalError("XCTTestingSetup.asyncTest is not supported on your platform")
             }

@@ -22,10 +22,10 @@ import XCTest
 
 /// Test application by running on an EmbeddedChannel
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-struct HBXCTAsyncEmbedded: HBXCT {
+struct HBXCTAsyncTesting: HBXCT {
     init() {
         self.asyncTestingChannel = .init()
-        self.testingEventLoop = self.asyncTestingChannel.testingEventLoop
+        self.asyncTestingEventLoop = self.asyncTestingChannel.testingEventLoop
     }
 
     /// Start tests
@@ -40,7 +40,7 @@ struct HBXCTAsyncEmbedded: HBXCT {
 
     /// EventLoop version of stop
     func stop(application: HBApplication) {
-        let promise = self.testingEventLoop.makePromise(of: Void.self)
+        let promise = self.asyncTestingEventLoop.makePromise(of: Void.self)
         promise.completeWithTask {
             try await self._stop(application: application)
         }
@@ -52,7 +52,7 @@ struct HBXCTAsyncEmbedded: HBXCT {
         do {
             try application.shutdownApplication()
             _ = try await self.asyncTestingChannel.finish()
-            try self.testingEventLoop.syncShutdownGracefully()
+            try self.asyncTestingEventLoop.syncShutdownGracefully()
         } catch {
             XCTFail("\(error)")
         }
@@ -64,7 +64,7 @@ struct HBXCTAsyncEmbedded: HBXCT {
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil
     ) -> EventLoopFuture<HBXCTResponse> {
-        let promise = self.testingEventLoop.makePromise(of: HBXCTResponse.self)
+        let promise = self.asyncTestingEventLoop.makePromise(of: HBXCTResponse.self)
         promise.completeWithTask {
             try await self._execute(uri: uri, method: method, headers: headers, body: body)
         }
@@ -87,10 +87,11 @@ struct HBXCTAsyncEmbedded: HBXCT {
             }
             try await self.writeInbound(.end(nil))
 
-            await self.asyncTestingChannel.testingEventLoop.run()
+            await self.asyncTestingEventLoop.run()
 
             // read response
-            guard case .head(let head) = try await readOutbound() else { throw HBXCTError.noHead }
+            let outbound = try await readOutbound()
+            guard case .head(let head) = outbound else { throw HBXCTError.noHead }
             var next = try await readOutbound()
             var buffer = self.asyncTestingChannel.allocator.buffer(capacity: 0)
             while case .body(let part) = next {
@@ -104,7 +105,7 @@ struct HBXCTAsyncEmbedded: HBXCT {
         }
     }
 
-    var eventLoopGroup: EventLoopGroup { return self.testingEventLoop }
+    var eventLoopGroup: EventLoopGroup { return self.asyncTestingEventLoop }
 
     func writeInbound(_ part: HTTPServerRequestPart) async throws {
         try await self.asyncTestingChannel.writeInbound(part)
@@ -115,7 +116,7 @@ struct HBXCTAsyncEmbedded: HBXCT {
     }
 
     let asyncTestingChannel: NIOAsyncTestingChannel
-    let testingEventLoop: NIOAsyncTestingEventLoop
+    let asyncTestingEventLoop: NIOAsyncTestingEventLoop
 }
 
 #endif // compiler(>=5.5.2) && canImport(_Concurrency)
