@@ -23,9 +23,10 @@ import XCTest
 /// Test application by running on an EmbeddedChannel
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 struct HBXCTAsyncTesting: HBXCT {
-    init() {
+    init(timeout: TimeAmount) {
         self.asyncTestingChannel = .init()
         self.asyncTestingEventLoop = self.asyncTestingChannel.testingEventLoop
+        self.timeout = timeout
     }
 
     /// Start tests
@@ -112,11 +113,20 @@ struct HBXCTAsyncTesting: HBXCT {
     }
 
     func readOutbound() async throws -> HTTPServerResponsePart? {
-        return try await self.asyncTestingChannel.readOutbound(as: HTTPServerResponsePart.self)
+        let deadline: NIODeadline = .now() + self.timeout
+        while NIODeadline.now() < deadline {
+            if let part = try await self.asyncTestingChannel.readOutbound(as: HTTPServerResponsePart.self) {
+                return part
+            }
+            // sleep a millisecond
+            try await Task.sleep(nanoseconds: 1_000_000)
+        }
+        throw HBXCTError.timeout
     }
 
     let asyncTestingChannel: NIOAsyncTestingChannel
     let asyncTestingEventLoop: NIOAsyncTestingEventLoop
+    let timeout: TimeAmount
 }
 
 #endif // compiler(>=5.5.2) && canImport(_Concurrency)
