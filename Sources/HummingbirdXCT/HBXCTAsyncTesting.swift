@@ -129,4 +129,9 @@ struct HBXCTAsyncTesting: HBXCT {
     let timeout: TimeAmount
 }
 
+// to get this to compile with Swift 5.5 we need to conform `IOData`` to `Sendable``
+#if compiler(<5.6)
+extension IOData: @unchecked Sendable {}
+#endif
+
 #endif // compiler(>=5.5.2) && canImport(_Concurrency)
