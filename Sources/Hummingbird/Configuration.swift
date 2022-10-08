@@ -56,7 +56,7 @@ extension HBApplication {
         // MARK: Initialization
 
         /// Initialize HBApplication configuration
-        /// 
+        ///
         /// - Parameters:
         ///   - address: Bind address for server
         ///   - serverName: Server name to return in "server" header
@@ -111,7 +111,7 @@ extension HBApplication {
 
         #if canImport(Network)
         /// Initialize HBApplication configuration
-        /// 
+        ///
         /// - Parameters:
         ///   - address: Bind address for server
         ///   - serverName: Server name to return in "server" header
