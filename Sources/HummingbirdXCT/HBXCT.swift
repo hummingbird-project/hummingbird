@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
+import NIOCore
 
 /// Response structure returned by XCT testing framework
 public struct HBXCTResponse {
@@ -25,11 +26,25 @@ public struct HBXCTResponse {
 }
 
 /// Errors thrown by XCT framework.
-enum HBXCTError: Error {
-    case notStarted
-    case noHead
-    case illegalBody
-    case noEnd
+struct HBXCTError: Error, Equatable {
+    private enum _Internal {
+        case notStarted
+        case noHead
+        case illegalBody
+        case noEnd
+        case timeout
+    }
+
+    private let value: _Internal
+    private init(_ value: _Internal) {
+        self.value = value
+    }
+
+    static var notStarted: Self { .init(.notStarted) }
+    static var noHead: Self { .init(.noHead) }
+    static var illegalBody: Self { .init(.illegalBody) }
+    static var noEnd: Self { .init(.noEnd) }
+    static var timeout: Self { .init(.timeout) }
 }
 
 /// Protocol for XCT framework.
