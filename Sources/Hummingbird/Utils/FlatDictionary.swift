@@ -118,5 +118,7 @@ public struct FlatDictionary<Key: Hashable, Value>: Collection {
     private var hashKeys: [Int]
 }
 
+#if compiler(>=5.6)
 // FlatDictionary is Sendable when Key and Value are Sendable
 extension FlatDictionary: Sendable where Key: Sendable, Value: Sendable {}
+#endif
