@@ -49,7 +49,7 @@ let package = Package(
             .product(name: "NIOPosix", package: "swift-nio"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
         ]),
-        .target(name: "PerformanceTest", dependencies: [
+        .executableTarget(name: "PerformanceTest", dependencies: [
             .byName(name: "Hummingbird"),
             .byName(name: "HummingbirdFoundation"),
             .product(name: "NIOPosix", package: "swift-nio"),
