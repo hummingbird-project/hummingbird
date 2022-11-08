@@ -302,6 +302,30 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    func testCollateBody() throws {
+        struct CollateMiddleware: HBMiddleware {
+            func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
+                return request.collateBody().flatMap { request in 
+                    request.logger.info("Buffer size: \(request.body.buffer!.readableBytes)")
+                    return next.respond(to: request)
+                }
+            }
+        }
+        let app = HBApplication(testing: .embedded)
+        app.middleware.add(CollateMiddleware())
+        app.router.put("/hello") { request -> HTTPResponseStatus in
+            return .ok
+        }
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        let buffer = self.randomBuffer(size: 512000)
+        app.XCTExecute(uri: "/hello", method: .PUT, body: buffer) { response in
+            XCTAssertEqual(response.status, .ok)
+        }
+    }
+
+
     func testOptional() throws {
         let app = HBApplication(testing: .embedded)
         app.router
