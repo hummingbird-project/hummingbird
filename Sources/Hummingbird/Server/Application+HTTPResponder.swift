@@ -14,6 +14,7 @@
 
 import HummingbirdCore
 import Logging
+import NIOCore
 import NIOHTTP1
 
 extension HBApplication {

@@ -14,6 +14,7 @@
 
 import Hummingbird
 import NIOCore
+import NIOHTTP1
 
 /// Response structure returned by XCT testing framework
 public struct HBXCTResponse {
