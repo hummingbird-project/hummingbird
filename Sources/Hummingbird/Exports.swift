@@ -13,5 +13,15 @@
 //===----------------------------------------------------------------------===//
 
 @_exported import HummingbirdCore
-@_exported import NIOCore
-@_exported import NIOHTTP1
+
+@_exported import struct NIOCore.ByteBuffer
+@_exported import struct NIOCore.ByteBufferAllocator
+@_exported import protocol NIOCore.EventLoop
+@_exported import class NIOCore.EventLoopFuture
+@_exported import protocol NIOCore.EventLoopGroup
+@_exported import enum NIOCore.SocketAddress
+@_exported import struct NIOCore.TimeAmount
+
+@_exported import struct NIOHTTP1.HTTPHeaders
+@_exported import enum NIOHTTP1.HTTPMethod
+@_exported import enum NIOHTTP1.HTTPResponseStatus

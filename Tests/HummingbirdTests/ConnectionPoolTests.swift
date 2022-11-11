@@ -14,6 +14,7 @@
 
 @testable import Hummingbird
 import Logging
+import NIOCore
 import NIOPosix
 import XCTest
 

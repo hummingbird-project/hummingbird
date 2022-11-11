@@ -12,4 +12,4 @@
 //
 //===----------------------------------------------------------------------===//
 
-@_exported import Logging
+@_exported import struct Logging.Logger
