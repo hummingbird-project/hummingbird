@@ -12,7 +12,17 @@
 //
 //===----------------------------------------------------------------------===//
 
-@_exported import HummingbirdCore
+@_exported import enum HummingbirdCore.HBBindAddress
+@_exported import struct HummingbirdCore.HBHTTPError
+@_exported import protocol HummingbirdCore.HBHTTPResponseError
+@_exported import enum HummingbirdCore.HBRequestBody
+@_exported import enum HummingbirdCore.HBResponseBody
+@_exported import protocol HummingbirdCore.HBResponseBodyStreamer
+@_exported import enum HummingbirdCore.HBStreamerOutput
+@_exported import protocol HummingbirdCore.HBStreamerProtocol
+#if canImport(Network)
+@_exported import struct HummingbirdCore.TSTLSOptions
+#endif
 
 @_exported import struct NIOCore.ByteBuffer
 @_exported import struct NIOCore.ByteBufferAllocator
