@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 @_exported import enum HummingbirdCore.HBBindAddress
-@_exported import class HummingbirdCore.HBByteBufferStreamer
 @_exported import struct HummingbirdCore.HBHTTPError
 @_exported import protocol HummingbirdCore.HBHTTPResponseError
 @_exported import enum HummingbirdCore.HBRequestBody
