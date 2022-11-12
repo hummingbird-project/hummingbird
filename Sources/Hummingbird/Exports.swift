@@ -21,7 +21,9 @@
 @_exported import protocol HummingbirdCore.HBResponseBodyStreamer
 @_exported import enum HummingbirdCore.HBStreamerOutput
 @_exported import protocol HummingbirdCore.HBStreamerProtocol
+#if canImport(Network)
 @_exported import struct HummingbirdCore.TSTLSOptions
+#endif
 
 @_exported import struct NIOCore.ByteBuffer
 @_exported import struct NIOCore.ByteBufferAllocator
