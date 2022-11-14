@@ -14,9 +14,9 @@
 
 import NIOCore
 
-public struct TimeoutPromise<Value> {
+struct TimeoutPromise<Value> {
     let task: Scheduled<Void>
-    public let promise: EventLoopPromise<Value>
+    let promise: EventLoopPromise<Value>
 
     /// Create TimeoutPromise
     internal init(eventLoop: EventLoop, deadline: NIODeadline, file: StaticString, line: UInt) {
@@ -30,7 +30,7 @@ public struct TimeoutPromise<Value> {
     /// - parameters:
     ///     - value: The successful result of the operation.
     @inlinable
-    public func succeed(_ value: Value) {
+    func succeed(_ value: Value) {
         self.promise.succeed(value)
     }
 
@@ -39,7 +39,7 @@ public struct TimeoutPromise<Value> {
     /// - parameters:
     ///      - error: The error from the operation.
     @inlinable
-    public func fail(_ error: Error) {
+    func fail(_ error: Error) {
         self.promise.fail(error)
     }
 
@@ -51,24 +51,24 @@ public struct TimeoutPromise<Value> {
     /// - parameters:
     ///     - future: The future whose value will be used to succeed or fail this promise.
     @inlinable
-    public func completeWith(_ future: EventLoopFuture<Value>) {
+    func completeWith(_ future: EventLoopFuture<Value>) {
         self.promise.completeWith(future)
     }
 
     @inlinable
-    public var futureResult: EventLoopFuture<Value> { self.promise.futureResult }
+    var futureResult: EventLoopFuture<Value> { self.promise.futureResult }
 }
 
 extension EventLoop {
     /// Creates and returns a new `TimeoutPromise` that will be notified using this `EventLoop`
     /// or fail if it runs past the timeout
-    public func makeTimeoutPromise<Value>(of: Value.Type, timeout: TimeAmount, file: StaticString = #file, line: UInt = #line) -> TimeoutPromise<Value> {
+    func makeTimeoutPromise<Value>(of: Value.Type, timeout: TimeAmount, file: StaticString = #file, line: UInt = #line) -> TimeoutPromise<Value> {
         .init(eventLoop: self, deadline: .now() + timeout, file: file, line: line)
     }
 
     /// Creates and returns a new `TimeoutPromise` that will be notified using this `EventLoop`
     /// or fail it is runs past the deadline
-    public func makeTimeoutPromise<Value>(of: Value.Type, deadline: NIODeadline, file: StaticString = #file, line: UInt = #line) -> TimeoutPromise<Value> {
+    func makeTimeoutPromise<Value>(of: Value.Type, deadline: NIODeadline, file: StaticString = #file, line: UInt = #line) -> TimeoutPromise<Value> {
         .init(eventLoop: self, deadline: deadline, file: file, line: line)
     }
 }

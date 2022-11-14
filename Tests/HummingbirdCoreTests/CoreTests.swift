@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import HummingbirdCore
-import HummingbirdCoreXCT
+@testable import HummingbirdCoreXCT
 import Logging
 import NIOCore
 import NIOEmbedded
