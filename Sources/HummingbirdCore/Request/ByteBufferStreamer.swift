@@ -21,6 +21,7 @@ public enum HBStreamerOutput: HBSendable {
     case end
 }
 
+/// Protocol for objects providing a stream of ByteBuffers
 public protocol HBStreamerProtocol: HBSendable {
     /// Consume what has been fed to the streamer
     /// - Parameter eventLoop: EventLoop to return future on
