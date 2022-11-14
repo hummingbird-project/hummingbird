@@ -17,6 +17,17 @@ import NIOCore
 import NIOHTTP1
 import XCTest
 
+/// Type of test framework
+public enum XCTTestingSetup {
+    /// Test using SwiftNIO `EmbeddedChannel`. This is useful for testing where no actual IO or multi threading is required.
+    case embedded
+    /// Test using SwiftNIO `NIOAsyncTestingChannel`. This allows for testing of Swift Concurrency based routes.
+    case asyncTest
+    /// Sets up a live server and execute tests using a HTTP client.
+    case live
+}
+
+
 /// Extends `HBApplication` to support testing of applications
 ///
 /// You use `XCTStart`, `XCTStop` and `XCTExecute` to run test applications. You can either create an
@@ -40,18 +51,6 @@ import XCTest
 /// }
 /// ```
 extension HBApplication {
-    // MARK: Types
-
-    /// Type of test framework
-    public enum XCTTestingSetup {
-        /// Test using `EmbeddedChannel`. If you have routes that use multi-threading this will probably fail
-        case embedded
-        /// Test using `NIOAsyncTestingChannel`.
-        case asyncTest
-        /// Test using live server
-        case live
-    }
-
     // MARK: Initialization
 
     /// Creates a version of `HBApplication` that can be used for testing code
