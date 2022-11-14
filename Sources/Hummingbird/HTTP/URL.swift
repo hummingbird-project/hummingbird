@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+/// Simple URL parser
 public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral {
     public struct Scheme: RawRepresentable, Equatable {
         public let rawValue: String

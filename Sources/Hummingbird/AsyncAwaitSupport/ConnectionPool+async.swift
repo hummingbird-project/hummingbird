@@ -80,6 +80,7 @@ extension HBConnectionPoolGroup {
     }
 }
 
+/// Connection that supports async close
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 public protocol HBAsyncConnection: HBConnection {
     func close() async throws
@@ -96,6 +97,7 @@ public extension HBAsyncConnection {
     }
 }
 
+/// Source of ``HBAsyncConnection``
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 public protocol HBAsyncConnectionSource: HBConnectionSource where Connection: HBAsyncConnection {
     func makeConnection(on eventLoop: EventLoop, logger: Logger) async throws -> Connection

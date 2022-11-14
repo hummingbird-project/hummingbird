@@ -32,6 +32,7 @@ public protocol HBConnection: AnyObject {
     var isClosed: Bool { get }
 }
 
+/// Source of ``HBConnection``
 public protocol HBConnectionSource {
     associatedtype Connection: HBConnection
 

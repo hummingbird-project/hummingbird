@@ -14,6 +14,7 @@
 
 import Lifecycle
 
+/// Define where we get the ServiceLifecycle from.
 public enum ServiceLifecycleProvider {
     /// Use a `ServiceLifecycle` provided by the user
     /// and run `HBApplication` tasks in a `ComponentLifecycle`.

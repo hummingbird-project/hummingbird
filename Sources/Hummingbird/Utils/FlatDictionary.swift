@@ -14,11 +14,12 @@
 
 /// Provides Dictionary like indexing, but uses a flat array of key
 /// value pairs, plus an array of hash keys for lookup for storage.
+/// 
 /// Useful for dictionary lookup on small collection that don't need
 /// a tree lookup to optimise indexing.
 ///
 /// The FlatDictionary also allows for key clashes. Standard lookup
-/// functions will always return the first key found, but it you
+/// functions will always return the first key found, but if you
 /// iterate through the key,value pairs you can access all values
 /// for a key
 public struct FlatDictionary<Key: Hashable, Value>: Collection {

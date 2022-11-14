@@ -15,18 +15,20 @@
 import NIOCore
 import NIOHTTP1
 
+/// Options available to routes
 public struct HBRouterMethodOptions: OptionSet {
     public let rawValue: Int
     public init(rawValue: Int) {
         self.rawValue = rawValue
     }
 
-    /// don't collate the request body, all handler to stream it
+    /// don't collate the request body, expect handler to stream it
     public static var streamBody: HBRouterMethodOptions = .init(rawValue: 1 << 0)
     /// allow handler to edit response via `request.response`
     public static var editResponse: HBRouterMethodOptions = .init(rawValue: 1 << 1)
 }
 
+/// Conform to `HBRouterMethods` to add standard router verb (get, post ...) methods
 public protocol HBRouterMethods {
     /// Add path for closure returning type conforming to ResponseFutureEncodable
     @discardableResult func on<Output: HBResponseGenerator>(
