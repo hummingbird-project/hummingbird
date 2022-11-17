@@ -28,7 +28,12 @@ extension HBApplication {
     }
 
     /// Accessor for persist framework
-    public var persist: Persist { self.extensions.get(\.persist) }
+    public var persist: Persist {
+        self.extensions.get(
+            \.persist,
+            error: "You need to setup the persistent memory driver with `HBApplication.addPersist` before using it."
+        )
+    }
 
     /// Add persist framework to `HBApplication`.
     /// - Parameter using: Factory struct that will create the persist driver when required
