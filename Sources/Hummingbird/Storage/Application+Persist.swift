@@ -23,7 +23,8 @@ extension HBApplication {
             self.driver = factory.create(application)
         }
 
-        let driver: HBPersistDriver
+        // persist framework driver
+        public let driver: HBPersistDriver
     }
 
     /// Accessor for persist framework
