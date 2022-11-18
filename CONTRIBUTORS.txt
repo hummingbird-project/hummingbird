@@ -12,7 +12,11 @@ needs to be listed here.
 
 - Adam Fowler <adamfowler71@gmail.com>
 - Chris <4376956+SoftwareEngineerChris@users.noreply.github.com>
+- Derek Clarkson <d4rkf1br3@gmail.com>
 - Florion <florion@lilo.org>
+- Moritz Lang <hi@slashmo.codes>
+- Michael Critz <github@michaelcritz.com>
+- Patrick Heneise <patrick@zentered.co>
 
 **Updating this list**
 
