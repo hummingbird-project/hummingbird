@@ -12,9 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Hummingbird
+import HummingbirdCore
 import HummingbirdCoreXCT
-import NIO
+import NIOCore
+import NIOHTTP1
 
 struct TestResponder: HBHTTPResponder {
     func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {

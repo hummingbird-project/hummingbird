@@ -14,7 +14,7 @@
 
 import Hummingbird
 import HummingbirdCoreXCT
-import NIO
+import NIOCore
 
 func run(identifier: String) {
     do {
