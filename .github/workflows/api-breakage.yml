@@ -8,7 +8,7 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     container:
-      image: swift:5.6-focal
+      image: swift:5.7
     steps:
     - name: Checkout
       uses: actions/checkout@v3

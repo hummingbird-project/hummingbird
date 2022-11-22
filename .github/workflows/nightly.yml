@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ['nightly-bionic', 'nightly-focal', 'nightly-amazonlinux2']
+        image: ['nightly-bionic', 'nightly-focal', 'nightly-jammy', 'nightly-amazonlinux2']
     
     container:
       image: swiftlang/swift:${{ matrix.image }}
