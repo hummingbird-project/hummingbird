@@ -113,15 +113,8 @@ struct HBXCTAsyncTesting: HBXCT {
     }
 
     func readOutbound() async throws -> HTTPServerResponsePart? {
-        let deadline: NIODeadline = .now() + self.timeout
-        while NIODeadline.now() < deadline {
-            if let part = try await self.asyncTestingChannel.readOutbound(as: HTTPServerResponsePart.self) {
-                return part
-            }
-            // sleep a millisecond
-            try await Task.sleep(nanoseconds: 1_000_000)
-        }
-        throw HBXCTError.timeout
+        let part = try await self.asyncTestingChannel.waitForOutboundWrite(as: HTTPServerResponsePart.self)
+        return part
     }
 
     let asyncTestingChannel: NIOAsyncTestingChannel
