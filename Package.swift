@@ -1,4 +1,4 @@
-// swift-tools-version:5.3
+// swift-tools-version:5.5
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -16,7 +16,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-log.git", from: "1.4.0"),
         .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.42.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.45.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "1.0.0-alpha.9"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-core.git", from: "1.0.0-alpha"),
     ],
@@ -49,7 +49,7 @@ let package = Package(
             .product(name: "NIOPosix", package: "swift-nio"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
         ]),
-        .target(name: "PerformanceTest", dependencies: [
+        .executableTarget(name: "PerformanceTest", dependencies: [
             .byName(name: "Hummingbird"),
             .byName(name: "HummingbirdFoundation"),
             .product(name: "NIOPosix", package: "swift-nio"),
