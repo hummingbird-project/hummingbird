@@ -52,28 +52,4 @@ class ExtensionTests: XCTestCase {
         try app.shutdownApplication()
         XCTAssertEqual(test.active, false)
     }
-
-    func testEventLoopStorage() {
-        var id = 0
-        let app = HBApplication()
-        app.eventLoopStorage.forEach { ev in
-            ev.storage.id = id
-            id += 1
-        }
-
-        var idMask: UInt64 = 0
-        var iterator = app.eventLoopGroup.makeIterator()
-        while let eventLoop = iterator.next() {
-            let id = app.eventLoopStorage(for: eventLoop).id
-            idMask |= 1 << id
-        }
-        XCTAssertEqual(1 << id, idMask + 1)
-    }
-}
-
-extension HBApplication.EventLoopStorage {
-    var id: Int {
-        get { self.extensions.get(\.id) }
-        set { self.extensions.set(\.id, value: newValue) }
-    }
 }

@@ -19,7 +19,7 @@ import NIOCore
 ///
 /// Each EventLoop has a connection pool associated with it
 public class HBConnectionPoolGroup<Source: HBConnectionSource> {
-    let pools: [EventLoop.Key: HBConnectionPool<Source>]
+    let pools: [EventLoop.PoolKey: HBConnectionPool<Source>]
     let eventLoopGroup: EventLoopGroup
     let logger: Logger
 
@@ -29,9 +29,9 @@ public class HBConnectionPoolGroup<Source: HBConnectionSource> {
     ///     - maxConnections: Maximum connections each EventLoop can make
     ///     - eventLoopGroup: `EventLoopGroup`` associated with this `HBConnectionPoolGroup`
     public init(source: Source, maxConnections: Int, eventLoopGroup: EventLoopGroup, logger: Logger) {
-        var pools: [EventLoop.Key: HBConnectionPool<Source>] = [:]
+        var pools: [EventLoop.PoolKey: HBConnectionPool<Source>] = [:]
         for eventLoop in eventLoopGroup.makeIterator() {
-            pools[eventLoop.key] = HBConnectionPool(source: source, maxConnections: maxConnections, eventLoop: eventLoop)
+            pools[eventLoop.poolKey] = HBConnectionPool(source: source, maxConnections: maxConnections, eventLoop: eventLoop)
         }
         self.eventLoopGroup = eventLoopGroup
         self.logger = logger
@@ -73,7 +73,7 @@ public class HBConnectionPoolGroup<Source: HBConnectionSource> {
 
     /// Return Connection Pool associated with EventLoopGroup
     public func getConnectionPool(on eventLoop: EventLoop) -> HBConnectionPool<Source> {
-        let pool = self.pools[eventLoop.key]
+        let pool = self.pools[eventLoop.poolKey]
         assert(pool != nil, "No connection pool available for event loop")
         return pool!
     }
@@ -82,5 +82,12 @@ public class HBConnectionPoolGroup<Source: HBConnectionSource> {
     public func close() -> EventLoopFuture<Void> {
         let closeFutures: [EventLoopFuture<Void>] = self.pools.values.map { $0.close(logger: self.logger) }
         return EventLoopFuture.andAllComplete(closeFutures, on: self.eventLoopGroup.any())
+    }
+}
+
+extension EventLoop {
+    typealias PoolKey = ObjectIdentifier
+    var poolKey: PoolKey {
+        ObjectIdentifier(self)
     }
 }

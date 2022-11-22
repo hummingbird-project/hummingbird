@@ -27,7 +27,6 @@ public enum XCTTestingSetup {
     case live
 }
 
-
 /// Extends `HBApplication` to support testing of applications
 ///
 /// You use `XCTStart`, `XCTStop` and `XCTExecute` to run test applications. You can either create an
