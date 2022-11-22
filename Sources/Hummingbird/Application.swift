@@ -116,8 +116,6 @@ public final class HBApplication: HBExtensible {
 
         self.server = HBHTTPServer(group: self.eventLoopGroup, configuration: self.configuration.httpServer)
 
-        self.addEventLoopStorage()
-
         // register application shutdown with lifecycle
         lifecycleTasksContainer.registerShutdown(
             label: "Application", .sync(self.shutdownApplication)
