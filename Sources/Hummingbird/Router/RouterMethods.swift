@@ -134,7 +134,7 @@ extension HBRouterMethods {
         return on(path, method: .PUT, options: options, use: handler)
     }
 
-    /// POST path for closure returning type conforming to ResponseFutureEncodable
+    /// DELETE path for closure returning type conforming to ResponseFutureEncodable
     @discardableResult public func delete<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
@@ -152,7 +152,7 @@ extension HBRouterMethods {
         return on(path, method: .HEAD, options: options, use: handler)
     }
 
-    /// DELETE path for closure returning type conforming to ResponseFutureEncodable
+    /// POST path for closure returning type conforming to ResponseFutureEncodable
     @discardableResult public func post<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],

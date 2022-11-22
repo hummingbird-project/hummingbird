@@ -18,7 +18,7 @@ import NIOCore
 
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension HBRouterMethods {
-    /// GET path for closure returning type conforming to ResponseFutureEncodable
+    /// GET path for async closure returning type conforming to ResponseEncodable
     @discardableResult public func get<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
@@ -27,7 +27,7 @@ extension HBRouterMethods {
         return on(path, method: .GET, options: options, use: handler)
     }
 
-    /// PUT path for closure returning type conforming to ResponseFutureEncodable
+    /// PUT path for async closure returning type conforming to ResponseEncodable
     @discardableResult public func put<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
@@ -36,7 +36,7 @@ extension HBRouterMethods {
         return on(path, method: .PUT, options: options, use: handler)
     }
 
-    /// POST path for closure returning type conforming to ResponseFutureEncodable
+    /// DELETE path for async closure returning type conforming to ResponseEncodable
     @discardableResult public func delete<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
@@ -45,7 +45,7 @@ extension HBRouterMethods {
         return on(path, method: .DELETE, options: options, use: handler)
     }
 
-    /// HEAD path for closure returning type conforming to ResponseFutureEncodable
+    /// HEAD path for async closure returning type conforming to ResponseEncodable
     @discardableResult public func head<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
@@ -54,7 +54,7 @@ extension HBRouterMethods {
         return on(path, method: .HEAD, options: options, use: handler)
     }
 
-    /// DELETE path for closure returning type conforming to ResponseFutureEncodable
+    /// POST path for async closure returning type conforming to ResponseEncodable
     @discardableResult public func post<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
@@ -63,7 +63,7 @@ extension HBRouterMethods {
         return on(path, method: .POST, options: options, use: handler)
     }
 
-    /// PATCH path for closure returning type conforming to ResponseFutureEncodable
+    /// PATCH path for async closure returning type conforming to ResponseEncodable
     @discardableResult public func patch<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
