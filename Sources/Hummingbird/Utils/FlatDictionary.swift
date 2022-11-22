@@ -14,7 +14,7 @@
 
 /// Provides Dictionary like indexing, but uses a flat array of key
 /// value pairs, plus an array of hash keys for lookup for storage.
-/// 
+///
 /// Useful for dictionary lookup on small collection that don't need
 /// a tree lookup to optimise indexing.
 ///
