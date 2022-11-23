@@ -102,7 +102,7 @@ struct HBXCTAsyncTesting: HBXCT {
         var buffer = self.asyncTestingChannel.allocator.buffer(capacity: 0)
         while case .body(var b) = next {
             buffer.writeBuffer(&b)
-            next = try await readOutbound(deadline: deadline)
+            next = try await self.readOutbound(deadline: deadline)
         }
         guard case .end = next else { throw HBXCTError.noEnd }
 
