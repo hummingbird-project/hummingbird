@@ -422,3 +422,8 @@ extension HBMediaType {
         "7z": .application7z,
     ]
 }
+
+#if swift(>=5.6)
+extension HBMediaType: Sendable {}
+extension HBMediaType.Category: Sendable {}
+#endif
