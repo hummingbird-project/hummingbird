@@ -39,3 +39,7 @@ public struct HBCookies {
 
     var cookieStrings: [Substring]
 }
+
+#if compiler(>=5.6)
+extension HBCookies: Sendable {}
+#endif

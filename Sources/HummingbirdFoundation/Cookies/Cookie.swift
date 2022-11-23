@@ -190,3 +190,8 @@ public struct HBCookie: CustomStringConvertible {
         var table: [Substring: String]
     }
 }
+
+#if compiler(>=5.6)
+extension HBCookie: Sendable {}
+extension HBCookie.Properties: Sendable {}
+#endif
