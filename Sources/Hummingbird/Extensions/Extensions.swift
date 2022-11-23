@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HummingbirdCore
 import Logging
 
 /// Extend objects with additional member variables
