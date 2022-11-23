@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2022 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -20,7 +20,7 @@ import NIOCore
 import NIOHTTP1
 
 /// Holds all the values required to process a request
-public struct HBRequest: HBExtensible {
+public struct HBRequest: HBSendableExtensible {
     // MARK: Member variables
 
     /// URI path
@@ -36,9 +36,9 @@ public struct HBRequest: HBExtensible {
     /// Logger to use
     public var logger: Logger
     /// reference to application
-    public var application: HBApplication { self._internal.application }
+    public var application: HBApplication { self._internal.application.wrappedValue }
     /// Request extensions
-    public var extensions: HBExtensions<HBRequest>
+    public var extensions: HBSendableExtensions<HBRequest>
     /// Request context (eventLoop, bytebuffer allocator and remote address)
     public var context: HBRequestContext { self._internal.context }
     /// EventLoop request is running on
@@ -61,8 +61,8 @@ public struct HBRequest: HBExtensible {
 
     /// endpoint that services this request.
     internal var endpointPath: String? {
-        get { self._internal.endpointPath }
-        set { self._internal.endpointPath = newValue }
+        get { self._internal.endpointPath.wrappedValue }
+        set { self._internal.endpointPath.wrappedValue = newValue }
     }
 
     // MARK: Initialization
@@ -90,7 +90,7 @@ public struct HBRequest: HBExtensible {
         )
         self.body = body
         self.logger = application.logger.with(metadataKey: "hb_id", value: .stringConvertible(Self.globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)))
-        self.extensions = HBExtensions()
+        self.extensions = .init()
     }
 
     // MARK: Methods
@@ -145,9 +145,9 @@ public struct HBRequest: HBExtensible {
             self.version = version
             self.method = method
             self.headers = headers
-            self.application = application
+            self.application = .init(application)
             self.context = context
-            self.endpointPath = endpointPath
+            self.endpointPath = .init(endpointPath)
         }
 
         /// URI path
@@ -158,13 +158,14 @@ public struct HBRequest: HBExtensible {
         let method: HTTPMethod
         /// Request HTTP headers
         let headers: HTTPHeaders
-        /// reference to application
-        let application: HBApplication
+        /// reference to application. Currently wrapped in HBUnsafeTransfer to make Sendable.
+        /// Hope to make it Sendable in the future
+        let application: HBUnsafeTransfer<HBApplication>
         /// request context
         let context: HBRequestContext
         /// Endpoint path. This is stored a var so it can be edited by the router. In theory this could
         /// be accessed on multiple thread/tasks at the same point but it is only ever edited by router
-        var endpointPath: String?
+        let endpointPath: HBUnsafeMutableTransferBox<String?>
     }
 
     private var _internal: _Internal
@@ -190,3 +191,8 @@ extension HBRequest: CustomStringConvertible {
         "uri: \(self.uri), version: \(self.version), method: \(self.method), headers: \(self.headers), body: \(self.body)"
     }
 }
+
+#if compiler(>=5.6)
+extension HBRequest: Sendable {}
+extension HBRequest._Internal: Sendable {}
+#endif

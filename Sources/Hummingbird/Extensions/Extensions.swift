@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HummingbirdCore
 import Logging
 
 /// Extend objects with additional member variables
@@ -91,3 +92,56 @@ public struct HBExtensions<ParentObject> {
 public protocol HBExtensible {
     var extensions: HBExtensions<Self> { get set }
 }
+
+/// Version of `HBExtensions` that requires all extensions are sendable
+public struct HBSendableExtensions<ParentObject> {
+    /// Initialize extensions
+    public init() {
+        self.items = [:]
+    }
+
+    /// Get optional extension from a `KeyPath`
+    public func get<Type: HBSendable>(_ key: KeyPath<ParentObject, Type>) -> Type? {
+        self.items[key]?.value as? Type
+    }
+
+    /// Get extension from a `KeyPath`
+    public func get<Type: HBSendable>(_ key: KeyPath<ParentObject, Type>, error: StaticString? = nil) -> Type {
+        guard let value = items[key]?.value as? Type else {
+            preconditionFailure(error?.description ?? "Cannot get extension of type \(Type.self) without having set it")
+        }
+        return value
+    }
+
+    /// Return if extension has been set
+    public func exists<Type: HBSendable>(_ key: KeyPath<ParentObject, Type>) -> Bool {
+        self.items[key]?.value != nil
+    }
+
+    /// Set extension for a `KeyPath`
+    /// - Parameters:
+    ///   - key: KeyPath
+    ///   - value: value to store in extension
+    ///   - shutdownCallback: closure to call when extensions are shutsdown
+    public mutating func set<Type: HBSendable>(_ key: KeyPath<ParentObject, Type>, value: Type) {
+        self.items[key] = .init(
+            value: value
+        )
+    }
+
+    struct Item {
+        let value: Any
+    }
+
+    var items: [PartialKeyPath<ParentObject>: Item]
+}
+
+/// Protocol for extensible classes
+public protocol HBSendableExtensible {
+    var extensions: HBSendableExtensions<Self> { get set }
+}
+
+#if compiler(>=5.6)
+/// Conform to @unchecked Sendable as the PartialKeyPath in the item dictionary is not Sendable
+extension HBSendableExtensions: @unchecked Sendable {}
+#endif
