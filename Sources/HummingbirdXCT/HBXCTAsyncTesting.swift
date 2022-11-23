@@ -117,6 +117,9 @@ struct HBXCTAsyncTesting: HBXCT {
 
     func readOutbound(deadline: NIODeadline) async throws -> HBHTTPServerResponsePart? {
         return try await withThrowingTaskGroup(of: HBHTTPServerResponsePart.self) { group in
+            defer {
+                group.cancelAll()
+            }
             group.addTask { try await self.asyncTestingChannel.waitForOutboundWrite(as: HBHTTPServerResponsePart.self) }
             group.addTask {
                 let timeout = deadline - .now()
@@ -128,7 +131,6 @@ struct HBXCTAsyncTesting: HBXCT {
                 throw HBXCTError.timeout
             }
             let result = try await group.next()
-            group.cancelAll()
             return result
         }
     }
