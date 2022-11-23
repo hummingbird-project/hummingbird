@@ -84,30 +84,29 @@ struct HBXCTAsyncTesting: HBXCT {
         headers: HTTPHeaders,
         body: ByteBuffer?
     ) async throws -> HBXCTResponse {
-        do {
-            // write request
-            let requestHead = HTTPRequestHead(version: .init(major: 1, minor: 1), method: method, uri: uri, headers: headers)
-            try await writeInbound(.head(requestHead))
-            if let body = body {
-                try await self.writeInbound(.body(body))
-            }
-            try await self.writeInbound(.end(nil))
-
-            await self.asyncTestingEventLoop.run()
-
-            // read response
-            let outbound = try await readOutbound()
-            guard case .head(let head) = outbound else { throw HBXCTError.noHead }
-            var next = try await readOutbound()
-            var buffer = self.asyncTestingChannel.allocator.buffer(capacity: 0)
-            while case .body(var b) = next {
-                buffer.writeBuffer(&b)
-                next = try await readOutbound()
-            }
-            guard case .end = next else { throw HBXCTError.noEnd }
-
-            return .init(status: head.status, headers: head.headers, body: buffer)
+        let deadline: NIODeadline = .now() + self.timeout
+        // write request
+        let requestHead = HTTPRequestHead(version: .init(major: 1, minor: 1), method: method, uri: uri, headers: headers)
+        try await writeInbound(.head(requestHead))
+        if let body = body {
+            try await self.writeInbound(.body(body))
         }
+        try await self.writeInbound(.end(nil))
+
+        await self.asyncTestingEventLoop.run()
+
+        // read response
+        let outbound = try await readOutbound(deadline: deadline)
+        guard case .head(let head) = outbound else { throw HBXCTError.noHead }
+        var next = try await readOutbound(deadline: deadline)
+        var buffer = self.asyncTestingChannel.allocator.buffer(capacity: 0)
+        while case .body(var b) = next {
+            buffer.writeBuffer(&b)
+            next = try await readOutbound(deadline: deadline)
+        }
+        guard case .end = next else { throw HBXCTError.noEnd }
+
+        return .init(status: head.status, headers: head.headers, body: buffer)
     }
 
     var eventLoopGroup: EventLoopGroup { return self.asyncTestingEventLoop }
@@ -116,9 +115,22 @@ struct HBXCTAsyncTesting: HBXCT {
         try await self.asyncTestingChannel.writeInbound(part)
     }
 
-    func readOutbound() async throws -> HBHTTPServerResponsePart? {
-        let part = try await self.asyncTestingChannel.waitForOutboundWrite(as: HBHTTPServerResponsePart.self)
-        return part
+    func readOutbound(deadline: NIODeadline) async throws -> HBHTTPServerResponsePart? {
+        return try await withThrowingTaskGroup(of: HBHTTPServerResponsePart.self) { group in
+            group.addTask { try await self.asyncTestingChannel.waitForOutboundWrite(as: HBHTTPServerResponsePart.self) }
+            group.addTask {
+                let timeout = deadline - .now()
+                if timeout > .nanoseconds(0) {
+                    try await Task.sleep(nanoseconds: numericCast(self.timeout.nanoseconds))
+                } else {
+                    try Task.checkCancellation()
+                }
+                throw HBXCTError.timeout
+            }
+            let result = try await group.next()
+            group.cancelAll()
+            return result
+        }
     }
 
     let asyncTestingChannel: NIOAsyncTestingChannel

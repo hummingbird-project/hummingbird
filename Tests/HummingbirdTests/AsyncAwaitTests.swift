@@ -31,6 +31,20 @@ final class AsyncAwaitTests: XCTestCase {
         return request.allocator.buffer(string: "Async Hello")
     }
 
+    func testTimeout() throws {
+        let app = HBApplication(testing: .asyncTest, timeout: .milliseconds(250))
+        app.router.get("/wait") { request -> HTTPResponseStatus in
+            try await Task.sleep(nanoseconds: 500_000_000)
+            return .ok
+        }
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/wait", method: .GET) { response in
+            XCTAssertEqual(response.status, .ok)
+        }
+    }
+
     func testAsyncRoute() throws {
         #if os(macOS)
         // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
