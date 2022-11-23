@@ -15,6 +15,7 @@
 #if compiler(>=5.5.2) && canImport(_Concurrency)
 
 import Hummingbird
+import HummingbirdCore
 import NIOCore
 import NIOEmbedded
 import NIOHTTP1
@@ -23,6 +24,9 @@ import XCTest
 /// Test application by running on an EmbeddedChannel
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 struct HBXCTAsyncTesting: HBXCT {
+    typealias HBHTTPServerRequestPart = HTTPPart<HTTPRequestHead, ByteBuffer>
+    typealias HBHTTPServerResponsePart = HTTPPart<HTTPResponseHead, ByteBuffer>
+
     init(timeout: TimeAmount) {
         self.asyncTestingChannel = .init()
         self.asyncTestingEventLoop = self.asyncTestingChannel.testingEventLoop
@@ -31,6 +35,7 @@ struct HBXCTAsyncTesting: HBXCT {
 
     /// Start tests
     func start(application: HBApplication) {
+        application.server.addChannelHandler(HBHTTPConvertChannel())
         application.server.addChannelHandler(BreakupHTTPBodyChannelHandler())
         XCTAssertNoThrow(
             try self.asyncTestingChannel.pipeline.addHandlers(
@@ -95,8 +100,7 @@ struct HBXCTAsyncTesting: HBXCT {
             guard case .head(let head) = outbound else { throw HBXCTError.noHead }
             var next = try await readOutbound()
             var buffer = self.asyncTestingChannel.allocator.buffer(capacity: 0)
-            while case .body(let part) = next {
-                guard case .byteBuffer(var b) = part else { throw HBXCTError.illegalBody }
+            while case .body(var b) = next {
                 buffer.writeBuffer(&b)
                 next = try await readOutbound()
             }
@@ -108,23 +112,41 @@ struct HBXCTAsyncTesting: HBXCT {
 
     var eventLoopGroup: EventLoopGroup { return self.asyncTestingEventLoop }
 
-    func writeInbound(_ part: HTTPServerRequestPart) async throws {
+    func writeInbound(_ part: HBHTTPServerRequestPart) async throws {
         try await self.asyncTestingChannel.writeInbound(part)
     }
 
-    func readOutbound() async throws -> HTTPServerResponsePart? {
-        let part = try await self.asyncTestingChannel.waitForOutboundWrite(as: HTTPServerResponsePart.self)
+    func readOutbound() async throws -> HBHTTPServerResponsePart? {
+        let part = try await self.asyncTestingChannel.waitForOutboundWrite(as: HBHTTPServerResponsePart.self)
         return part
     }
 
     let asyncTestingChannel: NIOAsyncTestingChannel
     let asyncTestingEventLoop: NIOAsyncTestingEventLoop
     let timeout: TimeAmount
-}
 
-// to get this to compile with Swift 5.5 we need to conform `IOData`` to `Sendable``
-#if compiler(<5.6)
-extension IOData: @unchecked Sendable {}
-#endif
+    /// Channel to convert HTTPServerResponsePart to the Sendable type HBHTTPServerResponsePart
+    private final class HBHTTPConvertChannel: ChannelOutboundHandler, RemovableChannelHandler {
+        typealias OutboundIn = HTTPServerResponsePart
+        typealias OutboundOut = HBHTTPServerResponsePart
+
+        func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
+            let part = unwrapOutboundIn(data)
+            switch part {
+            case .head(let head):
+                context.write(self.wrapOutboundOut(.head(head)), promise: promise)
+            case .body(let body):
+                switch body {
+                case .byteBuffer(let buffer):
+                    context.write(self.wrapOutboundOut(.body(buffer)), promise: promise)
+                default:
+                    preconditionFailure("HBXCTAsyncTesting only supports ByteBuffer body parts")
+                }
+            case .end:
+                context.write(self.wrapOutboundOut(.end(nil)), promise: promise)
+            }
+        }
+    }
+}
 
 #endif // compiler(>=5.5.2) && canImport(_Concurrency)
