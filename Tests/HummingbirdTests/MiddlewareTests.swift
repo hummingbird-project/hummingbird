@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Hummingbird
+@testable import Hummingbird
 import HummingbirdXCT
 import XCTest
 
@@ -65,6 +65,24 @@ final class MiddlewareTests: XCTestCase {
             XCTAssertEqual(response.headers["middleware"].first, "second")
             XCTAssertEqual(response.headers["middleware"].last, "first")
         }
+    }
+
+    func testEndpointPathInGroup() throws {
+        struct TestMiddleware: HBMiddleware {
+            func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
+                XCTAssertNotNil(request.endpointPath)
+                return next.respond(to: request)
+            }
+        }
+        let app = HBApplication(testing: .embedded)
+        app.router.group()
+            .add(middleware: TestMiddleware())
+            .get("test") { _ in return "test" }
+
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/test", method: .GET) { _ in }
     }
 
     func testCORSUseOrigin() throws {
