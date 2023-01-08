@@ -17,7 +17,7 @@ public final class HBMiddlewareGroup {
     var middlewares: [HBMiddleware]
 
     /// Initialize `HBMiddlewareGroup`
-    /// 
+    ///
     /// Set middleware array to be empty
     public init() {
         // this is set by WebSocketRouterGroup so this needs to be kept public
