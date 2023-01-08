@@ -67,6 +67,29 @@ final class MiddlewareTests: XCTestCase {
         }
     }
 
+    func testMiddlewareRunOnce() throws {
+        struct TestMiddleware: HBMiddleware {
+            func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
+                return next.respond(to: request).map { response in
+                    var response = response
+                    XCTAssertNil(response.headers["alreadyRun"].first)
+                    response.headers.add(name: "alreadyRun", value: "true")
+                    return response
+                }
+            }
+        }
+        let app = HBApplication(testing: .embedded)
+        app.middleware.add(TestMiddleware())
+        app.router.get("/hello") { _ -> String in
+            return "Hello"
+        }
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/hello", method: .GET) { _ in
+        }
+    }
+
     func testEndpointPathInGroup() throws {
         struct TestMiddleware: HBMiddleware {
             func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {

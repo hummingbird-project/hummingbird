@@ -76,8 +76,8 @@ public final class HBApplication: HBExtensible {
         logger.logLevel = configuration.logLevel
         self.logger = logger
 
-        self.middleware = HBMiddlewareGroup()
         self.router = TrieRouter()
+        self.middleware = HBMiddlewareGroup()
         self.configuration = configuration
         self.extensions = HBExtensions()
         self.encoder = NullEncoder()

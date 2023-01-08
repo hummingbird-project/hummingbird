@@ -18,15 +18,22 @@ import XCTest
 
 final class RouterTests: XCTestCase {
     struct TestMiddleware: HBMiddleware {
+        let output: String
+
+        init(_ output: String = "TestMiddleware") {
+            self.output = output
+        }
+
         func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
             return next.respond(to: request).map { response in
                 var response = response
-                response.headers.replaceOrAdd(name: "middleware", value: "TestMiddleware")
+                response.headers.replaceOrAdd(name: "middleware", value: self.output)
                 return response
             }
         }
     }
 
+    /// Test correct endpoints are called from group
     func testEndpoint() throws {
         let app = HBApplication(testing: .embedded)
         app.router
@@ -51,6 +58,8 @@ final class RouterTests: XCTestCase {
         }
     }
 
+    /// Test middle in group is applied to group but not to routes outside
+    /// group
     func testGroupMiddleware() throws {
         let app = HBApplication(testing: .embedded)
         app.router
@@ -90,6 +99,7 @@ final class RouterTests: XCTestCase {
         }
     }
 
+    /// Test middleware in parent group is applied to routes in child group
     func testGroupGroupMiddleware() throws {
         let app = HBApplication(testing: .embedded)
         app.router
@@ -104,6 +114,43 @@ final class RouterTests: XCTestCase {
 
         app.XCTExecute(uri: "/test/group", method: .GET) { response in
             XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
+        }
+    }
+
+    /// Test adding middleware to group doesn't affect middleware in parent groups
+    func testGroupGroupMiddleware2() throws {
+        struct TestGroupMiddleware: HBMiddleware {
+            let output: String
+
+            func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
+                var request = request
+                request.string = self.output
+                return next.respond(to: request)
+            }
+        }
+
+        let app = HBApplication(testing: .embedded)
+        app.router
+            .group("/test")
+            .add(middleware: TestGroupMiddleware(output: "route1"))
+            .get { request in
+                return request.success(request.string)
+            }
+            .group("/group")
+            .add(middleware: TestGroupMiddleware(output: "route2"))
+            .get { request in
+                return request.success(request.string)
+            }
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/test/group", method: .GET) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "route2")
+        }
+        app.XCTExecute(uri: "/test", method: .GET) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "route1")
         }
     }
 
@@ -136,5 +183,12 @@ final class RouterTests: XCTestCase {
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "1234")
         }
+    }
+}
+
+extension HBRequest {
+    var string: String {
+        get { self.extensions.get(\.string) }
+        set { self.extensions.set(\.string, value: newValue) }
     }
 }

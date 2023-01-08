@@ -16,8 +16,12 @@
 public final class HBMiddlewareGroup {
     var middlewares: [HBMiddleware]
 
-    public init() {
+    init() {
         self.middlewares = []
+    }
+
+    init(middlewares: [HBMiddleware]) {
+        self.middlewares = middlewares
     }
 
     /// Add middleware to group
@@ -28,7 +32,7 @@ public final class HBMiddlewareGroup {
     /// Construct responder chain from this middleware group
     /// - Parameter finalResponder: The responder the last middleware calls
     /// - Returns: Responder chain
-    public func constructResponder(finalResponder: HBResponder) -> HBResponder {
+    func constructResponder(finalResponder: HBResponder) -> HBResponder {
         var currentResponser = finalResponder
         for i in (0..<self.middlewares.count).reversed() {
             let responder = MiddlewareResponder(middleware: middlewares[i], next: currentResponser)

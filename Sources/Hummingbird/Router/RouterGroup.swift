@@ -42,15 +42,19 @@ public struct HBRouterGroup: HBRouterMethods {
     }
 
     /// Add middleware to RouterEndpoint
-    public func add(middleware: HBMiddleware) -> HBRouterGroup {
+    @discardableResult public func add(middleware: HBMiddleware) -> HBRouterGroup {
         self.middlewares.add(middleware)
         return self
     }
 
     /// Return a group inside the current group
     /// - Parameter path: path prefix to add to routes inside this group
-    public func group(_ path: String = "") -> HBRouterGroup {
-        return HBRouterGroup(path: self.combinePaths(self.path, path), middlewares: self.middlewares, router: self.router)
+    @discardableResult public func group(_ path: String = "") -> HBRouterGroup {
+        return HBRouterGroup(
+            path: self.combinePaths(self.path, path),
+            middlewares: .init(middlewares: self.middlewares.middlewares),
+            router: self.router
+        )
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
