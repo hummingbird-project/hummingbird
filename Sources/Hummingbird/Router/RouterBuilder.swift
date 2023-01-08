@@ -68,8 +68,8 @@ public final class HBRouterBuilder: HBRouterMethods {
     }
 
     /// build router
-    public func buildRouter() -> HBRouter {
-        .init(trie: self.trie, notFoundResponder: self.middlewares.constructResponder(finalResponder: NotFoundResponder()))
+    public func buildRouter() -> HBResponder {
+        HBRouter(trie: self.trie, notFoundResponder: self.middlewares.constructResponder(finalResponder: NotFoundResponder()))
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable

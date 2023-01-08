@@ -16,7 +16,11 @@
 public final class HBMiddlewareGroup {
     var middlewares: [HBMiddleware]
 
-    init() {
+    /// Initialize `HBMiddlewareGroup`
+    /// 
+    /// Set middleware array to be empty
+    public init() {
+        // this is set by WebSocketRouterGroup so this needs to be kept public
         self.middlewares = []
     }
 
@@ -32,7 +36,7 @@ public final class HBMiddlewareGroup {
     /// Construct responder chain from this middleware group
     /// - Parameter finalResponder: The responder the last middleware calls
     /// - Returns: Responder chain
-    func constructResponder(finalResponder: HBResponder) -> HBResponder {
+    public func constructResponder(finalResponder: HBResponder) -> HBResponder {
         var currentResponser = finalResponder
         for i in (0..<self.middlewares.count).reversed() {
             let responder = MiddlewareResponder(middleware: middlewares[i], next: currentResponser)
