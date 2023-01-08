@@ -43,7 +43,7 @@ import NIOHTTP1
 /// Both of these match routes which start with "/user" and the next path segment being anything.
 /// The second version extracts the path segment out and adds it to `HBRequest.parameters` with the
 /// key "id".
-public struct HBRouterBuilder: HBRouterMethods {
+public final class HBRouterBuilder: HBRouterMethods {
     var trie: RouterPathTrie<HBEndpointResponders>
     public let middlewares: HBMiddlewareGroup
 
@@ -68,7 +68,7 @@ public struct HBRouterBuilder: HBRouterMethods {
     }
 
     /// build router
-    func buildRouter() -> HBRouter {
+    public func buildRouter() -> HBRouter {
         .init(trie: self.trie, notFoundResponder: self.middlewares.constructResponder(finalResponder: NotFoundResponder()))
     }
 
