@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -11,49 +11,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 //===----------------------------------------------------------------------===//
-
-import HummingbirdCore
-
-/// Route requests to handlers based on request URI. Uses a Trie to select handler
-struct TrieRouter: HBRouter {
-    var trie: RouterPathTrie<HBEndpointResponder>
-
-    public init() {
-        self.trie = RouterPathTrie()
-    }
-
-    /// Add route to router
-    /// - Parameters:
-    ///   - path: URI path
-    ///   - method: http method
-    ///   - responder: handler to call
-    public func add(_ path: String, method: HTTPMethod, responder: HBResponder) {
-        self.trie.addEntry(.init(path), value: HBEndpointResponder(path: path)) { node in
-            node.value!.addResponder(for: method, responder: responder)
-        }
-    }
-
-    func endpoint(_ path: String) -> HBEndpointResponder? {
-        self.trie.getValueAndParameters(path)?.value
-    }
-
-    /// Respond to request by calling correct handler
-    /// - Parameter request: HTTP request
-    /// - Returns: EventLoopFuture that will be fulfilled with the Response
-    public func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
-        let path = request.uri.path
-        guard let result = trie.getValueAndParameters(path) else {
-            return request.eventLoop.makeFailedFuture(HBHTTPError(.notFound))
-        }
-        var request = request
-        if result.parameters.count > 0 {
-            request.parameters = result.parameters
-        }
-        // store endpoint path in request (mainly for metrics)
-        request.endpointPath = result.value.path
-        return result.value.respond(to: request)
-    }
-}
 
 /// URI Path Trie
 struct RouterPathTrie<Value> {

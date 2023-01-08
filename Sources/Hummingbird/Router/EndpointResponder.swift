@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -15,18 +15,15 @@
 import NIOCore
 import NIOHTTP1
 
-/// Responder that chooses the next responder to call based on the request method
-final class HBEndpointResponder: HBResponder {
+/// Stores endpoint responders for each HTTP method
+final class HBEndpointResponders {
     init(path: String) {
         self.path = path
         self.methods = [:]
     }
 
-    public func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
-        guard let responder = methods[request.method.rawValue] else {
-            return request.failure(HBHTTPError(.notFound))
-        }
-        return responder.respond(to: request)
+    public func getResponder(for method: HTTPMethod) -> HBResponder? {
+        return methods[method.rawValue]
     }
 
     func addResponder(for method: HTTPMethod, responder: HBResponder) {
