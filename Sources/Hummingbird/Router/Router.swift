@@ -27,8 +27,9 @@ struct HBRouter: HBResponder {
     public func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
         let path = request.uri.path
         guard let result = trie.getValueAndParameters(path),
-            let responder = result.value.getResponder(for: request.method) else {
-                return notFoundResponder.respond(to: request)
+              let responder = result.value.getResponder(for: request.method)
+        else {
+            return self.notFoundResponder.respond(to: request)
         }
         var request = request
         if result.parameters.count > 0 {
@@ -39,4 +40,3 @@ struct HBRouter: HBResponder {
         return responder.respond(to: request)
     }
 }
-

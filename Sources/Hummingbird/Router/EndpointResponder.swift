@@ -23,7 +23,7 @@ final class HBEndpointResponders {
     }
 
     public func getResponder(for method: HTTPMethod) -> HBResponder? {
-        return methods[method.rawValue]
+        return self.methods[method.rawValue]
     }
 
     func addResponder(for method: HTTPMethod, responder: HBResponder) {

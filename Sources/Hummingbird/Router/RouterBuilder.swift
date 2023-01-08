@@ -67,9 +67,9 @@ public struct HBRouterBuilder: HBRouterMethods {
         self.trie.getValueAndParameters(path)?.value
     }
 
-    /// build router 
+    /// build router
     func buildRouter() -> HBRouter {
-        .init(trie: trie, notFoundResponder: middlewares.constructResponder(finalResponder: NotFoundResponder()))
+        .init(trie: self.trie, notFoundResponder: self.middlewares.constructResponder(finalResponder: NotFoundResponder()))
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
@@ -80,7 +80,7 @@ public struct HBRouterBuilder: HBRouterMethods {
         use closure: @escaping (HBRequest) throws -> Output
     ) -> Self {
         let responder = constructResponder(options: options, use: closure)
-        add(path, method: method, responder: responder)
+        self.add(path, method: method, responder: responder)
         return self
     }
 
@@ -92,10 +92,10 @@ public struct HBRouterBuilder: HBRouterMethods {
         use closure: @escaping (HBRequest) -> EventLoopFuture<Output>
     ) -> Self {
         let responder = constructResponder(options: options, use: closure)
-        add(path, method: method, responder: responder)
+        self.add(path, method: method, responder: responder)
         return self
     }
-    
+
     /// return new `RouterGroup`
     /// - Parameter path: prefix to add to paths inside the group
     public func group(_ path: String = "") -> HBRouterGroup {
@@ -109,4 +109,3 @@ struct NotFoundResponder: HBResponder {
         return request.eventLoop.makeFailedFuture(HBHTTPError(.notFound))
     }
 }
-
