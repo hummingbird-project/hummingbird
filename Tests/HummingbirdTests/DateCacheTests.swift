@@ -39,10 +39,10 @@ class HummingbirdDateTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/date", method: .GET) { response in
+        try app.XCTExecute(uri: "/date", method: .GET) { response in
             XCTAssertNotNil(response.headers["date"].first)
         }
-        app.XCTExecute(uri: "/date", method: .GET) { response in
+        try app.XCTExecute(uri: "/date", method: .GET) { response in
             XCTAssertNotNil(response.headers["date"].first)
         }
     }

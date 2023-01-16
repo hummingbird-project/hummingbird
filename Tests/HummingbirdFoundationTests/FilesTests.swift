@@ -46,7 +46,7 @@ class HummingbirdFilesTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/test.jpg", method: .GET) { response in
+        try app.XCTExecute(uri: "/test.jpg", method: .GET) { response in
             var body = try XCTUnwrap(response.body)
             XCTAssertEqual(body.readString(length: body.readableBytes), text)
             XCTAssertEqual(response.headers["content-type"].first, "image/jpeg")
@@ -66,7 +66,7 @@ class HummingbirdFilesTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/test.txt", method: .GET) { response in
+        try app.XCTExecute(uri: "/test.txt", method: .GET) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(body, buffer)
         }
@@ -85,7 +85,7 @@ class HummingbirdFilesTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=100-3999"]) { response in
+        try app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=100-3999"]) { response in
             let body = try XCTUnwrap(response.body)
             let slice = buffer.getSlice(at: 100, length: 3900)
             XCTAssertEqual(body, slice)
@@ -93,7 +93,7 @@ class HummingbirdFilesTests: XCTestCase {
             XCTAssertEqual(response.headers["content-type"].first, "text/plain")
         }
 
-        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=-3999"]) { response in
+        try app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=-3999"]) { response in
             let body = try XCTUnwrap(response.body)
             let slice = buffer.getSlice(at: 0, length: 4000)
             XCTAssertEqual(body, slice)
@@ -101,7 +101,7 @@ class HummingbirdFilesTests: XCTestCase {
             XCTAssertEqual(response.headers["content-range"].first, "bytes 0-3999/326000")
         }
 
-        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=6000-"]) { response in
+        try app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=6000-"]) { response in
             let body = try XCTUnwrap(response.body)
             let slice = buffer.getSlice(at: 6000, length: 320_000)
             XCTAssertEqual(body, slice)
@@ -123,7 +123,7 @@ class HummingbirdFilesTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/testHead.txt", method: .HEAD) { response in
+        try app.XCTExecute(uri: "/testHead.txt", method: .HEAD) { response in
             XCTAssertNil(response.body)
             XCTAssertEqual(response.headers["Content-Length"].first, text.utf8.count.description)
             XCTAssertEqual(response.headers["content-type"].first, "text/plain")
@@ -147,10 +147,10 @@ class HummingbirdFilesTests: XCTestCase {
         defer { app.XCTStop() }
 
         var eTag: String?
-        app.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
+        try app.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
             eTag = try XCTUnwrap(response.headers["eTag"].first)
         }
-        app.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
+        try app.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
             XCTAssertEqual(response.headers["eTag"].first, eTag)
         }
     }
@@ -168,20 +168,18 @@ class HummingbirdFilesTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        var eTagOptional: String?
-        app.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
-            eTagOptional = try XCTUnwrap(response.headers["eTag"].first)
+        let eTag = try app.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
+            return try XCTUnwrap(response.headers["eTag"].first)
         }
-        let eTag = try XCTUnwrap(eTagOptional)
-        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-none-match": eTag]) { response in
+        try app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-none-match": eTag!]) { response in
             XCTAssertEqual(response.status, .notModified)
         }
         var headers: HTTPHeaders = ["if-none-match": "test"]
         headers.add(name: "if-none-match", value: "\(eTag)")
-        app.XCTExecute(uri: "/test.txt", method: .GET, headers: headers) { response in
+        try app.XCTExecute(uri: "/test.txt", method: .GET, headers: headers) { response in
             XCTAssertEqual(response.status, .notModified)
         }
-        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-none-match": "dummyETag"]) { response in
+        try app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-none-match": "dummyETag"]) { response in
             XCTAssertEqual(response.status, .ok)
         }
     }
@@ -199,17 +197,15 @@ class HummingbirdFilesTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        var modifiedDateOptional: String?
-        app.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
-            modifiedDateOptional = try XCTUnwrap(response.headers["modified-date"].first)
+        let modifiedDate = try app.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
+            return try XCTUnwrap(response.headers["modified-date"].first)
         }
-        let modifiedDate = try XCTUnwrap(modifiedDateOptional)
-        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-modified-since": modifiedDate]) { response in
+        try app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-modified-since": modifiedDate]) { response in
             XCTAssertEqual(response.status, .notModified)
         }
         // one minute before current date
         let date = try XCTUnwrap(self.rfc1123Formatter.string(from: Date(timeIntervalSinceNow: -60)))
-        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-modified-since": date]) { response in
+        try app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-modified-since": date]) { response in
             XCTAssertEqual(response.status, .ok)
         }
     }
@@ -234,10 +230,10 @@ class HummingbirdFilesTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/test.txt", method: .GET) { response in
+        try app.XCTExecute(uri: "/test.txt", method: .GET) { response in
             XCTAssertEqual(response.headers["cache-control"].first, "max-age=2592000")
         }
-        app.XCTExecute(uri: "/test.jpg", method: .GET) { response in
+        try app.XCTExecute(uri: "/test.jpg", method: .GET) { response in
             XCTAssertEqual(response.headers["cache-control"].first, "max-age=2592000, private")
         }
     }
@@ -255,7 +251,7 @@ class HummingbirdFilesTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/", method: .GET) { response in
+        try app.XCTExecute(uri: "/", method: .GET) { response in
             var body = try XCTUnwrap(response.body)
             XCTAssertEqual(body.readString(length: body.readableBytes), text)
         }
@@ -274,7 +270,7 @@ class HummingbirdFilesTests: XCTestCase {
         defer { app.XCTStop() }
 
         let buffer = ByteBufferAllocator().buffer(string: "This is a test")
-        app.XCTExecute(uri: "/store", method: .PUT, body: buffer) { response in
+        try app.XCTExecute(uri: "/store", method: .PUT, body: buffer) { response in
             XCTAssertEqual(response.status, .ok)
         }
 
@@ -297,7 +293,7 @@ class HummingbirdFilesTests: XCTestCase {
         defer { app.XCTStop() }
 
         let buffer = self.randomBuffer(size: 400_000)
-        app.XCTExecute(uri: "/store", method: .PUT, body: buffer) { response in
+        try app.XCTExecute(uri: "/store", method: .PUT, body: buffer) { response in
             XCTAssertEqual(response.status, .ok)
         }
 

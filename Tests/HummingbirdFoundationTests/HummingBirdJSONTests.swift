@@ -40,7 +40,7 @@ class HummingbirdJSONTests: XCTestCase {
         defer { app.XCTStop() }
 
         let body = #"{"name": "John Smith", "email": "john.smith@email.com", "age": 25}"#
-        app.XCTExecute(uri: "/user", method: .PUT, body: ByteBufferAllocator().buffer(string: body)) {
+        try app.XCTExecute(uri: "/user", method: .PUT, body: ByteBufferAllocator().buffer(string: body)) {
             XCTAssertEqual($0.status, .ok)
         }
     }
@@ -54,7 +54,7 @@ class HummingbirdJSONTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/user", method: .GET) { response in
+        try app.XCTExecute(uri: "/user", method: .GET) { response in
             let body = try XCTUnwrap(response.body)
             let user = try JSONDecoder().decode(User.self, from: body)
             XCTAssertEqual(user.name, "John Smith")
@@ -72,7 +72,7 @@ class HummingbirdJSONTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/json", method: .GET) { response in
+        try app.XCTExecute(uri: "/json", method: .GET) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), #"{"message":"Hello, world!"}"#)
         }

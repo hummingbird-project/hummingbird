@@ -69,12 +69,12 @@ final class RouterTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/endpoint", method: .GET) { response in
+        try app.XCTExecute(uri: "/endpoint", method: .GET) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "GET")
         }
 
-        app.XCTExecute(uri: "/endpoint", method: .PUT) { response in
+        try app.XCTExecute(uri: "/endpoint", method: .PUT) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "PUT")
         }
@@ -96,11 +96,11 @@ final class RouterTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/group", method: .GET) { response in
+        try app.XCTExecute(uri: "/group", method: .GET) { response in
             XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
         }
 
-        app.XCTExecute(uri: "/not-group", method: .GET) { response in
+        try app.XCTExecute(uri: "/not-group", method: .GET) { response in
             XCTAssertEqual(response.headers["middleware"].first, nil)
         }
     }
@@ -116,7 +116,7 @@ final class RouterTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/group", method: .HEAD) { response in
+        try app.XCTExecute(uri: "/group", method: .HEAD) { response in
             XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
         }
     }
@@ -134,7 +134,7 @@ final class RouterTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/test/group", method: .GET) { response in
+        try app.XCTExecute(uri: "/test/group", method: .GET) { response in
             XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
         }
     }
@@ -166,11 +166,11 @@ final class RouterTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/test/group", method: .GET) { response in
+        try app.XCTExecute(uri: "/test/group", method: .GET) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "route2")
         }
-        app.XCTExecute(uri: "/test", method: .GET) { response in
+        try app.XCTExecute(uri: "/test", method: .GET) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "route1")
         }
@@ -185,7 +185,7 @@ final class RouterTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/user/1234", method: .DELETE) { response in
+        try app.XCTExecute(uri: "/user/1234", method: .DELETE) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "1234")
         }
@@ -201,7 +201,7 @@ final class RouterTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/user/john/1234", method: .DELETE) { response in
+        try app.XCTExecute(uri: "/user/john/1234", method: .DELETE) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "1234")
         }

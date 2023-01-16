@@ -259,7 +259,7 @@ final class HummingbirdJobsTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/job", method: .GET) { response in
+        try app.XCTExecute(uri: "/job", method: .GET) { response in
             XCTAssertEqual(response.status, .ok)
         }
 

@@ -73,7 +73,7 @@ class CookieTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/", method: .POST) { response in
+        try app.XCTExecute(uri: "/", method: .POST) { response in
             XCTAssertEqual(response.headers["Set-Cookie"].first, "test=value; HttpOnly")
         }
     }
@@ -87,7 +87,7 @@ class CookieTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/", method: .POST) { response in
+        try app.XCTExecute(uri: "/", method: .POST) { response in
             XCTAssertEqual(response.headers["Set-Cookie"].first, "test=value; HttpOnly")
         }
     }
@@ -100,7 +100,7 @@ class CookieTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/", method: .POST, headers: ["cookie": "test=value"]) { response in
+        try app.XCTExecute(uri: "/", method: .POST, headers: ["cookie": "test=value"]) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "value")
         }
