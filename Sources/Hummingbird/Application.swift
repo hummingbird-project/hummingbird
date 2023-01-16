@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -44,10 +44,8 @@ public final class HBApplication: HBExtensible {
     public let eventLoopGroup: EventLoopGroup
     /// thread pool used by application
     public let threadPool: NIOThreadPool
-    /// middleware applied to requests
-    public let middleware: HBMiddlewareGroup
     /// routes requests to requestResponders based on URI
-    public var router: HBRouter
+    public var router: HBRouterBuilder
     /// http server
     public var server: HBHTTPServer
     /// Configuration
@@ -76,8 +74,7 @@ public final class HBApplication: HBExtensible {
         logger.logLevel = configuration.logLevel
         self.logger = logger
 
-        self.router = TrieRouter()
-        self.middleware = HBMiddlewareGroup()
+        self.router = HBRouterBuilder()
         self.configuration = configuration
         self.extensions = HBExtensions()
         self.encoder = NullEncoder()
@@ -160,9 +157,12 @@ public final class HBApplication: HBExtensible {
         self.lifecycle.shutdown()
     }
 
+    /// middleware applied to requests
+    public var middleware: HBMiddlewareGroup { return self.router.middlewares }
+
     /// Construct the RequestResponder from the middleware group and router
     public func constructResponder() -> HBResponder {
-        return self.middleware.constructResponder(finalResponder: self.router)
+        return self.router.buildRouter()
     }
 
     /// shutdown eventloop, threadpool and any extensions attached to the Application

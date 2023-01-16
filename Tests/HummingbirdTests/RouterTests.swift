@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Hummingbird
+@testable import Hummingbird
 import HummingbirdXCT
 import XCTest
 
@@ -33,8 +33,30 @@ final class RouterTests: XCTestCase {
         }
     }
 
+    /// Test endpointPath is set
+    func testEndpointPath() throws {
+        struct TestEndpointMiddleware: HBMiddleware {
+            func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
+                guard let endpointPath = request.endpointPath else { return next.respond(to: request) }
+                return request.success(.init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath))))
+            }
+        }
+
+        let app = HBApplication(testing: .embedded)
+        app.middleware.add(TestEndpointMiddleware())
+        app.router.get("/test/:number") { _ in return "xxx" }
+
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/test/1", method: .GET) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "/test/:number")
+        }
+    }
+
     /// Test correct endpoints are called from group
-    func testEndpoint() throws {
+    func testMethodEndpoint() throws {
         let app = HBApplication(testing: .embedded)
         app.router
             .group("/endpoint")

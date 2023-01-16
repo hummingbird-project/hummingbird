@@ -168,15 +168,16 @@ class HummingbirdFilesTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        var eTag: String?
+        var eTagOptional: String?
         app.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
-            eTag = try XCTUnwrap(response.headers["eTag"].first)
+            eTagOptional = try XCTUnwrap(response.headers["eTag"].first)
         }
-        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-none-match": eTag!]) { response in
+        let eTag = try XCTUnwrap(eTagOptional)
+        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-none-match": eTag]) { response in
             XCTAssertEqual(response.status, .notModified)
         }
         var headers: HTTPHeaders = ["if-none-match": "test"]
-        headers.add(name: "if-none-match", value: "\(eTag!)")
+        headers.add(name: "if-none-match", value: "\(eTag)")
         app.XCTExecute(uri: "/test.txt", method: .GET, headers: headers) { response in
             XCTAssertEqual(response.status, .notModified)
         }
@@ -198,11 +199,12 @@ class HummingbirdFilesTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        var modifiedDate: String?
+        var modifiedDateOptional: String?
         app.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
-            modifiedDate = try XCTUnwrap(response.headers["modified-date"].first)
+            modifiedDateOptional = try XCTUnwrap(response.headers["modified-date"].first)
         }
-        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-modified-since": modifiedDate!]) { response in
+        let modifiedDate = try XCTUnwrap(modifiedDateOptional)
+        app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-modified-since": modifiedDate]) { response in
             XCTAssertEqual(response.status, .notModified)
         }
         // one minute before current date

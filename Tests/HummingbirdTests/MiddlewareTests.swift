@@ -90,6 +90,30 @@ final class MiddlewareTests: XCTestCase {
         }
     }
 
+    func testMiddlewareRunWhenNoRouteFound() throws {
+        struct TestMiddleware: HBMiddleware {
+            func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
+                return next.respond(to: request).flatMapError { error in
+                    guard let httpError = error as? HBHTTPError, httpError.status == .notFound else {
+                        return request.failure(error)
+                    }
+                    return request.failure(.notFound, message: "Edited error")
+                }
+            }
+        }
+        let app = HBApplication(testing: .embedded)
+        app.middleware.add(TestMiddleware())
+
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        app.XCTExecute(uri: "/hello", method: .GET) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "Edited error")
+            XCTAssertEqual(response.status, .notFound)
+        }
+    }
+
     func testEndpointPathInGroup() throws {
         struct TestMiddleware: HBMiddleware {
             func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {

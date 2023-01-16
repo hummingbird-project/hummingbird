@@ -38,8 +38,11 @@ class HummingbirdTrieRouterTests: XCTestCase {
     func testWildcard() {
         let trie = RouterPathTrie<String>()
         trie.addEntry("users/*", value: "test1")
+        trie.addEntry("users/*/fowler", value: "test2")
+        trie.addEntry("users/*/*", value: "test3")
         XCTAssertEqual(trie.getValueAndParameters("/users/adam")?.value, "test1")
-        XCTAssertNil(trie.getValueAndParameters("/users/adam/1")?.value)
+        XCTAssertEqual(trie.getValueAndParameters("/users/adam/fowler")?.value, "test2")
+        XCTAssertEqual(trie.getValueAndParameters("/users/adam/1")?.value, "test3")
     }
 
     func testGetParameters() {
