@@ -171,7 +171,7 @@ class HummingbirdFilesTests: XCTestCase {
         let eTag = try app.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
             return try XCTUnwrap(response.headers["eTag"].first)
         }
-        try app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-none-match": eTag!]) { response in
+        try app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-none-match": eTag]) { response in
             XCTAssertEqual(response.status, .notModified)
         }
         var headers: HTTPHeaders = ["if-none-match": "test"]

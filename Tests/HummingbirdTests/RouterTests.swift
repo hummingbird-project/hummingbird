@@ -49,7 +49,7 @@ final class RouterTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/test/1", method: .GET) { response in
+        try app.XCTExecute(uri: "/test/1", method: .GET) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "/test/:number")
         }

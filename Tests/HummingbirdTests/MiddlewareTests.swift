@@ -107,7 +107,7 @@ final class MiddlewareTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/hello", method: .GET) { response in
+        try app.XCTExecute(uri: "/hello", method: .GET) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "Edited error")
             XCTAssertEqual(response.status, .notFound)
