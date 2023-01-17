@@ -60,7 +60,7 @@ public struct HBRequest: HBSendableExtensible {
     }
 
     /// endpoint that services this request.
-    internal var endpointPath: String? {
+    public internal(set) var endpointPath: String? {
         get { self._internal.endpointPath.wrappedValue }
         set { self._internal.endpointPath.wrappedValue = newValue }
     }
