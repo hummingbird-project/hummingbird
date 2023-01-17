@@ -35,7 +35,7 @@ final class MiddlewareTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/hello", method: .GET) { response in
+        try app.XCTExecute(uri: "/hello", method: .GET) { response in
             XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
         }
     }
@@ -60,7 +60,7 @@ final class MiddlewareTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/hello", method: .GET) { response in
+        try app.XCTExecute(uri: "/hello", method: .GET) { response in
             // headers come back in opposite order as middleware is applied to responses in that order
             XCTAssertEqual(response.headers["middleware"].first, "second")
             XCTAssertEqual(response.headers["middleware"].last, "first")
@@ -86,7 +86,7 @@ final class MiddlewareTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/hello", method: .GET) { _ in
+        try app.XCTExecute(uri: "/hello", method: .GET) { _ in
         }
     }
 
@@ -107,7 +107,7 @@ final class MiddlewareTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/hello", method: .GET) { response in
+        try app.XCTExecute(uri: "/hello", method: .GET) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "Edited error")
             XCTAssertEqual(response.status, .notFound)
@@ -129,7 +129,7 @@ final class MiddlewareTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/test", method: .GET) { _ in }
+        try app.XCTExecute(uri: "/test", method: .GET) { _ in }
     }
 
     func testCORSUseOrigin() throws {
@@ -141,7 +141,7 @@ final class MiddlewareTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/hello", method: .GET, headers: ["origin": "foo.com"]) { response in
+        try app.XCTExecute(uri: "/hello", method: .GET, headers: ["origin": "foo.com"]) { response in
             // headers come back in opposite order as middleware is applied to responses in that order
             XCTAssertEqual(response.headers["Access-Control-Allow-Origin"].first, "foo.com")
         }
@@ -156,7 +156,7 @@ final class MiddlewareTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/hello", method: .GET, headers: ["origin": "foo.com"]) { response in
+        try app.XCTExecute(uri: "/hello", method: .GET, headers: ["origin": "foo.com"]) { response in
             // headers come back in opposite order as middleware is applied to responses in that order
             XCTAssertEqual(response.headers["Access-Control-Allow-Origin"].first, "*")
         }
@@ -178,7 +178,7 @@ final class MiddlewareTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/hello", method: .OPTIONS, headers: ["origin": "foo.com"]) { response in
+        try app.XCTExecute(uri: "/hello", method: .OPTIONS, headers: ["origin": "foo.com"]) { response in
             // headers come back in opposite order as middleware is applied to responses in that order
             XCTAssertEqual(response.headers["Access-Control-Allow-Origin"].first, "*")
             let headers = response.headers[canonicalForm: "Access-Control-Allow-Headers"].joined(separator: ", ")
@@ -201,7 +201,7 @@ final class MiddlewareTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/hello", method: .PUT) { _ in
+        try app.XCTExecute(uri: "/hello", method: .PUT) { _ in
         }
     }
 }

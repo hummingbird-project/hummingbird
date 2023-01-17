@@ -33,7 +33,7 @@ final class ApplicationTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/hello", method: .GET) { response in
+        try app.XCTExecute(uri: "/hello", method: .GET) { response in
             var body = try XCTUnwrap(response.body)
             let string = body.readString(length: body.readableBytes)
             XCTAssertEqual(response.status, .ok)
@@ -49,7 +49,7 @@ final class ApplicationTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/accepted", method: .GET) { response in
+        try app.XCTExecute(uri: "/accepted", method: .GET) { response in
             XCTAssertEqual(response.status, .accepted)
         }
     }
@@ -62,7 +62,7 @@ final class ApplicationTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/hello", method: .GET) { response in
+        try app.XCTExecute(uri: "/hello", method: .GET) { response in
             XCTAssertEqual(response.headers["connection"].first, "keep-alive")
             XCTAssertEqual(response.headers["content-length"].first, "5")
         }
@@ -76,7 +76,7 @@ final class ApplicationTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/hello", method: .GET) { response in
+        try app.XCTExecute(uri: "/hello", method: .GET) { response in
             XCTAssertEqual(response.headers["server"].first, "TestServer")
         }
     }
@@ -89,7 +89,7 @@ final class ApplicationTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/hello", method: .POST) { response in
+        try app.XCTExecute(uri: "/hello", method: .POST) { response in
             var body = try XCTUnwrap(response.body)
             let string = body.readString(length: body.readableBytes)
             XCTAssertEqual(response.status, .ok)
@@ -108,11 +108,11 @@ final class ApplicationTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/hello", method: .GET) { response in
+        try app.XCTExecute(uri: "/hello", method: .GET) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "GET")
         }
-        app.XCTExecute(uri: "/hello", method: .POST) { response in
+        try app.XCTExecute(uri: "/hello", method: .POST) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "POST")
         }
@@ -130,11 +130,11 @@ final class ApplicationTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/hello", method: .GET) { response in
+        try app.XCTExecute(uri: "/hello", method: .GET) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "GET")
         }
-        app.XCTExecute(uri: "/hello", method: .POST) { response in
+        try app.XCTExecute(uri: "/hello", method: .POST) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "POST")
         }
@@ -149,7 +149,7 @@ final class ApplicationTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/query?test=test%20data%C3%A9", method: .POST) { response in
+        try app.XCTExecute(uri: "/query?test=test%20data%C3%A9", method: .POST) { response in
             var body = try XCTUnwrap(response.body)
             let string = body.readString(length: body.readableBytes)
             XCTAssertEqual(response.status, .ok)
@@ -165,7 +165,7 @@ final class ApplicationTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/add?value=3&value=45&value=7", method: .POST) { response in
+        try app.XCTExecute(uri: "/add?value=3&value=45&value=7", method: .POST) { response in
             var body = try XCTUnwrap(response.body)
             let string = body.readString(length: body.readableBytes)
             XCTAssertEqual(response.status, .ok)
@@ -181,7 +181,7 @@ final class ApplicationTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/array", method: .GET) { response in
+        try app.XCTExecute(uri: "/array", method: .GET) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "[\"yes\", \"no\"]")
         }
@@ -195,7 +195,7 @@ final class ApplicationTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/array", method: .PATCH) { response in
+        try app.XCTExecute(uri: "/array", method: .PATCH) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "[\"yes\", \"no\"]")
         }
@@ -213,7 +213,7 @@ final class ApplicationTests: XCTestCase {
         defer { app.XCTStop() }
 
         let buffer = self.randomBuffer(size: 1_140_000)
-        app.XCTExecute(uri: "/echo-body", method: .POST, body: buffer) { response in
+        try app.XCTExecute(uri: "/echo-body", method: .POST, body: buffer) { response in
             XCTAssertEqual(response.body, buffer)
         }
     }
@@ -255,14 +255,14 @@ final class ApplicationTests: XCTestCase {
         defer { app.XCTStop() }
 
         let buffer = self.randomBuffer(size: 640_001)
-        app.XCTExecute(uri: "/streaming", method: .POST, body: buffer) { response in
+        try app.XCTExecute(uri: "/streaming", method: .POST, body: buffer) { response in
             XCTAssertEqual(response.status, .ok)
             XCTAssertEqual(response.body, buffer)
         }
-        app.XCTExecute(uri: "/streaming", method: .POST) { response in
+        try app.XCTExecute(uri: "/streaming", method: .POST) { response in
             XCTAssertEqual(response.status, .badRequest)
         }
-        app.XCTExecute(uri: "/size", method: .POST, body: buffer) { response in
+        try app.XCTExecute(uri: "/size", method: .POST, body: buffer) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "640001")
         }
@@ -293,11 +293,11 @@ final class ApplicationTests: XCTestCase {
         defer { app.XCTStop() }
 
         let buffer = self.randomBuffer(size: 64)
-        app.XCTExecute(uri: "/streaming", method: .POST, body: buffer) { response in
+        try app.XCTExecute(uri: "/streaming", method: .POST, body: buffer) { response in
             XCTAssertEqual(response.status, .ok)
             XCTAssertEqual(response.body, buffer)
         }
-        app.XCTExecute(uri: "/streaming", method: .POST) { response in
+        try app.XCTExecute(uri: "/streaming", method: .POST) { response in
             XCTAssertEqual(response.status, .badRequest)
         }
     }
@@ -320,7 +320,7 @@ final class ApplicationTests: XCTestCase {
         defer { app.XCTStop() }
 
         let buffer = self.randomBuffer(size: 512_000)
-        app.XCTExecute(uri: "/hello", method: .PUT, body: buffer) { response in
+        try app.XCTExecute(uri: "/hello", method: .PUT, body: buffer) { response in
             XCTAssertEqual(response.status, .ok)
         }
     }
@@ -336,11 +336,11 @@ final class ApplicationTests: XCTestCase {
         defer { app.XCTStop() }
 
         let buffer = self.randomBuffer(size: 64)
-        app.XCTExecute(uri: "/echo-body", method: .POST, body: buffer) { response in
+        try app.XCTExecute(uri: "/echo-body", method: .POST, body: buffer) { response in
             XCTAssertEqual(response.status, .ok)
             XCTAssertEqual(response.body, buffer)
         }
-        app.XCTExecute(uri: "/echo-body", method: .POST) { response in
+        try app.XCTExecute(uri: "/echo-body", method: .POST) { response in
             XCTAssertEqual(response.status, .notFound)
         }
     }
@@ -356,11 +356,11 @@ final class ApplicationTests: XCTestCase {
         defer { app.XCTStop() }
 
         let buffer = self.randomBuffer(size: 64)
-        app.XCTExecute(uri: "/echo-body", method: .POST, body: buffer) { response in
+        try app.XCTExecute(uri: "/echo-body", method: .POST, body: buffer) { response in
             XCTAssertEqual(response.status, .ok)
             XCTAssertEqual(response.body, buffer)
         }
-        app.XCTExecute(uri: "/echo-body", method: .POST) { response in
+        try app.XCTExecute(uri: "/echo-body", method: .POST) { response in
             XCTAssertEqual(response.status, .notFound)
         }
     }
@@ -379,7 +379,7 @@ final class ApplicationTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/name", method: .PATCH) { response in
+        try app.XCTExecute(uri: "/name", method: .PATCH) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), #"Name(first: "john", last: "smith")"#)
         }
@@ -396,7 +396,7 @@ final class ApplicationTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/hello", method: .DELETE) { response in
+        try app.XCTExecute(uri: "/hello", method: .DELETE) { response in
             var body = try XCTUnwrap(response.body)
             let string = body.readString(length: body.readableBytes)
             XCTAssertEqual(response.status, .imATeapot)
@@ -418,7 +418,7 @@ final class ApplicationTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/hello", method: .DELETE) { response in
+        try app.XCTExecute(uri: "/hello", method: .DELETE) { response in
             var body = try XCTUnwrap(response.body)
             let string = body.readString(length: body.readableBytes)
             XCTAssertEqual(response.status, .imATeapot)
@@ -444,7 +444,7 @@ final class ApplicationTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/", method: .GET) { response in
+        try app.XCTExecute(uri: "/", method: .GET) { response in
             XCTAssertEqual(response.status, .ok)
             let body = try XCTUnwrap(response.body)
             let address = String(buffer: body)

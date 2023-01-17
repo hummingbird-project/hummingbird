@@ -100,15 +100,15 @@ extension HBApplication {
     }
 
     /// Send request and call test callback on the response returned
-    public func XCTExecute(
+    @discardableResult public func XCTExecute<Return>(
         uri: String,
         method: HTTPMethod,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        testCallback: @escaping (HBXCTResponse) throws -> Void
-    ) {
-        XCTAssertNoThrow(try self.xct.execute(uri: uri, method: method, headers: headers, body: body).flatMapThrowing { response in
+        testCallback: @escaping (HBXCTResponse) throws -> Return
+    ) throws -> Return {
+        return try self.xct.execute(uri: uri, method: method, headers: headers, body: body).flatMapThrowing { response in
             try testCallback(response)
-        }.wait())
+        }.wait()
     }
 }

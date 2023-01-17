@@ -43,7 +43,7 @@ final class AsyncAwaitTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/hello", method: .GET) { response in
+        try app.XCTExecute(uri: "/hello", method: .GET) { response in
             var body = try XCTUnwrap(response.body)
             let string = body.readString(length: body.readableBytes)
             XCTAssertEqual(response.status, .ok)
@@ -71,7 +71,7 @@ final class AsyncAwaitTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/hello", method: .GET) { response in
+        try app.XCTExecute(uri: "/hello", method: .GET) { response in
             XCTAssertEqual(response.headers["async"].first, "true")
         }
     }
@@ -97,7 +97,7 @@ final class AsyncAwaitTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/hello/Adam", method: .POST) { response in
+        try app.XCTExecute(uri: "/hello/Adam", method: .POST) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "Hello Adam")
         }
@@ -125,7 +125,7 @@ final class AsyncAwaitTests: XCTestCase {
         defer { app.XCTStop() }
 
         let buffer = self.randomBuffer(size: 530_001)
-        app.XCTExecute(uri: "/size", method: .POST, body: buffer) { response in
+        try app.XCTExecute(uri: "/size", method: .POST, body: buffer) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "530001")
         }

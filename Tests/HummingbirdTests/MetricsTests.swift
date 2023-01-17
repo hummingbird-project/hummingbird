@@ -191,7 +191,7 @@ final class MetricsTests: XCTestCase {
         }
         try app.XCTStart()
         defer { app.XCTStop() }
-        app.XCTExecute(uri: "/hello", method: .GET) { _ in }
+        try app.XCTExecute(uri: "/hello", method: .GET) { _ in }
 
         let counter = try XCTUnwrap(Self.testMetrics.counters["hb_requests"] as? TestCounter)
         XCTAssertEqual(counter.values[0].1, 1)
@@ -209,7 +209,7 @@ final class MetricsTests: XCTestCase {
         }
         try app.XCTStart()
         defer { app.XCTStop() }
-        app.XCTExecute(uri: "/hello", method: .GET) { _ in }
+        try app.XCTExecute(uri: "/hello", method: .GET) { _ in }
 
         let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
         XCTAssertEqual(counter.values.count, 1)
@@ -228,7 +228,7 @@ final class MetricsTests: XCTestCase {
         }
         try app.XCTStart()
         defer { app.XCTStop() }
-        app.XCTExecute(uri: "/hello2", method: .GET) { _ in }
+        try app.XCTExecute(uri: "/hello2", method: .GET) { _ in }
 
         let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
         XCTAssertEqual(counter.values.count, 1)
@@ -246,7 +246,7 @@ final class MetricsTests: XCTestCase {
         }
         try app.XCTStart()
         defer { app.XCTStop() }
-        app.XCTExecute(uri: "/user/765", method: .GET) { _ in }
+        try app.XCTExecute(uri: "/user/765", method: .GET) { _ in }
 
         let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
         XCTAssertEqual(counter.values.count, 1)

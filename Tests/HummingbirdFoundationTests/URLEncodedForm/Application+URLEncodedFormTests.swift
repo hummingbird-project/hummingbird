@@ -40,7 +40,7 @@ class HummingBirdURLEncodedTests: XCTestCase {
         defer { app.XCTStop() }
 
         let body = "name=John%20Smith&email=john.smith%40email.com&age=25"
-        app.XCTExecute(uri: "/user", method: .PUT, body: ByteBufferAllocator().buffer(string: body)) {
+        try app.XCTExecute(uri: "/user", method: .PUT, body: ByteBufferAllocator().buffer(string: body)) {
             XCTAssertEqual($0.status, .ok)
         }
     }
@@ -54,7 +54,7 @@ class HummingBirdURLEncodedTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/user", method: .GET) { response in
+        try app.XCTExecute(uri: "/user", method: .GET) { response in
             var body = try XCTUnwrap(response.body)
             let bodyString = try XCTUnwrap(body.readString(length: body.readableBytes))
             let user = try URLEncodedFormDecoder().decode(User.self, from: bodyString)

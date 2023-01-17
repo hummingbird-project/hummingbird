@@ -48,7 +48,7 @@ class HummingbirdAsyncFilesTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/test.jpg", method: .GET) { response in
+        try app.XCTExecute(uri: "/test.jpg", method: .GET) { response in
             XCTAssertEqual(response.body, buffer)
         }
     }
@@ -75,7 +75,7 @@ class HummingbirdAsyncFilesTests: XCTestCase {
         defer { app.XCTStop() }
 
         let buffer = ByteBufferAllocator().buffer(string: "This is a test")
-        app.XCTExecute(uri: "/store", method: .PUT, body: buffer) { response in
+        try app.XCTExecute(uri: "/store", method: .PUT, body: buffer) { response in
             XCTAssertEqual(response.status, .ok)
         }
 
