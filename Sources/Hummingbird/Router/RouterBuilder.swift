@@ -16,6 +16,8 @@ import HummingbirdCore
 import NIOCore
 import NIOHTTP1
 
+/// Create rules for routing requests and then create `HBResponder` that will follow these rules.
+///
 /// `HBRouterBuilder` requires an implementation of  the `on(path:method:use)` functions but because it
 /// also conforms to `HBRouterMethods` it is also possible to call the method specific functions `get`, `put`,
 /// `head`, `post` and `patch`.  The route handler closures all return objects conforming to
