@@ -38,6 +38,7 @@ get_contributors() {
 }
 
 get_contributors hummingbird
+get_contributors hummingbird-core
 get_contributors hummingbird-examples
 
 CONTRIBUTORS=$(awk '!a[$0]++' <<< """$CONTRIBUTORS""")
