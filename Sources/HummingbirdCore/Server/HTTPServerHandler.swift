@@ -104,7 +104,7 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
             break
 
         default:
-            assertionFailure("Should not get here")
+            assertionFailure("Should not get here!\nPart: \(part)\nState: \(self.state)")
             context.close(promise: nil)
         }
     }
