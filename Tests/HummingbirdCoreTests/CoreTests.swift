@@ -521,7 +521,7 @@ class HummingBirdCoreTests: XCTestCase {
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
         let timeoutPromise = Self.eventLoopGroup.next().makeTimeoutPromise(of: Void.self, timeout: .seconds(5))
-        _ = client.get("/", headers: ["connection": "close"])
+        _ = try client.get("/", headers: ["connection": "close"]).wait()
         client.channelPromise.futureResult.whenSuccess { channel in
             channel.closeFuture.whenSuccess { _ in
                 timeoutPromise.succeed(())
@@ -580,5 +580,85 @@ class HummingBirdCoreTests: XCTestCase {
         XCTAssertEqual(HBRequestBody.byteBuffer(nil).description, "empty")
         XCTAssertEqual(HBRequestBody.byteBuffer(self.randomBuffer(size: 64)).description, "64 bytes")
         XCTAssertEqual(HBRequestBody.byteBuffer(.init(string: "Test String")).description, "\"Test String\"")
+    }
+
+    func testReadIdleHandler() {
+        struct HelloResponder: HBHTTPResponder {
+            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
+                print(context.channel.pipeline)
+                let responseHead = HTTPResponseHead(version: .init(major: 1, minor: 1), status: .ok)
+                let response = HBHTTPResponse(head: responseHead, body: .empty)
+                onComplete(.success(response))
+            }
+        }
+        let server = HBHTTPServer(
+            group: Self.eventLoopGroup,
+            configuration: .init(address: .hostname(port: 0), idleTimeoutConfiguration: .init(readTimeout: .seconds(1)))
+        )
+        // Fake an incomplete request by adding a handler that never passes on the `.end` HTTP part
+        server.addChannelHandler(HTTPServerIncompleteRequest())
+        XCTAssertNoThrow(try server.start(responder: HelloResponder()).wait())
+        defer { XCTAssertNoThrow(try server.stop().wait()) }
+
+        let client = HBXCTClient(host: "localhost", port: server.port!, eventLoopGroupProvider: .createNew)
+        client.connect()
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+
+        _ = client.get("/", headers: ["connection": "keep-alive"])
+        let timeoutPromise = Self.eventLoopGroup.next().makeTimeoutPromise(of: Void.self, timeout: .seconds(5))
+        client.channelPromise.futureResult.whenSuccess { channel in
+            channel.closeFuture.whenSuccess { _ in
+                timeoutPromise.succeed(())
+            }
+        }
+        XCTAssertNoThrow(try timeoutPromise.futureResult.wait())
+    }
+
+    func testWriteIdleTimeout() {
+        struct HelloResponder: HBHTTPResponder {
+            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
+                print(context.channel.pipeline)
+                let responseHead = HTTPResponseHead(version: .init(major: 1, minor: 1), status: .ok)
+                let response = HBHTTPResponse(head: responseHead, body: .empty)
+                onComplete(.success(response))
+            }
+        }
+        let server = HBHTTPServer(
+            group: Self.eventLoopGroup,
+            configuration: .init(address: .hostname(port: 0), idleTimeoutConfiguration: .init(writeTimeout: .seconds(1)))
+        )
+        XCTAssertNoThrow(try server.start(responder: HelloResponder()).wait())
+        defer { XCTAssertNoThrow(try server.stop().wait()) }
+
+        let client = HBXCTClient(host: "localhost", port: server.port!, eventLoopGroupProvider: .createNew)
+        client.connect()
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+
+        _ = client.get("/", headers: ["connection": "keep-alive"]).map { response in
+            print(response)
+        }
+        let timeoutPromise = Self.eventLoopGroup.next().makeTimeoutPromise(of: Void.self, timeout: .seconds(5))
+        client.channelPromise.futureResult.whenSuccess { channel in
+            channel.closeFuture.whenSuccess { _ in
+                timeoutPromise.succeed(())
+            }
+        }
+        XCTAssertNoThrow(try timeoutPromise.futureResult.wait())
+    }
+}
+
+/// Channel Handler for serializing request header and data
+final class HTTPServerIncompleteRequest: ChannelInboundHandler, RemovableChannelHandler {
+    typealias InboundIn = HTTPServerRequestPart
+    typealias InboundOut = HTTPServerRequestPart
+
+    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+        let part = self.unwrapInboundIn(data)
+        switch part {
+        case .end:
+            break
+        default:
+            context.fireChannelRead(data)
+        }
     }
 }

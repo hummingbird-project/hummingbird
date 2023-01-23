@@ -98,6 +98,10 @@ public class HBXCTClient {
 
     /// shutdown client
     public func syncShutdown() throws {
+        do {
+            try self.close().wait()
+        } catch HBXCTClient.Error.connectionNotOpen {
+        } catch ChannelError.alreadyClosed {}
         if case .createNew = self.eventLoopGroupProvider {
             try self.eventLoopGroup.syncShutdownGracefully()
         }
@@ -140,6 +144,13 @@ public class HBXCTClient {
             let task = HTTPTask(request: self.cleanupRequest(request), responsePromise: promise.promise)
             channel.writeAndFlush(task, promise: nil)
             return promise.futureResult
+        }
+    }
+
+    public func close() -> EventLoopFuture<Void> {
+        self.channelPromise.completeWith(.failure(HBXCTClient.Error.connectionNotOpen))
+        return self.channelPromise.futureResult.flatMap { channel in
+            channel.close()
         }
     }
 
@@ -281,10 +292,6 @@ public class HBXCTClient {
         func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
             switch event {
             case let evt as IdleStateHandler.IdleStateEvent where evt == .read:
-                // The remote peer half-closed the channel. At this time, any
-                // outstanding response will be written before the channel is
-                // closed, and if we are idle we will close the channel immediately.
-                // if error caught, pass to all tasks in progress and close channel
                 while let task = self.queue.popFirst() {
                     task.responsePromise.fail(HBXCTClient.Error.readTimeout)
                 }

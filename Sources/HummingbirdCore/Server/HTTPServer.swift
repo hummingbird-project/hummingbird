@@ -38,6 +38,8 @@ public final class HBHTTPServer {
     public enum Error: Swift.Error {
         /// waiting on the server while it is not running will throw this
         case serverNotRunning
+        /// the current connection is closing
+        case connectionClosing
     }
 
     /// Initialize HTTP server
@@ -51,6 +53,15 @@ public final class HBHTTPServer {
         self.childChannelHandlers = .init()
         // defaults to HTTP1
         self.httpChannelInitializer = HTTP1ChannelInitializer()
+        // add idle read, write handlers
+        if let idleTimeoutConfiguration = configuration.idleTimeoutConfiguration {
+            self.childChannelHandlers.addHandler(
+                IdleStateHandler(
+                    readTimeout: idleTimeoutConfiguration.readTimeout,
+                    writeTimeout: idleTimeoutConfiguration.writeTimeout
+                )
+            )
+        }
     }
 
     /// Add TLS handler. Need to provide a closure so new instance of these handlers are
