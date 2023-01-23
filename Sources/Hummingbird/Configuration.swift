@@ -41,6 +41,8 @@ extension HBApplication {
         public let tcpNoDelay: Bool
         /// Pipelining ensures that only one http request is processed at one time
         public let enableHttpPipelining: Bool
+        /// Idle state handler setup.
+        public let idleTimeoutConfiguration: HBHTTPServer.IdleStateHandlerConfiguration?
         #if canImport(Network)
         /// TLS options for NIO Transport services
         public let tlsOptions: TSTLSOptions
@@ -79,6 +81,7 @@ extension HBApplication {
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = false,
             enableHttpPipelining: Bool = true,
+            idleTimeoutConfiguration: HBHTTPServer.IdleStateHandlerConfiguration? = nil,
             threadPoolSize: Int = 2,
             logLevel: Logger.Level? = nil,
             noHTTPServer: Bool = false
@@ -93,6 +96,7 @@ extension HBApplication {
             self.reuseAddress = reuseAddress
             self.tcpNoDelay = tcpNoDelay
             self.enableHttpPipelining = enableHttpPipelining
+            self.idleTimeoutConfiguration = idleTimeoutConfiguration
             #if canImport(Network)
             self.tlsOptions = .none
             #endif
@@ -131,6 +135,7 @@ extension HBApplication {
             maxStreamingBufferSize: Int = 1 * 1024 * 1024,
             reuseAddress: Bool = true,
             enableHttpPipelining: Bool = true,
+            idleTimeoutConfiguration: HBHTTPServer.IdleStateHandlerConfiguration? = nil,
             threadPoolSize: Int = 2,
             logLevel: Logger.Level? = nil,
             noHTTPServer: Bool = false,
@@ -146,6 +151,7 @@ extension HBApplication {
             self.reuseAddress = reuseAddress
             self.tcpNoDelay = true // not used by Network framework
             self.enableHttpPipelining = enableHttpPipelining
+            self.idleTimeoutConfiguration = idleTimeoutConfiguration
             self.tlsOptions = tlsOptions
 
             self.threadPoolSize = threadPoolSize
@@ -171,6 +177,7 @@ extension HBApplication {
             reuseAddress: Bool? = nil,
             tcpNoDelay: Bool? = nil,
             enableHttpPipelining: Bool? = nil,
+            idleTimeoutConfiguration: HBHTTPServer.IdleStateHandlerConfiguration? = nil,
             threadPoolSize: Int? = nil,
             logLevel: Logger.Level? = nil
         ) -> Self {
@@ -183,6 +190,7 @@ extension HBApplication {
                 reuseAddress: reuseAddress ?? self.reuseAddress,
                 tcpNoDelay: tcpNoDelay ?? self.tcpNoDelay,
                 enableHttpPipelining: enableHttpPipelining ?? self.enableHttpPipelining,
+                idleTimeoutConfiguration: idleTimeoutConfiguration ?? self.idleTimeoutConfiguration,
                 threadPoolSize: threadPoolSize ?? self.threadPoolSize,
                 logLevel: logLevel ?? self.logLevel
             )
@@ -198,6 +206,7 @@ extension HBApplication {
                 maxStreamingBufferSize: self.maxStreamingBufferSize,
                 reuseAddress: self.reuseAddress,
                 withPipeliningAssistance: self.enableHttpPipelining,
+                idleTimeoutConfiguration: self.idleTimeoutConfiguration,
                 tlsOptions: self.tlsOptions
             )
         }
@@ -211,7 +220,8 @@ extension HBApplication {
                 backlog: self.backlog,
                 reuseAddress: self.reuseAddress,
                 tcpNoDelay: self.tcpNoDelay,
-                withPipeliningAssistance: self.enableHttpPipelining
+                withPipeliningAssistance: self.enableHttpPipelining,
+                idleTimeoutConfiguration: self.idleTimeoutConfiguration
             )
         }
         #endif
