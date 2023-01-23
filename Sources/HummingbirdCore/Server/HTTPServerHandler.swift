@@ -116,8 +116,9 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
         } else {
             streamer = nil
         }
-        let keepAlive = request.head.isKeepAlive && (self.closeAfterResponseWritten == false || self.requestsInProgress > 1)
         let httpVersion = request.head.version
+        let httpKeepAlive = request.head.isKeepAlive || httpVersion.major > 1
+        let keepAlive = httpKeepAlive && (self.closeAfterResponseWritten == false || self.requestsInProgress > 1)
 
         // if error caught while parsing HTTP
         if let error = propagatedError {
