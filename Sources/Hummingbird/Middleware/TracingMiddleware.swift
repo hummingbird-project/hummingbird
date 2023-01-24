@@ -90,7 +90,7 @@ public struct HBTracingMiddleware: HBMiddleware {
             }
         }
 
-        return Baggage.$current.withValue(span.baggage) {
+        return request.withBaggage(baggage) { request in
             return next
                 .respond(to: request)
                 .always { result in
