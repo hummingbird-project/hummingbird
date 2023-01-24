@@ -38,7 +38,7 @@ public struct HBTracingMiddleware: HBMiddleware {
     }
 
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
-        var baggage = Baggage.topLevel
+        var baggage = request.baggage
         InstrumentationSystem.instrument.extract(request.headers, into: &baggage, using: HTTPHeadersExtractor())
 
         let operationName: String = {

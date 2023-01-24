@@ -46,16 +46,9 @@ extension HBRequest {
     func withSpan<Return>(
         _ operationName: String,
         ofKind kind: SpanKind = .internal,
-        _ operation: (Span) throws -> Return
+        _ operation: (HBRequest, Span) throws -> Return
     ) rethrows -> Return {
-        let span = InstrumentationSystem.tracer.startSpan(operationName, baggage: self.baggage, ofKind: kind)
-        defer { span.end() }
-        do {
-            return try operation(span)
-        } catch {
-            span.recordError(error)
-            throw error
-        }
+        return try withSpan(operationName, baggage: self.baggage, ofKind: kind, operation)
     }
 
     /// Execute a specific task within a newly created ``Span``.
@@ -76,15 +69,61 @@ extension HBRequest {
         ofKind kind: SpanKind = .internal,
         _ operation: (HBRequest, Span) throws -> Return
     ) rethrows -> Return {
-        return try withBaggage(baggage) { request in
-            let span = InstrumentationSystem.tracer.startSpan(operationName, baggage: request.baggage, ofKind: kind)
-            defer { span.end() }
+        let span = InstrumentationSystem.tracer.startSpan(operationName, baggage: baggage, ofKind: kind)
+        defer { span.end() }
+        return try withBaggage(span.baggage) { request in
             do {
                 return try operation(request, span)
             } catch {
                 span.recordError(error)
                 throw error
             }
+        }
+    }
+
+    /// Execute the given operation within a newly created ``Span``,
+    ///
+    /// DO NOT `end()` the passed in span manually. It will be ended automatically when the `operation` returns.
+    ///
+    /// - Parameters:
+    ///   - operationName: The name of the operation being traced. This may be a handler function, database call, ...
+    ///   - kind: The ``SpanKind`` of the ``Span`` to be created. Defaults to ``SpanKind/internal``.
+    ///   - operation: operation to wrap in a span start/end and execute immediately
+    /// - Returns: the value returned by `operation`
+    /// - Throws: the error the `operation` has thrown (if any)
+    func withSpan<Return>(
+        _ operationName: String,
+        ofKind kind: SpanKind = .internal,
+        _ operation: (HBRequest, Span) -> EventLoopFuture<Return>
+    ) -> EventLoopFuture<Return> {
+        return withSpan(operationName, baggage: self.baggage, ofKind: kind, operation)
+    }
+
+    /// Execute the given operation within a newly created ``Span``,
+    ///
+    /// DO NOT `end()` the passed in span manually. It will be ended automatically when the `operation` returns.
+    ///
+    /// - Parameters:
+    ///   - operationName: The name of the operation being traced. This may be a handler function, database call, ...
+    ///   - kind: The ``SpanKind`` of the ``Span`` to be created. Defaults to ``SpanKind/internal``.
+    ///   - operation: operation to wrap in a span start/end and execute immediately
+    /// - Returns: the value returned by `operation`
+    /// - Throws: the error the `operation` has thrown (if any)
+    func withSpan<Return>(
+        _ operationName: String,
+        baggage: Baggage,
+        ofKind kind: SpanKind = .internal,
+        _ operation: (HBRequest, Span) -> EventLoopFuture<Return>
+    ) -> EventLoopFuture<Return> {
+        let span = InstrumentationSystem.tracer.startSpan(operationName, baggage: baggage, ofKind: kind)
+        return withBaggage(span.baggage) { request in
+            return operation(request, span)
+                .flatMapErrorThrowing { error in
+                    span.recordError(error)
+                    throw error
+                }.always { _ in
+                    span.end()
+                }
         }
     }
 }
@@ -118,16 +157,9 @@ extension HBRequest {
     func withSpan<Return>(
         _ operationName: String,
         ofKind kind: SpanKind = .internal,
-        _ operation: (Span) async throws -> Return
+        _ operation: (HBRequest, Span) async throws -> Return
     ) async rethrows -> Return {
-        let span = InstrumentationSystem.tracer.startSpan(operationName, baggage: self.baggage, ofKind: kind)
-        defer { span.end() }
-        do {
-            return try await operation(span)
-        } catch {
-            span.recordError(error)
-            throw error
-        }
+        return try await withSpan(operationName, baggage: self.baggage, ofKind: kind, operation)
     }
 
     /// Execute a specific task within a newly created ``Span``.
@@ -148,9 +180,9 @@ extension HBRequest {
         ofKind kind: SpanKind = .internal,
         _ operation: (HBRequest, Span) async throws -> Return
     ) async rethrows -> Return {
-        return try await withBaggage(baggage) { request in
-            let span = InstrumentationSystem.tracer.startSpan(operationName, baggage: request.baggage, ofKind: kind)
-            defer { span.end() }
+        let span = InstrumentationSystem.tracer.startSpan(operationName, baggage: baggage, ofKind: kind)
+        defer { span.end() }
+        return try await withBaggage(span.baggage) { request in
             do {
                 return try await operation(request, span)
             } catch {
