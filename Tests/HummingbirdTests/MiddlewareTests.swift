@@ -507,6 +507,42 @@ final class MiddlewareTests: XCTestCase {
         XCTAssertEqual(span2.baggage[TestIDKey.self], "test")
         XCTAssertEqual(span2.baggage.traceID, span.baggage.traceID)
     }
+
+    func testTracingSpanBaggagePropagation() throws {
+        let expectation = expectation(description: "Expected span to be ended.")
+        expectation.expectedFulfillmentCount = 2
+
+        let tracer = TestTracer()
+        tracer.onEndSpan = { _ in expectation.fulfill() }
+        InstrumentationSystem.bootstrapInternal(tracer)
+
+        let app = HBApplication(testing: .embedded)
+        app.middleware.add(HBTracingMiddleware())
+        app.router.get("/") { request -> HTTPResponseStatus in
+            var baggage = request.baggage
+            baggage[TestIDKey.self] = "test"
+            return request.withSpan("TestSpan", baggage: baggage, ofKind: .client) { request, span in
+                span.attributes["test-attribute"] = 42
+                return .ok
+            }
+        }
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        try app.XCTExecute(uri: "/", method: .GET) { response in
+            XCTAssertEqual(response.status, .ok)
+        }
+
+        waitForExpectations(timeout: 1)
+
+        XCTAssertEqual(tracer.spans.count, 2)
+        let span = tracer.spans[0]
+        let span2 = tracer.spans[1]
+
+        XCTAssertEqual(span2.baggage[TestIDKey.self], "test")
+        XCTAssertEqual(span2.attributes["test-attribute"]?.toSpanAttribute(), 42)
+        XCTAssertEqual(span2.baggage.traceID, span.baggage.traceID)
+    }
 }
 
 internal enum TestIDKey: BaggageKey {
