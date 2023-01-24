@@ -47,70 +47,42 @@ public struct HBTracingMiddleware: HBMiddleware {
             }
             return endpointPath.starts(with: "/") ? endpointPath : "/\(endpointPath)"
         }()
-        let span = InstrumentationSystem.tracer.startSpan(operationName, baggage: baggage, ofKind: .server)
 
-        span.attributes["http.method"] = request.method.rawValue
-        span.attributes["http.target"] = request.uri.path
-        span.attributes["http.flavor"] = "\(request.version.major).\(request.version.minor)"
-        span.attributes["http.scheme"] = request.uri.scheme?.rawValue
-        span.attributes["http.user_agent"] = request.headers.first(name: "user-agent")
-        span.attributes["http.request_content_length"] = request.body.buffer?.readableBytes
+        return request.withSpan(operationName, baggage: baggage, ofKind: .server) { request, span in
+            span.attributes["http.method"] = request.method.rawValue
+            span.attributes["http.target"] = request.uri.path
+            span.attributes["http.flavor"] = "\(request.version.major).\(request.version.minor)"
+            span.attributes["http.scheme"] = request.uri.scheme?.rawValue
+            span.attributes["http.user_agent"] = request.headers.first(name: "user-agent")
+            span.attributes["http.request_content_length"] = request.body.buffer?.readableBytes
 
-        span.attributes["net.host.name"] = request.application.server.configuration.address.host
-        span.attributes["net.host.port"] = request.application.server.configuration.address.port
+            span.attributes["net.host.name"] = request.application.server.configuration.address.host
+            span.attributes["net.host.port"] = request.application.server.configuration.address.port
 
-        if let remoteAddress = request.remoteAddress {
-            span.attributes["net.sock.peer.port"] = remoteAddress.port
+            if let remoteAddress = request.remoteAddress {
+                span.attributes["net.sock.peer.port"] = remoteAddress.port
 
-            switch remoteAddress.protocol {
-            case .inet:
-                span.attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
-            case .inet6:
-                span.attributes["net.sock.family"] = "inet6"
-                span.attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
-            case .unix:
-                span.attributes["net.sock.family"] = "unix"
-                span.attributes["net.sock.peer.addr"] = remoteAddress.pathname
-            default:
-                break
-            }
-        }
-
-        if !self.headerNamesToRecord.isEmpty {
-            for header in self.headerNamesToRecord {
-                let values = request.headers[header.name]
-                guard !values.isEmpty else { continue }
-                let attribute = "http.request.header.\(header.attributeName)"
-
-                if values.count == 1 {
-                    span.attributes[attribute] = values[0]
-                } else {
-                    span.attributes[attribute] = values
+                switch remoteAddress.protocol {
+                case .inet:
+                    span.attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
+                case .inet6:
+                    span.attributes["net.sock.family"] = "inet6"
+                    span.attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
+                case .unix:
+                    span.attributes["net.sock.family"] = "unix"
+                    span.attributes["net.sock.peer.addr"] = remoteAddress.pathname
+                default:
+                    break
                 }
             }
-        }
 
-        return request.withBaggage(baggage) { request in
-            return next
-                .respond(to: request)
+            recordHeaders(request.headers, toSpan: span, withPrefix: "http.request.header.")
+
+            return next.respond(to: request)
                 .always { result in
-                    defer { span.end() }
-
                     switch result {
                     case .success(let response):
-                        if !headerNamesToRecord.isEmpty {
-                            for header in headerNamesToRecord {
-                                let values = response.headers[header.name]
-                                guard !values.isEmpty else { continue }
-                                let attribute = "http.response.header.\(header.attributeName)"
-
-                                if values.count == 1 {
-                                    span.attributes[attribute] = values[0]
-                                } else {
-                                    span.attributes[attribute] = values
-                                }
-                            }
-                        }
+                        recordHeaders(response.headers, toSpan: span, withPrefix: "http.response.header.")
 
                         span.attributes["http.status_code"] = Int(response.status.code)
                         switch response.body {
@@ -120,16 +92,29 @@ public struct HBTracingMiddleware: HBMiddleware {
                             break
                         }
                     case .failure(let error):
-                        if let httpError = error as? HBHTTPError {
+                        if let httpError = error as? HBHTTPResponseError {
                             span.attributes["http.status_code"] = Int(httpError.status.code)
 
                             if 500..<600 ~= httpError.status.code {
                                 span.setStatus(.init(code: .error))
                             }
                         }
-                        span.recordError(error)
                     }
                 }
+        }
+    }
+
+    func recordHeaders(_ headers: HTTPHeaders, toSpan span: Span, withPrefix prefix: String) {
+        for header in headerNamesToRecord {
+            let values = headers[header.name]
+            guard !values.isEmpty else { continue }
+            let attribute = "\(prefix)\(header.attributeName)"
+
+            if values.count == 1 {
+                span.attributes[attribute] = values[0]
+            } else {
+                span.attributes[attribute] = values
+            }
         }
     }
 }
