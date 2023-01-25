@@ -105,7 +105,7 @@ public struct HBTracingMiddleware: HBMiddleware {
     }
 
     func recordHeaders(_ headers: HTTPHeaders, toSpan span: Span, withPrefix prefix: String) {
-        for header in headerNamesToRecord {
+        for header in self.headerNamesToRecord {
             let values = headers[header.name]
             guard !values.isEmpty else { continue }
             let attribute = "\(prefix)\(header.attributeName)"

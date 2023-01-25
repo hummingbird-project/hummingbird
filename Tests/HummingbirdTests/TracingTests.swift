@@ -323,7 +323,7 @@ final class TracingTests: XCTestCase {
         app.router.get("/") { request -> HTTPResponseStatus in
             var baggage = request.baggage
             baggage[TestIDKey.self] = "test"
-            return request.withSpan("TestSpan", baggage: baggage, ofKind: .client) { request, span in
+            return request.withSpan("TestSpan", baggage: baggage, ofKind: .client) { _, span in
                 span.attributes["test-attribute"] = 42
                 return .ok
             }
@@ -356,7 +356,7 @@ final class TracingTests: XCTestCase {
             public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
                 var baggage = request.baggage
                 baggage[TestIDKey.self] = "testMiddleware"
-                return request.withSpan("TestSpan", baggage: baggage, ofKind: .server) { request, span in
+                return request.withSpan("TestSpan", baggage: baggage, ofKind: .server) { request, _ in
                     next.respond(to: request)
                 }
             }
@@ -402,7 +402,7 @@ extension TracingTests {
 
         let app = HBApplication(testing: .asyncTest)
         app.middleware.add(HBTracingMiddleware())
-        app.router.get("/") { request -> HTTPResponseStatus in
+        app.router.get("/") { _ -> HTTPResponseStatus in
             try await Task.sleep(nanoseconds: 1000)
             return InstrumentationSystem.tracer.withSpan("testing", ofKind: .server) { _ in
                 return .ok
@@ -436,7 +436,7 @@ extension Baggage {
     var testID: String? {
         get {
             self[TestIDKey.self]
-        }      
+        }
         set {
             self[TestIDKey.self] = newValue
         }

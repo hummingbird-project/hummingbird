@@ -22,7 +22,7 @@ extension HBRequest {
     }
 
     /// Execute the given operation with edited request that includes baggage
-    /// 
+    ///
     /// - Parameters:
     ///   - baggage: Baggage to attach to request
     ///   - operation: operation to run
@@ -48,14 +48,14 @@ extension HBRequest {
         ofKind kind: SpanKind = .internal,
         _ operation: (HBRequest, Span) throws -> Return
     ) rethrows -> Return {
-        return try withSpan(operationName, baggage: self.baggage, ofKind: kind, operation)
+        return try self.withSpan(operationName, baggage: self.baggage, ofKind: kind, operation)
     }
 
     /// Execute a specific task within a newly created ``Span``.
     ///
     /// Calls operation with edited request that includes the baggage, and the span
     /// DO NOT `end()` the passed in span manually. It will be ended automatically when the `operation` returns.
-    /// 
+    ///
     /// - Parameters:
     ///   - operationName: The name of the operation being traced. This may be a handler function, database call, ...
     ///   - baggage: Baggage potentially containing trace identifiers of a parent ``Span``.
@@ -71,7 +71,7 @@ extension HBRequest {
     ) rethrows -> Return {
         let span = InstrumentationSystem.tracer.startSpan(operationName, baggage: baggage, ofKind: kind)
         defer { span.end() }
-        return try withBaggage(span.baggage) { request in
+        return try self.withBaggage(span.baggage) { request in
             do {
                 return try operation(request, span)
             } catch {
@@ -96,7 +96,7 @@ extension HBRequest {
         ofKind kind: SpanKind = .internal,
         _ operation: (HBRequest, Span) -> EventLoopFuture<Return>
     ) -> EventLoopFuture<Return> {
-        return withSpan(operationName, baggage: self.baggage, ofKind: kind, operation)
+        return self.withSpan(operationName, baggage: self.baggage, ofKind: kind, operation)
     }
 
     /// Execute the given operation within a newly created ``Span``,
@@ -116,7 +116,7 @@ extension HBRequest {
         _ operation: (HBRequest, Span) -> EventLoopFuture<Return>
     ) -> EventLoopFuture<Return> {
         let span = InstrumentationSystem.tracer.startSpan(operationName, baggage: baggage, ofKind: kind)
-        return withBaggage(span.baggage) { request in
+        return self.withBaggage(span.baggage) { request in
             return operation(request, span)
                 .flatMapErrorThrowing { error in
                     span.recordError(error)
@@ -133,7 +133,7 @@ extension HBRequest {
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension HBRequest {
     /// Execute the given operation with edited request that includes baggage
-    /// 
+    ///
     /// - Parameters:
     ///   - baggage: Baggage to attach to request
     ///   - operation: operation to run
@@ -159,14 +159,14 @@ extension HBRequest {
         ofKind kind: SpanKind = .internal,
         _ operation: (HBRequest, Span) async throws -> Return
     ) async rethrows -> Return {
-        return try await withSpan(operationName, baggage: self.baggage, ofKind: kind, operation)
+        return try await self.withSpan(operationName, baggage: self.baggage, ofKind: kind, operation)
     }
 
     /// Execute a specific task within a newly created ``Span``.
     ///
     /// Calls operation with edited request that includes the baggage, and the span
     /// DO NOT `end()` the passed in span manually. It will be ended automatically when the `operation` returns.
-    /// 
+    ///
     /// - Parameters:
     ///   - operationName: The name of the operation being traced. This may be a handler function, database call, ...
     ///   - baggage: Baggage potentially containing trace identifiers of a parent ``Span``.
@@ -182,7 +182,7 @@ extension HBRequest {
     ) async rethrows -> Return {
         let span = InstrumentationSystem.tracer.startSpan(operationName, baggage: baggage, ofKind: kind)
         defer { span.end() }
-        return try await withBaggage(span.baggage) { request in
+        return try await self.withBaggage(span.baggage) { request in
             do {
                 return try await operation(request, span)
             } catch {
