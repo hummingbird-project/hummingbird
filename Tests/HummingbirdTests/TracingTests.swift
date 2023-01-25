@@ -423,6 +423,55 @@ extension TracingTests {
 
         XCTAssertEqual(span2.baggage.traceID, span.baggage.traceID)
     }
+
+    /// Test baggage is propagated to AsyncMiddleware and any baggage added in AsyncMiddleware is
+    /// propagated to route code
+    func testBaggagePropagationAsyncMiddleware() throws {
+        struct AsyncSpanMiddleware: HBAsyncMiddleware {
+            public func apply(to request: HBRequest, next: HBResponder) async throws -> HBResponse {
+                var baggage = request.baggage
+                baggage[TestIDKey.self] = "testAsyncMiddleware"
+                return try await InstrumentationSystem.tracer.withSpan("TestSpan", baggage: baggage, ofKind: .server) { _ in
+                    try await next.respond(to: request)
+                }
+            }
+        }
+
+        let expectation = expectation(description: "Expected span to be ended.")
+        expectation.expectedFulfillmentCount = 3
+
+        let tracer = TestTracer()
+        tracer.onEndSpan = { _ in expectation.fulfill() }
+        InstrumentationSystem.bootstrapInternal(tracer)
+
+        let app = HBApplication(testing: .asyncTest)
+        app.middleware.add(HBTracingMiddleware())
+        app.middleware.add(AsyncSpanMiddleware())
+        app.router.get("/") { request -> HTTPResponseStatus in
+            try await Task.sleep(nanoseconds: 1000)
+            return request.withSpan("testing", ofKind: .server) { _, _ in
+                return .ok
+            }
+        }
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        try app.XCTExecute(uri: "/", method: .GET) { response in
+            XCTAssertEqual(response.status, .ok)
+        }
+
+        waitForExpectations(timeout: 10)
+
+        XCTAssertEqual(tracer.spans.count, 3)
+        let span1 = tracer.spans[0]
+        let span2 = tracer.spans[1]
+        let span3 = tracer.spans[2]
+
+        XCTAssertEqual(span1.baggage.traceID, span2.baggage.traceID)
+        XCTAssertEqual(span2.baggage.traceID, span3.baggage.traceID)
+        XCTAssertEqual(span2.baggage[TestIDKey.self], "testAsyncMiddleware")
+        XCTAssertEqual(span3.baggage[TestIDKey.self], "testAsyncMiddleware")
+    }
 }
 
 #endif // compiler(>=5.5.2) && canImport(_Concurrency)

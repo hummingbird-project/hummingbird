@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import InstrumentationBaggage
 import NIOCore
 
 /// Middleware using async/await
@@ -24,10 +25,28 @@ public protocol HBAsyncMiddleware: HBMiddleware {
 extension HBAsyncMiddleware {
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
         let promise = request.eventLoop.makePromise(of: HBResponse.self)
-        promise.completeWithTask {
-            return try await apply(to: request, next: next)
+        return Baggage.$current.withValue(request.baggage) {
+            promise.completeWithTask {
+                return try await apply(to: request, next: HBPropagateBaggageResponder(responder: next))
+            }
+            return promise.futureResult
         }
-        return promise.futureResult
+    }
+}
+
+/// Propagate Task Local baggage back to HBRequest after running AsyncMiddleware
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+struct HBPropagateBaggageResponder: HBResponder {
+    let responder: HBResponder
+
+    func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
+        if let baggage = Baggage.$current.get() {
+            return request.withBaggage(baggage) { request in
+                self.responder.respond(to: request)
+            }
+        } else {
+            return self.responder.respond(to: request)
+        }
     }
 }
 
