@@ -55,6 +55,38 @@ final class RouterTests: XCTestCase {
         }
     }
 
+    /// Test endpointPath is prefixed with a "/"
+    func testEndpointPathPrefix() throws {
+        struct TestEndpointMiddleware: HBMiddleware {
+            func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
+                guard let endpointPath = request.endpointPath else { return next.respond(to: request) }
+                return request.success(.init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath))))
+            }
+        }
+
+        let app = HBApplication(testing: .embedded)
+        app.middleware.add(TestEndpointMiddleware())
+        app.router.get("test") {
+            $0.endpointPath
+        }
+        app.router.post("/test2") {
+            $0.endpointPath
+        }
+
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        try app.XCTExecute(uri: "/test/", method: .GET) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "/test")
+        }
+
+        try app.XCTExecute(uri: "/test2/", method: .POST) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "/test2")
+        }
+    }
+
     /// Test correct endpoints are called from group
     func testMethodEndpoint() throws {
         let app = HBApplication(testing: .embedded)

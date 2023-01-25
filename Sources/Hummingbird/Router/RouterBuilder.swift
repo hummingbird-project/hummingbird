@@ -60,6 +60,8 @@ public final class HBRouterBuilder: HBRouterMethods {
     ///   - method: http method
     ///   - responder: handler to call
     public func add(_ path: String, method: HTTPMethod, responder: HBResponder) {
+        // ensure path starts with a "/"
+        let path = path.starts(with: "/") ? path : "/\(path)"
         self.trie.addEntry(.init(path), value: HBEndpointResponders(path: path)) { node in
             node.value!.addResponder(for: method, responder: middlewares.constructResponder(finalResponder: responder))
         }
