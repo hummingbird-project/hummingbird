@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import Hummingbird
+import Hummingbird
 import HummingbirdXCT
 @testable import Instrumentation
 import Tracing
