@@ -55,7 +55,7 @@ final class RouterTests: XCTestCase {
         }
     }
 
-    /// Test endpointPath is set
+    /// Test endpointPath is prefixed with a "/"
     func testEndpointPathPrefix() throws {
         struct TestEndpointMiddleware: HBMiddleware {
             func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
