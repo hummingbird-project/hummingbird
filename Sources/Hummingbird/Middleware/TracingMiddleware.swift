@@ -45,7 +45,7 @@ public struct HBTracingMiddleware: HBMiddleware {
             guard let endpointPath = request.endpointPath else {
                 return "HTTP \(request.method.rawValue) route not found"
             }
-            return endpointPath.starts(with: "/") ? endpointPath : "/\(endpointPath)"
+            return endpointPath
         }()
 
         return request.withSpan(operationName, baggage: baggage, ofKind: .server) { request, span in
