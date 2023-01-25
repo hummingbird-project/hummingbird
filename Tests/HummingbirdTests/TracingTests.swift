@@ -49,15 +49,6 @@ final class TracingTests: XCTestCase {
         XCTAssertNil(span.status)
         XCTAssertTrue(span.errors.isEmpty)
 
-        XCTAssertEqual(span.attributes.count, 7)
-        XCTAssertEqual(span.attributes["http.method"]?.toSpanAttribute(), "GET")
-        XCTAssertEqual(span.attributes["http.target"]?.toSpanAttribute(), "/users/42")
-        XCTAssertEqual(span.attributes["http.status_code"]?.toSpanAttribute(), 200)
-        XCTAssertEqual(span.attributes["http.response_content_length"]?.toSpanAttribute(), 2)
-        XCTAssertEqual(span.attributes["net.host.name"]?.toSpanAttribute(), "localhost")
-        XCTAssertEqual(span.attributes["net.host.port"]?.toSpanAttribute(), 0)
-        XCTAssertEqual(span.attributes["http.flavor"]?.toSpanAttribute(), "1.1")
-
         XCTAssertSpanAttributesEqual(span.attributes, [
             "http.method": "GET",
             "http.target": "/users/42",
@@ -154,8 +145,6 @@ final class TracingTests: XCTestCase {
         XCTAssertEqual(span.kind, .server)
         XCTAssertNil(span.status)
         XCTAssertTrue(span.errors.isEmpty)
-
-        XCTAssertEqual(span.attributes.count, 11)
 
         XCTAssertSpanAttributesEqual(span.attributes, [
             "http.method": "GET",
@@ -381,7 +370,7 @@ final class TracingTests: XCTestCase {
         app.middleware.add(SpanMiddleware())
         app.middleware.add(HBTracingMiddleware())
         app.router.get("/") { request -> EventLoopFuture<HTTPResponseStatus> in
-            return request.eventLoop.scheduleTask(in: .milliseconds(100)) { return .ok }.futureResult
+            return request.eventLoop.scheduleTask(in: .milliseconds(2)) { return .ok }.futureResult
         }
         try app.XCTStart()
         defer { app.XCTStop() }
