@@ -287,7 +287,7 @@ final class TracingTests: XCTestCase {
         app.middleware.add(HBTracingMiddleware())
         app.router.get("/") { request -> HTTPResponseStatus in
             var baggage = request.baggage
-            baggage[TestIDKey.self] = "test"
+            baggage.testID = "test"
             let span = InstrumentationSystem.tracer.startSpan("testing", baggage: baggage, ofKind: .server)
             span.end()
             return .ok
@@ -305,7 +305,7 @@ final class TracingTests: XCTestCase {
         let span = tracer.spans[0]
         let span2 = tracer.spans[1]
 
-        XCTAssertEqual(span2.baggage[TestIDKey.self], "test")
+        XCTAssertEqual(span2.baggage.testID, "test")
         XCTAssertEqual(span2.baggage.traceID, span.baggage.traceID)
     }
 
@@ -322,7 +322,7 @@ final class TracingTests: XCTestCase {
         app.middleware.add(HBTracingMiddleware())
         app.router.get("/") { request -> HTTPResponseStatus in
             var baggage = request.baggage
-            baggage[TestIDKey.self] = "test"
+            baggage.testID = "test"
             return request.withSpan("TestSpan", baggage: baggage, ofKind: .client) { _, span in
                 span.attributes["test-attribute"] = 42
                 return .ok
@@ -341,7 +341,7 @@ final class TracingTests: XCTestCase {
         let span = tracer.spans[0]
         let span2 = tracer.spans[1]
 
-        XCTAssertEqual(span2.baggage[TestIDKey.self], "test")
+        XCTAssertEqual(span2.baggage.testID, "test")
         XCTAssertEqual(span2.attributes["test-attribute"]?.toSpanAttribute(), 42)
         XCTAssertEqual(span2.baggage.traceID, span.baggage.traceID)
     }
@@ -355,7 +355,7 @@ final class TracingTests: XCTestCase {
         struct SpanMiddleware: HBMiddleware {
             public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
                 var baggage = request.baggage
-                baggage[TestIDKey.self] = "testMiddleware"
+                baggage.testID = "testMiddleware"
                 return request.withSpan("TestSpan", baggage: baggage, ofKind: .server) { request, _ in
                     next.respond(to: request)
                 }
@@ -384,7 +384,7 @@ final class TracingTests: XCTestCase {
         XCTAssertEqual(tracer.spans.count, 2)
         let span2 = tracer.spans[1]
 
-        XCTAssertEqual(span2.baggage[TestIDKey.self], "testMiddleware")
+        XCTAssertEqual(span2.baggage.testID, "testMiddleware")
     }
 }
 
@@ -430,7 +430,7 @@ extension TracingTests {
         struct AsyncSpanMiddleware: HBAsyncMiddleware {
             public func apply(to request: HBRequest, next: HBResponder) async throws -> HBResponse {
                 var baggage = request.baggage
-                baggage[TestIDKey.self] = "testAsyncMiddleware"
+                baggage.testID = "testAsyncMiddleware"
                 return try await InstrumentationSystem.tracer.withSpan("TestSpan", baggage: baggage, ofKind: .server) { _ in
                     try await next.respond(to: request)
                 }
@@ -469,8 +469,8 @@ extension TracingTests {
 
         XCTAssertEqual(span1.baggage.traceID, span2.baggage.traceID)
         XCTAssertEqual(span2.baggage.traceID, span3.baggage.traceID)
-        XCTAssertEqual(span2.baggage[TestIDKey.self], "testAsyncMiddleware")
-        XCTAssertEqual(span3.baggage[TestIDKey.self], "testAsyncMiddleware")
+        XCTAssertEqual(span2.baggage.testID, "testAsyncMiddleware")
+        XCTAssertEqual(span3.baggage.testID, "testAsyncMiddleware")
     }
 }
 
