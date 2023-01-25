@@ -21,7 +21,8 @@ extension HBRequest {
         set { self.extensions.set(\.baggage, value: newValue) }
     }
 
-    /// Execute the given operation with edited request that includes baggage
+    /// Execute the given operation with edited request that includes baggage. Be sure to use the
+    /// `HBRequest` passed to the closure as that includes the baggage
     ///
     /// - Parameters:
     ///   - baggage: Baggage to attach to request
@@ -34,6 +35,9 @@ extension HBRequest {
     }
 
     /// Execute the given operation within a newly created ``Span``,
+    ///
+    /// Calls operation with edited request that includes the baggage from span, and the span Be sure to use the
+    /// `HBRequest` passed to the closure as that includes the baggage
     ///
     /// DO NOT `end()` the passed in span manually. It will be ended automatically when the `operation` returns.
     ///
@@ -53,7 +57,9 @@ extension HBRequest {
 
     /// Execute a specific task within a newly created ``Span``.
     ///
-    /// Calls operation with edited request that includes the baggage, and the span
+    /// Calls operation with edited request that includes the baggage, and the span Be sure to use the
+    /// `HBRequest` passed to the closure as that includes the baggage
+    ///
     /// DO NOT `end()` the passed in span manually. It will be ended automatically when the `operation` returns.
     ///
     /// - Parameters:
@@ -83,6 +89,9 @@ extension HBRequest {
 
     /// Execute the given operation within a newly created ``Span``,
     ///
+    /// Calls operation with edited request that includes the baggage from span, and the span. Be sure to use the
+    /// `HBRequest` passed to the closure as that includes the baggage
+    ///
     /// DO NOT `end()` the passed in span manually. It will be ended automatically when the `operation` returns.
     ///
     /// - Parameters:
@@ -100,6 +109,9 @@ extension HBRequest {
     }
 
     /// Execute the given operation within a newly created ``Span``,
+    ///
+    /// Calls operation with edited request that includes the baggage, and the span. Be sure to use the
+    /// `HBRequest` passed to the closure as that includes the baggage
     ///
     /// DO NOT `end()` the passed in span manually. It will be ended automatically when the `operation` returns.
     ///

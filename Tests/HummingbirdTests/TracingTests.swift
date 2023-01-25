@@ -275,6 +275,7 @@ final class TracingTests: XCTestCase {
         ])
     }
 
+    /// Test tracing baggage is attached to request when route handler is called
     func testBaggagePropagation() throws {
         let expectation = expectation(description: "Expected span to be ended.")
         expectation.expectedFulfillmentCount = 2
@@ -392,6 +393,7 @@ final class TracingTests: XCTestCase {
 
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension TracingTests {
+    /// Test tracing middleware baggage is propagated to async route handlers
     func testBaggagePropagationAsync() throws {
         let expectation = expectation(description: "Expected span to be ended.")
         expectation.expectedFulfillmentCount = 2
@@ -476,12 +478,14 @@ extension TracingTests {
 
 #endif // compiler(>=5.5.2) && canImport(_Concurrency)
 
+/// TestID Key used in tests
 internal enum TestIDKey: BaggageKey {
     typealias Value = String
     static var nameOverride: String? { "test-id" }
 }
 
 extension Baggage {
+    /// extend Baggage to easily access test id
     var testID: String? {
         get {
             self[TestIDKey.self]
