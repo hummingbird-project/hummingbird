@@ -587,6 +587,45 @@ final class MiddlewareTests: XCTestCase {
     }
 }
 
+#if compiler(>=5.5.2) && canImport(_Concurrency)
+
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+extension MiddlewareTests {
+    func testTracingBaggageAsyncPropagation() throws {
+        let expectation = expectation(description: "Expected span to be ended.")
+        expectation.expectedFulfillmentCount = 2
+
+        let tracer = TestTracer()
+        tracer.onEndSpan = { _ in expectation.fulfill() }
+        InstrumentationSystem.bootstrapInternal(tracer)
+
+        let app = HBApplication(testing: .asyncTest)
+        app.middleware.add(HBTracingMiddleware())
+        app.router.get("/") { request -> HTTPResponseStatus in
+            try await Task.sleep(nanoseconds: 1000)
+            return InstrumentationSystem.tracer.withSpan("testing", ofKind: .server) { _ in
+                return .ok
+            }
+        }
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        try app.XCTExecute(uri: "/", method: .GET) { response in
+            XCTAssertEqual(response.status, .ok)
+        }
+
+        waitForExpectations(timeout: 10)
+
+        XCTAssertEqual(tracer.spans.count, 2)
+        let span = tracer.spans[0]
+        let span2 = tracer.spans[1]
+
+        XCTAssertEqual(span2.baggage.traceID, span.baggage.traceID)
+    }
+}
+
+#endif // compiler(>=5.5.2) && canImport(_Concurrency)
+
 internal enum TestIDKey: BaggageKey {
     typealias Value = String
     static var nameOverride: String? { "test-id" }
