@@ -16,13 +16,20 @@ import Tracing
 
 extension HBRequest {
     /// Baggage attached to request. Used to propagate baggage to child functions
+    ///
+    /// Attaching baggage to the request should be used when we aren't inside an async
+    /// function and baggage cannot be propagated via Task local variables. Otherwise
+    /// baggage should be propagated using Task local variables using `Baggage.$current.withValue(_)`
     public var baggage: Baggage {
         get { self.extensions.get(\.baggage) ?? Baggage.topLevel }
         set { self.extensions.set(\.baggage, value: newValue) }
     }
 
-    /// Execute the given operation with edited request that includes baggage. Be sure to use the
-    /// `HBRequest` passed to the closure as that includes the baggage
+    /// Execute the given operation with edited request that includes baggage.
+    ///
+    /// Be sure to use the ``HBRequest`` passed to the closure as that includes the baggage.
+    /// This function should be used when we aren't inside an async function and baggage
+    /// cannot be propagated via Task local variables using `Baggage.$current.withValue(_)`
     ///
     /// - Parameters:
     ///   - baggage: Baggage to attach to request
@@ -34,10 +41,14 @@ extension HBRequest {
         return try operation(request)
     }
 
-    /// Execute the given operation within a newly created ``Span``,
+    /// Execute the given operation within a newly created ``Span``
     ///
     /// Calls operation with edited request that includes the baggage from span, and the span Be sure to use the
     /// `HBRequest` passed to the closure as that includes the baggage
+    ///
+    /// This function should be used when we aren't inside an async function and baggage cannot be propagated
+    /// via Task local variables. The equivalent async version of this is
+    /// `InstrumentationSystem.tracer.withSpan(_:ofKind:_)`
     ///
     /// DO NOT `end()` the passed in span manually. It will be ended automatically when the `operation` returns.
     ///
@@ -59,6 +70,10 @@ extension HBRequest {
     ///
     /// Calls operation with edited request that includes the baggage, and the span Be sure to use the
     /// `HBRequest` passed to the closure as that includes the baggage
+    ///
+    /// This function should be used when we aren't inside an async function and baggage cannot be propagated
+    /// via Task local variables. The equivalent async version of this is
+    /// `InstrumentationSystem.tracer.withSpan(_:baggage:ofKind:_)`
     ///
     /// DO NOT `end()` the passed in span manually. It will be ended automatically when the `operation` returns.
     ///
@@ -87,7 +102,7 @@ extension HBRequest {
         }
     }
 
-    /// Execute the given operation within a newly created ``Span``,
+    /// Execute the given operation within a newly created ``Span``
     ///
     /// Calls operation with edited request that includes the baggage from span, and the span. Be sure to use the
     /// `HBRequest` passed to the closure as that includes the baggage
