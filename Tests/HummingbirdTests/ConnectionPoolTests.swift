@@ -260,7 +260,7 @@ extension ConnectionPoolTests {
 
     func testAsyncRequestRelease() async throws {
         let eventLoop = Self.eventLoopGroup.next()
-        let pool = HBConnectionPool(source: ConnectionSource(), maxConnections: 4, eventLoop: eventLoop)
+        let pool = HBConnectionPool(source: AsyncConnectionSource(), maxConnections: 4, eventLoop: eventLoop)
         let c = try await pool.request(logger: Self.logger)
         pool.release(connection: c, logger: Self.logger)
 
@@ -273,7 +273,7 @@ extension ConnectionPoolTests {
 
     func testAsyncConnectionPoolGroupLease() async throws {
         let eventLoop = Self.eventLoopGroup.next()
-        let poolGroup = HBConnectionPoolGroup(source: AsyncConnectionSource(), maxConnections: 4, eventLoopGroup: Self.eventLoopGroup, logger: Self.logger)
+        let poolGroup = HBConnectionPoolGroup(source: ConnectionSource(), maxConnections: 4, eventLoopGroup: Self.eventLoopGroup, logger: Self.logger)
         let result = try await poolGroup.lease(on: eventLoop, logger: Self.logger) { _ in
             return poolGroup.getConnectionPool(on: eventLoop).numConnections
         }
