@@ -234,3 +234,38 @@ final class ConnectionPoolTests: XCTestCase {
         }.wait()
     }
 }
+
+#if compiler(>=5.5.2) && canImport(_Concurrency)
+
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+extension ConnectionPoolTests {
+    func testAsyncRequestRelease() async throws {
+        let eventLoop = Self.eventLoopGroup.next()
+        let pool = HBConnectionPool(source: ConnectionSource(), maxConnections: 4, eventLoop: eventLoop)
+        let c = try await pool.request(logger: Self.logger)
+        pool.release(connection: c, logger: Self.logger)
+
+        // force event loop to flush release task
+        try await eventLoop.submit {}.get()
+
+        XCTAssertEqual(pool.availableQueue.count, 1)
+        return try await pool.close(logger: Self.logger)
+    }
+
+    func testAsyncConnectionPoolGroupLease() async throws {
+        let eventLoop = Self.eventLoopGroup.next()
+        let poolGroup = HBConnectionPoolGroup(source: ConnectionSource(), maxConnections: 4, eventLoopGroup: Self.eventLoopGroup, logger: Self.logger)
+        let result = try await poolGroup.lease(on: eventLoop, logger: Self.logger) { _ in
+            return poolGroup.getConnectionPool(on: eventLoop).numConnections
+        }
+        XCTAssertEqual(result, 1)
+
+        // force event loop to flush release task
+        try await eventLoop.submit {}.get()
+
+        XCTAssertEqual(poolGroup.getConnectionPool(on: eventLoop).availableQueue.count, 1)
+        return try await poolGroup.close()
+    }
+}
+
+#endif // compiler(>=5.5.2) && canImport(_Concurrency)
