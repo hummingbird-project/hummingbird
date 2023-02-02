@@ -45,6 +45,15 @@ extension String: HBResponseGenerator {
     }
 }
 
+/// Extend String to conform to ResponseGenerator
+extension Substring: HBResponseGenerator {
+    /// Generate response holding string
+    public func response(from request: HBRequest) -> HBResponse {
+        let buffer = request.allocator.buffer(substring: self)
+        return HBResponse(status: .ok, headers: ["content-type": "text/plain; charset=utf-8"], body: .byteBuffer(buffer))
+    }
+}
+
 /// Extend ByteBuffer to conform to ResponseGenerator
 extension ByteBuffer: HBResponseGenerator {
     /// Generate response holding bytebuffer
