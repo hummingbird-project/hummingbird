@@ -239,6 +239,25 @@ final class ConnectionPoolTests: XCTestCase {
 
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension ConnectionPoolTests {
+    final class AsyncConnection: HBAsyncConnection {
+        var isClosed: Bool
+
+        init() {
+            self.isClosed = false
+        }
+
+        func close() async throws {
+            self.isClosed = true
+        }
+    }
+
+    struct AsyncConnectionSource: HBAsyncConnectionSource {
+        typealias Connection = AsyncConnection
+        func makeConnection(on eventLoop: NIOCore.EventLoop, logger: Logging.Logger) async throws -> Connection {
+            return .init()
+        }
+    }
+
     func testAsyncRequestRelease() async throws {
         let eventLoop = Self.eventLoopGroup.next()
         let pool = HBConnectionPool(source: ConnectionSource(), maxConnections: 4, eventLoop: eventLoop)
@@ -254,7 +273,7 @@ extension ConnectionPoolTests {
 
     func testAsyncConnectionPoolGroupLease() async throws {
         let eventLoop = Self.eventLoopGroup.next()
-        let poolGroup = HBConnectionPoolGroup(source: ConnectionSource(), maxConnections: 4, eventLoopGroup: Self.eventLoopGroup, logger: Self.logger)
+        let poolGroup = HBConnectionPoolGroup(source: AsyncConnectionSource(), maxConnections: 4, eventLoopGroup: Self.eventLoopGroup, logger: Self.logger)
         let result = try await poolGroup.lease(on: eventLoop, logger: Self.logger) { _ in
             return poolGroup.getConnectionPool(on: eventLoop).numConnections
         }
