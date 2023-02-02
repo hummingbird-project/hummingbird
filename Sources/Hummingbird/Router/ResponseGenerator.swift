@@ -77,7 +77,7 @@ extension Optional: HBResponseGenerator where Wrapped: HBResponseGenerator {
         case .some(let wrapped):
             return try wrapped.response(from: request)
         case .none:
-            throw HBHTTPError(.notFound)
+            return HBResponse(status: .noContent, headers: [:], body: .empty)
         }
     }
 }
