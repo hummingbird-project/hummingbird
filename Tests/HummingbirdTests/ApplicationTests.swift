@@ -341,7 +341,7 @@ final class ApplicationTests: XCTestCase {
             XCTAssertEqual(response.body, buffer)
         }
         try app.XCTExecute(uri: "/echo-body", method: .POST) { response in
-            XCTAssertEqual(response.status, .notFound)
+            XCTAssertEqual(response.status, .noContent)
         }
     }
 
@@ -361,7 +361,7 @@ final class ApplicationTests: XCTestCase {
             XCTAssertEqual(response.body, buffer)
         }
         try app.XCTExecute(uri: "/echo-body", method: .POST) { response in
-            XCTAssertEqual(response.status, .notFound)
+            XCTAssertEqual(response.status, .noContent)
         }
     }
 

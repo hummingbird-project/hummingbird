@@ -129,7 +129,7 @@ final class PersistTests: XCTestCase {
         try app.XCTExecute(uri: "/persist/\(tag2)/10", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest2")) { _ in }
         Thread.sleep(forTimeInterval: 1)
         try app.XCTExecute(uri: "/persist/\(tag1)", method: .GET) { response in
-            XCTAssertEqual(response.status, .notFound)
+            XCTAssertEqual(response.status, .noContent)
         }
         try app.XCTExecute(uri: "/persist/\(tag2)", method: .GET) { response in
             let body = try XCTUnwrap(response.body)
@@ -173,7 +173,7 @@ final class PersistTests: XCTestCase {
         try app.XCTExecute(uri: "/persist/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { _ in }
         try app.XCTExecute(uri: "/persist/\(tag)", method: .DELETE) { _ in }
         try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
-            XCTAssertEqual(response.status, .notFound)
+            XCTAssertEqual(response.status, .noContent)
         }
     }
 
@@ -186,7 +186,7 @@ final class PersistTests: XCTestCase {
         try app.XCTExecute(uri: "/persist/\(tag)/0", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { _ in }
         Thread.sleep(forTimeInterval: 1)
         try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
-            XCTAssertEqual(response.status, .notFound)
+            XCTAssertEqual(response.status, .noContent)
         }
         try app.XCTExecute(uri: "/persist/\(tag)/10", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { response in
             XCTAssertEqual(response.status, .ok)
