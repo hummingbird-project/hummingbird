@@ -89,21 +89,3 @@ public struct HBRouterGroup: HBRouterMethods {
         return "\(path1)/\(path2)"
     }
 }
-
-private extension String {
-    func dropPrefix(_ prefix: String) -> Substring {
-        if hasPrefix(prefix) {
-            return self.dropFirst(prefix.count)
-        } else {
-            return self[...]
-        }
-    }
-
-    func dropSuffix(_ suffix: String) -> Substring {
-        if hasSuffix(suffix) {
-            return self.dropLast(suffix.count)
-        } else {
-            return self[...]
-        }
-    }
-}
