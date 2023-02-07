@@ -69,6 +69,9 @@ final class RouterTests: XCTestCase {
         app.router.get("test") {
             $0.endpointPath
         }
+        app.router.get {
+            $0.endpointPath
+        }
         app.router.post("/test2") {
             $0.endpointPath
         }
@@ -76,11 +79,14 @@ final class RouterTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
+        try app.XCTExecute(uri: "/", method: .GET) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "/")
+        }
         try app.XCTExecute(uri: "/test/", method: .GET) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "/test")
         }
-
         try app.XCTExecute(uri: "/test2/", method: .POST) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "/test2")
