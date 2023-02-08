@@ -103,3 +103,7 @@ extension HBEnvironment: CustomStringConvertible {
         String(describing: self.values)
     }
 }
+
+#if compiler(>=5.6)
+extension HBEnvironment: Sendable {}
+#endif
