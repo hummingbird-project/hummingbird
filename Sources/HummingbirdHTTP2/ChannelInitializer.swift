@@ -14,6 +14,7 @@
 
 import HummingbirdCore
 import NIOCore
+import NIOHTTP1
 import NIOHTTP2
 import NIOSSL
 
@@ -32,7 +33,7 @@ struct HTTP2ChannelInitializer: HBChannelInitializer {
 
 /// HTTP2 upgrade channel initializer
 struct HTTP2UpgradeChannelInitializer: HBChannelInitializer {
-    let http1 = HTTP1ChannelInitializer()
+    var http1 = HTTP1ChannelInitializer()
     let http2 = HTTP2ChannelInitializer()
 
     func initialize(channel: Channel, childHandlers: [RemovableChannelHandler], configuration: HBHTTPServer.Configuration) -> EventLoopFuture<Void> {
@@ -44,5 +45,11 @@ struct HTTP2UpgradeChannelInitializer: HBChannelInitializer {
                 http1.initialize(channel: channel, childHandlers: childHandlers, configuration: configuration)
             }
         )
+    }
+
+    ///  Add protocol upgrader to channel initializer
+    /// - Parameter upgrader: HTTP server protocol upgrader to add
+    public mutating func addProtocolUpgrader(_ upgrader: HTTPServerProtocolUpgrader) {
+        self.http1.addProtocolUpgrader(upgrader)
     }
 }

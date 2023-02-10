@@ -23,6 +23,14 @@ public protocol HBChannelInitializer {
     ///   - childHandlers: Channel handlers to add
     ///   - configuration: server configuration
     func initialize(channel: Channel, childHandlers: [RemovableChannelHandler], configuration: HBHTTPServer.Configuration) -> EventLoopFuture<Void>
+
+    ///  Add protocol upgrader to channel initializer
+    /// - Parameter upgrader: HTTP server protocol upgrader to add
+    mutating func addProtocolUpgrader(_ upgrader: HTTPServerProtocolUpgrader)
+}
+
+extension HBChannelInitializer {
+    public mutating func addProtocolUpgrader(_: HTTPServerProtocolUpgrader) {}
 }
 
 /// Setup child channel for HTTP1
@@ -55,5 +63,11 @@ public struct HTTP1ChannelInitializer: HBChannelInitializer {
         }
     }
 
-    let upgraders: [HTTPServerProtocolUpgrader]
+    ///  Add protocol upgrader to channel initializer
+    /// - Parameter upgrader: HTTP server protocol upgrader to add
+    public mutating func addProtocolUpgrader(_ upgrader: HTTPServerProtocolUpgrader) {
+        self.upgraders.append(upgrader)
+    }
+
+    var upgraders: [HTTPServerProtocolUpgrader]
 }
