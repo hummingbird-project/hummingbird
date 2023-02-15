@@ -130,6 +130,39 @@ final class AsyncAwaitTests: XCTestCase {
             XCTAssertEqual(String(buffer: body), "530001")
         }
     }
+
+    /// Test streaming of response via AsyncSequence
+    func testResponseAsyncSequence() throws {
+        #if os(macOS)
+        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+        #endif
+        let app = HBApplication(testing: .asyncTest)
+        app.router.get("alphabet") { _ in
+            let stream = AsyncStream<ByteBuffer> { cont in
+                let alphabet = "abcdefghijklmnopqrstuvwxyz"
+                var index = alphabet.startIndex
+                while index != alphabet.endIndex {
+                    let nextIndex = alphabet.index(after: index)
+                    let buffer = ByteBufferAllocator().buffer(substring: alphabet[index..<nextIndex])
+                    cont.yield(buffer)
+                    index = nextIndex
+                }
+                cont.finish()
+            }
+            return stream
+        }
+
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        let buffer = self.randomBuffer(size: 530_001)
+        try app.XCTExecute(uri: "/alphabet", method: .GET, body: buffer) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(response.status, .ok)
+            XCTAssertEqual(String(buffer: body), "abcdefghijklmnopqrstuvwxyz")
+        }
+    }
 }
 
 #endif // compiler(>=5.5) && canImport(_Concurrency)
