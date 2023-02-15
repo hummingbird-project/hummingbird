@@ -68,12 +68,13 @@ public struct AsyncSequenceResponseGenerator<ByteBufferSequence: AsyncSequence>:
 
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension AsyncSequence where Element == ByteBuffer {
+    public typealias ResponseGenerator = AsyncSequenceResponseGenerator<Self>
     /// Return type that conforms to `HBResponseGenerator` that will serialize contents of sequence
     ///
     /// Preferably I would like to conform `AsyncSequence` to `HBResponseGenerator` but it is not
     /// possible to add conformances to protocols in extensions. So the solution is to return
     /// another object which wraps the `AsyncSequence`
-    public var responseGenerator: AsyncSequenceResponseGenerator<Self> { .init(asyncSequence: self) }
+    public var responseGenerator: ResponseGenerator { .init(asyncSequence: self) }
 }
 
 #if compiler(>=5.6)

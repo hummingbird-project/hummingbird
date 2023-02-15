@@ -15,6 +15,7 @@
 #if compiler(>=5.5.2) && canImport(_Concurrency)
 
 import Hummingbird
+import HummingbirdCore
 import HummingbirdXCT
 import NIOHTTP1
 import XCTest
@@ -138,7 +139,7 @@ final class AsyncAwaitTests: XCTestCase {
         guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
         #endif
         let app = HBApplication(testing: .asyncTest)
-        app.router.get("buffer", options: .streamBody) { request in
+        app.router.get("buffer", options: .streamBody) { request -> HBRequestBodyStreamerSequence.ResponseGenerator in
             guard let stream = request.body.stream else { throw HBHTTPError(.badRequest) }
             return stream.sequence.responseGenerator
         }
