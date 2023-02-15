@@ -138,6 +138,28 @@ final class AsyncAwaitTests: XCTestCase {
         guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
         #endif
         let app = HBApplication(testing: .asyncTest)
+        app.router.get("buffer", options: .streamBody) { request in
+            guard let stream = request.body.stream else { throw HBHTTPError(.badRequest) }
+            return stream.sequence.responseGenerator
+        }
+
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        let buffer = self.randomBuffer(size: 530_001)
+        try app.XCTExecute(uri: "/buffer", method: .GET, body: buffer) { response in
+            XCTAssertEqual(response.status, .ok)
+            XCTAssertEqual(response.body, buffer)
+        }
+    }
+
+    /// Test streaming of response via AsyncSequence
+    func testResponseAsyncStream() throws {
+        #if os(macOS)
+        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+        #endif
+        let app = HBApplication(testing: .asyncTest)
         app.router.get("alphabet") { _ in
             let stream = AsyncStream<ByteBuffer> { cont in
                 let alphabet = "abcdefghijklmnopqrstuvwxyz"
