@@ -161,7 +161,7 @@ final class AsyncAwaitTests: XCTestCase {
         #endif
         let app = HBApplication(testing: .asyncTest)
         app.router.get("alphabet") { _ in
-            let stream = AsyncStream<ByteBuffer> { cont in
+            AsyncStream<ByteBuffer> { cont in
                 let alphabet = "abcdefghijklmnopqrstuvwxyz"
                 var index = alphabet.startIndex
                 while index != alphabet.endIndex {
@@ -172,7 +172,6 @@ final class AsyncAwaitTests: XCTestCase {
                 }
                 cont.finish()
             }
-            return stream
         }
 
         try app.XCTStart()
