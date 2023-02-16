@@ -15,6 +15,7 @@
 #if compiler(>=5.5.2) && canImport(_Concurrency)
 
 import Hummingbird
+import HummingbirdCore
 import HummingbirdXCT
 import NIOHTTP1
 import XCTest
@@ -128,6 +129,60 @@ final class AsyncAwaitTests: XCTestCase {
         try app.XCTExecute(uri: "/size", method: .POST, body: buffer) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "530001")
+        }
+    }
+
+    /// Test streaming of response via AsyncSequence
+    func testResponseAsyncSequence() throws {
+        #if os(macOS)
+        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+        #endif
+        let app = HBApplication(testing: .asyncTest)
+        app.router.get("buffer", options: .streamBody) { request -> HBRequestBodyStreamerSequence.ResponseGenerator in
+            guard let stream = request.body.stream else { throw HBHTTPError(.badRequest) }
+            return stream.sequence.responseGenerator
+        }
+
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        let buffer = self.randomBuffer(size: 530_001)
+        try app.XCTExecute(uri: "/buffer", method: .GET, body: buffer) { response in
+            XCTAssertEqual(response.status, .ok)
+            XCTAssertEqual(response.body, buffer)
+        }
+    }
+
+    /// Test streaming of response via AsyncSequence
+    func testResponseAsyncStream() throws {
+        #if os(macOS)
+        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+        #endif
+        let app = HBApplication(testing: .asyncTest)
+        app.router.get("alphabet") { _ in
+            AsyncStream<ByteBuffer> { cont in
+                let alphabet = "abcdefghijklmnopqrstuvwxyz"
+                var index = alphabet.startIndex
+                while index != alphabet.endIndex {
+                    let nextIndex = alphabet.index(after: index)
+                    let buffer = ByteBufferAllocator().buffer(substring: alphabet[index..<nextIndex])
+                    cont.yield(buffer)
+                    index = nextIndex
+                }
+                cont.finish()
+            }
+        }
+
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        let buffer = self.randomBuffer(size: 530_001)
+        try app.XCTExecute(uri: "/alphabet", method: .GET, body: buffer) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(response.status, .ok)
+            XCTAssertEqual(String(buffer: body), "abcdefghijklmnopqrstuvwxyz")
         }
     }
 }
