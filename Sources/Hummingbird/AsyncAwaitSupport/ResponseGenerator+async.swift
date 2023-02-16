@@ -14,6 +14,7 @@
 #if compiler(>=5.5.2) && canImport(_Concurrency)
 import HummingbirdCore
 
+/// Response body streamer which uses an AsyncSequence as its input.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 final class AsyncSequenceResponseBodyStreamer<ByteBufferSequence: AsyncSequence>: HBResponseBodyStreamer where ByteBufferSequence.Element == ByteBuffer {
     var iterator: ByteBufferSequence.AsyncIterator
@@ -56,6 +57,9 @@ extension AsyncStream: HBResponseGenerator where Element == ByteBuffer {
 }
 
 /// Wrapper object for AsyncSequence that conforms to `HBResponseGenerator`
+///
+/// This can be returned from a route to generate a response that includes the
+/// sequence of ByteBuffers as its payload.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 public struct AsyncSequenceResponseGenerator<ByteBufferSequence: AsyncSequence>: HBResponseGenerator where ByteBufferSequence.Element == ByteBuffer {
     let asyncSequence: ByteBufferSequence
