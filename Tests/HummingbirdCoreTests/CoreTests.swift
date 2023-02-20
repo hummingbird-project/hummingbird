@@ -585,7 +585,6 @@ class HummingBirdCoreTests: XCTestCase {
     func testReadIdleHandler() {
         struct HelloResponder: HBHTTPResponder {
             func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
-                print(context.channel.pipeline)
                 let responseHead = HTTPResponseHead(version: .init(major: 1, minor: 1), status: .ok)
                 let response = HBHTTPResponse(head: responseHead, body: .empty)
                 onComplete(.success(response))
