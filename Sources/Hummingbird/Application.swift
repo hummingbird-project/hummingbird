@@ -154,7 +154,12 @@ public final class HBApplication: HBExtensible {
 
     /// Shutdown application
     public func stop() {
-        self.lifecycle.shutdown()
+        let stopSemaphore = DispatchSemaphore(value: 0)
+
+        self.lifecycle.shutdown { _ in
+            stopSemaphore.signal()
+        }
+        stopSemaphore.wait()
     }
 
     /// middleware applied to requests
