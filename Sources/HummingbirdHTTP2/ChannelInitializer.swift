@@ -20,6 +20,8 @@ import NIOSSL
 
 /// Setup child channel for HTTP2
 public struct HTTP2ChannelInitializer: HBChannelInitializer {
+    public init() {}
+
     public func initialize(channel: Channel, childHandlers: [RemovableChannelHandler], configuration: HBHTTPServer.Configuration) -> EventLoopFuture<Void> {
         return channel.configureHTTP2Pipeline(mode: .server) { streamChannel -> EventLoopFuture<Void> in
             return streamChannel.pipeline.addHandler(HTTP2FramePayloadToHTTP1ServerCodec()).flatMap { _ in
