@@ -170,8 +170,9 @@ public final class HBConnectionPool<Source: HBConnectionSource> {
         case .open:
             if let waitingPromise = self.waitingQueue.popFirst() {
                 waitingPromise.succeed(connection)
+            } else {
+                self.availableQueue.append(connection)
             }
-            self.availableQueue.append(connection)
 
         case .closed, .closing:
             _ = connection.close(on: self.eventLoop)
