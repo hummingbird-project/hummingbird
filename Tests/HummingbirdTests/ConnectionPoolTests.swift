@@ -50,6 +50,7 @@ final class ConnectionPoolTests: XCTestCase {
         XCTAssertNoThrow(try self.eventLoopGroup.syncShutdownGracefully())
     }
 
+    /// test request and releasing a connection
     func testRequestRelease() throws {
         let eventLoop = Self.eventLoopGroup.next()
         let pool = HBConnectionPool(source: ConnectionSource(), maxConnections: 4, eventLoop: eventLoop)
@@ -61,6 +62,7 @@ final class ConnectionPoolTests: XCTestCase {
         }.wait()
     }
 
+    /// test waiting on a connection when one isn't available
     func testWaiting() throws {
         let eventLoop = Self.eventLoopGroup.next()
         let pool = HBConnectionPool(source: ConnectionSource(), maxConnections: 1, eventLoop: eventLoop)
@@ -75,6 +77,7 @@ final class ConnectionPoolTests: XCTestCase {
         try pool.close(logger: Self.logger).wait()
     }
 
+    /// test requesting and releasing multiple connections
     func testMultiRequestRelease() throws {
         /// connection that keeps count of instance
         final class ConnectionCounter: HBConnection {
@@ -119,6 +122,7 @@ final class ConnectionPoolTests: XCTestCase {
         EventLoopFuture.whenAllComplete(futures, on: eventLoop)
             .always { _ in
                 XCTAssertEqual(ConnectionCounter.deletedCounter, 0)
+                XCTAssertEqual(pool.availableQueue.count, 4)
             }
             .flatMap { _ in
                 pool.close(logger: Self.logger)
@@ -127,9 +131,11 @@ final class ConnectionPoolTests: XCTestCase {
                 expectation.fulfill()
             }
         wait(for: [expectation], timeout: 1.0)
+        // test number of connections open is the maxConnections
         XCTAssertEqual(ConnectionCounter.counter, 4)
     }
 
+    /// Test closed connection is purged
     func testCheckCloseFlag() throws {
         /// connection that keeps count of instance
         final class ConnectionCounter: HBConnection {
@@ -176,12 +182,14 @@ final class ConnectionPoolTests: XCTestCase {
                 }.map { _ in
                     XCTAssertEqual(ConnectionCounter.deletedCounter, 1)
                     XCTAssertEqual(ConnectionCounter.counter, 2)
+                    XCTAssertEqual(pool.availableQueue.count, 0)
                 }.flatMap { () -> EventLoopFuture<Void> in
                     return pool.close(logger: Self.logger)
                 }
         }.wait()
     }
 
+    /// Check `poolClosed` error is thrown when request a connectino of a closed pool
     func testClosing() throws {
         let eventLoop = Self.eventLoopGroup.next()
         let pool = HBConnectionPool(source: ConnectionSource(), maxConnections: 1, eventLoop: eventLoop)
@@ -195,6 +203,7 @@ final class ConnectionPoolTests: XCTestCase {
         }
     }
 
+    /// Test requests that are waiting for a connection are failed when pool is closed
     func testWaitingClosing() throws {
         let eventLoop = Self.eventLoopGroup.next()
         let pool = HBConnectionPool(source: ConnectionSource(), maxConnections: 1, eventLoop: eventLoop)
@@ -210,6 +219,7 @@ final class ConnectionPoolTests: XCTestCase {
         }
     }
 
+    /// Test request and release connection from HBConnectionPoolGroup
     func testConnectionPoolGroup() throws {
         let eventLoop = Self.eventLoopGroup.next()
         let poolGroup = HBConnectionPoolGroup(source: ConnectionSource(), maxConnections: 4, eventLoopGroup: Self.eventLoopGroup, logger: Self.logger)
@@ -221,6 +231,7 @@ final class ConnectionPoolTests: XCTestCase {
         }.wait()
     }
 
+    /// Test leasing a connection from HBConnectionPoolGroup
     func testConnectionPoolGroupLease() throws {
         let eventLoop = Self.eventLoopGroup.next()
         let poolGroup = HBConnectionPoolGroup(source: ConnectionSource(), maxConnections: 4, eventLoopGroup: Self.eventLoopGroup, logger: Self.logger)
@@ -258,6 +269,7 @@ extension ConnectionPoolTests {
         }
     }
 
+    /// test async version of request and releasing a connection
     func testAsyncRequestRelease() async throws {
         let eventLoop = Self.eventLoopGroup.next()
         let pool = HBConnectionPool(source: AsyncConnectionSource(), maxConnections: 4, eventLoop: eventLoop)
@@ -271,6 +283,7 @@ extension ConnectionPoolTests {
         return try await pool.close(logger: Self.logger)
     }
 
+    /// test async connection pool lease
     func testAsyncConnectionPoolGroupLease() async throws {
         let eventLoop = Self.eventLoopGroup.next()
         let poolGroup = HBConnectionPoolGroup(source: ConnectionSource(), maxConnections: 4, eventLoopGroup: Self.eventLoopGroup, logger: Self.logger)
