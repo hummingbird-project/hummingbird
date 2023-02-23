@@ -295,6 +295,23 @@ final class RouterTests: XCTestCase {
             XCTAssertEqual(String(buffer: body), "1234")
         }
     }
+
+    func testRequestId() throws {
+        let app = HBApplication(testing: .embedded)
+        app.router.get("id") { $0.id }
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        try app.XCTExecute(uri: "/id", method: .GET) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "0")
+        }
+
+        try app.XCTExecute(uri: "/id", method: .GET) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "1")
+        }
+    }
 }
 
 extension HBRequest {
