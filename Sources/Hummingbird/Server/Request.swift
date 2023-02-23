@@ -48,6 +48,9 @@ public struct HBRequest: HBSendableExtensible {
     /// IP request came from
     public var remoteAddress: SocketAddress? { self._internal.context.remoteAddress }
 
+    /// Request ID (Uses ID attached to loggger to avoid replication)
+    public var id: String { self.logger[metadataKey: "hb_id"]!.description }
+
     /// Parameters extracted during processing of request URI. These are available to you inside the route handler
     public var parameters: HBParameters {
         get {

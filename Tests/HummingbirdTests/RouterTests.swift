@@ -295,6 +295,25 @@ final class RouterTests: XCTestCase {
             XCTAssertEqual(String(buffer: body), "1234")
         }
     }
+
+    /// Test we have a request id and that it increments with each request
+    func testRequestId() throws {
+        let app = HBApplication(testing: .embedded)
+        app.router.get("id") { $0.id }
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        let idString = try app.XCTExecute(uri: "/id", method: .GET) { response -> String in
+            let body = try XCTUnwrap(response.body)
+            return String(buffer: body)
+        }
+        let id = try XCTUnwrap(Int(idString))
+        try app.XCTExecute(uri: "/id", method: .GET) { response in
+            let body = try XCTUnwrap(response.body)
+            let id2 = Int(String(buffer: body))
+            XCTAssertEqual(id2, id + 1)
+        }
+    }
 }
 
 extension HBRequest {
