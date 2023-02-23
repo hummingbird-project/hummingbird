@@ -303,7 +303,7 @@ final class RouterTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        let idString = try app.XCTExecute(uri: "/id", method: .GET) { response in
+        let idString = try app.XCTExecute(uri: "/id", method: .GET) { response -> String in
             let body = try XCTUnwrap(response.body)
             return String(buffer: body)
         }
