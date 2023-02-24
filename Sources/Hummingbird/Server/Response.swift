@@ -43,28 +43,24 @@ public struct HBResponse: HBSendableExtensible {
 extension HBResponse {
     /// Specifies the type of redirect that the client should receive.
     public enum RedirectType {
-        /// The URL of the requested resource has been changed permanently. The new URL is
-        /// given in the response.
-        /// `301 moved permanently`
+        /// `301 moved permanently`: The URL of the requested resource has been changed permanently.
+        /// The new URL is iven in the response.
         case permanent
-        /// This response code means that the URI of requested resource has been changed
+        /// `302 found`: This response code means that the URI of requested resource has been changed
         /// temporarily. Further changes in the URI might be made in the future. Therefore,
         /// this same URI should be used by the client in future requests.
-        /// `302 found`
         case found
-        /// The server sent this response to direct the client to get the requested resource
-        /// at another URI with a GET request.
-        /// `303 see other`
+        /// `303 see other`: The server sent this response to direct the client to get the requested
+        /// resource at another URI with a GET request.
         case normal
-        /// The server sends this response to direct the client to get the requested resource
-        /// at another URI with the same method that was used in the prior request. This has
-        /// the same semantics as the 302 Found HTTP response code, with the exception that
-        /// the user agent must not change the HTTP method used: if a POST was used in the
-        /// first request, a POST must be used in the second request.
-        /// `307 Temporary`
+        /// `307 Temporary`: The server sends this response to direct the client to get the requested
+        /// resource at another URI with the same method that was used in the prior request. This has
+        /// the same semantics as the 302 Found HTTP response code, with the exception that the user
+        /// agent must not change the HTTP method used: if a POST was used in the first request, a POST
+        /// must be used in the second request.
         case temporary
 
-        /// Associated `HTTPStatus` for this redirect type.
+        /// Associated `HTTPResponseStatus` for this redirect type.
         public var status: HTTPResponseStatus {
             switch self {
             case .permanent: return .movedPermanently
@@ -75,6 +71,11 @@ extension HBResponse {
         }
     }
 
+    ///  Create a redirect response
+    /// - Parameters:
+    ///   - location: Location to redirect to
+    ///   - type: Redirection type
+    /// - Returns: HBResponse with redirection
     public static func redirect(to location: String, type: RedirectType = .normal) -> HBResponse {
         return .init(status: type.status, headers: ["location": location])
     }
