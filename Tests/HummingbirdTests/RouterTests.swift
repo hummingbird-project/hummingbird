@@ -314,6 +314,21 @@ final class RouterTests: XCTestCase {
             XCTAssertEqual(id2, id + 1)
         }
     }
+
+    // Test redirect response
+    func testRedirect() throws {
+        let app = HBApplication(testing: .embedded)
+        app.router.get("redirect") { _ in
+            return HBResponse.redirect(to: "/other")
+        }
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        try app.XCTExecute(uri: "/redirect", method: .GET) { response in
+            XCTAssertEqual(response.headers["location"].first, "/other")
+            XCTAssertEqual(response.status, .seeOther)
+        }
+    }
 }
 
 extension HBRequest {
