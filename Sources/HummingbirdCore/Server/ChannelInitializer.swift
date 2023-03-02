@@ -54,12 +54,13 @@ public struct HTTP1ChannelInitializer: HBChannelInitializer {
                 }
             })
         }
-        return channel.pipeline.configureHTTPServerPipeline(
-            withPipeliningAssistance: configuration.withPipeliningAssistance,
-            withServerUpgrade: serverUpgrade,
-            withErrorHandling: true
-        ).flatMap {
-            return channel.pipeline.addHandlers(childHandlers)
+        return channel.eventLoop.makeCompletedFuture {
+            try channel.pipeline.syncOperations.configureHTTPServerPipeline(
+                withPipeliningAssistance: configuration.withPipeliningAssistance,
+                withServerUpgrade: serverUpgrade,
+                withErrorHandling: true
+            )
+            try channel.pipeline.syncOperations.addHandlers(childHandlers)
         }
     }
 
