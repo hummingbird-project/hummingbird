@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug HTTPServer",
+            "program": "${workspaceFolder:Benchmarks}/.build/debug/HTTPServer",
+            "args": [],
+            "cwd": "${workspaceFolder:Benchmarks}",
+            "preLaunchTask": "swift: Build Debug HTTPServer"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Release HTTPServer",
+            "program": "${workspaceFolder:Benchmarks}/.build/release/HTTPServer",
+            "args": [],
+            "cwd": "${workspaceFolder:Benchmarks}",
+            "preLaunchTask": "swift: Build Release HTTPServer"
+        }
+    ]
+}
