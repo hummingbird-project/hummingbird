@@ -18,6 +18,7 @@ struct RouterPath: ExpressibleByStringLiteral {
         case path(Substring)
         case parameter(Substring)
         case wildcard
+        case recursiveWildcard
         case null
 
         static func ~= <S: StringProtocol>(lhs: Element, rhs: S) -> Bool {
@@ -28,7 +29,9 @@ struct RouterPath: ExpressibleByStringLiteral {
                 return true
             case .wildcard:
                 return true
-            default:
+            case .recursiveWildcard:
+                return true
+            case .null:
                 return false
             }
         }
@@ -52,6 +55,8 @@ struct RouterPath: ExpressibleByStringLiteral {
                 return .parameter(component.dropFirst())
             } else if component == "*" {
                 return .wildcard
+            } else if component == "**" {
+                return .recursiveWildcard
             } else {
                 return .path(component)
             }
