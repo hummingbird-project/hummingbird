@@ -68,6 +68,7 @@ class TrieRouterTests: XCTestCase {
     func testRecursiveWildcardWithPrefix() {
         let trie = RouterPathTrie<String>()
         trie.addEntry("Test/**", value: "true")
+        trie.addEntry("Test2/:test/**", value: "true")
         XCTAssertNil(trie.getValueAndParameters("/notTest/hello"))
         XCTAssertNil(trie.getValueAndParameters("/Test/")?.value, "true")
         XCTAssertEqual(trie.getValueAndParameters("/Test/one")?.value, "true")
@@ -75,6 +76,7 @@ class TrieRouterTests: XCTestCase {
         XCTAssertEqual(trie.getValueAndParameters("/Test/one/two/three")?.value, "true")
         XCTAssertEqual(trie.getValueAndParameters("/Test/")?.parameters?.getCatchAll(), nil)
         XCTAssertEqual(trie.getValueAndParameters("/Test/one/two")?.parameters?.getCatchAll(), "one/two")
+        XCTAssertEqual(trie.getValueAndParameters("/Test2/one/two")?.parameters?.getCatchAll(), "two")
     }
 
     func testPrefixWildcard() {

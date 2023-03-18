@@ -296,6 +296,41 @@ final class RouterTests: XCTestCase {
         }
     }
 
+    func testPartialCapture() throws {
+        let app = HBApplication(testing: .embedded)
+        app.router
+            .get("/files/file.:ext:/:name:.jpg") { request -> String in
+                XCTAssertEqual(request.parameters.count, 2)
+                let ext = try request.parameters.require("ext")
+                let name = try request.parameters.require("name")
+                return "\(name).\(ext)"
+            }
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        try app.XCTExecute(uri: "/files/file.doc/test.jpg", method: .GET) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "test.doc")
+        }
+    }
+
+    func testPartialWildcard() throws {
+        let app = HBApplication(testing: .embedded)
+        app.router
+            .get("/files/file.*/*.jpg") { _ -> HTTPResponseStatus in
+                return .ok
+            }
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        try app.XCTExecute(uri: "/files/file.doc/test.jpg", method: .GET) { response in
+            XCTAssertEqual(response.status, .ok)
+        }
+        try app.XCTExecute(uri: "/files/file.doc/test.png", method: .GET) { response in
+            XCTAssertEqual(response.status, .notFound)
+        }
+    }
+
     /// Test we have a request id and that it increments with each request
     func testRequestId() throws {
         let app = HBApplication(testing: .embedded)
