@@ -40,10 +40,17 @@ struct RouterPathTrie<Value> {
         for component in pathComponents {
             if let childNode = node.getChild(component) {
                 node = childNode
-                if case .parameter(let key) = node.key {
+                switch node.key {
+                case .capture(let key):
                     parameters.set(key, value: component)
-                } else if case .recursiveWildcard = node.key {
+                case .prefixCapture(let suffix, let key):
+                    parameters.set(key, value: component.dropLast(suffix.count))
+                case .suffixCapture(let prefix, let key):
+                    parameters.set(key, value: component.dropFirst(prefix.count))
+                case .recursiveWildcard:
                     parameters.setRecursiveCapture(path[component.startIndex..<path.endIndex])
+                default:
+                    break
                 }
             } else if case .recursiveWildcard = node.key {
             } else {

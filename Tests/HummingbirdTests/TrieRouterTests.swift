@@ -98,4 +98,26 @@ class TrieRouterTests: XCTestCase {
         XCTAssertEqual(trie.getValueAndParameters("/test/file.jpg")?.value, "testfile")
         XCTAssertEqual(trie.getValueAndParameters("/file.png/test")?.value, "filetest")
     }
+
+    func testPrefixCapture() {
+        let trie = RouterPathTrie<String>()
+        trie.addEntry(":file:.jpg", value: "jpg")
+        trie.addEntry("test/:file:.jpg", value: "testjpg")
+        trie.addEntry(":app:.app/config.json", value: "app")
+        XCTAssertNil(trie.getValueAndParameters("/hello.png"))
+        XCTAssertEqual(trie.getValueAndParameters("/hello.jpg")?.parameters?.get("file"), "hello")
+        XCTAssertEqual(trie.getValueAndParameters("/test/hello.jpg")?.parameters?.get("file"), "hello")
+        XCTAssertEqual(trie.getValueAndParameters("/hello.app/config.json")?.parameters?.get("app"), "hello")
+    }
+
+    func testSuffixCapture() {
+        let trie = RouterPathTrie<String>()
+        trie.addEntry("file.:ext:", value: "file")
+        trie.addEntry("test/file.:ext:", value: "testfile")
+        trie.addEntry("file.:ext:/test", value: "filetest")
+        XCTAssertNil(trie.getValueAndParameters("/file2.png"))
+        XCTAssertEqual(trie.getValueAndParameters("/file.jpg")?.parameters?.get("ext"), "jpg")
+        XCTAssertEqual(trie.getValueAndParameters("/test/file.jpg")?.parameters?.get("ext"), "jpg")
+        XCTAssertEqual(trie.getValueAndParameters("/file.png/test")?.parameters?.get("ext"), "png")
+    }
 }

@@ -16,7 +16,9 @@
 struct RouterPath: ExpressibleByStringLiteral {
     enum Element: Equatable {
         case path(Substring)
-        case parameter(Substring)
+        case capture(Substring)
+        case prefixCapture(Substring, Substring) // *.jpg
+        case suffixCapture(Substring, Substring) // file.*
         case wildcard
         case prefixWildcard(Substring) // *.jpg
         case suffixWildcard(Substring) // file.*
@@ -27,8 +29,12 @@ struct RouterPath: ExpressibleByStringLiteral {
             switch lhs {
             case .path(let lhs):
                 return lhs == rhs
-            case .parameter:
+            case .capture:
                 return true
+            case .prefixCapture(let suffix, _):
+                return rhs.hasSuffix(suffix)
+            case .suffixCapture(let prefix, _):
+                return rhs.hasPrefix(prefix)
             case .wildcard:
                 return true
             case .prefixWildcard(let suffix):
@@ -58,7 +64,24 @@ struct RouterPath: ExpressibleByStringLiteral {
         let split = value.split(separator: "/", omittingEmptySubsequences: true)
         self.components = split.map { component in
             if component.first == ":" {
-                return .parameter(component.dropFirst())
+                let parameter = component.dropFirst()
+                if let secondColon = parameter.firstIndex(of: ":") {
+                    let charAfterColon = parameter.index(after: secondColon)
+                    if charAfterColon != parameter.endIndex {
+                        return .prefixCapture(parameter[charAfterColon...], parameter[..<secondColon])
+                    } else {
+                        return .capture(parameter)
+                    }
+                }
+                return .capture(component.dropFirst())
+            } else if component.last == ":" {
+                let parameter = component.dropLast()
+                if let firstColon = parameter.firstIndex(of: ":") {
+                    let charAfterColon = parameter.index(after: firstColon)
+                    return .suffixCapture(parameter[..<firstColon], parameter[charAfterColon...])
+                } else {
+                    return .path(component)
+                }
             } else if component == "*" {
                 return .wildcard
             } else if component == "**" {
