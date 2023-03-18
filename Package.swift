@@ -19,7 +19,6 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.45.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "1.0.0-alpha.9"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-core.git", from: "1.0.0"),
-        .package(url: "https://github.com/ordo-one/package-benchmark.git", .upToNextMajor(from: "0.9.0")),
     ],
     targets: [
         .target(name: "Hummingbird", dependencies: [
