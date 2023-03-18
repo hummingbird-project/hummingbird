@@ -43,6 +43,7 @@ struct RouterPathTrie<Value> {
                 if case .parameter(let key) = node.key {
                     parameters.set(key, value: component)
                 }
+            } else if case .recursiveWildcard = node.key {
             } else {
                 return nil
             }

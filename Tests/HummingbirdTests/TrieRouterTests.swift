@@ -40,6 +40,7 @@ class HummingbirdTrieRouterTests: XCTestCase {
         trie.addEntry("users/*", value: "test1")
         trie.addEntry("users/*/fowler", value: "test2")
         trie.addEntry("users/*/*", value: "test3")
+        XCTAssertNil(trie.getValueAndParameters("/users"))
         XCTAssertEqual(trie.getValueAndParameters("/users/adam")?.value, "test1")
         XCTAssertEqual(trie.getValueAndParameters("/users/adam/fowler")?.value, "test2")
         XCTAssertEqual(trie.getValueAndParameters("/users/adam/1")?.value, "test3")
@@ -53,5 +54,23 @@ class HummingbirdTrieRouterTests: XCTestCase {
         XCTAssertEqual(trie.getValueAndParameters("/users/1234")?.parameters.get("user"), "1234")
         XCTAssertEqual(trie.getValueAndParameters("/users/1234/name")?.parameters.get("user"), "1234")
         XCTAssertEqual(trie.getValueAndParameters("/users/1234/name")?.value, "john smith")
+    }
+
+    func testRecursiveWildcard() {
+        let trie = RouterPathTrie<String>()
+        trie.addEntry("**", value: "**")
+        XCTAssertEqual(trie.getValueAndParameters("/one")?.value, "**")
+        XCTAssertEqual(trie.getValueAndParameters("/one/two")?.value, "**")
+        XCTAssertEqual(trie.getValueAndParameters("/one/two/three")?.value, "**")
+    }
+
+    func testRecursiveWildcardWithPrefix() {
+        let trie = RouterPathTrie<String>()
+        trie.addEntry("Test/**", value: "true")
+        XCTAssertNil(trie.getValueAndParameters("/notTest/hello"))
+        XCTAssertNil(trie.getValueAndParameters("/Test/")?.value, "true")
+        XCTAssertEqual(trie.getValueAndParameters("/Test/one")?.value, "true")
+        XCTAssertEqual(trie.getValueAndParameters("/Test/one/two")?.value, "true")
+        XCTAssertEqual(trie.getValueAndParameters("/Test/one/two/three")?.value, "true")
     }
 }

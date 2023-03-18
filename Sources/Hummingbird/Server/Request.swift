@@ -54,10 +54,7 @@ public struct HBRequest: HBSendableExtensible {
     /// Parameters extracted during processing of request URI. These are available to you inside the route handler
     public var parameters: HBParameters {
         get {
-            self.extensions.get(
-                \.parameters,
-                error: "Cannot access HBRequest.parameters on a route not extracting parameters from the URI."
-            )
+            self.extensions.get(\.parameters) ?? .init()
         }
         set { self.extensions.set(\.parameters, value: newValue) }
     }
