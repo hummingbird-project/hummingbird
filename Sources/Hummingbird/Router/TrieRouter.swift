@@ -48,7 +48,7 @@ struct RouterPathTrie<Value> {
                 case .suffixCapture(let prefix, let key):
                     parameters.set(key, value: component.dropFirst(prefix.count))
                 case .recursiveWildcard:
-                    parameters.setRecursiveCapture(path[component.startIndex..<path.endIndex])
+                    parameters.setCatchAll(path[component.startIndex..<path.endIndex])
                 default:
                     break
                 }
@@ -108,10 +108,10 @@ extension Optional where Wrapped == HBParameters {
         }
     }
 
-    mutating func setRecursiveCapture(_ value: Substring) {
+    mutating func setCatchAll(_ value: Substring) {
         switch self {
         case .some(var parameters):
-            parameters.setRecursiveCapture(value)
+            parameters.setCatchAll(value)
             self = .some(parameters)
         case .none:
             self = .some(.init(.init([(HBParameters.recursiveCaptureKey, value)])))

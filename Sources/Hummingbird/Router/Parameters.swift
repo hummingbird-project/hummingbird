@@ -48,7 +48,7 @@ public struct HBParameters {
     }
 
     ///  Return path elements caught by recursive capture
-    public func getRecursiveCapture() -> String? {
+    public func getCatchAll() -> String? {
         return self.parameters[Self.recursiveCaptureKey].map { String($0) }
     }
 
@@ -112,7 +112,7 @@ public struct HBParameters {
     /// Set path components caught by recursive capture
     /// - Parameters:
     ///   - value: parameter value
-    mutating func setRecursiveCapture(_ value: Substring) {
+    mutating func setCatchAll(_ value: Substring) {
         guard !self.parameters.has(Self.recursiveCaptureKey) else { return }
         self.parameters[Self.recursiveCaptureKey] = value
     }
