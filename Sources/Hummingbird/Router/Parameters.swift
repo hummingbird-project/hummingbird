@@ -17,8 +17,20 @@ public struct HBParameters {
     public typealias Collection = FlatDictionary<Substring, Substring>
     internal var parameters: Collection
 
+    static let recursiveCaptureKey: Substring = ":**:"
+
     init() {
         self.parameters = .init()
+    }
+
+    init(_ values: Collection) {
+        self.parameters = values
+    }
+
+    /// Return if parameter exists
+    /// - Parameter s: parameter id
+    public func has(_ s: Substring) -> Bool {
+        return self.parameters.has(s)
     }
 
     /// Return parameter with specified id
@@ -33,6 +45,11 @@ public struct HBParameters {
     ///   - as: type we want returned
     public func get<T: LosslessStringConvertible>(_ s: String, as: T.Type) -> T? {
         return self.parameters[s[...]].map { T(String($0)) } ?? nil
+    }
+
+    ///  Return path elements caught by recursive capture
+    public func getRecursiveCapture() -> String? {
+        return self.parameters[Self.recursiveCaptureKey].map { String($0) }
     }
 
     /// Return parameter with specified id
@@ -90,6 +107,14 @@ public struct HBParameters {
     ///   - value: parameter value
     mutating func set(_ s: Substring, value: Substring) {
         self.parameters[s] = value
+    }
+
+    /// Set path components caught by recursive capture
+    /// - Parameters:
+    ///   - value: parameter value
+    mutating func setRecursiveCapture(_ value: Substring) {
+        guard !self.parameters.has(Self.recursiveCaptureKey) else { return }
+        self.parameters[Self.recursiveCaptureKey] = value
     }
 
     public subscript(_ s: String) -> String? {

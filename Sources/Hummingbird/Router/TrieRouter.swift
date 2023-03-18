@@ -33,15 +33,17 @@ struct RouterPathTrie<Value> {
         }
     }
 
-    func getValueAndParameters(_ path: String) -> (value: Value, parameters: HBParameters)? {
+    func getValueAndParameters(_ path: String) -> (value: Value, parameters: HBParameters?)? {
         let pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
-        var parameters = HBParameters()
+        var parameters: HBParameters?
         var node = self.root
         for component in pathComponents {
             if let childNode = node.getChild(component) {
                 node = childNode
                 if case .parameter(let key) = node.key {
                     parameters.set(key, value: component)
+                } else if case .recursiveWildcard = node.key {
+                    parameters.setRecursiveCapture(path[component.startIndex..<path.endIndex])
                 }
             } else if case .recursiveWildcard = node.key {
             } else {
@@ -84,6 +86,28 @@ struct RouterPathTrie<Value> {
                 return child
             }
             return self.children.first { $0.key ~= key }
+        }
+    }
+}
+
+extension Optional where Wrapped == HBParameters {
+    mutating func set(_ s: Substring, value: Substring) {
+        switch self {
+        case .some(var parameters):
+            parameters.set(s, value: value)
+            self = .some(parameters)
+        case .none:
+            self = .some(.init(.init([(s, value)])))
+        }
+    }
+
+    mutating func setRecursiveCapture(_ value: Substring) {
+        switch self {
+        case .some(var parameters):
+            parameters.setRecursiveCapture(value)
+            self = .some(parameters)
+        case .none:
+            self = .some(.init(.init([(HBParameters.recursiveCaptureKey, value)])))
         }
     }
 }

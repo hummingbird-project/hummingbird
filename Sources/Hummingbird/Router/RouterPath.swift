@@ -18,6 +18,8 @@ struct RouterPath: ExpressibleByStringLiteral {
         case path(Substring)
         case parameter(Substring)
         case wildcard
+        case prefixWildcard(Substring) // *.jpg
+        case suffixWildcard(Substring) // file.*
         case recursiveWildcard
         case null
 
@@ -29,6 +31,10 @@ struct RouterPath: ExpressibleByStringLiteral {
                 return true
             case .wildcard:
                 return true
+            case .prefixWildcard(let suffix):
+                return rhs.hasSuffix(suffix)
+            case .suffixWildcard(let prefix):
+                return rhs.hasPrefix(prefix)
             case .recursiveWildcard:
                 return true
             case .null:
@@ -57,6 +63,10 @@ struct RouterPath: ExpressibleByStringLiteral {
                 return .wildcard
             } else if component == "**" {
                 return .recursiveWildcard
+            } else if component.first == "*" {
+                return .prefixWildcard(component.dropFirst())
+            } else if component.last == "*" {
+                return .suffixWildcard(component.dropLast())
             } else {
                 return .path(component)
             }

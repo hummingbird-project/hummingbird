@@ -52,7 +52,7 @@ public struct FlatDictionary<Key: Hashable, Value>: Collection {
     }
 
     /// Create a new FlatDictionary from an array of key value pairs
-    public init(_ values: [(key: Key, value: Value)]) {
+    public init(_ values: [Element]) {
         self.elements = values
         self.hashKeys = values.map {
             Self.hashKey($0.key)
@@ -86,6 +86,13 @@ public struct FlatDictionary<Key: Hashable, Value>: Collection {
                 self.hashKeys.append(hashKey)
             }
         }
+    }
+
+    ///  Return if dictionary has this value
+    /// - Parameter key:
+    public func has(_ key: Key) -> Bool {
+        let hashKey = Self.hashKey(key)
+        return self.hashKeys.firstIndex(of: hashKey) != nil
     }
 
     /// Return all the values, associated with a given key

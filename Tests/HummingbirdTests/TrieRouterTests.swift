@@ -15,7 +15,7 @@
 @testable import Hummingbird
 import XCTest
 
-class HummingbirdTrieRouterTests: XCTestCase {
+class TrieRouterTests: XCTestCase {
     func testPathComponentsTrie() {
         let trie = RouterPathTrie<String>()
         trie.addEntry("/usr/local/bin", value: "test1")
@@ -51,8 +51,8 @@ class HummingbirdTrieRouterTests: XCTestCase {
         trie.addEntry("users/:user", value: "test1")
         trie.addEntry("users/:user/name", value: "john smith")
         XCTAssertNil(trie.getValueAndParameters("/user/"))
-        XCTAssertEqual(trie.getValueAndParameters("/users/1234")?.parameters.get("user"), "1234")
-        XCTAssertEqual(trie.getValueAndParameters("/users/1234/name")?.parameters.get("user"), "1234")
+        XCTAssertEqual(trie.getValueAndParameters("/users/1234")?.parameters?.get("user"), "1234")
+        XCTAssertEqual(trie.getValueAndParameters("/users/1234/name")?.parameters?.get("user"), "1234")
         XCTAssertEqual(trie.getValueAndParameters("/users/1234/name")?.value, "john smith")
     }
 
@@ -62,6 +62,7 @@ class HummingbirdTrieRouterTests: XCTestCase {
         XCTAssertEqual(trie.getValueAndParameters("/one")?.value, "**")
         XCTAssertEqual(trie.getValueAndParameters("/one/two")?.value, "**")
         XCTAssertEqual(trie.getValueAndParameters("/one/two/three")?.value, "**")
+        XCTAssertEqual(trie.getValueAndParameters("/one/two/three")?.parameters?.getRecursiveCapture(), "one/two/three")
     }
 
     func testRecursiveWildcardWithPrefix() {
@@ -72,5 +73,29 @@ class HummingbirdTrieRouterTests: XCTestCase {
         XCTAssertEqual(trie.getValueAndParameters("/Test/one")?.value, "true")
         XCTAssertEqual(trie.getValueAndParameters("/Test/one/two")?.value, "true")
         XCTAssertEqual(trie.getValueAndParameters("/Test/one/two/three")?.value, "true")
+        XCTAssertEqual(trie.getValueAndParameters("/Test/")?.parameters?.getRecursiveCapture(), nil)
+        XCTAssertEqual(trie.getValueAndParameters("/Test/one/two")?.parameters?.getRecursiveCapture(), "one/two")
+    }
+
+    func testPrefixWildcard() {
+        let trie = RouterPathTrie<String>()
+        trie.addEntry("*.jpg", value: "jpg")
+        trie.addEntry("test/*.jpg", value: "testjpg")
+        trie.addEntry("*.app/config.json", value: "app")
+        XCTAssertNil(trie.getValueAndParameters("/hello.png"))
+        XCTAssertEqual(trie.getValueAndParameters("/hello.jpg")?.value, "jpg")
+        XCTAssertEqual(trie.getValueAndParameters("/test/hello.jpg")?.value, "testjpg")
+        XCTAssertEqual(trie.getValueAndParameters("/hello.app/config.json")?.value, "app")
+    }
+
+    func testSuffixWildcard() {
+        let trie = RouterPathTrie<String>()
+        trie.addEntry("file.*", value: "file")
+        trie.addEntry("test/file.*", value: "testfile")
+        trie.addEntry("file.*/test", value: "filetest")
+        XCTAssertNil(trie.getValueAndParameters("/file2.png"))
+        XCTAssertEqual(trie.getValueAndParameters("/file.jpg")?.value, "file")
+        XCTAssertEqual(trie.getValueAndParameters("/test/file.jpg")?.value, "testfile")
+        XCTAssertEqual(trie.getValueAndParameters("/file.png/test")?.value, "filetest")
     }
 }
