@@ -70,7 +70,7 @@ struct RouterPath: ExpressibleByStringLiteral {
                     if charAfterColon != parameter.endIndex {
                         return .prefixCapture(parameter[charAfterColon...], parameter[..<secondColon])
                     } else {
-                        return .capture(parameter)
+                        return .capture(parameter.dropLast())
                     }
                 }
                 return .capture(component.dropFirst())

@@ -120,4 +120,17 @@ class TrieRouterTests: XCTestCase {
         XCTAssertEqual(trie.getValueAndParameters("/test/file.jpg")?.parameters?.get("ext"), "jpg")
         XCTAssertEqual(trie.getValueAndParameters("/file.png/test")?.parameters?.get("ext"), "png")
     }
+
+    func testPrefixFullComponentCapture() {
+        let trie = RouterPathTrie<String>()
+        trie.addEntry(":text:", value: "test")
+        XCTAssertEqual(trie.getValueAndParameters("/file.jpg")?.parameters?.get("text"), "file.jpg")
+    }
+
+    func testIncompletSuffixCapture() {
+        let trie = RouterPathTrie<String>()
+        trie.addEntry("text:", value: "test")
+        XCTAssertEqual(trie.getValueAndParameters("/text:")?.value, "test")
+        XCTAssertNil(trie.getValueAndParameters("/text"))
+    }
 }
