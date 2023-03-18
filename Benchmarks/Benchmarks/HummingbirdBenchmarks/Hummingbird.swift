@@ -20,19 +20,19 @@ import HBPerformance
 @_dynamicReplacement(for: registerBenchmarks)
 
 func benchmarks() {
-    Benchmark("Basic Allocations", configuration: .init(metrics: [.mallocCountTotal, .allocatedResidentMemory, .memoryLeaked])) { benchmark in
+    Benchmark("Basic Allocations", configuration: .init(metrics: [.wallClock, .mallocCountTotal, .memoryLeaked])) { benchmark in
         try runBenchmark(benchmark: benchmark, running: HBApplicationBenchmarkWrapper(BasicBenchmark()))
     }
 
-    Benchmark("RequestInBody Allocations", configuration: .init(metrics: [.mallocCountTotal, .allocatedResidentMemory, .memoryLeaked])) { benchmark in
+    Benchmark("RequestInBody Allocations", configuration: .init(metrics: [.wallClock, .mallocCountTotal, .memoryLeaked])) { benchmark in
         try runBenchmark(benchmark: benchmark, running: HBApplicationBenchmarkWrapper(RequestBodyBenchmark(bufferSize: 100)))
     }
 
-    Benchmark("LargeRequestInBody Allocations", configuration: .init(metrics: [.mallocCountTotal, .allocatedResidentMemory, .memoryLeaked])) { benchmark in
+    Benchmark("LargeRequestInBody Allocations", configuration: .init(metrics: [.wallClock, .mallocCountTotal, .memoryLeaked])) { benchmark in
         try runBenchmark(benchmark: benchmark, running: HBApplicationBenchmarkWrapper(RequestBodyBenchmark(bufferSize: 250_000)))
     }
 
-    Benchmark("ResponseInBody Allocations", configuration: .init(metrics: [.mallocCountTotal, .allocatedResidentMemory, .memoryLeaked])) { benchmark in
+    Benchmark("ResponseInBody Allocations", configuration: .init(metrics: [.wallClock, .mallocCountTotal, .memoryLeaked])) { benchmark in
         try runBenchmark(benchmark: benchmark, running: HBApplicationBenchmarkWrapper(ResponseBodyBenchmark(bufferSize: 100)))
     }
 
