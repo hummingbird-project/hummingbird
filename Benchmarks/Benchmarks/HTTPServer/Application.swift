@@ -12,5 +12,15 @@
 //
 //===----------------------------------------------------------------------===//
 
+import BenchmarkSupport
 import HBPerformance
+
+@main extension BenchmarkRunner {}
+@_dynamicReplacement(for: registerBenchmarks)
+
+func benchmarks() {
+    Benchmark("Basic") { benchmark in
+        try runBenchmark(benchmark: benchmark, running: HBApplicationBenchmarkWrapper(BasicBenchmark(iterations: 1000)))
+    }
+}
 

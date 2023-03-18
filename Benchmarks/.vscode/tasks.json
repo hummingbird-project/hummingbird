@@ -1,0 +1,15 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "swift-plugin",
+			"command": "benchmark",
+			"args": [],
+			"disableSandbox": true,
+			"allowWritingToPackageDirectory": false,
+			"problemMatcher": [],
+			"label": "swift-plugin: Benchmark-Plugin",
+			"detail": "swift package benchmark (disable-sandbox)"
+		}
+	]
+}

@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 import BenchmarkSupport
 
-public func runBenchmark<B: Benchmark>(benchmark: BenchmarkSupport.Benchmark) throws {
+public func runBenchmark<B: Benchmark>(benchmark: BenchmarkSupport.Benchmark, running: B) throws {
     try running.setUp()
     defer {
         running.tearDown()

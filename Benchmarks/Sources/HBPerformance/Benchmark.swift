@@ -15,12 +15,12 @@
 public protocol Benchmark: AnyObject {
     func setUp() throws
     func tearDown()
-    func run() throws -> Int
+    func run() throws
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public protocol AsyncBenchmark: AnyObject, Sendable {
     func setUp() async throws
     func tearDown()
-    func run() async throws -> Int
+    func run() async throws
 }
