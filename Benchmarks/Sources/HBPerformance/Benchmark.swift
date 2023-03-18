@@ -32,4 +32,3 @@ public protocol AsyncBenchmarkWrapper: AnyObject, Sendable {
 extension AsyncBenchmarkWrapper {
     public func tearDown() {}
 }
-

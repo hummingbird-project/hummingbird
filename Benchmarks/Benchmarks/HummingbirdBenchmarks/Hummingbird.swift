@@ -29,7 +29,7 @@ func benchmarks() {
     }
 
     Benchmark("LargeRequestInBody Allocations", configuration: .init(metrics: [.mallocCountTotal, .allocatedResidentMemory, .memoryLeaked])) { benchmark in
-        try runBenchmark(benchmark: benchmark, running: HBApplicationBenchmarkWrapper(RequestBodyBenchmark(bufferSize: 250000)))
+        try runBenchmark(benchmark: benchmark, running: HBApplicationBenchmarkWrapper(RequestBodyBenchmark(bufferSize: 250_000)))
     }
 
     Benchmark("ResponseInBody Allocations", configuration: .init(metrics: [.mallocCountTotal, .allocatedResidentMemory, .memoryLeaked])) { benchmark in
@@ -40,4 +40,3 @@ func benchmarks() {
         try runBenchmark(benchmark: benchmark, running: TrieRouterBenchmark(iterations: 10000))
     }
 }
-

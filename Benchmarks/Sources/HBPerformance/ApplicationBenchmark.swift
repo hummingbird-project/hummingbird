@@ -34,8 +34,8 @@ public class HBApplicationBenchmarkWrapper<AB: HBApplicationBenchmark>: Benchmar
     var client: HBXCTClient!
 
     public init(
-        _ applicationBenchmarker: AB, 
-        iterations: Int = 1000, 
+        _ applicationBenchmarker: AB,
+        iterations: Int = 1000,
         configuration: HBApplication.Configuration = .init(address: .hostname("127.0.0.1", port: 0), logLevel: .critical)
     ) {
         self.iterations = iterations
@@ -56,7 +56,7 @@ public class HBApplicationBenchmarkWrapper<AB: HBApplicationBenchmark>: Benchmar
         self.client = .init(host: "localhost", port: self.application.server.port!, eventLoopGroupProvider: .shared(self.clientEventLoopGroup))
         self.client.connect()
 
-        // warm up 
+        // warm up
         for _ in 0..<50 {
             _ = try self.applicationBenchmarker.singleIteration(self.client).wait()
         }
