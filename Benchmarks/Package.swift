@@ -9,7 +9,6 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/ordo-one/package-benchmark.git", .upToNextMajor(from: "0.9.0")),
         .package(path: "../../hummingbird"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-core.git", from: "1.0.0"),
     ],
     targets: [
         // Support target having fundamentally verbatim copies of NIOPerformanceTester sources
@@ -18,7 +17,7 @@ let package = Package(
             dependencies: [
                 .product(name: "BenchmarkSupport", package: "package-benchmark"),
                 .product(name: "Hummingbird", package: "hummingbird"),
-                .product(name: "HummingbirdCoreXCT", package: "hummingbird-core"),
+                .product(name: "HummingbirdXCT", package: "hummingbird"),
             ]
         ),
 

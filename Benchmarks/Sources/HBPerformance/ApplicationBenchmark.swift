@@ -13,25 +13,21 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
-import HummingbirdCoreXCT
+import HummingbirdXCT
 import NIO
 import NIOPosix
 
 public protocol HBApplicationBenchmark {
     func setUp(_ application: HBApplication) throws
-    func singleIteration(_ client: HBXCTClient) -> EventLoopFuture<HBXCTClient.Response>
+    func singleIteration(_ client: HBXCT) -> EventLoopFuture<HBXCTResponse>
 }
 
 public class HBApplicationBenchmarkWrapper<AB: HBApplicationBenchmark>: BenchmarkWrapper {
     let applicationBenchmarker: AB
     let iterations: Int
 
-    var eventLoopGroup: EventLoopGroup!
     var application: HBApplication!
     let configuration: HBApplication.Configuration
-    // setup separate client eventLoopGroup so it doesn't interfere with the server
-    var clientEventLoopGroup: EventLoopGroup!
-    var client: HBXCTClient!
 
     public init(
         _ applicationBenchmarker: AB,
@@ -45,37 +41,24 @@ public class HBApplicationBenchmarkWrapper<AB: HBApplicationBenchmark>: Benchmar
 
     public func setUp() throws {
         // server setup
-        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        self.application = HBApplication(configuration: self.configuration, eventLoopGroupProvider: .shared(self.eventLoopGroup))
+        self.application = HBApplication(testing: .embedded, configuration: self.configuration)
         try self.applicationBenchmarker.setUp(self.application)
         // start server
-        try self.application.start()
-
-        // client setup
-        self.clientEventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        self.client = .init(host: "localhost", port: self.application.server.port!, eventLoopGroupProvider: .shared(self.clientEventLoopGroup))
-        self.client.connect()
+        try self.application.XCTStart()
 
         // warm up
         for _ in 0..<50 {
-            _ = try self.applicationBenchmarker.singleIteration(self.client).wait()
+            _ = try self.applicationBenchmarker.singleIteration(self.application.xct).wait()
         }
     }
 
     public func run() throws {
         for _ in 0..<self.iterations {
-            _ = try self.applicationBenchmarker.singleIteration(self.client).wait()
+            _ = try self.applicationBenchmarker.singleIteration(self.application.xct).wait()
         }
     }
 
     public func tearDown() {
-        do {
-            try self.client.syncShutdown()
-            self.application.stop()
-            try self.clientEventLoopGroup.syncShutdownGracefully()
-            try self.eventLoopGroup.syncShutdownGracefully()
-        } catch {
-            // do nothing
-        }
+        self.application.XCTStop()
     }
 }

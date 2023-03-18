@@ -105,7 +105,7 @@ class BreakupHTTPBodyChannelHandler: ChannelInboundHandler, RemovableChannelHand
             context.fireChannelRead(data)
         case .body(var buffer):
             while buffer.readableBytes > 0 {
-                let size = min(Int.random(in: 16...65536), buffer.readableBytes)
+                let size = min(32768, buffer.readableBytes)
                 let slice = buffer.readSlice(length: size)!
                 context.fireChannelRead(self.wrapInboundOut(.body(slice)))
             }
