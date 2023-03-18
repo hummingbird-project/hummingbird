@@ -1,8 +1,8 @@
 .DS_Store
 .build/
-/.swiftpm
-/.vscode
-/.devcontainer
+.swiftpm/
+.vscode/
+.devcontainer/
 /Packages
 /*.xcodeproj
 xcuserdata/
