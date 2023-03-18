@@ -17,6 +17,42 @@
             "args": [],
             "cwd": "${workspaceFolder:Benchmarks}",
             "preLaunchTask": "swift: Build Release HTTPServer"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug Hummingbird",
+            "program": "${workspaceFolder:Benchmarks}/.build/debug/Hummingbird",
+            "args": [],
+            "cwd": "${workspaceFolder:Benchmarks}",
+            "preLaunchTask": "swift: Build Debug Hummingbird"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Release Hummingbird",
+            "program": "${workspaceFolder:Benchmarks}/.build/release/Hummingbird",
+            "args": [],
+            "cwd": "${workspaceFolder:Benchmarks}",
+            "preLaunchTask": "swift: Build Release Hummingbird"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug HummingbirdBenchmarks",
+            "program": "${workspaceFolder:Benchmarks}/.build/debug/HummingbirdBenchmarks",
+            "args": [],
+            "cwd": "${workspaceFolder:Benchmarks}",
+            "preLaunchTask": "swift: Build Debug HummingbirdBenchmarks"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Release HummingbirdBenchmarks",
+            "program": "${workspaceFolder:Benchmarks}/.build/release/HummingbirdBenchmarks",
+            "args": [],
+            "cwd": "${workspaceFolder:Benchmarks}",
+            "preLaunchTask": "swift: Build Release HummingbirdBenchmarks"
         }
     ]
 }

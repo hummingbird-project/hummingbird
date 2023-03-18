@@ -10,6 +10,30 @@
 			"problemMatcher": [],
 			"label": "swift-plugin: Benchmark-Plugin",
 			"detail": "swift package benchmark (disable-sandbox)"
+		},
+		{
+			"type": "swift-plugin",
+			"command": "benchmark",
+			"args": [
+				"baseline", "update", "baseline"
+			],
+			"disableSandbox": true,
+			"allowWritingToPackageDirectory": true,
+			"problemMatcher": [],
+			"label": "swift-plugin: Benchmark-Plugin",
+			"detail": "swift package benchmark (baseline)"
+		},
+		{
+			"type": "swift-plugin",
+			"command": "benchmark",
+			"args": [
+				"baseline", "compare", "baseline"
+			],
+			"disableSandbox": true,
+			"allowWritingToPackageDirectory": false,
+			"problemMatcher": [],
+			"label": "swift-plugin: Benchmark-Plugin",
+			"detail": "swift package benchmark (compare)"
 		}
 	]
 }

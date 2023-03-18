@@ -12,15 +12,24 @@
 //
 //===----------------------------------------------------------------------===//
 
-public protocol Benchmark: AnyObject {
+public protocol BenchmarkWrapper: AnyObject {
     func setUp() throws
     func tearDown()
     func run() throws
 }
 
+extension BenchmarkWrapper {
+    public func tearDown() {}
+}
+
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-public protocol AsyncBenchmark: AnyObject, Sendable {
+public protocol AsyncBenchmarkWrapper: AnyObject, Sendable {
     func setUp() async throws
     func tearDown()
     func run() async throws
 }
+
+extension AsyncBenchmarkWrapper {
+    public func tearDown() {}
+}
+

@@ -24,12 +24,12 @@ let package = Package(
 
         // Benchmark targets
         .executableTarget(
-            name: "HTTPServer",
+            name: "HummingbirdBenchmarks",
             dependencies: [
                 "HBPerformance",
                 .product(name: "BenchmarkSupport", package: "package-benchmark"),
             ],
-            path: "Benchmarks/HTTPServer"
+            path: "Benchmarks/HummingbirdBenchmarks"
         ),
     ]
 )

@@ -14,14 +14,12 @@
 
 import Hummingbird
 import HummingbirdCoreXCT
+import NIOCore
 import NIOHTTP1
 
+/// Benchmark basic GET call which return 200
 public struct BasicBenchmark: HBApplicationBenchmark {
-    let iterations: Int
-
-    public init(iterations: Int) {
-        self.iterations = iterations
-    }
+    public init() {}
 
     public func setUp(_ application: HBApplication) throws {
         application.router.get("/") { _ -> HTTPResponseStatus in
@@ -29,15 +27,45 @@ public struct BasicBenchmark: HBApplicationBenchmark {
         }
     }
 
-    public func warmUp(_ application: HBApplication, _ client: HBXCTClient) throws {
-        for _ in 0..<100 {
-            _ = try client.get("/").wait()
+    public func singleIteration(_ client: HBXCTClient) -> EventLoopFuture<HBXCTClient.Response> {
+        client.get("/")
+    }
+}
+
+/// Benchmark  POST call with body
+public struct RequestBodyBenchmark: HBApplicationBenchmark {
+    let body: ByteBuffer
+
+    public init(bufferSize: Int) {
+        self.body = randomBuffer(size: bufferSize)
+    }
+
+    public func setUp(_ application: HBApplication) throws {
+        application.router.post("/") { _ -> HTTPResponseStatus in
+            .ok
         }
     }
 
-    public func run(_ application: HBApplication, _ client: HBXCTClient) throws {
-        for _ in 0..<self.iterations {
-            _ = try client.get("/").wait()
+    public func singleIteration(_ client: HBXCTClient) -> EventLoopFuture<HBXCTClient.Response> {
+        return client.post("/", body: self.body)
+    }
+}
+
+/// Benchmark basic GET call which returns a buffer
+public struct ResponseBodyBenchmark: HBApplicationBenchmark {
+    let body: ByteBuffer
+
+    public init(bufferSize: Int) {
+        self.body = randomBuffer(size: bufferSize)
+    }
+
+    public func setUp(_ application: HBApplication) throws {
+        application.router.get("/") { _ -> ByteBuffer in
+            self.body
         }
+    }
+
+    public func singleIteration(_ client: HBXCTClient) -> EventLoopFuture<HBXCTClient.Response> {
+        return client.get("/")
     }
 }

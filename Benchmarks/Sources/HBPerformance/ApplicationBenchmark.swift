@@ -19,20 +19,26 @@ import NIOPosix
 
 public protocol HBApplicationBenchmark {
     func setUp(_ application: HBApplication) throws
-    func warmUp(_ application: HBApplication, _ client: HBXCTClient) throws
-    func run(_ application: HBApplication, _ client: HBXCTClient) throws
+    func singleIteration(_ client: HBXCTClient) -> EventLoopFuture<HBXCTClient.Response>
 }
 
-public class HBApplicationBenchmarkWrapper<AB: HBApplicationBenchmark>: Benchmark {
+public class HBApplicationBenchmarkWrapper<AB: HBApplicationBenchmark>: BenchmarkWrapper {
+    let applicationBenchmarker: AB
+    let iterations: Int
+
     var eventLoopGroup: EventLoopGroup!
     var application: HBApplication!
     let configuration: HBApplication.Configuration
-    let applicationBenchmarker: AB
     // setup separate client eventLoopGroup so it doesn't interfere with the server
     var clientEventLoopGroup: EventLoopGroup!
     var client: HBXCTClient!
 
-    public init(_ applicationBenchmarker: AB, configuration: HBApplication.Configuration = .init(address: .hostname("127.0.0.1", port: 0))) {
+    public init(
+        _ applicationBenchmarker: AB, 
+        iterations: Int = 1000, 
+        configuration: HBApplication.Configuration = .init(address: .hostname("127.0.0.1", port: 0), logLevel: .critical)
+    ) {
+        self.iterations = iterations
         self.applicationBenchmarker = applicationBenchmarker
         self.configuration = configuration
     }
@@ -51,11 +57,15 @@ public class HBApplicationBenchmarkWrapper<AB: HBApplicationBenchmark>: Benchmar
         self.client.connect()
 
         // warm up 
-        try self.applicationBenchmarker.warmUp(self.application, self.client)
+        for _ in 0..<50 {
+            _ = try self.applicationBenchmarker.singleIteration(self.client).wait()
+        }
     }
 
     public func run() throws {
-        try self.applicationBenchmarker.run(self.application, self.client)
+        for _ in 0..<self.iterations {
+            _ = try self.applicationBenchmarker.singleIteration(self.client).wait()
+        }
     }
 
     public func tearDown() {

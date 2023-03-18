@@ -12,15 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-import BenchmarkSupport
-import HBPerformance
+import NIOCore
 
-@main extension BenchmarkRunner {}
-@_dynamicReplacement(for: registerBenchmarks)
-
-func benchmarks() {
-    Benchmark("Basic") { benchmark in
-        try runBenchmark(benchmark: benchmark, running: HBApplicationBenchmarkWrapper(BasicBenchmark(iterations: 1000)))
-    }
+public func randomBuffer(size: Int) -> ByteBuffer {
+    var data = [UInt8](repeating: 0, count: size)
+    data = data.map { _ in UInt8.random(in: 0...255) }
+    return ByteBufferAllocator().buffer(bytes: data)
 }
-
