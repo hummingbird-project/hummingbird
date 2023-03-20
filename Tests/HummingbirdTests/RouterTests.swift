@@ -299,7 +299,7 @@ final class RouterTests: XCTestCase {
     func testPartialCapture() throws {
         let app = HBApplication(testing: .embedded)
         app.router
-            .get("/files/file.:ext:/:name:.jpg") { request -> String in
+            .get("/files/file.${ext}/${name}.jpg") { request -> String in
                 XCTAssertEqual(request.parameters.count, 2)
                 let ext = try request.parameters.require("ext")
                 let name = try request.parameters.require("name")

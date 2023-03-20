@@ -27,8 +27,8 @@ public class TrieRouterBenchmark: BenchmarkWrapper {
         self.trie.addEntry("/test/", value: "/test/")
         self.trie.addEntry("/test/one", value: "/test/one")
         self.trie.addEntry("/test/one/two", value: "/test/one/two")
-        self.trie.addEntry("/test/:value:", value: "/test/:value:")
-        self.trie.addEntry("/test/:value:/:value2:", value: "/test/:value:/:value2:")
+        self.trie.addEntry("/test/:value", value: "/test/:value")
+        self.trie.addEntry("/test/:value/:value2", value: "/test/:value:/:value2")
         self.trie.addEntry("/test2/*/*", value: "/test2/*/*")
 
         // warmup

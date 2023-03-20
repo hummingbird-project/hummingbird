@@ -17,8 +17,8 @@ struct RouterPath: ExpressibleByStringLiteral {
     enum Element: Equatable {
         case path(Substring)
         case capture(Substring)
-        case prefixCapture(Substring, Substring) // *.jpg
-        case suffixCapture(Substring, Substring) // file.*
+        case prefixCapture(suffix: Substring, parameter: Substring) // *.jpg
+        case suffixCapture(prefix: Substring, parameter: Substring) // file.*
         case wildcard
         case prefixWildcard(Substring) // *.jpg
         case suffixWildcard(Substring) // file.*
@@ -64,24 +64,25 @@ struct RouterPath: ExpressibleByStringLiteral {
         let split = value.split(separator: "/", omittingEmptySubsequences: true)
         self.components = split.map { component in
             if component.first == ":" {
-                let parameter = component.dropFirst()
-                if let secondColon = parameter.firstIndex(of: ":") {
-                    let charAfterColon = parameter.index(after: secondColon)
-                    if charAfterColon != parameter.endIndex {
-                        return .prefixCapture(parameter[charAfterColon...], parameter[..<secondColon])
-                    } else {
-                        return .capture(parameter.dropLast())
-                    }
-                }
                 return .capture(component.dropFirst())
-            } else if component.last == ":" {
-                let parameter = component.dropLast()
-                if let firstColon = parameter.firstIndex(of: ":") {
-                    let charAfterColon = parameter.index(after: firstColon)
-                    return .suffixCapture(parameter[..<firstColon], parameter[charAfterColon...])
+            } else if component.first == "$", component.count > 1, component[component.index(after: component.startIndex)] == "{" {
+                let parameter = component.dropFirst(2)
+                if let closingParethesis = parameter.firstIndex(of: "}") {
+                    let charAfterClosingParethesis = parameter.index(after: closingParethesis)
+                    return .prefixCapture(suffix: parameter[charAfterClosingParethesis...], parameter: parameter[..<closingParethesis])
                 } else {
                     return .path(component)
                 }
+            } else if component.last == "}" {
+                let parameter = component.dropLast()
+                if let openingParenthesis = parameter.lastIndex(of: "{"), openingParenthesis != parameter.startIndex {
+                    let dollar = component.index(before: openingParenthesis)
+                    if component[dollar] == "$" {
+                        let charAfterOpeningParenthesis = parameter.index(after: openingParenthesis)
+                        return .suffixCapture(prefix: parameter[..<dollar], parameter: parameter[charAfterOpeningParenthesis...])
+                    }
+                }
+                return .path(component)
             } else if component == "*" {
                 return .wildcard
             } else if component == "**" {

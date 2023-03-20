@@ -103,9 +103,9 @@ class TrieRouterTests: XCTestCase {
 
     func testPrefixCapture() {
         let trie = RouterPathTrie<String>()
-        trie.addEntry(":file:.jpg", value: "jpg")
-        trie.addEntry("test/:file:.jpg", value: "testjpg")
-        trie.addEntry(":app:.app/config.json", value: "app")
+        trie.addEntry("${file}.jpg", value: "jpg")
+        trie.addEntry("test/${file}.jpg", value: "testjpg")
+        trie.addEntry("${app}.app/config.json", value: "app")
         XCTAssertNil(trie.getValueAndParameters("/hello.png"))
         XCTAssertEqual(trie.getValueAndParameters("/hello.jpg")?.parameters?.get("file"), "hello")
         XCTAssertEqual(trie.getValueAndParameters("/test/hello.jpg")?.parameters?.get("file"), "hello")
@@ -114,9 +114,9 @@ class TrieRouterTests: XCTestCase {
 
     func testSuffixCapture() {
         let trie = RouterPathTrie<String>()
-        trie.addEntry("file.:ext:", value: "file")
-        trie.addEntry("test/file.:ext:", value: "testfile")
-        trie.addEntry("file.:ext:/test", value: "filetest")
+        trie.addEntry("file.${ext}", value: "file")
+        trie.addEntry("test/file.${ext}", value: "testfile")
+        trie.addEntry("file.${ext}/test", value: "filetest")
         XCTAssertNil(trie.getValueAndParameters("/file2.png"))
         XCTAssertEqual(trie.getValueAndParameters("/file.jpg")?.parameters?.get("ext"), "jpg")
         XCTAssertEqual(trie.getValueAndParameters("/test/file.jpg")?.parameters?.get("ext"), "jpg")
@@ -125,14 +125,14 @@ class TrieRouterTests: XCTestCase {
 
     func testPrefixFullComponentCapture() {
         let trie = RouterPathTrie<String>()
-        trie.addEntry(":text:", value: "test")
+        trie.addEntry("${text}", value: "test")
         XCTAssertEqual(trie.getValueAndParameters("/file.jpg")?.parameters?.get("text"), "file.jpg")
     }
 
     func testIncompletSuffixCapture() {
         let trie = RouterPathTrie<String>()
-        trie.addEntry("text:", value: "test")
-        XCTAssertEqual(trie.getValueAndParameters("/text:")?.value, "test")
+        trie.addEntry("text}", value: "test")
+        XCTAssertEqual(trie.getValueAndParameters("/text}")?.value, "test")
         XCTAssertNil(trie.getValueAndParameters("/text"))
     }
 }
