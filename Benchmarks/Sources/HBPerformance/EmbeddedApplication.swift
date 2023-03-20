@@ -59,17 +59,16 @@ public struct HBEmbeddedApplication {
 
     /// Start tests
     public func start() throws {
-        application.server.addChannelHandler(BreakupHTTPBodyChannelHandler())
+        self.application.server.addChannelHandler(BreakupHTTPBodyChannelHandler())
         try self.embeddedChannel.pipeline.addHandlers(
-            application.server.getChildChannelHandlers(responder: HBApplication.HTTPResponder(application: application))
+            self.application.server.getChildChannelHandlers(responder: HBApplication.HTTPResponder(application: self.application))
         ).wait()
-    
     }
 
     /// Stop tests
     public func stop() {
         do {
-            try application.shutdownApplication()
+            try self.application.shutdownApplication()
             _ = try self.embeddedChannel.finish()
             try self.embeddedEventLoop.syncShutdownGracefully()
         } catch {
@@ -121,7 +120,6 @@ public struct HBEmbeddedApplication {
     func readOutbound() throws -> HTTPServerResponsePart? {
         return try self.embeddedChannel.readOutbound(as: HTTPServerResponsePart.self)
     }
-
 }
 
 /// Embedded channels pass all the data down immediately. This is not a real world situation so this handler
