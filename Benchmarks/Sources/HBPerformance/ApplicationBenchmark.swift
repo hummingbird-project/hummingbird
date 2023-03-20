@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
-import HummingbirdXCT
 import NIO
 import NIOPosix
 

@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
-import HummingbirdXCT
 import NIOCore
 import NIOHTTP1
 
