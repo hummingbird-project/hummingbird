@@ -48,8 +48,8 @@ public struct HBParameters {
     }
 
     ///  Return path elements caught by recursive capture
-    public func getCatchAll() -> String? {
-        return self.parameters[Self.recursiveCaptureKey].map { String($0) }
+    public func getCatchAll() -> [Substring] {
+        return self.parameters[Self.recursiveCaptureKey].map { $0.split(separator: "/", omittingEmptySubsequences: true) } ?? []
     }
 
     /// Return parameter with specified id

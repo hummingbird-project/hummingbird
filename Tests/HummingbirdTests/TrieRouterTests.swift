@@ -62,7 +62,7 @@ class TrieRouterTests: XCTestCase {
         XCTAssertEqual(trie.getValueAndParameters("/one")?.value, "**")
         XCTAssertEqual(trie.getValueAndParameters("/one/two")?.value, "**")
         XCTAssertEqual(trie.getValueAndParameters("/one/two/three")?.value, "**")
-        XCTAssertEqual(trie.getValueAndParameters("/one/two/three")?.parameters?.getCatchAll(), "one/two/three")
+        XCTAssertEqual(trie.getValueAndParameters("/one/two/three")?.parameters?.getCatchAll(), ["one", "two", "three"])
     }
 
     func testRecursiveWildcardWithPrefix() {
@@ -75,8 +75,9 @@ class TrieRouterTests: XCTestCase {
         XCTAssertEqual(trie.getValueAndParameters("/Test/one/two")?.value, "true")
         XCTAssertEqual(trie.getValueAndParameters("/Test/one/two/three")?.value, "true")
         XCTAssertEqual(trie.getValueAndParameters("/Test/")?.parameters?.getCatchAll(), nil)
-        XCTAssertEqual(trie.getValueAndParameters("/Test/one/two")?.parameters?.getCatchAll(), "one/two")
-        XCTAssertEqual(trie.getValueAndParameters("/Test2/one/two")?.parameters?.getCatchAll(), "two")
+        XCTAssertEqual(trie.getValueAndParameters("/Test/one/two")?.parameters?.getCatchAll(), ["one", "two"])
+        XCTAssertEqual(trie.getValueAndParameters("/Test2/one/two")?.parameters?.getCatchAll(), ["two"])
+        XCTAssertEqual(HBParameters().getCatchAll(), [])
     }
 
     func testPrefixWildcard() {
