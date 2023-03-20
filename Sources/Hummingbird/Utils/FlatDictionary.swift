@@ -22,7 +22,7 @@
 /// functions will always return the first key found, but if you
 /// iterate through the key,value pairs you can access all values
 /// for a key
-public struct FlatDictionary<Key: Hashable, Value>: Collection {
+public struct FlatDictionary<Key: Hashable, Value>: Collection, ExpressibleByDictionaryLiteral {
     public typealias Element = (key: Key, value: Value)
     public typealias Index = Array<Element>.Index
 
