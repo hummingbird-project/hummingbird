@@ -17,7 +17,6 @@ let package = Package(
             dependencies: [
                 .product(name: "BenchmarkSupport", package: "package-benchmark"),
                 .product(name: "Hummingbird", package: "hummingbird"),
-                .product(name: "HummingbirdXCT", package: "hummingbird"),
             ]
         ),
 

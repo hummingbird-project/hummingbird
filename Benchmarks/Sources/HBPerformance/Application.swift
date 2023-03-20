@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
-import HummingbirdXCT
 import NIOCore
 import NIOHTTP1
 
@@ -27,7 +26,7 @@ public struct BasicBenchmark: HBApplicationBenchmark {
         }
     }
 
-    public func singleIteration(_ client: HBXCT) -> EventLoopFuture<HBXCTResponse> {
+    public func singleIteration(_ client: HBEmbeddedApplication) -> EventLoopFuture<HBEmbeddedApplication.Response> {
         client.execute(uri: "/", method: .GET, headers: [:], body: nil)
     }
 }
@@ -46,7 +45,7 @@ public struct RequestBodyBenchmark: HBApplicationBenchmark {
         }
     }
 
-    public func singleIteration(_ client: HBXCT) -> EventLoopFuture<HBXCTResponse> {
+    public func singleIteration(_ client: HBEmbeddedApplication) -> EventLoopFuture<HBEmbeddedApplication.Response> {
         client.execute(uri: "/", method: .POST, headers: [:], body: self.body)
     }
 }
@@ -65,7 +64,7 @@ public struct ResponseBodyBenchmark: HBApplicationBenchmark {
         }
     }
 
-    public func singleIteration(_ client: HBXCT) -> EventLoopFuture<HBXCTResponse> {
+    public func singleIteration(_ client: HBEmbeddedApplication) -> EventLoopFuture<HBEmbeddedApplication.Response> {
         client.execute(uri: "/", method: .GET, headers: [:], body: nil)
     }
 }
