@@ -33,15 +33,24 @@ struct RouterPathTrie<Value> {
         }
     }
 
-    func getValueAndParameters(_ path: String) -> (value: Value, parameters: HBParameters)? {
+    func getValueAndParameters(_ path: String) -> (value: Value, parameters: HBParameters?)? {
         let pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
-        var parameters = HBParameters()
+        var parameters: HBParameters?
         var node = self.root
         for component in pathComponents {
             if let childNode = node.getChild(component) {
                 node = childNode
-                if case .parameter(let key) = node.key {
+                switch node.key {
+                case .capture(let key):
                     parameters.set(key, value: component)
+                case .prefixCapture(let suffix, let key):
+                    parameters.set(key, value: component.dropLast(suffix.count))
+                case .suffixCapture(let prefix, let key):
+                    parameters.set(key, value: component.dropFirst(prefix.count))
+                case .recursiveWildcard:
+                    parameters.setCatchAll(path[component.startIndex..<path.endIndex])
+                default:
+                    break
                 }
             } else if case .recursiveWildcard = node.key {
             } else {
@@ -84,6 +93,28 @@ struct RouterPathTrie<Value> {
                 return child
             }
             return self.children.first { $0.key ~= key }
+        }
+    }
+}
+
+extension Optional where Wrapped == HBParameters {
+    mutating func set(_ s: Substring, value: Substring) {
+        switch self {
+        case .some(var parameters):
+            parameters.set(s, value: value)
+            self = .some(parameters)
+        case .none:
+            self = .some(.init(.init([(s, value)])))
+        }
+    }
+
+    mutating func setCatchAll(_ value: Substring) {
+        switch self {
+        case .some(var parameters):
+            parameters.setCatchAll(value)
+            self = .some(parameters)
+        case .none:
+            self = .some(.init(.init([(HBParameters.recursiveCaptureKey, value)])))
         }
     }
 }

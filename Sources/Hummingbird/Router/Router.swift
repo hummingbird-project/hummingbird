@@ -32,8 +32,8 @@ struct HBRouter: HBResponder {
             return self.notFoundResponder.respond(to: request)
         }
         var request = request
-        if result.parameters.count > 0 {
-            request.parameters = result.parameters
+        if let parameters = result.parameters {
+            request.parameters = parameters
         }
         // store endpoint path in request (mainly for metrics)
         request.endpointPath = result.value.path
