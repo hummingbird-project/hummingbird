@@ -15,7 +15,6 @@
 import Hummingbird
 import NIOCore
 import NIOHTTP1
-import XCTest
 
 /// Type of test framework
 public enum XCTTestingSetup {

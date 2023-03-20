@@ -19,46 +19,46 @@ import NIOPosix
 
 public protocol HBApplicationBenchmark {
     func setUp(_ application: HBApplication) throws
-    func singleIteration(_ client: HBXCT) -> EventLoopFuture<HBXCTResponse>
+    func singleIteration(_ client: HBEmbeddedApplication) -> EventLoopFuture<HBEmbeddedApplication.Response>
 }
 
 public class HBApplicationBenchmarkWrapper<AB: HBApplicationBenchmark>: BenchmarkWrapper {
     let applicationBenchmarker: AB
     let iterations: Int
 
-    var application: HBApplication!
+    var application: HBEmbeddedApplication
     let configuration: HBApplication.Configuration
 
     public init(
         _ applicationBenchmarker: AB,
-        iterations: Int = 1000,
+        iterations: Int = 10000,
         configuration: HBApplication.Configuration = .init(address: .hostname("127.0.0.1", port: 0), logLevel: .critical)
     ) {
         self.iterations = iterations
         self.applicationBenchmarker = applicationBenchmarker
         self.configuration = configuration
+        self.application = .init(configuration: self.configuration)
     }
 
     public func setUp() throws {
         // server setup
-        self.application = HBApplication(testing: .embedded, configuration: self.configuration)
-        try self.applicationBenchmarker.setUp(self.application)
+        try self.applicationBenchmarker.setUp(self.application.application)
         // start server
-        try self.application.XCTStart()
+        try self.application.start()
 
         // warm up
         for _ in 0..<50 {
-            _ = try self.applicationBenchmarker.singleIteration(self.application.xct).wait()
+            _ = try self.applicationBenchmarker.singleIteration(self.application).wait()
         }
     }
 
     public func run() throws {
         for _ in 0..<self.iterations {
-            _ = try self.applicationBenchmarker.singleIteration(self.application.xct).wait()
+            _ = try self.applicationBenchmarker.singleIteration(self.application).wait()
         }
     }
 
     public func tearDown() {
-        self.application.XCTStop()
+        self.application.stop()
     }
 }
