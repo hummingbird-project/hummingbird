@@ -616,7 +616,6 @@ class HummingBirdCoreTests: XCTestCase {
     func testWriteIdleTimeout() {
         struct HelloResponder: HBHTTPResponder {
             func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
-                print(context.channel.pipeline)
                 let responseHead = HTTPResponseHead(version: .init(major: 1, minor: 1), status: .ok)
                 let response = HBHTTPResponse(head: responseHead, body: .empty)
                 onComplete(.success(response))
@@ -633,9 +632,7 @@ class HummingBirdCoreTests: XCTestCase {
         client.connect()
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
-        _ = client.get("/", headers: ["connection": "keep-alive"]).map { response in
-            print(response)
-        }
+        _ = client.get("/", headers: ["connection": "keep-alive"])
         let timeoutPromise = Self.eventLoopGroup.next().makeTimeoutPromise(of: Void.self, timeout: .seconds(5))
         client.channelPromise.futureResult.whenSuccess { channel in
             channel.closeFuture.whenSuccess { _ in

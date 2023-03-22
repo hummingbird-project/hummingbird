@@ -58,7 +58,7 @@ extension HBHTTPServer {
         ///   - address: Bind address for server
         ///   - serverName: Server name to return in "server" header
         ///   - maxUploadSize: Maximum upload size allowed
-        ///   - maxStreamingBufferSize: Maximum size of buffer for streaming request payloads
+        ///   - maxStreamingBufferSize: Maximum size of data in flight while streaming request payloads before back pressure is applied.
         ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
         ///   - tcpNoDelay: Disables the Nagle algorithm for send coalescing.
         ///   - withPipeliningAssistance: Pipelining ensures that only one http request is processed at one time
@@ -92,7 +92,7 @@ extension HBHTTPServer {
         ///   - address: Bind address for server
         ///   - serverName: Server name to return in "server" header
         ///   - maxUploadSize: Maximum upload size allowed
-        ///   - maxStreamingBufferSize: Maximum size of buffer for streaming request payloads
+        ///   - maxStreamingBufferSize: Maximum size of data in flight while streaming request payloads before back pressure is applied.
         ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
         ///   - withPipeliningAssistance: Pipelining ensures that only one http request is processed at one time
         ///   - tlsOptions: TLS options for when you are using NIOTransportServices

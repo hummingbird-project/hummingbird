@@ -167,9 +167,13 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
     /// - Returns: Returns an EventLoopFuture that will be fulfilled with array of ByteBuffers that has so far been fed to th request body
     ///     and whether we have consumed everything
     public func consume(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput> {
-        self.eventLoop.flatSubmit {
-            self.consume()
-        }.hop(to: eventLoop)
+        if self.eventLoop.inEventLoop {
+            return self.consume().hop(to: eventLoop)
+        } else {
+            return self.eventLoop.flatSubmit {
+                self.consume()
+            }.hop(to: eventLoop)
+        }
     }
 
     /// Consume the request body, calling `process` on each buffer until you receive an end tag
@@ -179,7 +183,7 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
     ///   - process: Closure to call to process ByteBuffer
     public func consumeAll(on eventLoop: EventLoop, _ process: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
         let promise = self.eventLoop.makePromise(of: Void.self)
-        func _consumeAll() {
+        func _consumeAll(_ count: Int) {
             self.consume().whenComplete { result in
                 switch result {
                 case .success(.byteBuffer(let buffer)):
@@ -188,7 +192,15 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
                         case .failure(let error):
                             promise.fail(error)
                         case .success:
-                            _consumeAll()
+                            // after 16 iterations, run via execute to avoid any possible
+                            // stack overflows
+                            if count > 16 {
+                                self.eventLoop.execute {
+                                    _consumeAll(0)
+                                }
+                            } else {
+                                _consumeAll(count + 1)
+                            }
                         }
                     }
 
@@ -201,7 +213,7 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
             }
         }
         self.eventLoop.execute {
-            _consumeAll()
+            _consumeAll(0)
         }
         return promise.futureResult
     }
