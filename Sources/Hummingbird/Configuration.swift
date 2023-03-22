@@ -63,7 +63,7 @@ extension HBApplication {
         ///   - address: Bind address for server
         ///   - serverName: Server name to return in "server" header
         ///   - maxUploadSize: Maximum upload size allowed
-        ///   - maxStreamingBufferSize: Maximum size of buffer for streaming request payloads
+        ///   - maxStreamingBufferSize: Maximum size of data in flight while streaming request payloads before back pressure is applied.
         ///   - backlog: the maximum length for the queue of pending connections.  If a connection request arrives with the queue full,
         ///         the client may receive an error with an indication of ECONNREFUSE
         ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
