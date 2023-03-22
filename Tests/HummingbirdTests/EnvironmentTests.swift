@@ -71,6 +71,16 @@ final class EnvironmentTests: XCTestCase {
         XCTAssertEqual(result.get("credentials"), "sdkfjh")
     }
 
+    func testDotEnvParsingError() throws {
+        let dotenv = """
+        TEST #thse
+        """
+        do {
+            let result = try HBEnvironment.parseDotEnv(dotenv)
+            XCTFail("Should fail")
+        } catch let error as HBEnvironment.Error where error == .dotEnvParseError {}
+    }
+
     func testDotEnvSpeechMarks() throws {
         let dotenv = """
         TEST="test this"
