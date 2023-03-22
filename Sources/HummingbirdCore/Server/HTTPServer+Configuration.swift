@@ -36,7 +36,7 @@ extension HBHTTPServer {
         public let serverName: String?
         /// Maximum upload size allowed
         public let maxUploadSize: Int
-        /// Maximum size of buffer for streaming request payloads
+        /// Maximum size of data in flight while streaming request payloads before back pressure is applied.
         public let maxStreamingBufferSize: Int
         /// Defines the maximum length for the queue of pending connections
         public let backlog: Int
