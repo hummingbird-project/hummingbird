@@ -97,7 +97,7 @@ public struct HBEnvironment: Decodable, ExpressibleByDictionaryLiteral {
     /// If an environment variable exists in both sets it will choose the version from the second
     /// set of environment variables
     /// - Parameter env: environemnt variables to merge into this environment variable set
-    public func merging(_ env: HBEnvironment) -> HBEnvironment {
+    public func merging(with env: HBEnvironment) -> HBEnvironment {
         .init(rawValues: self.values.merging(env.values) { $1 })
     }
 
