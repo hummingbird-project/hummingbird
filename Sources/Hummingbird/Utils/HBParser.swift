@@ -394,6 +394,16 @@ public extension HBParser {
         }
     }
 
+    /// Move parser to beginning of string
+    mutating func moveToStart() {
+        self.index = self.range.startIndex
+    }
+
+    /// Move parser to end of string
+    mutating func moveToEnd() {
+        self.index = self.range.endIndex
+    }
+
     mutating func unsafeAdvance() {
         self.index = skipUTF8Character(at: self.index)
     }
