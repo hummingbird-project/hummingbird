@@ -76,7 +76,7 @@ final class EnvironmentTests: XCTestCase {
         TEST #thse
         """
         do {
-            let result = try HBEnvironment.parseDotEnv(dotenv)
+            _ = try HBEnvironment.parseDotEnv(dotenv)
             XCTFail("Should fail")
         } catch let error as HBEnvironment.Error where error == .dotEnvParseError {}
     }
