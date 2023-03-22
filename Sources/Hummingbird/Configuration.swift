@@ -120,7 +120,7 @@ extension HBApplication {
         ///   - address: Bind address for server
         ///   - serverName: Server name to return in "server" header
         ///   - maxUploadSize: Maximum upload size allowed
-        ///   - maxStreamingBufferSize: Maximum size of buffer for streaming request payloads
+        ///   - maxStreamingBufferSize: Maximum size of data in flight while streaming request payloads before back pressure is applied.
         ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
         ///   - enableHttpPipelining: Pipelining ensures that only one http request is processed at one time
         ///   - threadPoolSize: Number of threads in application thread pool
