@@ -29,9 +29,14 @@ extension HBApplication {
         public let address: HBBindAddress
         /// Server name to return in "server" header
         public let serverName: String?
-        /// Maximum upload size allowed
+        /// Maximum upload size allowed for routes that don't stream the request payload. This
+        /// limits how much memory would be used for one request
         public let maxUploadSize: Int
-        /// Maximum size of buffer for streaming request payloads
+        /// Maximum upload size allowed when streaming. This value is passed down to the server
+        /// as at the server everything is considered to be streamed. This limits how much data
+        /// will be passed through the HTTP channel
+        public let maxStreamedUploadSize: Int
+        /// Maximum size of data in flight while streaming request payloads before back pressure is applied.
         public let maxStreamingBufferSize: Int
         /// Defines the maximum length for the queue of pending connections
         public let backlog: Int
@@ -62,7 +67,7 @@ extension HBApplication {
         /// - Parameters:
         ///   - address: Bind address for server
         ///   - serverName: Server name to return in "server" header
-        ///   - maxUploadSize: Maximum upload size allowed
+        ///   - maxUploadSize: Maximum upload size allowed for routes that don't stream the request payload
         ///   - maxStreamingBufferSize: Maximum size of data in flight while streaming request payloads before back pressure is applied.
         ///   - backlog: the maximum length for the queue of pending connections.  If a connection request arrives with the queue full,
         ///         the client may receive an error with an indication of ECONNREFUSE
@@ -91,6 +96,66 @@ extension HBApplication {
             self.address = address
             self.serverName = serverName
             self.maxUploadSize = maxUploadSize
+            self.maxStreamedUploadSize = maxUploadSize
+            self.maxStreamingBufferSize = maxStreamingBufferSize
+            self.backlog = backlog
+            self.reuseAddress = reuseAddress
+            self.tcpNoDelay = tcpNoDelay
+            self.enableHttpPipelining = enableHttpPipelining
+            self.idleTimeoutConfiguration = idleTimeoutConfiguration
+            #if canImport(Network)
+            self.tlsOptions = .none
+            #endif
+
+            self.threadPoolSize = threadPoolSize
+            self.noHTTPServer = noHTTPServer
+
+            if let logLevel = logLevel {
+                self.logLevel = logLevel
+            } else if let logLevel = env.get("LOG_LEVEL") {
+                self.logLevel = Logger.Level(rawValue: logLevel) ?? .info
+            } else {
+                self.logLevel = .info
+            }
+        }
+
+        /// Initialize HBApplication configuration
+        ///
+        /// - Parameters:
+        ///   - address: Bind address for server
+        ///   - serverName: Server name to return in "server" header
+        ///   - maxUploadSize: Maximum upload size allowed for routes that don't stream the request payload
+        ///   - maxStreamedUploadSize: Maximum upload size allowed when streaming data
+        ///   - maxStreamingBufferSize: Maximum size of data in flight while streaming request payloads before back pressure is applied.
+        ///   - backlog: the maximum length for the queue of pending connections.  If a connection request arrives with the queue full,
+        ///         the client may receive an error with an indication of ECONNREFUSE
+        ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
+        ///   - tcpNoDelay: Disables the Nagle algorithm for send coalescing.
+        ///   - enableHttpPipelining: Pipelining ensures that only one http request is processed at one time
+        ///   - threadPoolSize: Number of threads in application thread pool
+        ///   - logLevel: Logging level
+        ///   - noHTTPServer: Don't start up the HTTP server.
+        public init(
+            address: HBBindAddress = .hostname(),
+            serverName: String? = nil,
+            maxUploadSize: Int = 1 * 1024 * 1024,
+            maxStreamedUploadSize: Int = 4 * 1024 * 1024,
+            maxStreamingBufferSize: Int = 1 * 1024 * 1024,
+            backlog: Int = 256,
+            reuseAddress: Bool = true,
+            tcpNoDelay: Bool = false,
+            enableHttpPipelining: Bool = true,
+            idleTimeoutConfiguration: HBHTTPServer.IdleStateHandlerConfiguration? = nil,
+            threadPoolSize: Int = 2,
+            logLevel: Logger.Level? = nil,
+            noHTTPServer: Bool = false
+        ) {
+            let env = HBEnvironment()
+
+            self.address = address
+            self.serverName = serverName
+            self.maxUploadSize = maxUploadSize
+            self.maxStreamedUploadSize = maxStreamedUploadSize
             self.maxStreamingBufferSize = maxStreamingBufferSize
             self.backlog = backlog
             self.reuseAddress = reuseAddress
@@ -119,7 +184,7 @@ extension HBApplication {
         /// - Parameters:
         ///   - address: Bind address for server
         ///   - serverName: Server name to return in "server" header
-        ///   - maxUploadSize: Maximum upload size allowed
+        ///   - maxUploadSize: Maximum upload size allowed for routes that don't stream the request payload
         ///   - maxStreamingBufferSize: Maximum size of data in flight while streaming request payloads before back pressure is applied.
         ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
         ///   - enableHttpPipelining: Pipelining ensures that only one http request is processed at one time
@@ -146,6 +211,7 @@ extension HBApplication {
             self.address = address
             self.serverName = serverName
             self.maxUploadSize = maxUploadSize
+            self.maxStreamedUploadSize = maxUploadSize
             self.maxStreamingBufferSize = maxStreamingBufferSize
             self.backlog = 256 // not used by Network framework
             self.reuseAddress = reuseAddress
@@ -165,6 +231,61 @@ extension HBApplication {
                 self.logLevel = .info
             }
         }
+
+        /// Initialize HBApplication configuration
+        ///
+        /// - Parameters:
+        ///   - address: Bind address for server
+        ///   - serverName: Server name to return in "server" header
+        ///   - maxUploadSize: Maximum upload size allowed for routes that don't stream the request payload
+        ///   - maxStreamingBufferSize: Maximum size of data in flight while streaming request payloads before back pressure is applied.
+        ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
+        ///   - enableHttpPipelining: Pipelining ensures that only one http request is processed at one time
+        ///   - threadPoolSize: Number of threads in application thread pool
+        ///   - logLevel: Logging level
+        ///   - noHTTPServer: Don't start up the HTTP server.
+        ///   - tlsOptions: TLS options for when you are using NIOTransportServices
+        @available(macOS 10.14, iOS 12, tvOS 12, *)
+        public init(
+            address: HBBindAddress = .hostname(),
+            serverName: String? = nil,
+            maxUploadSize: Int = 1 * 1024 * 1024,
+            maxStreamedUploadSize: Int = 4 * 1024 * 1024,
+            maxStreamingBufferSize: Int = 1 * 1024 * 1024,
+            reuseAddress: Bool = true,
+            enableHttpPipelining: Bool = true,
+            idleTimeoutConfiguration: HBHTTPServer.IdleStateHandlerConfiguration? = nil,
+            threadPoolSize: Int = 2,
+            logLevel: Logger.Level? = nil,
+            noHTTPServer: Bool = false,
+            tlsOptions: TSTLSOptions
+        ) {
+            let env = HBEnvironment()
+
+            self.address = address
+            self.serverName = serverName
+            self.maxUploadSize = maxUploadSize
+            self.maxStreamedUploadSize = maxStreamedUploadSize
+            self.maxStreamingBufferSize = maxStreamingBufferSize
+            self.backlog = 256 // not used by Network framework
+            self.reuseAddress = reuseAddress
+            self.tcpNoDelay = true // not used by Network framework
+            self.enableHttpPipelining = enableHttpPipelining
+            self.idleTimeoutConfiguration = idleTimeoutConfiguration
+            self.tlsOptions = tlsOptions
+
+            self.threadPoolSize = threadPoolSize
+            self.noHTTPServer = noHTTPServer
+
+            if let logLevel = logLevel {
+                self.logLevel = logLevel
+            } else if let logLevel = env.get("LOG_LEVEL") {
+                self.logLevel = Logger.Level(rawValue: logLevel) ?? .info
+            } else {
+                self.logLevel = .info
+            }
+        }
+
         #endif
 
         /// Create new configuration struct with updated values
@@ -202,7 +323,7 @@ extension HBApplication {
             return .init(
                 address: self.address,
                 serverName: self.serverName,
-                maxUploadSize: self.maxUploadSize,
+                maxUploadSize: self.maxStreamedUploadSize, // we pass down the max streamed upload size here as server assumes everything is streamed
                 maxStreamingBufferSize: self.maxStreamingBufferSize,
                 reuseAddress: self.reuseAddress,
                 withPipeliningAssistance: self.enableHttpPipelining,
@@ -215,7 +336,7 @@ extension HBApplication {
             return .init(
                 address: self.address,
                 serverName: self.serverName,
-                maxUploadSize: self.maxUploadSize,
+                maxUploadSize: self.maxStreamedUploadSize, // we pass down the max streamed upload size here as server assumes everything is streamed
                 maxStreamingBufferSize: self.maxStreamingBufferSize,
                 backlog: self.backlog,
                 reuseAddress: self.reuseAddress,
