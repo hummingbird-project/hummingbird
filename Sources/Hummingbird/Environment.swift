@@ -17,11 +17,27 @@ import Glibc
 #else
 import Darwin.C
 #endif
+import NIO
 
 /// Access environment variables
 public struct HBEnvironment: Decodable, ExpressibleByDictionaryLiteral {
+    struct Error: Swift.Error, Equatable {
+        enum Value {
+            case dotEnvParseError
+        }
+
+        private let value: Value
+        private init(_ value: Value) {
+            self.value = value
+        }
+
+        public static var dotEnvParseError: Self { .init(.dotEnvParseError) }
+    }
+
     // shared environment
     public static let shared: HBEnvironment = .init()
+
+    var values: [String: String]
 
     /// initialize from environment variables
     public init() {
@@ -76,6 +92,15 @@ public struct HBEnvironment: Decodable, ExpressibleByDictionaryLiteral {
         self.values[s.lowercased()] = value
     }
 
+    /// Merge two environment variable sets together and return result
+    ///
+    /// If an environment variable exists in both sets it will choose the version from the second
+    /// set of environment variables
+    /// - Parameter env: environemnt variables to merge into this environment variable set
+    public func merging(with env: HBEnvironment) -> HBEnvironment {
+        .init(rawValues: self.values.merging(env.values) { $1 })
+    }
+
     /// Construct environment variable map
     static func getEnvironment() -> [String: String] {
         var values: [String: String] = [:]
@@ -95,7 +120,91 @@ public struct HBEnvironment: Decodable, ExpressibleByDictionaryLiteral {
         return values
     }
 
-    var values: [String: String]
+    /// Create HBEnvironment initialised from the `.env` file
+    public static func dotEnv() throws -> Self {
+        guard let dotEnv = loadDotEnv() else { return [:] }
+        return try .init(rawValues: self.parseDotEnv(dotEnv))
+    }
+
+    /// Load `.env` file into string
+    internal static func loadDotEnv() -> String? {
+        do {
+            let fileHandle = try NIOFileHandle(path: ".env")
+            defer {
+                try? fileHandle.close()
+            }
+            let fileRegion = try FileRegion(fileHandle: fileHandle)
+            let contents = try fileHandle.withUnsafeFileDescriptor { descriptor in
+                return Array<UInt8>.init(unsafeUninitializedCapacity: fileRegion.readableBytes) { bytes, size in
+                    size = fileRegion.readableBytes
+                    read(descriptor, .init(bytes.baseAddress), size)
+                }
+            }
+            return String(bytes: contents, encoding: .utf8)
+        } catch {
+            return nil
+        }
+    }
+
+    /// Parse a `.env` file
+    internal static func parseDotEnv(_ dotEnv: String) throws -> [String: String] {
+        enum DotEnvParserState {
+            case readingKey
+            case skippingEquals(key: String)
+            case readingValue(key: String)
+        }
+        var dotEnvDictionary: [String: String] = [:]
+        var parser = HBParser(dotEnv)
+        var state: DotEnvParserState = .readingKey
+        do {
+            parser.read(while: \.isWhitespace)
+            while !parser.reachedEnd() {
+                switch state {
+                case .readingKey:
+                    // check for comment
+                    let c = parser.current()
+                    if c == "#" {
+                        do {
+                            _ = try parser.read(until: \.isNewline)
+                            parser.unsafeAdvance()
+                        } catch HBParser.Error.overflow {
+                            parser.moveToEnd()
+                            break
+                        }
+                    }
+                    let key = try parser.read(until: { $0.isWhitespace || $0 == "=" }).string
+                    state = .skippingEquals(key: key)
+
+                case .skippingEquals(let key):
+                    let c = try parser.character()
+                    // we are expecting an equals
+                    guard c == "=" else { throw Error.dotEnvParseError }
+                    state = .readingValue(key: key)
+
+                case .readingValue(let key):
+                    let value: String
+                    if try parser.read("\"") {
+                        value = try parser.read(until: { $0 == "\"" }).string
+                        parser.unsafeAdvance()
+                    } else {
+                        value = try parser.read(until: \.isWhitespace, throwOnOverflow: false).string
+                    }
+                    dotEnvDictionary[key.lowercased()] = value
+                    state = .readingKey
+                }
+                parser.read(while: \.isWhitespace)
+            }
+            guard case .readingKey = state else { throw Error.dotEnvParseError }
+        } catch {
+            throw Error.dotEnvParseError
+        }
+        return dotEnvDictionary
+    }
+
+    /// initialize from an already processed dictionary
+    private init(rawValues: [String: String]) {
+        self.values = rawValues
+    }
 }
 
 extension HBEnvironment: CustomStringConvertible {
