@@ -104,6 +104,31 @@ final class AsyncAwaitTests: XCTestCase {
         }
     }
 
+    func testCollatingRequestBody() throws {
+        #if os(macOS)
+        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+        #endif
+        let app = HBApplication(testing: .asyncTest)
+        app.router.patch("size") { request -> String in
+            guard let body = request.body.buffer else {
+                throw HBHTTPError(.badRequest)
+            }
+            // force route to be async
+            try await Task.sleep(nanoseconds: 1)
+            return body.readableBytes.description
+        }
+
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        let buffer = self.randomBuffer(size: 530_001)
+        try app.XCTExecute(uri: "/size", method: .PATCH, body: buffer) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "530001")
+        }
+    }
+
     /// Test streaming of requests via AsyncSequence
     func testStreaming() throws {
         #if os(macOS)
