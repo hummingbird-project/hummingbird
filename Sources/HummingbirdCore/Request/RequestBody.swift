@@ -95,3 +95,28 @@ extension HBRequestBody: CustomStringConvertible {
         }
     }
 }
+
+#if compiler(>=5.5.2) && canImport(_Concurrency)
+
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+extension HBRequestBody {
+    /// Provide body as a single ByteBuffer
+    /// - Parameters
+    ///   - maxSize: Maximum size of ByteBuffer to generate
+    ///   - eventLoop: EventLoop to use
+    /// - Returns: EventLoopFuture that will be fulfilled with ByteBuffer. If no body is include then return `nil`
+    public func consumeBody(maxSize: Int) async throws -> ByteBuffer? {
+        switch self {
+        case .byteBuffer(let buffer):
+            return buffer
+        case .stream(let streamer):
+            if !streamer.eventLoop.inEventLoop {
+                return try await streamer.eventLoop.flatSubmit { streamer.consumeAll(maxSize: maxSize) }.get()
+            } else {
+                return try await streamer.consumeAll(maxSize: maxSize).get()
+            }
+        }
+    }
+}
+
+#endif // compiler(>=5.5.2) && canImport(_Concurrency)

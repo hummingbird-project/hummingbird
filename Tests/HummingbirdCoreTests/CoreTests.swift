@@ -169,6 +169,46 @@ class HummingBirdCoreTests: XCTestCase {
         XCTAssertNoThrow(try future.wait())
     }
 
+    func testConsumeBodyInTask() {
+        struct Responder: HBHTTPResponder {
+            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
+                let eventLoop = context.eventLoop
+                Task {
+                    do {
+                        let buffer = try await request.body.consumeBody(maxSize: .max)
+                        guard let buffer = buffer else {
+                            onComplete(.failure(HBHTTPError(.badRequest)))
+                            return
+                        }
+                        let response = HBHTTPResponse(
+                            head: .init(version: .init(major: 1, minor: 1), status: .ok),
+                            body: .byteBuffer(buffer)
+                        )
+                        onComplete(.success(response))
+
+                    } catch {
+                        onComplete(.failure(error))
+                    }
+                }
+            }
+        }
+        let server = HBHTTPServer(group: Self.eventLoopGroup, configuration: .init(address: .hostname(port: 0), maxStreamingBufferSize: 256 * 1024))
+        XCTAssertNoThrow(try server.start(responder: Responder()).wait())
+        defer { XCTAssertNoThrow(try server.stop().wait()) }
+
+        let client = HBXCTClient(host: "localhost", port: server.port!, eventLoopGroupProvider: .createNew)
+        client.connect()
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+
+        let buffer = self.randomBuffer(size: 1_140_000)
+        let future = client.post("/", body: buffer)
+            .flatMapThrowing { response in
+                let body = try XCTUnwrap(response.body)
+                XCTAssertEqual(body, buffer)
+            }
+        XCTAssertNoThrow(try future.wait())
+    }
+
     func testStreamBody() {
         struct Responder: HBHTTPResponder {
             func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {

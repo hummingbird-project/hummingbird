@@ -275,7 +275,6 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
     /// - Parameter maxSize: Maximum size for the resultant ByteBuffer
     /// - Returns: EventLoopFuture that will be fulfilled when all buffers are consumed
     func consumeAll(maxSize: Int) -> EventLoopFuture<ByteBuffer?> {
-        self.eventLoop.assertInEventLoop()
         let promise = self.eventLoop.makePromise(of: ByteBuffer?.self)
         var completeBuffer: ByteBuffer?
         func _consumeAll(size: Int) {
