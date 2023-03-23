@@ -121,15 +121,15 @@ public struct HBEnvironment: Decodable, ExpressibleByDictionaryLiteral {
     }
 
     /// Create HBEnvironment initialised from the `.env` file
-    public static func dotEnv() throws -> Self {
-        guard let dotEnv = loadDotEnv() else { return [:] }
+    public static func dotEnv(_ dovEnvPath: String = ".env") throws -> Self {
+        guard let dotEnv = loadDotEnv(dovEnvPath) else { return [:] }
         return try .init(rawValues: self.parseDotEnv(dotEnv))
     }
 
     /// Load `.env` file into string
-    internal static func loadDotEnv() -> String? {
+    internal static func loadDotEnv(_ dovEnvPath: String = ".env") -> String? {
         do {
-            let fileHandle = try NIOFileHandle(path: ".env")
+            let fileHandle = try NIOFileHandle(path: dovEnvPath)
             defer {
                 try? fileHandle.close()
             }
