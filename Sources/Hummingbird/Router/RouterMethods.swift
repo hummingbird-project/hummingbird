@@ -208,7 +208,10 @@ extension HBRouterMethods {
                         return request.failure(error)
                     }
                 } else {
-                    return request.body.consumeBody(on: request.eventLoop).flatMapThrowing { buffer in
+                    return request.body.consumeBody(
+                        maxSize: request.application.configuration.maxUploadSize,
+                        on: request.eventLoop
+                    ).flatMapThrowing { buffer in
                         var request = request
                         request.body = .byteBuffer(buffer)
                         return try _respond(request: request)
@@ -245,7 +248,10 @@ extension HBRouterMethods {
                 if case .byteBuffer = request.body {
                     return _respond(request: request)
                 } else {
-                    return request.body.consumeBody(on: request.eventLoop).flatMap { buffer in
+                    return request.body.consumeBody(
+                        maxSize: request.application.configuration.maxUploadSize,
+                        on: request.eventLoop
+                    ).flatMap { buffer in
                         request.body = .byteBuffer(buffer)
                         return _respond(request: request)
                     }

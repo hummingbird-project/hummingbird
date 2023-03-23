@@ -429,6 +429,28 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    func testMaxUploadSize() throws {
+        let app = HBApplication(testing: .embedded, configuration: .init(maxUploadSize: 64 * 1024))
+        app.router.post("upload") { _ in
+            "ok"
+        }
+        app.router.post("stream", options: .streamBody) { _ in
+            "ok"
+        }
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        let buffer = self.randomBuffer(size: 128 * 1024)
+        // check non streamed route throws an error
+        try app.XCTExecute(uri: "/upload", method: .POST, body: buffer) { response in
+            XCTAssertEqual(response.status, .payloadTooLarge)
+        }
+        // check streamed route doesn't
+        try app.XCTExecute(uri: "/stream", method: .POST, body: buffer) { response in
+            XCTAssertEqual(response.status, .ok)
+        }
+    }
+
     func testRemoteAddress() throws {
         let app = HBApplication(testing: .live)
         app.router.get("/") { request -> String in
