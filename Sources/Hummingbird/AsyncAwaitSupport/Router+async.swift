@@ -80,9 +80,8 @@ extension HBRouterMethods {
             var request = request
             if case .stream = request.body, !options.contains(.streamBody) {
                 let buffer = try await request.body.consumeBody(
-                    maxSize: request.application.configuration.maxUploadSize,
-                    on: request.eventLoop
-                ).get()
+                    maxSize: request.application.configuration.maxUploadSize
+                )
                 request.body = .byteBuffer(buffer)
             }
             if options.contains(.editResponse) {

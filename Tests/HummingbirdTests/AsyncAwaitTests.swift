@@ -52,6 +52,26 @@ final class AsyncAwaitTests: XCTestCase {
         }
     }
 
+    func testAsyncRouterGroup() throws {
+        #if os(macOS)
+        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+        #endif
+        let app = HBApplication(testing: .asyncTest)
+        app.router.group("test").get("/hello") { request -> ByteBuffer in
+            return await self.getBuffer(request: request)
+        }
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        try app.XCTExecute(uri: "/test/hello", method: .GET) { response in
+            var body = try XCTUnwrap(response.body)
+            let string = body.readString(length: body.readableBytes)
+            XCTAssertEqual(response.status, .ok)
+            XCTAssertEqual(string, "Async Hello")
+        }
+    }
+
     func testAsyncMiddleware() throws {
         #if os(macOS)
         // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
@@ -101,6 +121,31 @@ final class AsyncAwaitTests: XCTestCase {
         try app.XCTExecute(uri: "/hello/Adam", method: .POST) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "Hello Adam")
+        }
+    }
+
+    func testCollatingRequestBody() throws {
+        #if os(macOS)
+        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+        #endif
+        let app = HBApplication(testing: .asyncTest)
+        app.router.patch("size") { request -> String in
+            guard let body = request.body.buffer else {
+                throw HBHTTPError(.badRequest)
+            }
+            // force route to be async
+            try await Task.sleep(nanoseconds: 1)
+            return body.readableBytes.description
+        }
+
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        let buffer = self.randomBuffer(size: 530_001)
+        try app.XCTExecute(uri: "/size", method: .PATCH, body: buffer) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "530001")
         }
     }
 
