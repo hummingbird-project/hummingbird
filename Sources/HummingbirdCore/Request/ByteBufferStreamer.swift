@@ -271,22 +271,27 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
         }
     }
 
-    /// Consume the request body until you receive an end tag
+    /// Collate the request body into one ByteBuffer
+    /// - Parameter maxSize: Maximum size for the resultant ByteBuffer
     /// - Returns: EventLoopFuture that will be fulfilled when all buffers are consumed
-    func consumeAll() -> EventLoopFuture<ByteBuffer?> {
+    func consumeAll(maxSize: Int) -> EventLoopFuture<ByteBuffer?> {
         self.eventLoop.assertInEventLoop()
         let promise = self.eventLoop.makePromise(of: ByteBuffer?.self)
         var completeBuffer: ByteBuffer?
-        func _consumeAll() {
+        func _consumeAll(size: Int) {
             self.consume().whenComplete { result in
                 switch result {
                 case .success(.byteBuffer(var buffer)):
+                    let size = size + buffer.readableBytes
+                    if size > maxSize {
+                        promise.fail(HBHTTPError(.payloadTooLarge))
+                    }
                     if completeBuffer != nil {
                         completeBuffer!.writeBuffer(&buffer)
                     } else {
                         completeBuffer = buffer
                     }
-                    _consumeAll()
+                    _consumeAll(size: size)
 
                 case .success(.end):
                     promise.succeed(completeBuffer)
@@ -296,7 +301,7 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
                 }
             }
         }
-        _consumeAll()
+        _consumeAll(size: 0)
         return promise.futureResult
     }
 }

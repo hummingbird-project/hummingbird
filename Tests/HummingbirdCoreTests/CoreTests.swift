@@ -95,7 +95,7 @@ class HummingBirdCoreTests: XCTestCase {
     func testConsumeBody() {
         struct Responder: HBHTTPResponder {
             func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
-                request.body.consumeBody(on: context.eventLoop).whenComplete { result in
+                request.body.consumeBody(maxSize: .max, on: context.eventLoop).whenComplete { result in
                     switch result {
                     case .success(let buffer):
                         guard let buffer = buffer else {
@@ -303,7 +303,7 @@ class HummingBirdCoreTests: XCTestCase {
         }
         struct Responder: HBHTTPResponder {
             func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
-                request.body.consumeBody(on: context.eventLoop).whenComplete { result in
+                request.body.consumeBody(maxSize: .max, on: context.eventLoop).whenComplete { result in
                     let result = result.flatMap { buffer -> Result<HBHTTPResponse, Error> in
                         guard let buffer = buffer else {
                             return .failure(HBHTTPError(.badRequest))
@@ -428,10 +428,44 @@ class HummingBirdCoreTests: XCTestCase {
         XCTAssertNoThrow(try future.wait())
     }
 
+    func testMaxStreamedUploadSize() {
+        struct Responder: HBHTTPResponder {
+            func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
+                request.body.consumeBody(maxSize: .max, on: context.eventLoop).whenComplete { result in
+                    let result = result.flatMap { buffer -> Result<HBHTTPResponse, Error> in
+                        guard let buffer = buffer else {
+                            return .failure(HBHTTPError(.badRequest))
+                        }
+                        let response = HBHTTPResponse(
+                            head: .init(version: .init(major: 1, minor: 1), status: .ok),
+                            body: .byteBuffer(buffer)
+                        )
+                        return .success(response)
+                    }
+                    onComplete(result)
+                }
+            }
+        }
+        let server = HBHTTPServer(group: Self.eventLoopGroup, configuration: .init(address: .hostname(port: 0), maxUploadSize: 64 * 1024))
+        XCTAssertNoThrow(try server.start(responder: Responder()).wait())
+        defer { XCTAssertNoThrow(try server.stop().wait()) }
+
+        let client = HBXCTClient(host: "localhost", port: server.port!, eventLoopGroupProvider: .createNew)
+        client.connect()
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+
+        let buffer = self.randomBuffer(size: 320_000)
+        let future = client.post("/", body: buffer)
+            .flatMapThrowing { response in
+                XCTAssertEqual(response.status, .payloadTooLarge)
+            }
+        XCTAssertNoThrow(try future.wait())
+    }
+
     func testMaxUploadSize() {
         struct Responder: HBHTTPResponder {
             func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
-                request.body.consumeBody(on: context.eventLoop).whenComplete { result in
+                request.body.consumeBody(maxSize: 64 * 1024, on: context.eventLoop).whenComplete { result in
                     let result = result.flatMap { buffer -> Result<HBHTTPResponse, Error> in
                         guard let buffer = buffer else {
                             return .failure(HBHTTPError(.badRequest))
