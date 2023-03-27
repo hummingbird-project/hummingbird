@@ -28,6 +28,7 @@ jobs:
         xcrun llvm-cov export -format "lcov" \
           .build/debug/hummingbird-corePackageTests.xctest/Contents/MacOs/hummingbird-corePackageTests \
           -ignore-filename-regex="\/Tests\/" \
+          -ignore-filename-regex="\/Benchmarks\/" \
           -instr-profile=.build/debug/codecov/default.profdata > info.lcov
     - name: Upload to codecov.io
       uses: codecov/codecov-action@v3
@@ -55,6 +56,7 @@ jobs:
         llvm-cov export -format="lcov" \
           .build/debug/hummingbird-corePackageTests.xctest \
           -ignore-filename-regex="\/Tests\/" \
+          -ignore-filename-regex="\/Benchmarks\/" \
           -instr-profile .build/debug/codecov/default.profdata > info.lcov
     - name: Upload to codecov.io
       uses: codecov/codecov-action@v3
