@@ -10,20 +10,20 @@ jobs:
     runs-on: macOS-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: SPM tests
       run: swift test
   linux:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ['nightly-bionic', 'nightly-focal', 'nightly-jammy', 'nightly-amazonlinux2']
+        image: ['nightly-focal', 'nightly-jammy', 'nightly-amazonlinux2']
     
     container:
       image: swiftlang/swift:${{ matrix.image }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Test
       run: |
         swift test --enable-test-discovery
