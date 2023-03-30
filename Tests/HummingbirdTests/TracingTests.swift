@@ -47,7 +47,7 @@ final class TracingTests: XCTestCase {
         XCTAssertEqual(span.operationName, "/users/:id")
         XCTAssertEqual(span.kind, .server)
         XCTAssertNil(span.status)
-        XCTAssertTrue(span.errors.isEmpty)
+        XCTAssertTrue(span.recordedErrors.isEmpty)
 
         XCTAssertSpanAttributesEqual(span.attributes, [
             "http.method": "GET",
@@ -87,8 +87,8 @@ final class TracingTests: XCTestCase {
         XCTAssertEqual(span.kind, .server)
         XCTAssertEqual(span.status, .init(code: .error))
 
-        XCTAssertEqual(span.errors.count, 1)
-        let error = try XCTUnwrap(span.errors.first as? HBHTTPError, "Recorded unexpected errors: \(span.errors)")
+        XCTAssertEqual(span.recordedErrors.count, 1)
+        let error = try XCTUnwrap(span.recordedErrors.first?.0 as? HBHTTPError, "Recorded unexpected errors: \(span.recordedErrors)")
         XCTAssertEqual(error.status, .internalServerError)
 
         XCTAssertSpanAttributesEqual(span.attributes, [
@@ -144,7 +144,7 @@ final class TracingTests: XCTestCase {
         XCTAssertEqual(span.operationName, "/users/:id")
         XCTAssertEqual(span.kind, .server)
         XCTAssertNil(span.status)
-        XCTAssertTrue(span.errors.isEmpty)
+        XCTAssertTrue(span.recordedErrors.isEmpty)
 
         XCTAssertSpanAttributesEqual(span.attributes, [
             "http.method": "GET",
@@ -187,7 +187,7 @@ final class TracingTests: XCTestCase {
         XCTAssertEqual(span.operationName, "/users")
         XCTAssertEqual(span.kind, .server)
         XCTAssertNil(span.status)
-        XCTAssertTrue(span.errors.isEmpty)
+        XCTAssertTrue(span.recordedErrors.isEmpty)
 
         XCTAssertSpanAttributesEqual(span.attributes, [
             "http.method": "POST",
@@ -225,7 +225,7 @@ final class TracingTests: XCTestCase {
         XCTAssertEqual(span.operationName, "/")
         XCTAssertEqual(span.kind, .server)
         XCTAssertNil(span.status)
-        XCTAssertTrue(span.errors.isEmpty)
+        XCTAssertTrue(span.recordedErrors.isEmpty)
 
         XCTAssertSpanAttributesEqual(span.attributes, [
             "http.method": "GET",
@@ -261,8 +261,8 @@ final class TracingTests: XCTestCase {
         XCTAssertEqual(span.kind, .server)
         XCTAssertNil(span.status)
 
-        XCTAssertEqual(span.errors.count, 1)
-        let error = try XCTUnwrap(span.errors.first as? HBHTTPError, "Recorded unexpected errors: \(span.errors)")
+        XCTAssertEqual(span.recordedErrors.count, 1)
+        let error = try XCTUnwrap(span.recordedErrors.first?.0 as? HBHTTPError, "Recorded unexpected errors: \(span.recordedErrors)")
         XCTAssertEqual(error.status, .notFound)
 
         XCTAssertSpanAttributesEqual(span.attributes, [

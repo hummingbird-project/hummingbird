@@ -1,25 +1,25 @@
 //===----------------------------------------------------------------------===//
 //
-// This source file is part of the Swift Distributed Tracing open source project
+// This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2020-2021 Apple Inc. and the Swift Distributed Tracing project
-// authors
+// Copyright (c) 2021-2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
+// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
 //
 // SPDX-License-Identifier: Apache-2.0
 //
 //===----------------------------------------------------------------------===//
 //===----------------------------------------------------------------------===//
 //
-// This source file is part of the Hummingbird server framework project
+// This source file is part of the Swift Distributed Tracing open source project
 //
-// Copyright (c) 2023 the Hummingbird authors
+// Copyright (c) 2020-2023 Apple Inc. and the Swift Distributed Tracing project
+// authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -31,22 +31,26 @@ import Instrumentation
 import InstrumentationBaggage
 import Tracing
 
-final class TestTracer: Tracer {
+/// Only intended to be used in single-threaded testing.
+final class TestTracer: LegacyTracerProtocol {
     private(set) var spans = [TestSpan]()
-    var onEndSpan: (Span) -> Void = { _ in }
+    var onEndSpan: (TestSpan) -> Void = { _ in }
 
-    func startSpan(
+    func startAnySpan<Clock: TracerClock>(
         _ operationName: String,
-        baggage: Baggage,
+        baggage: @autoclosure () -> Baggage,
         ofKind kind: SpanKind,
-        at time: DispatchWallTime
-    ) -> Span {
+        clock: Clock,
+        function: String,
+        file fileID: String,
+        line: UInt
+    ) -> any Span {
         let span = TestSpan(
             operationName: operationName,
-            startTime: time,
-            baggage: baggage,
+            startTime: clock.now,
+            baggage: baggage(),
             kind: kind,
-            onEnd: onEndSpan
+            onEnd: self.onEndSpan
         )
         self.spans.append(span)
         return span
@@ -73,8 +77,36 @@ final class TestTracer: Tracer {
     }
 }
 
+#if swift(>=5.7.0)
+extension TestTracer: TracerProtocol {
+    func startSpan<Clock: TracerClock>(
+        _ operationName: String,
+        baggage: @autoclosure () -> Baggage,
+        ofKind kind: SpanKind,
+        clock: Clock,
+        function: String,
+        file fileID: String,
+        line: UInt
+    ) -> TestSpan {
+        let span = TestSpan(
+            operationName: operationName,
+            startTime: clock.now,
+            baggage: baggage(),
+            kind: kind,
+            onEnd: self.onEndSpan
+        )
+        self.spans.append(span)
+        return span
+    }
+}
+#endif
+
 extension TestTracer {
     enum TraceIDKey: BaggageKey {
+        typealias Value = String
+    }
+
+    enum SpanIDKey: BaggageKey {
         typealias Value = String
     }
 }
@@ -88,18 +120,27 @@ extension Baggage {
             self[TestTracer.TraceIDKey.self] = newValue
         }
     }
+
+    var spanID: String? {
+        get {
+            self[TestTracer.SpanIDKey.self]
+        }
+        set {
+            self[TestTracer.SpanIDKey.self] = newValue
+        }
+    }
 }
 
+/// Only intended to be used in single-threaded testing.
 final class TestSpan: Span {
-    let operationName: String
-    let kind: SpanKind
+    public let kind: SpanKind
+    public let startTime: UInt64
+    public private(set) var status: SpanStatus?
+    public private(set) var endTime: UInt64?
 
-    private(set) var status: SpanStatus?
+    private(set) var recordedErrors: [(Error, SpanAttributes)] = []
 
-    private let startTime: DispatchWallTime
-    private(set) var endTime: DispatchWallTime?
-    private(set) var errors = [Error]()
-
+    var operationName: String
     let baggage: Baggage
 
     private(set) var events = [SpanEvent]() {
@@ -118,17 +159,17 @@ final class TestSpan: Span {
 
     private(set) var isRecording = false
 
-    let onEnd: (Span) -> Void
+    let onEnd: (TestSpan) -> Void
 
-    init(
+    init<Instant: TracerInstantProtocol>(
         operationName: String,
-        startTime: DispatchWallTime,
+        startTime: Instant,
         baggage: Baggage,
         kind: SpanKind,
-        onEnd: @escaping (Span) -> Void
+        onEnd: @escaping (TestSpan) -> Void
     ) {
         self.operationName = operationName
-        self.startTime = startTime
+        self.startTime = startTime.millisecondsSinceEpoch
         self.baggage = baggage
         self.onEnd = onEnd
         self.kind = kind
@@ -147,12 +188,15 @@ final class TestSpan: Span {
         self.events.append(event)
     }
 
-    func recordError(_ error: Error) {
-        self.errors.append(error)
+    func recordError(_ error: Error, attributes: SpanAttributes) {
+        self.recordedErrors.append((error, attributes))
     }
 
-    func end(at time: DispatchWallTime) {
-        self.endTime = time
+    func end<Clock: TracerClock>(clock: Clock) {
+        self.endTime = clock.now.millisecondsSinceEpoch
         self.onEnd(self)
     }
 }
+
+extension TestTracer: @unchecked Sendable {} // only intended for single threaded testing
+extension TestSpan: @unchecked Sendable {} // only intended for single threaded testing
