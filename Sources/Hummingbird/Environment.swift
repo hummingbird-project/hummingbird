@@ -20,7 +20,7 @@ import Darwin.C
 import NIO
 
 /// Access environment variables
-public struct HBEnvironment: Decodable, ExpressibleByDictionaryLiteral {
+public struct HBEnvironment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
     struct Error: Swift.Error, Equatable {
         enum Value {
             case dotEnvParseError
@@ -212,7 +212,3 @@ extension HBEnvironment: CustomStringConvertible {
         String(describing: self.values)
     }
 }
-
-#if compiler(>=5.6)
-extension HBEnvironment: Sendable {}
-#endif

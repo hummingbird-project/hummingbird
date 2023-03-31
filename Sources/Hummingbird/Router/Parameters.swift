@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Store for parameters key, value pairs extracted from URI
-public struct HBParameters {
+public struct HBParameters: Sendable {
     public typealias Collection = FlatDictionary<Substring, Substring>
     internal var parameters: Collection
 
@@ -139,7 +139,3 @@ extension HBParameters: CustomStringConvertible {
         String(describing: self.parameters)
     }
 }
-
-#if swift(>=5.6)
-extension HBParameters: Sendable {}
-#endif

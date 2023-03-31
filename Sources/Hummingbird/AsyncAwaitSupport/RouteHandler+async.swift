@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 /// Route Handler using async/await methods
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 public protocol HBAsyncRouteHandler: HBRouteHandler where _Output == EventLoopFuture<_Output2> {
@@ -32,5 +30,3 @@ extension HBAsyncRouteHandler {
         return promise.futureResult
     }
 }
-
-#endif // compiler(>=5.5) && canImport(_Concurrency)

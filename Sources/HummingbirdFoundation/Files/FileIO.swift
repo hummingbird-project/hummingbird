@@ -200,9 +200,7 @@ public struct HBFileIO {
     }
 }
 
-#if compiler(>=5.6)
 // Can set this to @unchecked Sendable due to the way it is used. The `read`
 // function that accesses the non-Sendable parts of the class is never
 // called concurrently
 extension HBFileIO.FileStreamer: @unchecked Sendable {}
-#endif

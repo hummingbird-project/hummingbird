@@ -17,7 +17,7 @@ import Hummingbird
 import Logging
 
 /// Identifier for Job
-public struct JobIdentifier: CustomStringConvertible, Codable {
+public struct JobIdentifier: Sendable, CustomStringConvertible, Codable {
     let id: String
 
     init() {
@@ -122,7 +122,3 @@ public struct HBJobQueueFactory {
 
 /// Error type for when a job queue is being shutdown
 struct HBJobQueueShutdownError: Error {}
-
-#if swift(>=5.6)
-extension JobIdentifier: Sendable {}
-#endif

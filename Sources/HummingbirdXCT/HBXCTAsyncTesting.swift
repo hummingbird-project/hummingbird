@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 import Hummingbird
 import HummingbirdCore
 import NIOCore
@@ -162,5 +160,3 @@ struct HBXCTAsyncTesting: HBXCT {
         }
     }
 }
-
-#endif // compiler(>=5.5.2) && canImport(_Concurrency)

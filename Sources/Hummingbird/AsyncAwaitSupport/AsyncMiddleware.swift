@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 import NIOCore
 
 /// Middleware using async/await
@@ -40,5 +38,3 @@ extension HBResponder {
         return try await self.respond(to: request).get()
     }
 }
-
-#endif // compiler(>=5.5) && canImport(_Concurrency)

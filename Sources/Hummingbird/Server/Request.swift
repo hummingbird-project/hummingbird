@@ -20,7 +20,7 @@ import NIOCore
 import NIOHTTP1
 
 /// Holds all the values required to process a request
-public struct HBRequest: HBSendableExtensible {
+public struct HBRequest: Sendable, HBSendableExtensible {
     // MARK: Member variables
 
     /// URI path
@@ -153,7 +153,7 @@ public struct HBRequest: HBSendableExtensible {
 
     /// Store all the read-only values of the request in a class to avoid copying them
     /// everytime we pass the `HBRequest` struct about
-    final class _Internal {
+    final class _Internal: Sendable {
         internal init(uri: HBURL, version: HTTPVersion, method: HTTPMethod, headers: HTTPHeaders, application: HBApplication, context: HBRequestContext, endpointPath: String? = nil) {
             self.uri = uri
             self.version = version
@@ -205,8 +205,3 @@ extension HBRequest: CustomStringConvertible {
         "uri: \(self.uri), version: \(self.version), method: \(self.method), headers: \(self.headers), body: \(self.body)"
     }
 }
-
-#if compiler(>=5.6)
-extension HBRequest: Sendable {}
-extension HBRequest._Internal: Sendable {}
-#endif

@@ -11,7 +11,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 //===----------------------------------------------------------------------===//
-#if compiler(>=5.5.2) && canImport(_Concurrency)
 import HummingbirdCore
 
 /// Response body streamer which uses an AsyncSequence as its input.
@@ -81,9 +80,6 @@ extension AsyncSequence where Element == ByteBuffer {
     public var responseGenerator: ResponseGenerator { .init(asyncSequence: self) }
 }
 
-#if compiler(>=5.6)
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 // can guarantee Sendable because the read function is only ever called on the same EventLoop
 extension AsyncSequenceResponseBodyStreamer: @unchecked Sendable {}
-#endif // compiler(>=5.6)
-#endif // compiler(>=5.5.2) && canImport(_Concurrency)

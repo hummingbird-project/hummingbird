@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Define media type of file
-public struct HBMediaType: CustomStringConvertible {
+public struct HBMediaType: Sendable, CustomStringConvertible {
     /// general category
     public let type: Category
     /// exact kind of data specified
@@ -141,7 +141,7 @@ public struct HBMediaType: CustomStringConvertible {
     }
 
     /// Media type categories
-    public enum Category: String, Equatable {
+    public enum Category: String, Sendable, Equatable {
         case application
         case audio
         case example
@@ -422,8 +422,3 @@ extension HBMediaType {
         "7z": .application7z,
     ]
 }
-
-#if swift(>=5.6)
-extension HBMediaType: Sendable {}
-extension HBMediaType.Category: Sendable {}
-#endif

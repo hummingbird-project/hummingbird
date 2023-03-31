@@ -65,16 +65,11 @@ extension HBApplication {
         case .live:
             xct = HBXCTLive(configuration: configuration, timeout: timeout)
         case .asyncTest:
-            #if compiler(>=5.5.2) && canImport(_Concurrency)
             if #available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *) {
                 xct = HBXCTAsyncTesting(timeout: timeout)
             } else {
                 fatalError("XCTTestingSetup.asyncTest is not supported on your platform")
             }
-            #else
-            fatalError("XCTTestingSetup.asyncTest is not supported by version of Swift earlier than 5.5.2")
-            xct = HBXCTEmbedded()
-            #endif
         }
         self.init(configuration: configuration, eventLoopGroupProvider: .shared(xct.eventLoopGroup))
         self.extensions.set(\.xct, value: xct)

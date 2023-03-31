@@ -17,7 +17,7 @@ import Hummingbird
 /// Structure holding an array of cookies
 ///
 /// Cookies can be accessed from request via `HBRequest.cookies`.
-public struct HBCookies {
+public struct HBCookies: Sendable {
     /// Construct cookies accessor from `HBRequest`
     /// - Parameter request: request to get cookies from
     init(from request: HBRequest) {
@@ -39,7 +39,3 @@ public struct HBCookies {
 
     var cookieStrings: [Substring]
 }
-
-#if compiler(>=5.6)
-extension HBCookies: Sendable {}
-#endif

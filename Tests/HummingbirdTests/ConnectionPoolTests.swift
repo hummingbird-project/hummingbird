@@ -246,8 +246,6 @@ final class ConnectionPoolTests: XCTestCase {
     }
 }
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension ConnectionPoolTests {
     final class AsyncConnection: HBAsyncConnection {
@@ -299,5 +297,3 @@ extension ConnectionPoolTests {
         return try await poolGroup.close()
     }
 }
-
-#endif // compiler(>=5.5.2) && canImport(_Concurrency)

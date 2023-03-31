@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Context that created HBRequest.
-public protocol HBRequestContext: _HBSendableProtocol {
+public protocol HBRequestContext: Sendable {
     /// EventLoop request is running on
     var eventLoop: EventLoop { get }
     /// ByteBuffer allocator used by request

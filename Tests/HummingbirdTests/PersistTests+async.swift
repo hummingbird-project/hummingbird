@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 import Hummingbird
 import XCTest
 
@@ -231,5 +229,3 @@ final class AsyncPersistTests: XCTestCase {
         }
     }
 }
-
-#endif // compiler(>=5.5) && canImport(_Concurrency)

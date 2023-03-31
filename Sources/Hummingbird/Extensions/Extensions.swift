@@ -141,7 +141,5 @@ public protocol HBSendableExtensible {
     var extensions: HBSendableExtensions<Self> { get set }
 }
 
-#if compiler(>=5.6)
 /// Conform to @unchecked Sendable as the PartialKeyPath in the item dictionary is not Sendable
 extension HBSendableExtensions: @unchecked Sendable {}
-#endif
