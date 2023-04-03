@@ -33,12 +33,8 @@ public protocol HBStreamerProtocol: HBSendable {
     /// - Returns: EventLoopFuture that will be fulfilled when all buffers are consumed
     func consumeAll(on eventLoop: EventLoop, _ process: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void>
 
-    #if compiler(>=5.5.2) && canImport(_Concurrency)
-
     @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     func consume() async throws -> HBStreamerOutput
-
-    #endif // compiler(>=5.5) && canImport(_Concurrency)
 }
 
 /// Request body streamer. `HBHTTPDecodeHandler` feeds this with ByteBuffers while the Router consumes them
@@ -338,7 +334,5 @@ final class HBStaticStreamer: HBStreamerProtocol {
     }
 }
 
-#if compiler(>=5.6)
 extension HBByteBufferStreamer: @unchecked Sendable {}
 extension HBStaticStreamer: @unchecked Sendable {}
-#endif

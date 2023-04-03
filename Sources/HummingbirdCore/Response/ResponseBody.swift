@@ -14,12 +14,8 @@
 
 import NIOCore
 
-#if compiler(>=5.6)
 /// Function returning streamed byte buffer output
 public typealias HBStreamCallback = @Sendable (EventLoop) -> EventLoopFuture<HBStreamerOutput>
-#else
-public typealias HBStreamCallback = (EventLoop) -> EventLoopFuture<HBStreamerOutput>
-#endif
 
 /// Response body. Can be a single ByteBuffer, a stream of ByteBuffers or empty
 public enum HBResponseBody: HBSendable {

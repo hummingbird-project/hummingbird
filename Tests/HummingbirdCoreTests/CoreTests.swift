@@ -172,7 +172,6 @@ class HummingBirdCoreTests: XCTestCase {
     func testConsumeBodyInTask() {
         struct Responder: HBHTTPResponder {
             func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
-                let eventLoop = context.eventLoop
                 Task {
                     do {
                         let buffer = try await request.body.consumeBody(maxSize: .max)

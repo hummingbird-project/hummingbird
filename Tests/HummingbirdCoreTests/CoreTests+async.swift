@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 import HummingbirdCore
 import HummingbirdCoreXCT
 import NIOCore
@@ -85,5 +83,3 @@ final class HummingBirdCoreAsyncTests: XCTestCase {
         XCTAssertNoThrow(try future.wait())
     }
 }
-
-#endif // compiler(>=5.5) && canImport(_Concurrency)

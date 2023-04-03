@@ -96,8 +96,6 @@ extension HBRequestBody: CustomStringConvertible {
     }
 }
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension HBRequestBody {
     /// Provide body as a single ByteBuffer
@@ -118,5 +116,3 @@ extension HBRequestBody {
         }
     }
 }
-
-#endif // compiler(>=5.5.2) && canImport(_Concurrency)
