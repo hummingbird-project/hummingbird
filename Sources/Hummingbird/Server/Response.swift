@@ -16,7 +16,7 @@ import HummingbirdCore
 import NIOHTTP1
 
 /// Holds all the required to generate a HTTP Response
-public struct HBResponse: HBSendableExtensible {
+public struct HBResponse: Sendable, HBSendableExtensible {
     /// response status
     public var status: HTTPResponseStatus
     /// response headers
@@ -86,7 +86,3 @@ extension HBResponse: CustomStringConvertible {
         "status: \(self.status), headers: \(self.headers), body: \(self.body)"
     }
 }
-
-#if compiler(>=5.6)
-extension HBResponse: Sendable {}
-#endif

@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 import NIOCore
 
 /// Job with asynchronous handler
@@ -28,5 +26,3 @@ extension HBJobQueue {
         return try await self.push(job, on: eventLoop).map(\.id).get()
     }
 }
-
-#endif // compiler(>=5.5) && canImport(_Concurrency)

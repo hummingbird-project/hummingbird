@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 import Hummingbird
 import HummingbirdCore
 import NIOCore
@@ -58,7 +56,16 @@ struct HBXCTAsyncTesting: HBXCT {
         do {
             try application.shutdownApplication()
             _ = try await self.asyncTestingChannel.finish()
-            try self.asyncTestingEventLoop.syncShutdownGracefully()
+            // shutdown eventloop
+            try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+                self.asyncTestingEventLoop.shutdownGracefully { error in
+                    if let error = error {
+                        cont.resume(throwing: error)
+                    } else {
+                        cont.resume()
+                    }
+                }
+            }
         } catch {
             XCTFail("\(error)")
         }
@@ -162,5 +169,3 @@ struct HBXCTAsyncTesting: HBXCT {
         }
     }
 }
-
-#endif // compiler(>=5.5.2) && canImport(_Concurrency)

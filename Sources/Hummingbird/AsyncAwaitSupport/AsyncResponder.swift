@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 import NIO
 
 /// Responder that calls supplied closure
@@ -34,5 +32,3 @@ public struct HBAsyncCallbackResponder: HBResponder {
         return promise.futureResult
     }
 }
-
-#endif

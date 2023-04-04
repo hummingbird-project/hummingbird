@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 import Foundation
 import Hummingbird
 import HummingbirdFoundation
@@ -85,5 +83,3 @@ class HummingbirdAsyncFilesTests: XCTestCase {
         XCTAssertEqual(String(decoding: data, as: Unicode.UTF8.self), "This is a test")
     }
 }
-
-#endif // compiler(>=5.5) && canImport(_Concurrency)

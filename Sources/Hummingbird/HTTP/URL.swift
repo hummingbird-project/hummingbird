@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Simple URL parser
-public struct HBURL: CustomStringConvertible, ExpressibleByStringLiteral {
+public struct HBURL: Sendable, CustomStringConvertible, ExpressibleByStringLiteral {
     public struct Scheme: RawRepresentable, Equatable {
         public let rawValue: String
 
@@ -162,7 +162,3 @@ extension HBParameters {
         self.parameters = .init(queryKeyValues)
     }
 }
-
-#if swift(>=5.6)
-extension HBURL: Sendable {}
-#endif

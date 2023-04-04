@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension HBRequest.Persist {
     /// Set value for key that will expire after a certain time.
@@ -51,5 +49,3 @@ extension HBRequest.Persist {
         try await self.request.application.persist.driver.remove(key: key, request: self.request).get()
     }
 }
-
-#endif // compiler(>=5.5) && canImport(_Concurrency)

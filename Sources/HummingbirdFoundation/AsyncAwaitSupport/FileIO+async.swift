@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 import Hummingbird
 import Logging
 
@@ -62,5 +60,3 @@ extension HBFileIO {
         try await self.writeFile(contents: contents, path: path, context: context, logger: logger).get()
     }
 }
-
-#endif // compiler(>=5.5) && canImport(_Concurrency)

@@ -15,7 +15,7 @@
 import Foundation
 
 /// Structure holding a single cookie
-public struct HBCookie: CustomStringConvertible {
+public struct HBCookie: Sendable, CustomStringConvertible {
     public enum SameSite: String {
         case lax = "Lax"
         case secure = "Secure"
@@ -156,7 +156,7 @@ public struct HBCookie: CustomStringConvertible {
     }
 
     /// Cookie properties table
-    public struct Properties {
+    public struct Properties: Sendable {
         /// Common properties of a cookie
         enum CommonProperties: Substring {
             case expires = "Expires"
@@ -190,8 +190,3 @@ public struct HBCookie: CustomStringConvertible {
         var table: [Substring: String]
     }
 }
-
-#if compiler(>=5.6)
-extension HBCookie: Sendable {}
-extension HBCookie.Properties: Sendable {}
-#endif

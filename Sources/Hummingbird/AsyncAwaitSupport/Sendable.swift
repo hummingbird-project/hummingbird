@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2022 the Hummingbird authors
+// Copyright (c) 2021-2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,8 +12,5 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.6)
+@available(*, deprecated, message: "Use Sendable instead of _HBSendableProtocol")
 @preconcurrency public protocol _HBSendableProtocol: Sendable {}
-#else
-public protocol _HBSendableProtocol {}
-#endif

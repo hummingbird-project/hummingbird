@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 import Logging
 import NIO
 
@@ -113,5 +111,3 @@ public extension HBAsyncConnectionSource {
         return promise.futureResult
     }
 }
-
-#endif // compiler(>=5.5) && canImport(_Concurrency)
