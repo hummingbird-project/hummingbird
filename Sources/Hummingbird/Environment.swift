@@ -159,7 +159,7 @@ public struct HBEnvironment: Sendable, Decodable, ExpressibleByDictionaryLiteral
         do {
             while !parser.reachedEnd() {
                 parser.read(while: \.isWhitespace)
-                
+
                 switch state {
                 case .readingKey:
                     // check for comment
