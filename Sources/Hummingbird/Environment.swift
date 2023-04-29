@@ -157,8 +157,9 @@ public struct HBEnvironment: Sendable, Decodable, ExpressibleByDictionaryLiteral
         var parser = HBParser(dotEnv)
         var state: DotEnvParserState = .readingKey
         do {
-            parser.read(while: \.isWhitespace)
             while !parser.reachedEnd() {
+                parser.read(while: \.isWhitespace)
+
                 switch state {
                 case .readingKey:
                     // check for comment
@@ -171,6 +172,7 @@ public struct HBEnvironment: Sendable, Decodable, ExpressibleByDictionaryLiteral
                             parser.moveToEnd()
                             break
                         }
+                        continue
                     }
                     let key = try parser.read(until: { $0.isWhitespace || $0 == "=" }).string
                     state = .skippingEquals(key: key)
@@ -192,7 +194,6 @@ public struct HBEnvironment: Sendable, Decodable, ExpressibleByDictionaryLiteral
                     dotEnvDictionary[key.lowercased()] = value
                     state = .readingKey
                 }
-                parser.read(while: \.isWhitespace)
             }
             guard case .readingKey = state else { throw Error.dotEnvParseError }
         } catch {

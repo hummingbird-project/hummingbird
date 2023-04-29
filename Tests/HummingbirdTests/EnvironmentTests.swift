@@ -114,6 +114,17 @@ final class EnvironmentTests: XCTestCase {
         XCTAssertEqual(result["credentials"], "sdkfjh")
     }
 
+    func testDotEnvCommentAndEmptyLine() throws {
+        let dotenv = """
+        FOO=BAR
+        #BAZ=
+
+        """
+        let result = try HBEnvironment.parseDotEnv(dotenv)
+        XCTAssertEqual(result["foo"], "BAR")
+        XCTAssertEqual(result.count, 1)
+    }
+
     func testDotEnvOverridingEnvironment() throws {
         let dotenv = """
         TEST_VAR=testDotEnvOverridingEnvironment
