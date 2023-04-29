@@ -213,9 +213,9 @@ extension HBFileMiddleware {
     }
 
     private func matchRegex(_ string: String, expression: String) -> [Substring] {
-        let nsRange = NSRange(string.startIndex..<string.endIndex, in: string)
+        // let nsRange = NSRange(string.startIndex..<string.endIndex, in: string)
         guard let regularExpression = try? NSRegularExpression(pattern: expression, options: []),
-              let firstMatch = regularExpression.firstMatch(in: string, range: nsRange)
+              let firstMatch = regularExpression.firstMatch(in: string, range: NSMakeRange(0, string.count))
         else {
             return []
         }
