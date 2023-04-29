@@ -15,6 +15,7 @@ needs to be listed here.
 - Derek Clarkson <d4rkf1br3@gmail.com>
 - Florion <florion@lilo.org>
 - Moritz Lang <hi@slashmo.codes>
+- Simon Leeb <52261246+sliemeobn@users.noreply.github.com>
 - PO Bengtsson <po@niffic.se>
 - Michael Critz <github@michaelcritz.com>
 - Patrick Heneise <patrick@zentered.co>
