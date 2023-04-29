@@ -214,7 +214,7 @@ extension HBFileMiddleware {
 
     private func matchRegex(_ string: String, expression: String) -> [Substring] {
         guard let regularExpression = try? NSRegularExpression(pattern: expression, options: []),
-              let firstMatch = regularExpression.firstMatch(in: string, range: NSMakeRange(0, string.count))
+              let firstMatch = regularExpression.firstMatch(in: string, range: NSMakeRange(0, string.utf16.count))
         else {
             return []
         }
