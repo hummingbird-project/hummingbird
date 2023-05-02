@@ -162,9 +162,9 @@ public struct HBEnvironment: Sendable, Decodable, ExpressibleByDictionaryLiteral
 
                 switch state {
                 case .readingKey:
-                    //handle empty lines at the end
+                    // handle empty lines at the end
                     guard !parser.reachedEnd() else { break }
-                    
+
                     // check for comment
                     let c = parser.current()
                     if c == "#" {
