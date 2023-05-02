@@ -119,6 +119,17 @@ final class EnvironmentTests: XCTestCase {
         FOO=BAR
         #BAZ=
 
+
+        """
+        let result = try HBEnvironment.parseDotEnv(dotenv)
+        XCTAssertEqual(result["foo"], "BAR")
+        XCTAssertEqual(result.count, 1)
+    }
+
+    func testEmptyLineAtEnd() throws {
+        let dotenv = """
+        FOO=BAR
+
         """
         let result = try HBEnvironment.parseDotEnv(dotenv)
         XCTAssertEqual(result["foo"], "BAR")
