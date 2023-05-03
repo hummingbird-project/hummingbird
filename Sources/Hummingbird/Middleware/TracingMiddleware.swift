@@ -49,48 +49,51 @@ public struct HBTracingMiddleware: HBMiddleware {
         }()
 
         return request.withSpan(operationName, baggage: baggage, ofKind: .server) { request, span in
-            span.attributes["http.method"] = request.method.rawValue
-            span.attributes["http.target"] = request.uri.path
-            span.attributes["http.flavor"] = "\(request.version.major).\(request.version.minor)"
-            span.attributes["http.scheme"] = request.uri.scheme?.rawValue
-            span.attributes["http.user_agent"] = request.headers.first(name: "user-agent")
-            span.attributes["http.request_content_length"] = request.body.buffer?.readableBytes
+            var attributes: SpanAttributes = span.attributes
+            attributes["http.method"] = request.method.rawValue
+            attributes["http.target"] = request.uri.path
+            attributes["http.flavor"] = "\(request.version.major).\(request.version.minor)"
+            attributes["http.scheme"] = request.uri.scheme?.rawValue
+            attributes["http.user_agent"] = request.headers.first(name: "user-agent")
+            attributes["http.request_content_length"] = request.body.buffer?.readableBytes
 
-            span.attributes["net.host.name"] = request.application.server.configuration.address.host
-            span.attributes["net.host.port"] = request.application.server.configuration.address.port
+            attributes["net.host.name"] = request.application.server.configuration.address.host
+            attributes["net.host.port"] = request.application.server.configuration.address.port
 
             if let remoteAddress = request.remoteAddress {
-                span.attributes["net.sock.peer.port"] = remoteAddress.port
+                attributes["net.sock.peer.port"] = remoteAddress.port
 
                 switch remoteAddress.protocol {
                 case .inet:
-                    span.attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
+                    attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
                 case .inet6:
-                    span.attributes["net.sock.family"] = "inet6"
-                    span.attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
+                    attributes["net.sock.family"] = "inet6"
+                    attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
                 case .unix:
-                    span.attributes["net.sock.family"] = "unix"
-                    span.attributes["net.sock.peer.addr"] = remoteAddress.pathname
+                    attributes["net.sock.family"] = "unix"
+                    attributes["net.sock.peer.addr"] = remoteAddress.pathname
                 default:
                     break
                 }
             }
-
-            recordHeaders(request.headers, toSpan: span, withPrefix: "http.request.header.")
+            attributes = recordHeaders(request.headers, toSpanAttributes: attributes, withPrefix: "http.request.header.")
+            span.attributes = attributes
 
             return next.respond(to: request)
                 .always { result in
                     switch result {
                     case .success(let response):
-                        recordHeaders(response.headers, toSpan: span, withPrefix: "http.response.header.")
+                        var attributes = span.attributes
+                        attributes = recordHeaders(response.headers, toSpanAttributes: attributes, withPrefix: "http.response.header.")
 
-                        span.attributes["http.status_code"] = Int(response.status.code)
+                        attributes["http.status_code"] = Int(response.status.code)
                         switch response.body {
                         case .byteBuffer(let buffer):
-                            span.attributes["http.response_content_length"] = buffer.readableBytes
+                            attributes["http.response_content_length"] = buffer.readableBytes
                         case .stream, .empty:
                             break
                         }
+                        span.attributes = attributes
                     case .failure(let error):
                         if let httpError = error as? HBHTTPResponseError {
                             span.attributes["http.status_code"] = Int(httpError.status.code)
@@ -104,18 +107,20 @@ public struct HBTracingMiddleware: HBMiddleware {
         }
     }
 
-    func recordHeaders(_ headers: HTTPHeaders, toSpan span: Span, withPrefix prefix: String) {
+    func recordHeaders(_ headers: HTTPHeaders, toSpanAttributes attributes: SpanAttributes, withPrefix prefix: String) -> SpanAttributes {
+        var attributes = attributes
         for header in self.headerNamesToRecord {
             let values = headers[header.name]
             guard !values.isEmpty else { continue }
             let attribute = "\(prefix)\(header.attributeName)"
 
             if values.count == 1 {
-                span.attributes[attribute] = values[0]
+                attributes[attribute] = values[0]
             } else {
-                span.attributes[attribute] = values
+                attributes[attribute] = values
             }
         }
+        return attributes
     }
 }
 
