@@ -53,7 +53,7 @@ public enum HBRequestBody: HBSendable {
         case .byteBuffer(let buffer):
             return eventLoop.makeSucceededFuture(buffer)
         case .stream(let streamer):
-            return streamer.consumeAll(maxSize: .max).hop(to: eventLoop)
+            return streamer.collate(maxSize: .max).hop(to: eventLoop)
         }
     }
 
@@ -67,7 +67,7 @@ public enum HBRequestBody: HBSendable {
         case .byteBuffer(let buffer):
             return eventLoop.makeSucceededFuture(buffer)
         case .stream(let streamer):
-            return streamer.consumeAll(maxSize: maxSize).hop(to: eventLoop)
+            return streamer.collate(maxSize: maxSize).hop(to: eventLoop)
         }
     }
 }
@@ -109,9 +109,9 @@ extension HBRequestBody {
             return buffer
         case .stream(let streamer):
             if !streamer.eventLoop.inEventLoop {
-                return try await streamer.eventLoop.flatSubmit { streamer.consumeAll(maxSize: maxSize) }.get()
+                return try await streamer.eventLoop.flatSubmit { streamer.collate(maxSize: maxSize) }.get()
             } else {
-                return try await streamer.consumeAll(maxSize: maxSize).get()
+                return try await streamer.collate(maxSize: maxSize).get()
             }
         }
     }
