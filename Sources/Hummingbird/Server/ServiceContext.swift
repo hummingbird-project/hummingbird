@@ -15,38 +15,38 @@
 import Tracing
 
 extension HBRequest {
-    /// Baggage attached to request. Used to propagate baggage to child functions
+    /// ServiceContext attached to request. Used to propagate serviceContext to child functions
     ///
-    /// Attaching baggage to the request should be used when we aren't inside an async
-    /// function and baggage cannot be propagated via Task local variables. Otherwise
-    /// baggage should be propagated using Task local variables using `Baggage.$current.withValue(_)`
-    public var baggage: Baggage {
-        get { self.extensions.get(\.baggage) ?? Baggage.topLevel }
-        set { self.extensions.set(\.baggage, value: newValue) }
+    /// Attaching serviceContext to the request should be used when we aren't inside an async
+    /// function and serviceContext cannot be propagated via Task local variables. Otherwise
+    /// serviceContext should be propagated using Task local variables using `ServiceContext.$current.withValue(_)`
+    public var serviceContext: ServiceContext {
+        get { self.extensions.get(\.serviceContext) ?? ServiceContext.topLevel }
+        set { self.extensions.set(\.serviceContext, value: newValue) }
     }
 
-    /// Execute the given operation with edited request that includes baggage.
+    /// Execute the given operation with edited request that includes serviceContext.
     ///
-    /// Be sure to use the ``HBRequest`` passed to the closure as that includes the baggage.
-    /// This function should be used when we aren't inside an async function and baggage
-    /// cannot be propagated via Task local variables using `Baggage.$current.withValue(_)`
+    /// Be sure to use the ``HBRequest`` passed to the closure as that includes the serviceContext.
+    /// This function should be used when we aren't inside an async function and serviceContext
+    /// cannot be propagated via Task local variables using `ServiceContext.$current.withValue(_)`
     ///
     /// - Parameters:
-    ///   - baggage: Baggage to attach to request
+    ///   - serviceContext: ServiceContext to attach to request
     ///   - operation: operation to run
     /// - Returns: return value of operation
-    public func withBaggage<Return>(_ baggage: Baggage, _ operation: (HBRequest) throws -> Return) rethrows -> Return {
+    public func withServiceContext<Return>(_ context: ServiceContext, _ operation: (HBRequest) throws -> Return) rethrows -> Return {
         var request = self
-        request.baggage = baggage
+        request.serviceContext = context
         return try operation(request)
     }
 
     /// Execute the given operation within a newly created ``Span``
     ///
-    /// Calls operation with edited request that includes the baggage from span, and the span Be sure to use the
-    /// `HBRequest` passed to the closure as that includes the baggage
+    /// Calls operation with edited request that includes the serviceContext from span, and the span Be sure to use the
+    /// `HBRequest` passed to the closure as that includes the serviceContext
     ///
-    /// This function should be used when we aren't inside an async function and baggage cannot be propagated
+    /// This function should be used when we aren't inside an async function and serviceContext cannot be propagated
     /// via Task local variables. The equivalent async version of this is
     /// `InstrumentationSystem.tracer.withSpan(_:ofKind:_)`
     ///
@@ -63,36 +63,36 @@ extension HBRequest {
         ofKind kind: SpanKind = .internal,
         _ operation: (HBRequest, Span) throws -> Return
     ) rethrows -> Return {
-        return try self.withSpan(operationName, baggage: self.baggage, ofKind: kind, operation)
+        return try self.withSpan(operationName, context: self.serviceContext, ofKind: kind, operation)
     }
 
     /// Execute a specific task within a newly created ``Span``.
     ///
-    /// Calls operation with edited request that includes the baggage, and the span Be sure to use the
-    /// `HBRequest` passed to the closure as that includes the baggage
+    /// Calls operation with edited request that includes the serviceContext, and the span Be sure to use the
+    /// `HBRequest` passed to the closure as that includes the serviceContext
     ///
-    /// This function should be used when we aren't inside an async function and baggage cannot be propagated
+    /// This function should be used when we aren't inside an async function and serviceContext cannot be propagated
     /// via Task local variables. The equivalent async version of this is
-    /// `InstrumentationSystem.tracer.withSpan(_:baggage:ofKind:_)`
+    /// `InstrumentationSystem.tracer.withSpan(_:serviceContext:ofKind:_)`
     ///
     /// DO NOT `end()` the passed in span manually. It will be ended automatically when the `operation` returns.
     ///
     /// - Parameters:
     ///   - operationName: The name of the operation being traced. This may be a handler function, database call, ...
-    ///   - baggage: Baggage potentially containing trace identifiers of a parent ``Span``.
+    ///   - serviceContext: ServiceContext potentially containing trace identifiers of a parent ``Span``.
     ///   - kind: The ``SpanKind`` of the ``Span`` to be created. Defaults to ``SpanKind/internal``.
     ///   - operation: operation to wrap in a span start/end and execute immediately
     /// - Returns: the value returned by `operation`
     /// - Throws: the error the `operation` has thrown (if any)
     public func withSpan<Return>(
         _ operationName: String,
-        baggage: Baggage,
+        context: ServiceContext,
         ofKind kind: SpanKind = .internal,
         _ operation: (HBRequest, Span) throws -> Return
     ) rethrows -> Return {
-        let span = InstrumentationSystem.legacyTracer.startAnySpan(operationName, baggage: baggage, ofKind: kind)
+        let span = InstrumentationSystem.legacyTracer.startAnySpan(operationName, context: context, ofKind: kind)
         defer { span.end() }
-        return try self.withBaggage(span.baggage) { request in
+        return try self.withServiceContext(span.context) { request in
             do {
                 return try operation(request, span)
             } catch {
@@ -104,8 +104,8 @@ extension HBRequest {
 
     /// Execute the given operation within a newly created ``Span``
     ///
-    /// Calls operation with edited request that includes the baggage from span, and the span. Be sure to use the
-    /// `HBRequest` passed to the closure as that includes the baggage
+    /// Calls operation with edited request that includes the serviceContext from span, and the span. Be sure to use the
+    /// `HBRequest` passed to the closure as that includes the serviceContext
     ///
     /// DO NOT `end()` the passed in span manually. It will be ended automatically when the `operation` returns.
     ///
@@ -120,13 +120,13 @@ extension HBRequest {
         ofKind kind: SpanKind = .internal,
         _ operation: (HBRequest, Span) -> EventLoopFuture<Return>
     ) -> EventLoopFuture<Return> {
-        return self.withSpan(operationName, baggage: self.baggage, ofKind: kind, operation)
+        return self.withSpan(operationName, context: self.serviceContext, ofKind: kind, operation)
     }
 
     /// Execute the given operation within a newly created ``Span``,
     ///
-    /// Calls operation with edited request that includes the baggage, and the span. Be sure to use the
-    /// `HBRequest` passed to the closure as that includes the baggage
+    /// Calls operation with edited request that includes the serviceContext, and the span. Be sure to use the
+    /// `HBRequest` passed to the closure as that includes the serviceContext
     ///
     /// DO NOT `end()` the passed in span manually. It will be ended automatically when the `operation` returns.
     ///
@@ -138,12 +138,12 @@ extension HBRequest {
     /// - Throws: the error the `operation` has thrown (if any)
     public func withSpan<Return>(
         _ operationName: String,
-        baggage: Baggage,
+        context: ServiceContext,
         ofKind kind: SpanKind = .internal,
         _ operation: (HBRequest, Span) -> EventLoopFuture<Return>
     ) -> EventLoopFuture<Return> {
-        let span = InstrumentationSystem.legacyTracer.startAnySpan(operationName, baggage: baggage, ofKind: kind)
-        return self.withBaggage(span.baggage) { request in
+        let span = InstrumentationSystem.legacyTracer.startAnySpan(operationName, context: context, ofKind: kind)
+        return self.withServiceContext(span.context) { request in
             return operation(request, span)
                 .flatMapErrorThrowing { error in
                     span.recordError(error)

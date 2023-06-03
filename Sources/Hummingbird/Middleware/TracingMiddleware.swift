@@ -38,8 +38,8 @@ public struct HBTracingMiddleware: HBMiddleware {
     }
 
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
-        var baggage = request.baggage
-        InstrumentationSystem.instrument.extract(request.headers, into: &baggage, using: HTTPHeadersExtractor())
+        var serviceContext = request.serviceContext
+        InstrumentationSystem.instrument.extract(request.headers, into: &serviceContext, using: HTTPHeadersExtractor())
 
         let operationName: String = {
             guard let endpointPath = request.endpointPath else {
@@ -48,7 +48,7 @@ public struct HBTracingMiddleware: HBMiddleware {
             return endpointPath
         }()
 
-        return request.withSpan(operationName, baggage: baggage, ofKind: .server) { request, span in
+        return request.withSpan(operationName, context: serviceContext, ofKind: .server) { request, span in
             var attributes: SpanAttributes = span.attributes
             attributes["http.method"] = request.method.rawValue
             attributes["http.target"] = request.uri.path
@@ -76,7 +76,7 @@ public struct HBTracingMiddleware: HBMiddleware {
                     break
                 }
             }
-            attributes = recordHeaders(request.headers, toSpanAttributes: attributes, withPrefix: "http.request.header.")
+            attributes = self.recordHeaders(request.headers, toSpanAttributes: attributes, withPrefix: "http.request.header.")
             span.attributes = attributes
 
             return next.respond(to: request)
@@ -84,7 +84,7 @@ public struct HBTracingMiddleware: HBMiddleware {
                     switch result {
                     case .success(let response):
                         var attributes = span.attributes
-                        attributes = recordHeaders(response.headers, toSpanAttributes: attributes, withPrefix: "http.response.header.")
+                        attributes = self.recordHeaders(response.headers, toSpanAttributes: attributes, withPrefix: "http.response.header.")
 
                         attributes["http.status_code"] = Int(response.status.code)
                         switch response.body {

@@ -28,7 +28,7 @@
 import Dispatch
 import Foundation
 import Instrumentation
-import InstrumentationBaggage
+import ServiceContextModule
 import Tracing
 
 /// Only intended to be used in single-threaded testing.
@@ -38,7 +38,7 @@ final class TestTracer: LegacyTracer {
 
     func startAnySpan<Instant: TracerInstant>(
         _ operationName: String,
-        baggage: @autoclosure () -> Baggage,
+        context: @autoclosure () -> ServiceContext,
         ofKind kind: SpanKind,
         at instant: @autoclosure () -> Instant,
         function: String,
@@ -48,7 +48,7 @@ final class TestTracer: LegacyTracer {
         let span = TestSpan(
             operationName: operationName,
             at: instant(),
-            baggage: baggage(),
+            context: context(),
             kind: kind,
             onEnd: self.onEndSpan
         )
@@ -58,21 +58,21 @@ final class TestTracer: LegacyTracer {
 
     public func forceFlush() {}
 
-    func extract<Carrier, Extract>(_ carrier: Carrier, into baggage: inout Baggage, using extractor: Extract)
+    func extract<Carrier, Extract>(_ carrier: Carrier, into context: inout ServiceContext, using extractor: Extract)
         where
         Extract: Extractor,
         Carrier == Extract.Carrier
     {
         let traceID = extractor.extract(key: "trace-id", from: carrier) ?? UUID().uuidString
-        baggage.traceID = traceID
+        context.traceID = traceID
     }
 
-    func inject<Carrier, Inject>(_ baggage: Baggage, into carrier: inout Carrier, using injector: Inject)
+    func inject<Carrier, Inject>(_ context: ServiceContext, into carrier: inout Carrier, using injector: Inject)
         where
         Inject: Injector,
         Carrier == Inject.Carrier
     {
-        guard let traceID = baggage.traceID else { return }
+        guard let traceID = context.traceID else { return }
         injector.inject(traceID, forKey: "trace-id", into: &carrier)
     }
 }
@@ -81,7 +81,7 @@ final class TestTracer: LegacyTracer {
 extension TestTracer: Tracer {
     func startSpan<Instant: TracerInstant>(
         _ operationName: String,
-        baggage: @autoclosure () -> Baggage,
+        context: @autoclosure () -> ServiceContext,
         ofKind kind: SpanKind,
         at instant: @autoclosure () -> Instant,
         function: String,
@@ -91,7 +91,7 @@ extension TestTracer: Tracer {
         let span = TestSpan(
             operationName: operationName,
             at: instant(),
-            baggage: baggage(),
+            context: context(),
             kind: kind,
             onEnd: self.onEndSpan
         )
@@ -102,16 +102,16 @@ extension TestTracer: Tracer {
 #endif
 
 extension TestTracer {
-    enum TraceIDKey: BaggageKey {
+    enum TraceIDKey: ServiceContextKey {
         typealias Value = String
     }
 
-    enum SpanIDKey: BaggageKey {
+    enum SpanIDKey: ServiceContextKey {
         typealias Value = String
     }
 }
 
-extension Baggage {
+extension ServiceContext {
     var traceID: String? {
         get {
             self[TestTracer.TraceIDKey.self]
@@ -141,7 +141,7 @@ final class TestSpan: Span {
     private(set) var recordedErrors: [(Error, SpanAttributes)] = []
 
     var operationName: String
-    let baggage: Baggage
+    let context: ServiceContext
 
     private(set) var events = [SpanEvent]() {
         didSet {
@@ -164,13 +164,13 @@ final class TestSpan: Span {
     init<Instant: TracerInstant>(
         operationName: String,
         at instant: Instant,
-        baggage: Baggage,
+        context: ServiceContext,
         kind: SpanKind,
         onEnd: @escaping (TestSpan) -> Void
     ) {
         self.operationName = operationName
         self.startTime = instant.millisecondsSinceEpoch
-        self.baggage = baggage
+        self.context = context
         self.onEnd = onEnd
         self.kind = kind
     }

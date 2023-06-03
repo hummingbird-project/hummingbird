@@ -275,8 +275,8 @@ final class TracingTests: XCTestCase {
         ])
     }
 
-    /// Test tracing baggage is attached to request when route handler is called
-    func testBaggagePropagation() throws {
+    /// Test tracing serviceContext is attached to request when route handler is called
+    func testServiceContextPropagation() throws {
         let expectation = expectation(description: "Expected span to be ended.")
         expectation.expectedFulfillmentCount = 2
 
@@ -287,9 +287,9 @@ final class TracingTests: XCTestCase {
         let app = HBApplication(testing: .embedded)
         app.middleware.add(HBTracingMiddleware())
         app.router.get("/") { request -> HTTPResponseStatus in
-            var baggage = request.baggage
-            baggage.testID = "test"
-            let span = InstrumentationSystem.legacyTracer.startAnySpan("testing", baggage: baggage, ofKind: .server)
+            var serviceContext = request.serviceContext
+            serviceContext.testID = "test"
+            let span = InstrumentationSystem.legacyTracer.startAnySpan("testing", context: serviceContext, ofKind: .server)
             span.end()
             return .ok
         }
@@ -306,12 +306,12 @@ final class TracingTests: XCTestCase {
         let span = tracer.spans[0]
         let span2 = tracer.spans[1]
 
-        XCTAssertEqual(span2.baggage.testID, "test")
-        XCTAssertEqual(span2.baggage.traceID, span.baggage.traceID)
+        XCTAssertEqual(span2.context.testID, "test")
+        XCTAssertEqual(span2.context.traceID, span.context.traceID)
     }
 
-    /// Verify baggage set in trace middleware propagates to routes
-    func testBaggagePropagationWithSpan() throws {
+    /// Verify serviceContext set in trace middleware propagates to routes
+    func testServiceContextPropagationWithSpan() throws {
         let expectation = expectation(description: "Expected span to be ended.")
         expectation.expectedFulfillmentCount = 2
 
@@ -322,9 +322,9 @@ final class TracingTests: XCTestCase {
         let app = HBApplication(testing: .embedded)
         app.middleware.add(HBTracingMiddleware())
         app.router.get("/") { request -> HTTPResponseStatus in
-            var baggage = request.baggage
-            baggage.testID = "test"
-            return request.withSpan("TestSpan", baggage: baggage, ofKind: .client) { _, span in
+            var serviceContext = request.serviceContext
+            serviceContext.testID = "test"
+            return request.withSpan("TestSpan", context: serviceContext, ofKind: .client) { _, span in
                 span.attributes["test-attribute"] = 42
                 return .ok
             }
@@ -342,22 +342,22 @@ final class TracingTests: XCTestCase {
         let span = tracer.spans[0]
         let span2 = tracer.spans[1]
 
-        XCTAssertEqual(span2.baggage.testID, "test")
+        XCTAssertEqual(span2.context.testID, "test")
         XCTAssertEqual(span2.attributes["test-attribute"]?.toSpanAttribute(), 42)
-        XCTAssertEqual(span2.baggage.traceID, span.baggage.traceID)
+        XCTAssertEqual(span2.context.traceID, span.context.traceID)
     }
 
-    /// And SpanMiddleware in front of tracing middleware and set baggage value and use
+    /// And SpanMiddleware in front of tracing middleware and set serviceContext value and use
     /// EventLoopFuture version of `request.withSpan` to call next.respond
-    func testBaggagePropagationEventLoopFuture() throws {
+    func testServiceContextPropagationEventLoopFuture() throws {
         let expectation = expectation(description: "Expected span to be ended.")
         expectation.expectedFulfillmentCount = 2
 
         struct SpanMiddleware: HBMiddleware {
             public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
-                var baggage = request.baggage
-                baggage.testID = "testMiddleware"
-                return request.withSpan("TestSpan", baggage: baggage, ofKind: .server) { request, _ in
+                var serviceContext = request.serviceContext
+                serviceContext.testID = "testMiddleware"
+                return request.withSpan("TestSpan", context: serviceContext, ofKind: .server) { request, _ in
                     next.respond(to: request)
                 }
             }
@@ -385,7 +385,7 @@ final class TracingTests: XCTestCase {
         XCTAssertEqual(tracer.spans.count, 2)
         let span2 = tracer.spans[1]
 
-        XCTAssertEqual(span2.baggage.testID, "testMiddleware")
+        XCTAssertEqual(span2.context.testID, "testMiddleware")
     }
 }
 
@@ -393,8 +393,8 @@ final class TracingTests: XCTestCase {
 
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension TracingTests {
-    /// Test tracing middleware baggage is propagated to async route handlers
-    func testBaggagePropagationAsync() throws {
+    /// Test tracing middleware serviceContext is propagated to async route handlers
+    func testServiceContextPropagationAsync() throws {
         let expectation = expectation(description: "Expected span to be ended.")
         expectation.expectedFulfillmentCount = 2
 
@@ -423,17 +423,17 @@ extension TracingTests {
         let span = tracer.spans[0]
         let span2 = tracer.spans[1]
 
-        XCTAssertEqual(span2.baggage.traceID, span.baggage.traceID)
+        XCTAssertEqual(span2.context.traceID, span.context.traceID)
     }
 
-    /// Test baggage is propagated to AsyncMiddleware and any baggage added in AsyncMiddleware is
+    /// Test serviceContext is propagated to AsyncMiddleware and any serviceContext added in AsyncMiddleware is
     /// propagated to route code
-    func testBaggagePropagationAsyncMiddleware() throws {
+    func testServiceContextPropagationAsyncMiddleware() throws {
         struct AsyncSpanMiddleware: HBAsyncMiddleware {
             public func apply(to request: HBRequest, next: HBResponder) async throws -> HBResponse {
-                var baggage = request.baggage
-                baggage.testID = "testAsyncMiddleware"
-                return try await InstrumentationSystem.legacyTracer.withAnySpan("TestSpan", baggage: baggage, ofKind: .server) { _ in
+                var serviceContext = request.serviceContext
+                serviceContext.testID = "testAsyncMiddleware"
+                return try await InstrumentationSystem.legacyTracer.withAnySpan("TestSpan", context: serviceContext, ofKind: .server) { _ in
                     try await next.respond(to: request)
                 }
             }
@@ -469,23 +469,23 @@ extension TracingTests {
         let span2 = tracer.spans[1]
         let span3 = tracer.spans[2]
 
-        XCTAssertEqual(span1.baggage.traceID, span2.baggage.traceID)
-        XCTAssertEqual(span2.baggage.traceID, span3.baggage.traceID)
-        XCTAssertEqual(span2.baggage.testID, "testAsyncMiddleware")
-        XCTAssertEqual(span3.baggage.testID, "testAsyncMiddleware")
+        XCTAssertEqual(span1.context.traceID, span2.context.traceID)
+        XCTAssertEqual(span2.context.traceID, span3.context.traceID)
+        XCTAssertEqual(span2.context.testID, "testAsyncMiddleware")
+        XCTAssertEqual(span3.context.testID, "testAsyncMiddleware")
     }
 }
 
 #endif // compiler(>=5.5.2) && canImport(_Concurrency)
 
 /// TestID Key used in tests
-internal enum TestIDKey: BaggageKey {
+internal enum TestIDKey: ServiceContextKey {
     typealias Value = String
     static var nameOverride: String? { "test-id" }
 }
 
-extension Baggage {
-    /// extend Baggage to easily access test id
+extension ServiceContext {
+    /// extend ServiceContext to easily access test id
     var testID: String? {
         get {
             self[TestIDKey.self]
