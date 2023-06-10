@@ -130,7 +130,7 @@ class HummingbirdFilesTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        let (eTag, modificationDate) = try app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=-3999"]) { response in
+        let (eTag, modificationDate) = try app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=-3999"]) { response -> (String, String) in
             let eTag = try XCTUnwrap(response.headers["eTag"].first)
             let modificationDate = try XCTUnwrap(response.headers["modified-date"].first)
             let body = try XCTUnwrap(response.body)
