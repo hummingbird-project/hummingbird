@@ -112,8 +112,10 @@ public struct HBFileMiddleware: HBMiddleware {
                 headers.add(name: "content-length", value: String(describing: contentSize))
             }
             // modified-date
+            var modificationDateString: String?
             if let modificationDate = modificationDate {
-                headers.add(name: "modified-date", value: HBDateCache.rfc1123Formatter.string(from: modificationDate))
+                modificationDateString = HBDateCache.rfc1123Formatter.string(from: modificationDate)
+                headers.add(name: "modified-date", value: modificationDateString!)
             }
             // eTag (constructed from modification date and content size)
             headers.add(name: "eTag", value: eTag)
@@ -151,6 +153,8 @@ public struct HBFileMiddleware: HBMiddleware {
                 }
             }
 
+            headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
+
             switch request.method {
             case .GET:
                 // cache-control
@@ -162,22 +166,24 @@ public struct HBFileMiddleware: HBMiddleware {
                     guard let range = getRangeFromHeaderValue(rangeHeader) else {
                         return request.failure(.rangeNotSatisfiable)
                     }
-                    return fileIO.loadFile(path: fullPath.relativePath, range: range, context: request.context, logger: request.logger)
-                        .map { body, fileSize in
-                            headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
+                    // range request conditional on etag or modified date being equal to value in if-range
+                    if let ifRange = request.headers["if-range"].first, ifRange != eTag, ifRange != modificationDateString {
+                        // do nothing and drop down to returning full file
+                    } else {
+                        return fileIO.loadFile(path: fullPath.relativePath, range: range, context: request.context, logger: request.logger)
+                            .map { body, fileSize in
+                                let lowerBound = max(range.lowerBound, 0)
+                                let upperBound = min(range.upperBound, fileSize - 1)
+                                headers.replaceOrAdd(name: "content-range", value: "bytes \(lowerBound)-\(upperBound)/\(fileSize)")
+                                // override content-length set above
+                                headers.replaceOrAdd(name: "content-length", value: String(describing: upperBound - lowerBound + 1))
 
-                            let lowerBound = max(range.lowerBound, 0)
-                            let upperBound = min(range.upperBound, fileSize - 1)
-                            headers.replaceOrAdd(name: "content-range", value: "bytes \(lowerBound)-\(upperBound)/\(fileSize)")
-                            // override content-length set above
-                            headers.replaceOrAdd(name: "content-length", value: String(describing: upperBound - lowerBound + 1))
-
-                            return HBResponse(status: .partialContent, headers: headers, body: body)
-                        }
+                                return HBResponse(status: .partialContent, headers: headers, body: body)
+                            }
+                    }
                 }
                 return fileIO.loadFile(path: fullPath.relativePath, context: request.context, logger: request.logger)
                     .map { body in
-                        headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
                         return HBResponse(status: .ok, headers: headers, body: body)
                     }
 
