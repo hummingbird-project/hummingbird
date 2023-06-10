@@ -117,6 +117,42 @@ class HummingbirdFilesTests: XCTestCase {
         }
     }
 
+    func testIfRangeRead() throws {
+        let app = HBApplication(testing: .live)
+        app.middleware.add(HBFileMiddleware(".", application: app))
+
+        let buffer = self.randomBuffer(size: 10000)
+        let data = Data(buffer: buffer)
+        let fileURL = URL(fileURLWithPath: "test.txt")
+        XCTAssertNoThrow(try data.write(to: fileURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        let (eTag, modificationDate) = try app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=-3999"]) { response -> (String, String) in
+            let eTag = try XCTUnwrap(response.headers["eTag"].first)
+            let modificationDate = try XCTUnwrap(response.headers["modified-date"].first)
+            let body = try XCTUnwrap(response.body)
+            let slice = buffer.getSlice(at: 0, length: 4000)
+            XCTAssertEqual(body, slice)
+            XCTAssertEqual(response.headers["content-range"].first, "bytes 0-3999/10000")
+            return (eTag, modificationDate)
+        }
+
+        try app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=4000-", "if-range": eTag]) { response in
+            XCTAssertEqual(response.headers["content-range"].first, "bytes 4000-9999/10000")
+        }
+
+        try app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=4000-", "if-range": modificationDate]) { response in
+            XCTAssertEqual(response.headers["content-range"].first, "bytes 4000-9999/10000")
+        }
+
+        try app.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=4000-", "if-range": "not valid"]) { response in
+            XCTAssertNil(response.headers["content-range"].first)
+        }
+    }
+
     func testHead() throws {
         let app = HBApplication(testing: .live)
         app.middleware.add(HBFileMiddleware(".", application: app))
