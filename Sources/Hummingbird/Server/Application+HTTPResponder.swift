@@ -73,5 +73,10 @@ extension HBApplication {
         var eventLoop: EventLoop { return self.channel.eventLoop }
         var allocator: ByteBufferAllocator { return self.channel.allocator }
         var remoteAddress: SocketAddress? { return self.channel.remoteAddress }
+
+        /// Used by HBRequest to write informational headers
+        func writeInformationalResponse(head: HTTPResponseHead) {
+            self.channel.writeAndFlush(HTTPPart<HTTPResponseHead, IOData>.head(head), promise: nil)
+        }
     }
 }

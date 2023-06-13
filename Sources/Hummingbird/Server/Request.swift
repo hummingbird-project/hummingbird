@@ -187,6 +187,36 @@ public struct HBRequest: Sendable, HBSendableExtensible {
     private static let globalRequestID = ManagedAtomic(0)
 }
 
+extension HBRequest {
+    public enum InformationalResponseStatus {
+        case `continue`
+        case switchingProtocols
+        case processing
+        case earlyHints
+
+        var httpResponseStatus: HTTPResponseStatus {
+            switch self {
+            case .continue: return .continue
+            case .switchingProtocols: return .switchingProtocols
+            case .processing: return .processing
+            case .earlyHints: return .custom(code: 103, reasonPhrase: "Early Hints")
+            }
+        }
+    }
+
+    /// Write informantional response back before finishing processing request
+    ///
+    /// An informational response indicates that the request was received and understood. It is issued on a
+    /// provisional basis while request processing continues. It alerts the client to wait for a final response.
+    /// The message consists only of the status line and optional header fields
+    /// - Parameters:
+    ///   - status: information response status
+    ///   - headers: headers to include in information response
+    public func writeInformationalResponse(status: InformationalResponseStatus, headers: HTTPHeaders = [:]) {
+        self.context.writeInformationalResponse(head: .init(version: self.version, status: status.httpResponseStatus, headers: headers))
+    }
+}
+
 extension Logger {
     /// Create new Logger with additional metadata value
     /// - Parameters:

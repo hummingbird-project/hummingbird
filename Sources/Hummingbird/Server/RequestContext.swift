@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import NIOHTTP1
+
 /// Context that created HBRequest.
 public protocol HBRequestContext: Sendable {
     /// EventLoop request is running on
@@ -20,4 +22,8 @@ public protocol HBRequestContext: Sendable {
     var allocator: ByteBufferAllocator { get }
     /// Connected host address
     var remoteAddress: SocketAddress? { get }
+
+    ///  Write informational response back to server before completing the request
+    /// - Parameter head: response head
+    func writeInformationalResponse(head: HTTPResponseHead)
 }
