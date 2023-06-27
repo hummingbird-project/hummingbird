@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import NIOCore
+import ServiceContextModule
 
 /// Middleware using async/await
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
@@ -24,10 +25,28 @@ public protocol HBAsyncMiddleware: HBMiddleware {
 extension HBAsyncMiddleware {
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
         let promise = request.eventLoop.makePromise(of: HBResponse.self)
-        promise.completeWithTask {
-            return try await apply(to: request, next: next)
+        return ServiceContext.$current.withValue(request.serviceContext) {
+            promise.completeWithTask {
+                return try await self.apply(to: request, next: HBPropagateServiceContextResponder(responder: next))
+            }
+            return promise.futureResult
         }
-        return promise.futureResult
+    }
+}
+
+/// Propagate Task Local serviceContext back to HBRequest after running AsyncMiddleware
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+struct HBPropagateServiceContextResponder: HBResponder {
+    let responder: HBResponder
+
+    func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
+        if let serviceContext = ServiceContext.$current.get() {
+            return request.withServiceContext(serviceContext) { request in
+                self.responder.respond(to: request)
+            }
+        } else {
+            return self.responder.respond(to: request)
+        }
     }
 }
 

@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import NIO
+import ServiceContextModule
 
 /// Responder that calls supplied closure
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
@@ -26,9 +27,11 @@ public struct HBAsyncCallbackResponder: HBResponder {
     /// Return EventLoopFuture that will be fulfilled with response to the request supplied
     public func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
         let promise = request.eventLoop.makePromise(of: HBResponse.self)
-        promise.completeWithTask {
-            try await callback(request)
+        return ServiceContext.$current.withValue(request.serviceContext) {
+            promise.completeWithTask {
+                try await self.callback(request)
+            }
+            return promise.futureResult
         }
-        return promise.futureResult
     }
 }
