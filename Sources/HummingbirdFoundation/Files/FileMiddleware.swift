@@ -19,11 +19,11 @@ import NIOCore
 /// Middleware for serving static files.
 ///
 /// If router returns a 404 ie a route was not found then this middleware will treat the request
-/// path as a filename relative to the rootFolder (which defaults to "public") and checks to see if
-/// a file exists there. If so the file contents are passed back in the response.
+/// path as a filename relative to a defined rootFolder (this defaults to "public"). It checks to see if
+/// a file exists there and if so the file contents are passed back in the response.
 ///
 /// The file middleware supports both HEAD and GET methods and supports parsing of
-/// "if-modified-since", "if-none-match" and 'range" headers. It will output "content-length",
+/// "if-modified-since", "if-none-match", "if-range" and 'range" headers. It will output "content-length",
 /// "modified-date", "eTag", "content-type", "cache-control" and "content-range" headers where
 /// they are relevant.
 public struct HBFileMiddleware: HBMiddleware {
@@ -79,7 +79,7 @@ public struct HBFileMiddleware: HBMiddleware {
                 return request.failure(.badRequest)
             }
 
-            var fullPath = rootFolder.appendingPathComponent(path)
+            var fullPath = self.rootFolder.appendingPathComponent(path)
             let modificationDate: Date?
             let contentSize: Int?
             do {
@@ -87,7 +87,7 @@ public struct HBFileMiddleware: HBMiddleware {
                 // if file is a directory seach and `searchForIndexHtml` is set to true
                 // then search for index.html in directory
                 if let fileType = attributes[.type] as? FileAttributeType, fileType == .typeDirectory {
-                    guard searchForIndexHtml else { throw IsDirectoryError() }
+                    guard self.searchForIndexHtml else { throw IsDirectoryError() }
                     fullPath = fullPath.appendingPathComponent("index.html")
                     let attributes = try FileManager.default.attributesOfItem(atPath: fullPath.relativePath)
                     modificationDate = attributes[.modificationDate] as? Date
@@ -170,7 +170,7 @@ public struct HBFileMiddleware: HBMiddleware {
                     if let ifRange = request.headers["if-range"].first, ifRange != eTag, ifRange != modificationDateString {
                         // do nothing and drop down to returning full file
                     } else {
-                        return fileIO.loadFile(path: fullPath.relativePath, range: range, context: request.context, logger: request.logger)
+                        return self.fileIO.loadFile(path: fullPath.relativePath, range: range, context: request.context, logger: request.logger)
                             .map { body, fileSize in
                                 let lowerBound = max(range.lowerBound, 0)
                                 let upperBound = min(range.upperBound, fileSize - 1)
@@ -182,7 +182,7 @@ public struct HBFileMiddleware: HBMiddleware {
                             }
                     }
                 }
-                return fileIO.loadFile(path: fullPath.relativePath, context: request.context, logger: request.logger)
+                return self.fileIO.loadFile(path: fullPath.relativePath, context: request.context, logger: request.logger)
                     .map { body in
                         return HBResponse(status: .ok, headers: headers, body: body)
                     }
