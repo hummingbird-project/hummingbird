@@ -37,21 +37,30 @@ public struct HBExtensions<ParentObject> {
     }
 
     /// Get optional extension from a `KeyPath`
+    @inlinable
     public func get<Type>(_ key: KeyPath<ParentObject, Type>) -> Type? {
-        self.items[key]?.value as? Type
+        self.items[key.hashValue]?.value as? Type
+    }
+
+    /// Get optional extension from a `KeyPath` that returns an optional
+    @inlinable
+    public func get<Type>(_ key: KeyPath<ParentObject, Type?>) -> Type? {
+        self.items[key.hashValue]?.value as? Type
     }
 
     /// Get extension from a `KeyPath`
+    @inlinable
     public func get<Type>(_ key: KeyPath<ParentObject, Type>, error: StaticString? = nil) -> Type {
-        guard let value = items[key]?.value as? Type else {
+        guard let value = items[key.hashValue]?.value as? Type else {
             preconditionFailure(error?.description ?? "Cannot get extension of type \(Type.self) without having set it")
         }
         return value
     }
 
     /// Return if extension has been set
+    @inlinable
     public func exists<Type>(_ key: KeyPath<ParentObject, Type>) -> Bool {
-        self.items[key]?.value != nil
+        self.items[key.hashValue]?.value != nil
     }
 
     /// Set extension for a `KeyPath`
@@ -59,13 +68,15 @@ public struct HBExtensions<ParentObject> {
     ///   - key: KeyPath
     ///   - value: value to store in extension
     ///   - shutdownCallback: closure to call when extensions are shutsdown
+    @inlinable
     public mutating func set<Type>(_ key: KeyPath<ParentObject, Type>, value: Type, shutdownCallback: ((Type) throws -> Void)? = nil) {
-        if let item = items[key] {
+        let keyHash = key.hashValue
+        if let item = items[keyHash] {
             guard item.shutdown == nil else {
                 preconditionFailure("Cannot replace items with shutdown functions")
             }
         }
-        self.items[key] = .init(
+        self.items[keyHash] = .init(
             value: value,
             shutdown: shutdownCallback.map { callback in
                 return { item in try callback(item as! Type) }
@@ -80,42 +91,63 @@ public struct HBExtensions<ParentObject> {
         self.items = [:]
     }
 
+    @usableFromInline
     struct Item {
+        @usableFromInline
+        init(value: Any, shutdown: ((Any) throws -> Void)? = nil) {
+            self.value = value
+            self.shutdown = shutdown
+        }
+
+        @usableFromInline
         let value: Any
+        @usableFromInline
         let shutdown: ((Any) throws -> Void)?
     }
 
-    var items: [PartialKeyPath<ParentObject>: Item]
+    @usableFromInline
+    var items: [Int: Item]
 }
 
 /// Protocol for extensible classes
 public protocol HBExtensible {
+    @inlinable
     var extensions: HBExtensions<Self> { get set }
 }
 
 /// Version of `HBExtensions` that requires all extensions are sendable
-public struct HBSendableExtensions<ParentObject> {
+public struct HBSendableExtensions<ParentObject>: Sendable {
     /// Initialize extensions
+    @inlinable
     public init() {
         self.items = [:]
     }
 
     /// Get optional extension from a `KeyPath`
-    public func get<Type: HBSendable>(_ key: KeyPath<ParentObject, Type>) -> Type? {
-        self.items[key]?.value as? Type
+    @inlinable
+    public func get<Type: Sendable>(_ key: KeyPath<ParentObject, Type>) -> Type? {
+        self.items[key.hashValue]?.value as? Type
+    }
+
+    /// Get optional extension from a `KeyPath` that returns an optional
+    @inlinable
+    public func get<Type: Sendable>(_ key: KeyPath<ParentObject, Type?>) -> Type? {
+        self.items[key.hashValue]?.value as? Type
     }
 
     /// Get extension from a `KeyPath`
-    public func get<Type: HBSendable>(_ key: KeyPath<ParentObject, Type>, error: StaticString? = nil) -> Type {
-        guard let value = items[key]?.value as? Type else {
+    @inlinable
+    public func get<Type: Sendable>(_ key: KeyPath<ParentObject, Type>, error: StaticString? = nil) -> Type {
+        guard let value = items[key.hashValue]?.value as? Type else {
             preconditionFailure(error?.description ?? "Cannot get extension of type \(Type.self) without having set it")
         }
         return value
     }
 
     /// Return if extension has been set
-    public func exists<Type: HBSendable>(_ key: KeyPath<ParentObject, Type>) -> Bool {
-        self.items[key]?.value != nil
+    @inlinable
+    public func exists<Type: Sendable>(_ key: KeyPath<ParentObject, Type>) -> Bool {
+        self.items[key.hashValue]?.value != nil
     }
 
     /// Set extension for a `KeyPath`
@@ -123,23 +155,30 @@ public struct HBSendableExtensions<ParentObject> {
     ///   - key: KeyPath
     ///   - value: value to store in extension
     ///   - shutdownCallback: closure to call when extensions are shutsdown
-    public mutating func set<Type: HBSendable>(_ key: KeyPath<ParentObject, Type>, value: Type) {
-        self.items[key] = .init(
+    @inlinable
+    public mutating func set<Type: Sendable>(_ key: KeyPath<ParentObject, Type>, value: Type) {
+        self.items[key.hashValue] = .init(
             value: value
         )
     }
 
-    struct Item {
-        let value: Any
+    @usableFromInline
+    struct Item: Sendable {
+        @usableFromInline
+        internal init(value: Sendable) {
+            self.value = value
+        }
+
+        @usableFromInline
+        let value: Sendable
     }
 
-    var items: [PartialKeyPath<ParentObject>: Item]
+    @usableFromInline
+    var items: [Int: Item]
 }
 
 /// Protocol for extensible classes
 public protocol HBSendableExtensible {
+    @inlinable
     var extensions: HBSendableExtensions<Self> { get set }
 }
-
-/// Conform to @unchecked Sendable as the PartialKeyPath in the item dictionary is not Sendable
-extension HBSendableExtensions: @unchecked Sendable {}
