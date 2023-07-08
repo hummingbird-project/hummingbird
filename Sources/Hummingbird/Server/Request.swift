@@ -53,10 +53,10 @@ public struct HBRequest: Sendable, HBSendableExtensible {
 
     /// Parameters extracted during processing of request URI. These are available to you inside the route handler
     public var parameters: HBParameters {
-        get {
+        @inlinable get {
             self.extensions.get(\.parameters) ?? .init()
         }
-        set { self.extensions.set(\.parameters, value: newValue) }
+        @inlinable set { self.extensions.set(\.parameters, value: newValue) }
     }
 
     /// endpoint that services this request.

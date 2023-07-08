@@ -19,6 +19,7 @@ public struct HBParameters: Sendable {
 
     static let recursiveCaptureKey: Substring = ":**:"
 
+    @usableFromInline
     init() {
         self.parameters = .init()
     }
