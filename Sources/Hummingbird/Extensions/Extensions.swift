@@ -38,12 +38,12 @@ public struct HBExtensions<ParentObject> {
 
     /// Get optional extension from a `KeyPath`
     public func get<Type>(_ key: KeyPath<ParentObject, Type>) -> Type? {
-        self.items[key]?.value as? Type
+        self.items[key.hashValue]?.value as? Type
     }
 
     /// Get extension from a `KeyPath`
     public func get<Type>(_ key: KeyPath<ParentObject, Type>, error: StaticString? = nil) -> Type {
-        guard let value = items[key]?.value as? Type else {
+        guard let value = items[key.hashValue]?.value as? Type else {
             preconditionFailure(error?.description ?? "Cannot get extension of type \(Type.self) without having set it")
         }
         return value
@@ -51,7 +51,7 @@ public struct HBExtensions<ParentObject> {
 
     /// Return if extension has been set
     public func exists<Type>(_ key: KeyPath<ParentObject, Type>) -> Bool {
-        self.items[key]?.value != nil
+        self.items[key.hashValue]?.value != nil
     }
 
     /// Set extension for a `KeyPath`
@@ -60,12 +60,13 @@ public struct HBExtensions<ParentObject> {
     ///   - value: value to store in extension
     ///   - shutdownCallback: closure to call when extensions are shutsdown
     public mutating func set<Type>(_ key: KeyPath<ParentObject, Type>, value: Type, shutdownCallback: ((Type) throws -> Void)? = nil) {
-        if let item = items[key] {
+        let keyHash = key.hashValue
+        if let item = items[keyHash] {
             guard item.shutdown == nil else {
                 preconditionFailure("Cannot replace items with shutdown functions")
             }
         }
-        self.items[key] = .init(
+        self.items[keyHash] = .init(
             value: value,
             shutdown: shutdownCallback.map { callback in
                 return { item in try callback(item as! Type) }
@@ -85,7 +86,7 @@ public struct HBExtensions<ParentObject> {
         let shutdown: ((Any) throws -> Void)?
     }
 
-    var items: [PartialKeyPath<ParentObject>: Item]
+    var items: [Int: Item]
 }
 
 /// Protocol for extensible classes
@@ -94,7 +95,7 @@ public protocol HBExtensible {
 }
 
 /// Version of `HBExtensions` that requires all extensions are sendable
-public struct HBSendableExtensions<ParentObject> {
+public struct HBSendableExtensions<ParentObject>: Sendable {
     /// Initialize extensions
     public init() {
         self.items = [:]
@@ -102,12 +103,12 @@ public struct HBSendableExtensions<ParentObject> {
 
     /// Get optional extension from a `KeyPath`
     public func get<Type: HBSendable>(_ key: KeyPath<ParentObject, Type>) -> Type? {
-        self.items[key]?.value as? Type
+        self.items[key.hashValue]?.value as? Type
     }
 
     /// Get extension from a `KeyPath`
     public func get<Type: HBSendable>(_ key: KeyPath<ParentObject, Type>, error: StaticString? = nil) -> Type {
-        guard let value = items[key]?.value as? Type else {
+        guard let value = items[key.hashValue]?.value as? Type else {
             preconditionFailure(error?.description ?? "Cannot get extension of type \(Type.self) without having set it")
         }
         return value
@@ -115,7 +116,7 @@ public struct HBSendableExtensions<ParentObject> {
 
     /// Return if extension has been set
     public func exists<Type: HBSendable>(_ key: KeyPath<ParentObject, Type>) -> Bool {
-        self.items[key]?.value != nil
+        self.items[key.hashValue]?.value != nil
     }
 
     /// Set extension for a `KeyPath`
@@ -124,7 +125,7 @@ public struct HBSendableExtensions<ParentObject> {
     ///   - value: value to store in extension
     ///   - shutdownCallback: closure to call when extensions are shutsdown
     public mutating func set<Type: HBSendable>(_ key: KeyPath<ParentObject, Type>, value: Type) {
-        self.items[key] = .init(
+        self.items[key.hashValue] = .init(
             value: value
         )
     }
@@ -133,13 +134,10 @@ public struct HBSendableExtensions<ParentObject> {
         let value: Any
     }
 
-    var items: [PartialKeyPath<ParentObject>: Item]
+    var items: [Int: Item]
 }
 
 /// Protocol for extensible classes
 public protocol HBSendableExtensible {
     var extensions: HBSendableExtensions<Self> { get set }
 }
-
-/// Conform to @unchecked Sendable as the PartialKeyPath in the item dictionary is not Sendable
-extension HBSendableExtensions: @unchecked Sendable {}
