@@ -23,9 +23,19 @@ extension HBApplication {
         }
     }
 
-    var ext: Int? {
+    var ext: Int {
         get { return extensions.get(\.ext) }
         set { extensions.set(\.ext, value: newValue) }
+    }
+
+    var extWithDefault: Int {
+        get { return extensions.get(\.ext) ?? 50 }
+        set { extensions.set(\.ext, value: newValue) }
+    }
+
+    var optionalExt: Int? {
+        get { return extensions.get(\.optionalExt) }
+        set { extensions.set(\.optionalExt, value: newValue) }
     }
 
     var shutdownTest: ActiveTest? {
@@ -38,11 +48,51 @@ extension HBApplication {
     }
 }
 
+extension HBRequest {
+    var ext: Int {
+        get { return extensions.get(\.ext) }
+        set { extensions.set(\.ext, value: newValue) }
+    }
+
+    var extWithDefault: Int {
+        get { return extensions.get(\.ext) ?? 50 }
+        set { extensions.set(\.ext, value: newValue) }
+    }
+
+    var optionalExt: Int? {
+        get { return extensions.get(\.optionalExt) }
+        set { extensions.set(\.optionalExt, value: newValue) }
+    }
+}
+
 class ExtensionTests: XCTestCase {
     func testExtension() {
         let app = HBApplication()
         app.ext = 56
         XCTAssertEqual(app.ext, 56)
+    }
+
+    func testExtensionWithDefault() {
+        let app = HBApplication()
+        XCTAssertEqual(app.extWithDefault, 50)
+        app.ext = 23
+        XCTAssertEqual(app.extWithDefault, 23)
+    }
+
+    func testOptionalExtension() {
+        let app = HBApplication()
+        app.optionalExt = 56
+        XCTAssertEqual(app.optionalExt, 56)
+    }
+
+    func testExists() {
+        let app = HBApplication()
+        XCTAssertEqual(app.extensions.exists(\.ext), false)
+        XCTAssertEqual(app.extensions.exists(\.optionalExt), false)
+        app.optionalExt = 1
+        app.ext = 2
+        XCTAssertEqual(app.extensions.exists(\.ext), true)
+        XCTAssertEqual(app.extensions.exists(\.optionalExt), true)
     }
 
     func testExtensionShutdown() throws {

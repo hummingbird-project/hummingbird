@@ -42,6 +42,12 @@ public struct HBExtensions<ParentObject> {
         self.items[key.hashValue]?.value as? Type
     }
 
+    /// Get optional extension from a `KeyPath` that returns an optional
+    @inlinable
+    public func get<Type>(_ key: KeyPath<ParentObject, Type?>) -> Type? {
+        self.items[key.hashValue]?.value as? Type
+    }
+
     /// Get extension from a `KeyPath`
     @inlinable
     public func get<Type>(_ key: KeyPath<ParentObject, Type>, error: StaticString? = nil) -> Type {
@@ -119,13 +125,19 @@ public struct HBSendableExtensions<ParentObject>: Sendable {
 
     /// Get optional extension from a `KeyPath`
     @inlinable
-    public func get<Type: HBSendable>(_ key: KeyPath<ParentObject, Type>) -> Type? {
+    public func get<Type: Sendable>(_ key: KeyPath<ParentObject, Type>) -> Type? {
+        self.items[key.hashValue]?.value as? Type
+    }
+
+    /// Get optional extension from a `KeyPath` that returns an optional
+    @inlinable
+    public func get<Type: Sendable>(_ key: KeyPath<ParentObject, Type?>) -> Type? {
         self.items[key.hashValue]?.value as? Type
     }
 
     /// Get extension from a `KeyPath`
     @inlinable
-    public func get<Type: HBSendable>(_ key: KeyPath<ParentObject, Type>, error: StaticString? = nil) -> Type {
+    public func get<Type: Sendable>(_ key: KeyPath<ParentObject, Type>, error: StaticString? = nil) -> Type {
         guard let value = items[key.hashValue]?.value as? Type else {
             preconditionFailure(error?.description ?? "Cannot get extension of type \(Type.self) without having set it")
         }
@@ -134,7 +146,7 @@ public struct HBSendableExtensions<ParentObject>: Sendable {
 
     /// Return if extension has been set
     @inlinable
-    public func exists<Type: HBSendable>(_ key: KeyPath<ParentObject, Type>) -> Bool {
+    public func exists<Type: Sendable>(_ key: KeyPath<ParentObject, Type>) -> Bool {
         self.items[key.hashValue]?.value != nil
     }
 
@@ -144,7 +156,7 @@ public struct HBSendableExtensions<ParentObject>: Sendable {
     ///   - value: value to store in extension
     ///   - shutdownCallback: closure to call when extensions are shutsdown
     @inlinable
-    public mutating func set<Type: HBSendable>(_ key: KeyPath<ParentObject, Type>, value: Type) {
+    public mutating func set<Type: Sendable>(_ key: KeyPath<ParentObject, Type>, value: Type) {
         self.items[key.hashValue] = .init(
             value: value
         )
