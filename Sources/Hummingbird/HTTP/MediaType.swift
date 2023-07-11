@@ -125,12 +125,15 @@ public struct HBMediaType: Sendable, CustomStringConvertible {
     /// Return if media type matches the input
     public func isType(_ type: HBMediaType) -> Bool {
         guard self.type == type.type,
-              self.subType == type.subType || type.subType == "*",
-              type.parameter == nil || (self.parameter?.name == type.parameter?.name && self.parameter?.value == type.parameter?.value)
+              self.subType == type.subType || type.subType == "*"
         else {
             return false
         }
-        return true
+        if let parameter = type.parameter {
+            return parameter.name == self.parameter?.name && parameter.value == self.parameter?.value
+        } else {
+            return true
+        }
     }
 
     /// Get media type from a file extension
@@ -421,4 +424,11 @@ extension HBMediaType {
         "3g2": .video3g2,
         "7z": .application7z,
     ]
+}
+
+extension HBMediaType {
+    // Allow matching media types in switch statements
+    public static func ~= (_ lhs: Self, _ rhs: Self) -> Bool {
+        rhs.isType(lhs)
+    }
 }

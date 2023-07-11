@@ -89,6 +89,19 @@ class HTTPTests: XCTestCase {
         XCTAssert(HBMediaType(from: "audio/ogg")?.isType(.audioOgg) == true)
     }
 
+    func testMediaTypeMatching() {
+        switch HBMediaType(from: "application/json; charset=utf8") {
+        case .some(.application), .some(.applicationJson):
+            break
+        default: XCTFail()
+        }
+        switch HBMediaType(from: "application/json") {
+        case .some(.application), .some(.applicationJson):
+            break
+        default: XCTFail()
+        }
+    }
+
     func testMediaTypeParameters() {
         let mediaType = HBMediaType(from: "application/json; charset=utf8")
         XCTAssertEqual(mediaType?.parameter?.name, "charset")
