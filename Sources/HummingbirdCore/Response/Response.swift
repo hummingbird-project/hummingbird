@@ -16,7 +16,7 @@ import NIOCore
 import NIOHTTP1
 
 /// HTTP response
-public struct HBHTTPResponse: HBSendable {
+public struct HBHTTPResponse: Sendable {
     public var head: HTTPResponseHead
     public var body: HBResponseBody
 

@@ -16,7 +16,7 @@ import NIOCore
 import NIOHTTP1
 
 /// HTTP request
-public struct HBHTTPRequest: HBSendable {
+public struct HBHTTPRequest: Sendable {
     public var head: HTTPRequestHead
     public var body: HBRequestBody
 }

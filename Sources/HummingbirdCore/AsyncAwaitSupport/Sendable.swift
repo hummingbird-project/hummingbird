@@ -15,8 +15,5 @@
 import NIOCore
 import NIOHTTP1
 
-#if swift(>=5.6)
+@available(*, deprecated, renamed: "Sendable")
 public typealias HBSendable = Swift.Sendable
-#else
-public typealias HBSendable = Any
-#endif

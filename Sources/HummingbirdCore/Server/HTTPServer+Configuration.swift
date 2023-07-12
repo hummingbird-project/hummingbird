@@ -16,7 +16,7 @@ import NIOCore
 
 extension HBHTTPServer {
     /// Idle state handlder configuration
-    public struct IdleStateHandlerConfiguration {
+    public struct IdleStateHandlerConfiguration: Sendable {
         /// timeout when reading a request
         let readTimeout: TimeAmount
         /// timeout since last writing a response

@@ -18,7 +18,7 @@ import NIOCore
 public typealias HBStreamCallback = @Sendable (EventLoop) -> EventLoopFuture<HBStreamerOutput>
 
 /// Response body. Can be a single ByteBuffer, a stream of ByteBuffers or empty
-public enum HBResponseBody: HBSendable {
+public enum HBResponseBody: Sendable {
     /// Body stored as a single ByteBuffer
     case byteBuffer(ByteBuffer)
     /// Streamer object supplying byte buffers
@@ -75,7 +75,7 @@ extension HBResponseBody: CustomStringConvertible {
 }
 
 /// Object supplying ByteBuffers for a response body
-public protocol HBResponseBodyStreamer: HBSendable {
+public protocol HBResponseBodyStreamer: Sendable {
     func read(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput>
 }
 

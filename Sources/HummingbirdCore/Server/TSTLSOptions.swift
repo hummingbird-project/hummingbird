@@ -17,7 +17,7 @@ import Foundation
 import Network
 
 /// Wrapper for NIO transport services TLS options
-public struct TSTLSOptions {
+public struct TSTLSOptions: Sendable {
     @available(macOS 10.14, iOS 12, tvOS 12, *)
     public enum ServerIdentity {
         case secIdentity(SecIdentity)

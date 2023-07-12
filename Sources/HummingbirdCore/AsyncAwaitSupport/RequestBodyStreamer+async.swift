@@ -46,7 +46,7 @@ extension HBStaticStreamer {
 
 /// AsyncSequence providing ByteBuffers from a request body stream
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-public struct HBRequestBodyStreamerSequence: AsyncSequence {
+public struct HBRequestBodyStreamerSequence: AsyncSequence, Sendable {
     public typealias Element = ByteBuffer
 
     let streamer: HBStreamerProtocol
