@@ -26,18 +26,18 @@ struct HBXCTEmbedded: HBXCT {
     }
 
     /// Start tests
-    func start(application: HBApplication) {
+    func run(application: HBApplication) async throws {
         application.server.addChannelHandler(BreakupHTTPBodyChannelHandler())
         XCTAssertNoThrow(
             try self.embeddedChannel.pipeline.addHandlers(
                 application.server.getChildChannelHandlers(responder: HBApplication.HTTPResponder(application: application))
             ).wait()
         )
+        try await Task.sleep(nanoseconds: .max)
     }
 
     /// Stop tests
-    func stop(application: HBApplication) {
-        try? application.shutdownApplication()
+    func shutdown() {
         XCTAssertNoThrow(_ = try self.embeddedChannel.finish())
         XCTAssertNoThrow(_ = try self.embeddedEventLoop.syncShutdownGracefully())
     }

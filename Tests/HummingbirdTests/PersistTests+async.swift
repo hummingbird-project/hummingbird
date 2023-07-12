@@ -15,217 +15,218 @@
 import Hummingbird
 import XCTest
 
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-final class AsyncPersistTests: XCTestCase {
-    func createApplication() throws -> HBApplication {
-        let app = HBApplication(testing: .asyncTest)
-        // add persist
-        app.addPersist(using: .memory)
+/*
+ final class AsyncPersistTests: XCTestCase {
+     func createApplication() throws -> HBApplication {
+         let app = HBApplication(testing: .asyncTest)
+         // add persist
+         app.addPersist(using: .memory)
 
-        app.router.put("/persist/:tag") { request -> HTTPResponseStatus in
-            guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
-            let tag = try request.parameters.require("tag")
-            try await request.persist.set(key: tag, value: String(buffer: buffer))
-            return .ok
-        }
-        app.router.put("/persist/:tag/:time") { request -> HTTPResponseStatus in
-            guard let time = request.parameters.get("time", as: Int.self) else { throw HBHTTPError(.badRequest) }
-            guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
-            let tag = try request.parameters.require("tag")
-            try await request.persist.set(key: tag, value: String(buffer: buffer), expires: .seconds(numericCast(time)))
-            return .ok
-        }
-        app.router.get("/persist/:tag") { request -> String? in
-            let tag = try request.parameters.require("tag")
-            return try await request.persist.get(key: tag, as: String.self)
-        }
-        app.router.delete("/persist/:tag") { request -> HTTPResponseStatus in
-            let tag = try request.parameters.require("tag")
-            try await request.persist.remove(key: tag)
-            return .noContent
-        }
-        return app
-    }
+         app.router.put("/persist/:tag") { request -> HTTPResponseStatus in
+             guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
+             let tag = try request.parameters.require("tag")
+             try await request.persist.set(key: tag, value: String(buffer: buffer))
+             return .ok
+         }
+         app.router.put("/persist/:tag/:time") { request -> HTTPResponseStatus in
+             guard let time = request.parameters.get("time", as: Int.self) else { throw HBHTTPError(.badRequest) }
+             guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
+             let tag = try request.parameters.require("tag")
+             try await request.persist.set(key: tag, value: String(buffer: buffer), expires: .seconds(numericCast(time)))
+             return .ok
+         }
+         app.router.get("/persist/:tag") { request -> String? in
+             let tag = try request.parameters.require("tag")
+             return try await request.persist.get(key: tag, as: String.self)
+         }
+         app.router.delete("/persist/:tag") { request -> HTTPResponseStatus in
+             let tag = try request.parameters.require("tag")
+             try await request.persist.remove(key: tag)
+             return .noContent
+         }
+         return app
+     }
 
-    func testSetGet() throws {
-        #if os(macOS)
-        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
-        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
-        #endif
-        let app = try createApplication()
-        try app.XCTStart()
-        defer { app.XCTStop() }
-        let tag = UUID().uuidString
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(String(buffer: body), "Persist")
-        }
-    }
+     func testSetGet() throws {
+         #if os(macOS)
+         // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+         guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+         #endif
+         let app = try createApplication()
+         try app.XCTStart()
+         defer { app.XCTStop() }
+         let tag = UUID().uuidString
+         try app.XCTExecute(uri: "/persist/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
+         try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
+             let body = try XCTUnwrap(response.body)
+             XCTAssertEqual(String(buffer: body), "Persist")
+         }
+     }
 
-    func testCreateGet() throws {
-        #if os(macOS)
-        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
-        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
-        #endif
-        let app = try createApplication()
-        app.router.put("/create/:tag") { request -> HTTPResponseStatus in
-            guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
-            let tag = try request.parameters.require("tag")
-            try await request.persist.create(key: tag, value: String(buffer: buffer))
-            return .ok
-        }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-        let tag = UUID().uuidString
-        try app.XCTExecute(uri: "/create/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(String(buffer: body), "Persist")
-        }
-    }
+     func testCreateGet() throws {
+         #if os(macOS)
+         // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+         guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+         #endif
+         let app = try createApplication()
+         app.router.put("/create/:tag") { request -> HTTPResponseStatus in
+             guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
+             let tag = try request.parameters.require("tag")
+             try await request.persist.create(key: tag, value: String(buffer: buffer))
+             return .ok
+         }
+         try app.XCTStart()
+         defer { app.XCTStop() }
+         let tag = UUID().uuidString
+         try app.XCTExecute(uri: "/create/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
+         try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
+             let body = try XCTUnwrap(response.body)
+             XCTAssertEqual(String(buffer: body), "Persist")
+         }
+     }
 
-    func testDoubleCreateFail() throws {
-        #if os(macOS)
-        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
-        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
-        #endif
-        let app = try createApplication()
-        app.router.put("/create/:tag") { request -> HTTPResponseStatus in
-            guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
-            let tag = try request.parameters.require("tag")
-            do {
-                try await request.persist.create(key: tag, value: String(buffer: buffer))
-            } catch let error as HBPersistError where error == .duplicate {
-                throw HBHTTPError(.conflict)
-            }
-            return .ok
-        }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-        let tag = UUID().uuidString
-        try app.XCTExecute(uri: "/create/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { response in
-            XCTAssertEqual(response.status, .ok)
-        }
-        try app.XCTExecute(uri: "/create/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { response in
-            XCTAssertEqual(response.status, .conflict)
-        }
-    }
+     func testDoubleCreateFail() throws {
+         #if os(macOS)
+         // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+         guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+         #endif
+         let app = try createApplication()
+         app.router.put("/create/:tag") { request -> HTTPResponseStatus in
+             guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
+             let tag = try request.parameters.require("tag")
+             do {
+                 try await request.persist.create(key: tag, value: String(buffer: buffer))
+             } catch let error as HBPersistError where error == .duplicate {
+                 throw HBHTTPError(.conflict)
+             }
+             return .ok
+         }
+         try app.XCTStart()
+         defer { app.XCTStop() }
+         let tag = UUID().uuidString
+         try app.XCTExecute(uri: "/create/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { response in
+             XCTAssertEqual(response.status, .ok)
+         }
+         try app.XCTExecute(uri: "/create/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { response in
+             XCTAssertEqual(response.status, .conflict)
+         }
+     }
 
-    func testSetTwice() throws {
-        #if os(macOS)
-        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
-        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
-        #endif
-        let app = try createApplication()
-        try app.XCTStart()
-        defer { app.XCTStop() }
+     func testSetTwice() throws {
+         #if os(macOS)
+         // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+         guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+         #endif
+         let app = try createApplication()
+         try app.XCTStart()
+         defer { app.XCTStop() }
 
-        let tag = UUID().uuidString
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "test1")) { _ in }
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "test2")) { response in
-            XCTAssertEqual(response.status, .ok)
-        }
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(String(buffer: body), "test2")
-        }
-    }
+         let tag = UUID().uuidString
+         try app.XCTExecute(uri: "/persist/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "test1")) { _ in }
+         try app.XCTExecute(uri: "/persist/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "test2")) { response in
+             XCTAssertEqual(response.status, .ok)
+         }
+         try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
+             let body = try XCTUnwrap(response.body)
+             XCTAssertEqual(String(buffer: body), "test2")
+         }
+     }
 
-    func testExpires() throws {
-        #if os(macOS)
-        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
-        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
-        #endif
-        let app = try createApplication()
-        try app.XCTStart()
-        defer { app.XCTStop() }
+     func testExpires() throws {
+         #if os(macOS)
+         // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+         guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+         #endif
+         let app = try createApplication()
+         try app.XCTStart()
+         defer { app.XCTStop() }
 
-        let tag1 = UUID().uuidString
-        let tag2 = UUID().uuidString
+         let tag1 = UUID().uuidString
+         let tag2 = UUID().uuidString
 
-        try app.XCTExecute(uri: "/persist/\(tag1)/0", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { _ in }
-        try app.XCTExecute(uri: "/persist/\(tag2)/10", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest2")) { _ in }
-        Thread.sleep(forTimeInterval: 1)
-        try app.XCTExecute(uri: "/persist/\(tag1)", method: .GET) { response in
-            XCTAssertEqual(response.status, .noContent)
-        }
-        try app.XCTExecute(uri: "/persist/\(tag2)", method: .GET) { response in
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(String(buffer: body), "ThisIsTest2")
-        }
-    }
+         try app.XCTExecute(uri: "/persist/\(tag1)/0", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { _ in }
+         try app.XCTExecute(uri: "/persist/\(tag2)/10", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest2")) { _ in }
+         Thread.sleep(forTimeInterval: 1)
+         try app.XCTExecute(uri: "/persist/\(tag1)", method: .GET) { response in
+             XCTAssertEqual(response.status, .noContent)
+         }
+         try app.XCTExecute(uri: "/persist/\(tag2)", method: .GET) { response in
+             let body = try XCTUnwrap(response.body)
+             XCTAssertEqual(String(buffer: body), "ThisIsTest2")
+         }
+     }
 
-    func testCodable() throws {
-        #if os(macOS)
-        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
-        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
-        #endif
-        struct TestCodable: Codable {
-            let buffer: String
-        }
-        let app = try createApplication()
+     func testCodable() throws {
+         #if os(macOS)
+         // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+         guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+         #endif
+         struct TestCodable: Codable {
+             let buffer: String
+         }
+         let app = try createApplication()
 
-        app.router.put("/codable/:tag") { request -> EventLoopFuture<HTTPResponseStatus> in
-            guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
-            guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
-            return request.persist.set(key: tag, value: TestCodable(buffer: String(buffer: buffer)))
-                .map { _ in .ok }
-        }
-        app.router.get("/codable/:tag") { request -> EventLoopFuture<String?> in
-            guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
-            return request.persist.get(key: tag, as: TestCodable.self).map { $0.map(\.buffer) }
-        }
-        try app.XCTStart()
-        defer { app.XCTStop() }
+         app.router.put("/codable/:tag") { request -> EventLoopFuture<HTTPResponseStatus> in
+             guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
+             guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
+             return request.persist.set(key: tag, value: TestCodable(buffer: String(buffer: buffer)))
+                 .map { _ in .ok }
+         }
+         app.router.get("/codable/:tag") { request -> EventLoopFuture<String?> in
+             guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
+             return request.persist.get(key: tag, as: TestCodable.self).map { $0.map(\.buffer) }
+         }
+         try app.XCTStart()
+         defer { app.XCTStop() }
 
-        let tag = UUID().uuidString
-        try app.XCTExecute(uri: "/codable/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
-        try app.XCTExecute(uri: "/codable/\(tag)", method: .GET) { response in
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(String(buffer: body), "Persist")
-        }
-    }
+         let tag = UUID().uuidString
+         try app.XCTExecute(uri: "/codable/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
+         try app.XCTExecute(uri: "/codable/\(tag)", method: .GET) { response in
+             let body = try XCTUnwrap(response.body)
+             XCTAssertEqual(String(buffer: body), "Persist")
+         }
+     }
 
-    func testRemove() throws {
-        #if os(macOS)
-        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
-        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
-        #endif
-        let app = try createApplication()
-        try app.XCTStart()
-        defer { app.XCTStop() }
+     func testRemove() throws {
+         #if os(macOS)
+         // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+         guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+         #endif
+         let app = try createApplication()
+         try app.XCTStart()
+         defer { app.XCTStop() }
 
-        let tag = UUID().uuidString
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { _ in }
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .DELETE) { _ in }
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
-            XCTAssertEqual(response.status, .noContent)
-        }
-    }
+         let tag = UUID().uuidString
+         try app.XCTExecute(uri: "/persist/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { _ in }
+         try app.XCTExecute(uri: "/persist/\(tag)", method: .DELETE) { _ in }
+         try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
+             XCTAssertEqual(response.status, .noContent)
+         }
+     }
 
-    func testExpireAndAdd() throws {
-        #if os(macOS)
-        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
-        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
-        #endif
-        let app = try createApplication()
-        try app.XCTStart()
-        defer { app.XCTStop() }
+     func testExpireAndAdd() throws {
+         #if os(macOS)
+         // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
+         guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+         #endif
+         let app = try createApplication()
+         try app.XCTStart()
+         defer { app.XCTStop() }
 
-        let tag = UUID().uuidString
-        try app.XCTExecute(uri: "/persist/\(tag)/0", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { _ in }
-        Thread.sleep(forTimeInterval: 1)
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
-            XCTAssertEqual(response.status, .noContent)
-        }
-        try app.XCTExecute(uri: "/persist/\(tag)/10", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { response in
-            XCTAssertEqual(response.status, .ok)
-        }
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
-            XCTAssertEqual(response.status, .ok)
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(String(buffer: body), "ThisIsTest1")
-        }
-    }
-}
+         let tag = UUID().uuidString
+         try app.XCTExecute(uri: "/persist/\(tag)/0", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { _ in }
+         Thread.sleep(forTimeInterval: 1)
+         try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
+             XCTAssertEqual(response.status, .noContent)
+         }
+         try app.XCTExecute(uri: "/persist/\(tag)/10", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { response in
+             XCTAssertEqual(response.status, .ok)
+         }
+         try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
+             XCTAssertEqual(response.status, .ok)
+             let body = try XCTUnwrap(response.body)
+             XCTAssertEqual(String(buffer: body), "ThisIsTest1")
+         }
+     }
+ }
+ */

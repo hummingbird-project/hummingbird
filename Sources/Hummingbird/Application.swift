@@ -14,12 +14,11 @@
 
 import Dispatch
 import HummingbirdCore
-import Lifecycle
-import LifecycleNIOCompat
 import Logging
 import NIOCore
 import NIOPosix
 import NIOTransportServices
+import ServiceLifecycle
 
 /// Application class. Brings together all the components of Hummingbird together
 ///
@@ -35,21 +34,19 @@ import NIOTransportServices
 /// app.wait()
 /// ```
 /// Editing the application setup after calling `start` will produce undefined behaviour.
-public final class HBApplication: HBExtensible {
+public final class HBApplication: HBExtensible, Service, @unchecked Sendable {
     // MARK: Member variables
 
-    /// server lifecycle, controls initialization and shutdown of application
-    public let lifecycle: ServiceLifecycle
     /// event loop group used by application
     public let eventLoopGroup: EventLoopGroup
     /// thread pool used by application
     public let threadPool: NIOThreadPool
     /// routes requests to requestResponders based on URI
-    public var router: HBRouterBuilder
+    public let router: HBRouterBuilder
     /// http server
-    public var server: HBHTTPServer
+    public let server: HBHTTPServer
     /// Configuration
-    public var configuration: Configuration
+    public let configuration: Configuration
     /// Application extensions
     public var extensions: HBExtensions<HBApplication>
     /// Logger. Required to be a var by hummingbird-lambda
@@ -58,6 +55,8 @@ public final class HBApplication: HBExtensible {
     public var encoder: HBResponseEncoder
     /// decoder used by router
     public var decoder: HBRequestDecoder
+    /// on server running
+    let onServerRunning: @Sendable () -> Void
 
     /// who provided the eventLoopGroup
     let eventLoopGroupProvider: NIOEventLoopGroupProvider
@@ -68,7 +67,7 @@ public final class HBApplication: HBExtensible {
     public init(
         configuration: HBApplication.Configuration = HBApplication.Configuration(),
         eventLoopGroupProvider: NIOEventLoopGroupProvider = .createNew,
-        serviceLifecycleProvider: ServiceLifecycleProvider = .createNew
+        onServerRunning: @escaping @Sendable () -> Void = {}
     ) {
         var logger = Logger(label: configuration.serverName ?? "HummingBird")
         logger.logLevel = configuration.logLevel
@@ -79,6 +78,7 @@ public final class HBApplication: HBExtensible {
         self.extensions = HBExtensions()
         self.encoder = NullEncoder()
         self.decoder = NullDecoder()
+        self.onServerRunning = onServerRunning
 
         // create eventLoopGroup
         self.eventLoopGroupProvider = eventLoopGroupProvider
@@ -93,73 +93,51 @@ public final class HBApplication: HBExtensible {
             self.eventLoopGroup = elg
         }
 
-        // create lifecycle
-        let lifecycleTasksContainer: LifecycleTasksContainer
-
-        switch serviceLifecycleProvider {
-        case .shared(let parentLifecycle):
-            self.lifecycle = parentLifecycle
-            let componentLifecycle = ComponentLifecycle(label: self.logger.label, logger: self.logger)
-            lifecycleTasksContainer = componentLifecycle
-            self.lifecycle.register(componentLifecycle)
-        case .createNew:
-            let serviceLifecycle = ServiceLifecycle(configuration: .init(logger: self.logger))
-            lifecycleTasksContainer = serviceLifecycle
-            self.lifecycle = serviceLifecycle
-        }
-
         self.threadPool = NIOThreadPool(numberOfThreads: configuration.threadPoolSize)
         self.threadPool.start()
 
         self.server = HBHTTPServer(group: self.eventLoopGroup, configuration: self.configuration.httpServer)
 
         // register application shutdown with lifecycle
-        lifecycleTasksContainer.registerShutdown(
-            label: "Application", .sync(self.shutdownApplication)
-        )
+        /* lifecycleTasksContainer.registerShutdown(
+             label: "Application", .sync(self.shutdownApplication)
+         )
 
-        lifecycleTasksContainer.registerShutdown(
-            label: "DateCache", .eventLoopFuture { HBDateCache.shutdownDateCaches(eventLoopGroup: self.eventLoopGroup) }
-        )
-
-        // register server startup and shutdown with lifecycle
-        if !configuration.noHTTPServer {
-            lifecycleTasksContainer.register(
-                label: "HTTP Server",
-                start: .eventLoopFuture { self.server.start(responder: HTTPResponder(application: self)) },
-                shutdown: .eventLoopFuture(self.server.stop)
-            )
-        }
+         // register server startup and shutdown with lifecycle
+         if !configuration.noHTTPServer {
+             lifecycleTasksContainer.register(
+                 label: "HTTP Server",
+                 start: .eventLoopFuture { self.server.start(responder: HTTPResponder(application: self)) },
+                 shutdown: .eventLoopFuture(self.server.stop)
+             )
+         } */
     }
 
     // MARK: Methods
 
-    /// Run application
-    public func start() throws {
-        var startError: Error?
-        let startSemaphore = DispatchSemaphore(value: 0)
-
-        self.lifecycle.start { error in
-            startError = error
-            startSemaphore.signal()
+    public func run() async throws {
+        try await withGracefulShutdownHandler {
+            try await self.server.start(responder: HTTPResponder(application: self)).get()
+            self.onServerRunning()
+            try await withCheckedThrowingContinuation { cont in
+                self.server.channel?.closeFuture.whenComplete { result in
+                    cont.resume(with: result)
+                }
+            }
+            try await HBDateCache.shutdownDateCaches(eventLoopGroup: self.eventLoopGroup).get()
+            try self.shutdownApplication()
+        } onGracefulShutdown: {
+            _ = self.server.stop()
         }
-        startSemaphore.wait()
-        try startError.map { throw $0 }
     }
 
-    /// wait while server is running
-    public func wait() {
-        self.lifecycle.wait()
-    }
-
-    /// Shutdown application
-    public func stop() {
-        let stopSemaphore = DispatchSemaphore(value: 0)
-
-        self.lifecycle.shutdown { _ in
-            stopSemaphore.signal()
-        }
-        stopSemaphore.wait()
+    public func runService() async throws {
+        let serviceGroup = ServiceGroup(
+            services: [self],
+            configuration: .init(gracefulShutdownSignals: [.sigterm, .sigint]),
+            logger: self.logger
+        )
+        try await serviceGroup.run()
     }
 
     /// middleware applied to requests

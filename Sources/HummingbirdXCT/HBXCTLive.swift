@@ -32,9 +32,9 @@ class HBXCTLive: HBXCT {
     }
 
     /// Start tests
-    func start(application: HBApplication) throws {
+    func run(application: HBApplication) async throws {
         do {
-            try application.start()
+            try await application.run()
             let client = HBXCTClient(
                 host: "localhost",
                 port: application.server.port!,
@@ -51,10 +51,8 @@ class HBXCTLive: HBXCT {
     }
 
     /// Stop tests
-    func stop(application: HBApplication) {
+    func shutdown() {
         XCTAssertNoThrow(_ = try self.client?.syncShutdown())
-        application.stop()
-        application.wait()
         try? self.eventLoopGroup.syncShutdownGracefully()
     }
 

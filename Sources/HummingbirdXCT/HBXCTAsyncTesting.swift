@@ -32,7 +32,7 @@ struct HBXCTAsyncTesting: HBXCT {
     }
 
     /// Start tests
-    func start(application: HBApplication) {
+    func run(application: HBApplication) async throws {
         application.server.addChannelHandler(HBHTTPConvertChannel())
         application.server.addChannelHandler(BreakupHTTPBodyChannelHandler())
         XCTAssertNoThrow(
@@ -40,16 +40,11 @@ struct HBXCTAsyncTesting: HBXCT {
                 application.server.getChildChannelHandlers(responder: HBApplication.HTTPResponder(application: application))
             ).wait()
         )
+        try await Task.sleep(nanoseconds: .max)
     }
 
     /// EventLoop version of stop
-    func stop(application: HBApplication) {
-        let promise = self.asyncTestingEventLoop.makePromise(of: Void.self)
-        promise.completeWithTask {
-            try await self._stop(application: application)
-        }
-        try? promise.futureResult.wait()
-    }
+    func shutdown() {}
 
     /// Stop tests
     func _stop(application: HBApplication) async throws {

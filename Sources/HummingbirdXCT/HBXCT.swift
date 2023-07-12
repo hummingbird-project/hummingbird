@@ -15,6 +15,7 @@
 import Hummingbird
 import NIOCore
 import NIOHTTP1
+import ServiceLifecycle
 
 /// Response structure returned by XCT testing framework
 public struct HBXCTResponse {
@@ -50,10 +51,9 @@ struct HBXCTError: Error, Equatable {
 
 /// Protocol for XCT framework.
 public protocol HBXCT {
-    /// Called to start testing of application
-    func start(application: HBApplication) throws
-    /// Called to stop testing of application
-    func stop(application: HBApplication)
+    func run(application: HBApplication) async throws
+    /// Called to shutdown xct setup
+    func shutdown()
     /// Execute URL request and provide response
     func execute(
         uri: String,

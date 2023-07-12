@@ -84,13 +84,19 @@ extension HBApplication {
     // MARK: Methods
 
     /// Start tests
-    public func XCTStart() throws {
-        try self.xct.start(application: self)
-    }
+    public func XCTRun(_ test: @escaping @Sendable (HBApplication) async throws -> Void) async throws {
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                try await self.xct.run(application: self)
+            }
+            group.addTask {
+                try await test(self)
+            }
+            try await group.next()
+            group.cancelAll()
 
-    /// Stop tests
-    public func XCTStop() {
-        self.xct.stop(application: self)
+            self.xct.shutdown()
+        }
     }
 
     /// Send request and call test callback on the response returned

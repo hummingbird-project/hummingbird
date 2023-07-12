@@ -166,11 +166,8 @@ extension HBApplication {
     ///   - using: Default job queue driver
     ///   - numWorkers: Number of workers that will service the default queue
     public func addJobs(using: HBJobQueueFactory, numWorkers: Int) {
-        self.extensions.set(\.jobs, value: .init(queue: using, application: self, numWorkers: numWorkers))
-        self.lifecycle.register(
-            label: "Jobs",
-            start: .sync { self.jobs.start() },
-            shutdown: .eventLoopFuture { self.jobs.shutdown() }
-        )
+        self.extensions.set(\.jobs, value: .init(queue: using, application: self, numWorkers: numWorkers)) { _ in
+            try! self.jobs.shutdown().wait()
+        }
     }
 }
