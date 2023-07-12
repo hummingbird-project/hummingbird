@@ -1,11 +1,11 @@
-// swift-tools-version:5.6
+// swift-tools-version:5.7
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
     name: "hummingbird-core",
-    platforms: [.iOS(.v12), .tvOS(.v12)],
+    platforms: [.macOS(.v10_15), .iOS(.v13), .tvOS(.v13)],
     products: [
         .library(name: "HummingbirdCore", targets: ["HummingbirdCore"]),
         .library(name: "HummingbirdHTTP2", targets: ["HummingbirdHTTP2"]),

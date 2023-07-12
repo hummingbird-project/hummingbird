@@ -4,12 +4,14 @@ on:
   push:
     branches:
     - main
+    - 2.x.x
     paths:
     - '**.swift'
     - '**.yml'
   pull_request:
     branches:
     - main
+    - 2.x.x
     paths:
     - '**.swift'
     - '**.yml'
@@ -39,7 +41,6 @@ jobs:
     strategy:
       matrix:
         image:
-          - 'swift:5.6'
           - 'swift:5.7'
           - 'swift:5.8'
     
