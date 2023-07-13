@@ -72,7 +72,11 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
             self.state = .body(head, part)
 
         case (.body(let part), .body(let head, let buffer)):
-            let streamer = HBByteBufferStreamer(eventLoop: context.eventLoop, maxSize: self.configuration.maxUploadSize)
+            let streamer = HBByteBufferStreamer(
+                eventLoop: context.eventLoop,
+                maxSize: self.configuration.maxUploadSize,
+                maxStreamingBufferSize: self.configuration.maxStreamingBufferSize
+            )
             let request = HBHTTPRequest(head: head, body: .stream(streamer))
             streamer.feed(.byteBuffer(buffer))
             streamer.feed(.byteBuffer(part))
@@ -281,12 +285,10 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
 
     func read(context: ChannelHandlerContext) {
         if case .streamingBody(let streamer) = self.state {
-            guard streamer.currentSize < self.configuration.maxStreamingBufferSize else {
-                streamer.onConsume = { streamer in
-                    if streamer.currentSize < self.configuration.maxStreamingBufferSize {
-                        context.read()
-                    }
-                }
+            // test streamer didn't need to apply backpressure
+            guard !streamer.isBackpressureRequired({
+                context.read()
+            }) else {
                 return
             }
         }

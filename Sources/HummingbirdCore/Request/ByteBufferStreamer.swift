@@ -40,7 +40,7 @@ public protocol HBStreamerProtocol: Sendable {
 /// Request body streamer. `HBHTTPDecodeHandler` feeds this with ByteBuffers while the Router consumes them
 ///
 /// Can set as @unchecked Sendable as interface functions are only allowed to run on same EventLoop
-public final class HBByteBufferStreamer: HBStreamerProtocol {
+public final class HBByteBufferStreamer: HBStreamerProtocol, Sendable {
     public enum StreamerError: Swift.Error {
         case bodyDropped
     }
@@ -63,118 +63,290 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
         }
     }
 
-    /// Queue of streamer inputs
-    var queue: CircularBuffer<FeedInput>
-    /// Queue of promises waiting for streamer inputs.
-    var waitingQueue: CircularBuffer<EventLoopPromise<FeedInput>>
-    /// back pressure promise
-    var backPressurePromise: EventLoopPromise<Void>?
-    /// EventLoop everything is running on
-    let eventLoop: EventLoop
-    /// called every time a ByteBuffer is consumed
-    var onConsume: ((HBByteBufferStreamer) -> Void)?
-    /// maximum allowed size to upload
-    let maxSize: Int
-    /// maximum size currently being streamed before back pressure is applied
-    let maxStreamingBufferSize: Int
-    /// current size in memory
-    var currentSize: Int
-    /// bytes fed to streamer so far
-    var sizeFed: Int
-    /// is request streamer finished
-    var isFinishedFeeding: Bool
-    /// if finished the last result sent
-    var finishedResult: FeedInput?
+    class InternalState {
+        init(
+            queue: CircularBuffer<FeedInput>,
+            waitingQueue: CircularBuffer<EventLoopPromise<FeedInput>>,
+            backPressurePromise: EventLoopPromise<Void>? = nil,
+            onConsume: ((InternalState) -> Void)? = nil,
+            currentSize: Int,
+            sizeFed: Int,
+            isFinishedFeeding: Bool,
+            finishedResult: FeedInput? = nil,
+            maxSize: Int,
+            maxStreamingBufferSize: Int
+        ) {
+            self.queue = queue
+            self.waitingQueue = waitingQueue
+            self.backPressurePromise = backPressurePromise
+            self.onConsume = onConsume
+            self.currentSize = currentSize
+            self.sizeFed = sizeFed
+            self.isFinishedFeeding = isFinishedFeeding
+            self.finishedResult = finishedResult
+            self.maxSize = maxSize
+            self.maxStreamingBufferSize = maxStreamingBufferSize
+        }
+
+        /// Queue of streamer inputs
+        var queue: CircularBuffer<FeedInput>
+        /// Queue of promises waiting for streamer inputs.
+        var waitingQueue: CircularBuffer<EventLoopPromise<FeedInput>>
+        /// back pressure promise
+        var backPressurePromise: EventLoopPromise<Void>?
+        /// called every time a ByteBuffer is consumed
+        var onConsume: ((InternalState) -> Void)?
+        /// current size in memory
+        var currentSize: Int
+        /// bytes fed to streamer so far
+        var sizeFed: Int
+        /// is request streamer finished
+        var isFinishedFeeding: Bool
+        /// if finished the last result sent
+        var finishedResult: FeedInput?
+        /// maximum allowed size to upload
+        let maxSize: Int
+        /// maximum size currently being streamed before back pressure is applied
+        let maxStreamingBufferSize: Int
+
+        /// Feed a ByteBuffer to the request
+        /// - Parameter result: Bytebuffer or end tag
+        func feed(buffer: ByteBuffer, eventLoop: EventLoop) -> EventLoopFuture<Void> {
+            if let backPressurePromise = backPressurePromise {
+                let loopBoundSelf = NIOLoopBound(self, eventLoop: eventLoop)
+                return backPressurePromise.futureResult.always { _ in
+                    loopBoundSelf.value.feed(.byteBuffer(buffer), eventLoop: eventLoop)
+                }
+            } else {
+                self.feed(.byteBuffer(buffer), eventLoop: eventLoop)
+                return eventLoop.makeSucceededVoidFuture()
+            }
+        }
+
+        /// Feed a ByteBuffer to the stream
+        /// - Parameter result: Bytebuffer or end tag
+        func feed(_ result: FeedInput, eventLoop: EventLoop) {
+            // don't add more results to queue if we are finished
+            guard self.isFinishedFeeding == false else { return }
+
+            switch result {
+            case .byteBuffer(let byteBuffer):
+                self.sizeFed += byteBuffer.readableBytes
+                self.currentSize += byteBuffer.readableBytes
+                if self.currentSize > self.maxStreamingBufferSize {
+                    self.backPressurePromise = eventLoop.makePromise()
+                }
+                if self.sizeFed > self.maxSize {
+                    self.feed(.error(HBHTTPError(.payloadTooLarge)), eventLoop: eventLoop)
+                } else {
+                    // if there is a promise of the waiting queue then succeed that.
+                    // otherwise add feed result to queue
+                    if let promise = self.waitingQueue.popFirst() {
+                        promise.succeed(result)
+                    } else {
+                        self.queue.append(result)
+                    }
+                }
+            case .error, .end:
+                self.isFinishedFeeding = true
+                // if waiting queue has any promises then complete all of those
+                // otherwise add feed result to queue
+                if self.waitingQueue.count > 0 {
+                    for promise in self.waitingQueue {
+                        promise.succeed(result)
+                    }
+                } else {
+                    self.queue.append(result)
+                }
+            }
+        }
+
+        /// Consume what has been fed to the request
+        /// - Returns: Returns an EventLoopFuture that will be fulfilled with array of ByteBuffers that has so far been fed to the request body
+        ///     and whether we have consumed an end tag
+        func consume(eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput> {
+            if let finishedResult = self.finishedResult {
+                return eventLoop.makeCompletedFuture(finishedResult.streamerOutputResult)
+            }
+            // function for consuming feed input
+            @Sendable func _consume(input: FeedInput) -> Result<HBStreamerOutput, Error> {
+                switch input {
+                case .byteBuffer(let buffer):
+                    self.currentSize -= buffer.readableBytes
+                    if self.currentSize < self.maxStreamingBufferSize {
+                        self.backPressurePromise?.succeed(())
+                    }
+                case .end:
+                    let size = self.currentSize
+                    assert(size == 0)
+                    self.finishedResult = input
+                default:
+                    self.finishedResult = input
+                }
+                self.onConsume?(self)
+                return input.streamerOutputResult
+            }
+
+            // if there is a result on the queue consume that otherwise create
+            // a promise and add it to the waiting queue and once that promise
+            // is complete consume the result
+            if let result = self.queue.popFirst() {
+                return eventLoop.makeCompletedFuture(_consume(input: result))
+            } else {
+                let promise = eventLoop.makePromise(of: FeedInput.self)
+                self.waitingQueue.append(promise)
+                return promise.futureResult.flatMapResult(_consume)
+            }
+        }
+
+        /// Consume the request body, calling `process` on each buffer until you receive an end tag
+        /// - Returns: EventLoopFuture that will be fulfilled when all ByteBuffers have been consumed
+        /// - Parameters:
+        ///   - eventLoop: EventLoop to run on
+        ///   - process: Closure to call to process ByteBuffer
+        func consumeAll(on eventLoop: EventLoop, _ process: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
+            let promise = eventLoop.makePromise(of: Void.self)
+            @Sendable func _consumeAll(_ count: Int) {
+                self.consume(eventLoop: eventLoop).whenComplete { result in
+                    switch result {
+                    case .success(.byteBuffer(let buffer)):
+                        process(buffer).whenComplete { result in
+                            switch result {
+                            case .failure(let error):
+                                promise.fail(error)
+                            case .success:
+                                // after 16 iterations, run via execute to avoid any possible
+                                // stack overflows
+                                if count > 16 {
+                                    eventLoop.execute {
+                                        _consumeAll(0)
+                                    }
+                                } else {
+                                    _consumeAll(count + 1)
+                                }
+                            }
+                        }
+
+                    case .success(.end):
+                        promise.succeed(())
+
+                    case .failure(let error):
+                        promise.fail(error)
+                    }
+                }
+            }
+            _consumeAll(0)
+            return promise.futureResult
+        }
+
+        /// Consume the request body, but ignore contents
+        /// - Returns: EventLoopFuture that will be fulfilled when all ByteBuffers have been consumed
+        /// - Parameters:
+        ///   - eventLoop: EventLoop to run on
+        func drop(eventLoop: EventLoop) -> EventLoopFuture<Void> {
+            self.isFinishedFeeding = true
+
+            let promise = eventLoop.makePromise(of: Void.self)
+            @Sendable func _dropAll() {
+                self.consume(eventLoop: eventLoop).map { output in
+                    switch output {
+                    case .byteBuffer:
+                        _dropAll()
+
+                    case .end:
+                        promise.succeed(())
+                    }
+                }
+                .cascadeFailure(to: promise)
+            }
+            if self.waitingQueue.last != nil {
+                _dropAll()
+            } else {
+                promise.succeed(())
+            }
+            return promise.futureResult
+        }
+
+        /// Collate the request body into one ByteBuffer
+        /// - Parameter maxSize: Maximum size for the resultant ByteBuffer
+        /// - Returns: EventLoopFuture that will be fulfilled when all buffers are consumed
+        func collate(maxSize: Int, eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer?> {
+            let promise = eventLoop.makePromise(of: ByteBuffer?.self)
+            let completeBuffer: NIOLoopBoundBox<ByteBuffer?> = .init(nil, eventLoop: eventLoop)
+            @Sendable func _consumeAll(size: Int) {
+                self.consume(eventLoop: eventLoop).whenComplete { result in
+                    switch result {
+                    case .success(.byteBuffer(var buffer)):
+                        let size = size + buffer.readableBytes
+                        if size > maxSize {
+                            promise.fail(HBHTTPError(.payloadTooLarge))
+                        }
+                        if completeBuffer.value != nil {
+                            completeBuffer.value!.writeBuffer(&buffer)
+                        } else {
+                            completeBuffer.value = buffer
+                        }
+                        _consumeAll(size: size)
+
+                    case .success(.end):
+                        promise.succeed(completeBuffer.value)
+
+                    case .failure(let error):
+                        promise.fail(error)
+                    }
+                }
+            }
+            _consumeAll(size: 0)
+            return promise.futureResult
+        }
+
+        func isBackpressureRequired(_ callback: @escaping () -> Void) -> Bool {
+            guard self.currentSize < self.maxStreamingBufferSize else {
+                self.onConsume = { streamer in
+                    if streamer.currentSize < streamer.maxStreamingBufferSize {
+                        callback()
+                    }
+                }
+                return true
+            }
+            return false
+        }
+    }
+
+    /// state wrapped in a NIOLoopBoubdBox to ensure state is only ever accessed from eventloop
+    internal let state: NIOLoopBoundBox<InternalState>
 
     public init(eventLoop: EventLoop, maxSize: Int, maxStreamingBufferSize: Int? = nil) {
-        self.queue = .init()
-        self.waitingQueue = .init()
-        self.backPressurePromise = nil
-        self.eventLoop = eventLoop
-        self.sizeFed = 0
-        self.currentSize = 0
-        self.maxSize = maxSize
-        self.maxStreamingBufferSize = maxStreamingBufferSize ?? maxSize
-        self.onConsume = nil
-        self.isFinishedFeeding = false
-        self.finishedResult = nil
+        self.state = .init(
+            .init(
+                queue: .init(),
+                waitingQueue: .init(),
+                backPressurePromise: nil,
+                onConsume: nil,
+                currentSize: 0,
+                sizeFed: 0,
+                isFinishedFeeding: false,
+                finishedResult: nil,
+                maxSize: maxSize,
+                maxStreamingBufferSize: maxStreamingBufferSize ?? maxSize
+            ),
+            eventLoop: eventLoop
+        )
     }
 
     /// Feed a ByteBuffer to the request, while applying back pressure
     /// - Parameter result: Bytebuffer or end tag
     public func feed(buffer: ByteBuffer) -> EventLoopFuture<Void> {
-        if self.eventLoop.inEventLoop {
-            return self._feed(buffer: buffer)
-        } else {
-            return self.eventLoop.flatSubmit {
-                self._feed(buffer: buffer)
-            }
-        }
-    }
-
-    /// Feed a ByteBuffer to the request
-    /// - Parameter result: Bytebuffer or end tag
-    private func _feed(buffer: ByteBuffer) -> EventLoopFuture<Void> {
-        self.eventLoop.assertInEventLoop()
-        if let backPressurePromise = backPressurePromise {
-            return backPressurePromise.futureResult.always { _ in
-                self._feed(.byteBuffer(buffer))
-            }
-        } else {
-            self._feed(.byteBuffer(buffer))
-            return self.eventLoop.makeSucceededVoidFuture()
+        self.state.runOnLoop { state, eventLoop in
+            state.feed(buffer: buffer, eventLoop: eventLoop)
         }
     }
 
     /// Feed a ByteBuffer to the request
     /// - Parameter result: Bytebuffer or end tag
     public func feed(_ result: FeedInput) {
-        if self.eventLoop.inEventLoop {
-            self._feed(result)
-        } else {
-            self.eventLoop.execute {
-                self._feed(result)
-            }
-        }
-    }
-
-    /// Feed a ByteBuffer to the stream
-    /// - Parameter result: Bytebuffer or end tag
-    private func _feed(_ result: FeedInput) {
-        // don't add more results to queue if we are finished
-        guard self.isFinishedFeeding == false else { return }
-
-        self.eventLoop.assertInEventLoop()
-
-        switch result {
-        case .byteBuffer(let byteBuffer):
-            self.sizeFed += byteBuffer.readableBytes
-            self.currentSize += byteBuffer.readableBytes
-            if self.currentSize > self.maxStreamingBufferSize {
-                self.backPressurePromise = self.eventLoop.makePromise()
-            }
-            if self.sizeFed > self.maxSize {
-                self._feed(.error(HBHTTPError(.payloadTooLarge)))
-            } else {
-                // if there is a promise of the waiting queue then succeed that.
-                // otherwise add feed result to queue
-                if let promise = self.waitingQueue.popFirst() {
-                    promise.succeed(result)
-                } else {
-                    self.queue.append(result)
-                }
-            }
-        case .error, .end:
-            self.isFinishedFeeding = true
-            // if waiting queue has any promises then complete all of those
-            // otherwise add feed result to queue
-            if self.waitingQueue.count > 0 {
-                for promise in self.waitingQueue {
-                    promise.succeed(result)
-                }
-            } else {
-                self.queue.append(result)
-            }
+        self.state.runOnLoop { state, eventLoop in
+            state.feed(result, eventLoop: eventLoop)
         }
     }
 
@@ -183,13 +355,32 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
     /// - Parameter eventLoop: EventLoop to return future on
     /// - Returns: Returns an EventLoopFuture that will be fulfilled with array of ByteBuffers that has so far been fed to th request body
     ///     and whether we have consumed everything
+    public func consume() -> EventLoopFuture<HBStreamerOutput> {
+        self.state.runOnLoop { state, eventLoop in
+            state.consume(eventLoop: eventLoop)
+        }
+    }
+
+    /// Consume what has been fed to the request
+    ///
+    /// - Parameter eventLoop: EventLoop to return future on
+    /// - Returns: Returns an EventLoopFuture that will be fulfilled with array of ByteBuffers that has so far been fed to th request body
+    ///     and whether we have consumed everything
+    @available(*, deprecated, message: "Use consume(). If you need to jump to another EventLoop use hop(to:).")
     public func consume(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput> {
-        if self.eventLoop.inEventLoop {
-            return self.consume().hop(to: eventLoop)
-        } else {
-            return self.eventLoop.flatSubmit {
-                self.consume()
-            }.hop(to: eventLoop)
+        self.state.runOnLoop { state, stateEventLoop in
+            state.consume(eventLoop: stateEventLoop)
+        }.hop(to: eventLoop)
+    }
+
+    /// Consume the request body, calling `process` on each buffer until you receive an end tag
+    /// - Returns: EventLoopFuture that will be fulfilled when all ByteBuffers have been consumed
+    /// - Parameters:
+    ///   - eventLoop: EventLoop to run on
+    ///   - process: Closure to call to process ByteBuffer
+    public func consumeAll(_ process: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
+        self.state.runOnLoop { state, eventLoop in
+            state.consumeAll(on: eventLoop, process)
         }
     }
 
@@ -198,41 +389,11 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
     /// - Parameters:
     ///   - eventLoop: EventLoop to run on
     ///   - process: Closure to call to process ByteBuffer
+    @available(*, deprecated, message: "Use consumeAll(_:). If you need to jump to another EventLoop use hop(to:).")
     public func consumeAll(on eventLoop: EventLoop, _ process: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
-        let promise = self.eventLoop.makePromise(of: Void.self)
-        func _consumeAll(_ count: Int) {
-            self.consume().whenComplete { result in
-                switch result {
-                case .success(.byteBuffer(let buffer)):
-                    process(buffer).whenComplete { result in
-                        switch result {
-                        case .failure(let error):
-                            promise.fail(error)
-                        case .success:
-                            // after 16 iterations, run via execute to avoid any possible
-                            // stack overflows
-                            if count > 16 {
-                                self.eventLoop.execute {
-                                    _consumeAll(0)
-                                }
-                            } else {
-                                _consumeAll(count + 1)
-                            }
-                        }
-                    }
-
-                case .success(.end):
-                    promise.succeed(())
-
-                case .failure(let error):
-                    promise.fail(error)
-                }
-            }
-        }
-        self.eventLoop.execute {
-            _consumeAll(0)
-        }
-        return promise.futureResult
+        self.state.runOnLoop { state, stateEventLoop in
+            state.consumeAll(on: stateEventLoop, process)
+        }.hop(to: eventLoop)
     }
 
     /// Consume the request body, but ignore contents
@@ -240,64 +401,8 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
     /// - Parameters:
     ///   - eventLoop: EventLoop to run on
     func drop() -> EventLoopFuture<Void> {
-        self.eventLoop.assertInEventLoop()
-        self.isFinishedFeeding = true
-
-        let promise = self.eventLoop.makePromise(of: Void.self)
-        func _dropAll() {
-            self.consume(on: self.eventLoop).map { output in
-                switch output {
-                case .byteBuffer:
-                    _dropAll()
-
-                case .end:
-                    promise.succeed(())
-                }
-            }
-            .cascadeFailure(to: promise)
-        }
-        if self.waitingQueue.last != nil {
-            _dropAll()
-        } else {
-            promise.succeed(())
-        }
-        return promise.futureResult
-    }
-
-    /// Consume what has been fed to the request
-    /// - Returns: Returns an EventLoopFuture that will be fulfilled with array of ByteBuffers that has so far been fed to the request body
-    ///     and whether we have consumed an end tag
-    func consume() -> EventLoopFuture<HBStreamerOutput> {
-        if let finishedResult = self.finishedResult {
-            return self.eventLoop.makeCompletedFuture(finishedResult.streamerOutputResult)
-        }
-        // function for consuming feed input
-        func _consume(input: FeedInput) -> Result<HBStreamerOutput, Error> {
-            switch input {
-            case .byteBuffer(let buffer):
-                self.currentSize -= buffer.readableBytes
-                if self.currentSize < self.maxStreamingBufferSize {
-                    self.backPressurePromise?.succeed(())
-                }
-            case .end:
-                assert(self.currentSize == 0)
-                self.finishedResult = input
-            default:
-                self.finishedResult = input
-            }
-            self.onConsume?(self)
-            return input.streamerOutputResult
-        }
-        self.eventLoop.assertInEventLoop()
-        // if there is a result on the queue consume that otherwise create
-        // a promise and add it to the waiting queue and once that promise
-        // is complete consume the result
-        if let result = self.queue.popFirst() {
-            return self.eventLoop.makeCompletedFuture(_consume(input: result))
-        } else {
-            let promise = self.eventLoop.makePromise(of: FeedInput.self)
-            self.waitingQueue.append(promise)
-            return promise.futureResult.flatMapResult(_consume)
+        self.state.runOnLoop { state, eventLoop in
+            state.drop(eventLoop: eventLoop)
         }
     }
 
@@ -305,33 +410,15 @@ public final class HBByteBufferStreamer: HBStreamerProtocol {
     /// - Parameter maxSize: Maximum size for the resultant ByteBuffer
     /// - Returns: EventLoopFuture that will be fulfilled when all buffers are consumed
     func collate(maxSize: Int) -> EventLoopFuture<ByteBuffer?> {
-        let promise = self.eventLoop.makePromise(of: ByteBuffer?.self)
-        var completeBuffer: ByteBuffer?
-        func _consumeAll(size: Int) {
-            self.consume().whenComplete { result in
-                switch result {
-                case .success(.byteBuffer(var buffer)):
-                    let size = size + buffer.readableBytes
-                    if size > maxSize {
-                        promise.fail(HBHTTPError(.payloadTooLarge))
-                    }
-                    if completeBuffer != nil {
-                        completeBuffer!.writeBuffer(&buffer)
-                    } else {
-                        completeBuffer = buffer
-                    }
-                    _consumeAll(size: size)
-
-                case .success(.end):
-                    promise.succeed(completeBuffer)
-
-                case .failure(let error):
-                    promise.fail(error)
-                }
-            }
+        self.state.runOnLoop { state, eventLoop in
+            state.collate(maxSize: maxSize, eventLoop: eventLoop)
         }
-        _consumeAll(size: 0)
-        return promise.futureResult
+    }
+
+    /// Check if backpressure should be applied and provide callback to be called when it
+    /// is no longer needed
+    func isBackpressureRequired(_ callback: @escaping () -> Void) -> Bool {
+        self.state.value.isBackpressureRequired(callback)
     }
 }
 
@@ -368,5 +455,26 @@ final class HBStaticStreamer: HBStreamerProtocol {
     }
 }
 
-extension HBByteBufferStreamer: @unchecked Sendable {}
 extension HBStaticStreamer: @unchecked Sendable {}
+
+extension NIOLoopBoundBox {
+    @discardableResult func runOnLoop<NewValue>(_ callback: @escaping @Sendable (Value, EventLoop) -> EventLoopFuture<NewValue>) -> EventLoopFuture<NewValue> {
+        if self._eventLoop.inEventLoop {
+            return callback(self.value, self._eventLoop)
+        } else {
+            return self._eventLoop.flatSubmit {
+                callback(self.value, self._eventLoop)
+            }
+        }
+    }
+
+    @discardableResult func runOnLoop<NewValue>(_ callback: @escaping @Sendable (Value, EventLoop) throws -> NewValue) -> EventLoopFuture<NewValue> {
+        if self._eventLoop.inEventLoop {
+            return _eventLoop.makeCompletedFuture { try callback(self.value, self._eventLoop) }
+        } else {
+            return self._eventLoop.submit {
+                try callback(self.value, self._eventLoop)
+            }
+        }
+    }
+}

@@ -24,9 +24,7 @@ extension HBStreamerProtocol {
 extension HBByteBufferStreamer {
     /// Consume what has been fed to the request so far
     public func consume() async throws -> HBStreamerOutput {
-        return try await self.eventLoop.flatSubmit {
-            self.consume()
-        }.get()
+        try await self.consume().get()
     }
 }
 

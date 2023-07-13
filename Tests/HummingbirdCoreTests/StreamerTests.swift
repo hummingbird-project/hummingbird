@@ -59,7 +59,7 @@ class ByteBufferStreamerTests: XCTestCase {
         func _feed() {
             let blockSize = min(buffer.readableBytes, 32 * 1024)
             streamer.feed(buffer: buffer.readSlice(length: blockSize)!).whenComplete { _ in
-                XCTAssertLessThanOrEqual(streamer.currentSize, streamer.maxStreamingBufferSize + blockSize)
+                XCTAssertLessThanOrEqual(streamer.state.value.currentSize, streamer.state.value.maxStreamingBufferSize + blockSize)
                 if buffer.readableBytes > 0 {
                     _feed()
                 } else {
@@ -75,7 +75,7 @@ class ByteBufferStreamerTests: XCTestCase {
         func _feed() {
             let blockSize = min(buffer.readableBytes, 32 * 1024)
             streamer.feed(buffer: buffer.readSlice(length: blockSize)!).whenComplete { _ in
-                XCTAssertLessThanOrEqual(streamer.currentSize, streamer.maxStreamingBufferSize + blockSize)
+                XCTAssertLessThanOrEqual(streamer.state.value.currentSize, streamer.state.value.maxStreamingBufferSize + blockSize)
                 if buffer.readableBytes > 0 {
                     eventLoop.scheduleTask(in: .microseconds(Int64.random(in: 0..<100_000))) {
                         _feed()
@@ -90,7 +90,7 @@ class ByteBufferStreamerTests: XCTestCase {
 
     func consumeStreamer(_ streamer: HBByteBufferStreamer, eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer> {
         var consumeBuffer = ByteBuffer()
-        return streamer.consumeAll(on: eventLoop) { buffer in
+        return streamer.consumeAll { buffer in
             var buffer = buffer
             consumeBuffer.writeBuffer(&buffer)
             return eventLoop.makeSucceededVoidFuture()
@@ -99,7 +99,7 @@ class ByteBufferStreamerTests: XCTestCase {
 
     func consumeStreamerWithDelays(_ streamer: HBByteBufferStreamer, eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer> {
         var consumeBuffer = ByteBuffer()
-        return streamer.consumeAll(on: eventLoop) { buffer in
+        return streamer.consumeAll { buffer in
             var buffer = buffer
             consumeBuffer.writeBuffer(&buffer)
             return eventLoop.scheduleTask(in: .microseconds(Int64.random(in: 0..<100))) {}.futureResult
@@ -110,72 +110,88 @@ class ByteBufferStreamerTests: XCTestCase {
     func testFeedConsume() throws {
         let buffer = self.randomBuffer(size: 128_000)
         let eventLoop = self.elg.next()
-        let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 1024 * 1024)
 
-        self.feedStreamer(streamer, buffer: buffer, eventLoop: eventLoop)
-        let consumeBuffer = try consumeStreamer(streamer, eventLoop: eventLoop).wait()
+        try eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
+            let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 1024 * 1024)
 
-        XCTAssertEqual(buffer, consumeBuffer)
+            self.feedStreamer(streamer, buffer: buffer, eventLoop: eventLoop)
+            return self.consumeStreamer(streamer, eventLoop: eventLoop).map { consumeBuffer in
+                XCTAssertEqual(buffer, consumeBuffer)
+            }
+        }.wait()
     }
 
     /// Test can feed from not the EventLoop and then consume
     func testFeedOffEventLoop() throws {
         let buffer = self.randomBuffer(size: 128_000)
         let eventLoop = self.elg.next()
-        let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 1024 * 1024)
+        try eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
+            let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 1024 * 1024)
 
-        self.feedStreamer(streamer, buffer: buffer)
-        let consumeBuffer = try consumeStreamer(streamer, eventLoop: eventLoop).wait()
-
-        XCTAssertEqual(buffer, consumeBuffer)
+            self.feedStreamer(streamer, buffer: buffer, eventLoop: self.elg.next())
+            return self.consumeStreamer(streamer, eventLoop: eventLoop).map { consumeBuffer in
+                XCTAssertEqual(buffer, consumeBuffer)
+            }
+        }.wait()
     }
 
     /// Test can feed and then consume with back pressure applied
     func testFeedWithBackPressure() throws {
         let buffer = self.randomBuffer(size: 128_000)
         let eventLoop = self.elg.next()
-        let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 1024 * 1024, maxStreamingBufferSize: 20 * 1024)
 
-        self.feedStreamerWithBackPressure(streamer, buffer: buffer)
-        let consumeBuffer = try consumeStreamer(streamer, eventLoop: eventLoop).wait()
+        try eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
+            let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 1024 * 1024, maxStreamingBufferSize: 20 * 1024)
 
-        XCTAssertEqual(buffer, consumeBuffer)
+            self.feedStreamerWithBackPressure(streamer, buffer: buffer)
+            return self.consumeStreamer(streamer, eventLoop: eventLoop).map { consumeBuffer in
+                XCTAssertEqual(buffer, consumeBuffer)
+            }
+        }.wait()
     }
 
     /// Test can feed and then consume with delays and back pressure applied
     func testFeedWithBackPressureConsumeDelays() throws {
         let buffer = self.randomBuffer(size: 600_000)
         let eventLoop = self.elg.next()
-        let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 1024 * 1024, maxStreamingBufferSize: 64 * 1024)
 
-        self.feedStreamerWithBackPressure(streamer, buffer: buffer)
-        let consumeBuffer = try consumeStreamerWithDelays(streamer, eventLoop: eventLoop).wait()
+        try eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
+            let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 1024 * 1024, maxStreamingBufferSize: 64 * 1024)
 
-        XCTAssertEqual(buffer, consumeBuffer)
+            self.feedStreamerWithBackPressure(streamer, buffer: buffer)
+            return self.consumeStreamerWithDelays(streamer, eventLoop: eventLoop).map { consumeBuffer in
+                XCTAssertEqual(buffer, consumeBuffer)
+            }
+        }.wait()
     }
 
     /// Test can feed and then consume
     func testFeedWithBackPressureAndDelays() throws {
         let buffer = self.randomBuffer(size: 400_000)
         let eventLoop = self.elg.next()
-        let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 1024 * 1024, maxStreamingBufferSize: 64 * 1024)
 
-        self.feedStreamerWithDelays(streamer, buffer: buffer, eventLoop: eventLoop)
-        let consumeBuffer = try consumeStreamer(streamer, eventLoop: eventLoop).wait()
+        try eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
+            let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 1024 * 1024, maxStreamingBufferSize: 64 * 1024)
 
-        XCTAssertEqual(buffer, consumeBuffer)
+            self.feedStreamerWithDelays(streamer, buffer: buffer, eventLoop: eventLoop)
+            return self.consumeStreamer(streamer, eventLoop: eventLoop).map { consumeBuffer in
+                XCTAssertEqual(buffer, consumeBuffer)
+            }
+        }.wait()
     }
 
     /// Test can feed and then consume
     func testFeedAndConsumeWithDelays() throws {
         let buffer = self.randomBuffer(size: 550_000)
         let eventLoop = self.elg.next()
-        let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 1024 * 1024, maxStreamingBufferSize: 64 * 1024)
+        try eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
+            let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 1024 * 1024, maxStreamingBufferSize: 64 * 1024)
 
-        self.feedStreamerWithDelays(streamer, buffer: buffer, eventLoop: eventLoop)
-        let consumeBuffer = try consumeStreamerWithDelays(streamer, eventLoop: eventLoop).wait()
-
-        XCTAssertEqual(buffer, consumeBuffer)
+            self.feedStreamerWithDelays(streamer, buffer: buffer, eventLoop: eventLoop)
+            return self.consumeStreamerWithDelays(streamer, eventLoop: eventLoop).map { consumeBuffer in
+                XCTAssertEqual(buffer, consumeBuffer)
+            }
+        }.wait()
     }
 
     /// Test can run multiple consumes at same time
@@ -183,8 +199,8 @@ class ByteBufferStreamerTests: XCTestCase {
         let originalBuffer = self.randomBuffer(size: 20000)
         var buffer = originalBuffer
         let eventLoop = self.elg.next()
-        let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 1024 * 1024, maxStreamingBufferSize: 64 * 1024)
         let finalBuffer = try eventLoop.flatSubmit { () -> EventLoopFuture<ByteBuffer> in
+            let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 1024 * 1024, maxStreamingBufferSize: 64 * 1024)
             let consumeRequests: [EventLoopFuture<HBStreamerOutput>] = (0..<4).map { _ in streamer.consume() }
 
             while let slice = buffer.readSlice(length: 5000) {
@@ -210,8 +226,8 @@ class ByteBufferStreamerTests: XCTestCase {
         let originalBuffer = self.randomBuffer(size: 20000)
         var buffer = originalBuffer
         let eventLoop = self.elg.next()
-        let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 1024 * 1024, maxStreamingBufferSize: 64 * 1024)
         let finalBuffer = try eventLoop.flatSubmit { () -> EventLoopFuture<ByteBuffer> in
+            let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 1024 * 1024, maxStreamingBufferSize: 64 * 1024)
             var finalBuffer = ByteBufferAllocator().buffer(capacity: 20000)
             var consumeRequests: [EventLoopFuture<HBStreamerOutput>] = (0..<5).map { _ in streamer.consume() }
             while let slice = buffer.readSlice(length: 2000) {
@@ -236,29 +252,39 @@ class ByteBufferStreamerTests: XCTestCase {
     func testMaxSize() throws {
         let buffer = self.randomBuffer(size: 60000)
         let eventLoop = self.elg.next()
-        let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 32 * 1024)
-        self.feedStreamer(streamer, buffer: buffer)
-        XCTAssertThrowsError(try self.consumeStreamer(streamer, eventLoop: eventLoop).wait()) { error in
-            switch error {
-            case let error as HBHTTPError:
-                XCTAssertEqual(error.status, .payloadTooLarge)
-            default:
-                XCTFail("\(error)")
+        try eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
+            let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 32 * 1024)
+            self.feedStreamer(streamer, buffer: buffer)
+            return self.consumeStreamer(streamer, eventLoop: eventLoop).map { _ in
+                XCTFail("Should not get here")
+            }.flatMapErrorThrowing { error in
+                switch error {
+                case let error as HBHTTPError:
+                    XCTAssertEqual(error.status, .payloadTooLarge)
+                default:
+                    XCTFail("\(error)")
+                }
             }
-        }
+        }.wait()
     }
 
     func testCallingConsumeAfterEnd() throws {
         let buffer = self.randomBuffer(size: 1)
         let eventLoop = self.elg.next()
-        let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 32 * 1024)
-        streamer.feed(.byteBuffer(buffer))
-        streamer.feed(.end)
-        _ = try streamer.consume(on: eventLoop).wait()
-        let end1 = try streamer.consume(on: eventLoop).wait()
-        let end2 = try streamer.consume(on: eventLoop).wait()
-        XCTAssertEqual(end1, .end)
-        XCTAssertEqual(end2, .end)
+        try eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
+            let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 32 * 1024)
+            streamer.feed(.byteBuffer(buffer))
+            streamer.feed(.end)
+
+            return streamer.consume().flatMap { _ in
+                return streamer.consume()
+            }.flatMap { (end: HBStreamerOutput) in
+                XCTAssertEqual(end, .end)
+                return streamer.consume()
+            }.map { (end: HBStreamerOutput) in
+                XCTAssertEqual(end, .end)
+            }
+        }.wait()
     }
 
     /// test error is propagated
@@ -266,21 +292,25 @@ class ByteBufferStreamerTests: XCTestCase {
         struct MyError: Error {}
         var buffer = self.randomBuffer(size: 10000)
         let eventLoop = self.elg.next()
-        let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 32 * 1024)
+        try eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
+            let streamer = HBByteBufferStreamer(eventLoop: eventLoop, maxSize: 32 * 1024)
 
-        while buffer.readableBytes > 0 {
-            let blockSize = min(buffer.readableBytes, 32 * 1024)
-            streamer.feed(.byteBuffer(buffer.readSlice(length: blockSize)!))
-        }
-        streamer.feed(.error(MyError()))
-
-        XCTAssertThrowsError(try self.consumeStreamer(streamer, eventLoop: eventLoop).wait()) { error in
-            switch error {
-            case is MyError:
-                break
-            default:
-                XCTFail("\(error)")
+            while buffer.readableBytes > 0 {
+                let blockSize = min(buffer.readableBytes, 32 * 1024)
+                streamer.feed(.byteBuffer(buffer.readSlice(length: blockSize)!))
             }
-        }
+            streamer.feed(.error(MyError()))
+
+            return self.consumeStreamer(streamer, eventLoop: eventLoop).map { _ in
+                XCTFail("Should not get here")
+            }.flatMapErrorThrowing { error in
+                switch error {
+                case is MyError:
+                    break
+                default:
+                    XCTFail("\(error)")
+                }
+            }
+        }.wait()
     }
 }
