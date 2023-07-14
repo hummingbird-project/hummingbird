@@ -200,6 +200,12 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
 
     /// Write HTTP parts to channel context
     func writeHTTPParts(context: ChannelHandlerContext, response: HBHTTPResponse) -> EventLoopFuture<Void> {
+        func isInvalidHeaderError(_ error: Error?) -> Bool {
+            if let httpParserErrpr = error as? HTTPParserError, case .invalidHeaderToken = httpParserErrpr {
+                return true
+            }
+            return false
+        }
         // add content-length header
         var head = response.head
         if case .byteBuffer(let buffer) = response.body {
@@ -210,6 +216,7 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
             head.headers.add(name: "server", value: serverName)
         }
         context.write(self.wrapOutboundOut(.head(head)), promise: nil)
+        assert(!isInvalidHeaderError(self.propagatedError), "Invalid header")
         switch response.body {
         case .byteBuffer(let buffer):
             context.write(self.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: nil)
@@ -303,9 +310,6 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
             // only set state to error if already streaming a request body. Don't want to feed
             // additional ByteBuffers to streamer if error has been set
             self.state = .error
-        case .idle:
-            // don't propagate errors when state is idle
-            break
         default:
             self.propagatedError = error
         }
