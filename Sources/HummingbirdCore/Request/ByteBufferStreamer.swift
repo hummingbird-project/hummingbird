@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import NIOConcurrencyHelpers
 import NIOCore
 
 /// Values returned when we consume the contents of the streamer
@@ -366,7 +367,6 @@ public final class HBByteBufferStreamer: HBStreamerProtocol, Sendable {
     /// - Parameter eventLoop: EventLoop to return future on
     /// - Returns: Returns an EventLoopFuture that will be fulfilled with array of ByteBuffers that has so far been fed to th request body
     ///     and whether we have consumed everything
-    @available(*, deprecated, message: "Use consume(). If you need to jump to another EventLoop use hop(to:).")
     public func consume(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput> {
         self.state.runOnLoop { state, stateEventLoop in
             state.consume(eventLoop: stateEventLoop)
@@ -389,7 +389,6 @@ public final class HBByteBufferStreamer: HBStreamerProtocol, Sendable {
     /// - Parameters:
     ///   - eventLoop: EventLoop to run on
     ///   - process: Closure to call to process ByteBuffer
-    @available(*, deprecated, message: "Use consumeAll(_:). If you need to jump to another EventLoop use hop(to:).")
     public func consumeAll(on eventLoop: EventLoop, _ process: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
         self.state.runOnLoop { state, stateEventLoop in
             state.consumeAll(on: stateEventLoop, process)
@@ -426,16 +425,16 @@ public final class HBByteBufferStreamer: HBStreamerProtocol, Sendable {
 ///
 /// Required for the situation where the user wants to stream but has been provided
 /// with a single ByteBuffer
-final class HBStaticStreamer: HBStreamerProtocol {
-    var byteBuffer: ByteBuffer
+final class HBStaticStreamer: HBStreamerProtocol, Sendable {
+    let byteBuffer: NIOLockedValueBox<ByteBuffer>
 
     init(_ byteBuffer: ByteBuffer) {
-        self.byteBuffer = byteBuffer
+        self.byteBuffer = .init(byteBuffer)
     }
 
-    func consume(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput> {
-        return eventLoop.submit {
-            guard let output = self.byteBuffer.readSlice(length: self.byteBuffer.readableBytes) else {
+    func consume() -> HBStreamerOutput {
+        return self.byteBuffer.withLockedValue { byteBuffer in
+            guard let output = byteBuffer.readSlice(length: byteBuffer.readableBytes) else {
                 return .end
             }
             if output.readableBytes == 0 {
@@ -445,19 +444,26 @@ final class HBStaticStreamer: HBStreamerProtocol {
         }
     }
 
+    func consume(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput> {
+        return eventLoop.submit {
+            return self.consume()
+        }
+    }
+
     func consumeAll(on eventLoop: EventLoop, _ process: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
         return eventLoop.flatSubmit {
-            guard let output = self.byteBuffer.readSlice(length: self.byteBuffer.readableBytes) else {
-                return eventLoop.makeSucceededVoidFuture()
+            return self.byteBuffer.withLockedValue { byteBuffer in
+                guard let output = byteBuffer.readSlice(length: byteBuffer.readableBytes) else {
+                    return eventLoop.makeSucceededVoidFuture()
+                }
+                return process(output)
             }
-            return process(output)
         }
     }
 }
 
-extension HBStaticStreamer: @unchecked Sendable {}
-
 extension NIOLoopBoundBox {
+    /// Run callback on event loop attached to NIOLoopBoundBox
     @discardableResult func runOnLoop<NewValue>(_ callback: @escaping @Sendable (Value, EventLoop) -> EventLoopFuture<NewValue>) -> EventLoopFuture<NewValue> {
         if self._eventLoop.inEventLoop {
             return callback(self.value, self._eventLoop)
@@ -468,6 +474,7 @@ extension NIOLoopBoundBox {
         }
     }
 
+    /// Run callback on event loop attached to NIOLoopBoundBox
     @discardableResult func runOnLoop<NewValue>(_ callback: @escaping @Sendable (Value, EventLoop) throws -> NewValue) -> EventLoopFuture<NewValue> {
         if self._eventLoop.inEventLoop {
             return _eventLoop.makeCompletedFuture { try callback(self.value, self._eventLoop) }

@@ -28,20 +28,6 @@ extension HBByteBufferStreamer {
     }
 }
 
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-extension HBStaticStreamer {
-    /// Consume what has been fed to the request so far
-    public func consume() -> HBStreamerOutput {
-        guard let output = self.byteBuffer.readSlice(length: self.byteBuffer.readableBytes) else {
-            return .end
-        }
-        if output.readableBytes == 0 {
-            return .end
-        }
-        return .byteBuffer(output)
-    }
-}
-
 /// AsyncSequence providing ByteBuffers from a request body stream
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 public struct HBRequestBodyStreamerSequence: AsyncSequence, Sendable {
