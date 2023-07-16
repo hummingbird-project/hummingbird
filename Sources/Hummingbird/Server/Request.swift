@@ -23,8 +23,8 @@ private extension CodingKey {
 
     /// returns a coding key as a path key string
     var pathKeyValue: String {
-        if let intValue {
-            return String(intValue)
+        if let value = intValue {
+            return String(value)
         }
         return stringValue
     }
