@@ -139,9 +139,9 @@ public struct HBRequest: Sendable, HBSendableExtensible {
             let message = "Type mismatch for `\(path)` key, expected `\(type)` type."
             throw HBHTTPError(.badRequest, message: message)
         }
-        catch {
+        catch let error as HBHTTPResponseError {
             self.logger.debug("Decode Error: \(error)")
-            throw HBHTTPError(.badRequest, message: error.localizedDescription)
+            throw error
         }
     }
 
