@@ -106,7 +106,7 @@ public extension HBAsyncConnectionSource {
     func makeConnection(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Connection> {
         let promise = eventLoop.makePromise(of: Connection.self)
         promise.completeWithTask {
-            return try await makeConnection(on: eventLoop, logger: logger)
+            return try await self.makeConnection(on: eventLoop, logger: logger)
         }
         return promise.futureResult
     }

@@ -26,7 +26,7 @@ extension HBAsyncJob {
     func execute(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void> {
         let promise = eventLoop.makePromise(of: Void.self)
         promise.completeWithTask {
-            try await execute(logger: logger)
+            try await self.execute(logger: logger)
         }
         return promise.futureResult
     }

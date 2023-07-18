@@ -227,7 +227,7 @@ final class ApplicationTests: XCTestCase {
                 let stream: HBStreamerProtocol
 
                 func read(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput> {
-                    return stream.consume(on: eventLoop).map { chunk in
+                    return self.stream.consume(on: eventLoop).map { chunk in
                         switch chunk {
                         case .byteBuffer(let buffer):
                             return .byteBuffer(buffer)
@@ -277,7 +277,7 @@ final class ApplicationTests: XCTestCase {
                 let stream: HBStreamerProtocol
 
                 func read(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput> {
-                    return stream.consume(on: eventLoop).map { chunk in
+                    return self.stream.consume(on: eventLoop).map { chunk in
                         switch chunk {
                         case .byteBuffer(let buffer):
                             return .byteBuffer(buffer)

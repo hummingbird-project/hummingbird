@@ -46,7 +46,7 @@ final class MiddlewareTests: XCTestCase {
             func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
                 return next.respond(to: request).map { response in
                     var response = response
-                    response.headers.add(name: "middleware", value: string)
+                    response.headers.add(name: "middleware", value: self.string)
                     return response
                 }
             }

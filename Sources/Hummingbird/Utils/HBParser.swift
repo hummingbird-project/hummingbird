@@ -229,33 +229,33 @@ public extension HBParser {
         var untilString = untilString
         return try untilString.withUTF8 { utf8 in
             guard utf8.count > 0 else { throw Error.emptyString }
-            let startIndex = index
-            var foundIndex = index
+            let startIndex = self.index
+            var foundIndex = self.index
             var untilIndex = 0
-            while !reachedEnd() {
-                if buffer[index] == utf8[untilIndex] {
+            while !self.reachedEnd() {
+                if self.buffer[self.index] == utf8[untilIndex] {
                     if untilIndex == 0 {
-                        foundIndex = index
+                        foundIndex = self.index
                     }
                     untilIndex += 1
                     if untilIndex == utf8.endIndex {
                         unsafeAdvance()
                         if skipToEnd == false {
-                            index = foundIndex
+                            self.index = foundIndex
                         }
-                        let result = subParser(startIndex..<foundIndex)
+                        let result = self.subParser(startIndex..<foundIndex)
                         return result
                     }
                 } else {
                     untilIndex = 0
                 }
-                index += 1
+                self.index += 1
             }
             if throwOnOverflow {
                 _setPosition(startIndex)
                 throw Error.overflow
             }
-            return subParser(startIndex..<index)
+            return self.subParser(startIndex..<self.index)
         }
     }
 
@@ -625,7 +625,7 @@ extension HBParser {
                 }
             } else {
                 let newBuffer = try [UInt8].init(unsafeUninitializedCapacity: self.range.endIndex - self.index) { bytes, count in
-                    try count = _percentDecode(self.buffer[self.index..<range.endIndex], bytes)
+                    try count = _percentDecode(self.buffer[self.index..<self.range.endIndex], bytes)
                 }
                 return self.makeString(newBuffer)
             }

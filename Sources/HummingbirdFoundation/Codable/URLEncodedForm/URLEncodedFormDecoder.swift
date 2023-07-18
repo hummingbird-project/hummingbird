@@ -493,84 +493,84 @@ extension _URLEncodedFormDecoder {
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: Double.Type) throws -> Double {
-        guard let unboxValue = Double(try unbox(node, as: String.self)) else {
+        guard let unboxValue = try Double(unbox(node, as: String.self)) else {
             throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected Double"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: Float.Type) throws -> Float {
-        guard let unboxValue = Float(try unbox(node, as: String.self)) else {
+        guard let unboxValue = try Float(unbox(node, as: String.self)) else {
             throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected Float"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: Int.Type) throws -> Int {
-        guard let unboxValue = Int(try unbox(node, as: String.self)) else {
+        guard let unboxValue = try Int(unbox(node, as: String.self)) else {
             throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected Int"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: Int8.Type) throws -> Int8 {
-        guard let unboxValue = Int8(try unbox(node, as: String.self)) else {
+        guard let unboxValue = try Int8(unbox(node, as: String.self)) else {
             throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected Int8"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: Int16.Type) throws -> Int16 {
-        guard let unboxValue = Int16(try unbox(node, as: String.self)) else {
+        guard let unboxValue = try Int16(unbox(node, as: String.self)) else {
             throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected Int16"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: Int32.Type) throws -> Int32 {
-        guard let unboxValue = Int32(try unbox(node, as: String.self)) else {
+        guard let unboxValue = try Int32(unbox(node, as: String.self)) else {
             throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected Int32"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: Int64.Type) throws -> Int64 {
-        guard let unboxValue = Int64(try unbox(node, as: String.self)) else {
+        guard let unboxValue = try Int64(unbox(node, as: String.self)) else {
             throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected Int64"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: UInt.Type) throws -> UInt {
-        guard let unboxValue = UInt(try unbox(node, as: String.self)) else {
+        guard let unboxValue = try UInt(unbox(node, as: String.self)) else {
             throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected UInt"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: UInt8.Type) throws -> UInt8 {
-        guard let unboxValue = UInt8(try unbox(node, as: String.self)) else {
+        guard let unboxValue = try UInt8(unbox(node, as: String.self)) else {
             throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected UInt8"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: UInt16.Type) throws -> UInt16 {
-        guard let unboxValue = UInt16(try unbox(node, as: String.self)) else {
+        guard let unboxValue = try UInt16(unbox(node, as: String.self)) else {
             throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected UInt16"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: UInt32.Type) throws -> UInt32 {
-        guard let unboxValue = UInt32(try unbox(node, as: String.self)) else {
+        guard let unboxValue = try UInt32(unbox(node, as: String.self)) else {
             throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected UInt32"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: UInt64.Type) throws -> UInt64 {
-        guard let unboxValue = UInt64(try unbox(node, as: String.self)) else {
+        guard let unboxValue = try UInt64(unbox(node, as: String.self)) else {
             throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected UInt64"))
         }
         return unboxValue
@@ -644,7 +644,7 @@ private struct URLEncodedFormDecodingStorage {
     init() {}
 
     /// return the container at the top of the storage
-    var topContainer: URLEncodedFormNode { return containers.last! }
+    var topContainer: URLEncodedFormNode { return self.containers.last! }
 
     /// push a new container onto the storage
     mutating func push(container: URLEncodedFormNode) { self.containers.append(container) }

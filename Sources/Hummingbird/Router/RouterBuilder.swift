@@ -63,7 +63,7 @@ public final class HBRouterBuilder: HBRouterMethods {
         // ensure path starts with a "/" and doesn't end with a "/"
         let path = "/\(path.dropSuffix("/").dropPrefix("/"))"
         self.trie.addEntry(.init(path), value: HBEndpointResponders(path: path)) { node in
-            node.value!.addResponder(for: method, responder: middlewares.constructResponder(finalResponder: responder))
+            node.value!.addResponder(for: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         }
     }
 
