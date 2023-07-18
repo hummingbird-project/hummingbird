@@ -19,7 +19,6 @@ import NIOHTTP1
 import XCTest
 
 final class HandlerTests: XCTestCase {
-    
     func testDecodeKeyError() throws {
         struct DecodeTest: HBRequestDecodable {
             let name: String
@@ -28,7 +27,7 @@ final class HandlerTests: XCTestCase {
                 return "Hello \(self.name)"
             }
         }
-        
+
         let app = HBApplication(testing: .embedded)
         app.decoder = JSONDecoder()
         app.router.post("/hello", use: DecodeTest.self)
@@ -37,7 +36,7 @@ final class HandlerTests: XCTestCase {
         defer { app.XCTStop() }
 
         let body = ByteBufferAllocator().buffer(string: #"{"foo": "bar"}"#)
-        
+
         try app.XCTExecute(
             uri: "/hello",
             method: .POST,
@@ -49,7 +48,7 @@ final class HandlerTests: XCTestCase {
             XCTAssertEqual(String(buffer: body), expectation)
         }
     }
-    
+
     func testDecodeTypeError() throws {
         struct DecodeTest: HBRequestDecodable {
             let value: Int
@@ -58,7 +57,7 @@ final class HandlerTests: XCTestCase {
                 return "Value: \(self.value)"
             }
         }
-        
+
         let app = HBApplication(testing: .embedded)
         app.decoder = JSONDecoder()
         app.router.post("/hello", use: DecodeTest.self)
@@ -67,7 +66,7 @@ final class HandlerTests: XCTestCase {
         defer { app.XCTStop() }
 
         let body = ByteBufferAllocator().buffer(string: #"{"value": "bar"}"#)
-        
+
         try app.XCTExecute(
             uri: "/hello",
             method: .POST,
@@ -79,7 +78,7 @@ final class HandlerTests: XCTestCase {
             XCTAssertEqual(String(buffer: body), expectation)
         }
     }
-    
+
     func testDecodeValueError() throws {
         struct DecodeTest: HBRequestDecodable {
             let name: String
@@ -88,7 +87,7 @@ final class HandlerTests: XCTestCase {
                 return "Hello \(self.name)"
             }
         }
-        
+
         let app = HBApplication(testing: .embedded)
         app.decoder = JSONDecoder()
         app.router.post("/hello", use: DecodeTest.self)
@@ -97,7 +96,7 @@ final class HandlerTests: XCTestCase {
         defer { app.XCTStop() }
 
         let body = ByteBufferAllocator().buffer(string: #"{"name": null}"#)
-        
+
         try app.XCTExecute(
             uri: "/hello",
             method: .POST,
@@ -105,11 +104,16 @@ final class HandlerTests: XCTestCase {
         ) { response in
             XCTAssertEqual(response.status, .badRequest)
             let body = try XCTUnwrap(response.body)
+            #if os(Linux)
+            // NOTE: a type mismatch error occures under Linux for null values
+            let expectation = "Type mismatch for `name` key, expected `String` type."
+            #else
             let expectation = "Value not found for `name` key."
+            #endif
             XCTAssertEqual(String(buffer: body), expectation)
         }
     }
-    
+
     func testDecodeInputError() throws {
         struct DecodeTest: HBRequestDecodable {
             let name: String
@@ -118,7 +122,7 @@ final class HandlerTests: XCTestCase {
                 return "Hello \(self.name)"
             }
         }
-        
+
         let app = HBApplication(testing: .embedded)
         app.decoder = JSONDecoder()
         app.router.post("/hello", use: DecodeTest.self)
@@ -127,7 +131,7 @@ final class HandlerTests: XCTestCase {
         defer { app.XCTStop() }
 
         let body = ByteBufferAllocator().buffer(string: #"{invalid}"#)
-        
+
         try app.XCTExecute(
             uri: "/hello",
             method: .POST,
@@ -139,7 +143,7 @@ final class HandlerTests: XCTestCase {
             XCTAssertEqual(String(buffer: body), expectation)
         }
     }
-    
+
     func testDecode() throws {
         struct DecodeTest: HBRequestDecodable {
             let name: String

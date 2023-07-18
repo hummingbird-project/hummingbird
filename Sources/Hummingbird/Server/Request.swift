@@ -20,7 +20,6 @@ import NIOCore
 import NIOHTTP1
 
 private extension CodingKey {
-
     /// returns a coding key as a path key string
     var pathKeyValue: String {
         if let value = intValue {
@@ -31,7 +30,6 @@ private extension CodingKey {
 }
 
 private extension Array where Element == CodingKey {
-    
     /// returns a path key using a dot character as a separator
     var pathKeyValue: String {
         map(\.pathKeyValue).joined(separator: ".")
@@ -119,27 +117,22 @@ public struct HBRequest: Sendable, HBSendableExtensible {
     public func decode<Type: Decodable>(as type: Type.Type) throws -> Type {
         do {
             return try self.application.decoder.decode(type, from: self)
-        }
-        catch DecodingError.dataCorrupted(_) {
+        } catch DecodingError.dataCorrupted(_) {
             let message = "The given data was not valid input."
             throw HBHTTPError(.badRequest, message: message)
-        }
-        catch let DecodingError.keyNotFound(key, _) {
+        } catch DecodingError.keyNotFound(let key, _) {
             let path = key.pathKeyValue
             let message = "Coding key `\(path)` not found."
             throw HBHTTPError(.badRequest, message: message)
-        }
-        catch let DecodingError.valueNotFound(_, context) {
+        } catch DecodingError.valueNotFound(_, let context) {
             let path = context.codingPath.pathKeyValue
             let message = "Value not found for `\(path)` key."
             throw HBHTTPError(.badRequest, message: message)
-        }
-        catch let DecodingError.typeMismatch(type, context)  {
+        } catch DecodingError.typeMismatch(let type, let context) {
             let path = context.codingPath.pathKeyValue
             let message = "Type mismatch for `\(path)` key, expected `\(type)` type."
             throw HBHTTPError(.badRequest, message: message)
-        }
-        catch let error as HBHTTPResponseError {
+        } catch let error as HBHTTPResponseError {
             self.logger.debug("Decode Error: \(error)")
             throw error
         }

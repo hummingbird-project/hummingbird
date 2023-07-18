@@ -20,6 +20,6 @@ public func runBenchmark<B: BenchmarkWrapper>(benchmark: BenchmarkSupport.Benchm
     }
 
     benchmark.startMeasurement()
-    blackHole(try running.run())
+    try blackHole(running.run())
     benchmark.stopMeasurement()
 }

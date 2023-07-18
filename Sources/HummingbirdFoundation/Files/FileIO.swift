@@ -44,10 +44,10 @@ public struct HBFileIO {
 
             let futureResult: EventLoopFuture<HBResponseBody>
             if region.readableBytes > self.chunkSize {
-                let stream = streamFile(handle: handle, region: region, context: context)
+                let stream = self.streamFile(handle: handle, region: region, context: context)
                 futureResult = context.eventLoop.makeSucceededFuture(stream)
             } else {
-                futureResult = loadFile(handle: handle, region: region, context: context)
+                futureResult = self.loadFile(handle: handle, region: region, context: context)
                 // only close file handle for load, as streamer hasn't loaded data at this point
                 futureResult.whenComplete { _ in
                     try? handle.close()
@@ -80,10 +80,10 @@ public struct HBFileIO {
 
             let futureResult: EventLoopFuture<(HBResponseBody, Int)>
             if loadRegion.readableBytes > self.chunkSize {
-                let stream = streamFile(handle: handle, region: loadRegion, context: context)
+                let stream = self.streamFile(handle: handle, region: loadRegion, context: context)
                 futureResult = context.eventLoop.makeSucceededFuture((stream, region.readableBytes))
             } else {
-                futureResult = loadFile(handle: handle, region: loadRegion, context: context)
+                futureResult = self.loadFile(handle: handle, region: loadRegion, context: context)
                     .map { ($0, region.readableBytes) }
                 // only close file handle for load, as streamer hasn't loaded data at this point
                 futureResult.whenComplete { _ in
@@ -112,9 +112,9 @@ public struct HBFileIO {
             switch contents {
             case .byteBuffer(let buffer):
                 guard let buffer = buffer else { return context.eventLoop.makeSucceededVoidFuture() }
-                futureResult = writeFile(buffer: buffer, handle: handle, on: context.eventLoop)
+                futureResult = self.writeFile(buffer: buffer, handle: handle, on: context.eventLoop)
             case .stream(let streamer):
-                futureResult = writeFile(stream: streamer, handle: handle, on: context.eventLoop)
+                futureResult = self.writeFile(stream: streamer, handle: handle, on: context.eventLoop)
             }
             futureResult.whenComplete { _ in
                 try? handle.close()

@@ -122,7 +122,7 @@ internal class TestRecorder: RecorderHandler, Equatable {
     func record(_ value: Double) {
         self.lock.withLock {
             // this may loose precision but good enough as an example
-            values.append((Date(), Double(value)))
+            self.values.append((Date(), Double(value)))
         }
         print("recording \(value) in \(self.label)")
     }
@@ -156,7 +156,7 @@ internal class TestTimer: TimerHandler, Equatable {
 
     func retriveValueInPreferredUnit(atIndex i: Int) -> Double {
         return self.lock.withLock {
-            let value = values[i].1
+            let value = self.values[i].1
             guard let displayUnit = self.displayUnit else {
                 return Double(value)
             }
@@ -166,7 +166,7 @@ internal class TestTimer: TimerHandler, Equatable {
 
     func recordNanoseconds(_ duration: Int64) {
         self.lock.withLock {
-            values.append((Date(), duration))
+            self.values.append((Date(), duration))
         }
         print("recording \(duration) \(self.label)")
     }

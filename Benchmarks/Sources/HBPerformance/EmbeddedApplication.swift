@@ -101,7 +101,7 @@ public struct HBEmbeddedApplication {
             while case .body(let part) = next {
                 guard case .byteBuffer(var b) = part else { throw Error.illegalBody }
                 buffer.writeBuffer(&b)
-                next = try readOutbound()
+                next = try self.readOutbound()
             }
             guard case .end = next else { throw Error.noEnd }
 

@@ -41,7 +41,7 @@ public final class HBDateCache {
                 guard let dateCache = thread.currentValue else {
                     return eventLoop.makeSucceededFuture(())
                 }
-                thread.currentValue = nil
+                self.thread.currentValue = nil
                 return dateCache.shutdown(eventLoop: eventLoop)
             }
             dateCacheShutdownFutures.append(future)
