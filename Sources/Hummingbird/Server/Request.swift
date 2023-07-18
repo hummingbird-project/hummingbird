@@ -30,7 +30,7 @@ private extension CodingKey {
     }
 }
 
-private extension [CodingKey] {
+private extension Array where Element == CodingKey {
     
     /// returns a path key using a dot character as a separator
     var pathKeyValue: String {
