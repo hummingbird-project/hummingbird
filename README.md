@@ -1,5 +1,7 @@
-![# Hummingbird](https://opticalaberration.com/images/hummingbird-white-text@0.5x.png#gh-dark-mode-only)
-![# Hummingbird](https://opticalaberration.com/images/hummingbird-black-text@0.5x.png#gh-light-mode-only)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://opticalaberration.com/images/hummingbird-white-text@0.5x.png">
+  <img src="https://opticalaberration.com/images/hummingbird-black-text@0.5x.png">
+</picture>
 
 Lightweight, flexible server framework written in Swift.
 
