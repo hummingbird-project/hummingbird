@@ -1,4 +1,5 @@
-# Hummingbird
+![# Hummingbird](https://opticalaberration.com/images/hummingbird-white-text@0.5x.png#gh-dark-mode-only)
+![# Hummingbird](https://opticalaberration.com/images/hummingbird-black-text@0.5x.png#gh-light-mode-only)
 
 Lightweight, flexible server framework written in Swift.
 
