@@ -42,8 +42,47 @@ public struct HBJobQueueId: Hashable, ExpressibleByStringLiteral {
     public static var `default`: HBJobQueueId { "default" }
 }
 
+/// Object handling a single job queue
+public class HBJobQueueHandler {
+    public init(queue: HBJobQueue, numWorkers: Int, eventLoopGroup: EventLoopGroup, logger: Logger) {
+        self.queue = queue
+        self.workers = (0..<numWorkers).map { _ in
+            HBJobQueueWorker(queue: queue, eventLoop: eventLoopGroup.next(), logger: logger)
+        }
+        self.eventLoop = eventLoopGroup.next()
+    }
+
+    /// Push Job onto queue
+    /// - Returns: Queued job information
+    @discardableResult public func enqueue(_ job: HBJob, on eventLoop: EventLoop) -> EventLoopFuture<JobIdentifier> {
+        self.queue.enqueue(job, on: eventLoop)
+    }
+
+    /// Start queue workers
+    public func start() {
+        self.queue.onInit(on: self.eventLoop).whenComplete { _ in
+            self.workers.forEach {
+                $0.start()
+            }
+        }
+    }
+
+    /// Shutdown queue workers and queue
+    public func shutdown() -> EventLoopFuture<Void> {
+        // shutdown all workers
+        let shutdownFutures: [EventLoopFuture<Void>] = self.workers.map { $0.shutdown() }
+        return EventLoopFuture.andAllComplete(shutdownFutures, on: self.eventLoop).flatMap { _ in
+            self.queue.shutdown(on: self.eventLoop)
+        }
+    }
+
+    private let eventLoop: EventLoop
+    private let queue: HBJobQueue
+    private let workers: [HBJobQueueWorker]
+}
+
 extension HBApplication {
-    /// Handles the array of JobQueues.
+    /// Object internal to `HBApplication` that handles its array of JobQueues.
     public class JobQueueHandler {
         /// Job queue id
         public typealias QueueKey = HBJobQueueId
