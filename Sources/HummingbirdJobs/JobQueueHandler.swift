@@ -15,33 +15,6 @@
 import Hummingbird
 import Logging
 
-/// Job queue id
-///
-/// If you want to add a new task queue. Extend this class to include a new id
-/// ```
-/// extension HBJobQueueId {
-///     public static var `myQueue`: HBJobQueueId { "myQueue" }
-/// }
-/// ```
-/// and register new queue with tasks handler
-/// ```
-/// app.jobs.registerQueue(.myQueue, queue: .memory)
-/// ```
-/// If you don't register the queue your application will crash as soon as you try to use it
-public struct HBJobQueueId: Hashable, ExpressibleByStringLiteral {
-    public let id: String
-
-    public init(stringLiteral: String) {
-        self.id = stringLiteral
-    }
-
-    public init(_ string: String) {
-        self.id = string
-    }
-
-    public static var `default`: HBJobQueueId { "default" }
-}
-
 /// Object handling a single job queue
 public class HBJobQueueHandler {
     public init(queue: HBJobQueue, numWorkers: Int, eventLoopGroup: EventLoopGroup, logger: Logger) {
@@ -79,6 +52,33 @@ public class HBJobQueueHandler {
     private let eventLoop: EventLoop
     private let queue: HBJobQueue
     private let workers: [HBJobQueueWorker]
+}
+
+/// Job queue id
+///
+/// If you want to add a new task queue. Extend this class to include a new id
+/// ```
+/// extension HBJobQueueId {
+///     public static var `myQueue`: HBJobQueueId { "myQueue" }
+/// }
+/// ```
+/// and register new queue with tasks handler
+/// ```
+/// app.jobs.registerQueue(.myQueue, queue: .memory)
+/// ```
+/// If you don't register the queue your application will crash as soon as you try to use it
+public struct HBJobQueueId: Hashable, ExpressibleByStringLiteral {
+    public let id: String
+
+    public init(stringLiteral: String) {
+        self.id = stringLiteral
+    }
+
+    public init(_ string: String) {
+        self.id = string
+    }
+
+    public static var `default`: HBJobQueueId { "_hb_default_" }
 }
 
 extension HBApplication {
