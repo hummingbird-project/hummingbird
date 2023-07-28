@@ -17,7 +17,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-log.git", from: "1.4.0"),
         .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
         .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.0.1"),
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.45.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.56.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "1.0.0-alpha.9"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-core.git", from: "1.2.1"),
     ],
