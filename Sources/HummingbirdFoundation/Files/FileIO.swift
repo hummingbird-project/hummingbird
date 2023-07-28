@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import Hummingbird
 import HummingbirdCore
 import Logging
@@ -20,12 +21,14 @@ import NIOPosix
 
 /// Manages File reading and writing.
 public struct HBFileIO {
+    let threadPool: NIOThreadPool
     let fileIO: NonBlockingFileIO
     let chunkSize: Int
 
     /// Initialize FileIO
     /// - Parameter application: application using FileIO
     public init(application: HBApplication) {
+        self.threadPool = application.threadPool
         self.fileIO = .init(threadPool: application.threadPool)
         self.chunkSize = NonBlockingFileIO.defaultChunkSize
     }
@@ -93,6 +96,12 @@ public struct HBFileIO {
             return futureResult
         }.flatMapErrorThrowing { _ in
             throw HBHTTPError(.notFound)
+        }
+    }
+
+    public func getFileAttributes(path: String, eventLoop: EventLoop) -> EventLoopFuture<[FileAttributeKey: Any]> {
+        self.threadPool.runIfActive(eventLoop: eventLoop) {
+            try FileManager.default.attributesOfItem(atPath: path)
         }
     }
 

@@ -80,118 +80,125 @@ public struct HBFileMiddleware: HBMiddleware {
             }
 
             var fullPath = self.rootFolder.appendingPathComponent(path)
-            let modificationDate: Date?
-            let contentSize: Int?
-            do {
-                let attributes = try FileManager.default.attributesOfItem(atPath: fullPath.relativePath)
+
+            return self.fileIO.getFileAttributes(
+                path: fullPath.relativePath,
+                eventLoop: request.eventLoop
+            ).flatMap { attributes -> EventLoopFuture<(Date?, Int?)> in
                 // if file is a directory seach and `searchForIndexHtml` is set to true
                 // then search for index.html in directory
                 if let fileType = attributes[.type] as? FileAttributeType, fileType == .typeDirectory {
-                    guard self.searchForIndexHtml else { throw IsDirectoryError() }
+                    guard self.searchForIndexHtml else { return request.failure(IsDirectoryError()) }
                     fullPath = fullPath.appendingPathComponent("index.html")
-                    let attributes = try FileManager.default.attributesOfItem(atPath: fullPath.relativePath)
-                    modificationDate = attributes[.modificationDate] as? Date
-                    contentSize = attributes[.size] as? Int
+                    return self.fileIO.getFileAttributes(
+                        path: fullPath.relativePath,
+                        eventLoop: request.context.eventLoop
+                    ).map { attributes in
+                        return (attributes[.modificationDate] as? Date, attributes[.size] as? Int)
+                    }
                 } else {
-                    modificationDate = attributes[.modificationDate] as? Date
-                    contentSize = attributes[.size] as? Int
+                    return request.eventLoop.makeSucceededFuture(
+                        (attributes[.modificationDate] as? Date, attributes[.size] as? Int)
+                    )
                 }
-            } catch {
-                return request.failure(.notFound)
-            }
-            let eTag = createETag([
-                String(describing: modificationDate?.timeIntervalSince1970 ?? 0),
-                String(describing: contentSize ?? 0),
-            ])
+            }.flatMapErrorThrowing { _ in
+                // if an error was thrown while trying to get file attributes then throw not found error
+                throw HBHTTPError(.notFound)
+            }.flatMap { modificationDate, contentSize -> EventLoopFuture<HBResponse> in
+                let eTag = createETag([
+                    String(describing: modificationDate?.timeIntervalSince1970 ?? 0),
+                    String(describing: contentSize ?? 0),
+                ])
 
-            // construct headers
-            var headers = HTTPHeaders()
+                // construct headers
+                var headers = HTTPHeaders()
 
-            // content-length
-            if let contentSize = contentSize {
-                headers.add(name: "content-length", value: String(describing: contentSize))
-            }
-            // modified-date
-            var modificationDateString: String?
-            if let modificationDate = modificationDate {
-                modificationDateString = HBDateCache.rfc1123Formatter.string(from: modificationDate)
-                headers.add(name: "modified-date", value: modificationDateString!)
-            }
-            // eTag (constructed from modification date and content size)
-            headers.add(name: "eTag", value: eTag)
+                // content-length
+                if let contentSize = contentSize {
+                    headers.add(name: "content-length", value: String(describing: contentSize))
+                }
+                // modified-date
+                var modificationDateString: String?
+                if let modificationDate = modificationDate {
+                    modificationDateString = HBDateCache.rfc1123Formatter.string(from: modificationDate)
+                    headers.add(name: "modified-date", value: modificationDateString!)
+                }
+                // eTag (constructed from modification date and content size)
+                headers.add(name: "eTag", value: eTag)
 
-            // verify if-none-match. No need to verify if-match as this is used for state changing
-            // operations. Also the eTag we generate is considered weak.
-            let ifNoneMatch = request.headers["if-none-match"]
-            if ifNoneMatch.count > 0 {
-                for match in ifNoneMatch {
-                    if eTag == match {
-                        return request.success(HBResponse(status: .notModified, headers: headers))
+                // verify if-none-match. No need to verify if-match as this is used for state changing
+                // operations. Also the eTag we generate is considered weak.
+                let ifNoneMatch = request.headers["if-none-match"]
+                if ifNoneMatch.count > 0 {
+                    for match in ifNoneMatch {
+                        if eTag == match {
+                            return request.success(HBResponse(status: .notModified, headers: headers))
+                        }
                     }
                 }
-            }
-            // verify if-modified-since
-            else if let ifModifiedSince = request.headers["if-modified-since"].first,
-                    let modificationDate = modificationDate
-            {
-                if let ifModifiedSinceDate = HBDateCache.rfc1123Formatter.date(from: ifModifiedSince) {
-                    // round modification date of file down to seconds for comparison
-                    let modificationDateTimeInterval = modificationDate.timeIntervalSince1970.rounded(.down)
-                    let ifModifiedSinceDateTimeInterval = ifModifiedSinceDate.timeIntervalSince1970
-                    if modificationDateTimeInterval <= ifModifiedSinceDateTimeInterval {
-                        return request.success(HBResponse(status: .notModified, headers: headers))
+                // verify if-modified-since
+                else if let ifModifiedSince = request.headers["if-modified-since"].first,
+                        let modificationDate = modificationDate
+                {
+                    if let ifModifiedSinceDate = HBDateCache.rfc1123Formatter.date(from: ifModifiedSince) {
+                        // round modification date of file down to seconds for comparison
+                        let modificationDateTimeInterval = modificationDate.timeIntervalSince1970.rounded(.down)
+                        let ifModifiedSinceDateTimeInterval = ifModifiedSinceDate.timeIntervalSince1970
+                        if modificationDateTimeInterval <= ifModifiedSinceDateTimeInterval {
+                            return request.success(HBResponse(status: .notModified, headers: headers))
+                        }
                     }
                 }
-            }
 
-            // content-type
-            if let extPointIndex = path.lastIndex(of: ".") {
-                let extIndex = path.index(after: extPointIndex)
-                let ext = String(path.suffix(from: extIndex))
-                if let contentType = HBMediaType.getMediaType(forExtension: ext) {
-                    headers.add(name: "content-type", value: contentType.description)
-                }
-            }
-
-            headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
-
-            switch request.method {
-            case .GET:
-                // cache-control
-                if let cacheControlValue = self.cacheControl.getCacheControlHeader(for: path) {
-                    headers.add(name: "cache-control", value: cacheControlValue)
-                }
-
-                if let rangeHeader = request.headers["Range"].first {
-                    guard let range = getRangeFromHeaderValue(rangeHeader) else {
-                        return request.failure(.rangeNotSatisfiable)
-                    }
-                    // range request conditional on etag or modified date being equal to value in if-range
-                    if let ifRange = request.headers["if-range"].first, ifRange != eTag, ifRange != modificationDateString {
-                        // do nothing and drop down to returning full file
-                    } else {
-                        return self.fileIO.loadFile(path: fullPath.relativePath, range: range, context: request.context, logger: request.logger)
-                            .map { body, fileSize in
-                                let lowerBound = max(range.lowerBound, 0)
-                                let upperBound = min(range.upperBound, fileSize - 1)
-                                headers.replaceOrAdd(name: "content-range", value: "bytes \(lowerBound)-\(upperBound)/\(fileSize)")
-                                // override content-length set above
-                                headers.replaceOrAdd(name: "content-length", value: String(describing: upperBound - lowerBound + 1))
-
-                                return HBResponse(status: .partialContent, headers: headers, body: body)
-                            }
+                // content-type
+                if let extPointIndex = path.lastIndex(of: ".") {
+                    let extIndex = path.index(after: extPointIndex)
+                    let ext = String(path.suffix(from: extIndex))
+                    if let contentType = HBMediaType.getMediaType(forExtension: ext) {
+                        headers.add(name: "content-type", value: contentType.description)
                     }
                 }
-                return self.fileIO.loadFile(path: fullPath.relativePath, context: request.context, logger: request.logger)
-                    .map { body in
-                        return HBResponse(status: .ok, headers: headers, body: body)
+
+                headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
+
+                switch request.method {
+                case .GET:
+                    // cache-control
+                    if let cacheControlValue = self.cacheControl.getCacheControlHeader(for: path) {
+                        headers.add(name: "cache-control", value: cacheControlValue)
                     }
 
-            case .HEAD:
-                return request.success(HBResponse(status: .ok, headers: headers, body: .empty))
+                    if let rangeHeader = request.headers["Range"].first {
+                        guard let range = getRangeFromHeaderValue(rangeHeader) else {
+                            return request.failure(.rangeNotSatisfiable)
+                        }
+                        // range request conditional on etag or modified date being equal to value in if-range
+                        if let ifRange = request.headers["if-range"].first, ifRange != eTag, ifRange != modificationDateString {
+                            // do nothing and drop down to returning full file
+                        } else {
+                            return self.fileIO.loadFile(path: fullPath.relativePath, range: range, context: request.context, logger: request.logger)
+                                .map { body, fileSize in
+                                    let lowerBound = max(range.lowerBound, 0)
+                                    let upperBound = min(range.upperBound, fileSize - 1)
+                                    headers.replaceOrAdd(name: "content-range", value: "bytes \(lowerBound)-\(upperBound)/\(fileSize)")
+                                    // override content-length set above
+                                    headers.replaceOrAdd(name: "content-length", value: String(describing: upperBound - lowerBound + 1))
 
-            default:
-                return request.failure(error)
+                                    return HBResponse(status: .partialContent, headers: headers, body: body)
+                                }
+                        }
+                    }
+                    return self.fileIO.loadFile(path: fullPath.relativePath, context: request.context, logger: request.logger)
+                        .map { body in
+                            return HBResponse(status: .ok, headers: headers, body: body)
+                        }
+
+                case .HEAD:
+                    return request.success(HBResponse(status: .ok, headers: headers, body: .empty))
+
+                default:
+                    return request.failure(error)
+                }
             }
         }
     }
