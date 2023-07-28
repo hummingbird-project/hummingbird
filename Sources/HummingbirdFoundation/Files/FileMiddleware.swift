@@ -126,6 +126,22 @@ public struct HBFileMiddleware: HBMiddleware {
                 // eTag (constructed from modification date and content size)
                 headers.add(name: "eTag", value: eTag)
 
+                // content-type
+                if let extPointIndex = path.lastIndex(of: ".") {
+                    let extIndex = path.index(after: extPointIndex)
+                    let ext = String(path.suffix(from: extIndex))
+                    if let contentType = HBMediaType.getMediaType(forExtension: ext) {
+                        headers.add(name: "content-type", value: contentType.description)
+                    }
+                }
+
+                headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
+
+                // cache-control
+                if let cacheControlValue = self.cacheControl.getCacheControlHeader(for: path) {
+                    headers.add(name: "cache-control", value: cacheControlValue)
+                }
+
                 // verify if-none-match. No need to verify if-match as this is used for state changing
                 // operations. Also the eTag we generate is considered weak.
                 let ifNoneMatch = request.headers["if-none-match"]
@@ -148,22 +164,6 @@ public struct HBFileMiddleware: HBMiddleware {
                             return .response(HBResponse(status: .notModified, headers: headers))
                         }
                     }
-                }
-
-                // content-type
-                if let extPointIndex = path.lastIndex(of: ".") {
-                    let extIndex = path.index(after: extPointIndex)
-                    let ext = String(path.suffix(from: extIndex))
-                    if let contentType = HBMediaType.getMediaType(forExtension: ext) {
-                        headers.add(name: "content-type", value: contentType.description)
-                    }
-                }
-
-                headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
-
-                // cache-control
-                if let cacheControlValue = self.cacheControl.getCacheControlHeader(for: path) {
-                    headers.add(name: "cache-control", value: cacheControlValue)
                 }
 
                 if let rangeHeader = request.headers["Range"].first {
