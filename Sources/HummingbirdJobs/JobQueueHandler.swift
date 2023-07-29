@@ -50,7 +50,7 @@ public class HBJobQueueHandler {
     }
 
     private let eventLoop: EventLoop
-    private let queue: HBJobQueue
+    fileprivate let queue: HBJobQueue
     private let workers: [HBJobQueueWorker]
 }
 
@@ -87,12 +87,11 @@ extension HBApplication {
         /// Job queue id
         public typealias QueueKey = HBJobQueueId
         /// The default JobQueue setup at initialisation
-        public var queue: HBJobQueue { self.queues[.default]! }
+        public var queue: HBJobQueue { self.queues[.default]!.queue }
 
         init(queue: HBJobQueueFactory, application: HBApplication, numWorkers: Int) {
             self.application = application
             self.queues = [:]
-            self.workers = []
             self.registerQueue(.default, queue: queue, numWorkers: numWorkers)
         }
 
@@ -103,7 +102,7 @@ extension HBApplication {
         /// - Parameter id: Job queue id
         /// - Returns: Job queue
         public func queues(_ id: QueueKey) -> HBJobQueue {
-            return self.queues[id]!
+            return self.queues[id]!.queue
         }
 
         /// Register a job queue under an id
@@ -114,38 +113,31 @@ extension HBApplication {
         ///   - numWorkers: Number of workers you want servicing this job queue
         public func registerQueue(_ id: QueueKey, queue queueFactory: HBJobQueueFactory, numWorkers: Int) {
             let queue = queueFactory.create(self.application)
-            self.queues[id] = queue
-            for _ in 0..<numWorkers {
-                let worker = HBJobQueueWorker(queue: queue, eventLoop: application.eventLoopGroup.next(), logger: self.logger)
-                self.workers.append(worker)
-            }
+            let handler = HBJobQueueHandler(
+                queue: queue,
+                numWorkers: numWorkers,
+                eventLoopGroup: application.eventLoopGroup,
+                logger: self.logger
+            )
+            self.queues[id] = handler
         }
 
         func start() {
-            let eventLoop = self.application.eventLoopGroup.next()
-            let initFutures = self.queues.values.map { $0.onInit(on: eventLoop) }
-            EventLoopFuture.andAllComplete(initFutures, on: eventLoop).whenComplete { _ in
-                self.workers.forEach {
-                    $0.start()
-                }
+            for queue in self.queues {
+                queue.value.start()
             }
         }
 
         func shutdown() -> EventLoopFuture<Void> {
             let eventLoop = self.application.eventLoopGroup.next()
-            // shutdown all workers
-            let shutdownFutures: [EventLoopFuture<Void>] = self.workers.map { $0.shutdown() }
-            return EventLoopFuture.andAllComplete(shutdownFutures, on: eventLoop).flatMap {
-                // shutdown all queues
-                let shutdownFutures: [EventLoopFuture<Void>] = self.queues.values.map { $0.shutdown(on: eventLoop) }
-                return EventLoopFuture.andAllComplete(shutdownFutures, on: eventLoop)
-            }
+            // shutdown all queues
+            let shutdownFutures: [EventLoopFuture<Void>] = self.queues.values.map { $0.shutdown() }
+            return EventLoopFuture.andAllComplete(shutdownFutures, on: eventLoop)
         }
 
         private let application: HBApplication
         private var logger: Logger { self.application.logger }
-        private var queues: [QueueKey: HBJobQueue]
-        private var workers: [HBJobQueueWorker]
+        private var queues: [QueueKey: HBJobQueueHandler]
     }
 
     /// Job queue handler
