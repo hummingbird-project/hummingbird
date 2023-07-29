@@ -20,7 +20,7 @@ import NIOSSL
 /// Bare bones HTTP client that connects to one Server.
 ///
 /// This is here for testing purposes
-public class HBXCTClient {
+public struct HBXCTClient: Sendable {
     public let channelPromise: EventLoopPromise<Channel>
     let eventLoopGroup: EventLoopGroup
     let eventLoopGroupProvider: NIOEventLoopGroupProvider
@@ -29,7 +29,7 @@ public class HBXCTClient {
     let configuration: Configuration
 
     /// HBXCT configuration
-    public struct Configuration {
+    public struct Configuration: Sendable {
         public init(
             tlsConfiguration: TLSConfiguration? = nil,
             timeout: TimeAmount = .seconds(15),
@@ -89,6 +89,7 @@ public class HBXCTClient {
                             return channel.pipeline.addHandlers(handlers)
                         }
                 }
+                .connectTimeout(.seconds(5))
                 .connect(host: self.host, port: self.port)
                 .cascade(to: self.channelPromise)
         } catch {
@@ -97,61 +98,75 @@ public class HBXCTClient {
     }
 
     /// shutdown client
-    public func syncShutdown() throws {
+    public func shutdown() async throws {
         do {
-            try self.close().wait()
+            try await self.close()
         } catch HBXCTClient.Error.connectionNotOpen {
         } catch ChannelError.alreadyClosed {}
         if case .createNew = self.eventLoopGroupProvider {
-            try self.eventLoopGroup.syncShutdownGracefully()
+            try await self.eventLoopGroup.shutdownGracefully()
         }
     }
 
     /// GET request
-    public func get(_ uri: String, headers: HTTPHeaders = [:]) -> EventLoopFuture<HBXCTClient.Response> {
+    public func get(_ uri: String, headers: HTTPHeaders = [:]) async throws -> HBXCTClient.Response {
         let request = HBXCTClient.Request(uri, method: .GET, headers: headers)
-        return self.execute(request)
+        return try await self.execute(request)
     }
 
     /// HEAD request
-    public func head(_ uri: String, headers: HTTPHeaders = [:]) -> EventLoopFuture<HBXCTClient.Response> {
+    public func head(_ uri: String, headers: HTTPHeaders = [:]) async throws -> HBXCTClient.Response {
         let request = HBXCTClient.Request(uri, method: .HEAD, headers: headers)
-        return self.execute(request)
+        return try await self.execute(request)
     }
 
     /// PUT request
-    public func put(_ uri: String, headers: HTTPHeaders = [:], body: ByteBuffer) -> EventLoopFuture<HBXCTClient.Response> {
+    public func put(_ uri: String, headers: HTTPHeaders = [:], body: ByteBuffer) async throws -> HBXCTClient.Response {
         let request = HBXCTClient.Request(uri, method: .PUT, headers: headers, body: body)
-        return self.execute(request)
+        return try await self.execute(request)
     }
 
     /// POST request
-    public func post(_ uri: String, headers: HTTPHeaders = [:], body: ByteBuffer) -> EventLoopFuture<HBXCTClient.Response> {
+    public func post(_ uri: String, headers: HTTPHeaders = [:], body: ByteBuffer) async throws -> HBXCTClient.Response {
         let request = HBXCTClient.Request(uri, method: .POST, headers: headers, body: body)
-        return self.execute(request)
+        return try await self.execute(request)
     }
 
     /// DELETE request
-    public func delete(_ uri: String, headers: HTTPHeaders = [:], body: ByteBuffer) -> EventLoopFuture<HBXCTClient.Response> {
+    public func delete(_ uri: String, headers: HTTPHeaders = [:], body: ByteBuffer) async throws -> HBXCTClient.Response {
         let request = HBXCTClient.Request(uri, method: .DELETE, headers: headers, body: body)
-        return self.execute(request)
+        return try await self.execute(request)
     }
 
     /// Execute request to server. Return `EventLoopFuture` that will be fulfilled with HTTP response
-    public func execute(_ request: HBXCTClient.Request) -> EventLoopFuture<HBXCTClient.Response> {
-        self.channelPromise.futureResult.flatMap { channel in
-            let promise = self.eventLoopGroup.next().makeTimeoutPromise(of: HBXCTClient.Response.self, timeout: self.configuration.timeout)
-            let task = HTTPTask(request: self.cleanupRequest(request), responsePromise: promise.promise)
-            channel.writeAndFlush(task, promise: nil)
-            return promise.futureResult
+    public func execute(_ request: HBXCTClient.Request) async throws -> HBXCTClient.Response {
+        let channel = try await getChannel()
+        let response = try await withThrowingTaskGroup(of: HBXCTClient.Response.self) { group in
+            group.addTask {
+                try await Task.sleep(nanoseconds: numericCast(self.configuration.timeout.nanoseconds))
+                throw Error.readTimeout
+            }
+            group.addTask {
+                let promise = self.eventLoopGroup.any().makePromise(of: HBXCTClient.Response.self)
+                let task = HTTPTask(request: self.cleanupRequest(request), responsePromise: promise)
+                channel.writeAndFlush(task, promise: nil)
+                return try await promise.futureResult.get()
+            }
+            let response = try await group.next()
+            group.cancelAll()
+            return response!
         }
+        return response
     }
 
-    public func close() -> EventLoopFuture<Void> {
+    public func close() async throws {
         self.channelPromise.completeWith(.failure(HBXCTClient.Error.connectionNotOpen))
-        return self.channelPromise.futureResult.flatMap { channel in
-            channel.close()
-        }
+        let channel = try await getChannel()
+        return try await channel.close()
+    }
+
+    public func getChannel() async throws -> Channel {
+        try await self.channelPromise.futureResult.get()
     }
 
     private func cleanupRequest(_ request: HBXCTClient.Request) -> HBXCTClient.Request {
@@ -274,6 +289,13 @@ public class HBXCTClient {
             context.write(wrapOutboundOut(task.request), promise: promise)
         }
 
+        func channelInactive(context: ChannelHandlerContext) {
+            // if error caught, pass to all tasks in progress and close channel
+            while let task = self.queue.popFirst() {
+                task.responsePromise.fail(Error.connectionClosing)
+            }
+        }
+
         func channelRead(context: ChannelHandlerContext, data: NIOAny) {
             let response = unwrapInboundIn(data)
             if let task = self.queue.popFirst() {
@@ -295,6 +317,7 @@ public class HBXCTClient {
                 while let task = self.queue.popFirst() {
                     task.responsePromise.fail(HBXCTClient.Error.readTimeout)
                 }
+
             default:
                 context.fireUserInboundEventTriggered(event)
             }

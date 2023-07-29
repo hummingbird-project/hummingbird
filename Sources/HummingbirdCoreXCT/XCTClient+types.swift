@@ -25,9 +25,10 @@ extension HBXCTClient {
         case tlsSetupFailed
         case readTimeout
         case connectionNotOpen
+        case connectionClosing
     }
 
-    public struct Request {
+    public struct Request: Sendable {
         public var uri: String
         public var method: HTTPMethod
         public var headers: HTTPHeaders
@@ -41,7 +42,7 @@ extension HBXCTClient {
         }
     }
 
-    public struct Response {
+    public struct Response: Sendable {
         public let headers: HTTPHeaders
         public let status: HTTPResponseStatus
         public let body: ByteBuffer?

@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Address to bind server to
-public enum HBBindAddress {
+public enum HBBindAddress: Sendable {
     /// bind address define by host and port
     case hostname(_ host: String = "127.0.0.1", port: Int = 8080)
     /// bind address defined by unxi domain socket

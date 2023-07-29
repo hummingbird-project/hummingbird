@@ -19,32 +19,62 @@ import NIOHTTP2
 import NIOSSL
 
 /// Setup child channel for HTTP2
-public struct HTTP2ChannelInitializer: HBChannelInitializer {
-    public init() {}
+public struct HTTP2Channel: HBChannelInitializer {
+    public init(tlsConfiguration: TLSConfiguration?) throws {
+        if var tlsConfiguration = tlsConfiguration {
+            tlsConfiguration.applicationProtocols.append("h2")
+            tlsConfiguration.applicationProtocols.append("http/1.1")
+            self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
+        } else {
+            self.sslContext = nil
+        }
+    }
 
     public func initialize(channel: Channel, childHandlers: [RemovableChannelHandler], configuration: HBHTTPServer.Configuration) -> EventLoopFuture<Void> {
+        if let sslContext = self.sslContext {
+            do {
+                try channel.pipeline.syncOperations.addHandler(NIOSSLServerHandler(context: sslContext))
+            } catch {
+                return channel.eventLoop.makeFailedFuture(error)
+            }
+        }
+        let loopBoundHandlers = NIOLoopBound(childHandlers, eventLoop: channel.eventLoop)
         return channel.configureHTTP2Pipeline(mode: .server) { streamChannel -> EventLoopFuture<Void> in
             return streamChannel.pipeline.addHandler(HTTP2FramePayloadToHTTP1ServerCodec()).flatMap { _ in
-                streamChannel.pipeline.addHandlers(childHandlers)
+                streamChannel.pipeline.addHandlers(loopBoundHandlers.value)
             }
             .map { _ in }
         }
         .map { _ in }
     }
+
+    let sslContext: NIOSSLContext?
 }
 
 /// Setup child channel for HTTP2 upgrade
-struct HTTP2UpgradeChannelInitializer: HBChannelInitializer {
-    var http1 = HTTP1ChannelInitializer()
-    let http2 = HTTP2ChannelInitializer()
+struct HTTP2UpgradeChannel: HBChannelInitializer {
+    var http1: HTTP1Channel
+    let http2: HTTP2Channel
+    let sslContext: NIOSSLContext
+
+    public init(tlsConfiguration: TLSConfiguration, upgraders: [HTTPServerProtocolUpgrader] = []) throws {
+        self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
+        self.http1 = .init(upgraders: upgraders)
+        self.http2 = try .init(tlsConfiguration: nil)
+    }
 
     func initialize(channel: Channel, childHandlers: [RemovableChannelHandler], configuration: HBHTTPServer.Configuration) -> EventLoopFuture<Void> {
-        channel.configureHTTP2SecureUpgrade(
+        do {
+            try channel.pipeline.syncOperations.addHandler(NIOSSLServerHandler(context: self.sslContext))
+        } catch {
+            return channel.eventLoop.makeFailedFuture(error)
+        }
+        return channel.configureHTTP2SecureUpgrade(
             h2ChannelConfigurator: { channel in
-                http2.initialize(channel: channel, childHandlers: childHandlers, configuration: configuration)
+                self.http2.initialize(channel: channel, childHandlers: childHandlers, configuration: configuration)
             },
             http1ChannelConfigurator: { channel in
-                http1.initialize(channel: channel, childHandlers: childHandlers, configuration: configuration)
+                self.http1.initialize(channel: channel, childHandlers: childHandlers, configuration: configuration)
             }
         )
     }

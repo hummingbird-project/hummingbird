@@ -24,47 +24,24 @@ import NIOTransportServices
 import XCTest
 
 class HummingBirdTLSTests: XCTestCase {
-    struct HelloResponder: HBHTTPResponder {
-        func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
-            let responseHead = HTTPResponseHead(version: .init(major: 1, minor: 1), status: .ok)
-            let responseBody = context.channel.allocator.buffer(string: "Hello")
-            let response = HBHTTPResponse(head: responseHead, body: .byteBuffer(responseBody))
-            onComplete(.success(response))
-        }
-
-        var logger: Logger? = Logger(label: "Core")
-
-        init() {
-            self.logger?.logLevel = .trace
-        }
-    }
-
-    func testConnect() throws {
-        #if os(iOS)
-        let eventLoopGroup = NIOTSEventLoopGroup()
-        #else
+    func testConnect() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
-        #endif
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
-        let server = HBHTTPServer(group: eventLoopGroup, configuration: .init(address: .hostname(port: 0), serverName: testServerName))
-        try server.addTLS(tlsConfiguration: self.getServerTLSConfiguration())
-        try server.start(responder: HelloResponder()).wait()
-        defer { XCTAssertNoThrow(try server.stop().wait()) }
-
-        let client = try HBXCTClient(
-            host: "localhost",
-            port: server.port!,
-            configuration: .init(tlsConfiguration: self.getClientTLSConfiguration(), serverName: testServerName),
-            eventLoopGroupProvider: .createNew
+        let server = try HBHTTPServer(
+            group: eventLoopGroup,
+            configuration: .init(address: .hostname(port: 0), serverName: testServerName),
+            responder: HelloResponder(),
+            childChannelInitializer: HTTP1WithTLSChannel(tlsConfiguration: self.getServerTLSConfiguration()),
+            logger: Logger(label: "HB")
         )
-        client.connect()
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
-
-        let future = client.get("/").flatMapThrowing { response in
+        try await testServer(
+            server,
+            clientConfiguration: .init(tlsConfiguration: self.getClientTLSConfiguration(), serverName: testServerName)
+        ) { client in
+            let response = try await client.get("/")
             var body = try XCTUnwrap(response.body)
             XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
         }
-        XCTAssertNoThrow(try future.wait())
     }
 
     func getServerTLSConfiguration() throws -> TLSConfiguration {

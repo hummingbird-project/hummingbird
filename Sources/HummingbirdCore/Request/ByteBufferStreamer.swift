@@ -32,7 +32,7 @@ public protocol HBStreamerProtocol: Sendable {
 
     /// Consume ByteBuffers until you receive an end tag
     /// - Returns: EventLoopFuture that will be fulfilled when all buffers are consumed
-    func consumeAll(on eventLoop: EventLoop, _ process: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void>
+    func consumeAll(on eventLoop: EventLoop, _ process: @escaping @Sendable (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void>
 
     @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     func consume() async throws -> HBStreamerOutput
@@ -205,7 +205,7 @@ public final class HBByteBufferStreamer: HBStreamerProtocol, Sendable {
         /// - Parameters:
         ///   - eventLoop: EventLoop to run on
         ///   - process: Closure to call to process ByteBuffer
-        func consumeAll(on eventLoop: EventLoop, _ process: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
+        func consumeAll(on eventLoop: EventLoop, _ process: @escaping @Sendable (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
             let promise = eventLoop.makePromise(of: Void.self)
             @Sendable func _consumeAll(_ count: Int) {
                 self.consume(eventLoop: eventLoop).whenComplete { result in
@@ -378,7 +378,7 @@ public final class HBByteBufferStreamer: HBStreamerProtocol, Sendable {
     /// - Parameters:
     ///   - eventLoop: EventLoop to run on
     ///   - process: Closure to call to process ByteBuffer
-    public func consumeAll(_ process: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
+    public func consumeAll(_ process: @escaping @Sendable (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
         self.state.runOnLoop { state, eventLoop in
             state.consumeAll(on: eventLoop, process)
         }
@@ -389,7 +389,7 @@ public final class HBByteBufferStreamer: HBStreamerProtocol, Sendable {
     /// - Parameters:
     ///   - eventLoop: EventLoop to run on
     ///   - process: Closure to call to process ByteBuffer
-    public func consumeAll(on eventLoop: EventLoop, _ process: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
+    public func consumeAll(on eventLoop: EventLoop, _ process: @escaping @Sendable (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
         self.state.runOnLoop { state, stateEventLoop in
             state.consumeAll(on: stateEventLoop, process)
         }.hop(to: eventLoop)
@@ -450,7 +450,7 @@ final class HBStaticStreamer: HBStreamerProtocol, Sendable {
         }
     }
 
-    func consumeAll(on eventLoop: EventLoop, _ process: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
+    func consumeAll(on eventLoop: EventLoop, _ process: @escaping @Sendable (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
         return eventLoop.flatSubmit {
             return self.byteBuffer.withLockedValue { byteBuffer in
                 guard let output = byteBuffer.readSlice(length: byteBuffer.readableBytes) else {

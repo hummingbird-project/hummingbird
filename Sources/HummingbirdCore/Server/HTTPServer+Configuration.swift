@@ -29,7 +29,7 @@ extension HBHTTPServer {
     }
 
     /// HTTP server configuration
-    public struct Configuration {
+    public struct Configuration: Sendable {
         /// Bind address for server
         public let address: HBBindAddress
         /// Server name to return in "server" header
@@ -46,8 +46,6 @@ extension HBHTTPServer {
         public let tcpNoDelay: Bool
         /// Pipelining ensures that only one http request is processed at one time
         public let withPipeliningAssistance: Bool
-        /// Idle state handler setup.
-        public let idleTimeoutConfiguration: IdleStateHandlerConfiguration?
         #if canImport(Network)
         /// TLS options for NIO Transport services
         public let tlsOptions: TSTLSOptions
@@ -70,8 +68,7 @@ extension HBHTTPServer {
             backlog: Int = 256,
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = true,
-            withPipeliningAssistance: Bool = true,
-            idleTimeoutConfiguration: IdleStateHandlerConfiguration? = nil
+            withPipeliningAssistance: Bool = true
         ) {
             self.address = address
             self.serverName = serverName
@@ -81,7 +78,6 @@ extension HBHTTPServer {
             self.reuseAddress = reuseAddress
             self.tcpNoDelay = tcpNoDelay
             self.withPipeliningAssistance = withPipeliningAssistance
-            self.idleTimeoutConfiguration = idleTimeoutConfiguration
             #if canImport(Network)
             self.tlsOptions = .none
             #endif
@@ -104,7 +100,6 @@ extension HBHTTPServer {
             maxStreamingBufferSize: Int = 1 * 1024 * 1024,
             reuseAddress: Bool = true,
             withPipeliningAssistance: Bool = true,
-            idleTimeoutConfiguration: IdleStateHandlerConfiguration? = nil,
             tlsOptions: TSTLSOptions
         ) {
             self.address = address
@@ -115,7 +110,6 @@ extension HBHTTPServer {
             self.reuseAddress = reuseAddress
             self.tcpNoDelay = true
             self.withPipeliningAssistance = withPipeliningAssistance
-            self.idleTimeoutConfiguration = idleTimeoutConfiguration
             self.tlsOptions = tlsOptions
         }
         #endif

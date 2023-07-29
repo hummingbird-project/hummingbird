@@ -24,7 +24,6 @@ import NIOSSL
 import NIOTransportServices
 import XCTest
 
-@available(macOS 10.14, iOS 12, tvOS 12, *)
 class TransportServicesTests: XCTestCase {
     func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
@@ -32,43 +31,22 @@ class TransportServicesTests: XCTestCase {
         return ByteBufferAllocator().buffer(bytes: data)
     }
 
-    struct HelloResponder: HBHTTPResponder {
-        func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
-            let responseHead = HTTPResponseHead(version: .init(major: 1, minor: 1), status: .ok)
-            let responseBody = context.channel.allocator.buffer(string: "Hello")
-            let response = HBHTTPResponse(head: responseHead, body: .byteBuffer(responseBody))
-            onComplete(.success(response))
-        }
-
-        var logger: Logger
-        init() {
-            self.logger = Logger(label: "HB")
-            self.logger.logLevel = .trace
-        }
-    }
-
-    func testConnect() {
+    func testConnect() async throws {
         let eventLoopGroup = NIOTSEventLoopGroup()
-        let server = HBHTTPServer(group: eventLoopGroup, configuration: .init(address: .hostname(port: 0)))
-        XCTAssertNoThrow(try server.start(responder: HelloResponder()).wait())
-        defer { XCTAssertNoThrow(try server.stop().wait()) }
-
-        let client = HBXCTClient(
-            host: "localhost",
-            port: server.port!,
-            eventLoopGroupProvider: .createNew
+        let server = HBHTTPServer(
+            group: eventLoopGroup,
+            configuration: .init(address: .hostname(port: 0)),
+            responder: HelloResponder(),
+            logger: Logger(label: "HB")
         )
-        client.connect()
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
-
-        let future = client.get("/").flatMapThrowing { response in
+        try await testServer(server) { client in
+            let response = try await client.get("/")
             var body = try XCTUnwrap(response.body)
             XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
         }
-        XCTAssertNoThrow(try future.wait())
     }
 
-    func testTLS() throws {
+    func testTLS() async throws {
         let eventLoopGroup = NIOTSEventLoopGroup()
         let p12Path = Bundle.module.path(forResource: "server", ofType: "p12")!
         let tlsOptions = try XCTUnwrap(TSTLSOptions.options(
@@ -79,24 +57,20 @@ class TransportServicesTests: XCTestCase {
             serverName: testServerName,
             tlsOptions: tlsOptions
         )
-        let server = HBHTTPServer(group: eventLoopGroup, configuration: configuration)
-        XCTAssertNoThrow(try server.start(responder: HelloResponder()).wait())
-        defer { XCTAssertNoThrow(try server.stop().wait()) }
-
-        let client = try HBXCTClient(
-            host: "localhost",
-            port: server.port!,
-            configuration: .init(tlsConfiguration: self.getClientTLSConfiguration(), serverName: testServerName),
-            eventLoopGroupProvider: .createNew
+        let server = HBHTTPServer(
+            group: eventLoopGroup,
+            configuration: configuration,
+            responder: HelloResponder(),
+            logger: Logger(label: "HB")
         )
-        client.connect()
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
-
-        let future = client.get("/").flatMapThrowing { response in
+        try await testServer(
+            server,
+            clientConfiguration: .init(tlsConfiguration: self.getClientTLSConfiguration(), serverName: testServerName)
+        ) { client in
+            let response = try await client.get("/")
             var body = try XCTUnwrap(response.body)
             XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
         }
-        XCTAssertNoThrow(try future.wait())
     }
 
     func getClientTLSConfiguration() throws -> TLSConfiguration {

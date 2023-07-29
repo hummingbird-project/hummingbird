@@ -18,14 +18,12 @@ import Network
 
 /// Wrapper for NIO transport services TLS options
 public struct TSTLSOptions: Sendable {
-    @available(macOS 10.14, iOS 12, tvOS 12, *)
     public enum ServerIdentity {
         case secIdentity(SecIdentity)
         case p12(filename: String, password: String)
     }
 
     /// Initialize TSTLSOptions
-    @available(macOS 10.14, iOS 12, tvOS 12, *)
     public init(_ options: NWProtocolTLS.Options?) {
         if let options = options {
             self.value = .some(options)
@@ -35,12 +33,10 @@ public struct TSTLSOptions: Sendable {
     }
 
     /// TSTLSOptions holding options
-    @available(macOS 10.14, iOS 12, tvOS 12, *)
     public static func options(_ options: NWProtocolTLS.Options) -> Self {
         return .init(value: .some(options))
     }
 
-    @available(macOS 10.14, iOS 12, tvOS 12, *)
     public static func options(
         serverIdentity: ServerIdentity
     ) -> Self? {
@@ -67,16 +63,15 @@ public struct TSTLSOptions: Sendable {
         return .init(value: .none)
     }
 
-    @available(macOS 10.14, iOS 12, tvOS 12, *)
     var options: NWProtocolTLS.Options? {
-        if case .some(let options) = self.value { return options as? NWProtocolTLS.Options }
+        if case .some(let options) = self.value { return options }
         return nil
     }
 
-    /// Internal storage for TSTLSOptions. Originally stored a reference to the NWProtocolTLS.Options
-    /// class but we cannot use @available with enum values that hold associated values anymore
-    private enum Internal {
-        case some(Any)
+    /// Internal storage for TSTLSOptions. @unchecked Sendable while NWProtocolTLS.Options
+    /// is not Sendable
+    private enum Internal: @unchecked Sendable {
+        case some(NWProtocolTLS.Options)
         case none
     }
 

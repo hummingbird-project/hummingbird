@@ -1,6 +1,7 @@
 // swift-tools-version:5.7
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
+import Foundation
 import PackageDescription
 
 let package = Package(
@@ -19,6 +20,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-http2.git", from: "1.20.0"),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.14.0"),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.9.0"),
+        .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.0.0-alpha.3"),
     ],
     targets: [
         .target(name: "HummingbirdCore", dependencies: [
@@ -29,6 +31,7 @@ let package = Package(
             .product(name: "NIOHTTP1", package: "swift-nio"),
             .product(name: "NIOPosix", package: "swift-nio"),
             .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
+            .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
         ]),
         .target(name: "HummingbirdCoreXCT", dependencies: [
             .product(name: "NIOCore", package: "swift-nio"),
@@ -54,14 +57,11 @@ let package = Package(
             dependencies:
             [
                 .byName(name: "HummingbirdCore"),
+                .byName(name: "HummingbirdTLS"),
                 .byName(name: "HummingbirdCoreXCT"),
                 .product(name: "NIOEmbedded", package: "swift-nio"),
             ],
             resources: [.process("Certificates")]
         ),
-        .testTarget(name: "HummingbirdTLSTests", dependencies: [
-            .byName(name: "HummingbirdTLS"),
-            .byName(name: "HummingbirdCoreXCT"),
-        ]),
     ]
 )

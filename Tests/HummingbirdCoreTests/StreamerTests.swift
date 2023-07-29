@@ -89,21 +89,21 @@ class ByteBufferStreamerTests: XCTestCase {
     }
 
     func consumeStreamer(_ streamer: HBByteBufferStreamer, eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer> {
-        var consumeBuffer = ByteBuffer()
+        let consumeBufferLoopBound = NIOLoopBoundBox(ByteBuffer(), eventLoop: eventLoop)
         return streamer.consumeAll { buffer in
             var buffer = buffer
-            consumeBuffer.writeBuffer(&buffer)
+            consumeBufferLoopBound.value.writeBuffer(&buffer)
             return eventLoop.makeSucceededVoidFuture()
-        }.map { consumeBuffer }
+        }.map { consumeBufferLoopBound.value }
     }
 
     func consumeStreamerWithDelays(_ streamer: HBByteBufferStreamer, eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer> {
-        var consumeBuffer = ByteBuffer()
+        let consumeBufferLoopBound = NIOLoopBoundBox(ByteBuffer(), eventLoop: eventLoop)
         return streamer.consumeAll { buffer in
             var buffer = buffer
-            consumeBuffer.writeBuffer(&buffer)
+            consumeBufferLoopBound.value.writeBuffer(&buffer)
             return eventLoop.scheduleTask(in: .microseconds(Int64.random(in: 0..<100))) {}.futureResult
-        }.map { consumeBuffer }
+        }.map { consumeBufferLoopBound.value }
     }
 
     /// Test can feed and then consume
