@@ -148,7 +148,7 @@ public struct HBFileMiddleware: HBMiddleware {
                 if ifNoneMatch.count > 0 {
                     for match in ifNoneMatch {
                         if eTag == match {
-                            return .response(HBResponse(status: .notModified, headers: headers))
+                            return .notModified(headers)
                         }
                     }
                 }
@@ -161,7 +161,7 @@ public struct HBFileMiddleware: HBMiddleware {
                         let modificationDateTimeInterval = modificationDate.timeIntervalSince1970.rounded(.down)
                         let ifModifiedSinceDateTimeInterval = ifModifiedSinceDate.timeIntervalSince1970
                         if modificationDateTimeInterval <= ifModifiedSinceDateTimeInterval {
-                            return .response(HBResponse(status: .notModified, headers: headers))
+                            return .notModified(headers)
                         }
                     }
                 }
@@ -187,8 +187,8 @@ public struct HBFileMiddleware: HBMiddleware {
                 return .loadFile(headers, nil)
             }.flatMap { (result: FileResult) -> EventLoopFuture<HBResponse> in
                 switch result {
-                case .response(let response):
-                    return request.eventLoop.makeSucceededFuture(response)
+                case .notModified(let headers):
+                    return request.eventLoop.makeSucceededFuture(HBResponse(status: .notModified, headers: headers))
                 case .loadFile(let headers, let range):
                     switch request.method {
                     case .GET:
@@ -214,8 +214,9 @@ public struct HBFileMiddleware: HBMiddleware {
         }
     }
 
+    /// Whether to return data from the file or a not modified response
     private enum FileResult {
-        case response(HBResponse)
+        case notModified(HTTPHeaders)
         case loadFile(HTTPHeaders, ClosedRange<Int>?)
     }
 }
