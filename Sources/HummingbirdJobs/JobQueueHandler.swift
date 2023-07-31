@@ -16,7 +16,7 @@ import Hummingbird
 import Logging
 
 /// Object handling a single job queue
-public class HBJobQueueHandler {
+public final class HBJobQueueHandler {
     public init(queue: HBJobQueue, numWorkers: Int, eventLoopGroup: EventLoopGroup, logger: Logger) {
         self.queue = queue
         self.workers = (0..<numWorkers).map { _ in
