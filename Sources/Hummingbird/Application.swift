@@ -43,8 +43,6 @@ public final class HBApplication: HBExtensible, Service, @unchecked Sendable {
     public let threadPool: NIOThreadPool
     /// routes requests to requestResponders based on URI
     public let router: HBRouterBuilder
-    /// http server
-    public let server: HBHTTPServer
     /// Configuration
     public let configuration: Configuration
     /// Application extensions
@@ -56,8 +54,9 @@ public final class HBApplication: HBExtensible, Service, @unchecked Sendable {
     /// decoder used by router
     public var decoder: HBRequestDecoder
     /// on server running
-    let onServerRunning: @Sendable () -> Void
-
+    var onServerRunning: @Sendable (Channel) async -> Void
+    /// additional channel handlers
+    var additionalChannelHandlers: [@Sendable () -> any RemovableChannelHandler]
     /// who provided the eventLoopGroup
     let eventLoopGroupProvider: NIOEventLoopGroupProvider
 
@@ -67,7 +66,7 @@ public final class HBApplication: HBExtensible, Service, @unchecked Sendable {
     public init(
         configuration: HBApplication.Configuration = HBApplication.Configuration(),
         eventLoopGroupProvider: NIOEventLoopGroupProvider = .createNew,
-        onServerRunning: @escaping @Sendable () -> Void = {}
+        onServerRunning: @escaping @Sendable (Channel) async -> Void = { _ in }
     ) {
         var logger = Logger(label: configuration.serverName ?? "HummingBird")
         logger.logLevel = configuration.logLevel
@@ -79,6 +78,17 @@ public final class HBApplication: HBExtensible, Service, @unchecked Sendable {
         self.encoder = NullEncoder()
         self.decoder = NullDecoder()
         self.onServerRunning = onServerRunning
+        // add idle read, write handlers
+        if let idleTimeoutConfiguration = configuration.idleTimeoutConfiguration {
+            self.additionalChannelHandlers = [{
+                IdleStateHandler(
+                    readTimeout: idleTimeoutConfiguration.readTimeout,
+                    writeTimeout: idleTimeoutConfiguration.writeTimeout
+                )
+            }]
+        } else {
+            self.additionalChannelHandlers = []
+        }
 
         // create eventLoopGroup
         self.eventLoopGroupProvider = eventLoopGroupProvider
@@ -95,39 +105,27 @@ public final class HBApplication: HBExtensible, Service, @unchecked Sendable {
 
         self.threadPool = NIOThreadPool(numberOfThreads: configuration.threadPoolSize)
         self.threadPool.start()
-
-        self.server = HBHTTPServer(group: self.eventLoopGroup, configuration: self.configuration.httpServer)
-
-        // register application shutdown with lifecycle
-        /* lifecycleTasksContainer.registerShutdown(
-             label: "Application", .sync(self.shutdownApplication)
-         )
-
-         // register server startup and shutdown with lifecycle
-         if !configuration.noHTTPServer {
-             lifecycleTasksContainer.register(
-                 label: "HTTP Server",
-                 start: .eventLoopFuture { self.server.start(responder: HTTPResponder(application: self)) },
-                 shutdown: .eventLoopFuture(self.server.stop)
-             )
-         } */
     }
 
     // MARK: Methods
 
     public func run() async throws {
+        let server = HBHTTPServer(
+            group: self.eventLoopGroup,
+            configuration: self.configuration.httpServer,
+            responder: HTTPResponder(application: self),
+            additionalChannelHandlers: self.additionalChannelHandlers.map { $0() },
+            onServerRunning: self.onServerRunning,
+            logger: self.logger
+        )
         try await withGracefulShutdownHandler {
-            try await self.server.start(responder: HTTPResponder(application: self)).get()
-            self.onServerRunning()
-            try await withCheckedThrowingContinuation { cont in
-                self.server.channel?.closeFuture.whenComplete { result in
-                    cont.resume(with: result)
-                }
-            }
+            try await server.run()
             try await HBDateCache.shutdownDateCaches(eventLoopGroup: self.eventLoopGroup).get()
             try self.shutdownApplication()
         } onGracefulShutdown: {
-            _ = self.server.stop()
+            Task {
+                try await server.shutdownGracefully()
+            }
         }
     }
 
@@ -155,5 +153,9 @@ public final class HBApplication: HBExtensible, Service, @unchecked Sendable {
         if case .createNew = self.eventLoopGroupProvider {
             try self.eventLoopGroup.syncShutdownGracefully()
         }
+    }
+
+    public func addChannelHandler(_ handler: @autoclosure @escaping @Sendable () -> any RemovableChannelHandler) {
+        self.additionalChannelHandlers.append(handler)
     }
 }
