@@ -30,178 +30,177 @@ import Foundation
 import Instrumentation
 import ServiceContextModule
 import Tracing
-/*
- /// Only intended to be used in single-threaded testing.
- final class TestTracer: LegacyTracer {
-     private(set) var spans = [TestSpan]()
-     var onEndSpan: (TestSpan) -> Void = { _ in }
 
-     func startAnySpan<Instant: TracerInstant>(
-         _ operationName: String,
-         context: @autoclosure () -> ServiceContext,
-         ofKind kind: SpanKind,
-         at instant: @autoclosure () -> Instant,
-         function: String,
-         file fileID: String,
-         line: UInt
-     ) -> any Span {
-         let span = TestSpan(
-             operationName: operationName,
-             at: instant(),
-             context: context(),
-             kind: kind,
-             onEnd: self.onEndSpan
-         )
-         self.spans.append(span)
-         return span
-     }
+/// Only intended to be used in single-threaded testing.
+final class TestTracer: LegacyTracer {
+    private(set) var spans = [TestSpan]()
+    var onEndSpan: (TestSpan) -> Void = { _ in }
 
-     public func forceFlush() {}
+    func startAnySpan<Instant: TracerInstant>(
+        _ operationName: String,
+        context: @autoclosure () -> ServiceContext,
+        ofKind kind: SpanKind,
+        at instant: @autoclosure () -> Instant,
+        function: String,
+        file fileID: String,
+        line: UInt
+    ) -> any Span {
+        let span = TestSpan(
+            operationName: operationName,
+            at: instant(),
+            context: context(),
+            kind: kind,
+            onEnd: self.onEndSpan
+        )
+        self.spans.append(span)
+        return span
+    }
 
-     func extract<Carrier, Extract>(_ carrier: Carrier, into context: inout ServiceContext, using extractor: Extract)
-         where
-         Extract: Extractor,
-         Carrier == Extract.Carrier
-     {
-         let traceID = extractor.extract(key: "trace-id", from: carrier) ?? UUID().uuidString
-         context.traceID = traceID
-     }
+    public func forceFlush() {}
 
-     func inject<Carrier, Inject>(_ context: ServiceContext, into carrier: inout Carrier, using injector: Inject)
-         where
-         Inject: Injector,
-         Carrier == Inject.Carrier
-     {
-         guard let traceID = context.traceID else { return }
-         injector.inject(traceID, forKey: "trace-id", into: &carrier)
-     }
- }
+    func extract<Carrier, Extract>(_ carrier: Carrier, into context: inout ServiceContext, using extractor: Extract)
+        where
+        Extract: Extractor,
+        Carrier == Extract.Carrier
+    {
+        let traceID = extractor.extract(key: "trace-id", from: carrier) ?? UUID().uuidString
+        context.traceID = traceID
+    }
 
- #if swift(>=5.7.0)
- extension TestTracer: Tracer {
-     func startSpan<Instant: TracerInstant>(
-         _ operationName: String,
-         context: @autoclosure () -> ServiceContext,
-         ofKind kind: SpanKind,
-         at instant: @autoclosure () -> Instant,
-         function: String,
-         file fileID: String,
-         line: UInt
-     ) -> TestSpan {
-         let span = TestSpan(
-             operationName: operationName,
-             at: instant(),
-             context: context(),
-             kind: kind,
-             onEnd: self.onEndSpan
-         )
-         self.spans.append(span)
-         return span
-     }
- }
- #endif
+    func inject<Carrier, Inject>(_ context: ServiceContext, into carrier: inout Carrier, using injector: Inject)
+        where
+        Inject: Injector,
+        Carrier == Inject.Carrier
+    {
+        guard let traceID = context.traceID else { return }
+        injector.inject(traceID, forKey: "trace-id", into: &carrier)
+    }
+}
 
- extension TestTracer {
-     enum TraceIDKey: ServiceContextKey {
-         typealias Value = String
-     }
+#if swift(>=5.7.0)
+extension TestTracer: Tracer {
+    func startSpan<Instant: TracerInstant>(
+        _ operationName: String,
+        context: @autoclosure () -> ServiceContext,
+        ofKind kind: SpanKind,
+        at instant: @autoclosure () -> Instant,
+        function: String,
+        file fileID: String,
+        line: UInt
+    ) -> TestSpan {
+        let span = TestSpan(
+            operationName: operationName,
+            at: instant(),
+            context: context(),
+            kind: kind,
+            onEnd: self.onEndSpan
+        )
+        self.spans.append(span)
+        return span
+    }
+}
+#endif
 
-     enum SpanIDKey: ServiceContextKey {
-         typealias Value = String
-     }
- }
+extension TestTracer {
+    enum TraceIDKey: ServiceContextKey {
+        typealias Value = String
+    }
 
- extension ServiceContext {
-     var traceID: String? {
-         get {
-             self[TestTracer.TraceIDKey.self]
-         }
-         set {
-             self[TestTracer.TraceIDKey.self] = newValue
-         }
-     }
+    enum SpanIDKey: ServiceContextKey {
+        typealias Value = String
+    }
+}
 
-     var spanID: String? {
-         get {
-             self[TestTracer.SpanIDKey.self]
-         }
-         set {
-             self[TestTracer.SpanIDKey.self] = newValue
-         }
-     }
- }
+extension ServiceContext {
+    var traceID: String? {
+        get {
+            self[TestTracer.TraceIDKey.self]
+        }
+        set {
+            self[TestTracer.TraceIDKey.self] = newValue
+        }
+    }
 
- /// Only intended to be used in single-threaded testing.
- final class TestSpan: Span {
-     public let kind: SpanKind
-     public let startTime: UInt64
-     public private(set) var status: SpanStatus?
-     public private(set) var endTime: UInt64?
+    var spanID: String? {
+        get {
+            self[TestTracer.SpanIDKey.self]
+        }
+        set {
+            self[TestTracer.SpanIDKey.self] = newValue
+        }
+    }
+}
 
-     private(set) var recordedErrors: [(Error, SpanAttributes)] = []
+/// Only intended to be used in single-threaded testing.
+final class TestSpan: Span {
+    public let kind: SpanKind
+    public let startTime: UInt64
+    public private(set) var status: SpanStatus?
+    public private(set) var endTime: UInt64?
 
-     var operationName: String
-     let context: ServiceContext
+    private(set) var recordedErrors: [(Error, SpanAttributes)] = []
 
-     private(set) var events = [SpanEvent]() {
-         didSet {
-             self.isRecording = !self.events.isEmpty
-         }
-     }
+    var operationName: String
+    let context: ServiceContext
 
-     private(set) var links = [SpanLink]()
+    private(set) var events = [SpanEvent]() {
+        didSet {
+            self.isRecording = !self.events.isEmpty
+        }
+    }
 
-     var attributes: SpanAttributes = [:] {
-         didSet {
-             self.isRecording = !self.attributes.isEmpty
-         }
-     }
+    private(set) var links = [SpanLink]()
 
-     private(set) var isRecording = false
+    var attributes: SpanAttributes = [:] {
+        didSet {
+            self.isRecording = !self.attributes.isEmpty
+        }
+    }
 
-     let onEnd: (TestSpan) -> Void
+    private(set) var isRecording = false
 
-     init<Instant: TracerInstant>(
-         operationName: String,
-         at instant: Instant,
-         context: ServiceContext,
-         kind: SpanKind,
-         onEnd: @escaping (TestSpan) -> Void
-     ) {
-         self.operationName = operationName
-         self.startTime = instant.millisecondsSinceEpoch
-         self.context = context
-         self.onEnd = onEnd
-         self.kind = kind
-     }
+    let onEnd: (TestSpan) -> Void
 
-     func setStatus(_ status: SpanStatus) {
-         self.status = status
-         self.isRecording = true
-     }
+    init<Instant: TracerInstant>(
+        operationName: String,
+        at instant: Instant,
+        context: ServiceContext,
+        kind: SpanKind,
+        onEnd: @escaping (TestSpan) -> Void
+    ) {
+        self.operationName = operationName
+        self.startTime = instant.millisecondsSinceEpoch
+        self.context = context
+        self.onEnd = onEnd
+        self.kind = kind
+    }
 
-     func addLink(_ link: SpanLink) {
-         self.links.append(link)
-     }
+    func setStatus(_ status: SpanStatus) {
+        self.status = status
+        self.isRecording = true
+    }
 
-     func addEvent(_ event: SpanEvent) {
-         self.events.append(event)
-     }
+    func addLink(_ link: SpanLink) {
+        self.links.append(link)
+    }
 
-     func recordError<Instant: TracerInstant>(
-         _ error: Error,
-         attributes: SpanAttributes,
-         at instant: @autoclosure () -> Instant
-     ) {
-         self.recordedErrors.append((error, attributes))
-     }
+    func addEvent(_ event: SpanEvent) {
+        self.events.append(event)
+    }
 
-     func end<Instant: TracerInstant>(at instant: @autoclosure () -> Instant) {
-         self.endTime = instant().millisecondsSinceEpoch
-         self.onEnd(self)
-     }
- }
+    func recordError<Instant: TracerInstant>(
+        _ error: Error,
+        attributes: SpanAttributes,
+        at instant: @autoclosure () -> Instant
+    ) {
+        self.recordedErrors.append((error, attributes))
+    }
 
- extension TestTracer: @unchecked Sendable {} // only intended for single threaded testing
- extension TestSpan: @unchecked Sendable {} // only intended for single threaded testing
- */
+    func end<Instant: TracerInstant>(at instant: @autoclosure () -> Instant) {
+        self.endTime = instant().millisecondsSinceEpoch
+        self.onEnd(self)
+    }
+}
+
+extension TestTracer: @unchecked Sendable {} // only intended for single threaded testing
+extension TestSpan: @unchecked Sendable {} // only intended for single threaded testing

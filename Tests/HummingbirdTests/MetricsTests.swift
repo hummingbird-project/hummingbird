@@ -17,152 +17,142 @@ import HummingbirdXCT
 import Metrics
 import NIOConcurrencyHelpers
 import XCTest
-/*
- internal final class TestMetrics: MetricsFactory {
-     private let lock = NIOLock()
-     var counters = [String: CounterHandler]()
-     var recorders = [String: RecorderHandler]()
-     var timers = [String: TimerHandler]()
 
-     public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
-         return self.make(label: label, dimensions: dimensions, registry: &self.counters, maker: TestCounter.init)
-     }
+final class TestMetrics: MetricsFactory {
+    private let lock = NIOLock()
+    var counters = [String: CounterHandler]()
+    var recorders = [String: RecorderHandler]()
+    var timers = [String: TimerHandler]()
 
-     public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
-         let maker = { (label: String, dimensions: [(String, String)]) -> RecorderHandler in
-             TestRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
-         }
-         return self.make(label: label, dimensions: dimensions, registry: &self.recorders, maker: maker)
-     }
+    public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
+        return self.make(label: label, dimensions: dimensions, registry: &self.counters, maker: TestCounter.init)
+    }
 
-     public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
-         return self.make(label: label, dimensions: dimensions, registry: &self.timers, maker: TestTimer.init)
-     }
+    public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
+        let maker = { (label: String, dimensions: [(String, String)]) -> RecorderHandler in
+            TestRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
+        }
+        return self.make(label: label, dimensions: dimensions, registry: &self.recorders, maker: maker)
+    }
 
-     private func make<Item>(label: String, dimensions: [(String, String)], registry: inout [String: Item], maker: (String, [(String, String)]) -> Item) -> Item {
-         return self.lock.withLock {
-             let item = maker(label, dimensions)
-             registry[label] = item
-             return item
-         }
-     }
+    public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
+        return self.make(label: label, dimensions: dimensions, registry: &self.timers, maker: TestTimer.init)
+    }
 
-     func destroyCounter(_ handler: CounterHandler) {
-         if let testCounter = handler as? TestCounter {
-             self.counters.removeValue(forKey: testCounter.label)
-         }
-     }
+    private func make<Item>(label: String, dimensions: [(String, String)], registry: inout [String: Item], maker: (String, [(String, String)]) -> Item) -> Item {
+        return self.lock.withLock {
+            let item = maker(label, dimensions)
+            registry[label] = item
+            return item
+        }
+    }
 
-     func destroyRecorder(_ handler: RecorderHandler) {
-         if let testRecorder = handler as? TestRecorder {
-             self.recorders.removeValue(forKey: testRecorder.label)
-         }
-     }
+    func destroyCounter(_ handler: CounterHandler) {
+        if let testCounter = handler as? TestCounter {
+            self.counters.removeValue(forKey: testCounter.label)
+        }
+    }
 
-     func destroyTimer(_ handler: TimerHandler) {
-         if let testTimer = handler as? TestTimer {
-             self.timers.removeValue(forKey: testTimer.label)
-         }
-     }
- }
+    func destroyRecorder(_ handler: RecorderHandler) {
+        if let testRecorder = handler as? TestRecorder {
+            self.recorders.removeValue(forKey: testRecorder.label)
+        }
+    }
 
- internal class TestCounter: CounterHandler, Equatable {
-     let id: String
-     let label: String
-     let dimensions: [(String, String)]
+    func destroyTimer(_ handler: TimerHandler) {
+        if let testTimer = handler as? TestTimer {
+            self.timers.removeValue(forKey: testTimer.label)
+        }
+    }
+}
 
-     let lock = NIOLock()
-     var values = [(Date, Int64)]()
+internal class TestCounter: CounterHandler, Equatable {
+    let id: String
+    let label: String
+    let dimensions: [(String, String)]
 
-     init(label: String, dimensions: [(String, String)]) {
-         self.id = NSUUID().uuidString
-         self.label = label
-         self.dimensions = dimensions
-     }
+    let lock = NIOLock()
+    var values = [(Date, Int64)]()
 
-     func increment(by amount: Int64) {
-         self.lock.withLock {
-             self.values.append((Date(), amount))
-         }
-         print("adding \(amount) to \(self.label)")
-     }
+    init(label: String, dimensions: [(String, String)]) {
+        self.id = NSUUID().uuidString
+        self.label = label
+        self.dimensions = dimensions
+    }
 
-     func reset() {
-         self.lock.withLock {
-             self.values = []
-         }
-         print("reseting \(self.label)")
-     }
+    func increment(by amount: Int64) {
+        self.lock.withLock {
+            self.values.append((Date(), amount))
+        }
+        print("adding \(amount) to \(self.label)")
+    }
 
-     public static func == (lhs: TestCounter, rhs: TestCounter) -> Bool {
-         return lhs.id == rhs.id
-     }
- }
+    func reset() {
+        self.lock.withLock {
+            self.values = []
+        }
+        print("reseting \(self.label)")
+    }
 
- internal class TestRecorder: RecorderHandler, Equatable {
-     let id: String
-     let label: String
-     let dimensions: [(String, String)]
-     let aggregate: Bool
+    public static func == (lhs: TestCounter, rhs: TestCounter) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
 
-     let lock = NIOLock()
-     var values = [(Date, Double)]()
+internal class TestRecorder: RecorderHandler, Equatable {
+    let id: String
+    let label: String
+    let dimensions: [(String, String)]
+    let aggregate: Bool
 
-     init(label: String, dimensions: [(String, String)], aggregate: Bool) {
-         self.id = NSUUID().uuidString
-         self.label = label
-         self.dimensions = dimensions
-         self.aggregate = aggregate
-     }
+    let lock = NIOLock()
+    var values = [(Date, Double)]()
 
-     func record(_ value: Int64) {
-         self.record(Double(value))
-     }
+    init(label: String, dimensions: [(String, String)], aggregate: Bool) {
+        self.id = NSUUID().uuidString
+        self.label = label
+        self.dimensions = dimensions
+        self.aggregate = aggregate
+    }
 
-     func record(_ value: Double) {
-         self.lock.withLock {
-             // this may loose precision but good enough as an example
-             self.values.append((Date(), Double(value)))
-         }
-         print("recording \(value) in \(self.label)")
-     }
+    func record(_ value: Int64) {
+        self.record(Double(value))
+    }
 
-     public static func == (lhs: TestRecorder, rhs: TestRecorder) -> Bool {
-         return lhs.id == rhs.id
-     }
- }
+    func record(_ value: Double) {
+        self.lock.withLock {
+            // this may loose precision but good enough as an example
+            self.values.append((Date(), Double(value)))
+        }
+        print("recording \(value) in \(self.label)")
+    }
 
- internal class TestTimer: TimerHandler, Equatable {
-     let id: String
-     let label: String
-     var displayUnit: TimeUnit?
-     let dimensions: [(String, String)]
+    public static func == (lhs: TestRecorder, rhs: TestRecorder) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
 
-     let lock = NIOLock()
-     var values = [(Date, Int64)]()
+internal class TestTimer: TimerHandler, Equatable {
+    let id: String
+    let label: String
+    var displayUnit: TimeUnit?
+    let dimensions: [(String, String)]
 
-     init(label: String, dimensions: [(String, String)]) {
-         self.id = NSUUID().uuidString
-         self.label = label
-         self.displayUnit = nil
-         self.dimensions = dimensions
-     }
+    let lock = NIOLock()
+    var values = [(Date, Int64)]()
 
-     func preferDisplayUnit(_ unit: TimeUnit) {
-         self.lock.withLock {
-             self.displayUnit = unit
-         }
-     }
+    init(label: String, dimensions: [(String, String)]) {
+        self.id = NSUUID().uuidString
+        self.label = label
+        self.displayUnit = nil
+        self.dimensions = dimensions
+    }
 
-     func retriveValueInPreferredUnit(atIndex i: Int) -> Double {
-         return self.lock.withLock {
-             let value = values[i].1
-             guard let displayUnit = self.displayUnit else {
-                 return Double(value)
-             }
-             return Double(value) / Double(displayUnit.scaleFromNanoseconds)
-         }
-     }
+    func preferDisplayUnit(_ unit: TimeUnit) {
+        self.lock.withLock {
+            self.displayUnit = unit
+        }
+    }
 
     func retriveValueInPreferredUnit(atIndex i: Int) -> Double {
         return self.lock.withLock {
@@ -181,91 +171,90 @@ import XCTest
         print("recording \(duration) \(self.label)")
     }
 
-     public static func == (lhs: TestTimer, rhs: TestTimer) -> Bool {
-         return lhs.id == rhs.id
-     }
- }
+    public static func == (lhs: TestTimer, rhs: TestTimer) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
 
- final class MetricsTests: XCTestCase {
-     static var testMetrics = TestMetrics()
+final class MetricsTests: XCTestCase {
+    static var testMetrics = TestMetrics()
 
-     override class func setUp() {
-         MetricsSystem.bootstrap(self.testMetrics)
-     }
+    override class func setUp() {
+        MetricsSystem.bootstrap(self.testMetrics)
+    }
 
-     func testCounter() throws {
-         let app = HBApplication(testing: .embedded)
-         app.middleware.add(HBMetricsMiddleware())
-         app.router.get("/hello") { _ -> String in
-             return "Hello"
-         }
-         try app.XCTStart()
-         defer { app.XCTStop() }
-         try app.XCTExecute(uri: "/hello", method: .GET) { _ in }
+    func testCounter() async throws {
+        let app = HBApplication(testing: .router)
+        app.middleware.add(HBMetricsMiddleware())
+        app.router.get("/hello") { _ -> String in
+            return "Hello"
+        }
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/hello", method: .GET) { _ in }
+        }
 
-         let counter = try XCTUnwrap(Self.testMetrics.counters["hb_requests"] as? TestCounter)
-         XCTAssertEqual(counter.values[0].1, 1)
-         XCTAssertEqual(counter.dimensions[0].0, "hb_uri")
-         XCTAssertEqual(counter.dimensions[0].1, "/hello")
-         XCTAssertEqual(counter.dimensions[1].0, "hb_method")
-         XCTAssertEqual(counter.dimensions[1].1, "GET")
-     }
+        let counter = try XCTUnwrap(Self.testMetrics.counters["hb_requests"] as? TestCounter)
+        XCTAssertEqual(counter.values[0].1, 1)
+        XCTAssertEqual(counter.dimensions[0].0, "hb_uri")
+        XCTAssertEqual(counter.dimensions[0].1, "/hello")
+        XCTAssertEqual(counter.dimensions[1].0, "hb_method")
+        XCTAssertEqual(counter.dimensions[1].1, "GET")
+    }
 
-     func testError() throws {
-         let app = HBApplication(testing: .embedded)
-         app.middleware.add(HBMetricsMiddleware())
-         app.router.get("/hello") { _ -> String in
-             throw HBHTTPError(.badRequest)
-         }
-         try app.XCTStart()
-         defer { app.XCTStop() }
-         try app.XCTExecute(uri: "/hello", method: .GET) { _ in }
+    func testError() async throws {
+        let app = HBApplication(testing: .router)
+        app.middleware.add(HBMetricsMiddleware())
+        app.router.get("/hello") { _ -> String in
+            throw HBHTTPError(.badRequest)
+        }
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/hello", method: .GET) { _ in }
+        }
 
-         let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
-         XCTAssertEqual(counter.values.count, 1)
-         XCTAssertEqual(counter.values[0].1, 1)
-         XCTAssertEqual(counter.dimensions[0].0, "hb_uri")
-         XCTAssertEqual(counter.dimensions[0].1, "/hello")
-         XCTAssertEqual(counter.dimensions[1].0, "hb_method")
-         XCTAssertEqual(counter.dimensions[1].1, "GET")
-     }
+        let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
+        XCTAssertEqual(counter.values.count, 1)
+        XCTAssertEqual(counter.values[0].1, 1)
+        XCTAssertEqual(counter.dimensions[0].0, "hb_uri")
+        XCTAssertEqual(counter.dimensions[0].1, "/hello")
+        XCTAssertEqual(counter.dimensions[1].0, "hb_method")
+        XCTAssertEqual(counter.dimensions[1].1, "GET")
+    }
 
-     func testNotFoundError() throws {
-         let app = HBApplication(testing: .embedded)
-         app.middleware.add(HBMetricsMiddleware())
-         app.router.get("/hello") { _ -> String in
-             return "hello"
-         }
-         try app.XCTStart()
-         defer { app.XCTStop() }
-         try app.XCTExecute(uri: "/hello2", method: .GET) { _ in }
+    func testNotFoundError() async throws {
+        let app = HBApplication(testing: .router)
+        app.middleware.add(HBMetricsMiddleware())
+        app.router.get("/hello") { _ -> String in
+            return "hello"
+        }
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/hello2", method: .GET) { _ in }
+        }
 
-         let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
-         XCTAssertEqual(counter.values.count, 1)
-         XCTAssertEqual(counter.values[0].1, 1)
-         XCTAssertEqual(counter.dimensions.count, 1)
-         XCTAssertEqual(counter.dimensions[0].0, "hb_method")
-         XCTAssertEqual(counter.dimensions[0].1, "GET")
-     }
+        let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
+        XCTAssertEqual(counter.values.count, 1)
+        XCTAssertEqual(counter.values[0].1, 1)
+        XCTAssertEqual(counter.dimensions.count, 1)
+        XCTAssertEqual(counter.dimensions[0].0, "hb_method")
+        XCTAssertEqual(counter.dimensions[0].1, "GET")
+    }
 
-     func testParameterEndpoint() throws {
-         let app = HBApplication(testing: .embedded)
-         app.middleware.add(HBMetricsMiddleware())
-         app.router.get("/user/:id") { _ -> String in
-             throw HBHTTPError(.badRequest)
-         }
-         try app.XCTStart()
-         defer { app.XCTStop() }
-         try app.XCTExecute(uri: "/user/765", method: .GET) { _ in }
+    func testParameterEndpoint() async throws {
+        let app = HBApplication(testing: .router)
+        app.middleware.add(HBMetricsMiddleware())
+        app.router.get("/user/:id") { _ -> String in
+            throw HBHTTPError(.badRequest)
+        }
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/user/765", method: .GET) { _ in }
+        }
 
-         let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
-         XCTAssertEqual(counter.values.count, 1)
-         XCTAssertEqual(counter.values[0].1, 1)
-         XCTAssertEqual(counter.dimensions.count, 2)
-         XCTAssertEqual(counter.dimensions[0].0, "hb_uri")
-         XCTAssertEqual(counter.dimensions[0].1, "/user/:id")
-         XCTAssertEqual(counter.dimensions[1].0, "hb_method")
-         XCTAssertEqual(counter.dimensions[1].1, "GET")
-     }
- }
- */
+        let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
+        XCTAssertEqual(counter.values.count, 1)
+        XCTAssertEqual(counter.values[0].1, 1)
+        XCTAssertEqual(counter.dimensions.count, 2)
+        XCTAssertEqual(counter.dimensions[0].0, "hb_uri")
+        XCTAssertEqual(counter.dimensions[0].1, "/user/:id")
+        XCTAssertEqual(counter.dimensions[1].0, "hb_method")
+        XCTAssertEqual(counter.dimensions[1].1, "GET")
+    }
+}

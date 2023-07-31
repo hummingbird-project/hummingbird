@@ -11,76 +11,65 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 //===----------------------------------------------------------------------===//
-/*
- import Foundation
- import Hummingbird
- import HummingbirdFoundation
- import HummingbirdXCT
- import XCTest
 
- @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
- class HummingbirdAsyncFilesTests: XCTestCase {
-     func randomBuffer(size: Int) -> ByteBuffer {
-         var data = [UInt8](repeating: 0, count: size)
-         data = data.map { _ in UInt8.random(in: 0...255) }
-         return ByteBufferAllocator().buffer(bytes: data)
-     }
+import Foundation
+import Hummingbird
+import HummingbirdFoundation
+import HummingbirdXCT
+import XCTest
 
-     func testRead() throws {
-         #if os(macOS)
-         // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
-         guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
-         #endif
-         let app = HBApplication(testing: .asyncTest)
-         app.router.get("test.jpg") { request -> HBResponse in
-             let fileIO = HBFileIO(application: request.application)
-             let body = try await fileIO.loadFile(path: "test.jpg", context: request.context, logger: request.logger)
-             return .init(status: .ok, headers: [:], body: body)
-         }
-         let buffer = self.randomBuffer(size: 320_003)
-         let data = Data(buffer: buffer)
-         let fileURL = URL(fileURLWithPath: "test.jpg")
-         XCTAssertNoThrow(try data.write(to: fileURL))
-         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+class HummingbirdAsyncFilesTests: XCTestCase {
+    func randomBuffer(size: Int) -> ByteBuffer {
+        var data = [UInt8](repeating: 0, count: size)
+        data = data.map { _ in UInt8.random(in: 0...255) }
+        return ByteBufferAllocator().buffer(bytes: data)
+    }
 
-         try app.XCTStart()
-         defer { app.XCTStop() }
+    func testRead() async throws {
+        let app = HBApplication(testing: .router)
+        app.router.get("test.jpg") { request -> HBResponse in
+            let fileIO = HBFileIO(application: request.application)
+            let body = try await fileIO.loadFile(path: "test.jpg", context: request.context, logger: request.logger)
+            return .init(status: .ok, headers: [:], body: body)
+        }
+        let buffer = self.randomBuffer(size: 320_003)
+        let data = Data(buffer: buffer)
+        let fileURL = URL(fileURLWithPath: "test.jpg")
+        XCTAssertNoThrow(try data.write(to: fileURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-         try app.XCTExecute(uri: "/test.jpg", method: .GET) { response in
-             XCTAssertEqual(response.body, buffer)
-         }
-     }
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/test.jpg", method: .GET) { response in
+                XCTAssertEqual(response.body, buffer)
+            }
+        }
+    }
 
-     func testWrite() throws {
-         #if os(macOS)
-         // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
-         guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
-         #endif
-         let filename = "testWrite.txt"
-         let app = HBApplication(testing: .asyncTest)
-         app.router.put("store") { request -> HTTPResponseStatus in
-             let fileIO = HBFileIO(application: request.application)
-             try await fileIO.writeFile(
-                 contents: request.body,
-                 path: filename,
-                 context: request.context,
-                 logger: request.logger
-             )
-             return .ok
-         }
+    func testWrite() async throws {
+        let filename = "testWrite.txt"
+        let app = HBApplication(testing: .router)
+        app.router.put("store") { request -> HTTPResponseStatus in
+            let fileIO = HBFileIO(application: request.application)
+            try await fileIO.writeFile(
+                contents: request.body,
+                path: filename,
+                context: request.context,
+                logger: request.logger
+            )
+            return .ok
+        }
 
-         try app.XCTStart()
-         defer { app.XCTStop() }
+        try await app.XCTTest { client in
+            let buffer = ByteBufferAllocator().buffer(string: "This is a test")
+            try await client.XCTExecute(uri: "/store", method: .PUT, body: buffer) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
 
-         let buffer = ByteBufferAllocator().buffer(string: "This is a test")
-         try app.XCTExecute(uri: "/store", method: .PUT, body: buffer) { response in
-             XCTAssertEqual(response.status, .ok)
-         }
-
-         let fileURL = URL(fileURLWithPath: filename)
-         let data = try Data(contentsOf: fileURL)
-         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
-         XCTAssertEqual(String(decoding: data, as: Unicode.UTF8.self), "This is a test")
-     }
- }
- */
+            let fileURL = URL(fileURLWithPath: filename)
+            let data = try Data(contentsOf: fileURL)
+            defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+            XCTAssertEqual(String(decoding: data, as: Unicode.UTF8.self), "This is a test")
+        }
+    }
+}
