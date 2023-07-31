@@ -28,7 +28,7 @@ public actor HBHTTPServer {
         case initial(
             responder: HBHTTPResponder,
             childChannelInitializer: HBChannelInitializer,
-            onServerRunning: @Sendable () async -> Void
+            onServerRunning: @Sendable (Channel) async -> Void
         )
         case starting
         case running(
@@ -88,7 +88,7 @@ public actor HBHTTPServer {
         responder: HBHTTPResponder,
         childChannelInitializer: HBChannelInitializer = HTTP1Channel(),
         additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = [],
-        onServerRunning: @escaping @Sendable () async -> Void = {},
+        onServerRunning: @escaping @Sendable (Channel) async -> Void = { _ in },
         logger: Logger
     ) {
         self.eventLoopGroup = group
@@ -120,7 +120,7 @@ public actor HBHTTPServer {
 
             case .starting:
                 self.state = .running(channel: channel, quiescingHelper: quiescingHelper)
-                await onServerRunning()
+                await onServerRunning(channel)
 
             case .shuttingDown, .shutdown:
                 try await channel.close()

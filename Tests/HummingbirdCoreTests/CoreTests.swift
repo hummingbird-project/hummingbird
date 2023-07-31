@@ -631,33 +631,51 @@ class HummingBirdCoreTests: XCTestCase {
     }
 
     func testServerAsService() async throws {
-        final class Barrier: @unchecked Sendable {
-            let cont: AsyncStream<Void>.Continuation
-            let stream: AsyncStream<Void>
+        actor Promise<Value> {
+            enum State {
+                case blocked([CheckedContinuation<Value, Never>])
+                case unblocked(Value)
+            }
+
+            var state: State
 
             init() {
-                var cont: AsyncStream<Void>.Continuation!
-                self.stream = AsyncStream<Void> { cont = $0 }
-                self.cont = cont
+                self.state = .blocked([])
             }
 
-            func wait() async {
-                await self.stream.first { _ in true }
+            func wait() async -> Value {
+                switch self.state {
+                case .blocked(var continuations):
+                    return await withCheckedContinuation { cont in
+                        continuations.append(cont)
+                        self.state = .blocked(continuations)
+                    }
+                case .unblocked(let value):
+                    return value
+                }
             }
 
-            func signal() {
-                self.cont.yield()
+            func complete(_ value: Value) {
+                switch self.state {
+                case .blocked(let continuations):
+                    for cont in continuations {
+                        cont.resume(returning: value)
+                    }
+                    self.state = .unblocked(value)
+                case .unblocked:
+                    self.state = .unblocked(value)
+                }
             }
         }
 
-        let barrier = Barrier()
+        let promise = Promise<Int>()
         var logger = Logger(label: "HB")
         logger.logLevel = .trace
         let server = HBHTTPServer(
             group: Self.eventLoopGroup,
             configuration: .init(address: .hostname(port: 0)),
             responder: HelloResponder(),
-            onServerRunning: { barrier.signal() },
+            onServerRunning: { channel in await promise.complete(channel.localAddress!.port!) },
             logger: logger
         )
         try await withThrowingTaskGroup(of: Void.self) { group in
@@ -669,10 +687,10 @@ class HummingBirdCoreTests: XCTestCase {
             group.addTask {
                 try await serviceGroup.run()
             }
-            await barrier.wait()
-            let client = await HBXCTClient(
+            let port = await promise.wait()
+            let client = HBXCTClient(
                 host: "localhost",
-                port: server.port!,
+                port: port,
                 configuration: .init(timeout: .seconds(2)),
                 eventLoopGroupProvider: .createNew
             )
