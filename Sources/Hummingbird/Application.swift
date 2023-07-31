@@ -33,7 +33,10 @@ import ServiceLifecycle
 /// app.start()
 /// app.wait()
 /// ```
-/// Editing the application setup after calling `start` will produce undefined behaviour.
+/// Editing the application setup after calling `run` will produce undefined behaviour.
+///
+/// TODO: Temporarily I have added unchecked Sendable conformance to the class as Sendable
+/// conformance is required by `Service`. I will need to revisit this.
 public final class HBApplication: HBExtensible, Service, @unchecked Sendable {
     // MARK: Member variables
 
