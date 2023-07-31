@@ -142,6 +142,35 @@ final class HummingbirdJobsTests: XCTestCase {
         wait(for: [TestJob.expectation], timeout: 1)
     }
 
+    func testQueueOutsideApplication() throws {
+        struct TestJob: HBJob {
+            static let name = "testSecondQueue"
+            static let expectation = XCTestExpectation(description: "Jobs Completed")
+            func execute(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void> {
+                Self.expectation.fulfill()
+                return eventLoop.makeSucceededVoidFuture()
+            }
+        }
+        TestJob.register()
+        TestJob.expectation.expectedFulfillmentCount = 1
+        let app = HBApplication(testing: .live)
+        app.logger.logLevel = .trace
+        let jobQueue = HBMemoryJobQueue(eventLoop: app.eventLoopGroup.any())
+        let JobQueueHandler = HBJobQueueHandler(queue: jobQueue, numWorkers: 4, eventLoopGroup: app.eventLoopGroup, logger: app.logger)
+        app.lifecycle.register(
+            label: "MyJobQueue",
+            start: .sync { JobQueueHandler.start() },
+            shutdown: .eventLoopFuture { JobQueueHandler.shutdown() }
+        )
+
+        try app.start()
+        defer { app.stop() }
+
+        JobQueueHandler.enqueue(TestJob(), on: app.eventLoopGroup.next())
+
+        wait(for: [TestJob.expectation], timeout: 1)
+    }
+
     func testShutdown() throws {
         let app = HBApplication(testing: .live)
         app.logger.logLevel = .trace
