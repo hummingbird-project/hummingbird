@@ -34,10 +34,7 @@ import ServiceLifecycle
 /// app.wait()
 /// ```
 /// Editing the application setup after calling `run` will produce undefined behaviour.
-///
-/// TODO: Temporarily I have added unchecked Sendable conformance to the class as Sendable
-/// conformance is required by `Service`. I will need to revisit this.
-public final class HBApplication: HBExtensible, Service, @unchecked Sendable {
+public final class HBApplication: HBExtensible {
     // MARK: Member variables
 
     /// event loop group used by application
@@ -112,6 +109,32 @@ public final class HBApplication: HBExtensible, Service, @unchecked Sendable {
 
     // MARK: Methods
 
+    /// middleware applied to requests
+    public var middleware: HBMiddlewareGroup { return self.router.middlewares }
+
+    /// Construct the RequestResponder from the middleware group and router
+    public func constructResponder() -> HBResponder {
+        return self.router.buildRouter()
+    }
+
+    /// shutdown eventloop, threadpool and any extensions attached to the Application
+    public func shutdownApplication() throws {
+        try self.extensions.shutdown()
+        try self.threadPool.syncShutdownGracefully()
+        if case .createNew = self.eventLoopGroupProvider {
+            try self.eventLoopGroup.syncShutdownGracefully()
+        }
+    }
+
+    public func addChannelHandler(_ handler: @autoclosure @escaping @Sendable () -> any RemovableChannelHandler) {
+        self.additionalChannelHandlers.append(handler)
+    }
+}
+
+/// Conform to `Service` from `ServiceLifecycle`.
+/// TODO: Temporarily I have added unchecked Sendable conformance to the class as Sendable
+/// conformance is required by `Service`. I will need to revisit this.
+extension HBApplication: Service, @unchecked Sendable {
     public func run() async throws {
         let server = HBHTTPServer(
             group: self.eventLoopGroup,
@@ -139,26 +162,5 @@ public final class HBApplication: HBExtensible, Service, @unchecked Sendable {
             logger: self.logger
         )
         try await serviceGroup.run()
-    }
-
-    /// middleware applied to requests
-    public var middleware: HBMiddlewareGroup { return self.router.middlewares }
-
-    /// Construct the RequestResponder from the middleware group and router
-    public func constructResponder() -> HBResponder {
-        return self.router.buildRouter()
-    }
-
-    /// shutdown eventloop, threadpool and any extensions attached to the Application
-    public func shutdownApplication() throws {
-        try self.extensions.shutdown()
-        try self.threadPool.syncShutdownGracefully()
-        if case .createNew = self.eventLoopGroupProvider {
-            try self.eventLoopGroup.syncShutdownGracefully()
-        }
-    }
-
-    public func addChannelHandler(_ handler: @autoclosure @escaping @Sendable () -> any RemovableChannelHandler) {
-        self.additionalChannelHandlers.append(handler)
     }
 }
