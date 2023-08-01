@@ -22,16 +22,15 @@ import ServiceLifecycle
 
 /// Application class. Brings together all the components of Hummingbird together
 ///
-/// Create an HBApplication, setup your application middleware, encoders, routes etc and then call `start` to
-/// start the server and `wait` to wait until the server is stopped.
+/// Create an HBApplication, setup your application middleware, encoders, routes etc and then either
+/// add to ServiceLifecycle `ServiceGroup` or run independently with `runService`.
 /// ```
 /// let app = HBApplication()
 /// app.middleware.add(MyMiddleware())
-/// app.get("hello") { _ in
+/// app.router.get("hello") { _ in
 ///     return "hello"
 /// }
-/// app.start()
-/// app.wait()
+/// try await app.runService()
 /// ```
 /// Editing the application setup after calling `run` will produce undefined behaviour.
 public final class HBApplication: HBExtensible {
@@ -155,6 +154,8 @@ extension HBApplication: Service, @unchecked Sendable {
         }
     }
 
+    /// Helper function that runs application inside a ServiceGroup which will gracefully
+    /// shutdown on signals SIGINT, SIGTERM
     public func runService() async throws {
         let serviceGroup = ServiceGroup(
             services: [self],
