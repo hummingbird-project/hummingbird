@@ -65,6 +65,11 @@ extension HBJobQueueHandler {
     @discardableResult public func enqueue(_ job: HBJob, on eventLoop: EventLoop) async throws -> JobIdentifier {
         try await self.enqueue(job, on: eventLoop).get()
     }
+
+    /// Shutdown queue workers and queue
+    public func shutdown() async throws {
+        try await self.shutdown().get()
+    }
 }
 
 /// Job queue id
