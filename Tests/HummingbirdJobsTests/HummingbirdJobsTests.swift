@@ -156,17 +156,17 @@ final class HummingbirdJobsTests: XCTestCase {
         let app = HBApplication(testing: .live)
         app.logger.logLevel = .trace
         let jobQueue = HBMemoryJobQueue(eventLoop: app.eventLoopGroup.any())
-        let JobQueueHandler = HBJobQueueHandler(queue: jobQueue, numWorkers: 4, eventLoopGroup: app.eventLoopGroup, logger: app.logger)
+        let jobQueueHandler = HBJobQueueHandler(queue: jobQueue, numWorkers: 4, eventLoopGroup: app.eventLoopGroup, logger: app.logger)
         app.lifecycle.register(
             label: "MyJobQueue",
-            start: .sync { JobQueueHandler.start() },
-            shutdown: .eventLoopFuture { JobQueueHandler.shutdown() }
+            start: .sync { jobQueueHandler.start() },
+            shutdown: .eventLoopFuture { jobQueueHandler.shutdown() }
         )
 
         try app.start()
         defer { app.stop() }
 
-        JobQueueHandler.enqueue(TestJob(), on: app.eventLoopGroup.next())
+        jobQueueHandler.enqueue(TestJob(), on: app.eventLoopGroup.next())
 
         wait(for: [TestJob.expectation], timeout: 1)
     }
