@@ -104,6 +104,19 @@ extension HBJobQueue {
     public var pollTime: TimeAmount { .milliseconds(100) }
 }
 
+/// Job queue asynchronous enqueue
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+extension HBJobQueue {
+    /// Push job onto queue
+    /// - Parameters:
+    ///   - job: Job descriptor
+    ///   - maxRetryCount: Number of times you should retry job
+    /// - Returns: ID for job
+    @discardableResult public func enqueue(_ job: HBJob, on eventLoop: EventLoop) async throws -> JobIdentifier {
+        return try await self.push(job, on: eventLoop).map(\.id).get()
+    }
+}
+
 /// Factory class for Job Queue drivers
 public struct HBJobQueueFactory {
     let create: (HBApplication) -> HBJobQueue

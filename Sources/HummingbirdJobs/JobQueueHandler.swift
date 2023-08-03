@@ -54,6 +54,19 @@ public final class HBJobQueueHandler {
     private let workers: [HBJobQueueWorker]
 }
 
+/// Job queue handler asynchronous enqueue
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+extension HBJobQueueHandler {
+    /// Push job onto queue
+    /// - Parameters:
+    ///   - job: Job descriptor
+    ///   - maxRetryCount: Number of times you should retry job
+    /// - Returns: ID for job
+    @discardableResult public func enqueue(_ job: HBJob, on eventLoop: EventLoop) async throws -> JobIdentifier {
+        try await self.enqueue(job, on: eventLoop).get()
+    }
+}
+
 /// Job queue id
 ///
 /// If you want to add a new task queue. Extend this class to include a new id
