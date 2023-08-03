@@ -51,6 +51,24 @@ public protocol HBPersistDriver {
 extension HBPersistDriver {
     /// default implemenation of shutdown()
     public func shutdown() {}
+    /// create key/value pair. If key already exist throw `HBPersistError.duplicate` error
+    /// - Parameters:
+    ///   - key: Key to store value against
+    ///   - value: Codable value to store
+    ///   - request: Request making this call
+    func create<Object: Codable>(key: String, value: Object, request: HBRequest) -> EventLoopFuture<Void> {
+        self.create(key: key, value: value, expires: nil, request: request)
+    }
+
+    /// set value for key. If value already exists overwrite it
+    /// - Parameters:
+    ///   - key: Key to store value against
+    ///   - value: Codable value to store
+    ///   - expires: If non-nil defines time that value will expire
+    ///   - request: Request making this call
+    func set<Object: Codable>(key: String, value: Object, request: HBRequest) -> EventLoopFuture<Void> {
+        self.set(key: key, value: value, expires: nil, request: request)
+    }
 }
 
 /// Factory class for persist drivers

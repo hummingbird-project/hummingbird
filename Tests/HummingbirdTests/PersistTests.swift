@@ -197,4 +197,28 @@ final class PersistTests: XCTestCase {
             XCTAssertEqual(String(buffer: body), "ThisIsTest1")
         }
     }
+
+    func testSetGetOutsideApp() throws {
+        let app = HBApplication(testing: .embedded)
+        let persist = HBMemoryPersistDriver(eventLoopGroup: app.eventLoopGroup)
+
+        app.router.put("/persist/:tag") { request -> EventLoopFuture<HTTPResponseStatus> in
+            guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
+            guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
+            return persist.set(key: tag, value: String(buffer: buffer), request: request)
+                .map { _ in .ok }
+        }
+        app.router.get("/persist/:tag") { request -> EventLoopFuture<String?> in
+            guard let tag = request.parameters.get("tag", as: String.self) else { return request.failure(.badRequest) }
+            return persist.get(key: tag, as: String.self, request: request)
+        }
+        try app.XCTStart()
+        defer { app.XCTStop() }
+        let tag = UUID().uuidString
+        try app.XCTExecute(uri: "/persist/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
+        try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
+            let body = try XCTUnwrap(response.body)
+            XCTAssertEqual(String(buffer: body), "Persist")
+        }
+    }
 }
