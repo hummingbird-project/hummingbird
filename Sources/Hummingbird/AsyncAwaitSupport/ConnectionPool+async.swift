@@ -19,7 +19,7 @@ import NIO
 extension HBConnectionPool {
     /// Request a connection, run a process and then release the connection
     /// - Parameters:
-    ///   -logger: Logger used for logging
+    ///   - logger: Logger used for logging
     ///   - process: Closure to run while we have the connection
     public func lease<NewValue>(logger: Logger, process: @escaping (Source.Connection) async throws -> NewValue) async throws -> NewValue {
         return try await self.lease(logger: logger) { connection in
@@ -51,7 +51,7 @@ extension HBConnectionPoolGroup {
     /// Request a connection, run a process and then release the connection
     /// - Parameters:
     ///   - eventLoop: event loop to find associated connection pool
-    ///   -logger: Logger used for logging
+    ///   - logger: Logger used for logging
     ///   - process: Closure to run while we have the connection
     public func lease<NewValue>(
         on eventLoop: EventLoop,
