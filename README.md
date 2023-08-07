@@ -2,6 +2,17 @@
   <source media="(prefers-color-scheme: dark)" srcset="https://opticalaberration.com/images/hummingbird-white-text@0.5x.png">
   <img src="https://opticalaberration.com/images/hummingbird-black-text@0.5x.png">
 </picture>
+<p align="center">
+<a href="https://swift.org">
+  <img src="https://img.shields.io/badge/swift-5.6-brightgreen.svg"/>
+</a>
+<a href="https://github.com/hummingbird-project/hummingbird/actions?query=workflow%3ACI">
+  <img src="https://github.com/hummingbird-project/hummingbird/actions/workflows/ci.yml/badge.svg?branch=main"/>
+</a>
+<a href="https://discord.gg/7ME3nZ7mP2">
+  <img src="https://img.shields.io/badge/chat-discord-brightgreen.svg"/>
+</a>
+</p>
 
 Lightweight, flexible server framework written in Swift.
 
