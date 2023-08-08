@@ -20,32 +20,32 @@ import Darwin.C
 import NIOCore
 
 /// In memory driver for persist system for storing persistent cross request key/value pairs
-final class HBMemoryPersistDriver: HBPersistDriver {
-    init(eventLoopGroup: EventLoopGroup) {
+public final class HBMemoryPersistDriver: HBPersistDriver {
+    public init(eventLoopGroup: EventLoopGroup) {
         self.values = [:]
         self.task = eventLoopGroup.next().scheduleRepeatedTask(initialDelay: .hours(1), delay: .hours(1)) { _ in
             self.tidy()
         }
     }
 
-    func shutdown() {
+    public func shutdown() {
         self.task?.cancel()
     }
 
-    func create<Object: Codable>(key: String, value: Object, expires: TimeAmount? = nil, request: HBRequest) -> EventLoopFuture<Void> {
+    public func create<Object: Codable>(key: String, value: Object, expires: TimeAmount?, request: HBRequest) -> EventLoopFuture<Void> {
         return request.eventLoop.submit {
             guard self.values[key] == nil else { throw HBPersistError.duplicate }
             self.values[key] = .init(value: value, expires: expires)
         }
     }
 
-    func set<Object: Codable>(key: String, value: Object, expires: TimeAmount? = nil, request: HBRequest) -> EventLoopFuture<Void> {
+    public func set<Object: Codable>(key: String, value: Object, expires: TimeAmount?, request: HBRequest) -> EventLoopFuture<Void> {
         return request.eventLoop.submit {
             self.values[key] = .init(value: value, expires: expires)
         }
     }
 
-    func get<Object: Codable>(key: String, as: Object.Type, request: HBRequest) -> EventLoopFuture<Object?> {
+    public func get<Object: Codable>(key: String, as: Object.Type, request: HBRequest) -> EventLoopFuture<Object?> {
         return request.eventLoop.submit {
             guard let item = self.values[key] else { return nil }
             guard let expires = item.epochExpires else { return item.value as? Object }
@@ -54,7 +54,7 @@ final class HBMemoryPersistDriver: HBPersistDriver {
         }
     }
 
-    func remove(key: String, request: HBRequest) -> EventLoopFuture<Void> {
+    public func remove(key: String, request: HBRequest) -> EventLoopFuture<Void> {
         return request.eventLoop.submit {
             self.values[key] = nil
         }
