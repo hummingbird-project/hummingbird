@@ -205,6 +205,12 @@ final class PersistTests: XCTestCase {
         app.router.put("/persist/:tag") { request -> EventLoopFuture<HTTPResponseStatus> in
             guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
             guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
+            return persist.create(key: tag, value: String(buffer: buffer), request: request)
+                .map { _ in .ok }
+        }
+        app.router.patch("/persist/:tag") { request -> EventLoopFuture<HTTPResponseStatus> in
+            guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
+            guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
             return persist.set(key: tag, value: String(buffer: buffer), request: request)
                 .map { _ in .ok }
         }
@@ -216,9 +222,10 @@ final class PersistTests: XCTestCase {
         defer { app.XCTStop() }
         let tag = UUID().uuidString
         try app.XCTExecute(uri: "/persist/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
+        try app.XCTExecute(uri: "/persist/\(tag)", method: .PATCH, body: ByteBufferAllocator().buffer(string: "Persist2")) { _ in }
         try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
             let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(String(buffer: body), "Persist")
+            XCTAssertEqual(String(buffer: body), "Persist2")
         }
     }
 }
