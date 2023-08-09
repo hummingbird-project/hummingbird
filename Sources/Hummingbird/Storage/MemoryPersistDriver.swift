@@ -22,8 +22,9 @@ import NIOCore
 /// In memory driver for persist system for storing persistent cross request key/value pairs
 public final class HBMemoryPersistDriver: HBPersistDriver {
     public init(eventLoopGroup: EventLoopGroup) {
+        self.eventLoop = eventLoopGroup.next()
         self.values = [:]
-        self.task = eventLoopGroup.next().scheduleRepeatedTask(initialDelay: .hours(1), delay: .hours(1)) { _ in
+        self.task = self.eventLoop.scheduleRepeatedTask(initialDelay: .hours(1), delay: .hours(1)) { _ in
             self.tidy()
         }
     }
@@ -33,20 +34,20 @@ public final class HBMemoryPersistDriver: HBPersistDriver {
     }
 
     public func create<Object: Codable>(key: String, value: Object, expires: TimeAmount?, request: HBRequest) -> EventLoopFuture<Void> {
-        return request.eventLoop.submit {
+        return self.eventLoop.submit {
             guard self.values[key] == nil else { throw HBPersistError.duplicate }
             self.values[key] = .init(value: value, expires: expires)
         }
     }
 
     public func set<Object: Codable>(key: String, value: Object, expires: TimeAmount?, request: HBRequest) -> EventLoopFuture<Void> {
-        return request.eventLoop.submit {
+        return self.eventLoop.submit {
             self.values[key] = .init(value: value, expires: expires)
         }
     }
 
     public func get<Object: Codable>(key: String, as: Object.Type, request: HBRequest) -> EventLoopFuture<Object?> {
-        return request.eventLoop.submit {
+        return self.eventLoop.submit {
             guard let item = self.values[key] else { return nil }
             guard let expires = item.epochExpires else { return item.value as? Object }
             guard Item.getEpochTime() <= expires else { return nil }
@@ -55,7 +56,7 @@ public final class HBMemoryPersistDriver: HBPersistDriver {
     }
 
     public func remove(key: String, request: HBRequest) -> EventLoopFuture<Void> {
-        return request.eventLoop.submit {
+        return self.eventLoop.submit {
             self.values[key] = nil
         }
     }
@@ -90,6 +91,11 @@ public final class HBMemoryPersistDriver: HBPersistDriver {
         }
     }
 
+    let eventLoop: EventLoop
     var values: [String: Item]
     var task: RepeatedTask?
 }
+
+// We are able to conform HBMemoryPersistDriver to `@unchecked Sendable` as the value dictionary
+// is only ever access on the one event loop and the task is only set in the `init`
+extension HBMemoryPersistDriver: @unchecked Sendable {}
