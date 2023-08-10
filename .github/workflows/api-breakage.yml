@@ -3,6 +3,8 @@ name: API breaking changes
 
 on:
   pull_request:
+    branches:
+      - main    
 
 jobs:
   linux:

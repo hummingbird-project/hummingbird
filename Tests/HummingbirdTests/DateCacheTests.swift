@@ -30,20 +30,19 @@ class HummingbirdDateTests: XCTestCase {
         }
     }
 
-    func testDateHeader() throws {
-        let app = HBApplication(testing: .embedded)
+    func testDateHeader() async throws {
+        let app = HBApplication(testing: .live)
         app.router.get("date") { _ in
             return "hello"
         }
 
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        try app.XCTExecute(uri: "/date", method: .GET) { response in
-            XCTAssertNotNil(response.headers["date"].first)
-        }
-        try app.XCTExecute(uri: "/date", method: .GET) { response in
-            XCTAssertNotNil(response.headers["date"].first)
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/date", method: .GET) { response in
+                XCTAssertNotNil(response.headers["date"].first)
+            }
+            try await client.XCTExecute(uri: "/date", method: .GET) { response in
+                XCTAssertNotNil(response.headers["date"].first)
+            }
         }
     }
 }

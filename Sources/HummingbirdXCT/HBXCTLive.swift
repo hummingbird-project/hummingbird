@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -18,67 +18,113 @@ import NIOCore
 import NIOHTTP1
 import NIOPosix
 import NIOTransportServices
+import ServiceLifecycle
 import XCTest
 
-/// Test using a live server and AsyncHTTPClient
-class HBXCTLive: HBXCT {
+/// Test using a live server
+final class HBXCTLive: HBXCT {
+    struct Client: HBXCTClientProtocol {
+        let client: HBXCTClient
+
+        /// Send request and call test callback on the response returned
+        func execute(
+            uri: String,
+            method: HTTPMethod,
+            headers: HTTPHeaders = [:],
+            body: ByteBuffer? = nil
+        ) async throws -> HBXCTResponse {
+            var headers = headers
+            headers.replaceOrAdd(name: "connection", value: "keep-alive")
+            headers.replaceOrAdd(name: "host", value: "localhost")
+            let request = HBXCTClient.Request(uri, method: method, headers: headers, body: body)
+            let response = try await client.execute(request)
+            return .init(status: response.status, headers: response.headers, body: response.body)
+        }
+    }
+
     init(configuration: HBApplication.Configuration, timeout: TimeAmount) {
+        self.timeout = timeout
+        self.promise = .init()
         #if os(iOS)
         self.eventLoopGroup = NIOTSEventLoopGroup()
         #else
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         #endif
-        self.timeout = timeout
     }
 
     /// Start tests
-    func start(application: HBApplication) throws {
-        do {
-            try application.start()
+    func run(application: HBApplication, _ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Void) async throws {
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            let serviceGroup = ServiceGroup(
+                services: [application],
+                configuration: .init(gracefulShutdownSignals: [.sigterm, .sigint]),
+                logger: application.logger
+            )
+            group.addTask {
+                try await serviceGroup.run()
+            }
+            let port = await self.promise.wait()
             let client = HBXCTClient(
                 host: "localhost",
-                port: application.server.port!,
-                configuration: .init(timeout: self.timeout),
+                port: port,
+                configuration: .init(timeout: .seconds(2)),
                 eventLoopGroupProvider: .createNew
             )
             client.connect()
-            self.client = client
-        } catch {
-            // if start fails then shutdown client
-            try self.client?.syncShutdown()
-            throw error
-        }
-    }
-
-    /// Stop tests
-    func stop(application: HBApplication) {
-        XCTAssertNoThrow(_ = try self.client?.syncShutdown())
-        application.stop()
-        application.wait()
-        try? self.eventLoopGroup.syncShutdownGracefully()
-    }
-
-    /// Send request and call test callback on the response returned
-    func execute(
-        uri: String,
-        method: HTTPMethod,
-        headers: HTTPHeaders = [:],
-        body: ByteBuffer? = nil
-    ) -> EventLoopFuture<HBXCTResponse> {
-        var headers = headers
-        headers.replaceOrAdd(name: "connection", value: "keep-alive")
-        headers.replaceOrAdd(name: "host", value: "localhost")
-        let request = HBXCTClient.Request(uri, method: method, headers: headers, body: body)
-        guard let client = self.client else {
-            return self.eventLoopGroup.next().makeFailedFuture(HBXCTError.notStarted)
-        }
-        return client.execute(request)
-            .map { response in
-                return .init(status: response.status, headers: response.headers, body: response.body)
+            group.addTask {
+                _ = try await test(Client(client: client))
             }
+            try await group.next()
+            await serviceGroup.triggerGracefulShutdown()
+            try await client.shutdown()
+        }
+    }
+
+    func onServerRunning(_ channel: Channel) async {
+        await self.promise.complete(channel.localAddress!.port!)
     }
 
     let eventLoopGroup: EventLoopGroup
-    var client: HBXCTClient?
+    let promise: Promise<Int>
     let timeout: TimeAmount
+}
+
+/// Promise type.
+actor Promise<Value> {
+    enum State {
+        case blocked([CheckedContinuation<Value, Never>])
+        case unblocked(Value)
+    }
+
+    var state: State
+
+    init() {
+        self.state = .blocked([])
+    }
+
+    /// wait from promise to be completed
+    func wait() async -> Value {
+        switch self.state {
+        case .blocked(var continuations):
+            return await withCheckedContinuation { cont in
+                continuations.append(cont)
+                self.state = .blocked(continuations)
+            }
+        case .unblocked(let value):
+            return value
+        }
+    }
+
+    /// complete promise with value
+    func complete(_ value: Value) {
+        switch self.state {
+        case .blocked(let continuations):
+            for cont in continuations {
+                cont.resume(returning: value)
+            }
+            self.state = .unblocked(value)
+        case .unblocked:
+            break
+        }
+    }
 }

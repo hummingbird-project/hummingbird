@@ -63,46 +63,43 @@ class CookieTests: XCTestCase {
         XCTAssertEqual(cookie?.sameSite, .secure)
     }
 
-    func testSetCookie() throws {
-        let app = HBApplication(testing: .embedded)
+    func testSetCookie() async throws {
+        let app = HBApplication(testing: .router)
         app.router.post("/") { _ -> HBResponse in
             var response = HBResponse(status: .ok, headers: [:], body: .empty)
             response.setCookie(.init(name: "test", value: "value"))
             return response
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        try app.XCTExecute(uri: "/", method: .POST) { response in
-            XCTAssertEqual(response.headers["Set-Cookie"].first, "test=value; HttpOnly")
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/", method: .POST) { response in
+                XCTAssertEqual(response.headers["Set-Cookie"].first, "test=value; HttpOnly")
+            }
         }
     }
 
-    func testSetCookieViaRequest() throws {
-        let app = HBApplication(testing: .embedded)
+    func testSetCookieViaRequest() async throws {
+        let app = HBApplication(testing: .router)
         app.router.post("/", options: .editResponse) { request -> String in
             request.response.setCookie(.init(name: "test", value: "value"))
             return "Hello"
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        try app.XCTExecute(uri: "/", method: .POST) { response in
-            XCTAssertEqual(response.headers["Set-Cookie"].first, "test=value; HttpOnly")
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/", method: .POST) { response in
+                XCTAssertEqual(response.headers["Set-Cookie"].first, "test=value; HttpOnly")
+            }
         }
     }
 
-    func testReadCookieFromRequest() throws {
-        let app = HBApplication(testing: .embedded)
+    func testReadCookieFromRequest() async throws {
+        let app = HBApplication(testing: .router)
         app.router.post("/") { request -> String? in
             return request.cookies["test"]?.value
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        try app.XCTExecute(uri: "/", method: .POST, headers: ["cookie": "test=value"]) { response in
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(String(buffer: body), "value")
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/", method: .POST, headers: ["cookie": "test=value"]) { response in
+                let body = try XCTUnwrap(response.body)
+                XCTAssertEqual(String(buffer: body), "value")
+            }
         }
     }
 }

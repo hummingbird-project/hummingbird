@@ -26,12 +26,8 @@ class HummingbirdAsyncFilesTests: XCTestCase {
         return ByteBufferAllocator().buffer(bytes: data)
     }
 
-    func testRead() throws {
-        #if os(macOS)
-        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
-        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
-        #endif
-        let app = HBApplication(testing: .asyncTest)
+    func testRead() async throws {
+        let app = HBApplication(testing: .router)
         app.router.get("test.jpg") { request -> HBResponse in
             let fileIO = HBFileIO(application: request.application)
             let body = try await fileIO.loadFile(path: "test.jpg", context: request.context, logger: request.logger)
@@ -43,21 +39,16 @@ class HummingbirdAsyncFilesTests: XCTestCase {
         XCTAssertNoThrow(try data.write(to: fileURL))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        try app.XCTExecute(uri: "/test.jpg", method: .GET) { response in
-            XCTAssertEqual(response.body, buffer)
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/test.jpg", method: .GET) { response in
+                XCTAssertEqual(response.body, buffer)
+            }
         }
     }
 
-    func testWrite() throws {
-        #if os(macOS)
-        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
-        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
-        #endif
+    func testWrite() async throws {
         let filename = "testWrite.txt"
-        let app = HBApplication(testing: .asyncTest)
+        let app = HBApplication(testing: .router)
         app.router.put("store") { request -> HTTPResponseStatus in
             let fileIO = HBFileIO(application: request.application)
             try await fileIO.writeFile(
@@ -69,17 +60,16 @@ class HummingbirdAsyncFilesTests: XCTestCase {
             return .ok
         }
 
-        try app.XCTStart()
-        defer { app.XCTStop() }
+        try await app.XCTTest { client in
+            let buffer = ByteBufferAllocator().buffer(string: "This is a test")
+            try await client.XCTExecute(uri: "/store", method: .PUT, body: buffer) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
 
-        let buffer = ByteBufferAllocator().buffer(string: "This is a test")
-        try app.XCTExecute(uri: "/store", method: .PUT, body: buffer) { response in
-            XCTAssertEqual(response.status, .ok)
+            let fileURL = URL(fileURLWithPath: filename)
+            let data = try Data(contentsOf: fileURL)
+            defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+            XCTAssertEqual(String(decoding: data, as: Unicode.UTF8.self), "This is a test")
         }
-
-        let fileURL = URL(fileURLWithPath: filename)
-        let data = try Data(contentsOf: fileURL)
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
-        XCTAssertEqual(String(decoding: data, as: Unicode.UTF8.self), "This is a test")
     }
 }

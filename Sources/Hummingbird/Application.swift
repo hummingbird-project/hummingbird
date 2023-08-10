@@ -14,42 +14,36 @@
 
 import Dispatch
 import HummingbirdCore
-import Lifecycle
-import LifecycleNIOCompat
 import Logging
 import NIOCore
 import NIOPosix
 import NIOTransportServices
+import ServiceLifecycle
 
 /// Application class. Brings together all the components of Hummingbird together
 ///
-/// Create an HBApplication, setup your application middleware, encoders, routes etc and then call `start` to
-/// start the server and `wait` to wait until the server is stopped.
+/// Create an HBApplication, setup your application middleware, encoders, routes etc and then either
+/// add to ServiceLifecycle `ServiceGroup` or run independently with `runService`.
 /// ```
 /// let app = HBApplication()
 /// app.middleware.add(MyMiddleware())
-/// app.get("hello") { _ in
+/// app.router.get("hello") { _ in
 ///     return "hello"
 /// }
-/// app.start()
-/// app.wait()
+/// try await app.runService()
 /// ```
-/// Editing the application setup after calling `start` will produce undefined behaviour.
+/// Editing the application setup after calling `run` will produce undefined behaviour.
 public final class HBApplication: HBExtensible {
     // MARK: Member variables
 
-    /// server lifecycle, controls initialization and shutdown of application
-    public let lifecycle: ServiceLifecycle
     /// event loop group used by application
     public let eventLoopGroup: EventLoopGroup
     /// thread pool used by application
     public let threadPool: NIOThreadPool
     /// routes requests to requestResponders based on URI
-    public var router: HBRouterBuilder
-    /// http server
-    public var server: HBHTTPServer
+    public let router: HBRouterBuilder
     /// Configuration
-    public var configuration: Configuration
+    public let configuration: Configuration
     /// Application extensions
     public var extensions: HBExtensions<HBApplication>
     /// Logger. Required to be a var by hummingbird-lambda
@@ -58,7 +52,10 @@ public final class HBApplication: HBExtensible {
     public var encoder: HBResponseEncoder
     /// decoder used by router
     public var decoder: HBRequestDecoder
-
+    /// on server running
+    var onServerRunning: @Sendable (Channel) async -> Void
+    /// additional channel handlers
+    var additionalChannelHandlers: [@Sendable () -> any RemovableChannelHandler]
     /// who provided the eventLoopGroup
     let eventLoopGroupProvider: NIOEventLoopGroupProvider
 
@@ -68,7 +65,7 @@ public final class HBApplication: HBExtensible {
     public init(
         configuration: HBApplication.Configuration = HBApplication.Configuration(),
         eventLoopGroupProvider: NIOEventLoopGroupProvider = .createNew,
-        serviceLifecycleProvider: ServiceLifecycleProvider = .createNew
+        onServerRunning: @escaping @Sendable (Channel) async -> Void = { _ in }
     ) {
         var logger = Logger(label: configuration.serverName ?? "HummingBird")
         logger.logLevel = configuration.logLevel
@@ -79,6 +76,18 @@ public final class HBApplication: HBExtensible {
         self.extensions = HBExtensions()
         self.encoder = NullEncoder()
         self.decoder = NullDecoder()
+        self.onServerRunning = onServerRunning
+        // add idle read, write handlers
+        if let idleTimeoutConfiguration = configuration.idleTimeoutConfiguration {
+            self.additionalChannelHandlers = [{
+                IdleStateHandler(
+                    readTimeout: idleTimeoutConfiguration.readTimeout,
+                    writeTimeout: idleTimeoutConfiguration.writeTimeout
+                )
+            }]
+        } else {
+            self.additionalChannelHandlers = []
+        }
 
         // create eventLoopGroup
         self.eventLoopGroupProvider = eventLoopGroupProvider
@@ -93,74 +102,11 @@ public final class HBApplication: HBExtensible {
             self.eventLoopGroup = elg
         }
 
-        // create lifecycle
-        let lifecycleTasksContainer: LifecycleTasksContainer
-
-        switch serviceLifecycleProvider {
-        case .shared(let parentLifecycle):
-            self.lifecycle = parentLifecycle
-            let componentLifecycle = ComponentLifecycle(label: self.logger.label, logger: self.logger)
-            lifecycleTasksContainer = componentLifecycle
-            self.lifecycle.register(componentLifecycle)
-        case .createNew:
-            let serviceLifecycle = ServiceLifecycle(configuration: .init(logger: self.logger))
-            lifecycleTasksContainer = serviceLifecycle
-            self.lifecycle = serviceLifecycle
-        }
-
         self.threadPool = NIOThreadPool(numberOfThreads: configuration.threadPoolSize)
         self.threadPool.start()
-
-        self.server = HBHTTPServer(group: self.eventLoopGroup, configuration: self.configuration.httpServer)
-
-        // register application shutdown with lifecycle
-        lifecycleTasksContainer.registerShutdown(
-            label: "Application", .sync(self.shutdownApplication)
-        )
-
-        lifecycleTasksContainer.registerShutdown(
-            label: "DateCache", .eventLoopFuture { HBDateCache.shutdownDateCaches(eventLoopGroup: self.eventLoopGroup) }
-        )
-
-        // register server startup and shutdown with lifecycle
-        if !configuration.noHTTPServer {
-            lifecycleTasksContainer.register(
-                label: "HTTP Server",
-                start: .eventLoopFuture { self.server.start(responder: HTTPResponder(application: self)) },
-                shutdown: .eventLoopFuture(self.server.stop)
-            )
-        }
     }
 
     // MARK: Methods
-
-    /// Run application
-    public func start() throws {
-        var startError: Error?
-        let startSemaphore = DispatchSemaphore(value: 0)
-
-        self.lifecycle.start { error in
-            startError = error
-            startSemaphore.signal()
-        }
-        startSemaphore.wait()
-        try startError.map { throw $0 }
-    }
-
-    /// wait while server is running
-    public func wait() {
-        self.lifecycle.wait()
-    }
-
-    /// Shutdown application
-    public func stop() {
-        let stopSemaphore = DispatchSemaphore(value: 0)
-
-        self.lifecycle.shutdown { _ in
-            stopSemaphore.signal()
-        }
-        stopSemaphore.wait()
-    }
 
     /// middleware applied to requests
     public var middleware: HBMiddlewareGroup { return self.router.middlewares }
@@ -177,5 +123,45 @@ public final class HBApplication: HBExtensible {
         if case .createNew = self.eventLoopGroupProvider {
             try self.eventLoopGroup.syncShutdownGracefully()
         }
+    }
+
+    public func addChannelHandler(_ handler: @autoclosure @escaping @Sendable () -> any RemovableChannelHandler) {
+        self.additionalChannelHandlers.append(handler)
+    }
+}
+
+/// Conform to `Service` from `ServiceLifecycle`.
+/// TODO: Temporarily I have added unchecked Sendable conformance to the class as Sendable
+/// conformance is required by `Service`. I will need to revisit this.
+extension HBApplication: Service, @unchecked Sendable {
+    public func run() async throws {
+        let server = HBHTTPServer(
+            group: self.eventLoopGroup,
+            configuration: self.configuration.httpServer,
+            responder: HTTPResponder(application: self),
+            additionalChannelHandlers: self.additionalChannelHandlers.map { $0() },
+            onServerRunning: self.onServerRunning,
+            logger: self.logger
+        )
+        try await withGracefulShutdownHandler {
+            try await server.run()
+            try await HBDateCache.shutdownDateCaches(eventLoopGroup: self.eventLoopGroup).get()
+            try self.shutdownApplication()
+        } onGracefulShutdown: {
+            Task {
+                try await server.shutdownGracefully()
+            }
+        }
+    }
+
+    /// Helper function that runs application inside a ServiceGroup which will gracefully
+    /// shutdown on signals SIGINT, SIGTERM
+    public func runService() async throws {
+        let serviceGroup = ServiceGroup(
+            services: [self],
+            configuration: .init(gracefulShutdownSignals: [.sigterm, .sigint]),
+            logger: self.logger
+        )
+        try await serviceGroup.run()
     }
 }

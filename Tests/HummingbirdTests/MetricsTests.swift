@@ -18,7 +18,7 @@ import Metrics
 import NIOConcurrencyHelpers
 import XCTest
 
-internal final class TestMetrics: MetricsFactory {
+final class TestMetrics: MetricsFactory {
     private let lock = NIOLock()
     var counters = [String: CounterHandler]()
     var recorders = [String: RecorderHandler]()
@@ -183,15 +183,15 @@ final class MetricsTests: XCTestCase {
         MetricsSystem.bootstrap(self.testMetrics)
     }
 
-    func testCounter() throws {
-        let app = HBApplication(testing: .embedded)
+    func testCounter() async throws {
+        let app = HBApplication(testing: .router)
         app.middleware.add(HBMetricsMiddleware())
         app.router.get("/hello") { _ -> String in
             return "Hello"
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-        try app.XCTExecute(uri: "/hello", method: .GET) { _ in }
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/hello", method: .GET) { _ in }
+        }
 
         let counter = try XCTUnwrap(Self.testMetrics.counters["hb_requests"] as? TestCounter)
         XCTAssertEqual(counter.values[0].1, 1)
@@ -201,15 +201,15 @@ final class MetricsTests: XCTestCase {
         XCTAssertEqual(counter.dimensions[1].1, "GET")
     }
 
-    func testError() throws {
-        let app = HBApplication(testing: .embedded)
+    func testError() async throws {
+        let app = HBApplication(testing: .router)
         app.middleware.add(HBMetricsMiddleware())
         app.router.get("/hello") { _ -> String in
             throw HBHTTPError(.badRequest)
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-        try app.XCTExecute(uri: "/hello", method: .GET) { _ in }
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/hello", method: .GET) { _ in }
+        }
 
         let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
         XCTAssertEqual(counter.values.count, 1)
@@ -220,15 +220,15 @@ final class MetricsTests: XCTestCase {
         XCTAssertEqual(counter.dimensions[1].1, "GET")
     }
 
-    func testNotFoundError() throws {
-        let app = HBApplication(testing: .embedded)
+    func testNotFoundError() async throws {
+        let app = HBApplication(testing: .router)
         app.middleware.add(HBMetricsMiddleware())
         app.router.get("/hello") { _ -> String in
             return "hello"
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-        try app.XCTExecute(uri: "/hello2", method: .GET) { _ in }
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/hello2", method: .GET) { _ in }
+        }
 
         let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
         XCTAssertEqual(counter.values.count, 1)
@@ -238,15 +238,15 @@ final class MetricsTests: XCTestCase {
         XCTAssertEqual(counter.dimensions[0].1, "GET")
     }
 
-    func testParameterEndpoint() throws {
-        let app = HBApplication(testing: .embedded)
+    func testParameterEndpoint() async throws {
+        let app = HBApplication(testing: .router)
         app.middleware.add(HBMetricsMiddleware())
         app.router.get("/user/:id") { _ -> String in
             throw HBHTTPError(.badRequest)
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-        try app.XCTExecute(uri: "/user/765", method: .GET) { _ in }
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/user/765", method: .GET) { _ in }
+        }
 
         let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
         XCTAssertEqual(counter.values.count, 1)

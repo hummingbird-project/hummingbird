@@ -21,6 +21,25 @@ import Network
 extension HBApplication {
     // MARK: Configuration
 
+    /// Idle state handlder configuration.
+    ///
+    /// Timeout values before a connection is closed. The `readTimeout`` will trigger after the server
+    /// receives no request parts for the specified time. It is meant to catch when a connection is
+    /// idle for too long in the middle of reading a request. The writeTimeout will trigger after
+    /// the server hasn't written any http parts for the specified time. It is meant to catch if a
+    /// connection is idle for too long between requests.
+    public struct IdleStateHandlerConfiguration: Sendable {
+        /// timeout when reading a request
+        let readTimeout: TimeAmount
+        /// timeout since last writing a response
+        let writeTimeout: TimeAmount
+
+        public init(readTimeout: TimeAmount = .seconds(30), writeTimeout: TimeAmount = .minutes(3)) {
+            self.readTimeout = readTimeout
+            self.writeTimeout = writeTimeout
+        }
+    }
+
     /// Application configuration
     public struct Configuration {
         // MARK: Member variables
@@ -47,7 +66,7 @@ extension HBApplication {
         /// Pipelining ensures that only one http request is processed at one time
         public let enableHttpPipelining: Bool
         /// Idle state handler setup.
-        public let idleTimeoutConfiguration: HBHTTPServer.IdleStateHandlerConfiguration?
+        public let idleTimeoutConfiguration: IdleStateHandlerConfiguration?
         #if canImport(Network)
         /// TLS options for NIO Transport services
         public let tlsOptions: TSTLSOptions
@@ -61,63 +80,6 @@ extension HBApplication {
         public let logLevel: Logger.Level
 
         // MARK: Initialization
-
-        /// Initialize HBApplication configuration
-        ///
-        /// - Parameters:
-        ///   - address: Bind address for server
-        ///   - serverName: Server name to return in "server" header
-        ///   - maxUploadSize: Maximum upload size allowed for routes that don't stream the request payload
-        ///   - maxStreamingBufferSize: Maximum size of data in flight while streaming request payloads before back pressure is applied.
-        ///   - backlog: the maximum length for the queue of pending connections.  If a connection request arrives with the queue full,
-        ///         the client may receive an error with an indication of ECONNREFUSE
-        ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
-        ///   - tcpNoDelay: Disables the Nagle algorithm for send coalescing.
-        ///   - enableHttpPipelining: Pipelining ensures that only one http request is processed at one time
-        ///   - threadPoolSize: Number of threads in application thread pool
-        ///   - logLevel: Logging level
-        ///   - noHTTPServer: Don't start up the HTTP server.
-        public init(
-            address: HBBindAddress = .hostname(),
-            serverName: String? = nil,
-            maxUploadSize: Int = 2 * 1024 * 1024,
-            maxStreamingBufferSize: Int = 1 * 1024 * 1024,
-            backlog: Int = 256,
-            reuseAddress: Bool = true,
-            tcpNoDelay: Bool = false,
-            enableHttpPipelining: Bool = true,
-            idleTimeoutConfiguration: HBHTTPServer.IdleStateHandlerConfiguration? = nil,
-            threadPoolSize: Int = 2,
-            logLevel: Logger.Level? = nil,
-            noHTTPServer: Bool = false
-        ) {
-            let env = HBEnvironment()
-
-            self.address = address
-            self.serverName = serverName
-            self.maxUploadSize = maxUploadSize
-            self.maxStreamedUploadSize = maxUploadSize
-            self.maxStreamingBufferSize = maxStreamingBufferSize
-            self.backlog = backlog
-            self.reuseAddress = reuseAddress
-            self.tcpNoDelay = tcpNoDelay
-            self.enableHttpPipelining = enableHttpPipelining
-            self.idleTimeoutConfiguration = idleTimeoutConfiguration
-            #if canImport(Network)
-            self.tlsOptions = .none
-            #endif
-
-            self.threadPoolSize = threadPoolSize
-            self.noHTTPServer = noHTTPServer
-
-            if let logLevel = logLevel {
-                self.logLevel = logLevel
-            } else if let logLevel = env.get("LOG_LEVEL") {
-                self.logLevel = Logger.Level(rawValue: logLevel) ?? .info
-            } else {
-                self.logLevel = .info
-            }
-        }
 
         /// Initialize HBApplication configuration
         ///
@@ -145,7 +107,7 @@ extension HBApplication {
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = false,
             enableHttpPipelining: Bool = true,
-            idleTimeoutConfiguration: HBHTTPServer.IdleStateHandlerConfiguration? = nil,
+            idleTimeoutConfiguration: IdleStateHandlerConfiguration? = nil,
             threadPoolSize: Int = 2,
             logLevel: Logger.Level? = nil,
             noHTTPServer: Bool = false
@@ -196,65 +158,12 @@ extension HBApplication {
         public init(
             address: HBBindAddress = .hostname(),
             serverName: String? = nil,
-            maxUploadSize: Int = 2 * 1024 * 1024,
-            maxStreamingBufferSize: Int = 1 * 1024 * 1024,
-            reuseAddress: Bool = true,
-            enableHttpPipelining: Bool = true,
-            idleTimeoutConfiguration: HBHTTPServer.IdleStateHandlerConfiguration? = nil,
-            threadPoolSize: Int = 2,
-            logLevel: Logger.Level? = nil,
-            noHTTPServer: Bool = false,
-            tlsOptions: TSTLSOptions
-        ) {
-            let env = HBEnvironment()
-
-            self.address = address
-            self.serverName = serverName
-            self.maxUploadSize = maxUploadSize
-            self.maxStreamedUploadSize = maxUploadSize
-            self.maxStreamingBufferSize = maxStreamingBufferSize
-            self.backlog = 256 // not used by Network framework
-            self.reuseAddress = reuseAddress
-            self.tcpNoDelay = true // not used by Network framework
-            self.enableHttpPipelining = enableHttpPipelining
-            self.idleTimeoutConfiguration = idleTimeoutConfiguration
-            self.tlsOptions = tlsOptions
-
-            self.threadPoolSize = threadPoolSize
-            self.noHTTPServer = noHTTPServer
-
-            if let logLevel = logLevel {
-                self.logLevel = logLevel
-            } else if let logLevel = env.get("LOG_LEVEL") {
-                self.logLevel = Logger.Level(rawValue: logLevel) ?? .info
-            } else {
-                self.logLevel = .info
-            }
-        }
-
-        /// Initialize HBApplication configuration
-        ///
-        /// - Parameters:
-        ///   - address: Bind address for server
-        ///   - serverName: Server name to return in "server" header
-        ///   - maxUploadSize: Maximum upload size allowed for routes that don't stream the request payload
-        ///   - maxStreamingBufferSize: Maximum size of data in flight while streaming request payloads before back pressure is applied.
-        ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
-        ///   - enableHttpPipelining: Pipelining ensures that only one http request is processed at one time
-        ///   - threadPoolSize: Number of threads in application thread pool
-        ///   - logLevel: Logging level
-        ///   - noHTTPServer: Don't start up the HTTP server.
-        ///   - tlsOptions: TLS options for when you are using NIOTransportServices
-        @available(macOS 10.14, iOS 12, tvOS 12, *)
-        public init(
-            address: HBBindAddress = .hostname(),
-            serverName: String? = nil,
             maxUploadSize: Int = 1 * 1024 * 1024,
             maxStreamedUploadSize: Int = 4 * 1024 * 1024,
             maxStreamingBufferSize: Int = 1 * 1024 * 1024,
             reuseAddress: Bool = true,
             enableHttpPipelining: Bool = true,
-            idleTimeoutConfiguration: HBHTTPServer.IdleStateHandlerConfiguration? = nil,
+            idleTimeoutConfiguration: IdleStateHandlerConfiguration? = nil,
             threadPoolSize: Int = 2,
             logLevel: Logger.Level? = nil,
             noHTTPServer: Bool = false,
@@ -298,7 +207,7 @@ extension HBApplication {
             reuseAddress: Bool? = nil,
             tcpNoDelay: Bool? = nil,
             enableHttpPipelining: Bool? = nil,
-            idleTimeoutConfiguration: HBHTTPServer.IdleStateHandlerConfiguration? = nil,
+            idleTimeoutConfiguration: IdleStateHandlerConfiguration? = nil,
             threadPoolSize: Int? = nil,
             logLevel: Logger.Level? = nil
         ) -> Self {
@@ -327,7 +236,6 @@ extension HBApplication {
                 maxStreamingBufferSize: self.maxStreamingBufferSize,
                 reuseAddress: self.reuseAddress,
                 withPipeliningAssistance: self.enableHttpPipelining,
-                idleTimeoutConfiguration: self.idleTimeoutConfiguration,
                 tlsOptions: self.tlsOptions
             )
         }
@@ -341,8 +249,7 @@ extension HBApplication {
                 backlog: self.backlog,
                 reuseAddress: self.reuseAddress,
                 tcpNoDelay: self.tcpNoDelay,
-                withPipeliningAssistance: self.enableHttpPipelining,
-                idleTimeoutConfiguration: self.idleTimeoutConfiguration
+                withPipeliningAssistance: self.enableHttpPipelining
             )
         }
         #endif

@@ -26,8 +26,8 @@ class HummingbirdJSONTests: XCTestCase {
 
     struct Error: Swift.Error {}
 
-    func testDecode() throws {
-        let app = HBApplication(testing: .embedded)
+    func testDecode() async throws {
+        let app = HBApplication(testing: .router)
         app.decoder = JSONDecoder()
         app.router.put("/user") { request -> HTTPResponseStatus in
             guard let user = try? request.decode(as: User.self) else { throw HBHTTPError(.badRequest) }
@@ -36,45 +36,42 @@ class HummingbirdJSONTests: XCTestCase {
             XCTAssertEqual(user.age, 25)
             return .ok
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        let body = #"{"name": "John Smith", "email": "john.smith@email.com", "age": 25}"#
-        try app.XCTExecute(uri: "/user", method: .PUT, body: ByteBufferAllocator().buffer(string: body)) {
-            XCTAssertEqual($0.status, .ok)
+        try await app.XCTTest { client in
+            let body = #"{"name": "John Smith", "email": "john.smith@email.com", "age": 25}"#
+            try await client.XCTExecute(uri: "/user", method: .PUT, body: ByteBufferAllocator().buffer(string: body)) {
+                XCTAssertEqual($0.status, .ok)
+            }
         }
     }
 
-    func testEncode() throws {
-        let app = HBApplication(testing: .embedded)
+    func testEncode() async throws {
+        let app = HBApplication(testing: .router)
         app.encoder = JSONEncoder()
         app.router.get("/user") { _ -> User in
             return User(name: "John Smith", email: "john.smith@email.com", age: 25)
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        try app.XCTExecute(uri: "/user", method: .GET) { response in
-            let body = try XCTUnwrap(response.body)
-            let user = try JSONDecoder().decode(User.self, from: body)
-            XCTAssertEqual(user.name, "John Smith")
-            XCTAssertEqual(user.email, "john.smith@email.com")
-            XCTAssertEqual(user.age, 25)
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/user", method: .GET) { response in
+                let body = try XCTUnwrap(response.body)
+                let user = try JSONDecoder().decode(User.self, from: body)
+                XCTAssertEqual(user.name, "John Smith")
+                XCTAssertEqual(user.email, "john.smith@email.com")
+                XCTAssertEqual(user.age, 25)
+            }
         }
     }
 
-    func testEncode2() throws {
-        let app = HBApplication(testing: .embedded)
+    func testEncode2() async throws {
+        let app = HBApplication(testing: .router)
         app.encoder = JSONEncoder()
         app.router.get("/json") { _ in
             return ["message": "Hello, world!"]
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        try app.XCTExecute(uri: "/json", method: .GET) { response in
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(String(buffer: body), #"{"message":"Hello, world!"}"#)
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/json", method: .GET) { response in
+                let body = try XCTUnwrap(response.body)
+                XCTAssertEqual(String(buffer: body), #"{"message":"Hello, world!"}"#)
+            }
         }
     }
 }

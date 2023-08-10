@@ -18,12 +18,10 @@ import NIOHTTP1
 
 /// Type of test framework
 public enum XCTTestingSetup {
-    /// Test using SwiftNIO `EmbeddedChannel`. This is useful for testing where no actual IO or multi threading is required.
-    case embedded
-    /// Test using SwiftNIO `NIOAsyncTestingChannel`. This allows for testing of Swift Concurrency based routes.
-    case asyncTest
     /// Sets up a live server and execute tests using a HTTP client.
     case live
+    /// Test writing requests directly to router.
+    case router
 }
 
 /// Extends `HBApplication` to support testing of applications
@@ -57,52 +55,34 @@ extension HBApplication {
     ///   - testing: indicates which type of testing framework we want
     ///   - configuration: configuration of application
     public convenience init(testing: XCTTestingSetup, configuration: HBApplication.Configuration = .init(), timeout: TimeAmount = .seconds(15)) {
-        let xct: HBXCT
+        let xct: any HBXCT
         let configuration = configuration.with(address: .hostname("localhost", port: 0))
         switch testing {
-        case .embedded:
-            xct = HBXCTEmbedded()
+        case .router:
+            xct = HBXCTRouter()
         case .live:
             xct = HBXCTLive(configuration: configuration, timeout: timeout)
-        case .asyncTest:
-            if #available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *) {
-                xct = HBXCTAsyncTesting(timeout: timeout)
-            } else {
-                fatalError("XCTTestingSetup.asyncTest is not supported on your platform")
-            }
         }
-        self.init(configuration: configuration, eventLoopGroupProvider: .shared(xct.eventLoopGroup))
+        self.init(
+            configuration: configuration,
+            eventLoopGroupProvider: .shared(xct.eventLoopGroup),
+            onServerRunning: { channel in
+                await xct.onServerRunning(channel)
+            }
+        )
         self.extensions.set(\.xct, value: xct)
     }
 
     // MARK: Member variables
 
-    public var xct: HBXCT {
+    public var xct: any HBXCT {
         self.extensions.get(\.xct)
     }
 
     // MARK: Methods
 
     /// Start tests
-    public func XCTStart() throws {
-        try self.xct.start(application: self)
-    }
-
-    /// Stop tests
-    public func XCTStop() {
-        self.xct.stop(application: self)
-    }
-
-    /// Send request and call test callback on the response returned
-    @discardableResult public func XCTExecute<Return>(
-        uri: String,
-        method: HTTPMethod,
-        headers: HTTPHeaders = [:],
-        body: ByteBuffer? = nil,
-        testCallback: @escaping (HBXCTResponse) throws -> Return
-    ) throws -> Return {
-        return try self.xct.execute(uri: uri, method: method, headers: headers, body: body).flatMapThrowing { response in
-            try testCallback(response)
-        }.wait()
+    public func XCTTest(_ test: @escaping @Sendable (any HBXCTClientProtocol) async throws -> Void) async throws {
+        try await self.xct.run(application: self, test)
     }
 }
