@@ -50,6 +50,10 @@ struct HBXCTError: Error, Equatable {
 }
 
 /// Protocol for client used by HBXCT
+///
+/// TODO: Could this be made Sendable? Currently HBXCTRouter.Client is not Sendable
+/// Because `HBResponder` is not Sendable, Maybe in the future it could be and we
+/// can revisit this
 public protocol HBXCTClientProtocol {
     /// Execute URL request and provide response
     func execute(
