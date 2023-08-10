@@ -19,7 +19,7 @@ final class PersistTests: XCTestCase {
     static let redisHostname = HBEnvironment.shared.get("REDIS_HOSTNAME") ?? "localhost"
 
     func createApplication() throws -> HBApplication {
-        let app = HBApplication(testing: .embedded)
+        let app = HBApplication(testing: .router)
         // add persist
         app.addPersist(using: .memory)
 
@@ -48,19 +48,19 @@ final class PersistTests: XCTestCase {
         return app
     }
 
-    func testSetGet() throws {
+    func testSetGet() async throws {
         let app = try createApplication()
-        try app.XCTStart()
-        defer { app.XCTStop() }
-        let tag = UUID().uuidString
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(String(buffer: body), "Persist")
+        try await app.XCTTest { client in
+            let tag = UUID().uuidString
+            try await client.XCTExecute(uri: "/persist/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
+            try await client.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
+                let body = try XCTUnwrap(response.body)
+                XCTAssertEqual(String(buffer: body), "Persist")
+            }
         }
     }
 
-    func testCreateGet() throws {
+    func testCreateGet() async throws {
         let app = try createApplication()
         app.router.put("/create/:tag") { request -> EventLoopFuture<HTTPResponseStatus> in
             guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
@@ -68,17 +68,17 @@ final class PersistTests: XCTestCase {
             return request.persist.create(key: tag, value: String(buffer: buffer))
                 .map { _ in .ok }
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-        let tag = UUID().uuidString
-        try app.XCTExecute(uri: "/create/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(String(buffer: body), "Persist")
+        try await app.XCTTest { client in
+            let tag = UUID().uuidString
+            try await client.XCTExecute(uri: "/create/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
+            try await client.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
+                let body = try XCTUnwrap(response.body)
+                XCTAssertEqual(String(buffer: body), "Persist")
+            }
         }
     }
 
-    func testDoubleCreateFail() throws {
+    func testDoubleCreateFail() async throws {
         let app = try createApplication()
         app.router.put("/create/:tag") { request -> EventLoopFuture<HTTPResponseStatus> in
             guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
@@ -90,54 +90,54 @@ final class PersistTests: XCTestCase {
                 }
                 .map { _ in .ok }
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-        let tag = UUID().uuidString
-        try app.XCTExecute(uri: "/create/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { response in
-            XCTAssertEqual(response.status, .ok)
-        }
-        try app.XCTExecute(uri: "/create/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { response in
-            XCTAssertEqual(response.status, .conflict)
+        try await app.XCTTest { client in
+            let tag = UUID().uuidString
+            try await client.XCTExecute(uri: "/create/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+            try await client.XCTExecute(uri: "/create/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { response in
+                XCTAssertEqual(response.status, .conflict)
+            }
         }
     }
 
-    func testSetTwice() throws {
+    func testSetTwice() async throws {
         let app = try createApplication()
-        try app.XCTStart()
-        defer { app.XCTStop() }
+        try await app.XCTTest { client in
 
-        let tag = UUID().uuidString
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "test1")) { _ in }
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "test2")) { response in
-            XCTAssertEqual(response.status, .ok)
-        }
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(String(buffer: body), "test2")
+            let tag = UUID().uuidString
+            try await client.XCTExecute(uri: "/persist/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "test1")) { _ in }
+            try await client.XCTExecute(uri: "/persist/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "test2")) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+            try await client.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
+                let body = try XCTUnwrap(response.body)
+                XCTAssertEqual(String(buffer: body), "test2")
+            }
         }
     }
 
-    func testExpires() throws {
+    func testExpires() async throws {
         let app = try createApplication()
-        try app.XCTStart()
-        defer { app.XCTStop() }
+        try await app.XCTTest { client in
 
-        let tag1 = UUID().uuidString
-        let tag2 = UUID().uuidString
+            let tag1 = UUID().uuidString
+            let tag2 = UUID().uuidString
 
-        try app.XCTExecute(uri: "/persist/\(tag1)/0", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { _ in }
-        try app.XCTExecute(uri: "/persist/\(tag2)/10", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest2")) { _ in }
-        Thread.sleep(forTimeInterval: 1)
-        try app.XCTExecute(uri: "/persist/\(tag1)", method: .GET) { response in
-            XCTAssertEqual(response.status, .noContent)
-        }
-        try app.XCTExecute(uri: "/persist/\(tag2)", method: .GET) { response in
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(String(buffer: body), "ThisIsTest2")
+            try await client.XCTExecute(uri: "/persist/\(tag1)/0", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { _ in }
+            try await client.XCTExecute(uri: "/persist/\(tag2)/10", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest2")) { _ in }
+            try await Task.sleep(nanoseconds: 1_000_000_000)
+            try await client.XCTExecute(uri: "/persist/\(tag1)", method: .GET) { response in
+                XCTAssertEqual(response.status, .noContent)
+            }
+            try await client.XCTExecute(uri: "/persist/\(tag2)", method: .GET) { response in
+                let body = try XCTUnwrap(response.body)
+                XCTAssertEqual(String(buffer: body), "ThisIsTest2")
+            }
         }
     }
 
-    func testCodable() throws {
+    func testCodable() async throws {
         struct TestCodable: Codable {
             let buffer: String
         }
@@ -153,48 +153,79 @@ final class PersistTests: XCTestCase {
             guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
             return request.persist.get(key: tag, as: TestCodable.self).map { $0.map(\.buffer) }
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
+        try await app.XCTTest { client in
 
-        let tag = UUID().uuidString
-        try app.XCTExecute(uri: "/codable/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
-        try app.XCTExecute(uri: "/codable/\(tag)", method: .GET) { response in
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(String(buffer: body), "Persist")
+            let tag = UUID().uuidString
+            try await client.XCTExecute(uri: "/codable/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
+            try await client.XCTExecute(uri: "/codable/\(tag)", method: .GET) { response in
+                let body = try XCTUnwrap(response.body)
+                XCTAssertEqual(String(buffer: body), "Persist")
+            }
         }
     }
 
-    func testRemove() throws {
+    func testRemove() async throws {
         let app = try createApplication()
-        try app.XCTStart()
-        defer { app.XCTStop() }
+        try await app.XCTTest { client in
 
-        let tag = UUID().uuidString
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { _ in }
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .DELETE) { _ in }
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
-            XCTAssertEqual(response.status, .noContent)
+            let tag = UUID().uuidString
+            try await client.XCTExecute(uri: "/persist/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { _ in }
+            try await client.XCTExecute(uri: "/persist/\(tag)", method: .DELETE) { _ in }
+            try await client.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
+                XCTAssertEqual(response.status, .noContent)
+            }
         }
     }
 
-    func testExpireAndAdd() throws {
+    func testExpireAndAdd() async throws {
         let app = try createApplication()
-        try app.XCTStart()
-        defer { app.XCTStop() }
+        try await app.XCTTest { client in
 
-        let tag = UUID().uuidString
-        try app.XCTExecute(uri: "/persist/\(tag)/0", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { _ in }
-        Thread.sleep(forTimeInterval: 1)
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
-            XCTAssertEqual(response.status, .noContent)
+            let tag = UUID().uuidString
+            try await client.XCTExecute(uri: "/persist/\(tag)/0", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { _ in }
+            try await Task.sleep(nanoseconds: 1_000_000_000)
+            try await client.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
+                XCTAssertEqual(response.status, .noContent)
+            }
+            try await client.XCTExecute(uri: "/persist/\(tag)/10", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+            try await client.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
+                XCTAssertEqual(response.status, .ok)
+                let body = try XCTUnwrap(response.body)
+                XCTAssertEqual(String(buffer: body), "ThisIsTest1")
+            }
         }
-        try app.XCTExecute(uri: "/persist/\(tag)/10", method: .PUT, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { response in
-            XCTAssertEqual(response.status, .ok)
+    }
+
+    func testSetGetOutsideApp() async throws {
+        let app = HBApplication(testing: .router)
+        let persist = HBMemoryPersistDriver(eventLoopGroup: app.eventLoopGroup)
+
+        app.router.put("/persist/:tag") { request -> EventLoopFuture<HTTPResponseStatus> in
+            guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
+            guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
+            return persist.create(key: tag, value: String(buffer: buffer), request: request)
+                .map { _ in .ok }
         }
-        try app.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
-            XCTAssertEqual(response.status, .ok)
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(String(buffer: body), "ThisIsTest1")
+        app.router.patch("/persist/:tag") { request -> EventLoopFuture<HTTPResponseStatus> in
+            guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
+            guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
+            return persist.set(key: tag, value: String(buffer: buffer), request: request)
+                .map { _ in .ok }
+        }
+        app.router.get("/persist/:tag") { request -> EventLoopFuture<String?> in
+            guard let tag = request.parameters.get("tag", as: String.self) else { return request.failure(.badRequest) }
+            return persist.get(key: tag, as: String.self, request: request)
+        }
+        try await app.XCTTest { client in
+            let tag = UUID().uuidString
+            try await client.XCTExecute(uri: "/persist/\(tag)", method: .PUT, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
+            try await client.XCTExecute(uri: "/persist/\(tag)", method: .PATCH, body: ByteBufferAllocator().buffer(string: "Persist2")) { _ in }
+            try await client.XCTExecute(uri: "/persist/\(tag)", method: .GET) { response in
+                let body = try XCTUnwrap(response.body)
+                XCTAssertEqual(String(buffer: body), "Persist2")
+            }
         }
     }
 

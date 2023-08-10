@@ -19,7 +19,7 @@ import NIOHTTP1
 import XCTest
 
 final class HandlerTests: XCTestCase {
-    func testDecodeKeyError() throws {
+    func testDecodeKeyError() async throws {
         struct DecodeTest: HBRequestDecodable {
             let name: String
 
@@ -28,28 +28,27 @@ final class HandlerTests: XCTestCase {
             }
         }
 
-        let app = HBApplication(testing: .embedded)
+        let app = HBApplication(testing: .router)
         app.decoder = JSONDecoder()
         app.router.post("/hello", use: DecodeTest.self)
 
-        try app.XCTStart()
-        defer { app.XCTStop() }
+        try await app.XCTTest { client in
+            let body = ByteBufferAllocator().buffer(string: #"{"foo": "bar"}"#)
 
-        let body = ByteBufferAllocator().buffer(string: #"{"foo": "bar"}"#)
-
-        try app.XCTExecute(
-            uri: "/hello",
-            method: .POST,
-            body: body
-        ) { response in
-            XCTAssertEqual(response.status, .badRequest)
-            let body = try XCTUnwrap(response.body)
-            let expectation = "Coding key `name` not found."
-            XCTAssertEqual(String(buffer: body), expectation)
+            try await client.XCTExecute(
+                uri: "/hello",
+                method: .POST,
+                body: body
+            ) { response in
+                XCTAssertEqual(response.status, .badRequest)
+                let body = try XCTUnwrap(response.body)
+                let expectation = "Coding key `name` not found."
+                XCTAssertEqual(String(buffer: body), expectation)
+            }
         }
     }
 
-    func testDecodeTypeError() throws {
+    func testDecodeTypeError() async throws {
         struct DecodeTest: HBRequestDecodable {
             let value: Int
 
@@ -58,28 +57,27 @@ final class HandlerTests: XCTestCase {
             }
         }
 
-        let app = HBApplication(testing: .embedded)
+        let app = HBApplication(testing: .router)
         app.decoder = JSONDecoder()
         app.router.post("/hello", use: DecodeTest.self)
 
-        try app.XCTStart()
-        defer { app.XCTStop() }
+        try await app.XCTTest { client in
+            let body = ByteBufferAllocator().buffer(string: #"{"value": "bar"}"#)
 
-        let body = ByteBufferAllocator().buffer(string: #"{"value": "bar"}"#)
-
-        try app.XCTExecute(
-            uri: "/hello",
-            method: .POST,
-            body: body
-        ) { response in
-            XCTAssertEqual(response.status, .badRequest)
-            let body = try XCTUnwrap(response.body)
-            let expectation = "Type mismatch for `value` key, expected `Int` type."
-            XCTAssertEqual(String(buffer: body), expectation)
+            try await client.XCTExecute(
+                uri: "/hello",
+                method: .POST,
+                body: body
+            ) { response in
+                XCTAssertEqual(response.status, .badRequest)
+                let body = try XCTUnwrap(response.body)
+                let expectation = "Type mismatch for `value` key, expected `Int` type."
+                XCTAssertEqual(String(buffer: body), expectation)
+            }
         }
     }
 
-    func testDecodeValueError() throws {
+    func testDecodeValueError() async throws {
         struct DecodeTest: HBRequestDecodable {
             let name: String
 
@@ -88,33 +86,32 @@ final class HandlerTests: XCTestCase {
             }
         }
 
-        let app = HBApplication(testing: .embedded)
+        let app = HBApplication(testing: .router)
         app.decoder = JSONDecoder()
         app.router.post("/hello", use: DecodeTest.self)
 
-        try app.XCTStart()
-        defer { app.XCTStop() }
+        try await app.XCTTest { client in
+            let body = ByteBufferAllocator().buffer(string: #"{"name": null}"#)
 
-        let body = ByteBufferAllocator().buffer(string: #"{"name": null}"#)
-
-        try app.XCTExecute(
-            uri: "/hello",
-            method: .POST,
-            body: body
-        ) { response in
-            XCTAssertEqual(response.status, .badRequest)
-            let body = try XCTUnwrap(response.body)
-            #if os(Linux)
-            // NOTE: a type mismatch error occures under Linux for null values
-            let expectation = "Type mismatch for `name` key, expected `String` type."
-            #else
-            let expectation = "Value not found for `name` key."
-            #endif
-            XCTAssertEqual(String(buffer: body), expectation)
+            try await client.XCTExecute(
+                uri: "/hello",
+                method: .POST,
+                body: body
+            ) { response in
+                XCTAssertEqual(response.status, .badRequest)
+                let body = try XCTUnwrap(response.body)
+                #if os(Linux)
+                // NOTE: a type mismatch error occures under Linux for null values
+                let expectation = "Type mismatch for `name` key, expected `String` type."
+                #else
+                let expectation = "Value not found for `name` key."
+                #endif
+                XCTAssertEqual(String(buffer: body), expectation)
+            }
         }
     }
 
-    func testDecodeInputError() throws {
+    func testDecodeInputError() async throws {
         struct DecodeTest: HBRequestDecodable {
             let name: String
 
@@ -123,87 +120,85 @@ final class HandlerTests: XCTestCase {
             }
         }
 
-        let app = HBApplication(testing: .embedded)
+        let app = HBApplication(testing: .router)
         app.decoder = JSONDecoder()
         app.router.post("/hello", use: DecodeTest.self)
 
-        try app.XCTStart()
-        defer { app.XCTStop() }
+        try await app.XCTTest { client in
+            let body = ByteBufferAllocator().buffer(string: #"{invalid}"#)
 
-        let body = ByteBufferAllocator().buffer(string: #"{invalid}"#)
-
-        try app.XCTExecute(
-            uri: "/hello",
-            method: .POST,
-            body: body
-        ) { response in
-            XCTAssertEqual(response.status, .badRequest)
-            let body = try XCTUnwrap(response.body)
-            let expectation = "The given data was not valid input."
-            XCTAssertEqual(String(buffer: body), expectation)
+            try await client.XCTExecute(
+                uri: "/hello",
+                method: .POST,
+                body: body
+            ) { response in
+                XCTAssertEqual(response.status, .badRequest)
+                let body = try XCTUnwrap(response.body)
+                let expectation = "The given data was not valid input."
+                XCTAssertEqual(String(buffer: body), expectation)
+            }
         }
     }
 
-    func testDecode() throws {
+    func testDecode() async throws {
         struct DecodeTest: HBRequestDecodable {
             let name: String
             func handle(request: HBRequest) -> String {
                 return "Hello \(self.name)"
             }
         }
-        let app = HBApplication(testing: .embedded)
+        let app = HBApplication(testing: .router)
         app.decoder = JSONDecoder()
         app.router.post("/hello", use: DecodeTest.self)
 
-        try app.XCTStart()
-        defer { app.XCTStop() }
+        try await app.XCTTest { client in
 
-        try app.XCTExecute(uri: "/hello", method: .POST, body: ByteBufferAllocator().buffer(string: #"{"name": "Adam"}"#)) { response in
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(String(buffer: body), "Hello Adam")
+            try await client.XCTExecute(uri: "/hello", method: .POST, body: ByteBufferAllocator().buffer(string: #"{"name": "Adam"}"#)) { response in
+                let body = try XCTUnwrap(response.body)
+                XCTAssertEqual(String(buffer: body), "Hello Adam")
+            }
         }
     }
 
-    func testDecodeFutureResponse() throws {
+    func testDecodeFutureResponse() async throws {
         struct DecodeTest: HBRequestDecodable {
             let name: String
             func handle(request: HBRequest) -> EventLoopFuture<String> {
                 return request.success("Hello \(self.name)")
             }
         }
-        let app = HBApplication(testing: .embedded)
+        let app = HBApplication(testing: .router)
         app.decoder = JSONDecoder()
         app.router.put("/hello", use: DecodeTest.self)
 
-        try app.XCTStart()
-        defer { app.XCTStop() }
+        try await app.XCTTest { client in
 
-        try app.XCTExecute(uri: "/hello", method: .PUT, body: ByteBufferAllocator().buffer(string: #"{"name": "Adam"}"#)) { response in
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(String(buffer: body), "Hello Adam")
+            try await client.XCTExecute(uri: "/hello", method: .PUT, body: ByteBufferAllocator().buffer(string: #"{"name": "Adam"}"#)) { response in
+                let body = try XCTUnwrap(response.body)
+                XCTAssertEqual(String(buffer: body), "Hello Adam")
+            }
         }
     }
 
-    func testDecodeFail() throws {
+    func testDecodeFail() async throws {
         struct DecodeTest: HBRequestDecodable {
             let name: String
             func handle(request: HBRequest) -> HTTPResponseStatus {
                 return .ok
             }
         }
-        let app = HBApplication(testing: .embedded)
+        let app = HBApplication(testing: .router)
         app.decoder = JSONDecoder()
         app.router.get("/hello", use: DecodeTest.self)
 
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        try app.XCTExecute(uri: "/hello", method: .GET, body: ByteBufferAllocator().buffer(string: #"{"name2": "Adam"}"#)) { response in
-            XCTAssertEqual(response.status, .badRequest)
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/hello", method: .GET, body: ByteBufferAllocator().buffer(string: #"{"name2": "Adam"}"#)) { response in
+                XCTAssertEqual(response.status, .badRequest)
+            }
         }
     }
 
-    func testEmptyRequest() throws {
+    func testEmptyRequest() async throws {
         struct ParameterTest: HBRouteHandler {
             let parameter: Int
             init(from request: HBRequest) throws {
@@ -215,15 +210,15 @@ final class HandlerTests: XCTestCase {
             }
         }
 
-        let app = HBApplication(testing: .embedded)
+        let app = HBApplication(testing: .router)
         app.router.put("/:test", use: ParameterTest.self)
 
-        try app.XCTStart()
-        defer { app.XCTStop() }
+        try await app.XCTTest { client in
 
-        try app.XCTExecute(uri: "/23", method: .PUT) { response in
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(String(buffer: body), "23")
+            try await client.XCTExecute(uri: "/23", method: .PUT) { response in
+                let body = try XCTUnwrap(response.body)
+                XCTAssertEqual(String(buffer: body), "23")
+            }
         }
     }
 }

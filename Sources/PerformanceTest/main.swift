@@ -30,6 +30,7 @@ let app = HBApplication(
     ),
     eventLoopGroupProvider: .shared(elg)
 )
+app.logger.logLevel = .debug
 app.encoder = JSONEncoder()
 app.decoder = JSONDecoder()
 
@@ -54,5 +55,4 @@ app.router.get("json") { _ in
 }
 
 // run app
-try app.start()
-app.wait()
+try await app.runService()

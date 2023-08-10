@@ -15,6 +15,7 @@
 import Hummingbird
 import NIOCore
 import NIOHTTP1
+import ServiceLifecycle
 
 /// Response structure returned by XCT testing framework
 public struct HBXCTResponse {
@@ -48,19 +49,48 @@ struct HBXCTError: Error, Equatable {
     static var timeout: Self { .init(.timeout) }
 }
 
-/// Protocol for XCT framework.
-public protocol HBXCT {
-    /// Called to start testing of application
-    func start(application: HBApplication) throws
-    /// Called to stop testing of application
-    func stop(application: HBApplication)
+/// Protocol for client used by HBXCT
+///
+/// TODO: Could this be made Sendable? Currently HBXCTRouter.Client is not Sendable
+/// Because `HBResponder` is not Sendable, Maybe in the future it could be and we
+/// can revisit this
+public protocol HBXCTClientProtocol {
     /// Execute URL request and provide response
     func execute(
         uri: String,
         method: HTTPMethod,
         headers: HTTPHeaders,
         body: ByteBuffer?
-    ) -> EventLoopFuture<HBXCTResponse>
+    ) async throws -> HBXCTResponse
+}
+
+extension HBXCTClientProtocol {
+    /// Send request and call test callback on the response returned
+    @discardableResult public func XCTExecute<Return>(
+        uri: String,
+        method: HTTPMethod,
+        headers: HTTPHeaders = [:],
+        body: ByteBuffer? = nil,
+        testCallback: @escaping (HBXCTResponse) async throws -> Return = { $0 }
+    ) async throws -> Return {
+        let response = try await execute(uri: uri, method: method, headers: headers, body: body)
+        return try await testCallback(response)
+    }
+}
+
+/// Protocol for XCT framework.
+public protocol HBXCT {
+    /// Associated client with XCT server type
+    associatedtype Client: HBXCTClientProtocol
+
+    /// Run XCT server
+    func run(application: HBApplication, _ test: @escaping @Sendable (any HBXCTClientProtocol) async throws -> Void) async throws
+    /// Called once the XCT server is up and running
+    func onServerRunning(_ channel: Channel) async
     /// EventLoopGroup used by XCT framework
     var eventLoopGroup: EventLoopGroup { get }
+}
+
+extension HBXCT {
+    func onServerRunning(_: Channel) {}
 }

@@ -19,28 +19,35 @@ import Tracing
 import XCTest
 
 final class TracingTests: XCTestCase {
-    func testTracingMiddleware() throws {
+    func wait(for expectations: [XCTestExpectation], timeout: TimeInterval) async {
+        #if os(Linux) || swift(<5.8)
+        super.wait(for: expectations, timeout: timeout)
+        #else
+        await fulfillment(of: expectations, timeout: timeout)
+        #endif
+    }
+
+    func testTracingMiddleware() async throws {
         let expectation = expectation(description: "Expected span to be ended.")
 
         let tracer = TestTracer()
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplication(testing: .embedded)
+        let app = HBApplication(testing: .router)
         app.middleware.add(HBTracingMiddleware())
         app.router.get("users/:id") { _ -> String in
             return "42"
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        try app.XCTExecute(uri: "/users/42", method: .GET) { response in
-            XCTAssertEqual(response.status, .ok)
-            var responseBody = try XCTUnwrap(response.body)
-            XCTAssertEqual(responseBody.readString(length: responseBody.readableBytes), "42")
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/users/42", method: .GET) { response in
+                XCTAssertEqual(response.status, .ok)
+                var responseBody = try XCTUnwrap(response.body)
+                XCTAssertEqual(responseBody.readString(length: responseBody.readableBytes), "42")
+            }
         }
 
-        waitForExpectations(timeout: 1)
+        await self.wait(for: [expectation], timeout: 1)
 
         let span = try XCTUnwrap(tracer.spans.first)
 
@@ -60,26 +67,25 @@ final class TracingTests: XCTestCase {
         ])
     }
 
-    func testTracingMiddlewareServerError() throws {
+    func testTracingMiddlewareServerError() async throws {
         let expectation = expectation(description: "Expected span to be ended.")
 
         let tracer = TestTracer()
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplication(testing: .embedded)
+        let app = HBApplication(testing: .router)
         app.middleware.add(HBTracingMiddleware())
         app.router.post("users") { _ -> String in
             throw HBHTTPError(.internalServerError)
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        try app.XCTExecute(uri: "/users", method: .POST, body: ByteBuffer(string: "42")) { response in
-            XCTAssertEqual(response.status, .internalServerError)
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/users", method: .POST, body: ByteBuffer(string: "42")) { response in
+                XCTAssertEqual(response.status, .internalServerError)
+            }
         }
 
-        waitForExpectations(timeout: 1)
+        await self.wait(for: [expectation], timeout: 1)
 
         let span = try XCTUnwrap(tracer.spans.first)
 
@@ -102,14 +108,14 @@ final class TracingTests: XCTestCase {
         ])
     }
 
-    func testTracingMiddlewareIncludingHeaders() throws {
+    func testTracingMiddlewareIncludingHeaders() async throws {
         let expectation = expectation(description: "Expected span to be ended.")
 
         let tracer = TestTracer()
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplication(testing: .embedded)
+        let app = HBApplication(testing: .router)
         app.middleware.add(HBTracingMiddleware(recordingHeaders: [
             "accept", "content-type", "cache-control", "does-not-exist",
         ]))
@@ -124,20 +130,19 @@ final class TracingTests: XCTestCase {
                 body: .byteBuffer(ByteBuffer(string: "42"))
             )
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        var requestHeaders = HTTPHeaders()
-        requestHeaders.add(name: "Accept", value: "text/plain")
-        requestHeaders.add(name: "Accept", value: "application/json")
-        requestHeaders.add(name: "Cache-Control", value: "no-cache")
-        try app.XCTExecute(uri: "/users/42", method: .GET, headers: requestHeaders) { response in
-            XCTAssertEqual(response.status, .ok)
-            var responseBody = try XCTUnwrap(response.body)
-            XCTAssertEqual(responseBody.readString(length: responseBody.readableBytes), "42")
+        try await app.XCTTest { client in
+            var requestHeaders = HTTPHeaders()
+            requestHeaders.add(name: "Accept", value: "text/plain")
+            requestHeaders.add(name: "Accept", value: "application/json")
+            requestHeaders.add(name: "Cache-Control", value: "no-cache")
+            try await client.XCTExecute(uri: "/users/42", method: .GET, headers: requestHeaders) { response in
+                XCTAssertEqual(response.status, .ok)
+                var responseBody = try XCTUnwrap(response.body)
+                XCTAssertEqual(responseBody.readString(length: responseBody.readableBytes), "42")
+            }
         }
 
-        waitForExpectations(timeout: 1)
+        await self.wait(for: [expectation], timeout: 1)
 
         let span = try XCTUnwrap(tracer.spans.first)
 
@@ -161,26 +166,25 @@ final class TracingTests: XCTestCase {
         ])
     }
 
-    func testTracingMiddlewareEmptyResponse() throws {
+    func testTracingMiddlewareEmptyResponse() async throws {
         let expectation = expectation(description: "Expected span to be ended.")
 
         let tracer = TestTracer()
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplication(testing: .embedded)
+        let app = HBApplication(testing: .router)
         app.middleware.add(HBTracingMiddleware())
         app.router.post("/users") { _ -> HTTPResponseStatus in
             return .noContent
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        try app.XCTExecute(uri: "/users", method: .POST) { response in
-            XCTAssertEqual(response.status, .noContent)
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/users", method: .POST) { response in
+                XCTAssertEqual(response.status, .noContent)
+            }
         }
 
-        waitForExpectations(timeout: 1)
+        await self.wait(for: [expectation], timeout: 1)
 
         let span = try XCTUnwrap(tracer.spans.first)
 
@@ -199,26 +203,25 @@ final class TracingTests: XCTestCase {
         ])
     }
 
-    func testTracingMiddlewareIndexRoute() throws {
+    func testTracingMiddlewareIndexRoute() async throws {
         let expectation = expectation(description: "Expected span to be ended.")
 
         let tracer = TestTracer()
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplication(testing: .embedded)
+        let app = HBApplication(testing: .router)
         app.middleware.add(HBTracingMiddleware())
         app.router.get("/") { _ -> HTTPResponseStatus in
             return .ok
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        try app.XCTExecute(uri: "/", method: .GET) { response in
-            XCTAssertEqual(response.status, .ok)
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/", method: .GET) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
         }
 
-        waitForExpectations(timeout: 1)
+        await self.wait(for: [expectation], timeout: 1)
 
         let span = try XCTUnwrap(tracer.spans.first)
 
@@ -237,23 +240,21 @@ final class TracingTests: XCTestCase {
         ])
     }
 
-    func testTracingMiddlewareRouteNotFound() throws {
+    func testTracingMiddlewareRouteNotFound() async throws {
         let expectation = expectation(description: "Expected span to be ended.")
 
         let tracer = TestTracer()
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplication(testing: .embedded)
+        let app = HBApplication(testing: .router)
         app.middleware.add(HBTracingMiddleware())
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        try app.XCTExecute(uri: "/", method: .GET) { response in
-            XCTAssertEqual(response.status, .notFound)
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/", method: .GET) { response in
+                XCTAssertEqual(response.status, .notFound)
+            }
         }
-
-        waitForExpectations(timeout: 1)
+        await self.wait(for: [expectation], timeout: 1)
 
         let span = try XCTUnwrap(tracer.spans.first)
 
@@ -276,7 +277,7 @@ final class TracingTests: XCTestCase {
     }
 
     /// Test tracing serviceContext is attached to request when route handler is called
-    func testServiceContextPropagation() throws {
+    func testServiceContextPropagation() async throws {
         let expectation = expectation(description: "Expected span to be ended.")
         expectation.expectedFulfillmentCount = 2
 
@@ -284,7 +285,7 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplication(testing: .embedded)
+        let app = HBApplication(testing: .router)
         app.middleware.add(HBTracingMiddleware())
         app.router.get("/") { request -> HTTPResponseStatus in
             var serviceContext = request.serviceContext
@@ -293,14 +294,12 @@ final class TracingTests: XCTestCase {
             span.end()
             return .ok
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        try app.XCTExecute(uri: "/", method: .GET) { response in
-            XCTAssertEqual(response.status, .ok)
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/", method: .GET) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
         }
-
-        waitForExpectations(timeout: 1)
+        await self.wait(for: [expectation], timeout: 1)
 
         XCTAssertEqual(tracer.spans.count, 2)
         let span = tracer.spans[0]
@@ -311,7 +310,7 @@ final class TracingTests: XCTestCase {
     }
 
     /// Verify serviceContext set in trace middleware propagates to routes
-    func testServiceContextPropagationWithSpan() throws {
+    func testServiceContextPropagationWithSpan() async throws {
         let expectation = expectation(description: "Expected span to be ended.")
         expectation.expectedFulfillmentCount = 2
 
@@ -319,7 +318,7 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplication(testing: .embedded)
+        let app = HBApplication(testing: .router)
         app.middleware.add(HBTracingMiddleware())
         app.router.get("/") { request -> HTTPResponseStatus in
             var serviceContext = request.serviceContext
@@ -329,14 +328,13 @@ final class TracingTests: XCTestCase {
                 return .ok
             }
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        try app.XCTExecute(uri: "/", method: .GET) { response in
-            XCTAssertEqual(response.status, .ok)
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/", method: .GET) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
         }
 
-        waitForExpectations(timeout: 1)
+        await self.wait(for: [expectation], timeout: 1)
 
         XCTAssertEqual(tracer.spans.count, 2)
         let span = tracer.spans[0]
@@ -349,7 +347,7 @@ final class TracingTests: XCTestCase {
 
     /// And SpanMiddleware in front of tracing middleware and set serviceContext value and use
     /// EventLoopFuture version of `request.withSpan` to call next.respond
-    func testServiceContextPropagationEventLoopFuture() throws {
+    func testServiceContextPropagationEventLoopFuture() async throws {
         let expectation = expectation(description: "Expected span to be ended.")
         expectation.expectedFulfillmentCount = 2
 
@@ -364,23 +362,24 @@ final class TracingTests: XCTestCase {
         }
 
         let tracer = TestTracer()
-        tracer.onEndSpan = { _ in expectation.fulfill() }
+        tracer.onEndSpan = { _ in
+            expectation.fulfill()
+        }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplication(testing: .live)
+        let app = HBApplication(testing: .router)
         app.middleware.add(SpanMiddleware())
         app.middleware.add(HBTracingMiddleware())
         app.router.get("/") { request -> EventLoopFuture<HTTPResponseStatus> in
             return request.eventLoop.scheduleTask(in: .milliseconds(2)) { return .ok }.futureResult
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        try app.XCTExecute(uri: "/", method: .GET) { response in
-            XCTAssertEqual(response.status, .ok)
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/", method: .GET) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
         }
 
-        waitForExpectations(timeout: 1)
+        await self.wait(for: [expectation], timeout: 1)
 
         XCTAssertEqual(tracer.spans.count, 2)
         let span2 = tracer.spans[1]
@@ -394,7 +393,7 @@ final class TracingTests: XCTestCase {
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension TracingTests {
     /// Test tracing middleware serviceContext is propagated to async route handlers
-    func testServiceContextPropagationAsync() throws {
+    func testServiceContextPropagationAsync() async throws {
         let expectation = expectation(description: "Expected span to be ended.")
         expectation.expectedFulfillmentCount = 2
 
@@ -402,7 +401,7 @@ extension TracingTests {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplication(testing: .asyncTest)
+        let app = HBApplication(testing: .router)
         app.middleware.add(HBTracingMiddleware())
         app.router.get("/") { _ -> HTTPResponseStatus in
             try await Task.sleep(nanoseconds: 1000)
@@ -410,14 +409,13 @@ extension TracingTests {
                 return .ok
             }
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        try app.XCTExecute(uri: "/", method: .GET) { response in
-            XCTAssertEqual(response.status, .ok)
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/", method: .GET) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
         }
 
-        waitForExpectations(timeout: 10)
+        await self.wait(for: [expectation], timeout: 1)
 
         XCTAssertEqual(tracer.spans.count, 2)
         let span = tracer.spans[0]
@@ -428,7 +426,7 @@ extension TracingTests {
 
     /// Test serviceContext is propagated to AsyncMiddleware and any serviceContext added in AsyncMiddleware is
     /// propagated to route code
-    func testServiceContextPropagationAsyncMiddleware() throws {
+    func testServiceContextPropagationAsyncMiddleware() async throws {
         struct AsyncSpanMiddleware: HBAsyncMiddleware {
             public func apply(to request: HBRequest, next: HBResponder) async throws -> HBResponse {
                 var serviceContext = request.serviceContext
@@ -446,7 +444,7 @@ extension TracingTests {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplication(testing: .asyncTest)
+        let app = HBApplication(testing: .router)
         app.middleware.add(HBTracingMiddleware())
         app.middleware.add(AsyncSpanMiddleware())
         app.router.get("/") { request -> HTTPResponseStatus in
@@ -455,14 +453,13 @@ extension TracingTests {
                 return .ok
             }
         }
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        try app.XCTExecute(uri: "/", method: .GET) { response in
-            XCTAssertEqual(response.status, .ok)
+        try await app.XCTTest { client in
+            try await client.XCTExecute(uri: "/", method: .GET) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
         }
 
-        waitForExpectations(timeout: 10)
+        await self.wait(for: [expectation], timeout: 1)
 
         XCTAssertEqual(tracer.spans.count, 3)
         let span1 = tracer.spans[0]
