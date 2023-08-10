@@ -21,7 +21,13 @@ import Network
 extension HBApplication {
     // MARK: Configuration
 
-    /// Idle state handlder configuration
+    /// Idle state handlder configuration.
+    ///
+    /// Timeout values before a connection is closed. The `readTimeout`` will trigger after the server
+    /// receives no request parts for the specified time. It is meant to catch when a connection is
+    /// idle for too long in the middle of reading a request. The writeTimeout will trigger after
+    /// the server hasn't written any http parts for the specified time. It is meant to catch if a
+    /// connection is idle for too long between requests.
     public struct IdleStateHandlerConfiguration: Sendable {
         /// timeout when reading a request
         let readTimeout: TimeAmount
