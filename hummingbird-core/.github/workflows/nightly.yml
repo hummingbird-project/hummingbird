@@ -1,0 +1,29 @@
+name: Swift nightly build
+
+on:
+  schedule:
+    - cron: '0 1 * * 1'
+  workflow_dispatch:
+
+jobs:
+  macOS:
+    runs-on: macOS-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: SPM tests
+      run: swift test
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: ['nightly-focal', 'nightly-jammy', 'nightly-amazonlinux2']
+    
+    container:
+      image: swiftlang/swift:${{ matrix.image }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Test
+      run: |
+        swift test --enable-test-discovery

@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches:
+    - main
+    - 2.x.x
+    paths:
+    - '**.swift'
+    - '**.yml'
+  pull_request:
+    branches:
+    - main
+    - 2.x.x
+    paths:
+    - '**.swift'
+    - '**.yml'
+  workflow_dispatch:
+
+jobs:
+  macOS:
+    runs-on: macOS-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: SPM tests
+      run: swift test --enable-code-coverage
+    - name: Convert coverage files
+      run: |
+        xcrun llvm-cov export -format "lcov" \
+          .build/debug/hummingbird-corePackageTests.xctest/Contents/MacOs/hummingbird-corePackageTests \
+          -ignore-filename-regex="\/Tests\/" \
+          -ignore-filename-regex="\/Benchmarks\/" \
+          -instr-profile=.build/debug/codecov/default.profdata > info.lcov
+    - name: Upload to codecov.io
+      uses: codecov/codecov-action@v3
+      with:
+        file: info.lcov
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image:
+          - 'swift:5.7'
+          - 'swift:5.8'
+    
+    container:
+      image: ${{ matrix.image }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Test
+      run: |
+        swift test --enable-code-coverage
+    - name: Convert coverage files
+      run: |
+        llvm-cov export -format="lcov" \
+          .build/debug/hummingbird-corePackageTests.xctest \
+          -ignore-filename-regex="\/Tests\/" \
+          -ignore-filename-regex="\/Benchmarks\/" \
+          -instr-profile .build/debug/codecov/default.profdata > info.lcov
+    - name: Upload to codecov.io
+      uses: codecov/codecov-action@v3
+      with:
+        file: info.lcov

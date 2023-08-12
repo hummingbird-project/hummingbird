@@ -1,0 +1,26 @@
+# Minimum swiftformat version
+--minversion 0.47.4
+
+# Swift version
+--swiftversion 5.3
+
+# file options
+--exclude .build
+
+# rules
+--disable redundantReturn, extensionAccessControl
+
+# format options
+--ifdef no-indent
+--nospaceoperators ...,..<
+--patternlet inline
+--self insert
+--stripunusedargs unnamed-only
+
+#--maxwidth 150
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+
+#file header
+# --header "//===----------------------------------------------------------------------===//\n//\n// This source file is part of the Hummingbird server framework project\n//\n// Copyright (c) {created.year}-{year} the Hummingbird authors\n// Licensed under Apache License v2.0\n//\n// See LICENSE.txt for license information\n// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors\n//\n// SPDX-License-Identifier: Apache-2.0\n//\n//===----------------------------------------------------------------------===//"
