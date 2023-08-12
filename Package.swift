@@ -18,12 +18,15 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
         .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.0.1"),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.56.0"),
+        .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.7.0"),
+        .package(url: "https://github.com/apple/swift-nio-http2.git", from: "1.20.0"),
+        .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.14.0"),
+        .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.9.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.0.0-alpha"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-core.git", branch: "2.x.x"),
     ],
     targets: [
         .target(name: "Hummingbird", dependencies: [
-            .product(name: "HummingbirdCore", package: "hummingbird-core"),
+            .byName(name: "HummingbirdCore"),
             .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
             .product(name: "Logging", package: "swift-log"),
             .product(name: "Metrics", package: "swift-metrics"),
@@ -44,11 +47,39 @@ let package = Package(
         ]),
         .target(name: "HummingbirdXCT", dependencies: [
             .byName(name: "Hummingbird"),
-            .product(name: "HummingbirdCoreXCT", package: "hummingbird-core"),
+            .byName(name: "HummingbirdCoreXCT"),
             .product(name: "NIOCore", package: "swift-nio"),
             .product(name: "NIOEmbedded", package: "swift-nio"),
             .product(name: "NIOPosix", package: "swift-nio"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
+        ]),
+        .target(name: "HummingbirdCore", dependencies: [
+            .product(name: "Logging", package: "swift-log"),
+            .product(name: "NIOCore", package: "swift-nio"),
+            .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
+            .product(name: "NIOExtras", package: "swift-nio-extras"),
+            .product(name: "NIOHTTP1", package: "swift-nio"),
+            .product(name: "NIOPosix", package: "swift-nio"),
+            .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
+            .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
+        ]),
+        .target(name: "HummingbirdCoreXCT", dependencies: [
+            .product(name: "NIOCore", package: "swift-nio"),
+            .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
+            .product(name: "NIOHTTP1", package: "swift-nio"),
+            .product(name: "NIOPosix", package: "swift-nio"),
+            .product(name: "NIOSSL", package: "swift-nio-ssl"),
+        ]),
+        .target(name: "HummingbirdHTTP2", dependencies: [
+            .byName(name: "HummingbirdCore"),
+            .product(name: "NIOCore", package: "swift-nio"),
+            .product(name: "NIOHTTP2", package: "swift-nio-http2"),
+            .product(name: "NIOSSL", package: "swift-nio-ssl"),
+        ]),
+        .target(name: "HummingbirdTLS", dependencies: [
+            .byName(name: "HummingbirdCore"),
+            .product(name: "NIOCore", package: "swift-nio"),
+            .product(name: "NIOSSL", package: "swift-nio-ssl"),
         ]),
         .executableTarget(name: "PerformanceTest", dependencies: [
             .byName(name: "Hummingbird"),
@@ -69,5 +100,16 @@ let package = Package(
             .byName(name: "HummingbirdJobs"),
             .byName(name: "HummingbirdXCT"),
         ]),
+        .testTarget(
+            name: "HummingbirdCoreTests",
+            dependencies:
+            [
+                .byName(name: "HummingbirdCore"),
+                .byName(name: "HummingbirdTLS"),
+                .byName(name: "HummingbirdCoreXCT"),
+                .product(name: "NIOEmbedded", package: "swift-nio"),
+            ],
+            resources: [.process("Certificates")]
+        ),
     ]
 )
