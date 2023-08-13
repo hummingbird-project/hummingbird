@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// protocol for encoders generating a Response
-public protocol HBResponseEncoder {
+public protocol HBResponseEncoder: Sendable {
     /// Encode value returned by handler to request
     ///
     /// - Parameters:
@@ -23,7 +23,7 @@ public protocol HBResponseEncoder {
 }
 
 /// protocol for decoder deserializing from a Request body
-public protocol HBRequestDecoder {
+public protocol HBRequestDecoder: Sendable {
     /// Decode type from request
     /// - Parameters:
     ///   - type: type to decode to

@@ -16,6 +16,7 @@ import Dispatch
 import HummingbirdCore
 import Logging
 import NIOCore
+import NIOHTTP1
 import NIOPosix
 import NIOTransportServices
 import ServiceLifecycle
@@ -33,7 +34,7 @@ import ServiceLifecycle
 /// try await app.runService()
 /// ```
 /// Editing the application setup after calling `run` will produce undefined behaviour.
-public final class HBApplication: HBExtensible {
+public final class HBApplicationBuilder: HBExtensible {
     // MARK: Member variables
 
     /// event loop group used by application
@@ -43,9 +44,9 @@ public final class HBApplication: HBExtensible {
     /// routes requests to requestResponders based on URI
     public let router: HBRouterBuilder
     /// Configuration
-    public let configuration: Configuration
+    public let configuration: HBApplication.Configuration
     /// Application extensions
-    public var extensions: HBExtensions<HBApplication>
+    public var extensions: HBExtensions<HBApplicationBuilder>
     /// Logger. Required to be a var by hummingbird-lambda
     public var logger: Logger
     /// Encoder used by router
@@ -130,26 +131,73 @@ public final class HBApplication: HBExtensible {
     }
 }
 
+public struct HBApplication: Sendable {
+    public struct Context: Sendable {
+        /// event loop group used by application
+        public let eventLoopGroup: EventLoopGroup
+        /// thread pool used by application
+        public let threadPool: NIOThreadPool
+        /// Configuration
+        public let configuration: Configuration
+        /// Logger. Required to be a var by hummingbird-lambda
+        public let logger: Logger
+        /// Encoder used by router
+        public let encoder: HBResponseEncoder
+        /// decoder used by router
+        public let decoder: HBRequestDecoder
+    }
+
+    /// event loop group used by application
+    public let context: Context
+    // server
+    public let server: HBHTTPServer
+    /// who provided the eventLoopGroup
+    let eventLoopGroupProvider: NIOEventLoopGroupProvider
+
+    init(builder: HBApplicationBuilder) {
+        let threadPool = NIOThreadPool(numberOfThreads: builder.configuration.threadPoolSize)
+        threadPool.start()
+        self.context = .init(
+            eventLoopGroup: builder.eventLoopGroup,
+            threadPool: threadPool,
+            configuration: builder.configuration,
+            logger: builder.logger,
+            encoder: builder.encoder,
+            decoder: builder.decoder
+        )
+        self.eventLoopGroupProvider = builder.eventLoopGroupProvider
+
+        self.server = HBHTTPServer(
+            group: builder.eventLoopGroup,
+            configuration: builder.configuration.httpServer,
+            responder: Responder(responder: builder.constructResponder(), applicationContext: self.context),
+            additionalChannelHandlers: builder.additionalChannelHandlers.map { $0() },
+            onServerRunning: builder.onServerRunning,
+            logger: builder.logger
+        )
+    }
+
+    /// shutdown eventloop, threadpool and any extensions attached to the Application
+    public func shutdownApplication() throws {
+        try self.context.threadPool.syncShutdownGracefully()
+        if case .createNew = self.eventLoopGroupProvider {
+            try self.context.eventLoopGroup.syncShutdownGracefully()
+        }
+    }
+}
+
 /// Conform to `Service` from `ServiceLifecycle`.
 /// TODO: Temporarily I have added unchecked Sendable conformance to the class as Sendable
 /// conformance is required by `Service`. I will need to revisit this.
-extension HBApplication: Service, @unchecked Sendable {
+extension HBApplication: Service {
     public func run() async throws {
-        let server = HBHTTPServer(
-            group: self.eventLoopGroup,
-            configuration: self.configuration.httpServer,
-            responder: HTTPResponder(application: self),
-            additionalChannelHandlers: self.additionalChannelHandlers.map { $0() },
-            onServerRunning: self.onServerRunning,
-            logger: self.logger
-        )
         try await withGracefulShutdownHandler {
-            try await server.run()
-            try await HBDateCache.shutdownDateCaches(eventLoopGroup: self.eventLoopGroup).get()
+            try await self.server.run()
+            try await HBDateCache.shutdownDateCaches(eventLoopGroup: self.context.eventLoopGroup).get()
             try self.shutdownApplication()
         } onGracefulShutdown: {
             Task {
-                try await server.shutdownGracefully()
+                try await self.server.shutdownGracefully()
             }
         }
     }
@@ -160,7 +208,7 @@ extension HBApplication: Service, @unchecked Sendable {
         let serviceGroup = ServiceGroup(
             services: [self],
             configuration: .init(gracefulShutdownSignals: [.sigterm, .sigint]),
-            logger: self.logger
+            logger: self.context.logger
         )
         try await serviceGroup.run()
     }

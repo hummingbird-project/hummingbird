@@ -78,7 +78,7 @@ extension HBRouterMethods {
             var request = request
             if case .stream = request.body, !options.contains(.streamBody) {
                 let buffer = try await request.body.consumeBody(
-                    maxSize: request.application.configuration.maxUploadSize
+                    maxSize: request.applicationContext.configuration.maxUploadSize
                 )
                 request.body = .byteBuffer(buffer)
             }
