@@ -44,11 +44,11 @@ public struct HBFileMiddleware: HBMiddleware {
         _ rootFolder: String = "public",
         cacheControl: HBCacheControl = .init([]),
         searchForIndexHtml: Bool = false,
-        application: HBApplication
+        application: HBApplicationBuilder
     ) {
         self.rootFolder = URL(fileURLWithPath: rootFolder)
         self.threadPool = application.threadPool
-        self.fileIO = .init(application: application)
+        self.fileIO = .init(threadPool: application.threadPool)
         self.cacheControl = cacheControl
         self.searchForIndexHtml = searchForIndexHtml
 

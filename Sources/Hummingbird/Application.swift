@@ -21,6 +21,14 @@ import NIOPosix
 import NIOTransportServices
 import ServiceLifecycle
 
+/// Where should the application get its EventLoopGroup from
+public enum EventLoopGroupProvider {
+    /// Use this EventLoopGroup
+    case shared(EventLoopGroup)
+    /// Use one of the global EventLoopGroups
+    case global
+}
+
 /// Application class. Brings together all the components of Hummingbird together
 ///
 /// Create an HBApplication, setup your application middleware, encoders, routes etc and then either
@@ -34,7 +42,7 @@ import ServiceLifecycle
 /// try await app.runService()
 /// ```
 /// Editing the application setup after calling `run` will produce undefined behaviour.
-public final class HBApplicationBuilder: HBExtensible {
+public final class HBApplicationBuilder {
     // MARK: Member variables
 
     /// event loop group used by application
@@ -45,8 +53,6 @@ public final class HBApplicationBuilder: HBExtensible {
     public let router: HBRouterBuilder
     /// Configuration
     public let configuration: HBApplication.Configuration
-    /// Application extensions
-    public var extensions: HBExtensions<HBApplicationBuilder>
     /// Logger. Required to be a var by hummingbird-lambda
     public var logger: Logger
     /// Encoder used by router
@@ -54,19 +60,16 @@ public final class HBApplicationBuilder: HBExtensible {
     /// decoder used by router
     public var decoder: HBRequestDecoder
     /// on server running
-    var onServerRunning: @Sendable (Channel) async -> Void
+    public var onServerRunning: @Sendable (Channel) async -> Void
     /// additional channel handlers
     var additionalChannelHandlers: [@Sendable () -> any RemovableChannelHandler]
-    /// who provided the eventLoopGroup
-    let eventLoopGroupProvider: NIOEventLoopGroupProvider
 
     // MARK: Initialization
 
     /// Initialize new Application
     public init(
         configuration: HBApplication.Configuration = HBApplication.Configuration(),
-        eventLoopGroupProvider: NIOEventLoopGroupProvider = .createNew,
-        onServerRunning: @escaping @Sendable (Channel) async -> Void = { _ in }
+        eventLoopGroupProvider: EventLoopGroupProvider = .global
     ) {
         var logger = Logger(label: configuration.serverName ?? "HummingBird")
         logger.logLevel = configuration.logLevel
@@ -74,10 +77,9 @@ public final class HBApplicationBuilder: HBExtensible {
 
         self.router = HBRouterBuilder()
         self.configuration = configuration
-        self.extensions = HBExtensions()
         self.encoder = NullEncoder()
         self.decoder = NullDecoder()
-        self.onServerRunning = onServerRunning
+        self.onServerRunning = { _ in }
         // add idle read, write handlers
         if let idleTimeoutConfiguration = configuration.idleTimeoutConfiguration {
             self.additionalChannelHandlers = [{
@@ -91,13 +93,12 @@ public final class HBApplicationBuilder: HBExtensible {
         }
 
         // create eventLoopGroup
-        self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {
-        case .createNew:
+        case .global:
             #if os(iOS)
-            self.eventLoopGroup = NIOTSEventLoopGroup()
+            self.eventLoopGroup = NIOTSEventLoopGroup.singleton
             #else
-            self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+            self.eventLoopGroup = MultiThreadedEventLoopGroup.singleton
             #endif
         case .shared(let elg):
             self.eventLoopGroup = elg
@@ -109,6 +110,21 @@ public final class HBApplicationBuilder: HBExtensible {
 
     // MARK: Methods
 
+    __consuming public func build() -> HBApplication {
+        return .init(builder: self)
+    }
+
+    /// Helper function that runs application inside a ServiceGroup which will gracefully
+    /// shutdown on signals SIGINT, SIGTERM
+    public func buildAndRun() async throws {
+        let serviceGroup = ServiceGroup(
+            services: [self.build()],
+            configuration: .init(gracefulShutdownSignals: [.sigterm, .sigint]),
+            logger: self.logger
+        )
+        try await serviceGroup.run()
+    }
+
     /// middleware applied to requests
     public var middleware: HBMiddlewareGroup { return self.router.middlewares }
 
@@ -119,11 +135,7 @@ public final class HBApplicationBuilder: HBExtensible {
 
     /// shutdown eventloop, threadpool and any extensions attached to the Application
     public func shutdownApplication() throws {
-        try self.extensions.shutdown()
         try self.threadPool.syncShutdownGracefully()
-        if case .createNew = self.eventLoopGroupProvider {
-            try self.eventLoopGroup.syncShutdownGracefully()
-        }
     }
 
     public func addChannelHandler(_ handler: @autoclosure @escaping @Sendable () -> any RemovableChannelHandler) {
@@ -145,28 +157,38 @@ public struct HBApplication: Sendable {
         public let encoder: HBResponseEncoder
         /// decoder used by router
         public let decoder: HBRequestDecoder
+
+        public init(
+            eventLoopGroup: EventLoopGroup,
+            threadPool: NIOThreadPool,
+            configuration: Configuration,
+            logger: Logger,
+            encoder: HBResponseEncoder,
+            decoder: HBRequestDecoder
+        ) {
+            self.eventLoopGroup = eventLoopGroup
+            self.threadPool = threadPool
+            self.configuration = configuration
+            self.logger = logger
+            self.encoder = encoder
+            self.decoder = decoder
+        }
     }
 
     /// event loop group used by application
     public let context: Context
     // server
     public let server: HBHTTPServer
-    /// who provided the eventLoopGroup
-    let eventLoopGroupProvider: NIOEventLoopGroupProvider
 
     init(builder: HBApplicationBuilder) {
-        let threadPool = NIOThreadPool(numberOfThreads: builder.configuration.threadPoolSize)
-        threadPool.start()
         self.context = .init(
             eventLoopGroup: builder.eventLoopGroup,
-            threadPool: threadPool,
+            threadPool: builder.threadPool,
             configuration: builder.configuration,
             logger: builder.logger,
             encoder: builder.encoder,
             decoder: builder.decoder
         )
-        self.eventLoopGroupProvider = builder.eventLoopGroupProvider
-
         self.server = HBHTTPServer(
             group: builder.eventLoopGroup,
             configuration: builder.configuration.httpServer,
@@ -180,9 +202,6 @@ public struct HBApplication: Sendable {
     /// shutdown eventloop, threadpool and any extensions attached to the Application
     public func shutdownApplication() throws {
         try self.context.threadPool.syncShutdownGracefully()
-        if case .createNew = self.eventLoopGroupProvider {
-            try self.context.eventLoopGroup.syncShutdownGracefully()
-        }
     }
 }
 
@@ -200,16 +219,5 @@ extension HBApplication: Service {
                 try await self.server.shutdownGracefully()
             }
         }
-    }
-
-    /// Helper function that runs application inside a ServiceGroup which will gracefully
-    /// shutdown on signals SIGINT, SIGTERM
-    public func runService() async throws {
-        let serviceGroup = ServiceGroup(
-            services: [self],
-            configuration: .init(gracefulShutdownSignals: [.sigterm, .sigint]),
-            logger: self.context.logger
-        )
-        try await serviceGroup.run()
     }
 }

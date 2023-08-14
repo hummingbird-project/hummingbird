@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension HBPersistDriver {
     /// create key/value pair. If key already exist throw `HBPersistError.duplicate` error
     /// - Parameters:
