@@ -23,8 +23,6 @@ import ServiceLifecycle
 
 public struct HBApplication: Sendable {
     public struct Context: Sendable {
-        /// event loop group used by application
-        public let eventLoopGroup: EventLoopGroup
         /// thread pool used by application
         public let threadPool: NIOThreadPool
         /// Configuration
@@ -37,14 +35,12 @@ public struct HBApplication: Sendable {
         public let decoder: HBRequestDecoder
 
         public init(
-            eventLoopGroup: EventLoopGroup,
             threadPool: NIOThreadPool,
             configuration: Configuration,
             logger: Logger,
             encoder: HBResponseEncoder,
             decoder: HBRequestDecoder
         ) {
-            self.eventLoopGroup = eventLoopGroup
             self.threadPool = threadPool
             self.configuration = configuration
             self.logger = logger
@@ -55,12 +51,14 @@ public struct HBApplication: Sendable {
 
     /// event loop group used by application
     public let context: Context
+    // eventLoopGroup
+    public let eventLoopGroup: EventLoopGroup
     // server
     public let server: HBHTTPServer
 
     init(builder: HBApplicationBuilder) {
+        self.eventLoopGroup = builder.eventLoopGroup
         self.context = .init(
-            eventLoopGroup: builder.eventLoopGroup,
             threadPool: builder.threadPool,
             configuration: builder.configuration,
             logger: builder.logger,
@@ -90,7 +88,7 @@ extension HBApplication: Service {
     public func run() async throws {
         try await withGracefulShutdownHandler {
             try await self.server.run()
-            try await HBDateCache.shutdownDateCaches(eventLoopGroup: self.context.eventLoopGroup).get()
+            try await HBDateCache.shutdownDateCaches(eventLoopGroup: self.eventLoopGroup).get()
             try self.shutdownApplication()
         } onGracefulShutdown: {
             Task {

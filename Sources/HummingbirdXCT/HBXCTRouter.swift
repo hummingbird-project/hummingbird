@@ -25,12 +25,13 @@ struct HBXCTRouter: HBXCTApplication {
         var remoteAddress: SocketAddress? { return nil }
     }
 
+    let eventLoopGroup: EventLoopGroup
     let context: HBApplication.Context
     let responder: HBResponder
 
     init(builder: HBApplicationBuilder) {
+        self.eventLoopGroup = builder.eventLoopGroup
         self.context = HBApplication.Context(
-            eventLoopGroup: builder.eventLoopGroup,
             threadPool: builder.threadPool,
             configuration: builder.configuration,
             logger: builder.logger,
@@ -46,7 +47,7 @@ struct HBXCTRouter: HBXCTApplication {
 
     /// Run test
     func run(_ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Void) async throws {
-        let client = Client(responder: self.responder, applicationContext: self.context)
+        let client = Client(eventLoopGroup: self.eventLoopGroup, responder: self.responder, applicationContext: self.context)
         try await test(client)
         try self.shutdown()
     }
@@ -54,11 +55,12 @@ struct HBXCTRouter: HBXCTApplication {
     /// HBXCTRouter client. Constructs an `HBRequest` sends it to the router and then converts
     /// resulting response back to XCT response type
     struct Client: HBXCTClientProtocol {
+        let eventLoopGroup: EventLoopGroup
         let responder: HBResponder
         let applicationContext: HBApplication.Context
 
         func execute(uri: String, method: HTTPMethod, headers: HTTPHeaders, body: ByteBuffer?) async throws -> HBXCTResponse {
-            let eventLoop = self.applicationContext.eventLoopGroup.any()
+            let eventLoop = self.eventLoopGroup.any()
             let request = HBRequest(
                 head: .init(version: .http1_1, method: method, uri: uri, headers: headers),
                 body: .byteBuffer(body),
