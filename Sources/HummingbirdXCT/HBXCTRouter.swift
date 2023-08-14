@@ -17,7 +17,7 @@ import NIOCore
 import NIOPosix
 
 /// Test sending values to requests to router. This does not setup a live server
-struct HBXCTRouter: HBXCT {
+struct HBXCTRouter: HBXCTApplication {
     /// Dummy request context
     struct RequestContext: HBRequestContext {
         let eventLoop: EventLoop
@@ -25,33 +25,45 @@ struct HBXCTRouter: HBXCT {
         var remoteAddress: SocketAddress? { return nil }
     }
 
-    init() {
-        #if os(iOS)
-        self.eventLoopGroup = NIOTSEventLoopGroup()
-        #else
-        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-        #endif
+    let context: HBApplication.Context
+    let responder: HBResponder
+
+    init(builder: HBApplicationBuilder) {
+        let threadPool = NIOThreadPool(numberOfThreads: builder.configuration.threadPoolSize)
+        self.context = HBApplication.Context(
+            eventLoopGroup: builder.eventLoopGroup,
+            threadPool: builder.threadPool,
+            configuration: builder.configuration,
+            logger: builder.logger,
+            encoder: builder.encoder,
+            decoder: builder.decoder
+        )
+        self.responder = builder.router.buildRouter()
+    }
+
+    func shutdown() throws {
+        try self.context.threadPool.syncShutdownGracefully()
     }
 
     /// Run test
-    func run(application: HBApplication, _ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Void) async throws {
-        let router = application.router.buildRouter()
-        try await test(Client(responder: router, application: application))
-        try application.shutdownApplication()
+    func run(_ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Void) async throws {
+        let client = Client(responder: self.responder, applicationContext: self.context)
+        try await test(client)
+        try self.shutdown()
     }
 
     /// HBXCTRouter client. Constructs an `HBRequest` sends it to the router and then converts
     /// resulting response back to XCT response type
     struct Client: HBXCTClientProtocol {
         let responder: HBResponder
-        let application: HBApplication
+        let applicationContext: HBApplication.Context
 
         func execute(uri: String, method: HTTPMethod, headers: HTTPHeaders, body: ByteBuffer?) async throws -> HBXCTResponse {
-            let eventLoop = self.application.eventLoopGroup.any()
+            let eventLoop = self.applicationContext.eventLoopGroup.any()
             let request = HBRequest(
                 head: .init(version: .http1_1, method: method, uri: uri, headers: headers),
                 body: .byteBuffer(body),
-                application: application,
+                applicationContext: applicationContext,
                 context: RequestContext(eventLoop: eventLoop)
             )
             let response: HBResponse
@@ -86,6 +98,4 @@ struct HBXCTRouter: HBXCT {
             return .init(status: response.status, headers: response.headers, body: body)
         }
     }
-
-    var eventLoopGroup: EventLoopGroup
 }

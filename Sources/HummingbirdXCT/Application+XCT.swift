@@ -46,7 +46,7 @@ public enum XCTTestingSetup {
 ///     XCTAssertEqual(String(buffer: body, "hello")
 /// }
 /// ```
-extension HBApplication {
+extension HBApplicationBuilder {
     // MARK: Initialization
 
     /// Creates a version of `HBApplication` that can be used for testing code
@@ -54,35 +54,14 @@ extension HBApplication {
     /// - Parameters:
     ///   - testing: indicates which type of testing framework we want
     ///   - configuration: configuration of application
-    public convenience init(testing: XCTTestingSetup, configuration: HBApplication.Configuration = .init(), timeout: TimeAmount = .seconds(15)) {
-        let xct: any HBXCT
-        let configuration = configuration.with(address: .hostname("localhost", port: 0))
+    __consuming public func buildAndTest(_ testing: XCTTestingSetup, _ test: @escaping @Sendable (any HBXCTClientProtocol) async throws -> Void) async throws {
+        let app: any HBXCTApplication
         switch testing {
         case .router:
-            xct = HBXCTRouter()
+            app = HBXCTRouter(builder: self)
         case .live:
-            xct = HBXCTLive(configuration: configuration, timeout: timeout)
+            app = HBXCTLive(builder: self)
         }
-        self.init(
-            configuration: configuration,
-            eventLoopGroupProvider: .shared(xct.eventLoopGroup),
-            onServerRunning: { channel in
-                await xct.onServerRunning(channel)
-            }
-        )
-        self.extensions.set(\.xct, value: xct)
-    }
-
-    // MARK: Member variables
-
-    public var xct: any HBXCT {
-        self.extensions.get(\.xct)
-    }
-
-    // MARK: Methods
-
-    /// Start tests
-    public func XCTTest(_ test: @escaping @Sendable (any HBXCTClientProtocol) async throws -> Void) async throws {
-        try await self.xct.run(application: self, test)
+        try await app.run(test)
     }
 }

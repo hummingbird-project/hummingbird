@@ -78,19 +78,11 @@ extension HBXCTClientProtocol {
     }
 }
 
-/// Protocol for XCT framework.
-public protocol HBXCT {
+/// Protocol for Test application.
+public protocol HBXCTApplication {
     /// Associated client with XCT server type
     associatedtype Client: HBXCTClientProtocol
 
     /// Run XCT server
-    func run(application: HBApplication, _ test: @escaping @Sendable (any HBXCTClientProtocol) async throws -> Void) async throws
-    /// Called once the XCT server is up and running
-    func onServerRunning(_ channel: Channel) async
-    /// EventLoopGroup used by XCT framework
-    var eventLoopGroup: EventLoopGroup { get }
-}
-
-extension HBXCT {
-    func onServerRunning(_: Channel) {}
+    func run(_ test: @escaping @Sendable (any HBXCTClientProtocol) async throws -> Void) async throws
 }
