@@ -31,12 +31,12 @@ class HummingbirdDateTests: XCTestCase {
     }
 
     func testDateHeader() async throws {
-        let app = HBApplication(testing: .live)
+        let app = HBApplicationBuilder()
         app.router.get("date") { _ in
             return "hello"
         }
 
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.live) { client in
             try await client.XCTExecute(uri: "/date", method: .GET) { response in
                 XCTAssertNotNil(response.headers["date"].first)
             }

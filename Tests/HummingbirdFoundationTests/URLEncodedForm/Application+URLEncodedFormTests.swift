@@ -27,7 +27,7 @@ class HummingBirdURLEncodedTests: XCTestCase {
     struct Error: Swift.Error {}
 
     func testDecode() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.decoder = URLEncodedFormDecoder()
         app.router.put("/user") { request -> HTTPResponseStatus in
             guard let user = try? request.decode(as: User.self) else { throw HBHTTPError(.badRequest) }
@@ -36,7 +36,7 @@ class HummingBirdURLEncodedTests: XCTestCase {
             XCTAssertEqual(user.age, 25)
             return .ok
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             let body = "name=John%20Smith&email=john.smith%40email.com&age=25"
             try await client.XCTExecute(uri: "/user", method: .PUT, body: ByteBufferAllocator().buffer(string: body)) {
                 XCTAssertEqual($0.status, .ok)
@@ -45,12 +45,12 @@ class HummingBirdURLEncodedTests: XCTestCase {
     }
 
     func testEncode() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.encoder = URLEncodedFormEncoder()
         app.router.get("/user") { _ -> User in
             return User(name: "John Smith", email: "john.smith@email.com", age: 25)
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/user", method: .GET) { response in
                 var body = try XCTUnwrap(response.body)
                 let bodyString = try XCTUnwrap(body.readString(length: body.readableBytes))

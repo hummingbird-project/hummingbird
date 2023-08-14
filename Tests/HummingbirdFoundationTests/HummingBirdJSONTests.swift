@@ -27,7 +27,7 @@ class HummingbirdJSONTests: XCTestCase {
     struct Error: Swift.Error {}
 
     func testDecode() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.decoder = JSONDecoder()
         app.router.put("/user") { request -> HTTPResponseStatus in
             guard let user = try? request.decode(as: User.self) else { throw HBHTTPError(.badRequest) }
@@ -36,7 +36,7 @@ class HummingbirdJSONTests: XCTestCase {
             XCTAssertEqual(user.age, 25)
             return .ok
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             let body = #"{"name": "John Smith", "email": "john.smith@email.com", "age": 25}"#
             try await client.XCTExecute(uri: "/user", method: .PUT, body: ByteBufferAllocator().buffer(string: body)) {
                 XCTAssertEqual($0.status, .ok)
@@ -45,12 +45,12 @@ class HummingbirdJSONTests: XCTestCase {
     }
 
     func testEncode() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.encoder = JSONEncoder()
         app.router.get("/user") { _ -> User in
             return User(name: "John Smith", email: "john.smith@email.com", age: 25)
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/user", method: .GET) { response in
                 let body = try XCTUnwrap(response.body)
                 let user = try JSONDecoder().decode(User.self, from: body)
@@ -62,12 +62,12 @@ class HummingbirdJSONTests: XCTestCase {
     }
 
     func testEncode2() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.encoder = JSONEncoder()
         app.router.get("/json") { _ in
             return ["message": "Hello, world!"]
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/json", method: .GET) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), #"{"message":"Hello, world!"}"#)

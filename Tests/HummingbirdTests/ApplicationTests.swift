@@ -26,12 +26,12 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testGetRoute() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router.get("/hello") { request -> EventLoopFuture<ByteBuffer> in
             let buffer = request.allocator.buffer(string: "GET: Hello")
             return request.eventLoop.makeSucceededFuture(buffer)
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/hello", method: .GET) { response in
                 var body = try XCTUnwrap(response.body)
                 let string = body.readString(length: body.readableBytes)
@@ -42,11 +42,11 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testHTTPStatusRoute() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router.get("/accepted") { _ -> HTTPResponseStatus in
             return .accepted
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/accepted", method: .GET) { response in
                 XCTAssertEqual(response.status, .accepted)
             }
@@ -54,11 +54,11 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testStandardHeaders() async throws {
-        let app = HBApplication(testing: .live)
+        let app = HBApplicationBuilder()
         app.router.get("/hello") { _ in
             return "Hello"
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.live) { client in
             try await client.XCTExecute(uri: "/hello", method: .GET) { response in
                 XCTAssertEqual(response.headers["connection"].first, "keep-alive")
                 XCTAssertEqual(response.headers["content-length"].first, "5")
@@ -67,11 +67,11 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testServerHeaders() async throws {
-        let app = HBApplication(testing: .live, configuration: .init(serverName: "TestServer"))
+        let app = HBApplicationBuilder(configuration: .init(serverName: "TestServer"))
         app.router.get("/hello") { _ in
             return "Hello"
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.live) { client in
             try await client.XCTExecute(uri: "/hello", method: .GET) { response in
                 XCTAssertEqual(response.headers["server"].first, "TestServer")
             }
@@ -79,11 +79,11 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testPostRoute() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router.post("/hello") { _ -> String in
             return "POST: Hello"
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
 
             try await client.XCTExecute(uri: "/hello", method: .POST) { response in
                 var body = try XCTUnwrap(response.body)
@@ -95,14 +95,14 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testMultipleMethods() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router.post("/hello") { _ -> String in
             return "POST"
         }
         app.router.get("/hello") { _ -> String in
             return "GET"
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
 
             try await client.XCTExecute(uri: "/hello", method: .GET) { response in
                 let body = try XCTUnwrap(response.body)
@@ -116,7 +116,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testMultipleGroupMethods() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router.group("hello")
             .post { _ -> String in
                 return "POST"
@@ -124,7 +124,7 @@ final class ApplicationTests: XCTestCase {
             .get { _ -> String in
                 return "GET"
             }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
 
             try await client.XCTExecute(uri: "/hello", method: .GET) { response in
                 let body = try XCTUnwrap(response.body)
@@ -138,12 +138,12 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testQueryRoute() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router.post("/query") { request -> EventLoopFuture<ByteBuffer> in
             let buffer = request.allocator.buffer(string: request.uri.queryParameters["test"].map { String($0) } ?? "")
             return request.eventLoop.makeSucceededFuture(buffer)
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
 
             try await client.XCTExecute(uri: "/query?test=test%20data%C3%A9", method: .POST) { response in
                 var body = try XCTUnwrap(response.body)
@@ -155,11 +155,11 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testMultipleQueriesRoute() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router.post("/add") { request -> String in
             return request.uri.queryParameters.getAll("value", as: Int.self).reduce(0,+).description
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
 
             try await client.XCTExecute(uri: "/add?value=3&value=45&value=7", method: .POST) { response in
                 var body = try XCTUnwrap(response.body)
@@ -171,11 +171,11 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testArray() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router.get("array") { _ -> [String] in
             return ["yes", "no"]
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
 
             try await client.XCTExecute(uri: "/array", method: .GET) { response in
                 let body = try XCTUnwrap(response.body)
@@ -185,11 +185,11 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testEventLoopFutureArray() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router.patch("array") { request -> EventLoopFuture<[String]> in
             return request.success(["yes", "no"])
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
 
             try await client.XCTExecute(uri: "/array", method: .PATCH) { response in
                 let body = try XCTUnwrap(response.body)
@@ -199,14 +199,14 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testResponseBody() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router
             .group("/echo-body")
             .post { request -> HBResponse in
                 let body: HBResponseBody = request.body.buffer.map { .byteBuffer($0) } ?? .empty
                 return .init(status: .ok, headers: [:], body: body)
             }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
 
             let buffer = self.randomBuffer(size: 1_140_000)
             try await client.XCTExecute(uri: "/echo-body", method: .POST, body: buffer) { response in
@@ -217,7 +217,7 @@ final class ApplicationTests: XCTestCase {
 
     /// Test streaming of requests and streaming of responses by streaming the request body into a response streamer
     func testStreaming() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router.post("streaming", options: .streamBody) { request -> HBResponse in
             guard let stream = request.body.stream else { throw HBHTTPError(.badRequest) }
             struct RequestStreamer: HBResponseBodyStreamer {
@@ -248,7 +248,7 @@ final class ApplicationTests: XCTestCase {
             .map { _ in size.load(ordering: .relaxed).description }
         }
 
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
 
             let buffer = self.randomBuffer(size: 640_001)
             try await client.XCTExecute(uri: "/streaming", method: .POST, body: buffer) { response in
@@ -267,7 +267,7 @@ final class ApplicationTests: XCTestCase {
 
     /// Test streaming of requests and streaming of responses by streaming the request body into a response streamer
     func testStreamingSmallBuffer() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router.post("streaming", options: .streamBody) { request -> HBResponse in
             guard let stream = request.body.stream else { throw HBHTTPError(.badRequest) }
             struct RequestStreamer: HBResponseBodyStreamer {
@@ -286,7 +286,7 @@ final class ApplicationTests: XCTestCase {
             }
             return HBResponse(status: .ok, headers: [:], body: .stream(RequestStreamer(stream: stream)))
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
 
             let buffer = self.randomBuffer(size: 64)
             try await client.XCTExecute(uri: "/streaming", method: .POST, body: buffer) { response in
@@ -308,12 +308,12 @@ final class ApplicationTests: XCTestCase {
                 }
             }
         }
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.middleware.add(CollateMiddleware())
         app.router.put("/hello") { _ -> HTTPResponseStatus in
             return .ok
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
 
             let buffer = self.randomBuffer(size: 512_000)
             try await client.XCTExecute(uri: "/hello", method: .PUT, body: buffer) { response in
@@ -323,13 +323,13 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testOptional() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router
             .group("/echo-body")
             .post { request -> ByteBuffer? in
                 return request.body.buffer
             }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
 
             let buffer = self.randomBuffer(size: 64)
             try await client.XCTExecute(uri: "/echo-body", method: .POST, body: buffer) { response in
@@ -343,13 +343,13 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testELFOptional() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router
             .group("/echo-body")
             .post { request -> EventLoopFuture<ByteBuffer?> in
                 return request.success(request.body.buffer)
             }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
 
             let buffer = self.randomBuffer(size: 64)
             try await client.XCTExecute(uri: "/echo-body", method: .POST, body: buffer) { response in
@@ -367,13 +367,13 @@ final class ApplicationTests: XCTestCase {
             let first: String
             let last: String
         }
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router
             .group("/name")
             .patch { _ -> Name? in
                 return Name(first: "john", last: "smith")
             }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
 
             try await client.XCTExecute(uri: "/name", method: .PATCH) { response in
                 let body = try XCTUnwrap(response.body)
@@ -383,14 +383,14 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testEditResponse() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router.delete("/hello", options: .editResponse) { request -> String in
             request.response.headers.add(name: "test", value: "value")
             request.response.headers.replaceOrAdd(name: "content-type", value: "application/json")
             request.response.status = .imATeapot
             return "Hello"
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
 
             try await client.XCTExecute(uri: "/hello", method: .DELETE) { response in
                 var body = try XCTUnwrap(response.body)
@@ -405,14 +405,14 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testEditResponseFuture() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router.delete("/hello", options: .editResponse) { request -> EventLoopFuture<String> in
             request.response.headers.add(name: "test", value: "value")
             request.response.headers.replaceOrAdd(name: "content-type", value: "application/json")
             request.response.status = .imATeapot
             return request.success("Hello")
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
 
             try await client.XCTExecute(uri: "/hello", method: .DELETE) { response in
                 var body = try XCTUnwrap(response.body)
@@ -427,14 +427,14 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testMaxUploadSize() async throws {
-        let app = HBApplication(testing: .live, configuration: .init(maxUploadSize: 64 * 1024))
+        let app = HBApplicationBuilder(configuration: .init(maxUploadSize: 64 * 1024))
         app.router.post("upload") { _ in
             "ok"
         }
         app.router.post("stream", options: .streamBody) { _ in
             "ok"
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.live) { client in
             let buffer = self.randomBuffer(size: 128 * 1024)
             // check non streamed route throws an error
             try await client.XCTExecute(uri: "/upload", method: .POST, body: buffer) { response in
@@ -448,7 +448,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testRemoteAddress() async throws {
-        let app = HBApplication(testing: .live)
+        let app = HBApplicationBuilder()
         app.router.get("/") { request -> String in
             switch request.remoteAddress {
             case .v4(let address):
@@ -459,7 +459,7 @@ final class ApplicationTests: XCTestCase {
                 throw HBHTTPError(.internalServerError)
             }
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.live) { client in
 
             try await client.XCTExecute(uri: "/", method: .GET) { response in
                 XCTAssertEqual(response.status, .ok)
