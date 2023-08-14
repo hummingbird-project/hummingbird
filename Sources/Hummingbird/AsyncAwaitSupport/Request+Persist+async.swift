@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -20,7 +20,7 @@ extension HBPersistDriver {
     ///   - value: Codable value to store
     ///   - expires: If non-nil defines time that value will expire
     ///   - request: Request making this call
-    func create<Object: Codable>(key: String, value: Object, expires: TimeAmount?, request: HBRequest) async throws {
+    public func create<Object: Codable>(key: String, value: Object, expires: TimeAmount? = nil, request: HBRequest) async throws {
         try await self.create(key: key, value: value, expires: expires, request: request).get()
     }
 
@@ -30,7 +30,7 @@ extension HBPersistDriver {
     ///   - value: Codable value to store
     ///   - expires: If non-nil defines time that value will expire
     ///   - request: Request making this call
-    func set<Object: Codable>(key: String, value: Object, expires: TimeAmount?, request: HBRequest) async throws {
+    public func set<Object: Codable>(key: String, value: Object, expires: TimeAmount? = nil, request: HBRequest) async throws {
         try await self.set(key: key, value: value, expires: expires, request: request).get()
     }
 
@@ -39,7 +39,7 @@ extension HBPersistDriver {
     ///   - key: Key used to look for value
     ///   - as: Type you want value to be returned as. If it cannot be returned as this value then nil will be returned
     ///   - request: Request making this call
-    func get<Object: Codable>(key: String, as type: Object.Type, request: HBRequest) async throws -> Object? {
+    public func get<Object: Codable>(key: String, as type: Object.Type, request: HBRequest) async throws -> Object? {
         try await self.get(key: key, as: type, request: request).get()
     }
 
@@ -47,7 +47,7 @@ extension HBPersistDriver {
     /// - Parameters:
     ///   - key: Key used to look for value
     ///   - request: Request making this call
-    func remove(key: String, request: HBRequest) async throws {
+    public func remove(key: String, request: HBRequest) async throws {
         try await self.remove(key: key, request: request).get()
     }
 }
