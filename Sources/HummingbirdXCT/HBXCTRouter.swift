@@ -29,7 +29,6 @@ struct HBXCTRouter: HBXCTApplication {
     let responder: HBResponder
 
     init(builder: HBApplicationBuilder) {
-        let threadPool = NIOThreadPool(numberOfThreads: builder.configuration.threadPoolSize)
         self.context = HBApplication.Context(
             eventLoopGroup: builder.eventLoopGroup,
             threadPool: builder.threadPool,

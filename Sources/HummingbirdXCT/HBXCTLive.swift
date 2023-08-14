@@ -43,7 +43,7 @@ final class HBXCTLive: HBXCTApplication {
     }
 
     init(builder: HBApplicationBuilder) {
-        var builder = builder
+        let builder = builder
         let promise = Promise<Int>()
         builder.onServerRunning = { channel in
             await promise.complete(channel.localAddress!.port!)
