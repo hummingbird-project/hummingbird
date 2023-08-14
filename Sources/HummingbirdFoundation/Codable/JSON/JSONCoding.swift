@@ -17,7 +17,7 @@
 import Hummingbird
 import NIOFoundationCompat
 
-extension JSONEncoder: HBResponseEncoder {
+extension JSONEncoder: HBResponseEncoder, @unchecked Sendable {
     /// Extend JSONEncoder to support encoding `HBResponse`'s. Sets body and header values
     /// - Parameters:
     ///   - value: Value to encode
@@ -34,7 +34,7 @@ extension JSONEncoder: HBResponseEncoder {
     }
 }
 
-extension JSONDecoder: HBRequestDecoder {
+extension JSONDecoder: HBRequestDecoder, @unchecked Sendable {
     /// Extend JSONDecoder to decode from `HBRequest`.
     /// - Parameters:
     ///   - type: Type to decode
