@@ -61,8 +61,8 @@ final class TracingTests: XCTestCase {
             "http.target": "/users/42",
             "http.status_code": 200,
             "http.response_content_length": 2,
-            "net.host.name": "localhost",
-            "net.host.port": 0,
+            "net.host.name": "127.0.0.1",
+            "net.host.port": 8080,
             "http.flavor": "1.1",
         ])
     }
@@ -102,8 +102,8 @@ final class TracingTests: XCTestCase {
             "http.target": "/users",
             "http.status_code": 500,
             "http.request_content_length": 2,
-            "net.host.name": "localhost",
-            "net.host.port": 0,
+            "net.host.name": "127.0.0.1",
+            "net.host.port": 8080,
             "http.flavor": "1.1",
         ])
     }
@@ -156,8 +156,8 @@ final class TracingTests: XCTestCase {
             "http.target": "/users/42",
             "http.status_code": 200,
             "http.response_content_length": 2,
-            "net.host.name": "localhost",
-            "net.host.port": 0,
+            "net.host.name": "127.0.0.1",
+            "net.host.port": 8080,
             "http.flavor": "1.1",
             "http.request.header.accept": .stringArray(["text/plain", "application/json"]),
             "http.request.header.cache_control": "no-cache",
@@ -197,8 +197,8 @@ final class TracingTests: XCTestCase {
             "http.method": "POST",
             "http.target": "/users",
             "http.status_code": 204,
-            "net.host.name": "localhost",
-            "net.host.port": 0,
+            "net.host.name": "127.0.0.1",
+            "net.host.port": 8080,
             "http.flavor": "1.1",
         ])
     }
@@ -234,8 +234,8 @@ final class TracingTests: XCTestCase {
             "http.method": "GET",
             "http.target": "/",
             "http.status_code": 200,
-            "net.host.name": "localhost",
-            "net.host.port": 0,
+            "net.host.name": "127.0.0.1",
+            "net.host.port": 8080,
             "http.flavor": "1.1",
         ])
     }
@@ -270,8 +270,8 @@ final class TracingTests: XCTestCase {
             "http.method": "GET",
             "http.target": "/",
             "http.status_code": 404,
-            "net.host.name": "localhost",
-            "net.host.port": 0,
+            "net.host.name": "127.0.0.1",
+            "net.host.port": 8080,
             "http.flavor": "1.1",
         ])
     }
