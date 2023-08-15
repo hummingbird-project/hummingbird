@@ -35,7 +35,7 @@ class HummingbirdFilesTests: XCTestCase {
 
     func testRead() async throws {
         let app = HBApplicationBuilder()
-        app.middleware.add(HBFileMiddleware(".", application: app))
+        app.middleware.add(HBFileMiddleware(".", threadPool: app.threadPool, logger: app.logger))
 
         let text = "Test file contents"
         let data = Data(text.utf8)
@@ -54,7 +54,7 @@ class HummingbirdFilesTests: XCTestCase {
 
     func testReadLargeFile() async throws {
         let app = HBApplicationBuilder()
-        app.middleware.add(HBFileMiddleware(".", application: app))
+        app.middleware.add(HBFileMiddleware(".", threadPool: app.threadPool, logger: app.logger))
 
         let buffer = self.randomBuffer(size: 380_000)
         let data = Data(buffer: buffer)
@@ -72,7 +72,7 @@ class HummingbirdFilesTests: XCTestCase {
 
     func testReadRange() async throws {
         let app = HBApplicationBuilder()
-        app.middleware.add(HBFileMiddleware(".", application: app))
+        app.middleware.add(HBFileMiddleware(".", threadPool: app.threadPool, logger: app.logger))
 
         let buffer = self.randomBuffer(size: 326_000)
         let data = Data(buffer: buffer)
@@ -116,7 +116,7 @@ class HummingbirdFilesTests: XCTestCase {
 
     func testIfRangeRead() async throws {
         let app = HBApplicationBuilder()
-        app.middleware.add(HBFileMiddleware(".", application: app))
+        app.middleware.add(HBFileMiddleware(".", threadPool: app.threadPool, logger: app.logger))
 
         let buffer = self.randomBuffer(size: 10000)
         let data = Data(buffer: buffer)
@@ -151,7 +151,7 @@ class HummingbirdFilesTests: XCTestCase {
 
     func testHead() async throws {
         let app = HBApplicationBuilder()
-        app.middleware.add(HBFileMiddleware(".", application: app))
+        app.middleware.add(HBFileMiddleware(".", threadPool: app.threadPool, logger: app.logger))
 
         let date = Date()
         let text = "Test file contents"
@@ -174,7 +174,7 @@ class HummingbirdFilesTests: XCTestCase {
 
     func testETag() async throws {
         let app = HBApplicationBuilder()
-        app.middleware.add(HBFileMiddleware(".", application: app))
+        app.middleware.add(HBFileMiddleware(".", threadPool: app.threadPool, logger: app.logger))
 
         let buffer = self.randomBuffer(size: 16200)
         let data = Data(buffer: buffer)
@@ -195,7 +195,7 @@ class HummingbirdFilesTests: XCTestCase {
 
     func testIfNoneMatch() async throws {
         let app = HBApplicationBuilder()
-        app.middleware.add(HBFileMiddleware(".", application: app))
+        app.middleware.add(HBFileMiddleware(".", threadPool: app.threadPool, logger: app.logger))
 
         let buffer = self.randomBuffer(size: 16200)
         let data = Data(buffer: buffer)
@@ -223,7 +223,7 @@ class HummingbirdFilesTests: XCTestCase {
 
     func testIfModifiedSince() async throws {
         let app = HBApplicationBuilder()
-        app.middleware.add(HBFileMiddleware(".", application: app))
+        app.middleware.add(HBFileMiddleware(".", threadPool: app.threadPool, logger: app.logger))
 
         let buffer = self.randomBuffer(size: 16200)
         let data = Data(buffer: buffer)
@@ -252,7 +252,7 @@ class HummingbirdFilesTests: XCTestCase {
             (.text, [.maxAge(60 * 60 * 24 * 30)]),
             (.imageJpeg, [.maxAge(60 * 60 * 24 * 30), .private]),
         ])
-        app.middleware.add(HBFileMiddleware(".", cacheControl: cacheControl, application: app))
+        app.middleware.add(HBFileMiddleware(".", cacheControl: cacheControl, threadPool: app.threadPool, logger: app.logger))
 
         let text = "Test file contents"
         let data = Data(text.utf8)
@@ -275,7 +275,7 @@ class HummingbirdFilesTests: XCTestCase {
 
     func testIndexHtml() async throws {
         let app = HBApplicationBuilder()
-        app.middleware.add(HBFileMiddleware(".", searchForIndexHtml: true, application: app))
+        app.middleware.add(HBFileMiddleware(".", searchForIndexHtml: true, threadPool: app.threadPool, logger: app.logger))
 
         let text = "Test file contents"
         let data = Data(text.utf8)

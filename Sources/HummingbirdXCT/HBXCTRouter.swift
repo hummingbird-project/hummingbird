@@ -41,15 +41,16 @@ struct HBXCTRouter: HBXCTApplication {
         self.responder = builder.router.buildRouter()
     }
 
-    func shutdown() throws {
-        try self.context.threadPool.syncShutdownGracefully()
+    func shutdown() async throws {
+        try await self.context.threadPool.shutdownGracefully()
     }
 
     /// Run test
-    func run(_ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Void) async throws {
+    func run<Value>(_ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Value) async throws -> Value {
         let client = Client(eventLoopGroup: self.eventLoopGroup, responder: self.responder, applicationContext: self.context)
-        try await test(client)
-        try self.shutdown()
+        let value = try await test(client)
+        try await self.shutdown()
+        return value
     }
 
     /// HBXCTRouter client. Constructs an `HBRequest` sends it to the router and then converts

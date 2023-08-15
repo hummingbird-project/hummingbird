@@ -43,7 +43,7 @@ final class HBXCTLive: HBXCTApplication {
     }
 
     init(builder: HBApplicationBuilder) {
-        let builder = builder
+        builder.configuration = builder.configuration.with(address: .hostname("localhost", port: 0))
         let promise = Promise<Int>()
         builder.onServerRunning = { channel in
             await promise.complete(channel.localAddress!.port!)
@@ -54,7 +54,7 @@ final class HBXCTLive: HBXCTApplication {
     }
 
     /// Start tests
-    func run(_ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Void) async throws {
+    func run<Value>(_ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Value) async throws -> Value {
         try await withThrowingTaskGroup(of: Void.self) { group in
             let serviceGroup = ServiceGroup(
                 services: [self.application],
@@ -72,12 +72,10 @@ final class HBXCTLive: HBXCTApplication {
                 eventLoopGroupProvider: .createNew
             )
             client.connect()
-            group.addTask {
-                _ = try await test(Client(client: client))
-            }
-            try await group.next()
+            let value = try await test(Client(client: client))
             await serviceGroup.triggerGracefulShutdown()
             try await client.shutdown()
+            return value
         }
     }
 

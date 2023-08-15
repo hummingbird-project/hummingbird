@@ -53,7 +53,7 @@ public final class HBApplicationBuilder {
     /// routes requests to requestResponders based on URI
     public let router: HBRouterBuilder
     /// Configuration
-    public let configuration: HBApplication.Configuration
+    public var configuration: HBApplication.Configuration
     /// Logger. Required to be a var by hummingbird-lambda
     public var logger: Logger
     /// Encoder used by router

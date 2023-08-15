@@ -54,7 +54,10 @@ extension HBApplicationBuilder {
     /// - Parameters:
     ///   - testing: indicates which type of testing framework we want
     ///   - configuration: configuration of application
-    __consuming public func buildAndTest(_ testing: XCTTestingSetup, _ test: @escaping @Sendable (any HBXCTClientProtocol) async throws -> Void) async throws {
+    __consuming public func buildAndTest<Value>(
+        _ testing: XCTTestingSetup,
+        _ test: @escaping @Sendable (any HBXCTClientProtocol) async throws -> Value
+    ) async throws -> Value {
         let app: any HBXCTApplication
         switch testing {
         case .router:
@@ -62,6 +65,6 @@ extension HBApplicationBuilder {
         case .live:
             app = HBXCTLive(builder: self)
         }
-        try await app.run(test)
+        return try await app.run(test)
     }
 }

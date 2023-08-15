@@ -84,5 +84,5 @@ public protocol HBXCTApplication {
     associatedtype Client: HBXCTClientProtocol
 
     /// Run XCT server
-    func run(_ test: @escaping @Sendable (any HBXCTClientProtocol) async throws -> Void) async throws
+    func run<Value>(_ test: @escaping @Sendable (any HBXCTClientProtocol) async throws -> Value) async throws -> Value
 }
