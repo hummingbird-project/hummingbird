@@ -26,7 +26,7 @@ public enum XCTTestingSetup {
 
 /// Extends `HBApplicationBuilder` to support testing of applications
 ///
-/// You use `buildAndTest` and `XCTExecute` to run test applications. You can either create an
+/// You use `buildAndTest` and `XCTExecute` to test applications. You can either create an
 /// `.router` application which send request directly to the router for testing your code or a
 /// `.live` application. A `.router` application test is quicker and doesn't require setting up
 /// a full server but will only test code run from request generation onwards.
@@ -39,7 +39,7 @@ public enum XCTTestingSetup {
 /// }
 /// app.buildAndTest(.router) { client in
 ///     // does my app return "hello" in the body for this route
-///     app.XCTExecute(uri: "/hello", method: .GET) { response in
+///     client.XCTExecute(uri: "/hello", method: .GET) { response in
 ///         let body = try XCTUnwrap(response.body)
 ///         XCTAssertEqual(String(buffer: body, "hello")
 ///     }
