@@ -111,7 +111,7 @@ public final class HBApplicationBuilder {
 
     // MARK: Methods
 
-    __consuming public func build() -> HBApplication {
+    public func build() -> HBApplication {
         return .init(builder: self)
     }
 

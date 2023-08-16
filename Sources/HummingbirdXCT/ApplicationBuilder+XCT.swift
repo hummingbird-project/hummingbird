@@ -54,7 +54,7 @@ extension HBApplicationBuilder {
     /// - Parameters:
     ///   - testing: indicates which type of testing framework we want
     ///   - configuration: configuration of application
-    __consuming public func buildAndTest<Value>(
+    public func buildAndTest<Value>(
         _ testing: XCTTestingSetup,
         _ test: @escaping @Sendable (any HBXCTClientProtocol) async throws -> Value
     ) async throws -> Value {
