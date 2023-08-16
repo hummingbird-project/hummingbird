@@ -24,26 +24,25 @@ public enum XCTTestingSetup {
     case router
 }
 
-/// Extends `HBApplication` to support testing of applications
+/// Extends `HBApplicationBuilder` to support testing of applications
 ///
-/// You use `XCTStart`, `XCTStop` and `XCTExecute` to run test applications. You can either create an
-/// "embedded" application which uses the `EmbeddedChannel` for testing your code or a "live" application.
-/// An "embedded" application test is quicker and doesn't require setting up a full server but if you code is reliant
-/// on multi-threading it will fail. In that situation you should use a "live" application which will setup a local server.
+/// You use `buildAndTest` and `XCTExecute` to run test applications. You can either create an
+/// `.router` application which send request directly to the router for testing your code or a
+/// `.live` application. A `.router` application test is quicker and doesn't require setting up
+/// a full server but will only test code run from request generation onwards.
 ///
-/// The example below is using the `.embedded` framework to test
+/// The example below is using the `.router` framework to test
 /// ```
-/// let app = HBApplication(testing: .embedded)
+/// let app = HBApplicationBuilder()
 /// app.router.get("/hello") { _ in
 ///     return "hello"
 /// }
-/// app.XCTStart()
-/// defer { app.XCTStop() }
-///
-/// // does my app return "hello" in the body for this route
-/// app.XCTExecute(uri: "/hello", method: .GET) { response in
-///     let body = try XCTUnwrap(response.body)
-///     XCTAssertEqual(String(buffer: body, "hello")
+/// app.buildAndTest(.router) { client in
+///     // does my app return "hello" in the body for this route
+///     app.XCTExecute(uri: "/hello", method: .GET) { response in
+///         let body = try XCTUnwrap(response.body)
+///         XCTAssertEqual(String(buffer: body, "hello")
+///     }
 /// }
 /// ```
 extension HBApplicationBuilder {
