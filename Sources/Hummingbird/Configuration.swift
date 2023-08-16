@@ -41,7 +41,7 @@ extension HBApplication {
     }
 
     /// Application configuration
-    public struct Configuration {
+    public struct Configuration: Sendable {
         // MARK: Member variables
 
         /// Bind address for server

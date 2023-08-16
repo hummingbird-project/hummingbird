@@ -117,21 +117,5 @@ extension HBJobQueue {
     }
 }
 
-/// Factory class for Job Queue drivers
-public struct HBJobQueueFactory {
-    let create: (HBApplication) -> HBJobQueue
-
-    /// Initialize HBJobQueueFactory
-    /// - Parameter create: Job Queue factory function
-    public init(create: @escaping (HBApplication) -> HBJobQueue) {
-        self.create = create
-    }
-
-    /// In memory driver for Job Queue system
-    public static var memory: HBJobQueueFactory {
-        .init(create: { app in HBMemoryJobQueue(eventLoop: app.eventLoopGroup.next()) })
-    }
-}
-
 /// Error type for when a job queue is being shutdown
 struct HBJobQueueShutdownError: Error {}

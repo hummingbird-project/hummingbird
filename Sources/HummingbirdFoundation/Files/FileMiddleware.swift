@@ -14,6 +14,7 @@
 
 import Foundation
 import Hummingbird
+import Logging
 import NIOCore
 import NIOPosix
 
@@ -44,11 +45,12 @@ public struct HBFileMiddleware: HBMiddleware {
         _ rootFolder: String = "public",
         cacheControl: HBCacheControl = .init([]),
         searchForIndexHtml: Bool = false,
-        application: HBApplication
+        threadPool: NIOThreadPool,
+        logger: Logger
     ) {
         self.rootFolder = URL(fileURLWithPath: rootFolder)
-        self.threadPool = application.threadPool
-        self.fileIO = .init(application: application)
+        self.threadPool = threadPool
+        self.fileIO = .init(threadPool: threadPool)
         self.cacheControl = cacheControl
         self.searchForIndexHtml = searchForIndexHtml
 
@@ -63,7 +65,7 @@ public struct HBFileMiddleware: HBMiddleware {
                 workingFolder = "./"
             }
         }
-        application.logger.info("FileMiddleware serving from \(workingFolder)\(rootFolder)")
+        logger.info("FileMiddleware serving from \(workingFolder)\(rootFolder)")
     }
 
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {

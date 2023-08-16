@@ -27,9 +27,9 @@ class HummingbirdAsyncFilesTests: XCTestCase {
     }
 
     func testRead() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router.get("test.jpg") { request -> HBResponse in
-            let fileIO = HBFileIO(application: request.application)
+            let fileIO = HBFileIO(threadPool: request.applicationContext.threadPool)
             let body = try await fileIO.loadFile(path: "test.jpg", context: request.context, logger: request.logger)
             return .init(status: .ok, headers: [:], body: body)
         }
@@ -39,7 +39,7 @@ class HummingbirdAsyncFilesTests: XCTestCase {
         XCTAssertNoThrow(try data.write(to: fileURL))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/test.jpg", method: .GET) { response in
                 XCTAssertEqual(response.body, buffer)
             }
@@ -48,9 +48,9 @@ class HummingbirdAsyncFilesTests: XCTestCase {
 
     func testWrite() async throws {
         let filename = "testWrite.txt"
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router.put("store") { request -> HTTPResponseStatus in
-            let fileIO = HBFileIO(application: request.application)
+            let fileIO = HBFileIO(threadPool: request.applicationContext.threadPool)
             try await fileIO.writeFile(
                 contents: request.body,
                 path: filename,
@@ -60,7 +60,7 @@ class HummingbirdAsyncFilesTests: XCTestCase {
             return .ok
         }
 
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             let buffer = ByteBufferAllocator().buffer(string: "This is a test")
             try await client.XCTExecute(uri: "/store", method: .PUT, body: buffer) { response in
                 XCTAssertEqual(response.status, .ok)

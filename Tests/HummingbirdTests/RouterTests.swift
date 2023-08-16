@@ -42,11 +42,11 @@ final class RouterTests: XCTestCase {
             }
         }
 
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.middleware.add(TestEndpointMiddleware())
         app.router.get("/test/:number") { _ in return "xxx" }
 
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/test/1", method: .GET) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "/test/:number")
@@ -63,7 +63,7 @@ final class RouterTests: XCTestCase {
             }
         }
 
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.middleware.add(TestEndpointMiddleware())
         app.router.get("test") {
             $0.endpointPath
@@ -75,7 +75,7 @@ final class RouterTests: XCTestCase {
             $0.endpointPath
         }
 
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/", method: .GET) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "/")
@@ -100,7 +100,7 @@ final class RouterTests: XCTestCase {
             }
         }
 
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.middleware.add(TestEndpointMiddleware())
         app.router.get("test/") {
             $0.endpointPath
@@ -118,7 +118,7 @@ final class RouterTests: XCTestCase {
             .get("/") {
                 $0.endpointPath
             }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/test/", method: .GET) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "/test")
@@ -143,7 +143,7 @@ final class RouterTests: XCTestCase {
 
     /// Test correct endpoints are called from group
     func testMethodEndpoint() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router
             .group("/endpoint")
             .get { _ in
@@ -152,7 +152,7 @@ final class RouterTests: XCTestCase {
             .put { _ in
                 return "PUT"
             }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/endpoint", method: .GET) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "GET")
@@ -168,7 +168,7 @@ final class RouterTests: XCTestCase {
     /// Test middle in group is applied to group but not to routes outside
     /// group
     func testGroupMiddleware() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router
             .group()
             .add(middleware: TestMiddleware())
@@ -178,7 +178,7 @@ final class RouterTests: XCTestCase {
         app.router.get("/not-group") { _ in
             return "hello"
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/group", method: .GET) { response in
                 XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
             }
@@ -190,14 +190,14 @@ final class RouterTests: XCTestCase {
     }
 
     func testEndpointMiddleware() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router
             .group("/group")
             .add(middleware: TestMiddleware())
             .head { _ in
                 return "hello"
             }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/group", method: .HEAD) { response in
                 XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
             }
@@ -206,7 +206,7 @@ final class RouterTests: XCTestCase {
 
     /// Test middleware in parent group is applied to routes in child group
     func testGroupGroupMiddleware() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router
             .group("/test")
             .add(middleware: TestMiddleware())
@@ -214,7 +214,7 @@ final class RouterTests: XCTestCase {
             .get { request in
                 return request.success("hello")
             }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/test/group", method: .GET) { response in
                 XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
             }
@@ -233,7 +233,7 @@ final class RouterTests: XCTestCase {
             }
         }
 
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router
             .group("/test")
             .add(middleware: TestGroupMiddleware(output: "route1"))
@@ -245,7 +245,7 @@ final class RouterTests: XCTestCase {
             .get { request in
                 return request.success(request.string)
             }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/test/group", method: .GET) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "route2")
@@ -258,12 +258,12 @@ final class RouterTests: XCTestCase {
     }
 
     func testParameters() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router
             .delete("/user/:id") { request -> String? in
                 return request.parameters.get("id", as: String.self)
             }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/user/1234", method: .DELETE) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "1234")
@@ -272,13 +272,13 @@ final class RouterTests: XCTestCase {
     }
 
     func testParameterCollection() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router
             .delete("/user/:username/:id") { request -> String? in
                 XCTAssertEqual(request.parameters.count, 2)
                 return request.parameters.get("id", as: String.self)
             }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/user/john/1234", method: .DELETE) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "1234")
@@ -287,7 +287,7 @@ final class RouterTests: XCTestCase {
     }
 
     func testPartialCapture() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router
             .get("/files/file.${ext}/${name}.jpg") { request -> String in
                 XCTAssertEqual(request.parameters.count, 2)
@@ -295,7 +295,7 @@ final class RouterTests: XCTestCase {
                 let name = try request.parameters.require("name")
                 return "\(name).\(ext)"
             }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/files/file.doc/test.jpg", method: .GET) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "test.doc")
@@ -304,12 +304,12 @@ final class RouterTests: XCTestCase {
     }
 
     func testPartialWildcard() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router
             .get("/files/file.*/*.jpg") { _ -> HTTPResponseStatus in
                 return .ok
             }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/files/file.doc/test.jpg", method: .GET) { response in
                 XCTAssertEqual(response.status, .ok)
             }
@@ -321,9 +321,9 @@ final class RouterTests: XCTestCase {
 
     /// Test we have a request id and that it increments with each request
     func testRequestId() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router.get("id") { $0.id }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             let idString = try await client.XCTExecute(uri: "/id", method: .GET) { response -> String in
                 let body = try XCTUnwrap(response.body)
                 return String(buffer: body)
@@ -339,11 +339,11 @@ final class RouterTests: XCTestCase {
 
     // Test redirect response
     func testRedirect() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router.get("redirect") { _ in
             return HBResponse.redirect(to: "/other")
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/redirect", method: .GET) { response in
                 XCTAssertEqual(response.headers["location"].first, "/other")
                 XCTAssertEqual(response.status, .seeOther)

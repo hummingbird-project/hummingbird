@@ -18,25 +18,9 @@ import NIOCore
 import NIOHTTP1
 
 extension HBApplication {
-    // MARK: HTTPResponder
-
-    /// HTTP responder class for Hummingbird. This is the interface between Hummingbird and HummingbirdCore
-    ///
-    /// The HummingbirdCore server calls `respond` to get the HTTP response from Hummingbird
-    public struct HTTPResponder: HBHTTPResponder {
-        let application: HBApplication
+    struct Responder: HBHTTPResponder {
         let responder: HBResponder
-
-        /// Construct HTTP responder
-        /// - Parameter application: application creating this responder
-        public init(application: HBApplication) {
-            self.application = application
-            // application responder has been set for sure
-            self.responder = application.constructResponder()
-        }
-
-        /// Logger used by responder
-        public var logger: Logger { return self.application.logger }
+        let applicationContext: HBApplication.Context
 
         /// Return EventLoopFuture that will be fulfilled with the HTTP response for the supplied HTTP request
         /// - Parameters:
@@ -47,7 +31,7 @@ extension HBApplication {
             let request = HBRequest(
                 head: request.head,
                 body: request.body,
-                application: self.application,
+                applicationContext: self.applicationContext,
                 context: ChannelRequestContext(channel: context.channel)
             )
             let httpVersion = request.version

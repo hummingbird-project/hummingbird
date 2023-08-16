@@ -25,8 +25,8 @@ public struct HBFileIO {
 
     /// Initialize FileIO
     /// - Parameter application: application using FileIO
-    public init(application: HBApplication) {
-        self.fileIO = .init(threadPool: application.threadPool)
+    public init(threadPool: NIOThreadPool) {
+        self.fileIO = .init(threadPool: threadPool)
         self.chunkSize = NonBlockingFileIO.defaultChunkSize
     }
 

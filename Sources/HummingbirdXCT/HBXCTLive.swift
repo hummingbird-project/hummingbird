@@ -22,7 +22,7 @@ import ServiceLifecycle
 import XCTest
 
 /// Test using a live server
-final class HBXCTLive: HBXCT {
+final class HBXCTLive: HBXCTApplication {
     struct Client: HBXCTClientProtocol {
         let client: HBXCTClient
 
@@ -42,23 +42,24 @@ final class HBXCTLive: HBXCT {
         }
     }
 
-    init(configuration: HBApplication.Configuration, timeout: TimeAmount) {
-        self.timeout = timeout
-        self.promise = .init()
-        #if os(iOS)
-        self.eventLoopGroup = NIOTSEventLoopGroup()
-        #else
-        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-        #endif
+    init(builder: HBApplicationBuilder) {
+        builder.configuration = builder.configuration.with(address: .hostname("localhost", port: 0))
+        let promise = Promise<Int>()
+        builder.onServerRunning = { channel in
+            await promise.complete(channel.localAddress!.port!)
+        }
+        self.timeout = .seconds(15)
+        self.promise = promise
+        self.application = builder.build()
     }
 
     /// Start tests
-    func run(application: HBApplication, _ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Void) async throws {
+    func run<Value>(_ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Value) async throws -> Value {
         try await withThrowingTaskGroup(of: Void.self) { group in
             let serviceGroup = ServiceGroup(
-                services: [application],
+                services: [self.application],
                 configuration: .init(gracefulShutdownSignals: [.sigterm, .sigint]),
-                logger: application.logger
+                logger: self.application.context.logger
             )
             group.addTask {
                 try await serviceGroup.run()
@@ -71,12 +72,10 @@ final class HBXCTLive: HBXCT {
                 eventLoopGroupProvider: .createNew
             )
             client.connect()
-            group.addTask {
-                _ = try await test(Client(client: client))
-            }
-            try await group.next()
+            let value = try await test(Client(client: client))
             await serviceGroup.triggerGracefulShutdown()
             try await client.shutdown()
+            return value
         }
     }
 
@@ -84,7 +83,7 @@ final class HBXCTLive: HBXCT {
         await self.promise.complete(channel.localAddress!.port!)
     }
 
-    let eventLoopGroup: EventLoopGroup
+    let application: HBApplication
     let promise: Promise<Int>
     let timeout: TimeAmount
 }

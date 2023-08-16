@@ -28,11 +28,11 @@ final class HandlerTests: XCTestCase {
             }
         }
 
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.decoder = JSONDecoder()
         app.router.post("/hello", use: DecodeTest.self)
 
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             let body = ByteBufferAllocator().buffer(string: #"{"foo": "bar"}"#)
 
             try await client.XCTExecute(
@@ -57,11 +57,11 @@ final class HandlerTests: XCTestCase {
             }
         }
 
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.decoder = JSONDecoder()
         app.router.post("/hello", use: DecodeTest.self)
 
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             let body = ByteBufferAllocator().buffer(string: #"{"value": "bar"}"#)
 
             try await client.XCTExecute(
@@ -86,11 +86,11 @@ final class HandlerTests: XCTestCase {
             }
         }
 
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.decoder = JSONDecoder()
         app.router.post("/hello", use: DecodeTest.self)
 
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             let body = ByteBufferAllocator().buffer(string: #"{"name": null}"#)
 
             try await client.XCTExecute(
@@ -120,11 +120,11 @@ final class HandlerTests: XCTestCase {
             }
         }
 
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.decoder = JSONDecoder()
         app.router.post("/hello", use: DecodeTest.self)
 
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             let body = ByteBufferAllocator().buffer(string: #"{invalid}"#)
 
             try await client.XCTExecute(
@@ -147,11 +147,11 @@ final class HandlerTests: XCTestCase {
                 return "Hello \(self.name)"
             }
         }
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.decoder = JSONDecoder()
         app.router.post("/hello", use: DecodeTest.self)
 
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
 
             try await client.XCTExecute(uri: "/hello", method: .POST, body: ByteBufferAllocator().buffer(string: #"{"name": "Adam"}"#)) { response in
                 let body = try XCTUnwrap(response.body)
@@ -167,11 +167,11 @@ final class HandlerTests: XCTestCase {
                 return request.success("Hello \(self.name)")
             }
         }
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.decoder = JSONDecoder()
         app.router.put("/hello", use: DecodeTest.self)
 
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
 
             try await client.XCTExecute(uri: "/hello", method: .PUT, body: ByteBufferAllocator().buffer(string: #"{"name": "Adam"}"#)) { response in
                 let body = try XCTUnwrap(response.body)
@@ -187,11 +187,11 @@ final class HandlerTests: XCTestCase {
                 return .ok
             }
         }
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.decoder = JSONDecoder()
         app.router.get("/hello", use: DecodeTest.self)
 
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/hello", method: .GET, body: ByteBufferAllocator().buffer(string: #"{"name2": "Adam"}"#)) { response in
                 XCTAssertEqual(response.status, .badRequest)
             }
@@ -210,10 +210,10 @@ final class HandlerTests: XCTestCase {
             }
         }
 
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.router.put("/:test", use: ParameterTest.self)
 
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
 
             try await client.XCTExecute(uri: "/23", method: .PUT) { response in
                 let body = try XCTUnwrap(response.body)

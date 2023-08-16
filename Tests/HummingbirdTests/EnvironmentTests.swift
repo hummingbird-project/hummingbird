@@ -43,7 +43,7 @@ final class EnvironmentTests: XCTestCase {
 
     func testLogLevel() {
         setenv("LOG_LEVEL", "trace", 1)
-        let app = HBApplication()
+        let app = HBApplicationBuilder()
         XCTAssertEqual(app.logger.logLevel, .trace)
     }
 

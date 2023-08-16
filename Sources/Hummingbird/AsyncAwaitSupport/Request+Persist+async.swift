@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension HBPersistDriver {
     /// create key/value pair. If key already exist throw `HBPersistError.duplicate` error
     /// - Parameters:
@@ -49,43 +48,5 @@ extension HBPersistDriver {
     ///   - request: Request making this call
     public func remove(key: String, request: HBRequest) async throws {
         try await self.remove(key: key, request: request).get()
-    }
-}
-
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-extension HBRequest.Persist {
-    /// Set value for key that will expire after a certain time.
-    ///
-    /// Doesn't check to see if key already exists. Some drivers may fail it key already exists
-    /// - Parameters:
-    ///   - key: key string
-    ///   - value: value
-    ///   - expires: time key/value pair will expire
-    public func create<Object: Codable>(key: String, value: Object, expires: TimeAmount? = nil) async throws {
-        try await self.request.application.persist.driver.create(key: key, value: value, expires: expires, request: self.request)
-    }
-
-    /// Set value for key that will expire after a certain time
-    /// - Parameters:
-    ///   - key: key string
-    ///   - value: value
-    ///   - expires: time key/value pair will expire
-    public func set<Object: Codable>(key: String, value: Object, expires: TimeAmount? = nil) async throws {
-        try await self.request.application.persist.driver.set(key: key, value: value, expires: expires, request: self.request)
-    }
-
-    /// Get value for key
-    /// - Parameters:
-    ///   - key: key string
-    ///   - type: Type of value
-    /// - Returns: Value
-    public func get<Object: Codable>(key: String, as type: Object.Type) async throws -> Object? {
-        return try await self.request.application.persist.driver.get(key: key, as: type, request: self.request)
-    }
-
-    /// Remove value for key
-    /// - Parameter key: key string
-    public func remove(key: String) async throws {
-        try await self.request.application.persist.driver.remove(key: key, request: self.request)
     }
 }

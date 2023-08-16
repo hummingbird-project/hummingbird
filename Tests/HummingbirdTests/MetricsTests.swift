@@ -184,12 +184,12 @@ final class MetricsTests: XCTestCase {
     }
 
     func testCounter() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.middleware.add(HBMetricsMiddleware())
         app.router.get("/hello") { _ -> String in
             return "Hello"
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/hello", method: .GET) { _ in }
         }
 
@@ -202,12 +202,12 @@ final class MetricsTests: XCTestCase {
     }
 
     func testError() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.middleware.add(HBMetricsMiddleware())
         app.router.get("/hello") { _ -> String in
             throw HBHTTPError(.badRequest)
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/hello", method: .GET) { _ in }
         }
 
@@ -221,12 +221,12 @@ final class MetricsTests: XCTestCase {
     }
 
     func testNotFoundError() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.middleware.add(HBMetricsMiddleware())
         app.router.get("/hello") { _ -> String in
             return "hello"
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/hello2", method: .GET) { _ in }
         }
 
@@ -239,12 +239,12 @@ final class MetricsTests: XCTestCase {
     }
 
     func testParameterEndpoint() async throws {
-        let app = HBApplication(testing: .router)
+        let app = HBApplicationBuilder()
         app.middleware.add(HBMetricsMiddleware())
         app.router.get("/user/:id") { _ -> String in
             throw HBHTTPError(.badRequest)
         }
-        try await app.XCTTest { client in
+        try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/user/765", method: .GET) { _ in }
         }
 

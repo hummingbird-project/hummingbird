@@ -207,7 +207,7 @@ extension HBRouterMethods {
                     }
                 } else {
                     return request.body.consumeBody(
-                        maxSize: request.application.configuration.maxUploadSize,
+                        maxSize: request.applicationContext.configuration.maxUploadSize,
                         on: request.eventLoop
                     ).flatMapThrowing { buffer in
                         var request = request
@@ -247,7 +247,7 @@ extension HBRouterMethods {
                     return _respond(request: request)
                 } else {
                     return request.body.consumeBody(
-                        maxSize: request.application.configuration.maxUploadSize,
+                        maxSize: request.applicationContext.configuration.maxUploadSize,
                         on: request.eventLoop
                     ).flatMap { buffer in
                         request.body = .byteBuffer(buffer)

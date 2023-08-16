@@ -23,7 +23,7 @@ let port = HBEnvironment.shared.get("SERVER_PORT", as: Int.self) ?? 8080
 // create app
 let elg = MultiThreadedEventLoopGroup(numberOfThreads: 2)
 defer { try? elg.syncShutdownGracefully() }
-let app = HBApplication(
+let app = HBApplicationBuilder(
     configuration: .init(
         address: .hostname(hostname, port: port),
         serverName: "Hummingbird"
@@ -55,4 +55,4 @@ app.router.get("json") { _ in
 }
 
 // run app
-try await app.runService()
+try await app.buildAndRun()

@@ -421,7 +421,7 @@ public extension HBParser {
 extension HBParser: Sequence {
     public typealias Element = Unicode.Scalar
 
-    public __consuming func makeIterator() -> Iterator {
+    public func makeIterator() -> Iterator {
         return Iterator(self)
     }
 
