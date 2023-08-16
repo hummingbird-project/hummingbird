@@ -12,12 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
+import struct Foundation.Date
 @_exported import class Foundation.JSONDecoder
 @_exported import class Foundation.JSONEncoder
 import Hummingbird
 import NIOFoundationCompat
 
-extension JSONEncoder: HBResponseEncoder, @unchecked Sendable {
+extension JSONEncoder: HBResponseEncoder {
     /// Extend JSONEncoder to support encoding `HBResponse`'s. Sets body and header values
     /// - Parameters:
     ///   - value: Value to encode
@@ -34,7 +35,7 @@ extension JSONEncoder: HBResponseEncoder, @unchecked Sendable {
     }
 }
 
-extension JSONDecoder: HBRequestDecoder, @unchecked Sendable {
+extension JSONDecoder: HBRequestDecoder {
     /// Extend JSONDecoder to decode from `HBRequest`.
     /// - Parameters:
     ///   - type: Type to decode
@@ -48,3 +49,9 @@ extension JSONDecoder: HBRequestDecoder, @unchecked Sendable {
         return try self.decode(T.self, from: data)
     }
 }
+
+/// `HBRequestDecoder` and `HBResponseEncoder` both require conformance to `Sendable`. Given
+/// `JSONEncoder`` and `JSONDecoder`` conform to Sendable in macOS 13+ I think I can just
+/// back date the conformance to all versions of Swift, macOS we support
+extension JSONDecoder: @unchecked Sendable {}
+extension JSONEncoder: @unchecked Sendable {}
