@@ -87,7 +87,11 @@ public struct HBApplication: Sendable {
 extension HBApplication: Service {
     public func run() async throws {
         try await withGracefulShutdownHandler {
-            try await self.server.run()
+            let services = [server]
+            let serviceGroup = ServiceGroup(
+                configuration: .init(services: services, logger: self.context.logger)
+            )
+            try await serviceGroup.run()
             try await HBDateCache.shutdownDateCaches(eventLoopGroup: self.eventLoopGroup).get()
             try self.shutdownApplication()
         } onGracefulShutdown: {
