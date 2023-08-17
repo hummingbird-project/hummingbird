@@ -22,7 +22,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-http2.git", from: "1.20.0"),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.14.0"),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.18.0"),
-        .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.0.0-alpha"),
+        .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.0.0-beta"),
     ],
     targets: [
         .target(name: "Hummingbird", dependencies: [
