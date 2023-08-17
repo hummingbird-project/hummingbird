@@ -21,6 +21,7 @@ extension HBApplication {
     struct Responder: HBHTTPResponder {
         let responder: HBResponder
         let applicationContext: HBApplication.Context
+        let dateCache: HBDateCache
 
         /// Return EventLoopFuture that will be fulfilled with the HTTP response for the supplied HTTP request
         /// - Parameters:
@@ -40,7 +41,7 @@ extension HBApplication {
                 switch result {
                 case .success(let response):
                     var response = response
-                    response.headers.add(name: "Date", value: HBDateCache.getDateCache(on: context.eventLoop).currentDate)
+                    response.headers.add(name: "Date", value: self.dateCache.date)
                     let responseHead = HTTPResponseHead(version: httpVersion, status: response.status, headers: response.headers)
                     onComplete(.success(HBHTTPResponse(head: responseHead, body: response.body)))
 
