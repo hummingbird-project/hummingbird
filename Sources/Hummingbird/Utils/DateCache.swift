@@ -49,7 +49,7 @@ public final class HBDateCache: Service {
                 var sleepUntil = ContinuousClock.now
                 while !cancelled.load(ordering: .relaxed) {
                     sleepUntil += .seconds(1)
-                    try await Task.sleep(until: sleepUntil)
+                    try await Task.sleep(until: sleepUntil, clock: .continuous)
                     let epochTime = time(nil)
                     self.dateContainer.store(.init(date: Self.formatRFC1123Date(epochTime)), ordering: .relaxed)
                 }
