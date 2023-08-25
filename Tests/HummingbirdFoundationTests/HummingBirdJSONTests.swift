@@ -29,7 +29,7 @@ class HummingbirdJSONTests: XCTestCase {
     func testDecode() async throws {
         let app = HBApplicationBuilder()
         app.decoder = JSONDecoder()
-        app.router.put("/user") { request -> HTTPResponseStatus in
+        app.router.put("/user") { request, _ -> HTTPResponseStatus in
             guard let user = try? request.decode(as: User.self) else { throw HBHTTPError(.badRequest) }
             XCTAssertEqual(user.name, "John Smith")
             XCTAssertEqual(user.email, "john.smith@email.com")
@@ -47,7 +47,7 @@ class HummingbirdJSONTests: XCTestCase {
     func testEncode() async throws {
         let app = HBApplicationBuilder()
         app.encoder = JSONEncoder()
-        app.router.get("/user") { _ -> User in
+        app.router.get("/user") { _, _ -> User in
             return User(name: "John Smith", email: "john.smith@email.com", age: 25)
         }
         try await app.buildAndTest(.router) { client in
@@ -64,7 +64,7 @@ class HummingbirdJSONTests: XCTestCase {
     func testEncode2() async throws {
         let app = HBApplicationBuilder()
         app.encoder = JSONEncoder()
-        app.router.get("/json") { _ in
+        app.router.get("/json") { _, _ in
             return ["message": "Hello, world!"]
         }
         try await app.buildAndTest(.router) { client in

@@ -18,16 +18,16 @@ import ServiceContextModule
 /// Middleware using async/await
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 public protocol HBAsyncMiddleware: HBMiddleware {
-    func apply(to request: HBRequest, next: HBResponder) async throws -> HBResponse
+    func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) async throws -> HBResponse
 }
 
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension HBAsyncMiddleware {
-    public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
+    public func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
         let promise = request.eventLoop.makePromise(of: HBResponse.self)
         return ServiceContext.$current.withValue(request.serviceContext) {
             promise.completeWithTask {
-                return try await self.apply(to: request, next: HBPropagateServiceContextResponder(responder: next))
+                return try await self.apply(to: request, context: context, next: HBPropagateServiceContextResponder(responder: next, context: context))
             }
             return promise.futureResult
         }
@@ -38,14 +38,15 @@ extension HBAsyncMiddleware {
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 struct HBPropagateServiceContextResponder: HBResponder {
     let responder: HBResponder
+    let context: HBRequestContext
 
-    func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
+    func respond(to request: HBRequest, context: HBRequestContext) -> EventLoopFuture<HBResponse> {
         if let serviceContext = ServiceContext.$current.get() {
             return request.withServiceContext(serviceContext) { request in
-                self.responder.respond(to: request)
+                self.responder.respond(to: request, context: context)
             }
         } else {
-            return self.responder.respond(to: request)
+            return self.responder.respond(to: request, context: context)
         }
     }
 }
@@ -53,7 +54,7 @@ struct HBPropagateServiceContextResponder: HBResponder {
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension HBResponder {
     /// extend HBResponder to provide async/await version of respond
-    public func respond(to request: HBRequest) async throws -> HBResponse {
-        return try await self.respond(to: request).get()
+    public func respond(to request: HBRequest, context: HBRequestContext) async throws -> HBResponse {
+        return try await self.respond(to: request, context: context).get()
     }
 }

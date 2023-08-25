@@ -70,7 +70,7 @@ struct HBXCTRouter: HBXCTApplication {
             )
             let response: HBResponse
             do {
-                response = try await self.responder.respond(to: request)
+                response = try await self.responder.respond(to: request, context: request.context)
             } catch let error as HBHTTPResponseError {
                 let httpResponse = error.response(version: .http1_1, allocator: ByteBufferAllocator())
                 response = .init(status: httpResponse.head.status, headers: httpResponse.head.headers, body: httpResponse.body)

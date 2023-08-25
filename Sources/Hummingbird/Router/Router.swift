@@ -24,12 +24,12 @@ struct HBRouter: HBResponder {
     /// Respond to request by calling correct handler
     /// - Parameter request: HTTP request
     /// - Returns: EventLoopFuture that will be fulfilled with the Response
-    public func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
+    public func respond(to request: HBRequest, context: HBRequestContext) -> EventLoopFuture<HBResponse> {
         let path = request.uri.path
         guard let result = trie.getValueAndParameters(path),
               let responder = result.value.getResponder(for: request.method)
         else {
-            return self.notFoundResponder.respond(to: request)
+            return self.notFoundResponder.respond(to: request, context: context)
         }
         var request = request
         if let parameters = result.parameters {
@@ -37,6 +37,6 @@ struct HBRouter: HBResponder {
         }
         // store endpoint path in request (mainly for metrics)
         request.endpointPath = result.value.path
-        return responder.respond(to: request)
+        return responder.respond(to: request, context: context)
     }
 }

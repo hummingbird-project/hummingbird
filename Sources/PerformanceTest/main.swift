@@ -38,19 +38,19 @@ app.decoder = JSONDecoder()
 
 // number of raw requests
 // ./wrk -c 128 -d 15s -t 8 http://localhost:8080
-app.router.get { _ in
+app.router.get { _, _ in
     return "Hello, world"
 }
 
 // request with a body
 // ./wrk -c 128 -d 15s -t 8 -s scripts/post.lua http://localhost:8080
-app.router.post { request in
+app.router.post { request, _ in
     return request.body.buffer
 }
 
 // return JSON
 // ./wrk -c 128 -d 15s -t 8 http://localhost:8080/json
-app.router.get("json") { _ in
+app.router.get("json") { _, _ in
     return ["message": "Hello, world"]
 }
 

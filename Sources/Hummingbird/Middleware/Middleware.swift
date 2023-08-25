@@ -41,14 +41,14 @@ import NIOCore
 /// }
 /// ```
 public protocol HBMiddleware {
-    func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse>
+    func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse>
 }
 
 struct MiddlewareResponder: HBResponder {
     let middleware: HBMiddleware
     let next: HBResponder
 
-    func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
-        return self.middleware.apply(to: request, next: self.next)
+    func respond(to request: HBRequest, context: HBRequestContext) -> EventLoopFuture<HBResponse> {
+        return self.middleware.apply(to: request, context: context, next: self.next)
     }
 }

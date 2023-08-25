@@ -23,7 +23,7 @@ final class HandlerTests: XCTestCase {
         struct DecodeTest: HBRequestDecodable {
             let name: String
 
-            func handle(request: HBRequest) -> String {
+            func handle(request: HBRequest, context: HBRequestContext) -> String {
                 return "Hello \(self.name)"
             }
         }
@@ -52,7 +52,7 @@ final class HandlerTests: XCTestCase {
         struct DecodeTest: HBRequestDecodable {
             let value: Int
 
-            func handle(request: HBRequest) -> String {
+            func handle(request: HBRequest, context: HBRequestContext) -> String {
                 return "Value: \(self.value)"
             }
         }
@@ -81,7 +81,7 @@ final class HandlerTests: XCTestCase {
         struct DecodeTest: HBRequestDecodable {
             let name: String
 
-            func handle(request: HBRequest) -> String {
+            func handle(request: HBRequest, context: HBRequestContext) -> String {
                 return "Hello \(self.name)"
             }
         }
@@ -115,7 +115,7 @@ final class HandlerTests: XCTestCase {
         struct DecodeTest: HBRequestDecodable {
             let name: String
 
-            func handle(request: HBRequest) -> String {
+            func handle(request: HBRequest, context: HBRequestContext) -> String {
                 return "Hello \(self.name)"
             }
         }
@@ -143,7 +143,7 @@ final class HandlerTests: XCTestCase {
     func testDecode() async throws {
         struct DecodeTest: HBRequestDecodable {
             let name: String
-            func handle(request: HBRequest) -> String {
+            func handle(request: HBRequest, context: HBRequestContext) -> String {
                 return "Hello \(self.name)"
             }
         }
@@ -163,7 +163,7 @@ final class HandlerTests: XCTestCase {
     func testDecodeFutureResponse() async throws {
         struct DecodeTest: HBRequestDecodable {
             let name: String
-            func handle(request: HBRequest) -> EventLoopFuture<String> {
+            func handle(request: HBRequest, context: HBRequestContext) -> EventLoopFuture<String> {
                 return request.success("Hello \(self.name)")
             }
         }
@@ -183,7 +183,8 @@ final class HandlerTests: XCTestCase {
     func testDecodeFail() async throws {
         struct DecodeTest: HBRequestDecodable {
             let name: String
-            func handle(request: HBRequest) -> HTTPResponseStatus {
+            
+            func handle(request: HBRequest, context: HBRequestContext) -> HTTPResponseStatus {
                 return .ok
             }
         }
@@ -201,11 +202,11 @@ final class HandlerTests: XCTestCase {
     func testEmptyRequest() async throws {
         struct ParameterTest: HBRouteHandler {
             let parameter: Int
-            init(from request: HBRequest) throws {
+            init(from request: HBRequest, context: HBRequestContext) throws {
                 self.parameter = try request.parameters.require("test", as: Int.self)
             }
 
-            func handle(request: HBRequest) -> String {
+            func handle(request: HBRequest, context: HBRequestContext) -> String {
                 return "\(self.parameter)"
             }
         }

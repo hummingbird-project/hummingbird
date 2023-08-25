@@ -37,7 +37,7 @@ public struct HBTracingMiddleware: HBMiddleware {
         self.init(recordingHeaders: [])
     }
 
-    public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
+    public func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
         var serviceContext = request.serviceContext
         InstrumentationSystem.instrument.extract(request.headers, into: &serviceContext, using: HTTPHeadersExtractor())
 
@@ -79,7 +79,7 @@ public struct HBTracingMiddleware: HBMiddleware {
                 attributes = self.recordHeaders(request.headers, toSpanAttributes: attributes, withPrefix: "http.request.header.")
             }
 
-            return next.respond(to: request)
+            return next.respond(to: request, context: context)
                 .always { result in
                     switch result {
                     case .success(let response):

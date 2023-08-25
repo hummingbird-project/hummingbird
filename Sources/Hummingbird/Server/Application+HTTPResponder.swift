@@ -36,7 +36,7 @@ extension HBApplication {
             )
             let httpVersion = request.version
             // respond to request
-            self.responder.respond(to: request).whenComplete { result in
+            self.responder.respond(to: request, context: request.context).whenComplete { result in
                 switch result {
                 case .success(let response):
                     var response = response

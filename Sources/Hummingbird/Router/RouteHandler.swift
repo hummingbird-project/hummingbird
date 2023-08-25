@@ -39,8 +39,8 @@
 /// ```
 public protocol HBRouteHandler {
     associatedtype _Output
-    init(from: HBRequest) throws
-    func handle(request: HBRequest) throws -> _Output
+    init(from: HBRequest, context: HBRequestContext) throws
+    func handle(request: HBRequest, context: HBRequestContext) throws -> _Output
 }
 
 extension HBRouterMethods {
@@ -51,9 +51,9 @@ extension HBRouterMethods {
         options: HBRouterMethodOptions = [],
         use handlerType: Handler.Type
     ) -> Self where Handler._Output == _Output {
-        return self.on(path, method: method, options: options) { request -> _Output in
-            let handler = try Handler(from: request)
-            return try handler.handle(request: request)
+        return self.on(path, method: method, options: options) { request, context -> _Output in
+            let handler = try Handler(from: request, context: context)
+            return try handler.handle(request: request, context: context)
         }
     }
 
@@ -65,10 +65,10 @@ extension HBRouterMethods {
         options: HBRouterMethodOptions = [],
         use handlerType: Handler.Type
     ) -> Self where Handler._Output == EventLoopFuture<_Output> {
-        return self.on(path, method: method, options: options) { request -> EventLoopFuture<_Output> in
+        return self.on(path, method: method, options: options) { request, context -> EventLoopFuture<_Output> in
             do {
-                let handler = try Handler(from: request)
-                return try handler.handle(request: request)
+                let handler = try Handler(from: request, context: context)
+                return try handler.handle(request: request, context: context)
             } catch {
                 return request.failure(error)
             }

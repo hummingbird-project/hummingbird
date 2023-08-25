@@ -83,9 +83,9 @@ public struct HBCORSMiddleware: HBMiddleware {
     }
 
     /// apply CORS middleware
-    public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
+    public func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
         // if no origin header then don't apply CORS
-        guard request.headers["origin"].first != nil else { return next.respond(to: request) }
+        guard request.headers["origin"].first != nil else { return next.respond(to: request, context: context) }
 
         if request.method == .OPTIONS {
             // if request is OPTIONS then return CORS headers and skip the rest of the middleware chain
@@ -110,7 +110,7 @@ public struct HBCORSMiddleware: HBMiddleware {
             return request.success(HBResponse(status: .noContent, headers: headers, body: .empty))
         } else {
             // if not OPTIONS then run rest of middleware chain and add origin value at the end
-            return next.respond(to: request).map { response in
+            return next.respond(to: request, context: context).map { response in
                 var response = response
                 response.headers.add(name: "access-control-allow-origin", value: self.allowOrigin.value(for: request) ?? "")
                 if case .originBased = self.allowOrigin {

@@ -20,24 +20,24 @@ final class AsyncPersistTests: XCTestCase {
         let app = HBApplicationBuilder()
         let persist: HBPersistDriver = HBMemoryPersistDriver(eventLoopGroup: app.eventLoopGroup)
 
-        app.router.put("/persist/:tag") { request -> HTTPResponseStatus in
+        app.router.put("/persist/:tag") { request, context -> HTTPResponseStatus in
             guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
             let tag = try request.parameters.require("tag")
             try await persist.set(key: tag, value: String(buffer: buffer), request: request)
             return .ok
         }
-        app.router.put("/persist/:tag/:time") { request -> HTTPResponseStatus in
+        app.router.put("/persist/:tag/:time") { request, context -> HTTPResponseStatus in
             guard let time = request.parameters.get("time", as: Int.self) else { throw HBHTTPError(.badRequest) }
             guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
             let tag = try request.parameters.require("tag")
             try await persist.set(key: tag, value: String(buffer: buffer), expires: .seconds(numericCast(time)), request: request)
             return .ok
         }
-        app.router.get("/persist/:tag") { request -> String? in
+        app.router.get("/persist/:tag") { request, context -> String? in
             let tag = try request.parameters.require("tag")
             return try await persist.get(key: tag, as: String.self, request: request)
         }
-        app.router.delete("/persist/:tag") { request -> HTTPResponseStatus in
+        app.router.delete("/persist/:tag") { request, context -> HTTPResponseStatus in
             let tag = try request.parameters.require("tag")
             try await persist.remove(key: tag, request: request)
             return .noContent
@@ -67,7 +67,7 @@ final class AsyncPersistTests: XCTestCase {
         guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
         #endif
         let (app, persist) = try createApplication()
-        app.router.put("/create/:tag") { request -> HTTPResponseStatus in
+        app.router.put("/create/:tag") { request, context -> HTTPResponseStatus in
             guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
             let tag = try request.parameters.require("tag")
             try await persist.create(key: tag, value: String(buffer: buffer), request: request)
@@ -89,7 +89,7 @@ final class AsyncPersistTests: XCTestCase {
         guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
         #endif
         let (app, persist) = try createApplication()
-        app.router.put("/create/:tag") { request -> HTTPResponseStatus in
+        app.router.put("/create/:tag") { request, context -> HTTPResponseStatus in
             guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
             let tag = try request.parameters.require("tag")
             do {
@@ -164,13 +164,13 @@ final class AsyncPersistTests: XCTestCase {
         }
         let (app, persist) = try createApplication()
 
-        app.router.put("/codable/:tag") { request -> HTTPResponseStatus in
+        app.router.put("/codable/:tag") { request, context -> HTTPResponseStatus in
             guard let tag = request.parameters.get("tag") else { throw HBHTTPError(.badRequest) }
             guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
             try await persist.set(key: tag, value: TestCodable(buffer: String(buffer: buffer)), request: request)
             return .ok
         }
-        app.router.get("/codable/:tag") { request -> String? in
+        app.router.get("/codable/:tag") { request, context -> String? in
             guard let tag = request.parameters.get("tag") else { throw HBHTTPError(.badRequest) }
             let value = try await persist.get(key: tag, as: TestCodable.self, request: request)
             return value?.buffer

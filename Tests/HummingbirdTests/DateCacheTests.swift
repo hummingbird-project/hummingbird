@@ -32,7 +32,7 @@ class HummingbirdDateTests: XCTestCase {
 
     func testDateHeader() async throws {
         let app = HBApplicationBuilder()
-        app.router.get("date") { _ in
+        app.router.get("date") { _, _ in
             return "hello"
         }
 

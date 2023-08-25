@@ -68,10 +68,10 @@ public struct HBFileMiddleware: HBMiddleware {
         logger.info("FileMiddleware serving from \(workingFolder)\(rootFolder)")
     }
 
-    public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
+    public func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
         struct IsDirectoryError: Error {}
         // if next responder returns a 404 then check if file exists
-        let response: EventLoopFuture<HBResponse> = next.respond(to: request)
+        let response: EventLoopFuture<HBResponse> = next.respond(to: request, context: context)
         return response.flatMapError { error -> EventLoopFuture<HBResponse> in
             guard let httpError = error as? HBHTTPError, httpError.status == .notFound else {
                 return request.failure(error)

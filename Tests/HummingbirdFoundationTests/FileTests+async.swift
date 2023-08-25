@@ -28,7 +28,7 @@ class HummingbirdAsyncFilesTests: XCTestCase {
 
     func testRead() async throws {
         let app = HBApplicationBuilder()
-        app.router.get("test.jpg") { request -> HBResponse in
+        app.router.get("test.jpg") { request, context -> HBResponse in
             let fileIO = HBFileIO(threadPool: request.applicationContext.threadPool)
             let body = try await fileIO.loadFile(path: "test.jpg", context: request.context, logger: request.logger)
             return .init(status: .ok, headers: [:], body: body)
@@ -49,7 +49,7 @@ class HummingbirdAsyncFilesTests: XCTestCase {
     func testWrite() async throws {
         let filename = "testWrite.txt"
         let app = HBApplicationBuilder()
-        app.router.put("store") { request -> HTTPResponseStatus in
+        app.router.put("store") { request, context -> HTTPResponseStatus in
             let fileIO = HBFileIO(threadPool: request.applicationContext.threadPool)
             try await fileIO.writeFile(
                 contents: request.body,

@@ -32,7 +32,7 @@ final class AsyncAwaitTests: XCTestCase {
 
     func testAsyncRoute() async throws {
         let app = HBApplicationBuilder()
-        app.router.get("/hello") { request -> ByteBuffer in
+        app.router.get("/hello") { request, context -> ByteBuffer in
             return await self.getBuffer(request: request)
         }
         try await app.buildAndTest(.router) { client in
@@ -47,7 +47,7 @@ final class AsyncAwaitTests: XCTestCase {
 
     func testAsyncRouterGroup() async throws {
         let app = HBApplicationBuilder()
-        app.router.group("test").get("/hello") { request -> ByteBuffer in
+        app.router.group("test").get("/hello") { request, context -> ByteBuffer in
             return await self.getBuffer(request: request)
         }
         try await app.buildAndTest(.router) { client in
@@ -62,15 +62,15 @@ final class AsyncAwaitTests: XCTestCase {
 
     func testAsyncMiddleware() async throws {
         struct AsyncTestMiddleware: HBAsyncMiddleware {
-            func apply(to request: HBRequest, next: HBResponder) async throws -> HBResponse {
-                var response = try await next.respond(to: request)
+            func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) async throws -> HBResponse {
+                var response = try await next.respond(to: request, context: context)
                 response.headers.add(name: "async", value: "true")
                 return response
             }
         }
         let app = HBApplicationBuilder()
         app.middleware.add(AsyncTestMiddleware())
-        app.router.get("/hello") { _ -> String in
+        app.router.get("/hello") { _, _ -> String in
             "hello"
         }
         try await app.buildAndTest(.router) { client in
@@ -83,11 +83,11 @@ final class AsyncAwaitTests: XCTestCase {
     func testAsyncRouteHandler() async throws {
         struct AsyncTest: HBAsyncRouteHandler {
             let name: String
-            init(from request: HBRequest) throws {
+            init(from request: HBRequest, context: HBRequestContext) throws {
                 self.name = try request.parameters.require("name")
             }
 
-            func handle(request: HBRequest) async throws -> String {
+            func handle(request: HBRequest, context: HBRequestContext) async throws -> String {
                 return try await request.success("Hello \(self.name)").get()
             }
         }
@@ -104,7 +104,7 @@ final class AsyncAwaitTests: XCTestCase {
 
     func testCollatingRequestBody() async throws {
         let app = HBApplicationBuilder()
-        app.router.patch("size") { request -> String in
+        app.router.patch("size") { request, context -> String in
             guard let body = request.body.buffer else {
                 throw HBHTTPError(.badRequest)
             }
@@ -125,7 +125,7 @@ final class AsyncAwaitTests: XCTestCase {
     /// Test streaming of requests via AsyncSequence
     func testStreaming() async throws {
         let app = HBApplicationBuilder()
-        app.router.post("size", options: .streamBody) { request -> String in
+        app.router.post("size", options: .streamBody) { request, context -> String in
             guard let stream = request.body.stream else {
                 throw HBHTTPError(.badRequest)
             }
@@ -148,7 +148,7 @@ final class AsyncAwaitTests: XCTestCase {
     /// Test streaming of response via AsyncSequence
     func testResponseAsyncSequence() async throws {
         let app = HBApplicationBuilder()
-        app.router.get("buffer", options: .streamBody) { request -> HBRequestBodyStreamerSequence.ResponseGenerator in
+        app.router.get("buffer", options: .streamBody) { request, context -> HBRequestBodyStreamerSequence.ResponseGenerator in
             guard let stream = request.body.stream else { throw HBHTTPError(.badRequest) }
             return stream.sequence.responseGenerator
         }
@@ -165,7 +165,7 @@ final class AsyncAwaitTests: XCTestCase {
     /// Test streaming of response via AsyncSequence
     func testResponseAsyncStream() async throws {
         let app = HBApplicationBuilder()
-        app.router.get("alphabet") { _ in
+        app.router.get("alphabet") { _, _ in
             AsyncStream<ByteBuffer> { cont in
                 let alphabet = "abcdefghijklmnopqrstuvwxyz"
                 var index = alphabet.startIndex

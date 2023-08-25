@@ -18,18 +18,18 @@ import ServiceContextModule
 /// Responder that calls supplied closure
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 public struct HBAsyncCallbackResponder: HBResponder {
-    let callback: (HBRequest) async throws -> HBResponse
+    let callback: @Sendable (HBRequest, HBRequestContext) async throws -> HBResponse
 
-    public init(callback: @escaping (HBRequest) async throws -> HBResponse) {
+    public init(callback: @escaping @Sendable (HBRequest, HBRequestContext) async throws -> HBResponse) {
         self.callback = callback
     }
 
     /// Return EventLoopFuture that will be fulfilled with response to the request supplied
-    public func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
+    public func respond(to request: HBRequest, context: HBRequestContext) -> EventLoopFuture<HBResponse> {
         let promise = request.eventLoop.makePromise(of: HBResponse.self)
         return ServiceContext.$current.withValue(request.serviceContext) {
             promise.completeWithTask {
-                try await self.callback(request)
+                try await self.callback(request, context)
             }
             return promise.futureResult
         }
