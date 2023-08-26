@@ -37,11 +37,14 @@ class HummingbirdDateTests: XCTestCase {
         }
 
         try await app.buildAndTest(.live) { client in
-            try await client.XCTExecute(uri: "/date", method: .GET) { response in
+            let date = try await client.XCTExecute(uri: "/date", method: .GET) { response in
                 XCTAssertNotNil(response.headers["date"].first)
+                return response.headers["date"].first
             }
+            try await Task.sleep(nanoseconds: 1_500_000_000)
             try await client.XCTExecute(uri: "/date", method: .GET) { response in
                 XCTAssertNotNil(response.headers["date"].first)
+                XCTAssertNotEqual(response.headers["date"].first, date)
             }
         }
     }

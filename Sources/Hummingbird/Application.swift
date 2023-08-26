@@ -55,6 +55,8 @@ public struct HBApplication: Sendable {
     public let eventLoopGroup: EventLoopGroup
     // server
     public let server: HBHTTPServer
+    // date cache service
+    internal let dateCache: HBDateCache
 
     init(builder: HBApplicationBuilder) {
         self.eventLoopGroup = builder.eventLoopGroup
@@ -65,10 +67,16 @@ public struct HBApplication: Sendable {
             encoder: builder.encoder,
             decoder: builder.decoder
         )
+        self.dateCache = .init()
+        let responder = Responder(
+            responder: builder.constructResponder(),
+            applicationContext: self.context,
+            dateCache: self.dateCache
+        )
         self.server = HBHTTPServer(
             group: builder.eventLoopGroup,
             configuration: builder.configuration.httpServer,
-            responder: Responder(responder: builder.constructResponder(), applicationContext: self.context),
+            responder: responder,
             additionalChannelHandlers: builder.additionalChannelHandlers.map { $0() },
             onServerRunning: builder.onServerRunning,
             logger: builder.logger
@@ -87,8 +95,11 @@ public struct HBApplication: Sendable {
 extension HBApplication: Service {
     public func run() async throws {
         try await withGracefulShutdownHandler {
-            try await self.server.run()
-            try await HBDateCache.shutdownDateCaches(eventLoopGroup: self.eventLoopGroup).get()
+            let services: [any Service] = [self.server, self.dateCache]
+            let serviceGroup = ServiceGroup(
+                configuration: .init(services: services, logger: self.context.logger)
+            )
+            try await serviceGroup.run()
             try self.shutdownApplication()
         } onGracefulShutdown: {
             Task {

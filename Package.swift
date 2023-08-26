@@ -14,6 +14,7 @@ let package = Package(
         .executable(name: "PerformanceTest", targets: ["PerformanceTest"]),
     ],
     dependencies: [
+        .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "0.1.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.4.0"),
         .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
         .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.0.1"),
@@ -28,6 +29,7 @@ let package = Package(
         .target(name: "Hummingbird", dependencies: [
             .byName(name: "HummingbirdCore"),
             .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
+            .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
             .product(name: "Logging", package: "swift-log"),
             .product(name: "Metrics", package: "swift-metrics"),
             .product(name: "Tracing", package: "swift-distributed-tracing"),

@@ -12,61 +12,61 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AsyncAlgorithms
+import Atomics
 import NIOCore
 import NIOPosix
+#if os(Linux)
+import Glibc
+#else
+import Darwin.C
+#endif
+import ServiceLifecycle
 
-/// Current date cache.
+/// Current date formatted cache service
 ///
-/// Getting the current date formatted is an expensive operation. This creates a scheduled task that will
-/// update a cached version of the date in the format as detailed in RFC1123 once every second. To
-/// avoid threading issues it is assumed that `currentDate` will only every be accessed on the same
-/// EventLoop that the update is running.
-public final class HBDateCache {
-    /// Current formatted date
-    public var currentDate: String
+/// Getting the current date formatted is an expensive operation. This creates a task that will
+/// update a cached version of the date in the format as detailed in RFC1123 once every second.
+public final class HBDateCache: Service {
+    final class DateContainer: AtomicReference, Sendable {
+        let date: String
 
-    /// return date cache for this thread. If one doesn't exist create one scheduled on EventLoop
-    public static func getDateCache(on eventLoop: EventLoop) -> HBDateCache {
-        guard let dateCache = thread.currentValue else {
-            self.thread.currentValue = .init(eventLoop: eventLoop)
-            return self.thread.currentValue!
+        init(date: String) {
+            self.date = date
         }
-        return dateCache
     }
 
-    static func shutdownDateCaches(eventLoopGroup: EventLoopGroup) -> EventLoopFuture<Void> {
-        var dateCacheShutdownFutures: [EventLoopFuture<Void>] = []
-        for eventLoop in eventLoopGroup.makeIterator() {
-            let future: EventLoopFuture<Void> = eventLoop.flatSubmit {
-                guard let dateCache = thread.currentValue else {
-                    return eventLoop.makeSucceededFuture(())
-                }
-                self.thread.currentValue = nil
-                return dateCache.shutdown(eventLoop: eventLoop)
+    let dateContainer: ManagedAtomic<DateContainer>
+
+    init() {
+        let epochTime = time(nil)
+        self.dateContainer = .init(.init(date: Self.formatRFC1123Date(epochTime)))
+    }
+
+    public func run() async throws {
+        let cancelled = ManagedAtomic(false)
+        if #available(macOS 13.0, *) {
+            let timerSequence = AsyncTimerSequence(interval: .seconds(1), clock: .suspending)
+                .cancelOnGracefulShutdown()
+            for try await _ in timerSequence {
+                let epochTime = time(nil)
+                self.dateContainer.store(.init(date: Self.formatRFC1123Date(epochTime)), ordering: .relaxed)
             }
-            dateCacheShutdownFutures.append(future)
-        }
-        return EventLoopFuture.andAllComplete(dateCacheShutdownFutures, on: eventLoopGroup.next())
-    }
-
-    /// Initialize DateCache to run on a specific `EventLoop`
-    private init(eventLoop: EventLoop) {
-        assert(eventLoop.inEventLoop)
-        var timeVal = timeval.init()
-        gettimeofday(&timeVal, nil)
-        self.currentDate = Self.formatRFC1123Date(timeVal.tv_sec)
-
-        let millisecondsSinceLastSecond = Double(timeVal.tv_usec) / 1000.0
-        let millisecondsUntilNextSecond = Int64(1000.0 - millisecondsSinceLastSecond)
-        self.task = eventLoop.scheduleRepeatedTask(initialDelay: .milliseconds(millisecondsUntilNextSecond), delay: .seconds(1)) { _ in
-            self.updateDate()
+        } else {
+            try await withGracefulShutdownHandler {
+                while !cancelled.load(ordering: .relaxed) {
+                    try await Task.sleep(nanoseconds: 1_000_000_000)
+                    let epochTime = time(nil)
+                    self.dateContainer.store(.init(date: Self.formatRFC1123Date(epochTime)), ordering: .relaxed)
+                }
+            } onGracefulShutdown: {
+                cancelled.store(true, ordering: .relaxed)
+            }
         }
     }
 
-    private func shutdown(eventLoop: EventLoop) -> EventLoopFuture<Void> {
-        let promise = eventLoop.makePromise(of: Void.self)
-        self.task.cancel(promise: promise)
-        return promise.futureResult
+    public var date: String {
+        return self.dateContainer.load(ordering: .relaxed).date
     }
 
     /// Render Epoch seconds as RFC1123 formatted date
@@ -98,16 +98,6 @@ public final class HBDateCache {
 
         return formatted
     }
-
-    private func updateDate() {
-        let epochTime = time(nil)
-        self.currentDate = Self.formatRFC1123Date(epochTime)
-    }
-
-    /// Thread-specific HBDateCache
-    private static let thread: ThreadSpecificVariable<HBDateCache> = .init()
-
-    private var task: RepeatedTask!
 
     private static let dayNames = [
         "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
