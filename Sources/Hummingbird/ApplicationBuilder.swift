@@ -119,9 +119,11 @@ public final class HBApplicationBuilder {
     /// shutdown on signals SIGINT, SIGTERM
     public func buildAndRun() async throws {
         let serviceGroup = ServiceGroup(
-            services: [self.build()],
-            configuration: .init(gracefulShutdownSignals: [.sigterm, .sigint]),
-            logger: self.logger
+            configuration: .init(
+                services: [self.build()], 
+                gracefulShutdownSignals: [.sigterm, .sigint], 
+                logger: self.logger
+            )
         )
         try await serviceGroup.run()
     }

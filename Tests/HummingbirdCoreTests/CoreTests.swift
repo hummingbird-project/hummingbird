@@ -680,9 +680,11 @@ class HummingBirdCoreTests: XCTestCase {
         )
         try await withThrowingTaskGroup(of: Void.self) { group in
             let serviceGroup = await ServiceGroup(
-                services: [server],
-                configuration: .init(gracefulShutdownSignals: [.sigterm, .sigint]),
-                logger: server.logger
+                configuration: .init(
+                    services: [server],
+                    gracefulShutdownSignals: [.sigterm, .sigint],
+                    logger: server.logger
+                )
             )
             group.addTask {
                 try await serviceGroup.run()

@@ -57,9 +57,11 @@ final class HBXCTLive: HBXCTApplication {
     func run<Value>(_ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Value) async throws -> Value {
         try await withThrowingTaskGroup(of: Void.self) { group in
             let serviceGroup = ServiceGroup(
-                services: [self.application],
-                configuration: .init(gracefulShutdownSignals: [.sigterm, .sigint]),
-                logger: self.application.context.logger
+                configuration: .init(
+                    services: [self.application],
+                    gracefulShutdownSignals: [.sigterm, .sigint],
+                    logger: self.application.context.logger
+                )
             )
             group.addTask {
                 try await serviceGroup.run()
