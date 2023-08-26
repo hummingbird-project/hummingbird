@@ -54,9 +54,9 @@ public struct HBApplication: Sendable {
     // eventLoopGroup
     public let eventLoopGroup: EventLoopGroup
     // server
-    internal let server: HBHTTPServer
+    public let server: HBHTTPServer
     // date cache service
-    public let dateCache: HBDateCache
+    internal let dateCache: HBDateCache
 
     init(builder: HBApplicationBuilder) {
         self.eventLoopGroup = builder.eventLoopGroup
