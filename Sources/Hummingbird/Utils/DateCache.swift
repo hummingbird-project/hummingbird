@@ -46,7 +46,7 @@ public final class HBDateCache: Service {
     public func run() async throws {
         let cancelled = ManagedAtomic(false)
         if #available(macOS 13.0, *) {
-            let timerSequence = AsyncTimerSequence(interval: .seconds(1), clock: .continuous)
+            let timerSequence = AsyncTimerSequence(interval: .seconds(1), clock: .suspending)
                 .cancelOnGracefulShutdown()
             for try await _ in timerSequence {
                 let epochTime = time(nil)
