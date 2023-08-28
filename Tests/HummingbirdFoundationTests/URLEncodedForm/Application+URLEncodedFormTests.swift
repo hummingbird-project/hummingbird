@@ -29,7 +29,7 @@ class HummingBirdURLEncodedTests: XCTestCase {
     func testDecode() async throws {
         let app = HBApplicationBuilder()
         app.decoder = URLEncodedFormDecoder()
-        app.router.put("/user") { request -> HTTPResponseStatus in
+        app.router.put("/user") { request, _ -> HTTPResponseStatus in
             guard let user = try? request.decode(as: User.self) else { throw HBHTTPError(.badRequest) }
             XCTAssertEqual(user.name, "John Smith")
             XCTAssertEqual(user.email, "john.smith@email.com")
@@ -47,7 +47,7 @@ class HummingBirdURLEncodedTests: XCTestCase {
     func testEncode() async throws {
         let app = HBApplicationBuilder()
         app.encoder = URLEncodedFormEncoder()
-        app.router.get("/user") { _ -> User in
+        app.router.get("/user") { _, _ -> User in
             return User(name: "John Smith", email: "john.smith@email.com", age: 25)
         }
         try await app.buildAndTest(.router) { client in

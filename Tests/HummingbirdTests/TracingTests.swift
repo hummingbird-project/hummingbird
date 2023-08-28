@@ -36,7 +36,7 @@ final class TracingTests: XCTestCase {
 
         let app = HBApplicationBuilder()
         app.middleware.add(HBTracingMiddleware())
-        app.router.get("users/:id") { _ -> String in
+        app.router.get("users/:id") { _, _ -> String in
             return "42"
         }
         try await app.buildAndTest(.router) { client in
@@ -76,7 +76,7 @@ final class TracingTests: XCTestCase {
 
         let app = HBApplicationBuilder()
         app.middleware.add(HBTracingMiddleware())
-        app.router.post("users") { _ -> String in
+        app.router.post("users") { _, _ -> String in
             throw HBHTTPError(.internalServerError)
         }
         try await app.buildAndTest(.router) { client in
@@ -119,7 +119,7 @@ final class TracingTests: XCTestCase {
         app.middleware.add(HBTracingMiddleware(recordingHeaders: [
             "accept", "content-type", "cache-control", "does-not-exist",
         ]))
-        app.router.get("users/:id") { _ -> HBResponse in
+        app.router.get("users/:id") { _, _ -> HBResponse in
             var headers = HTTPHeaders()
             headers.add(name: "cache-control", value: "86400")
             headers.add(name: "cache-control", value: "public")
@@ -175,7 +175,7 @@ final class TracingTests: XCTestCase {
 
         let app = HBApplicationBuilder()
         app.middleware.add(HBTracingMiddleware())
-        app.router.post("/users") { _ -> HTTPResponseStatus in
+        app.router.post("/users") { _, _ -> HTTPResponseStatus in
             return .noContent
         }
         try await app.buildAndTest(.router) { client in
@@ -212,7 +212,7 @@ final class TracingTests: XCTestCase {
 
         let app = HBApplicationBuilder()
         app.middleware.add(HBTracingMiddleware())
-        app.router.get("/") { _ -> HTTPResponseStatus in
+        app.router.get("/") { _, _ -> HTTPResponseStatus in
             return .ok
         }
         try await app.buildAndTest(.router) { client in
@@ -287,7 +287,7 @@ final class TracingTests: XCTestCase {
 
         let app = HBApplicationBuilder()
         app.middleware.add(HBTracingMiddleware())
-        app.router.get("/") { request -> HTTPResponseStatus in
+        app.router.get("/") { request, _ -> HTTPResponseStatus in
             var serviceContext = request.serviceContext
             serviceContext.testID = "test"
             let span = InstrumentationSystem.legacyTracer.startAnySpan("testing", context: serviceContext, ofKind: .server)
@@ -320,7 +320,7 @@ final class TracingTests: XCTestCase {
 
         let app = HBApplicationBuilder()
         app.middleware.add(HBTracingMiddleware())
-        app.router.get("/") { request -> HTTPResponseStatus in
+        app.router.get("/") { request, _ -> HTTPResponseStatus in
             var serviceContext = request.serviceContext
             serviceContext.testID = "test"
             return request.withSpan("TestSpan", context: serviceContext, ofKind: .client) { _, span in
@@ -352,11 +352,11 @@ final class TracingTests: XCTestCase {
         expectation.expectedFulfillmentCount = 2
 
         struct SpanMiddleware: HBMiddleware {
-            public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
+            public func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
                 var serviceContext = request.serviceContext
                 serviceContext.testID = "testMiddleware"
                 return request.withSpan("TestSpan", context: serviceContext, ofKind: .server) { request, _ in
-                    next.respond(to: request)
+                    next.respond(to: request, context: context)
                 }
             }
         }
@@ -370,8 +370,8 @@ final class TracingTests: XCTestCase {
         let app = HBApplicationBuilder()
         app.middleware.add(SpanMiddleware())
         app.middleware.add(HBTracingMiddleware())
-        app.router.get("/") { request -> EventLoopFuture<HTTPResponseStatus> in
-            return request.eventLoop.scheduleTask(in: .milliseconds(2)) { return .ok }.futureResult
+        app.router.get("/") { _, context -> EventLoopFuture<HTTPResponseStatus> in
+            return context.eventLoop.scheduleTask(in: .milliseconds(2)) { return .ok }.futureResult
         }
         try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/", method: .GET) { response in
@@ -403,7 +403,7 @@ extension TracingTests {
 
         let app = HBApplicationBuilder()
         app.middleware.add(HBTracingMiddleware())
-        app.router.get("/") { _ -> HTTPResponseStatus in
+        app.router.get("/") { _, _ -> HTTPResponseStatus in
             try await Task.sleep(nanoseconds: 1000)
             return InstrumentationSystem.legacyTracer.withAnySpan("testing", ofKind: .server) { _ in
                 return .ok
@@ -428,11 +428,11 @@ extension TracingTests {
     /// propagated to route code
     func testServiceContextPropagationAsyncMiddleware() async throws {
         struct AsyncSpanMiddleware: HBAsyncMiddleware {
-            public func apply(to request: HBRequest, next: HBResponder) async throws -> HBResponse {
+            public func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) async throws -> HBResponse {
                 var serviceContext = request.serviceContext
                 serviceContext.testID = "testAsyncMiddleware"
                 return try await InstrumentationSystem.legacyTracer.withAnySpan("TestSpan", context: serviceContext, ofKind: .server) { _ in
-                    try await next.respond(to: request)
+                    try await next.respond(to: request, context: context)
                 }
             }
         }
@@ -447,7 +447,7 @@ extension TracingTests {
         let app = HBApplicationBuilder()
         app.middleware.add(HBTracingMiddleware())
         app.middleware.add(AsyncSpanMiddleware())
-        app.router.get("/") { request -> HTTPResponseStatus in
+        app.router.get("/") { request, _ -> HTTPResponseStatus in
             try await Task.sleep(nanoseconds: 1000)
             return request.withSpan("testing", ofKind: .server) { _, _ in
                 return .ok

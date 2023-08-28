@@ -24,7 +24,7 @@ public struct HBLogRequestsMiddleware: HBMiddleware {
         self.includeHeaders = includeHeaders
     }
 
-    public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
+    public func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
         if self.includeHeaders {
             request.logger.log(
                 level: self.logLevel,
@@ -38,6 +38,6 @@ public struct HBLogRequestsMiddleware: HBMiddleware {
                 metadata: ["hb_uri": .stringConvertible(request.uri), "hb_method": .string(request.method.rawValue)]
             )
         }
-        return next.respond(to: request)
+        return next.respond(to: request, context: context)
     }
 }

@@ -22,24 +22,24 @@ final class PersistTests: XCTestCase {
         let app = HBApplicationBuilder()
         let persist = HBMemoryPersistDriver(eventLoopGroup: app.eventLoopGroup)
 
-        app.router.put("/persist/:tag") { request -> EventLoopFuture<HTTPResponseStatus> in
+        app.router.put("/persist/:tag") { request, context -> EventLoopFuture<HTTPResponseStatus> in
             guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
             guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
             return persist.set(key: tag, value: String(buffer: buffer), request: request)
                 .map { _ in .ok }
         }
-        app.router.put("/persist/:tag/:time") { request -> EventLoopFuture<HTTPResponseStatus> in
+        app.router.put("/persist/:tag/:time") { request, context -> EventLoopFuture<HTTPResponseStatus> in
             guard let time = request.parameters.get("time", as: Int.self) else { return request.failure(.badRequest) }
             guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
             guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
             return persist.set(key: tag, value: String(buffer: buffer), expires: .seconds(numericCast(time)), request: request)
                 .map { _ in .ok }
         }
-        app.router.get("/persist/:tag") { request -> EventLoopFuture<String?> in
+        app.router.get("/persist/:tag") { request, context -> EventLoopFuture<String?> in
             guard let tag = request.parameters.get("tag", as: String.self) else { return request.failure(.badRequest) }
             return persist.get(key: tag, as: String.self, request: request)
         }
-        app.router.delete("/persist/:tag") { request -> EventLoopFuture<HTTPResponseStatus> in
+        app.router.delete("/persist/:tag") { request, context -> EventLoopFuture<HTTPResponseStatus> in
             guard let tag = request.parameters.get("tag", as: String.self) else { return request.failure(.badRequest) }
             return persist.remove(key: tag, request: request)
                 .map { _ in .noContent }
@@ -61,7 +61,7 @@ final class PersistTests: XCTestCase {
 
     func testCreateGet() async throws {
         let (app, persist) = try createApplication()
-        app.router.put("/create/:tag") { request -> EventLoopFuture<HTTPResponseStatus> in
+        app.router.put("/create/:tag") { request, context -> EventLoopFuture<HTTPResponseStatus> in
             guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
             guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
             return persist.create(key: tag, value: String(buffer: buffer), request: request)
@@ -79,7 +79,7 @@ final class PersistTests: XCTestCase {
 
     func testDoubleCreateFail() async throws {
         let (app, persist) = try createApplication()
-        app.router.put("/create/:tag") { request -> EventLoopFuture<HTTPResponseStatus> in
+        app.router.put("/create/:tag") { request, context -> EventLoopFuture<HTTPResponseStatus> in
             guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
             guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
             return persist.create(key: tag, value: String(buffer: buffer), request: request)
@@ -142,13 +142,13 @@ final class PersistTests: XCTestCase {
         }
         let (app, persist) = try createApplication()
 
-        app.router.put("/codable/:tag") { request -> EventLoopFuture<HTTPResponseStatus> in
+        app.router.put("/codable/:tag") { request, context -> EventLoopFuture<HTTPResponseStatus> in
             guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
             guard let buffer = request.body.buffer else { return request.failure(.badRequest) }
             return persist.set(key: tag, value: TestCodable(buffer: String(buffer: buffer)), request: request)
                 .map { _ in .ok }
         }
-        app.router.get("/codable/:tag") { request -> EventLoopFuture<String?> in
+        app.router.get("/codable/:tag") { request, context -> EventLoopFuture<String?> in
             guard let tag = request.parameters.get("tag") else { return request.failure(.badRequest) }
             return persist.get(key: tag, as: TestCodable.self, request: request).map { $0.map(\.buffer) }
         }

@@ -22,10 +22,10 @@ import Metrics
 public struct HBMetricsMiddleware: HBMiddleware {
     public init() {}
 
-    public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
+    public func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
         let startTime = DispatchTime.now().uptimeNanoseconds
 
-        let responseFuture = next.respond(to: request)
+        let responseFuture = next.respond(to: request, context: context)
         responseFuture.whenComplete { result in
             switch result {
             case .success:

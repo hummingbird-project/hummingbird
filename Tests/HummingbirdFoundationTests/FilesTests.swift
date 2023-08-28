@@ -294,7 +294,7 @@ class HummingbirdFilesTests: XCTestCase {
     func testWrite() async throws {
         let filename = "testWrite.txt"
         let app = HBApplicationBuilder()
-        app.router.put("store") { request -> EventLoopFuture<HTTPResponseStatus> in
+        app.router.put("store") { request, context -> EventLoopFuture<HTTPResponseStatus> in
             let fileIO = HBFileIO(threadPool: request.applicationContext.threadPool)
             return fileIO.writeFile(contents: request.body, path: filename, context: request.context, logger: request.logger)
                 .map { .ok }
@@ -316,7 +316,7 @@ class HummingbirdFilesTests: XCTestCase {
     func testWriteLargeFile() async throws {
         let filename = "testWriteLargeFile.txt"
         let app = HBApplicationBuilder()
-        app.router.put("store") { request -> EventLoopFuture<HTTPResponseStatus> in
+        app.router.put("store") { request, context -> EventLoopFuture<HTTPResponseStatus> in
             let fileIO = HBFileIO(threadPool: request.applicationContext.threadPool)
             return fileIO.writeFile(contents: request.body, path: filename, context: request.context, logger: request.logger)
                 .map { .ok }

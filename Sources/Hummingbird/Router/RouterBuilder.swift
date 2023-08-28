@@ -81,7 +81,7 @@ public final class HBRouterBuilder: HBRouterMethods {
         _ path: String,
         method: HTTPMethod,
         options: HBRouterMethodOptions = [],
-        use closure: @escaping (HBRequest) throws -> Output
+        use closure: @escaping (HBRequest, HBRequestContext) throws -> Output
     ) -> Self {
         let responder = constructResponder(options: options, use: closure)
         self.add(path, method: method, responder: responder)
@@ -93,7 +93,7 @@ public final class HBRouterBuilder: HBRouterMethods {
         _ path: String,
         method: HTTPMethod,
         options: HBRouterMethodOptions = [],
-        use closure: @escaping (HBRequest) -> EventLoopFuture<Output>
+        use closure: @escaping (HBRequest, HBRequestContext) -> EventLoopFuture<Output>
     ) -> Self {
         let responder = constructResponder(options: options, use: closure)
         self.add(path, method: method, responder: responder)
@@ -109,7 +109,7 @@ public final class HBRouterBuilder: HBRouterMethods {
 
 /// Responder that return a not found error
 struct NotFoundResponder: HBResponder {
-    func respond(to request: HBRequest) -> NIOCore.EventLoopFuture<HBResponse> {
+    func respond(to request: HBRequest, context: HBRequestContext) -> NIOCore.EventLoopFuture<HBResponse> {
         return request.eventLoop.makeFailedFuture(HBHTTPError(.notFound))
     }
 }

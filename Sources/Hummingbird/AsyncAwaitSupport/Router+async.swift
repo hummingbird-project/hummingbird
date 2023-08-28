@@ -20,7 +20,7 @@ extension HBRouterMethods {
     @discardableResult public func get<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping (HBRequest) async throws -> Output
+        use handler: @escaping (HBRequest, HBRequestContext) async throws -> Output
     ) -> Self {
         return on(path, method: .GET, options: options, use: handler)
     }
@@ -29,7 +29,7 @@ extension HBRouterMethods {
     @discardableResult public func put<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping (HBRequest) async throws -> Output
+        use handler: @escaping (HBRequest, HBRequestContext) async throws -> Output
     ) -> Self {
         return on(path, method: .PUT, options: options, use: handler)
     }
@@ -38,7 +38,7 @@ extension HBRouterMethods {
     @discardableResult public func delete<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping (HBRequest) async throws -> Output
+        use handler: @escaping (HBRequest, HBRequestContext) async throws -> Output
     ) -> Self {
         return on(path, method: .DELETE, options: options, use: handler)
     }
@@ -47,7 +47,7 @@ extension HBRouterMethods {
     @discardableResult public func head<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping (HBRequest) async throws -> Output
+        use handler: @escaping (HBRequest, HBRequestContext) async throws -> Output
     ) -> Self {
         return on(path, method: .HEAD, options: options, use: handler)
     }
@@ -56,7 +56,7 @@ extension HBRouterMethods {
     @discardableResult public func post<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping (HBRequest) async throws -> Output
+        use handler: @escaping (HBRequest, HBRequestContext) async throws -> Output
     ) -> Self {
         return on(path, method: .POST, options: options, use: handler)
     }
@@ -65,16 +65,16 @@ extension HBRouterMethods {
     @discardableResult public func patch<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping (HBRequest) async throws -> Output
+        use handler: @escaping (HBRequest, HBRequestContext) async throws -> Output
     ) -> Self {
         return on(path, method: .PATCH, options: options, use: handler)
     }
 
     func constructResponder<Output: HBResponseGenerator>(
         options: HBRouterMethodOptions = [],
-        use closure: @escaping (HBRequest) async throws -> Output
+        use closure: @escaping (HBRequest, HBRequestContext) async throws -> Output
     ) -> HBResponder {
-        return HBAsyncCallbackResponder { request in
+        return HBAsyncCallbackResponder { request, context in
             var request = request
             if case .stream = request.body, !options.contains(.streamBody) {
                 let buffer = try await request.body.consumeBody(
@@ -84,9 +84,9 @@ extension HBRouterMethods {
             }
             if options.contains(.editResponse) {
                 request.response = .init()
-                return try await closure(request).patchedResponse(from: request)
+                return try await closure(request, context).patchedResponse(from: request)
             } else {
-                return try await closure(request).response(from: request)
+                return try await closure(request, context).response(from: request)
             }
         }
     }
@@ -99,7 +99,7 @@ extension HBRouterBuilder {
         _ path: String,
         method: HTTPMethod,
         options: HBRouterMethodOptions = [],
-        use closure: @escaping (HBRequest) async throws -> Output
+        use closure: @escaping (HBRequest, HBRequestContext) async throws -> Output
     ) -> Self {
         let responder = constructResponder(options: options, use: closure)
         add(path, method: method, responder: responder)
@@ -114,7 +114,7 @@ extension HBRouterGroup {
         _ path: String = "",
         method: HTTPMethod,
         options: HBRouterMethodOptions = [],
-        use closure: @escaping (HBRequest) async throws -> Output
+        use closure: @escaping (HBRequest, HBRequestContext) async throws -> Output
     ) -> Self {
         let responder = constructResponder(options: options, use: closure)
         let path = self.combinePaths(self.path, path)
