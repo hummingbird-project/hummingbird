@@ -55,7 +55,7 @@ public struct HBTracingMiddleware: HBMiddleware {
                 attributes["http.flavor"] = "\(request.version.major).\(request.version.minor)"
                 attributes["http.scheme"] = request.uri.scheme?.rawValue
                 attributes["http.user_agent"] = request.headers.first(name: "user-agent")
-                attributes["http.request_content_length"] = request.body.buffer?.readableBytes
+                attributes["http.request_content_length"] = request.headers["content-length"].first.map { Int($0) } ?? nil
 
                 attributes["net.host.name"] = context.applicationContext.configuration.address.host
                 attributes["net.host.port"] = context.applicationContext.configuration.address.port
@@ -90,7 +90,9 @@ public struct HBTracingMiddleware: HBMiddleware {
                             switch response.body {
                             case .byteBuffer(let buffer):
                                 attributes["http.response_content_length"] = buffer.readableBytes
-                            case .stream, .empty:
+                            case .stream:
+                                attributes["http.response_content_length"] = response.headers["content-length"].first.map { Int($0) } ?? nil
+                            case .empty:
                                 break
                             }
                         }
