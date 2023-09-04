@@ -75,7 +75,7 @@ final class TracingTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        try app.XCTExecute(uri: "/users", method: .POST, body: ByteBuffer(string: "42")) { response in
+        try app.XCTExecute(uri: "/users", method: .POST, headers: ["content-length": "2"], body: ByteBuffer(string: "42")) { response in
             XCTAssertEqual(response.status, .internalServerError)
         }
 
