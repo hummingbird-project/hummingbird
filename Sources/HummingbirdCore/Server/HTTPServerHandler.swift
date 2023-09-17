@@ -232,7 +232,7 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
             return context.eventLoop.makeSucceededVoidFuture()
         case .stream(let streamer):
             return streamer.write(on: context.eventLoop) { buffer in
-                context.write(self.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: nil)
+                context.writeAndFlush(self.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: nil)
             }
             .flatAlways { _ in
                 context.writeAndFlush(self.wrapOutboundOut(.end(nil)), promise: nil)
