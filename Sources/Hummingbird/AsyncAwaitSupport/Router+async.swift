@@ -78,15 +78,15 @@ extension HBRouterMethods {
             var request = request
             if case .stream = request.body, !options.contains(.streamBody) {
                 let buffer = try await request.body.consumeBody(
-                    maxSize: request.applicationContext.configuration.maxUploadSize
+                    maxSize: context.applicationContext.configuration.maxUploadSize
                 )
                 request.body = .byteBuffer(buffer)
             }
             if options.contains(.editResponse) {
                 request.response = .init()
-                return try await closure(request, context).patchedResponse(from: request)
+                return try await closure(request, context).patchedResponse(from: request, context: context)
             } else {
-                return try await closure(request, context).response(from: request)
+                return try await closure(request, context).response(from: request, context: context)
             }
         }
     }

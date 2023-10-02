@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Atomics
 import HummingbirdCore
 import Logging
 import NIOCore
@@ -19,6 +20,8 @@ import NIOHTTP1
 
 extension HBApplication {
     struct Responder: HBHTTPResponder {
+        internal static let globalRequestID = ManagedAtomic(0)
+
         let responder: HBResponder
         let applicationContext: HBApplication.Context
         let dateCache: HBDateCache
@@ -29,15 +32,20 @@ extension HBApplication {
         ///   - context: context from ChannelHandler
         /// - Returns: response
         public func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
+            let requestId = String(Self.globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed))
             let request = HBRequest(
                 head: request.head,
                 body: request.body,
-                applicationContext: self.applicationContext,
-                context: ChannelRequestContext(channel: context.channel)
+                id: requestId
+            )
+            let context = ChannelRequestContext(
+                channel: context.channel, 
+                applicationContext: self.applicationContext, 
+                requestId: requestId
             )
             let httpVersion = request.version
             // respond to request
-            self.responder.respond(to: request, context: request.context).whenComplete { result in
+            self.responder.respond(to: request, context: context).whenComplete { result in
                 switch result {
                 case .success(let response):
                     var response = response
@@ -55,8 +63,10 @@ extension HBApplication {
     /// Context object for Channel to be provided to HBRequest
     struct ChannelRequestContext: HBRequestContext {
         let channel: Channel
+        let applicationContext: HBApplication.Context
         var eventLoop: EventLoop { return self.channel.eventLoop }
         var allocator: ByteBufferAllocator { return self.channel.allocator }
         var remoteAddress: SocketAddress? { return self.channel.remoteAddress }
+        let requestId: String
     }
 }

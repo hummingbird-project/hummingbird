@@ -30,7 +30,7 @@ import NIOHTTP1
 ///     return .ok
 /// }
 /// app.router.data("data") { request -> ByteBuffer in
-///     return request.allocator.buffer(string: "buffer")
+///     return context.allocator.buffer(string: "buffer")
 /// }
 /// ```
 /// Routes can also return `EventLoopFuture`'s. So you can support returning values from
@@ -110,6 +110,6 @@ public final class HBRouterBuilder: HBRouterMethods {
 /// Responder that return a not found error
 struct NotFoundResponder: HBResponder {
     func respond(to request: HBRequest, context: HBRequestContext) -> NIOCore.EventLoopFuture<HBResponse> {
-        return request.eventLoop.makeFailedFuture(HBHTTPError(.notFound))
+        return context.eventLoop.makeFailedFuture(HBHTTPError(.notFound))
     }
 }

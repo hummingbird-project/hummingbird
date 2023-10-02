@@ -28,7 +28,7 @@ All middleware has to conform to the protocol `HBMiddleware`. This requires one 
 public struct LogRequestsMiddleware: HBMiddleware {
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
         // log request URI
-        request.logger.log(level: .debug, String(describing:request.uri.path))
+        context.logger.log(level: .debug, String(describing:request.uri.path))
         // pass request onto next middleware or the router
         return next.respond(to: request)
     }

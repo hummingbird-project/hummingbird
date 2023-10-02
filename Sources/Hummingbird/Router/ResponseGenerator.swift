@@ -19,13 +19,13 @@ import NIOHTTP1
 /// This is used by `Router` to convert handler return values into a `HBResponse`.
 public protocol HBResponseGenerator {
     /// Generate response based on the request this object came from
-    func response(from request: HBRequest) throws -> HBResponse
+    func response(from request: HBRequest, context: HBRequestContext) throws -> HBResponse
 }
 
 extension HBResponseGenerator {
     /// Generate reponse based on the request this object came from and apply request patches
-    func patchedResponse(from request: HBRequest) throws -> HBResponse {
-        var r = try response(from: request)
+    func patchedResponse(from request: HBRequest, context: HBRequestContext) throws -> HBResponse {
+        var r = try response(from: request, context: context)
         return r.apply(patch: request.optionalResponse)
     }
 }
@@ -33,14 +33,14 @@ extension HBResponseGenerator {
 /// Extend Response to conform to ResponseGenerator
 extension HBResponse: HBResponseGenerator {
     /// Return self as the response
-    public func response(from request: HBRequest) -> HBResponse { self }
+    public func response(from request: HBRequest, context: HBRequestContext) -> HBResponse { self }
 }
 
 /// Extend String to conform to ResponseGenerator
 extension String: HBResponseGenerator {
     /// Generate response holding string
-    public func response(from request: HBRequest) -> HBResponse {
-        let buffer = request.allocator.buffer(string: self)
+    public func response(from request: HBRequest, context: HBRequestContext) -> HBResponse {
+        let buffer = context.allocator.buffer(string: self)
         return HBResponse(status: .ok, headers: ["content-type": "text/plain; charset=utf-8"], body: .byteBuffer(buffer))
     }
 }
@@ -48,8 +48,8 @@ extension String: HBResponseGenerator {
 /// Extend String to conform to ResponseGenerator
 extension Substring: HBResponseGenerator {
     /// Generate response holding string
-    public func response(from request: HBRequest) -> HBResponse {
-        let buffer = request.allocator.buffer(substring: self)
+    public func response(from request: HBRequest, context: HBRequestContext) -> HBResponse {
+        let buffer = context.allocator.buffer(substring: self)
         return HBResponse(status: .ok, headers: ["content-type": "text/plain; charset=utf-8"], body: .byteBuffer(buffer))
     }
 }
@@ -57,7 +57,7 @@ extension Substring: HBResponseGenerator {
 /// Extend ByteBuffer to conform to ResponseGenerator
 extension ByteBuffer: HBResponseGenerator {
     /// Generate response holding bytebuffer
-    public func response(from request: HBRequest) -> HBResponse {
+    public func response(from request: HBRequest, context: HBRequestContext) -> HBResponse {
         HBResponse(status: .ok, headers: ["content-type": "application/octet-stream"], body: .byteBuffer(self))
     }
 }
@@ -65,17 +65,17 @@ extension ByteBuffer: HBResponseGenerator {
 /// Extend HTTPResponseStatus to conform to ResponseGenerator
 extension HTTPResponseStatus: HBResponseGenerator {
     /// Generate response with this response status code
-    public func response(from request: HBRequest) -> HBResponse {
+    public func response(from request: HBRequest, context: HBRequestContext) -> HBResponse {
         HBResponse(status: self, headers: [:], body: .empty)
     }
 }
 
 /// Extend Optional to conform to HBResponseGenerator
 extension Optional: HBResponseGenerator where Wrapped: HBResponseGenerator {
-    public func response(from request: HBRequest) throws -> HBResponse {
+    public func response(from request: HBRequest, context: HBRequestContext) throws -> HBResponse {
         switch self {
         case .some(let wrapped):
-            return try wrapped.response(from: request)
+            return try wrapped.response(from: request, context: context)
         case .none:
             return HBResponse(status: .noContent, headers: [:], body: .empty)
         }

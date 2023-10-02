@@ -31,7 +31,7 @@ Route handlers are required to return either a type conforming to the `HBRespons
 extension String: HBResponseGenerator {
     /// Generate response holding string
     public func response(from request: HBRequest) -> HBResponse {
-        let buffer = request.allocator.buffer(string: self)
+        let buffer = context.allocator.buffer(string: self)
         return HBResponse(status: .ok, headers: ["content-type": "text/plain; charset=utf-8"], body: .byteBuffer(buffer))
     }
 }
@@ -108,12 +108,12 @@ By default Hummingbird will collate the contents of your request body into one B
 ```swift
 application.router.post("size", options: .streamBody) { request -> EventLoopFuture<String> in
     guard let stream = request.body.stream else { 
-        return request.failure(.badRequest)
+        return context.failure(.badRequest)
     }
     var size = 0
-    return stream.consumeAll(on: request.eventLoop) { buffer in
+    return stream.consumeAll(on: context.eventLoop) { buffer in
         size += buffer.readableBytes
-        return request.eventLoop.makeSucceededFuture(())
+        return context.eventLoop.makeSucceededFuture(())
     }
     .map { size.description }
 }

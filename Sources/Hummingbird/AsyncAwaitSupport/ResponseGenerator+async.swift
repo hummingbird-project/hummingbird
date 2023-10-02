@@ -40,7 +40,7 @@ final class AsyncSequenceResponseBodyStreamer<ByteBufferSequence: AsyncSequence>
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension AsyncThrowingStream: HBResponseGenerator where Element == ByteBuffer {
     /// Return self as the response
-    public func response(from request: HBRequest) -> HBResponse {
+    public func response(from request: HBRequest, context: HBRequestContext) -> HBResponse {
         return .init(status: .ok, body: .stream(AsyncSequenceResponseBodyStreamer(self)))
     }
 }
@@ -50,7 +50,7 @@ extension AsyncThrowingStream: HBResponseGenerator where Element == ByteBuffer {
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension AsyncStream: HBResponseGenerator where Element == ByteBuffer {
     /// Return self as the response
-    public func response(from request: HBRequest) -> HBResponse {
+    public func response(from request: HBRequest, context: HBRequestContext) -> HBResponse {
         return .init(status: .ok, body: .stream(AsyncSequenceResponseBodyStreamer(self)))
     }
 }
@@ -64,7 +64,7 @@ public struct AsyncSequenceResponseGenerator<ByteBufferSequence: AsyncSequence>:
     let asyncSequence: ByteBufferSequence
 
     /// Return self as the response
-    public func response(from request: HBRequest) -> HBResponse {
+    public func response(from request: HBRequest, context: HBRequestContext) -> HBResponse {
         return .init(status: .ok, body: .stream(AsyncSequenceResponseBodyStreamer(self.asyncSequence)))
     }
 }

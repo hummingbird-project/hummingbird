@@ -57,10 +57,10 @@ public struct HBTracingMiddleware: HBMiddleware {
                 attributes["http.user_agent"] = request.headers.first(name: "user-agent")
                 attributes["http.request_content_length"] = request.body.buffer?.readableBytes
 
-                attributes["net.host.name"] = request.applicationContext.configuration.address.host
-                attributes["net.host.port"] = request.applicationContext.configuration.address.port
+                attributes["net.host.name"] = context.applicationContext.configuration.address.host
+                attributes["net.host.port"] = context.applicationContext.configuration.address.port
 
-                if let remoteAddress = request.remoteAddress {
+                if let remoteAddress = context.remoteAddress {
                     attributes["net.sock.peer.port"] = remoteAddress.port
 
                     switch remoteAddress.protocol {

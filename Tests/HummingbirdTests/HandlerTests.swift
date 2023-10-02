@@ -164,7 +164,7 @@ final class HandlerTests: XCTestCase {
         struct DecodeTest: HBRequestDecodable {
             let name: String
             func handle(request: HBRequest, context: HBRequestContext) -> EventLoopFuture<String> {
-                return request.success("Hello \(self.name)")
+                return context.success("Hello \(self.name)")
             }
         }
         let app = HBApplicationBuilder()

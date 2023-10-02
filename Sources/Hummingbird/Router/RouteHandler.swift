@@ -70,7 +70,7 @@ extension HBRouterMethods {
                 let handler = try Handler(from: request, context: context)
                 return try handler.handle(request: request, context: context)
             } catch {
-                return request.failure(error)
+                return context.failure(error)
             }
         }
     }

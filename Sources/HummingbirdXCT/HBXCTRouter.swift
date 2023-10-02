@@ -12,7 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Atomics
 import Hummingbird
+import Logging
 import NIOCore
 import NIOPosix
 
@@ -23,6 +25,9 @@ struct HBXCTRouter: HBXCTApplication {
         let eventLoop: EventLoop
         var allocator: ByteBufferAllocator { ByteBufferAllocator() }
         var remoteAddress: SocketAddress? { return nil }
+        let logger: Logger
+        let applicationContext: HBApplication.Context
+        let requestId: String
     }
 
     let eventLoopGroup: EventLoopGroup
@@ -56,21 +61,31 @@ struct HBXCTRouter: HBXCTApplication {
     /// HBXCTRouter client. Constructs an `HBRequest` sends it to the router and then converts
     /// resulting response back to XCT response type
     struct Client: HBXCTClientProtocol {
+        internal static let globalRequestID = ManagedAtomic(0)
+
         let eventLoopGroup: EventLoopGroup
         let responder: HBResponder
         let applicationContext: HBApplication.Context
 
         func execute(uri: String, method: HTTPMethod, headers: HTTPHeaders, body: ByteBuffer?) async throws -> HBXCTResponse {
             let eventLoop = self.eventLoopGroup.any()
+            
+            let requestId = String(Self.globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed))
+
             let request = HBRequest(
                 head: .init(version: .http1_1, method: method, uri: uri, headers: headers),
                 body: .byteBuffer(body),
-                applicationContext: applicationContext,
-                context: RequestContext(eventLoop: eventLoop)
+                id: requestId
+            )
+            let context = RequestContext(
+                eventLoop: eventLoop,
+                logger: self.applicationContext.logger,
+                applicationContext: self.applicationContext,
+                requestId: requestId
             )
             let response: HBResponse
             do {
-                response = try await self.responder.respond(to: request, context: request.context)
+                response = try await self.responder.respond(to: request, context: context)
             } catch let error as HBHTTPResponseError {
                 let httpResponse = error.response(version: .http1_1, allocator: ByteBufferAllocator())
                 response = .init(status: httpResponse.head.status, headers: httpResponse.head.headers, body: httpResponse.body)

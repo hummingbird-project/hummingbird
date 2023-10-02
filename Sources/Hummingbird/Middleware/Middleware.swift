@@ -34,7 +34,7 @@ import NIOCore
 /// ```
 /// func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
 ///     if request.method == .OPTIONS {
-///         return request.success(HBResponse(status: .noContent))
+///         return context.success(HBResponse(status: .noContent))
 ///     } else {
 ///         return next.respond(to: request)
 ///     }

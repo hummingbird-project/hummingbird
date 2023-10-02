@@ -24,7 +24,7 @@ public protocol HBAsyncMiddleware: HBMiddleware {
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension HBAsyncMiddleware {
     public func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
-        let promise = request.eventLoop.makePromise(of: HBResponse.self)
+        let promise = context.eventLoop.makePromise(of: HBResponse.self)
         return ServiceContext.$current.withValue(request.serviceContext) {
             promise.completeWithTask {
                 return try await self.apply(to: request, context: context, next: HBPropagateServiceContextResponder(responder: next, context: context))

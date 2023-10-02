@@ -38,7 +38,7 @@ final class RouterTests: XCTestCase {
         struct TestEndpointMiddleware: HBMiddleware {
             func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
                 guard let endpointPath = request.endpointPath else { return next.respond(to: request, context: context) }
-                return request.success(.init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath))))
+                return context.success(.init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath))))
             }
         }
 
@@ -59,7 +59,7 @@ final class RouterTests: XCTestCase {
         struct TestEndpointMiddleware: HBMiddleware {
             func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
                 guard let endpointPath = request.endpointPath else { return next.respond(to: request, context: context) }
-                return request.success(.init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath))))
+                return context.success(.init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath))))
             }
         }
 
@@ -96,7 +96,7 @@ final class RouterTests: XCTestCase {
         struct TestEndpointMiddleware: HBMiddleware {
             func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
                 guard let endpointPath = request.endpointPath else { return next.respond(to: request, context: context) }
-                return request.success(.init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath))))
+                return context.success(.init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath))))
             }
         }
 
@@ -212,7 +212,7 @@ final class RouterTests: XCTestCase {
             .add(middleware: TestMiddleware())
             .group("/group")
             .get { request, context in
-                return request.success("hello")
+                return context.success("hello")
             }
         try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/test/group", method: .GET) { response in
@@ -238,12 +238,12 @@ final class RouterTests: XCTestCase {
             .group("/test")
             .add(middleware: TestGroupMiddleware(output: "route1"))
             .get { request, context in
-                return request.success(request.string)
+                return context.success(request.string)
             }
             .group("/group")
             .add(middleware: TestGroupMiddleware(output: "route2"))
             .get { request, context in
-                return request.success(request.string)
+                return context.success(request.string)
             }
         try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/test/group", method: .GET) { response in

@@ -23,7 +23,7 @@ public protocol HBAsyncRouteHandler: HBRouteHandler where _Output == EventLoopFu
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension HBAsyncRouteHandler {
     public func handle(request: HBRequest, context: HBRequestContext) throws -> EventLoopFuture<_Output2> {
-        let promise = request.eventLoop.makePromise(of: _Output2.self)
+        let promise = context.eventLoop.makePromise(of: _Output2.self)
         promise.completeWithTask {
             try await self.handle(request: request, context: context)
         }
