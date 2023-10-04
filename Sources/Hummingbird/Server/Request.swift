@@ -52,7 +52,6 @@ public struct HBRequest: Sendable, HBSendableExtensible {
     public var body: HBRequestBody
     /// Request extensions
     public var extensions: HBSendableExtensions<HBRequest>
-    public let id: String
 
     /// Parameters extracted during processing of request URI. These are available to you inside the route handler
     public var parameters: HBParameters {
@@ -60,12 +59,6 @@ public struct HBRequest: Sendable, HBSendableExtensible {
             self.extensions.get(\.parameters) ?? .init()
         }
         @inlinable set { self.extensions.set(\.parameters, value: newValue) }
-    }
-
-    /// endpoint that services this request.
-    public internal(set) var endpointPath: String? {
-        get { self._internal.endpointPath.wrappedValue }
-        set { self._internal.endpointPath.wrappedValue = newValue }
     }
 
     // MARK: Initialization
@@ -77,8 +70,7 @@ public struct HBRequest: Sendable, HBSendableExtensible {
     ///   - id: Unique RequestID
     public init(
         head: HTTPRequestHead,
-        body: HBRequestBody,
-        id: String
+        body: HBRequestBody
     ) {
         self._internal = .init(
             uri: .init(head.uri),
@@ -87,7 +79,6 @@ public struct HBRequest: Sendable, HBSendableExtensible {
             headers: head.headers
         )
         self.body = body
-        self.id = id
         self.extensions = .init()
     }
 
@@ -122,12 +113,11 @@ public struct HBRequest: Sendable, HBSendableExtensible {
     /// Store all the read-only values of the request in a class to avoid copying them
     /// everytime we pass the `HBRequest` struct about
     final class _Internal: Sendable {
-        internal init(uri: HBURL, version: HTTPVersion, method: HTTPMethod, headers: HTTPHeaders, endpointPath: String? = nil) {
+        internal init(uri: HBURL, version: HTTPVersion, method: HTTPMethod, headers: HTTPHeaders) {
             self.uri = uri
             self.version = version
             self.method = method
             self.headers = headers
-            self.endpointPath = .init(endpointPath)
         }
 
         /// URI path
@@ -138,9 +128,6 @@ public struct HBRequest: Sendable, HBSendableExtensible {
         let method: HTTPMethod
         /// Request HTTP headers
         let headers: HTTPHeaders
-        /// Endpoint path. This is stored a var so it can be edited by the router. In theory this could
-        /// be accessed on multiple thread/tasks at the same point but it is only ever edited by router
-        let endpointPath: HBUnsafeMutableTransferBox<String?>
     }
 
     private var _internal: _Internal

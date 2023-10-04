@@ -28,6 +28,11 @@ struct HBXCTRouter: HBXCTApplication {
         let logger: Logger
         let applicationContext: HBApplication.Context
         let requestId: String
+        private let _endpointPath = HBUnsafeMutableTransferBox<String?>(nil)
+        var endpointPath: String? {
+            get { _endpointPath.wrappedValue }
+            nonmutating set { _endpointPath.wrappedValue = newValue }
+        }
     }
 
     let eventLoopGroup: EventLoopGroup
@@ -74,8 +79,7 @@ struct HBXCTRouter: HBXCTApplication {
 
             let request = HBRequest(
                 head: .init(version: .http1_1, method: method, uri: uri, headers: headers),
-                body: .byteBuffer(body),
-                id: requestId
+                body: .byteBuffer(body)
             )
             let context = RequestContext(
                 eventLoop: eventLoop,

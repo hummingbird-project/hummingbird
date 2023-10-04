@@ -26,6 +26,9 @@ public protocol HBRequestContext: Sendable {
     var applicationContext: HBApplication.Context { get }
     var logger: Logger { get }
     var requestId: String { get }
+    /// Endpoint path. This is stored a var so it can be edited by the router. In theory this could
+    /// be accessed on multiple thread/tasks at the same point but it is only ever edited by router
+    var endpointPath: String? { get nonmutating set }
 }
 
 extension HBRequestContext {

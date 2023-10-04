@@ -35,8 +35,7 @@ extension HBApplication {
             let requestId = String(Self.globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed))
             let request = HBRequest(
                 head: request.head,
-                body: request.body,
-                id: requestId
+                body: request.body
             )
             let context = ChannelRequestContext(
                 channel: context.channel, 
@@ -68,5 +67,10 @@ extension HBApplication {
         var allocator: ByteBufferAllocator { return self.channel.allocator }
         var remoteAddress: SocketAddress? { return self.channel.remoteAddress }
         let requestId: String
+        private let _endpointPath = HBUnsafeMutableTransferBox<String?>(nil)
+        var endpointPath: String? {
+            get { _endpointPath.wrappedValue }
+            nonmutating set { _endpointPath.wrappedValue = newValue }
+        }
     }
 }

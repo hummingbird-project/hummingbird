@@ -42,7 +42,7 @@ public struct HBTracingMiddleware: HBMiddleware {
         InstrumentationSystem.instrument.extract(request.headers, into: &serviceContext, using: HTTPHeadersExtractor())
 
         let operationName: String = {
-            guard let endpointPath = request.endpointPath else {
+            guard let endpointPath = context.endpointPath else {
                 return "HTTP \(request.method.rawValue) route not found"
             }
             return endpointPath
