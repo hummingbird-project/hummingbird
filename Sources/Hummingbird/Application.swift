@@ -36,6 +36,25 @@ import NIOTransportServices
 /// ```
 /// Editing the application setup after calling `start` will produce undefined behaviour.
 public final class HBApplication: HBExtensible {
+    /// Indicates where we should get our EventLoopGroup from
+    public struct EventLoopGroupProvider {
+        enum Internal {
+            case createNew
+            case shared(EventLoopGroup)
+            case singleton
+        }
+
+        let value: Internal
+        init(_ value: Internal) {
+            self.value = value
+        }
+
+        /// Use EventLoopGroup provided
+        public static func shared(_ eventLoopGroup: EventLoopGroup) -> Self { .init(.shared(eventLoopGroup)) }
+        /// Use singleton EventLoopGroup
+        public static var singleton: Self { .init(.singleton) }
+    }
+
     // MARK: Member variables
 
     /// server lifecycle, controls initialization and shutdown of application
@@ -60,14 +79,14 @@ public final class HBApplication: HBExtensible {
     public var decoder: HBRequestDecoder
 
     /// who provided the eventLoopGroup
-    let eventLoopGroupProvider: NIOEventLoopGroupProvider
+    let eventLoopGroupProvider: HBApplication.EventLoopGroupProvider
 
     // MARK: Initialization
 
     /// Initialize new Application
     public init(
         configuration: HBApplication.Configuration = HBApplication.Configuration(),
-        eventLoopGroupProvider: NIOEventLoopGroupProvider = .createNew,
+        eventLoopGroupProvider: EventLoopGroupProvider = .singleton,
         serviceLifecycleProvider: ServiceLifecycleProvider = .createNew
     ) {
         var logger = Logger(label: configuration.serverName ?? "HummingBird")
@@ -82,12 +101,18 @@ public final class HBApplication: HBExtensible {
 
         // create eventLoopGroup
         self.eventLoopGroupProvider = eventLoopGroupProvider
-        switch eventLoopGroupProvider {
+        switch self.eventLoopGroupProvider.value {
         case .createNew:
             #if os(iOS)
             self.eventLoopGroup = NIOTSEventLoopGroup()
             #else
             self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+            #endif
+        case .singleton:
+            #if os(iOS)
+            self.eventLoopGroup = NIOTSEventLoopGroup.singleton
+            #else
+            self.eventLoopGroup = MultiThreadedEventLoopGroup.singleton
             #endif
         case .shared(let elg):
             self.eventLoopGroup = elg
@@ -129,6 +154,21 @@ public final class HBApplication: HBExtensible {
                 start: .eventLoopFuture { self.server.start(responder: HTTPResponder(application: self)) },
                 shutdown: .eventLoopFuture(self.server.stop)
             )
+        }
+    }
+
+    @available(*, deprecated, message: "Calling HBApplication.init(eventLoopGroupProvider: .createNew) has been deprecated. Use .singleton instead.")
+    @_disfavoredOverload
+    public convenience init(
+        configuration: HBApplication.Configuration = HBApplication.Configuration(),
+        eventLoopGroupProvider: NIOEventLoopGroupProvider = .createNew,
+        serviceLifecycleProvider: ServiceLifecycleProvider = .createNew
+    ) {
+        switch eventLoopGroupProvider {
+        case .createNew:
+            self.init(configuration: configuration, eventLoopGroupProvider: .init(.createNew), serviceLifecycleProvider: serviceLifecycleProvider)
+        case .shared(let elg):
+            self.init(configuration: configuration, eventLoopGroupProvider: .init(.shared(elg)), serviceLifecycleProvider: serviceLifecycleProvider)
         }
     }
 
@@ -174,7 +214,7 @@ public final class HBApplication: HBExtensible {
     public func shutdownApplication() throws {
         try self.extensions.shutdown()
         try self.threadPool.syncShutdownGracefully()
-        if case .createNew = self.eventLoopGroupProvider {
+        if case .createNew = self.eventLoopGroupProvider.value {
             try self.eventLoopGroup.syncShutdownGracefully()
         }
     }
