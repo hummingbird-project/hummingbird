@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
+import HummingbirdCoreXCT
 import HummingbirdXCT
 import NIOHTTP1
 import XCTest
@@ -472,5 +473,29 @@ final class ApplicationTests: XCTestCase {
             let address = String(buffer: body)
             XCTAssert(address == "127.0.0.1" || address == "::1")
         }
+    }
+
+    func testSingleEventLoopGroup() throws {
+        let app = HBApplication(eventLoopGroupProvider: .singleton)
+        app.router.get("/hello") { request -> EventLoopFuture<ByteBuffer> in
+            let buffer = request.allocator.buffer(string: "GET: Hello")
+            return request.eventLoop.makeSucceededFuture(buffer)
+        }
+        try app.start()
+        defer { app.stop() }
+
+        let client = HBXCTClient(
+            host: "localhost",
+            port: app.server.port!,
+            configuration: .init(timeout: .seconds(15)),
+            eventLoopGroupProvider: .createNew
+        )
+        defer { try? client.syncShutdown() }
+        client.connect()
+        let response = try client.get("/hello").wait()
+        var body = try XCTUnwrap(response.body)
+        let string = body.readString(length: body.readableBytes)
+        XCTAssertEqual(response.status, .ok)
+        XCTAssertEqual(string, "GET: Hello")
     }
 }
