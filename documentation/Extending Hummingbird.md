@@ -39,7 +39,7 @@ Note, I have placed everything inside a containing struct `AWS`, so the KeyPath 
 
 ## Extending EventLoop
 
-In certain situations it can be useful to hold data on a per `EventLoop` basis. You can do this by extending the class `HBApplication.EventLoopStorage`. The class can be extended in the same way as above. You then access the storage either via `HBApplication.eventLoopStorage(for:)` or `HBRequest.eventLoopStorage`. 
+In certain situations it can be useful to hold data on a per `EventLoop` basis. You can do this by extending the class `HBApplication.EventLoopStorage`. The class can be extended in the same way as above. You then access the storage either via `HBApplication.eventLoopStorage(for:)` or `HBcontext.eventLoopStorage`. 
 ```swift
 extension HBApplication.EventLoopStorage {
     public var index: Int? {
@@ -48,7 +48,7 @@ extension HBApplication.EventLoopStorage {
     }
 }
 func getIndex(_ request: HBRequest) {
-    let index = request.eventLoopStorage.index
+    let index = context.eventLoopStorage.index
     ...
 }
 ```

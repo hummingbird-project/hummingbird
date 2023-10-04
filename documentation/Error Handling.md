@@ -16,12 +16,12 @@ app.get("user") { request -> User in
 ```
 The `HBHTTPError` generated here will be recognised by the server and it will generate a status code 400 (Bad Request) with the body "Invalid user id".
 
-In the situation where you have a route that returns an `EventLoopFuture` you are not allowed to throw an error so you have to return a failed `EventLoopFuture`. Hummingbird provides a shortcut here for you `request.failure`. It can be used as follows
+In the situation where you have a route that returns an `EventLoopFuture` you are not allowed to throw an error so you have to return a failed `EventLoopFuture`. Hummingbird provides a shortcut here for you `context.failure`. It can be used as follows
 
 ```swift
 app.get("user") { request -> EventLoopFuture<User> in
     guard let userId = request.uri.queryParameters.get("id", as: Int.self) else {
-        return request.failure(.badRequest, message: "Invalid user id")
+        return context.failure(.badRequest, message: "Invalid user id")
     }
     ...
 }

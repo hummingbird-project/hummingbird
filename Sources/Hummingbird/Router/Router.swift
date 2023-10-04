@@ -36,7 +36,7 @@ struct HBRouter: HBResponder {
             request.parameters = parameters
         }
         // store endpoint path in request (mainly for metrics)
-        request.endpointPath = result.value.path
+        context.endpointPath = result.value.path
         return responder.respond(to: request, context: context)
     }
 }

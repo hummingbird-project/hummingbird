@@ -23,8 +23,8 @@ public protocol HBResponseCodable: HBResponseEncodable, Decodable {}
 
 /// Extend ResponseEncodable to conform to ResponseGenerator
 extension HBResponseEncodable {
-    public func response(from request: HBRequest) throws -> HBResponse {
-        return try request.applicationContext.encoder.encode(self, from: request)
+    public func response(from request: HBRequest, context: HBRequestContext) throws -> HBResponse {
+        return try context.applicationContext.encoder.encode(self, from: request, context: context)
     }
 }
 
@@ -33,8 +33,8 @@ extension Array: HBResponseGenerator where Element: Encodable {}
 
 /// Extend Array to conform to HBResponseEncodable
 extension Array: HBResponseEncodable where Element: Encodable {
-    public func response(from request: HBRequest) throws -> HBResponse {
-        return try request.applicationContext.encoder.encode(self, from: request)
+    public func response(from request: HBRequest, context: HBRequestContext) throws -> HBResponse {
+        return try context.applicationContext.encoder.encode(self, from: request, context: context)
     }
 }
 
@@ -43,7 +43,7 @@ extension Dictionary: HBResponseGenerator where Key: Encodable, Value: Encodable
 
 /// Extend Array to conform to HBResponseEncodable
 extension Dictionary: HBResponseEncodable where Key: Encodable, Value: Encodable {
-    public func response(from request: HBRequest) throws -> HBResponse {
-        return try request.applicationContext.encoder.encode(self, from: request)
+    public func response(from request: HBRequest, context: HBRequestContext) throws -> HBResponse {
+        return try context.applicationContext.encoder.encode(self, from: request, context: context)
     }
 }

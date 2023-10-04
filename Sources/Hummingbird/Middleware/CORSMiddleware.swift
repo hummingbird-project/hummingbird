@@ -107,7 +107,7 @@ public struct HBCORSMiddleware: HBMiddleware {
                 headers.add(name: "vary", value: "Origin")
             }
 
-            return request.success(HBResponse(status: .noContent, headers: headers, body: .empty))
+            return context.success(HBResponse(status: .noContent, headers: headers, body: .empty))
         } else {
             // if not OPTIONS then run rest of middleware chain and add origin value at the end
             return next.respond(to: request, context: context).map { response in

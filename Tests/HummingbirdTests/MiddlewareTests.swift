@@ -92,9 +92,9 @@ final class MiddlewareTests: XCTestCase {
             func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
                 return next.respond(to: request, context: context).flatMapError { error in
                     guard let httpError = error as? HBHTTPError, httpError.status == .notFound else {
-                        return request.failure(error)
+                        return context.failure(error)
                     }
-                    return request.failure(.notFound, message: "Edited error")
+                    return context.failure(.notFound, message: "Edited error")
                 }
             }
         }
@@ -113,7 +113,7 @@ final class MiddlewareTests: XCTestCase {
     func testEndpointPathInGroup() async throws {
         struct TestMiddleware: HBMiddleware {
             func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
-                XCTAssertNotNil(request.endpointPath)
+                XCTAssertNotNil(context.endpointPath)
                 return next.respond(to: request, context: context)
             }
         }
@@ -189,8 +189,8 @@ final class MiddlewareTests: XCTestCase {
     func testRouteLoggingMiddleware() async throws {
         let app = HBApplicationBuilder()
         app.middleware.add(HBLogRequestsMiddleware(.debug))
-        app.router.put("/hello") { request, _ -> EventLoopFuture<String> in
-            return request.failure(.badRequest)
+        app.router.put("/hello") { request, context -> EventLoopFuture<String> in
+            return context.failure(.badRequest)
         }
         try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/hello", method: .PUT) { _ in

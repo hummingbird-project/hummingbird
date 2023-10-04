@@ -29,8 +29,8 @@ class HummingbirdAsyncFilesTests: XCTestCase {
     func testRead() async throws {
         let app = HBApplicationBuilder()
         app.router.get("test.jpg") { request, context -> HBResponse in
-            let fileIO = HBFileIO(threadPool: request.applicationContext.threadPool)
-            let body = try await fileIO.loadFile(path: "test.jpg", context: request.context, logger: request.logger)
+            let fileIO = HBFileIO(threadPool: context.applicationContext.threadPool)
+            let body = try await fileIO.loadFile(path: "test.jpg", context: context, logger: context.logger)
             return .init(status: .ok, headers: [:], body: body)
         }
         let buffer = self.randomBuffer(size: 320_003)
@@ -50,12 +50,12 @@ class HummingbirdAsyncFilesTests: XCTestCase {
         let filename = "testWrite.txt"
         let app = HBApplicationBuilder()
         app.router.put("store") { request, context -> HTTPResponseStatus in
-            let fileIO = HBFileIO(threadPool: request.applicationContext.threadPool)
+            let fileIO = HBFileIO(threadPool: context.applicationContext.threadPool)
             try await fileIO.writeFile(
                 contents: request.body,
                 path: filename,
-                context: request.context,
-                logger: request.logger
+                context: context,
+                logger: context.logger
             )
             return .ok
         }

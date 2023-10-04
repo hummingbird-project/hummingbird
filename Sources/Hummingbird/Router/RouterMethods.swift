@@ -180,9 +180,9 @@ extension HBRouterMethods {
             if options.contains(.editResponse) {
                 var request = request
                 request.response = .init()
-                response = try closure(request, context).patchedResponse(from: request)
+                response = try closure(request, context).patchedResponse(from: request, context: context)
             } else {
-                response = try closure(request, context).response(from: request)
+                response = try closure(request, context).response(from: request, context: context)
             }
             return response
         }
@@ -191,9 +191,9 @@ extension HBRouterMethods {
             return HBCallbackResponder { request, context in
                 do {
                     let response = try _respond(request: request, context: context)
-                    return request.success(response)
+                    return context.success(response)
                 } catch {
-                    return request.failure(error)
+                    return context.failure(error)
                 }
             }
         } else {
@@ -201,14 +201,14 @@ extension HBRouterMethods {
                 if case .byteBuffer = request.body {
                     do {
                         let response = try _respond(request: request, context: context)
-                        return request.success(response)
+                        return context.success(response)
                     } catch {
-                        return request.failure(error)
+                        return context.failure(error)
                     }
                 } else {
                     return request.body.consumeBody(
-                        maxSize: request.applicationContext.configuration.maxUploadSize,
-                        on: request.eventLoop
+                        maxSize: context.applicationContext.configuration.maxUploadSize,
+                        on: context.eventLoop
                     ).flatMapThrowing { buffer in
                         var request = request
                         request.body = .byteBuffer(buffer)
@@ -229,11 +229,11 @@ extension HBRouterMethods {
             let responseFuture: EventLoopFuture<HBResponse>
             if options.contains(.editResponse) {
                 request.response = .init()
-                responseFuture = closure(request, context).flatMapThrowing { try $0.patchedResponse(from: request) }
+                responseFuture = closure(request, context).flatMapThrowing { try $0.patchedResponse(from: request, context: context) }
             } else {
-                responseFuture = closure(request, context).flatMapThrowing { try $0.response(from: request) }
+                responseFuture = closure(request, context).flatMapThrowing { try $0.response(from: request, context: context) }
             }
-            return responseFuture.hop(to: request.eventLoop)
+            return responseFuture.hop(to: context.eventLoop)
         }
 
         if options.contains(.streamBody) {
@@ -247,8 +247,8 @@ extension HBRouterMethods {
                     return _respond(request: request, context: context)
                 } else {
                     return request.body.consumeBody(
-                        maxSize: request.applicationContext.configuration.maxUploadSize,
-                        on: request.eventLoop
+                        maxSize: context.applicationContext.configuration.maxUploadSize,
+                        on: context.eventLoop
                     ).flatMap { buffer in
                         request.body = .byteBuffer(buffer)
                         return _respond(request: request, context: context)

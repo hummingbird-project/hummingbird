@@ -37,8 +37,8 @@ final class RouterTests: XCTestCase {
     func testEndpointPath() async throws {
         struct TestEndpointMiddleware: HBMiddleware {
             func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
-                guard let endpointPath = request.endpointPath else { return next.respond(to: request, context: context) }
-                return request.success(.init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath))))
+                guard let endpointPath = context.endpointPath else { return next.respond(to: request, context: context) }
+                return context.success(.init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath))))
             }
         }
 
@@ -58,21 +58,21 @@ final class RouterTests: XCTestCase {
     func testEndpointPathPrefix() async throws {
         struct TestEndpointMiddleware: HBMiddleware {
             func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
-                guard let endpointPath = request.endpointPath else { return next.respond(to: request, context: context) }
-                return request.success(.init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath))))
+                guard let endpointPath = context.endpointPath else { return next.respond(to: request, context: context) }
+                return context.success(.init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath))))
             }
         }
 
         let app = HBApplicationBuilder()
         app.middleware.add(TestEndpointMiddleware())
-        app.router.get("test") { req, _ in
-            return req.endpointPath
+        app.router.get("test") { req, context in
+            return context.endpointPath
         }
-        app.router.get { req, _ in
-            return req.endpointPath
+        app.router.get { req, context in
+            return context.endpointPath
         }
-        app.router.post("/test2") { req, _ in
-            return req.endpointPath
+        app.router.post("/test2") { req, context in
+            return context.endpointPath
         }
 
         try await app.buildAndTest(.router) { client in
@@ -95,28 +95,28 @@ final class RouterTests: XCTestCase {
     func testEndpointPathSuffix() async throws {
         struct TestEndpointMiddleware: HBMiddleware {
             func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
-                guard let endpointPath = request.endpointPath else { return next.respond(to: request, context: context) }
-                return request.success(.init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath))))
+                guard let endpointPath = context.endpointPath else { return next.respond(to: request, context: context) }
+                return context.success(.init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath))))
             }
         }
 
         let app = HBApplicationBuilder()
         app.middleware.add(TestEndpointMiddleware())
-        app.router.get("test/") { req, _ in
-            return req.endpointPath
+        app.router.get("test/") { req, context in
+            return context.endpointPath
         }
-        app.router.post("test2") { req, _ in
-            return req.endpointPath
+        app.router.post("test2") { req, context in
+            return context.endpointPath
         }
         app.router
             .group("testGroup")
-            .get { req, _ in
-                return req.endpointPath
+            .get { req, context in
+                return context.endpointPath
             }
         app.router
             .group("testGroup2")
-            .get("/") { req, _ in
-                return req.endpointPath
+            .get("/") { req, context in
+                return context.endpointPath
             }
         try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/test/", method: .GET) { response in
@@ -212,7 +212,7 @@ final class RouterTests: XCTestCase {
             .add(middleware: TestMiddleware())
             .group("/group")
             .get { request, context in
-                return request.success("hello")
+                return context.success("hello")
             }
         try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/test/group", method: .GET) { response in
@@ -238,12 +238,12 @@ final class RouterTests: XCTestCase {
             .group("/test")
             .add(middleware: TestGroupMiddleware(output: "route1"))
             .get { request, context in
-                return request.success(request.string)
+                return context.success(request.string)
             }
             .group("/group")
             .add(middleware: TestGroupMiddleware(output: "route2"))
             .get { request, context in
-                return request.success(request.string)
+                return context.success(request.string)
             }
         try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/test/group", method: .GET) { response in
@@ -322,8 +322,8 @@ final class RouterTests: XCTestCase {
     /// Test we have a request id and that it increments with each request
     func testRequestId() async throws {
         let app = HBApplicationBuilder()
-        app.router.get("id") { req, _ in 
-            return req.id
+        app.router.get("id") { req, context in 
+            return context.requestId
         }
         try await app.buildAndTest(.router) { client in
             let idString = try await client.XCTExecute(uri: "/id", method: .GET) { response -> String in

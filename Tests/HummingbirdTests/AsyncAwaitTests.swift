@@ -26,14 +26,14 @@ final class AsyncAwaitTests: XCTestCase {
         return ByteBufferAllocator().buffer(bytes: data)
     }
 
-    func getBuffer(request: HBRequest) async -> ByteBuffer {
-        return request.allocator.buffer(string: "Async Hello")
+    func getBuffer(request: HBRequest, context: HBRequestContext) async -> ByteBuffer {
+        return context.allocator.buffer(string: "Async Hello")
     }
 
     func testAsyncRoute() async throws {
         let app = HBApplicationBuilder()
         app.router.get("/hello") { request, context -> ByteBuffer in
-            return await self.getBuffer(request: request)
+            return await self.getBuffer(request: request, context: context)
         }
         try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/hello", method: .GET) { response in
@@ -48,7 +48,7 @@ final class AsyncAwaitTests: XCTestCase {
     func testAsyncRouterGroup() async throws {
         let app = HBApplicationBuilder()
         app.router.group("test").get("/hello") { request, context -> ByteBuffer in
-            return await self.getBuffer(request: request)
+            return await self.getBuffer(request: request, context: context)
         }
         try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/test/hello", method: .GET) { response in
@@ -88,7 +88,7 @@ final class AsyncAwaitTests: XCTestCase {
             }
 
             func handle(request: HBRequest, context: HBRequestContext) async throws -> String {
-                return try await request.success("Hello \(self.name)").get()
+                return try await context.success("Hello \(self.name)").get()
             }
         }
         let app = HBApplicationBuilder()

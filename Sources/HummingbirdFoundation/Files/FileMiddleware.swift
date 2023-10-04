@@ -74,20 +74,20 @@ public struct HBFileMiddleware: HBMiddleware {
         let response: EventLoopFuture<HBResponse> = next.respond(to: request, context: context)
         return response.flatMapError { error -> EventLoopFuture<HBResponse> in
             guard let httpError = error as? HBHTTPError, httpError.status == .notFound else {
-                return request.failure(error)
+                return context.failure(error)
             }
 
             guard let path = request.uri.path.removingPercentEncoding else {
-                return request.failure(.badRequest)
+                return context.failure(.badRequest)
             }
 
             guard !path.contains("..") else {
-                return request.failure(.badRequest)
+                return context.failure(.badRequest)
             }
 
             var fullPath = self.rootFolder.appendingPathComponent(path)
 
-            return self.threadPool.runIfActive(eventLoop: request.eventLoop) { () -> FileResult in
+            return self.threadPool.runIfActive(eventLoop: context.eventLoop) { () -> FileResult in
                 let modificationDate: Date?
                 let contentSize: Int?
                 do {
@@ -190,26 +190,26 @@ public struct HBFileMiddleware: HBMiddleware {
             }.flatMap { (result: FileResult) -> EventLoopFuture<HBResponse> in
                 switch result {
                 case .notModified(let headers):
-                    return request.eventLoop.makeSucceededFuture(HBResponse(status: .notModified, headers: headers))
+                    return context.eventLoop.makeSucceededFuture(HBResponse(status: .notModified, headers: headers))
                 case .loadFile(let headers, let range):
                     switch request.method {
                     case .GET:
                         if let range = range {
-                            return self.fileIO.loadFile(path: fullPath.relativePath, range: range, context: request.context, logger: request.logger)
+                            return self.fileIO.loadFile(path: fullPath.relativePath, range: range, context: context, logger: context.logger)
                                 .map { body, _ in
                                     return HBResponse(status: .partialContent, headers: headers, body: body)
                                 }
                         }
-                        return self.fileIO.loadFile(path: fullPath.relativePath, context: request.context, logger: request.logger)
+                        return self.fileIO.loadFile(path: fullPath.relativePath, context: context, logger: context.logger)
                             .map { body in
                                 return HBResponse(status: .ok, headers: headers, body: body)
                             }
 
                     case .HEAD:
-                        return request.success(HBResponse(status: .ok, headers: headers, body: .empty))
+                        return context.success(HBResponse(status: .ok, headers: headers, body: .empty))
 
                     default:
-                        return request.failure(error)
+                        return context.failure(error)
                     }
                 }
             }
