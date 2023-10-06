@@ -18,7 +18,7 @@ import NIOPosix
 
 // get environment
 let hostname = HBEnvironment.shared.get("SERVER_HOSTNAME") ?? "127.0.0.1"
-let port = HBEnvironment.shared.get("SERVER_PORT", as: Int.self) ?? 8080
+let port = HBEnvironment.shared.get("SERVER_PORT", as: Int.self) ?? 8081
 
 // create app
 let elg = MultiThreadedEventLoopGroup(numberOfThreads: 2)
@@ -54,5 +54,4 @@ app.router.get("json") { _ in
 }
 
 // run app
-try app.start()
-app.wait()
+try app.run()
