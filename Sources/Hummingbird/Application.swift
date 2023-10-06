@@ -189,10 +189,8 @@ public final class HBApplication: HBExtensible {
     /// Version of `run` that can be called from asynchronous context
     @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     public func asyncRun() async throws {
-        try await self.onExecutionQueue { app in
-            try app.start()
-            app.wait()
-        }
+        try self.start()
+        await self.asyncWait()
     }
 
     /// Start application
@@ -251,22 +249,6 @@ public final class HBApplication: HBExtensible {
         try self.threadPool.syncShutdownGracefully()
         if case .createNew = self.eventLoopGroupProvider.value {
             try self.eventLoopGroup.syncShutdownGracefully()
-        }
-    }
-
-    /// Run throwing closure on private execution queue
-    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-    private func onExecutionQueue(_ process: @Sendable @escaping (HBApplication) throws -> Void) async throws {
-        let unsafeApp = HBUnsafeTransfer(self)
-        try await withCheckedThrowingContinuation { continuation in
-            HBApplication.executionQueue.async {
-                do {
-                    try process(unsafeApp.wrappedValue)
-                    continuation.resume()
-                } catch {
-                    continuation.resume(throwing: error)
-                }
-            }
         }
     }
 
