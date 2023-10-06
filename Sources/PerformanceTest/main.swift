@@ -54,5 +54,6 @@ app.router.get("json") { _ in
 }
 
 // run app
-try app.start()
-app.wait()
+if #available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *) {
+    try await app.asyncRun()
+}

@@ -174,7 +174,28 @@ public final class HBApplication: HBExtensible {
 
     // MARK: Methods
 
-    /// Run application
+    /// Start application and wait for it to stop
+    ///
+    /// This function can only be called from a non async context as it stalls
+    /// the current thread waiting for the application to finish
+    @available(*, noasync, message: "Use HBApplication.asyncRun instead.")
+    public func run() throws {
+        try self.start()
+        self.wait()
+    }
+
+    /// Start application and wait for it to stop
+    ///
+    /// Version of `run`` that can be called from asynchronous context
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    public func asyncRun() async throws {
+        try await self.onExecutionQueue { app in
+            try app.start()
+            app.wait()
+        }
+    }
+
+    /// Start application
     public func start() throws {
         var startError: Error?
         let startSemaphore = DispatchSemaphore(value: 0)
@@ -187,9 +208,23 @@ public final class HBApplication: HBExtensible {
         try startError.map { throw $0 }
     }
 
-    /// wait while server is running
+    /// Wait until server has stopped running
+    ///
+    /// This function can only be called from a non async context as it stalls
+    /// the current thread waiting for the application to finish
+    @available(*, noasync, message: "Use HBApplication.asyncRun instead.")
     public func wait() {
         self.lifecycle.wait()
+    }
+
+    /// Wait until server has stopped running
+    ///
+    /// Version of `wait`` that can be called from asynchronous context
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    public func asyncWait() async {
+        await self.onExecutionQueue { app in
+            app.wait()
+        }
     }
 
     /// Shutdown application
@@ -218,4 +253,34 @@ public final class HBApplication: HBExtensible {
             try self.eventLoopGroup.syncShutdownGracefully()
         }
     }
+
+    /// Run throwing closure on private execution queue
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    private func onExecutionQueue(_ process: @Sendable @escaping (HBApplication) throws -> Void) async throws {
+        let unsafeApp = HBUnsafeTransfer(self)
+        try await withCheckedThrowingContinuation { continuation in
+            HBApplication.executionQueue.async {
+                do {
+                    try process(unsafeApp.wrappedValue)
+                    continuation.resume()
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    /// Run closure on private execution queue
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    private func onExecutionQueue(_ process: @Sendable @escaping (HBApplication) -> Void) async {
+        let unsafeApp = HBUnsafeTransfer(self)
+        await withCheckedContinuation { continuation in
+            HBApplication.executionQueue.async {
+                process(unsafeApp.wrappedValue)
+                continuation.resume()
+            }
+        }
+    }
+
+    private static let executionQueue = DispatchQueue(label: "hummingbird.execution")
 }
