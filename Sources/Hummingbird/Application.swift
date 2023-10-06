@@ -212,7 +212,7 @@ public final class HBApplication: HBExtensible {
     ///
     /// This function can only be called from a non async context as it stalls
     /// the current thread waiting for the application to finish
-    @available(*, noasync, message: "Use HBApplication.asyncRun instead.")
+    @available(*, noasync, message: "Use HBApplication.asyncWait instead.")
     public func wait() {
         self.lifecycle.wait()
     }
