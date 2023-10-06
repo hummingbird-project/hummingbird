@@ -186,7 +186,7 @@ public final class HBApplication: HBExtensible {
 
     /// Start application and wait for it to stop
     ///
-    /// Version of `run`` that can be called from asynchronous context
+    /// Version of `run` that can be called from asynchronous context
     @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     public func asyncRun() async throws {
         try await self.onExecutionQueue { app in
