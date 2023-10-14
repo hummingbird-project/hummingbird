@@ -14,7 +14,7 @@
 
 import Logging
 
-/// Context that created HBRequest.
+/// Context from Channel that created HBRequest.
 public protocol HBChannelContextProtocol: Sendable {
     /// EventLoop request is running on
     var eventLoop: EventLoop { get }

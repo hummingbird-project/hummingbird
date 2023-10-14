@@ -16,13 +16,17 @@ import Atomics
 import Logging
 import NIOCore
 
+/// Holds data associated with a request. Provides context for request processing
 public struct HBRequestContext {
-    /// reference to application
+    /// Application context
     public let applicationContext: HBApplication.Context
+    /// Channel context (where to get EventLoop, allocator etc)
     let channelContext: HBChannelContextProtocol
+    /// Logger to use with Request
     public let logger: Logger
+    /// Request ID
     public let requestId: Int
-    /// Endpoint path. This is stored a var so it can be edited by the router.
+    /// Endpoint path
     public internal(set) var endpointPath: String? {
         get { self._endpointPath.value }
         nonmutating set { self._endpointPath.value = newValue }
@@ -34,10 +38,15 @@ public struct HBRequestContext {
     public var allocator: ByteBufferAllocator { self.channelContext.allocator }
     /// Connected host address
     public var remoteAddress: SocketAddress? { self.channelContext.remoteAddress }
-
-    private static let globalRequestID = ManagedAtomic(0)
+    /// Internal storage for endpoint path
     private let _endpointPath: NIOLoopBoundBox<String?>
+    /// Current global request ID
+    private static let globalRequestID = ManagedAtomic(0)
 
+    ///  Initialize an `HBRequestContext`
+    /// - Parameters:
+    ///   - applicationContext: Context from Application that instigated the request
+    ///   - channelContext: Context providing source for EventLoop
     public init(
         applicationContext: HBApplication.Context,
         channelContext: HBChannelContextProtocol
