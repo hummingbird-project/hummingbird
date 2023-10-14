@@ -86,7 +86,7 @@ public struct HBRequest: Sendable, HBSendableExtensible {
 
     /// Decode request using decoder stored at `HBApplication.decoder`.
     /// - Parameter type: Type you want to decode to
-    public func decode<Type: Decodable>(as type: Type.Type, using context: any HBRequestContext) throws -> Type {
+    public func decode<Type: Decodable>(as type: Type.Type, using context: HBRequestContext) throws -> Type {
         do {
             return try context.applicationContext.decoder.decode(type, from: self, context: context)
         } catch DecodingError.dataCorrupted(_) {

@@ -21,18 +21,10 @@ import NIOPosix
 /// Test sending values to requests to router. This does not setup a live server
 struct HBXCTRouter: HBXCTApplication {
     /// Dummy request context
-    struct RequestContext: HBRequestContext {
+    struct XCTChannelContext: HBChannelContextProtocol {
         let eventLoop: EventLoop
         var allocator: ByteBufferAllocator { ByteBufferAllocator() }
         var remoteAddress: SocketAddress? { return nil }
-        let logger: Logger
-        let applicationContext: HBApplication.Context
-        let requestId: String
-        private let _endpointPath = HBUnsafeMutableTransferBox<String?>(nil)
-        var endpointPath: String? {
-            get { _endpointPath.wrappedValue }
-            nonmutating set { _endpointPath.wrappedValue = newValue }
-        }
     }
 
     let eventLoopGroup: EventLoopGroup
@@ -66,57 +58,59 @@ struct HBXCTRouter: HBXCTApplication {
     /// HBXCTRouter client. Constructs an `HBRequest` sends it to the router and then converts
     /// resulting response back to XCT response type
     struct Client: HBXCTClientProtocol {
-        internal static let globalRequestID = ManagedAtomic(0)
-
         let eventLoopGroup: EventLoopGroup
         let responder: HBResponder
         let applicationContext: HBApplication.Context
 
         func execute(uri: String, method: HTTPMethod, headers: HTTPHeaders, body: ByteBuffer?) async throws -> HBXCTResponse {
             let eventLoop = self.eventLoopGroup.any()
-            
-            let requestId = String(Self.globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed))
 
-            let request = HBRequest(
-                head: .init(version: .http1_1, method: method, uri: uri, headers: headers),
-                body: .byteBuffer(body)
-            )
-            let context = RequestContext(
-                eventLoop: eventLoop,
-                logger: self.applicationContext.logger,
-                applicationContext: self.applicationContext,
-                requestId: requestId
-            )
-            let response: HBResponse
-            do {
-                response = try await self.responder.respond(to: request, context: context)
-            } catch let error as HBHTTPResponseError {
-                let httpResponse = error.response(version: .http1_1, allocator: ByteBufferAllocator())
-                response = .init(status: httpResponse.head.status, headers: httpResponse.head.headers, body: httpResponse.body)
-            } catch {
-                response = .init(status: .internalServerError)
-            }
-            let body: ByteBuffer?
-            switch response.body {
-            case .byteBuffer(let buffer):
-                body = buffer
-            case .empty:
-                body = nil
-            case .stream(let streamer):
-                var colllateBuffer = ByteBuffer()
-                streamerReadLoop:
-                    while true
-                {
-                    switch try await streamer.read(on: eventLoop).get() {
-                    case .byteBuffer(var part):
-                        colllateBuffer.writeBuffer(&part)
-                    case .end:
-                        break streamerReadLoop
+            return try await eventLoop.flatSubmit {
+                let request = HBRequest(
+                    head: .init(version: .http1_1, method: method, uri: uri, headers: headers),
+                    body: .byteBuffer(body)
+                )
+                let context = HBRequestContext(
+                    applicationContext: self.applicationContext,
+                    channelContext: XCTChannelContext(eventLoop: eventLoop)
+                )
+                return self.responder.respond(to: request, context: context)
+                    .flatMapErrorThrowing { error in
+                        switch error {
+                        case let error as HBHTTPResponseError:
+                            let httpResponse = error.response(version: .http1_1, allocator: ByteBufferAllocator())
+                            return HBResponse(status: httpResponse.head.status, headers: httpResponse.head.headers, body: httpResponse.body)
+                        default:
+                            return HBResponse(status: .internalServerError)
+                        }
                     }
-                }
-                body = colllateBuffer
-            }
-            return .init(status: response.status, headers: response.headers, body: body)
+                    .flatMap { response in
+                        let promise = eventLoop.makePromise(of: HBXCTResponse.self)
+                        promise.completeWithTask {
+                            let body: ByteBuffer?
+                            switch response.body {
+                            case .byteBuffer(let buffer):
+                                body = buffer
+                            case .empty:
+                                body = nil
+                            case .stream(let streamer):
+                                var colllateBuffer = ByteBuffer()
+                                streamerReadLoop:
+                                    while true {
+                                    switch try await streamer.read(on: eventLoop).get() {
+                                    case .byteBuffer(var part):
+                                        colllateBuffer.writeBuffer(&part)
+                                    case .end:
+                                        break streamerReadLoop
+                                    }
+                                }
+                                body = colllateBuffer
+                            }
+                            return HBXCTResponse(status: response.status, headers: response.headers, body: body)
+                        }
+                        return promise.futureResult
+                    }
+            }.get()
         }
     }
 }
