@@ -41,15 +41,17 @@ public struct HBRequest: Sendable, HBSendableExtensible {
     // MARK: Member variables
 
     /// URI path
-    public var uri: HBURL { self._internal.uri }
-    /// HTTP version
-    public var version: HTTPVersion { self._internal.version }
-    /// Request HTTP method
-    public var method: HTTPMethod { self._internal.method }
-    /// Request HTTP headers
-    public var headers: HTTPHeaders { self._internal.headers }
+    public let uri: HBURL
+    /// HTTP head
+    public let head: HTTPRequestHead
     /// Body of HTTP request
     public var body: HBRequestBody
+    /// HTTP version
+    public var version: HTTPVersion { self.head.version }
+    /// Request HTTP method
+    public var method: HTTPMethod { self.head.method }
+    /// Request HTTP headers
+    public var headers: HTTPHeaders { self.head.headers }
     /// Request extensions
     public var extensions: HBSendableExtensions<HBRequest>
 
@@ -72,12 +74,8 @@ public struct HBRequest: Sendable, HBSendableExtensible {
         head: HTTPRequestHead,
         body: HBRequestBody
     ) {
-        self._internal = .init(
-            uri: .init(head.uri),
-            version: head.version,
-            method: head.method,
-            headers: head.headers
-        )
+        self.uri = .init(head.uri)
+        self.head = head
         self.body = body
         self.extensions = .init()
     }
@@ -109,28 +107,6 @@ public struct HBRequest: Sendable, HBSendableExtensible {
             throw error
         }
     }
-
-    /// Store all the read-only values of the request in a class to avoid copying them
-    /// everytime we pass the `HBRequest` struct about
-    final class _Internal: Sendable {
-        internal init(uri: HBURL, version: HTTPVersion, method: HTTPMethod, headers: HTTPHeaders) {
-            self.uri = uri
-            self.version = version
-            self.method = method
-            self.headers = headers
-        }
-
-        /// URI path
-        let uri: HBURL
-        /// HTTP version
-        let version: HTTPVersion
-        /// Request HTTP method
-        let method: HTTPMethod
-        /// Request HTTP headers
-        let headers: HTTPHeaders
-    }
-
-    private var _internal: _Internal
 }
 
 extension Logger {
