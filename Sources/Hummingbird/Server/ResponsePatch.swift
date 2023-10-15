@@ -14,7 +14,7 @@
 
 import NIOHTTP1
 
-extension HBRequest {
+extension HBRequestContext {
     // MARK: Response patching
 
     /// Patches Response via `HBResponse.apply(patch:)`
@@ -61,7 +61,7 @@ extension HBRequest {
 
 extension HBResponse {
     /// apply `HBRequest.ResponsePatch` to `HBResponse`
-    mutating func apply(patch: HBRequest.ResponsePatch?) -> Self {
+    mutating func apply(patch: HBRequestContext.ResponsePatch?) -> Self {
         guard let patch = patch else { return self }
         if let status = patch.status {
             self.status = status

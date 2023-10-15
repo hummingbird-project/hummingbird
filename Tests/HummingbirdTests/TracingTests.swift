@@ -287,8 +287,8 @@ final class TracingTests: XCTestCase {
 
         let app = HBApplicationBuilder()
         app.middleware.add(HBTracingMiddleware())
-        app.router.get("/") { request, _ -> HTTPResponseStatus in
-            var serviceContext = request.serviceContext
+        app.router.get("/") { _, context -> HTTPResponseStatus in
+            var serviceContext = context.serviceContext
             serviceContext.testID = "test"
             let span = InstrumentationSystem.legacyTracer.startAnySpan("testing", context: serviceContext, ofKind: .server)
             span.end()
@@ -320,10 +320,10 @@ final class TracingTests: XCTestCase {
 
         let app = HBApplicationBuilder()
         app.middleware.add(HBTracingMiddleware())
-        app.router.get("/") { request, _ -> HTTPResponseStatus in
-            var serviceContext = request.serviceContext
+        app.router.get("/") { _, context -> HTTPResponseStatus in
+            var serviceContext = context.serviceContext
             serviceContext.testID = "test"
-            return request.withSpan("TestSpan", context: serviceContext, ofKind: .client) { _, span in
+            return context.withSpan("TestSpan", serviceContext: serviceContext, ofKind: .client) { _, span in
                 span.attributes["test-attribute"] = 42
                 return .ok
             }
@@ -353,9 +353,9 @@ final class TracingTests: XCTestCase {
 
         struct SpanMiddleware: HBMiddleware {
             public func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
-                var serviceContext = request.serviceContext
+                var serviceContext = context.serviceContext
                 serviceContext.testID = "testMiddleware"
-                return request.withSpan("TestSpan", context: serviceContext, ofKind: .server) { request, _ in
+                return context.withSpan("TestSpan", serviceContext: serviceContext, ofKind: .server) { context, _ in
                     next.respond(to: request, context: context)
                 }
             }
@@ -429,7 +429,7 @@ extension TracingTests {
     func testServiceContextPropagationAsyncMiddleware() async throws {
         struct AsyncSpanMiddleware: HBAsyncMiddleware {
             public func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) async throws -> HBResponse {
-                var serviceContext = request.serviceContext
+                var serviceContext = context.serviceContext
                 serviceContext.testID = "testAsyncMiddleware"
                 return try await InstrumentationSystem.legacyTracer.withAnySpan("TestSpan", context: serviceContext, ofKind: .server) { _ in
                     try await next.respond(to: request, context: context)
@@ -447,9 +447,9 @@ extension TracingTests {
         let app = HBApplicationBuilder()
         app.middleware.add(HBTracingMiddleware())
         app.middleware.add(AsyncSpanMiddleware())
-        app.router.get("/") { request, _ -> HTTPResponseStatus in
+        app.router.get("/") { _, context -> HTTPResponseStatus in
             try await Task.sleep(nanoseconds: 1000)
-            return request.withSpan("testing", ofKind: .server) { _, _ in
+            return context.withSpan("testing", ofKind: .server) { _, _ in
                 return .ok
             }
         }

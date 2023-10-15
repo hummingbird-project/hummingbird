@@ -38,7 +38,7 @@ public struct HBTracingMiddleware: HBMiddleware {
     }
 
     public func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
-        var serviceContext = request.serviceContext
+        var serviceContext = context.serviceContext
         InstrumentationSystem.instrument.extract(request.headers, into: &serviceContext, using: HTTPHeadersExtractor())
 
         let operationName: String = {
@@ -48,7 +48,7 @@ public struct HBTracingMiddleware: HBMiddleware {
             return endpointPath
         }()
 
-        return request.withSpan(operationName, context: serviceContext, ofKind: .server) { request, span in
+        return context.withSpan(operationName, serviceContext: serviceContext, ofKind: .server) { context, span in
             span.updateAttributes { attributes in
                 attributes["http.method"] = request.method.rawValue
                 attributes["http.target"] = request.uri.path

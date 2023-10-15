@@ -178,8 +178,8 @@ extension HBRouterMethods {
         func _respond(request: HBRequest, context: HBRequestContext) throws -> HBResponse {
             let response: HBResponse
             if options.contains(.editResponse) {
-                var request = request
-                request.response = .init()
+                var context = context
+                context.response = .init()
                 response = try closure(request, context).patchedResponse(from: request, context: context)
             } else {
                 response = try closure(request, context).response(from: request, context: context)
@@ -225,10 +225,10 @@ extension HBRouterMethods {
     ) -> HBResponder {
         // generate response from request. Moved repeated code into internal function
         func _respond(request: HBRequest, context: HBRequestContext) -> EventLoopFuture<HBResponse> {
-            var request = request
+            var context = context
             let responseFuture: EventLoopFuture<HBResponse>
             if options.contains(.editResponse) {
-                request.response = .init()
+                context.response = .init()
                 responseFuture = closure(request, context).flatMapThrowing { try $0.patchedResponse(from: request, context: context) }
             } else {
                 responseFuture = closure(request, context).flatMapThrowing { try $0.response(from: request, context: context) }

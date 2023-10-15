@@ -227,8 +227,8 @@ final class RouterTests: XCTestCase {
             let output: String
 
             func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
-                var request = request
-                request.string = self.output
+                var context = context
+                context.string = self.output
                 return next.respond(to: request, context: context)
             }
         }
@@ -238,12 +238,12 @@ final class RouterTests: XCTestCase {
             .group("/test")
             .add(middleware: TestGroupMiddleware(output: "route1"))
             .get { request, context in
-                return context.success(request.string)
+                return context.success(context.string)
             }
             .group("/group")
             .add(middleware: TestGroupMiddleware(output: "route2"))
             .get { request, context in
-                return context.success(request.string)
+                return context.success(context.string)
             }
         try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/test/group", method: .GET) { response in
@@ -260,8 +260,8 @@ final class RouterTests: XCTestCase {
     func testParameters() async throws {
         let app = HBApplicationBuilder()
         app.router
-            .delete("/user/:id") { request, _ -> String? in
-                return request.parameters.get("id", as: String.self)
+            .delete("/user/:id") { _, context -> String? in
+                return context.parameters.get("id", as: String.self)
             }
         try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/user/1234", method: .DELETE) { response in
@@ -274,9 +274,9 @@ final class RouterTests: XCTestCase {
     func testParameterCollection() async throws {
         let app = HBApplicationBuilder()
         app.router
-            .delete("/user/:username/:id") { request, _ -> String? in
-                XCTAssertEqual(request.parameters.count, 2)
-                return request.parameters.get("id", as: String.self)
+            .delete("/user/:username/:id") { _, context -> String? in
+                XCTAssertEqual(context.parameters.count, 2)
+                return context.parameters.get("id", as: String.self)
             }
         try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/user/john/1234", method: .DELETE) { response in
@@ -289,10 +289,10 @@ final class RouterTests: XCTestCase {
     func testPartialCapture() async throws {
         let app = HBApplicationBuilder()
         app.router
-            .get("/files/file.${ext}/${name}.jpg") { request, _ -> String in
-                XCTAssertEqual(request.parameters.count, 2)
-                let ext = try request.parameters.require("ext")
-                let name = try request.parameters.require("name")
+            .get("/files/file.${ext}/${name}.jpg") { _, context -> String in
+                XCTAssertEqual(context.parameters.count, 2)
+                let ext = try context.parameters.require("ext")
+                let name = try context.parameters.require("name")
                 return "\(name).\(ext)"
             }
         try await app.buildAndTest(.router) { client in
@@ -354,7 +354,7 @@ final class RouterTests: XCTestCase {
     }
 }
 
-extension HBRequest {
+extension HBRequestContext {
     var string: String {
         get { self.extensions.get(\.string) }
         set { self.extensions.set(\.string, value: newValue) }
