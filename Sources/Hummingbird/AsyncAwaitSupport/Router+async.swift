@@ -82,13 +82,7 @@ extension HBRouterMethods {
                 )
                 request.body = .byteBuffer(buffer)
             }
-            var context = context
-            if options.contains(.editResponse) {
-                context.response = .init()
-                return try await closure(request, context).patchedResponse(from: request, context: context)
-            } else {
-                return try await closure(request, context).response(from: request, context: context)
-            }
+            return try await closure(request, context).response(from: request, context: context)
         }
     }
 }

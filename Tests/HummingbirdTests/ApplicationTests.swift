@@ -384,11 +384,12 @@ final class ApplicationTests: XCTestCase {
 
     func testEditResponse() async throws {
         let app = HBApplicationBuilder()
-        app.router.delete("/hello", options: .editResponse) { _, context -> String in
-            context.response.headers.add(name: "test", value: "value")
-            context.response.headers.replaceOrAdd(name: "content-type", value: "application/json")
-            context.response.status = .imATeapot
-            return "Hello"
+        app.router.delete("/hello", options: .editResponse) { _, _ in
+            return HBTypedResponse(
+                status: .imATeapot,
+                headers: ["test": "value", "content-type": "application/json"],
+                body: "Hello"
+            )
         }
         try await app.buildAndTest(.router) { client in
 
@@ -406,11 +407,14 @@ final class ApplicationTests: XCTestCase {
 
     func testEditResponseFuture() async throws {
         let app = HBApplicationBuilder()
-        app.router.delete("/hello", options: .editResponse) { _, context -> EventLoopFuture<String> in
-            context.response.headers.add(name: "test", value: "value")
-            context.response.headers.replaceOrAdd(name: "content-type", value: "application/json")
-            context.response.status = .imATeapot
-            return context.success("Hello")
+        app.router.delete("/hello", options: .editResponse) { _, context in
+            return context.success(
+                HBTypedResponse(
+                    status: .imATeapot,
+                    headers: ["test": "value", "content-type": "application/json"],
+                    body: "Hello"
+                )
+            )
         }
         try await app.buildAndTest(.router) { client in
 

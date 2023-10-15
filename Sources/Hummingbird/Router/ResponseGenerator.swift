@@ -22,14 +22,6 @@ public protocol HBResponseGenerator {
     func response(from request: HBRequest, context: HBRequestContext) throws -> HBResponse
 }
 
-extension HBResponseGenerator {
-    /// Generate reponse based on the request this object came from and apply request patches
-    func patchedResponse(from request: HBRequest, context: HBRequestContext) throws -> HBResponse {
-        var r = try response(from: request, context: context)
-        return r.apply(patch: context.optionalResponse)
-    }
-}
-
 /// Extend Response to conform to ResponseGenerator
 extension HBResponse: HBResponseGenerator {
     /// Return self as the response
@@ -79,5 +71,38 @@ extension Optional: HBResponseGenerator where Wrapped: HBResponseGenerator {
         case .none:
             return HBResponse(status: .noContent, headers: [:], body: .empty)
         }
+    }
+}
+
+public struct HBTypedResponse<Body: HBResponseGenerator>: HBResponseGenerator {
+    public var status: HTTPResponseStatus?
+    public var headers: HTTPHeaders
+    public var body: Body
+
+    public init(
+        status: HTTPResponseStatus? = nil,
+        headers: HTTPHeaders = .init(),
+        body: Body
+    ) {
+        self.status = status
+        self.headers = headers
+        self.body = body
+    }
+
+    public func response(from request: HBRequest, context: HBRequestContext) throws -> HBResponse {
+        var response = try body.response(from: request, context: context)
+        if let status = self.status {
+            response.status = status
+        }
+        if self.headers.count > 0 {
+            var headers = self.headers
+            for (name, value) in response.headers {
+                if headers[name].first == nil {
+                    headers.add(name: name, value: value)
+                }
+            }
+            response.headers = headers
+        }
+        return response
     }
 }
