@@ -19,23 +19,6 @@ import NIOConcurrencyHelpers
 import NIOCore
 import NIOHTTP1
 
-private extension CodingKey {
-    /// returns a coding key as a path key string
-    var pathKeyValue: String {
-        if let value = intValue {
-            return String(value)
-        }
-        return stringValue
-    }
-}
-
-private extension Array where Element == CodingKey {
-    /// returns a path key using a dot character as a separator
-    var pathKeyValue: String {
-        map(\.pathKeyValue).joined(separator: ".")
-    }
-}
-
 /// Holds all the values required to process a request
 public struct HBRequest: Sendable, HBSendableExtensible {
     // MARK: Member variables
@@ -109,21 +92,25 @@ public struct HBRequest: Sendable, HBSendableExtensible {
     }
 }
 
-extension Logger {
-    /// Create new Logger with additional metadata value
-    /// - Parameters:
-    ///   - metadataKey: Metadata key
-    ///   - value: Metadata value
-    /// - Returns: Logger
-    func with(metadataKey: String, value: MetadataValue) -> Logger {
-        var logger = self
-        logger[metadataKey: metadataKey] = value
-        return logger
-    }
-}
-
 extension HBRequest: CustomStringConvertible {
     public var description: String {
         "uri: \(self.uri), version: \(self.version), method: \(self.method), headers: \(self.headers), body: \(self.body)"
+    }
+}
+
+private extension CodingKey {
+    /// returns a coding key as a path key string
+    var pathKeyValue: String {
+        if let value = intValue {
+            return String(value)
+        }
+        return stringValue
+    }
+}
+
+private extension Array where Element == CodingKey {
+    /// returns a path key using a dot character as a separator
+    var pathKeyValue: String {
+        map(\.pathKeyValue).joined(separator: ".")
     }
 }
