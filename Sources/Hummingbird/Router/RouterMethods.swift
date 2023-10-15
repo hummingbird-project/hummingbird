@@ -24,8 +24,6 @@ public struct HBRouterMethodOptions: OptionSet {
 
     /// don't collate the request body, expect handler to stream it
     public static let streamBody: HBRouterMethodOptions = .init(rawValue: 1 << 0)
-    /// allow handler to edit response via `request.response`
-    public static let editResponse: HBRouterMethodOptions = .init(rawValue: 1 << 1)
 }
 
 /// Conform to `HBRouterMethods` to add standard router verb (get, post ...) methods
