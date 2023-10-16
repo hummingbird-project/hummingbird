@@ -43,7 +43,7 @@ public enum EventLoopGroupProvider {
 /// try await app.buildAndRun()
 /// ```
 /// Editing the application builder setup after calling `build` will produce undefined behaviour.
-public final class HBApplicationBuilder {
+public final class HBApplicationBuilder<RequestContext: HBRequestContext> {
     // MARK: Member variables
 
     /// event loop group used by application
@@ -51,9 +51,9 @@ public final class HBApplicationBuilder {
     /// thread pool used by application
     public let threadPool: NIOThreadPool
     /// routes requests to requestResponders based on URI
-    public let router: HBRouterBuilder
+    public let router: HBRouterBuilder<RequestContext>
     /// Configuration
-    public var configuration: HBApplication.Configuration
+    public var configuration: HBApplicationConfiguration
     /// Logger. Required to be a var by hummingbird-lambda
     public var logger: Logger
     /// Encoder used by router
@@ -69,6 +69,7 @@ public final class HBApplicationBuilder {
 
     /// Initialize new Application
     public init(
+        context: RequestContext.Type = HBBasicRequestContext.self,
         configuration: HBApplication.Configuration = HBApplication.Configuration(),
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton
     ) {
@@ -76,7 +77,7 @@ public final class HBApplicationBuilder {
         logger.logLevel = configuration.logLevel
         self.logger = logger
 
-        self.router = HBRouterBuilder()
+        self.router = HBRouterBuilder(context: RequestContext.self)
         self.configuration = configuration
         self.encoder = NullEncoder()
         self.decoder = NullDecoder()
@@ -111,7 +112,7 @@ public final class HBApplicationBuilder {
 
     // MARK: Methods
 
-    public func build() -> HBApplication {
+    public func build() -> HBApplication<RequestContext> {
         return .init(builder: self)
     }
 
@@ -129,10 +130,10 @@ public final class HBApplicationBuilder {
     }
 
     /// middleware applied to requests
-    public var middleware: HBMiddlewareGroup { return self.router.middlewares }
+    public var middleware: HBMiddlewareGroup<RequestContext> { return self.router.middlewares }
 
     /// Construct the RequestResponder from the middleware group and router
-    func constructResponder() -> HBResponder {
+    func constructResponder() -> any HBResponder<RequestContext> {
         return self.router.buildRouter()
     }
 

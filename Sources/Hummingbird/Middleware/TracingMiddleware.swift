@@ -21,7 +21,7 @@ import Tracing
 /// You may opt in to recording a specific subset of HTTP request/response header values by passing
 /// a set of header names to ``init(recordingHeaders:)``.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-public struct HBTracingMiddleware: HBMiddleware {
+public struct HBTracingMiddleware<Context: HBRequestContext>: HBMiddleware {
     private let headerNamesToRecord: Set<RecordingHeader>
 
     /// Intialize a new HBTracingMiddleware.
@@ -37,12 +37,12 @@ public struct HBTracingMiddleware: HBMiddleware {
         self.init(recordingHeaders: [])
     }
 
-    public func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
+    public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
         var serviceContext = context.serviceContext
         InstrumentationSystem.instrument.extract(request.headers, into: &serviceContext, using: HTTPHeadersExtractor())
 
         let operationName: String = {
-            guard let endpointPath = context.endpointPath else {
+            guard let endpointPath = context.endpointPath.value else {
                 return "HTTP \(request.method.rawValue) route not found"
             }
             return endpointPath
@@ -60,22 +60,23 @@ public struct HBTracingMiddleware: HBMiddleware {
                 attributes["net.host.name"] = context.applicationContext.configuration.address.host
                 attributes["net.host.port"] = context.applicationContext.configuration.address.port
 
-                if let remoteAddress = context.remoteAddress {
-                    attributes["net.sock.peer.port"] = remoteAddress.port
+                // TODO: remote address in context
+                /* if let remoteAddress = context.remoteAddress {
+                     attributes["net.sock.peer.port"] = remoteAddress.port
 
-                    switch remoteAddress.protocol {
-                    case .inet:
-                        attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
-                    case .inet6:
-                        attributes["net.sock.family"] = "inet6"
-                        attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
-                    case .unix:
-                        attributes["net.sock.family"] = "unix"
-                        attributes["net.sock.peer.addr"] = remoteAddress.pathname
-                    default:
-                        break
-                    }
-                }
+                     switch remoteAddress.protocol {
+                     case .inet:
+                         attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
+                     case .inet6:
+                         attributes["net.sock.family"] = "inet6"
+                         attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
+                     case .unix:
+                         attributes["net.sock.family"] = "unix"
+                         attributes["net.sock.peer.addr"] = remoteAddress.pathname
+                     default:
+                         break
+                     }
+                 } */
                 attributes = self.recordHeaders(request.headers, toSpanAttributes: attributes, withPrefix: "http.request.header.")
             }
 

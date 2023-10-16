@@ -28,7 +28,9 @@ import NIOPosix
 /// "if-modified-since", "if-none-match", "if-range" and 'range" headers. It will output "content-length",
 /// "modified-date", "eTag", "content-type", "cache-control" and "content-range" headers where
 /// they are relevant.
-public struct HBFileMiddleware: HBMiddleware {
+public struct HBFileMiddleware<Context: HBRequestContext>: HBMiddleware {
+    struct IsDirectoryError: Error {}
+
     let rootFolder: URL
     let threadPool: NIOThreadPool
     let fileIO: HBFileIO
@@ -45,7 +47,7 @@ public struct HBFileMiddleware: HBMiddleware {
         _ rootFolder: String = "public",
         cacheControl: HBCacheControl = .init([]),
         searchForIndexHtml: Bool = false,
-        threadPool: NIOThreadPool,
+        threadPool: NIOThreadPool = NIOThreadPool.singleton,
         logger: Logger
     ) {
         self.rootFolder = URL(fileURLWithPath: rootFolder)
@@ -68,8 +70,7 @@ public struct HBFileMiddleware: HBMiddleware {
         logger.info("FileMiddleware serving from \(workingFolder)\(rootFolder)")
     }
 
-    public func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
-        struct IsDirectoryError: Error {}
+    public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
         // if next responder returns a 404 then check if file exists
         let response: EventLoopFuture<HBResponse> = next.respond(to: request, context: context)
         return response.flatMapError { error -> EventLoopFuture<HBResponse> in

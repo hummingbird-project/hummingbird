@@ -28,7 +28,7 @@ final class HandlerTests: XCTestCase {
             }
         }
 
-        let app = HBApplicationBuilder()
+        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
         app.decoder = JSONDecoder()
         app.router.post("/hello", use: DecodeTest.self)
 
@@ -57,7 +57,7 @@ final class HandlerTests: XCTestCase {
             }
         }
 
-        let app = HBApplicationBuilder()
+        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
         app.decoder = JSONDecoder()
         app.router.post("/hello", use: DecodeTest.self)
 
@@ -86,7 +86,7 @@ final class HandlerTests: XCTestCase {
             }
         }
 
-        let app = HBApplicationBuilder()
+        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
         app.decoder = JSONDecoder()
         app.router.post("/hello", use: DecodeTest.self)
 
@@ -120,7 +120,7 @@ final class HandlerTests: XCTestCase {
             }
         }
 
-        let app = HBApplicationBuilder()
+        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
         app.decoder = JSONDecoder()
         app.router.post("/hello", use: DecodeTest.self)
 
@@ -147,7 +147,7 @@ final class HandlerTests: XCTestCase {
                 return "Hello \(self.name)"
             }
         }
-        let app = HBApplicationBuilder()
+        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
         app.decoder = JSONDecoder()
         app.router.post("/hello", use: DecodeTest.self)
 
@@ -167,7 +167,7 @@ final class HandlerTests: XCTestCase {
                 return context.success("Hello \(self.name)")
             }
         }
-        let app = HBApplicationBuilder()
+        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
         app.decoder = JSONDecoder()
         app.router.put("/hello", use: DecodeTest.self)
 
@@ -188,7 +188,7 @@ final class HandlerTests: XCTestCase {
                 return .ok
             }
         }
-        let app = HBApplicationBuilder()
+        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
         app.decoder = JSONDecoder()
         app.router.get("/hello", use: DecodeTest.self)
 
@@ -211,7 +211,7 @@ final class HandlerTests: XCTestCase {
             }
         }
 
-        let app = HBApplicationBuilder()
+        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
         app.router.put("/:test", use: ParameterTest.self)
 
         try await app.buildAndTest(.router) { client in

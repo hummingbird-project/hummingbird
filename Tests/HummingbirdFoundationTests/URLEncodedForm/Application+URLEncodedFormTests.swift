@@ -27,7 +27,7 @@ class HummingBirdURLEncodedTests: XCTestCase {
     struct Error: Swift.Error {}
 
     func testDecode() async throws {
-        let app = HBApplicationBuilder()
+        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
         app.decoder = URLEncodedFormDecoder()
         app.router.put("/user") { request, context -> HTTPResponseStatus in
             guard let user = try? request.decode(as: User.self, using: context) else { throw HBHTTPError(.badRequest) }
@@ -45,7 +45,7 @@ class HummingBirdURLEncodedTests: XCTestCase {
     }
 
     func testEncode() async throws {
-        let app = HBApplicationBuilder()
+        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
         app.encoder = URLEncodedFormEncoder()
         app.router.get("/user") { _, _ -> User in
             return User(name: "John Smith", email: "john.smith@email.com", age: 25)

@@ -15,34 +15,79 @@
 import Atomics
 import Logging
 import NIOCore
+import Tracing
+
+/// Endpoint path storage
+public struct EndpointPath: Sendable {
+    public init(eventLoop: EventLoop) {
+        self._value = .init(nil, eventLoop: eventLoop)
+    }
+
+    /// Endpoint path
+    public internal(set) var value: String? {
+        get { self._value.value }
+        nonmutating set { self._value.value = newValue }
+    }
+
+    private let _value: NIOLoopBoundBox<String?>
+}
+
+public protocol HBRequestContext: Sendable {
+    /// Application context
+    var applicationContext: HBApplicationContext { get }
+    /// Logger to use with Request
+    var logger: Logger { get }
+    /// EventLoop request is running on
+    var eventLoop: EventLoop { get }
+    /// ByteBuffer allocator used by request
+    var allocator: ByteBufferAllocator { get }
+    /// Endpoint path
+    var endpointPath: EndpointPath { get }
+    /// Parameters extracted from URI
+    var parameters: HBParameters { get set }
+    /// request ID
+    var requestId: Int { get }
+    /// service context
+    var serviceContext: ServiceContext { get set }
+    /// Default init
+    init(applicationContext: HBApplicationContext, channel: Channel)
+}
+
+extension HBRequestContext {
+    static func create(applicationContext: HBApplicationContext, channel: Channel) -> Self {
+        return .init(applicationContext: applicationContext, channel: channel)
+    }
+}
+
+public protocol HBChannelContext {
+    /// channel that created request
+    var channel: Channel { get }
+}
 
 /// Holds data associated with a request. Provides context for request processing
-public struct HBRequestContext: Sendable, HBSendableExtensible {
+public struct HBBasicRequestContext: HBRequestContext, HBChannelContext, HBSendableExtensible {
     /// Application context
-    public let applicationContext: HBApplication.Context
+    public let applicationContext: HBApplicationContext
     /// Channel context (where to get EventLoop, allocator etc)
-    let channelContext: HBChannelContextProtocol
+    public let channel: Channel
     /// Logger to use with Request
     public let logger: Logger
     /// Request ID
     public let requestId: Int
     /// Endpoint path
-    public internal(set) var endpointPath: String? {
-        get { self._endpointPath.value }
-        nonmutating set { self._endpointPath.value = newValue }
-    }
+    public let endpointPath: EndpointPath
 
+    /// ServiceContext
+    public var serviceContext: ServiceContext
     /// Extensions
-    public var extensions: HBSendableExtensions<HBRequestContext>
+    public var extensions: HBSendableExtensions<HBBasicRequestContext>
 
     /// EventLoop request is running on
-    public var eventLoop: EventLoop { self.channelContext.eventLoop }
+    public var eventLoop: EventLoop { self.channel.eventLoop }
     /// ByteBuffer allocator used by request
-    public var allocator: ByteBufferAllocator { self.channelContext.allocator }
+    public var allocator: ByteBufferAllocator { self.channel.allocator }
     /// Connected host address
-    public var remoteAddress: SocketAddress? { self.channelContext.remoteAddress }
-    /// Internal storage for endpoint path
-    private let _endpointPath: NIOLoopBoundBox<String?>
+    public var remoteAddress: SocketAddress? { self.channel.remoteAddress }
     /// Current global request ID
     private static let globalRequestID = ManagedAtomic(0)
 
@@ -51,15 +96,16 @@ public struct HBRequestContext: Sendable, HBSendableExtensible {
     ///   - applicationContext: Context from Application that instigated the request
     ///   - channelContext: Context providing source for EventLoop
     public init(
-        applicationContext: HBApplication.Context,
-        channelContext: HBChannelContextProtocol
+        applicationContext: HBApplicationContext,
+        channel: Channel
     ) {
         self.applicationContext = applicationContext
-        self.channelContext = channelContext
+        self.channel = channel
         self.requestId = Self.globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
         self.logger = self.applicationContext.logger.with(metadataKey: "hb_id", value: .stringConvertible(self.requestId))
+        self.serviceContext = .topLevel
         self.extensions = .init()
-        self._endpointPath = .init(nil, eventLoop: channelContext.eventLoop)
+        self.endpointPath = .init(eventLoop: channel.eventLoop)
     }
 
     /// Parameters extracted during processing of request URI. These are available to you inside the route handler

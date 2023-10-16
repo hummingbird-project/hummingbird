@@ -20,7 +20,7 @@ import NIOCore
 /// then return an empty body with all the standard CORS headers otherwise send
 /// request onto the next handler and when you receive the response add a
 /// "access-control-allow-origin" header
-public struct HBCORSMiddleware: HBMiddleware {
+public struct HBCORSMiddleware<Context: HBRequestContext>: HBMiddleware {
     /// Defines what origins are allowed
     public enum AllowOrigin {
         case none
@@ -83,7 +83,7 @@ public struct HBCORSMiddleware: HBMiddleware {
     }
 
     /// apply CORS middleware
-    public func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
+    public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
         // if no origin header then don't apply CORS
         guard request.headers["origin"].first != nil else { return next.respond(to: request, context: context) }
 

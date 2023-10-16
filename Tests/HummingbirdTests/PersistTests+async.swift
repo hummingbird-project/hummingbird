@@ -13,11 +13,12 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
+import HummingbirdXCT
 import XCTest
 
 final class AsyncPersistTests: XCTestCase {
-    func createApplication() throws -> (HBApplicationBuilder, HBPersistDriver) {
-        let app = HBApplicationBuilder()
+    func createApplication() throws -> (HBApplicationBuilder<HBTestRouterContext>, HBPersistDriver) {
+        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
         let persist: HBPersistDriver = HBMemoryPersistDriver(eventLoopGroup: app.eventLoopGroup)
 
         app.router.put("/persist/:tag") { request, context -> HTTPResponseStatus in

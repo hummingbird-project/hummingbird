@@ -15,7 +15,7 @@
 import Logging
 
 /// Middleware outputting to log for every call to server
-public struct HBLogRequestsMiddleware: HBMiddleware {
+public struct HBLogRequestsMiddleware<Context: HBRequestContext>: HBMiddleware {
     let logLevel: Logger.Level
     let includeHeaders: Bool
 
@@ -24,7 +24,7 @@ public struct HBLogRequestsMiddleware: HBMiddleware {
         self.includeHeaders = includeHeaders
     }
 
-    public func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
+    public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
         if self.includeHeaders {
             context.logger.log(
                 level: self.logLevel,

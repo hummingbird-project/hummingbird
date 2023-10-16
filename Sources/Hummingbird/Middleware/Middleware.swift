@@ -40,15 +40,16 @@ import NIOCore
 ///     }
 /// }
 /// ```
-public protocol HBMiddleware {
-    func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse>
+public protocol HBMiddleware<Context> {
+    associatedtype Context: HBRequestContext
+    func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse>
 }
 
-struct MiddlewareResponder: HBResponder {
-    let middleware: HBMiddleware
-    let next: HBResponder
+struct MiddlewareResponder<Context: HBRequestContext>: HBResponder {
+    let middleware: any HBMiddleware<Context>
+    let next: any HBResponder<Context>
 
-    func respond(to request: HBRequest, context: HBRequestContext) -> EventLoopFuture<HBResponse> {
+    func respond(to request: HBRequest, context: Context) -> EventLoopFuture<HBResponse> {
         return self.middleware.apply(to: request, context: context, next: self.next)
     }
 }

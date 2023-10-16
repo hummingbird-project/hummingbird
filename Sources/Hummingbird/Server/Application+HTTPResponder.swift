@@ -20,8 +20,8 @@ import NIOHTTP1
 
 extension HBApplication {
     struct Responder: HBHTTPResponder {
-        let responder: HBResponder
-        let applicationContext: HBApplication.Context
+        let responder: any HBResponder<RequestContext>
+        let applicationContext: HBApplicationContext
         let dateCache: HBDateCache
 
         /// Return EventLoopFuture that will be fulfilled with the HTTP response for the supplied HTTP request
@@ -34,9 +34,9 @@ extension HBApplication {
                 head: request.head,
                 body: request.body
             )
-            let context = HBRequestContext(
+            let context = RequestContext.create(
                 applicationContext: self.applicationContext,
-                channelContext: ChannelRequestContext(channel: context.channel)
+                channel: context.channel
             )
             let httpVersion = request.version
             // respond to request

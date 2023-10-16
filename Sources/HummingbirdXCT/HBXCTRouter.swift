@@ -17,9 +17,64 @@ import Hummingbird
 import Logging
 import NIOCore
 import NIOPosix
+import Tracing
+
+public protocol HBTestRouterContextProtocol: HBRequestContext {
+    init(applicationContext: HBApplicationContext, eventLoop: EventLoop)
+}
+
+extension HBTestRouterContextProtocol {
+    ///  Initialize an `HBRequestContext`
+    /// - Parameters:
+    ///   - applicationContext: Context from Application that instigated the request
+    ///   - channelContext: Context providing source for EventLoop
+    public init(
+        applicationContext: HBApplicationContext,
+        channel: Channel
+    ) {
+        self.init(applicationContext: applicationContext, eventLoop: channel.eventLoop)
+    }
+
+    static func create(applicationContext: HBApplicationContext, eventLoop: EventLoop) -> Self {
+        return .init(applicationContext: applicationContext, eventLoop: eventLoop)
+    }
+}
+
+public struct HBTestRouterContext: HBTestRouterContextProtocol {
+    public init(applicationContext: HBApplicationContext, eventLoop: EventLoop) {
+        self.applicationContext = applicationContext
+        self.eventLoop = eventLoop
+        self.requestId = Self.globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
+        self.logger = self.applicationContext.logger.with(metadataKey: "hb_id", value: .stringConvertible(self.requestId))
+        self.serviceContext = .topLevel
+        self.parameters = .init()
+        self.endpointPath = .init(eventLoop: eventLoop)
+    }
+
+    /// Application context
+    public let applicationContext: HBApplicationContext
+    /// Logger to use with Request
+    public let logger: Logger
+    /// Request ID
+    public let requestId: Int
+    /// parameters
+    public var parameters: HBParameters
+    /// Endpoint path
+    public let endpointPath: EndpointPath
+
+    /// ServiceContext
+    public var serviceContext: ServiceContext
+
+    /// EventLoop request is running on
+    public let eventLoop: EventLoop
+    /// ByteBuffer allocator used by request
+    public var allocator: ByteBufferAllocator { ByteBufferAllocator() }
+    /// Current global request ID
+    private static let globalRequestID = ManagedAtomic(0)
+}
 
 /// Test sending values to requests to router. This does not setup a live server
-struct HBXCTRouter: HBXCTApplication {
+struct HBXCTRouter<RequestContext: HBTestRouterContextProtocol>: HBXCTApplication {
     /// Dummy request context
     struct XCTChannelContext: HBChannelContextProtocol {
         let eventLoop: EventLoop
@@ -28,12 +83,12 @@ struct HBXCTRouter: HBXCTApplication {
     }
 
     let eventLoopGroup: EventLoopGroup
-    let context: HBApplication.Context
-    let responder: HBResponder
+    let context: HBApplicationContext
+    let responder: any HBResponder<RequestContext>
 
-    init(builder: HBApplicationBuilder) {
+    init(builder: HBApplicationBuilder<RequestContext>) {
         self.eventLoopGroup = builder.eventLoopGroup
-        self.context = HBApplication.Context(
+        self.context = HBApplicationContext(
             threadPool: builder.threadPool,
             configuration: builder.configuration,
             logger: builder.logger,
@@ -59,8 +114,8 @@ struct HBXCTRouter: HBXCTApplication {
     /// resulting response back to XCT response type
     struct Client: HBXCTClientProtocol {
         let eventLoopGroup: EventLoopGroup
-        let responder: HBResponder
-        let applicationContext: HBApplication.Context
+        let responder: any HBResponder<RequestContext>
+        let applicationContext: HBApplicationContext
 
         func execute(uri: String, method: HTTPMethod, headers: HTTPHeaders, body: ByteBuffer?) async throws -> HBXCTResponse {
             let eventLoop = self.eventLoopGroup.any()
@@ -70,9 +125,9 @@ struct HBXCTRouter: HBXCTApplication {
                     head: .init(version: .http1_1, method: method, uri: uri, headers: headers),
                     body: .byteBuffer(body)
                 )
-                let context = HBRequestContext(
+                let context = RequestContext.create(
                     applicationContext: self.applicationContext,
-                    channelContext: XCTChannelContext(eventLoop: eventLoop)
+                    eventLoop: eventLoop
                 )
                 return self.responder.respond(to: request, context: context)
                     .flatMapErrorThrowing { error in
@@ -96,7 +151,8 @@ struct HBXCTRouter: HBXCTApplication {
                             case .stream(let streamer):
                                 var colllateBuffer = ByteBuffer()
                                 streamerReadLoop:
-                                    while true {
+                                    while true
+                                {
                                     switch try await streamer.read(on: eventLoop).get() {
                                     case .byteBuffer(var part):
                                         colllateBuffer.writeBuffer(&part)
@@ -112,5 +168,18 @@ struct HBXCTRouter: HBXCTApplication {
                     }
             }.get()
         }
+    }
+}
+
+extension Logger {
+    /// Create new Logger with additional metadata value
+    /// - Parameters:
+    ///   - metadataKey: Metadata key
+    ///   - value: Metadata value
+    /// - Returns: Logger
+    func with(metadataKey: String, value: MetadataValue) -> Logger {
+        var logger = self
+        logger[metadataKey: metadataKey] = value
+        return logger
     }
 }
