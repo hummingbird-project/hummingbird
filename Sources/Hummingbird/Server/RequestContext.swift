@@ -12,30 +12,54 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Atomics
 import Logging
+import NIOCore
 
-/// Context that created HBRequest.
-public protocol HBRequestContext: Sendable {
+/// Holds data associated with a request. Provides context for request processing
+public struct HBRequestContext {
+    /// Application context
+    public let applicationContext: HBApplication.Context
+    /// Channel context (where to get EventLoop, allocator etc)
+    let channelContext: HBChannelContextProtocol
+    /// Logger to use with Request
+    public let logger: Logger
+    /// Request ID
+    public let requestId: Int
+    /// Endpoint path
+    public internal(set) var endpointPath: String? {
+        get { self._endpointPath.value }
+        nonmutating set { self._endpointPath.value = newValue }
+    }
+
     /// EventLoop request is running on
-    var eventLoop: EventLoop { get }
+    public var eventLoop: EventLoop { self.channelContext.eventLoop }
     /// ByteBuffer allocator used by request
-    var allocator: ByteBufferAllocator { get }
+    public var allocator: ByteBufferAllocator { self.channelContext.allocator }
     /// Connected host address
-    var remoteAddress: SocketAddress? { get }
-    /// reference to application
-    var applicationContext: HBApplication.Context { get }
-    var logger: Logger { get }
-    var requestId: String { get }
-    /// Endpoint path. This is stored a var so it can be edited by the router. In theory this could
-    /// be accessed on multiple thread/tasks at the same point but it is only ever edited by router
-    var endpointPath: String? { get nonmutating set }
+    public var remoteAddress: SocketAddress? { self.channelContext.remoteAddress }
+    /// Internal storage for endpoint path
+    private let _endpointPath: NIOLoopBoundBox<String?>
+    /// Current global request ID
+    private static let globalRequestID = ManagedAtomic(0)
+
+    ///  Initialize an `HBRequestContext`
+    /// - Parameters:
+    ///   - applicationContext: Context from Application that instigated the request
+    ///   - channelContext: Context providing source for EventLoop
+    public init(
+        applicationContext: HBApplication.Context,
+        channelContext: HBChannelContextProtocol
+    ) {
+        self.applicationContext = applicationContext
+        self.channelContext = channelContext
+        self.requestId = Self.globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
+        self.logger = self.applicationContext.logger.with(metadataKey: "hb_id", value: .stringConvertible(self.requestId))
+        self._endpointPath = .init(nil, eventLoop: channelContext.eventLoop)
+    }
 }
 
 extension HBRequestContext {
-    public var logger: Logger {
-        applicationContext.logger.with(metadataKey: "hb_id", value: .stringConvertible(requestId))
-    }
-
     /// Return failed `EventLoopFuture`
     public func failure<T>(_ error: Error) -> EventLoopFuture<T> {
         return self.eventLoop.makeFailedFuture(error)
@@ -79,5 +103,18 @@ extension HBRequestContext {
             request.body = .byteBuffer(buffer)
             return request
         }
+    }
+}
+
+extension Logger {
+    /// Create new Logger with additional metadata value
+    /// - Parameters:
+    ///   - metadataKey: Metadata key
+    ///   - value: Metadata value
+    /// - Returns: Logger
+    func with(metadataKey: String, value: MetadataValue) -> Logger {
+        var logger = self
+        logger[metadataKey: metadataKey] = value
+        return logger
     }
 }

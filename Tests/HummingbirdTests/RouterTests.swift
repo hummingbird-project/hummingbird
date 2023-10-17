@@ -65,13 +65,13 @@ final class RouterTests: XCTestCase {
 
         let app = HBApplicationBuilder()
         app.middleware.add(TestEndpointMiddleware())
-        app.router.get("test") { req, context in
+        app.router.get("test") { _, context in
             return context.endpointPath
         }
-        app.router.get { req, context in
+        app.router.get { _, context in
             return context.endpointPath
         }
-        app.router.post("/test2") { req, context in
+        app.router.post("/test2") { _, context in
             return context.endpointPath
         }
 
@@ -102,20 +102,20 @@ final class RouterTests: XCTestCase {
 
         let app = HBApplicationBuilder()
         app.middleware.add(TestEndpointMiddleware())
-        app.router.get("test/") { req, context in
+        app.router.get("test/") { _, context in
             return context.endpointPath
         }
-        app.router.post("test2") { req, context in
+        app.router.post("test2") { _, context in
             return context.endpointPath
         }
         app.router
             .group("testGroup")
-            .get { req, context in
+            .get { _, context in
                 return context.endpointPath
             }
         app.router
             .group("testGroup2")
-            .get("/") { req, context in
+            .get("/") { _, context in
                 return context.endpointPath
             }
         try await app.buildAndTest(.router) { client in
@@ -211,7 +211,7 @@ final class RouterTests: XCTestCase {
             .group("/test")
             .add(middleware: TestMiddleware())
             .group("/group")
-            .get { request, context in
+            .get { _, context in
                 return context.success("hello")
             }
         try await app.buildAndTest(.router) { client in
@@ -260,7 +260,7 @@ final class RouterTests: XCTestCase {
     func testParameters() async throws {
         let app = HBApplicationBuilder()
         app.router
-            .delete("/user/:id") { request, context -> String? in
+            .delete("/user/:id") { request, _ -> String? in
                 return request.parameters.get("id", as: String.self)
             }
         try await app.buildAndTest(.router) { client in
@@ -274,7 +274,7 @@ final class RouterTests: XCTestCase {
     func testParameterCollection() async throws {
         let app = HBApplicationBuilder()
         app.router
-            .delete("/user/:username/:id") { request, context -> String? in
+            .delete("/user/:username/:id") { request, _ -> String? in
                 XCTAssertEqual(request.parameters.count, 2)
                 return request.parameters.get("id", as: String.self)
             }
@@ -289,7 +289,7 @@ final class RouterTests: XCTestCase {
     func testPartialCapture() async throws {
         let app = HBApplicationBuilder()
         app.router
-            .get("/files/file.${ext}/${name}.jpg") { request, context -> String in
+            .get("/files/file.${ext}/${name}.jpg") { request, _ -> String in
                 XCTAssertEqual(request.parameters.count, 2)
                 let ext = try request.parameters.require("ext")
                 let name = try request.parameters.require("name")
@@ -322,8 +322,8 @@ final class RouterTests: XCTestCase {
     /// Test we have a request id and that it increments with each request
     func testRequestId() async throws {
         let app = HBApplicationBuilder()
-        app.router.get("id") { req, context in 
-            return context.requestId
+        app.router.get("id") { _, context in
+            return context.requestId.description
         }
         try await app.buildAndTest(.router) { client in
             let idString = try await client.XCTExecute(uri: "/id", method: .GET) { response -> String in
