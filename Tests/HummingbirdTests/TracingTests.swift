@@ -80,7 +80,7 @@ final class TracingTests: XCTestCase {
             throw HBHTTPError(.internalServerError)
         }
         try await app.buildAndTest(.router) { client in
-            try await client.XCTExecute(uri: "/users", method: .POST, body: ByteBuffer(string: "42")) { response in
+            try await client.XCTExecute(uri: "/users", method: .POST, headers: ["content-length": "2"], body: ByteBuffer(string: "42")) { response in
                 XCTAssertEqual(response.status, .internalServerError)
             }
         }

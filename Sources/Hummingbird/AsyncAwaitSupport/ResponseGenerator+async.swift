@@ -15,14 +15,14 @@ import HummingbirdCore
 
 /// Response body streamer which uses an AsyncSequence as its input.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-final class AsyncSequenceResponseBodyStreamer<ByteBufferSequence: AsyncSequence>: HBResponseBodyStreamer where ByteBufferSequence.Element == ByteBuffer {
+public final class AsyncSequenceResponseBodyStreamer<ByteBufferSequence: AsyncSequence>: HBResponseBodyStreamer where ByteBufferSequence.Element == ByteBuffer {
     var iterator: ByteBufferSequence.AsyncIterator
 
-    init(_ asyncSequence: ByteBufferSequence) {
+    public init(_ asyncSequence: ByteBufferSequence) {
         self.iterator = asyncSequence.makeAsyncIterator()
     }
 
-    func read(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput> {
+    public func read(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput> {
         let promise = eventLoop.makePromise(of: HBStreamerOutput.self)
         promise.completeWithTask {
             if let buffer = try await self.iterator.next() {

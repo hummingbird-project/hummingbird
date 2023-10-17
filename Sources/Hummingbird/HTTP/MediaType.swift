@@ -288,7 +288,7 @@ extension HBMediaType {
     /// Portable Network Graphics
     public static var imagePng: Self { .init(type: .image, subType: "png") }
     /// Scalable Vector Graphics (SVG)
-    public static var imageSvg: Self { .init(type: .image, subType: "svg") }
+    public static var imageSvg: Self { .init(type: .image, subType: "svg+xml") }
     /// Tagged Image File Format (TIFF)
     public static var imageTiff: Self { .init(type: .image, subType: "tiff") }
     /// WEBP image

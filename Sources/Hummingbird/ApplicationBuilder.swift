@@ -25,8 +25,8 @@ import ServiceLifecycle
 public enum EventLoopGroupProvider {
     /// Use this EventLoopGroup
     case shared(EventLoopGroup)
-    /// Use one of the global EventLoopGroups
-    case global
+    /// Use one of the singleton EventLoopGroups
+    case singleton
 }
 
 /// Application builder class. Brings together all the components of Hummingbird together
@@ -70,7 +70,7 @@ public final class HBApplicationBuilder {
     /// Initialize new Application
     public init(
         configuration: HBApplication.Configuration = HBApplication.Configuration(),
-        eventLoopGroupProvider: EventLoopGroupProvider = .global
+        eventLoopGroupProvider: EventLoopGroupProvider = .singleton
     ) {
         var logger = Logger(label: configuration.serverName ?? "HummingBird")
         logger.logLevel = configuration.logLevel
@@ -95,7 +95,7 @@ public final class HBApplicationBuilder {
 
         // create eventLoopGroup
         switch eventLoopGroupProvider {
-        case .global:
+        case .singleton:
             #if os(iOS)
             self.eventLoopGroup = NIOTSEventLoopGroup.singleton
             #else
@@ -120,8 +120,8 @@ public final class HBApplicationBuilder {
     public func buildAndRun() async throws {
         let serviceGroup = ServiceGroup(
             configuration: .init(
-                services: [self.build()], 
-                gracefulShutdownSignals: [.sigterm, .sigint], 
+                services: [self.build()],
+                gracefulShutdownSignals: [.sigterm, .sigint],
                 logger: self.logger
             )
         )
