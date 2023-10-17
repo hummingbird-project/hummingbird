@@ -19,8 +19,8 @@ import NIOCore
 import NIOPosix
 import Tracing
 
-public protocol HBTestRouterContextProtocol: HBRequestContext {
-    init(applicationContext: HBApplicationContext, eventLoop: EventLoop)
+public protocol HBTestRouterContextProtocol: HBTracingRequestContext {
+    init(applicationContext: HBApplicationContext, eventLoop: EventLoop, logger: Logger)
 }
 
 extension HBTestRouterContextProtocol {
@@ -30,22 +30,22 @@ extension HBTestRouterContextProtocol {
     ///   - channelContext: Context providing source for EventLoop
     public init(
         applicationContext: HBApplicationContext,
-        channel: Channel
+        channel: Channel,
+        logger: Logger
     ) {
-        self.init(applicationContext: applicationContext, eventLoop: channel.eventLoop)
+        self.init(applicationContext: applicationContext, eventLoop: channel.eventLoop, logger: logger)
     }
 
-    static func create(applicationContext: HBApplicationContext, eventLoop: EventLoop) -> Self {
-        return .init(applicationContext: applicationContext, eventLoop: eventLoop)
+    static func create(applicationContext: HBApplicationContext, eventLoop: EventLoop, logger: Logger) -> Self {
+        return .init(applicationContext: applicationContext, eventLoop: eventLoop, logger: logger)
     }
 }
 
-public struct HBTestRouterContext: HBTestRouterContextProtocol {
-    public init(applicationContext: HBApplicationContext, eventLoop: EventLoop) {
+public struct HBTestRouterContext: HBTestRouterContextProtocol, HBRemoteAddressRequestContext {
+    public init(applicationContext: HBApplicationContext, eventLoop: EventLoop, logger: Logger) {
         self.applicationContext = applicationContext
         self.eventLoop = eventLoop
-        self.requestId = Self.globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
-        self.logger = self.applicationContext.logger.with(metadataKey: "hb_id", value: .stringConvertible(self.requestId))
+        self.logger = logger
         self.serviceContext = .topLevel
         self.parameters = .init()
         self.endpointPath = .init(eventLoop: eventLoop)
@@ -55,22 +55,19 @@ public struct HBTestRouterContext: HBTestRouterContextProtocol {
     public let applicationContext: HBApplicationContext
     /// Logger to use with Request
     public let logger: Logger
-    /// Request ID
-    public let requestId: Int
     /// parameters
     public var parameters: HBParameters
     /// Endpoint path
     public let endpointPath: EndpointPath
-
-    /// ServiceContext
-    public var serviceContext: ServiceContext
-
     /// EventLoop request is running on
     public let eventLoop: EventLoop
     /// ByteBuffer allocator used by request
     public var allocator: ByteBufferAllocator { ByteBufferAllocator() }
-    /// Current global request ID
-    private static let globalRequestID = ManagedAtomic(0)
+
+    /// ServiceContext
+    public var serviceContext: ServiceContext
+    /// Connected remote host
+    public var remoteAddress: SocketAddress? { nil }
 }
 
 /// Test sending values to requests to router. This does not setup a live server
@@ -127,7 +124,8 @@ struct HBXCTRouter<RequestContext: HBTestRouterContextProtocol>: HBXCTApplicatio
                 )
                 let context = RequestContext.create(
                     applicationContext: self.applicationContext,
-                    eventLoop: eventLoop
+                    eventLoop: eventLoop,
+                    logger: HBApplication<RequestContext>.loggerWithRequestId(self.applicationContext.logger)
                 )
                 return self.responder.respond(to: request, context: context)
                     .flatMapErrorThrowing { error in
@@ -151,8 +149,7 @@ struct HBXCTRouter<RequestContext: HBTestRouterContextProtocol>: HBXCTApplicatio
                             case .stream(let streamer):
                                 var colllateBuffer = ByteBuffer()
                                 streamerReadLoop:
-                                    while true
-                                {
+                                    while true {
                                     switch try await streamer.read(on: eventLoop).get() {
                                     case .byteBuffer(var part):
                                         colllateBuffer.writeBuffer(&part)
@@ -183,3 +180,6 @@ extension Logger {
         return logger
     }
 }
+
+/// Current global request ID
+private let globalRequestID = ManagedAtomic(0)

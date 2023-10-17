@@ -15,23 +15,30 @@
 import NIO
 import ServiceContextModule
 
+extension HBResponder {
+    /// extend HBResponder to provide async/await version of respond
+    public func respond(to request: HBRequest, context: Context) async throws -> HBResponse {
+        return try await self.respond(to: request, context: context).get()
+    }
+}
+
 /// Responder that calls supplied closure
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 public struct HBAsyncCallbackResponder<Context: HBRequestContext>: HBResponder {
     let callback: @Sendable (HBRequest, Context) async throws -> HBResponse
 
     public init(callback: @escaping @Sendable (HBRequest, Context) async throws -> HBResponse) {
         self.callback = callback
     }
+}
 
-    /// Return EventLoopFuture that will be fulfilled with response to the request supplied
-    public func respond(to request: HBRequest, context: Context) -> EventLoopFuture<HBResponse> {
+public extension HBAsyncCallbackResponder where Context: HBRequestContext {
+    func respond(to request: HBRequest, context: Context) -> EventLoopFuture<HBResponse> {
         let promise = context.eventLoop.makePromise(of: HBResponse.self)
-        return ServiceContext.$current.withValue(context.serviceContext) {
-            promise.completeWithTask {
+        promise.completeWithTask {
+            return try await ServiceContext.$current.withValue(context.serviceContext) {
                 try await self.callback(request, context)
             }
-            return promise.futureResult
         }
+        return promise.futureResult
     }
 }

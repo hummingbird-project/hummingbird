@@ -45,51 +45,56 @@ public protocol HBRequestContext: Sendable {
     var endpointPath: EndpointPath { get }
     /// Parameters extracted from URI
     var parameters: HBParameters { get set }
-    /// request ID
-    var requestId: Int { get }
-    /// service context
-    var serviceContext: ServiceContext { get set }
+    /// Service context
+    var serviceContext: ServiceContext { get }
     /// Default init
-    init(applicationContext: HBApplicationContext, channel: Channel)
+    init(applicationContext: HBApplicationContext, channel: Channel, logger: Logger)
 }
 
 extension HBRequestContext {
-    static func create(applicationContext: HBApplicationContext, channel: Channel) -> Self {
-        return .init(applicationContext: applicationContext, channel: channel)
+    static func create(applicationContext: HBApplicationContext, channel: Channel, logger: Logger) -> Self {
+        return .init(applicationContext: applicationContext, channel: channel, logger: logger)
     }
+
+    var serviceContext: ServiceContext { .topLevel }
+
+    var id: String { self.logger[metadataKey: "hb_id"]!.description }
 }
 
-public protocol HBChannelContext {
-    /// channel that created request
-    var channel: Channel { get }
+/// Protocol for request context that stores the Channel that created it
+public protocol HBRemoteAddressRequestContext: HBRequestContext {
+    /// Connected host address
+    var remoteAddress: SocketAddress? { get }
+}
+
+/// Protocol for request context that supports tracing
+public protocol HBTracingRequestContext: HBRequestContext {
+    /// service context
+    var serviceContext: ServiceContext { get set }
 }
 
 /// Holds data associated with a request. Provides context for request processing
-public struct HBBasicRequestContext: HBRequestContext, HBChannelContext, HBSendableExtensible {
+public struct HBBasicRequestContext: HBRequestContext, HBRemoteAddressRequestContext, HBTracingRequestContext {
     /// Application context
     public let applicationContext: HBApplicationContext
-    /// Channel context (where to get EventLoop, allocator etc)
-    public let channel: Channel
     /// Logger to use with Request
     public let logger: Logger
-    /// Request ID
-    public let requestId: Int
     /// Endpoint path
     public let endpointPath: EndpointPath
+    /// Parameters extracted during processing of request URI. These are available to you inside the route handler
+    public var parameters: HBParameters
 
     /// ServiceContext
     public var serviceContext: ServiceContext
-    /// Extensions
-    public var extensions: HBSendableExtensions<HBBasicRequestContext>
 
+    /// Channel context (where to get EventLoop, allocator etc)
+    let channel: Channel
     /// EventLoop request is running on
     public var eventLoop: EventLoop { self.channel.eventLoop }
     /// ByteBuffer allocator used by request
     public var allocator: ByteBufferAllocator { self.channel.allocator }
     /// Connected host address
     public var remoteAddress: SocketAddress? { self.channel.remoteAddress }
-    /// Current global request ID
-    private static let globalRequestID = ManagedAtomic(0)
 
     ///  Initialize an `HBRequestContext`
     /// - Parameters:
@@ -97,23 +102,15 @@ public struct HBBasicRequestContext: HBRequestContext, HBChannelContext, HBSenda
     ///   - channelContext: Context providing source for EventLoop
     public init(
         applicationContext: HBApplicationContext,
-        channel: Channel
+        channel: Channel,
+        logger: Logger
     ) {
         self.applicationContext = applicationContext
         self.channel = channel
-        self.requestId = Self.globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
-        self.logger = self.applicationContext.logger.with(metadataKey: "hb_id", value: .stringConvertible(self.requestId))
+        self.logger = logger
         self.serviceContext = .topLevel
-        self.extensions = .init()
+        self.parameters = .init()
         self.endpointPath = .init(eventLoop: channel.eventLoop)
-    }
-
-    /// Parameters extracted during processing of request URI. These are available to you inside the route handler
-    public var parameters: HBParameters {
-        @inlinable get {
-            self.extensions.get(\.parameters) ?? .init()
-        }
-        @inlinable set { self.extensions.set(\.parameters, value: newValue) }
     }
 }
 
@@ -161,18 +158,5 @@ extension HBRequestContext {
             request.body = .byteBuffer(buffer)
             return request
         }
-    }
-}
-
-extension Logger {
-    /// Create new Logger with additional metadata value
-    /// - Parameters:
-    ///   - metadataKey: Metadata key
-    ///   - value: Metadata value
-    /// - Returns: Logger
-    func with(metadataKey: String, value: MetadataValue) -> Logger {
-        var logger = self
-        logger[metadataKey: metadataKey] = value
-        return logger
     }
 }

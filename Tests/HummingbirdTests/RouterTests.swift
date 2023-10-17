@@ -326,7 +326,7 @@ final class RouterTests: XCTestCase {
     func testRequestId() async throws {
         let app = HBApplicationBuilder(context: HBTestRouterContext.self)
         app.router.get("id") { _, context in
-            return context.requestId.description
+            return context.id.description
         }
         try await app.buildAndTest(.router) { client in
             let idString = try await client.XCTExecute(uri: "/id", method: .GET) { response -> String in
@@ -358,11 +358,10 @@ final class RouterTests: XCTestCase {
 }
 
 public struct HBTestRouterContext2: HBTestRouterContextProtocol {
-    public init(applicationContext: HBApplicationContext, eventLoop: EventLoop) {
+    public init(applicationContext: HBApplicationContext, eventLoop: EventLoop, logger: Logger) {
         self.applicationContext = applicationContext
         self.eventLoop = eventLoop
-        self.requestId = Self.globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
-        self.logger = self.applicationContext.logger.with(metadataKey: "hb_id", value: .stringConvertible(self.requestId))
+        self.logger = logger
         self.serviceContext = .topLevel
         self.parameters = .init()
         self.endpointPath = .init(eventLoop: eventLoop)
@@ -373,22 +372,20 @@ public struct HBTestRouterContext2: HBTestRouterContextProtocol {
     public let applicationContext: HBApplicationContext
     /// Logger to use with Request
     public let logger: Logger
-    /// Request ID
-    public let requestId: Int
     /// parameters
     public var parameters: HBParameters
     /// Endpoint path
     public let endpointPath: EndpointPath
 
-    /// ServiceContext
-    public var serviceContext: ServiceContext
-
     /// EventLoop request is running on
     public let eventLoop: EventLoop
     /// ByteBuffer allocator used by request
     public var allocator: ByteBufferAllocator { ByteBufferAllocator() }
-    /// Current global request ID
-    private static let globalRequestID = ManagedAtomic(0)
+
+    /// ServiceContext
+    public var serviceContext: ServiceContext
+    /// Connected remote host
+    public var remoteAddress: SocketAddress? { nil }
 
     /// additional data
     public var string: String

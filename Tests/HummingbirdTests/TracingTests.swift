@@ -351,7 +351,7 @@ final class TracingTests: XCTestCase {
         let expectation = expectation(description: "Expected span to be ended.")
         expectation.expectedFulfillmentCount = 2
 
-        struct SpanMiddleware<Context: HBRequestContext>: HBMiddleware {
+        struct SpanMiddleware<Context: HBTracingRequestContext>: HBMiddleware {
             public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
                 var serviceContext = context.serviceContext
                 serviceContext.testID = "testMiddleware"
@@ -405,7 +405,7 @@ extension TracingTests {
         app.middleware.add(HBTracingMiddleware())
         app.router.get("/") { _, _ -> HTTPResponseStatus in
             try await Task.sleep(nanoseconds: 1000)
-            return InstrumentationSystem.legacyTracer.withAnySpan("testing", ofKind: .server) { _ in
+            return InstrumentationSystem.tracer.withAnySpan("testing", ofKind: .server) { _ in
                 return .ok
             }
         }
@@ -427,7 +427,7 @@ extension TracingTests {
     /// Test serviceContext is propagated to AsyncMiddleware and any serviceContext added in AsyncMiddleware is
     /// propagated to route code
     func testServiceContextPropagationAsyncMiddleware() async throws {
-        struct AsyncSpanMiddleware<Context: HBRequestContext>: HBAsyncMiddleware {
+        struct AsyncSpanMiddleware<Context: HBTracingRequestContext>: HBAsyncMiddleware {
             public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 var serviceContext = context.serviceContext
                 serviceContext.testID = "testAsyncMiddleware"
