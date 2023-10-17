@@ -17,7 +17,7 @@ import Logging
 import NIOCore
 
 /// Holds data associated with a request. Provides context for request processing
-public struct HBRequestContext {
+public struct HBRequestContext: Sendable, HBSendableExtensible {
     /// Application context
     public let applicationContext: HBApplication.Context
     /// Channel context (where to get EventLoop, allocator etc)
@@ -31,6 +31,9 @@ public struct HBRequestContext {
         get { self._endpointPath.value }
         nonmutating set { self._endpointPath.value = newValue }
     }
+
+    /// Extensions
+    public var extensions: HBSendableExtensions<HBRequestContext>
 
     /// EventLoop request is running on
     public var eventLoop: EventLoop { self.channelContext.eventLoop }
@@ -55,7 +58,16 @@ public struct HBRequestContext {
         self.channelContext = channelContext
         self.requestId = Self.globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
         self.logger = self.applicationContext.logger.with(metadataKey: "hb_id", value: .stringConvertible(self.requestId))
+        self.extensions = .init()
         self._endpointPath = .init(nil, eventLoop: channelContext.eventLoop)
+    }
+
+    /// Parameters extracted during processing of request URI. These are available to you inside the route handler
+    public var parameters: HBParameters {
+        @inlinable get {
+            self.extensions.get(\.parameters) ?? .init()
+        }
+        @inlinable set { self.extensions.set(\.parameters, value: newValue) }
     }
 }
 

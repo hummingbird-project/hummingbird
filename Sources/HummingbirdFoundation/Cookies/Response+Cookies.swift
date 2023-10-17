@@ -21,7 +21,7 @@ extension HBResponse {
     }
 }
 
-extension HBRequest.ResponsePatch {
+extension HBRequestContext.ResponsePatch {
     /// Set cookie on reponse patch
     ///
     /// Can be accessed via `request.response.setCookie(myCookie)`

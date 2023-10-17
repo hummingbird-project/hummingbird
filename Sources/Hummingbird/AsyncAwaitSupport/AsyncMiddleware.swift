@@ -25,7 +25,7 @@ public protocol HBAsyncMiddleware: HBMiddleware {
 extension HBAsyncMiddleware {
     public func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
         let promise = context.eventLoop.makePromise(of: HBResponse.self)
-        return ServiceContext.$current.withValue(request.serviceContext) {
+        return ServiceContext.$current.withValue(context.serviceContext) {
             promise.completeWithTask {
                 return try await self.apply(to: request, context: context, next: HBPropagateServiceContextResponder(responder: next, context: context))
             }
@@ -42,7 +42,7 @@ struct HBPropagateServiceContextResponder: HBResponder {
 
     func respond(to request: HBRequest, context: HBRequestContext) -> EventLoopFuture<HBResponse> {
         if let serviceContext = ServiceContext.$current.get() {
-            return request.withServiceContext(serviceContext) { request in
+            return context.withServiceContext(serviceContext) { context in
                 self.responder.respond(to: request, context: context)
             }
         } else {

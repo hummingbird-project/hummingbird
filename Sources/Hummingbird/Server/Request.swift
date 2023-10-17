@@ -20,7 +20,7 @@ import NIOCore
 import NIOHTTP1
 
 /// Holds all the values required to process a request
-public struct HBRequest: Sendable, HBSendableExtensible {
+public struct HBRequest: Sendable {
     // MARK: Member variables
 
     /// URI path
@@ -35,16 +35,6 @@ public struct HBRequest: Sendable, HBSendableExtensible {
     public var method: HTTPMethod { self.head.method }
     /// Request HTTP headers
     public var headers: HTTPHeaders { self.head.headers }
-    /// Request extensions
-    public var extensions: HBSendableExtensions<HBRequest>
-
-    /// Parameters extracted during processing of request URI. These are available to you inside the route handler
-    public var parameters: HBParameters {
-        @inlinable get {
-            self.extensions.get(\.parameters) ?? .init()
-        }
-        @inlinable set { self.extensions.set(\.parameters, value: newValue) }
-    }
 
     // MARK: Initialization
 
@@ -60,7 +50,6 @@ public struct HBRequest: Sendable, HBSendableExtensible {
         self.uri = .init(head.uri)
         self.head = head
         self.body = body
-        self.extensions = .init()
     }
 
     // MARK: Methods

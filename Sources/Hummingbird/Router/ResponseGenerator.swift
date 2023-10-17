@@ -26,7 +26,7 @@ extension HBResponseGenerator {
     /// Generate reponse based on the request this object came from and apply request patches
     func patchedResponse(from request: HBRequest, context: HBRequestContext) throws -> HBResponse {
         var r = try response(from: request, context: context)
-        return r.apply(patch: request.optionalResponse)
+        return r.apply(patch: context.optionalResponse)
     }
 }
 

@@ -15,7 +15,7 @@
 import Tracing
 
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-extension HBRequest {
+extension HBRequestContext {
     /// ServiceContext attached to request. Used to propagate serviceContext to child functions
     ///
     /// Attaching serviceContext to the request should be used when we aren't inside an async
@@ -36,10 +36,10 @@ extension HBRequest {
     ///   - serviceContext: ServiceContext to attach to request
     ///   - operation: operation to run
     /// - Returns: return value of operation
-    public func withServiceContext<Return>(_ context: ServiceContext, _ operation: (HBRequest) throws -> Return) rethrows -> Return {
-        var request = self
-        request.serviceContext = context
-        return try operation(request)
+    public func withServiceContext<Return>(_ serviceContext: ServiceContext, _ operation: (HBRequestContext) throws -> Return) rethrows -> Return {
+        var context = self
+        context.serviceContext = serviceContext
+        return try operation(context)
     }
 
     /// Execute the given operation within a newly created ``Span``
@@ -62,9 +62,9 @@ extension HBRequest {
     public func withSpan<Return>(
         _ operationName: String,
         ofKind kind: SpanKind = .internal,
-        _ operation: (HBRequest, Span) throws -> Return
+        _ operation: (HBRequestContext, Span) throws -> Return
     ) rethrows -> Return {
-        return try self.withSpan(operationName, context: self.serviceContext, ofKind: kind, operation)
+        return try self.withSpan(operationName, serviceContext: self.serviceContext, ofKind: kind, operation)
     }
 
     /// Execute a specific task within a newly created ``Span``.
@@ -87,11 +87,11 @@ extension HBRequest {
     /// - Throws: the error the `operation` has thrown (if any)
     public func withSpan<Return>(
         _ operationName: String,
-        context: ServiceContext,
+        serviceContext: ServiceContext,
         ofKind kind: SpanKind = .internal,
-        _ operation: (HBRequest, Span) throws -> Return
+        _ operation: (HBRequestContext, Span) throws -> Return
     ) rethrows -> Return {
-        let span = InstrumentationSystem.legacyTracer.startAnySpan(operationName, context: context, ofKind: kind)
+        let span = InstrumentationSystem.legacyTracer.startAnySpan(operationName, context: serviceContext, ofKind: kind)
         defer { span.end() }
         return try self.withServiceContext(span.context) { request in
             do {
@@ -119,9 +119,9 @@ extension HBRequest {
     public func withSpan<Return>(
         _ operationName: String,
         ofKind kind: SpanKind = .internal,
-        _ operation: (HBRequest, Span) -> EventLoopFuture<Return>
+        _ operation: (HBRequestContext, Span) -> EventLoopFuture<Return>
     ) -> EventLoopFuture<Return> {
-        return self.withSpan(operationName, context: self.serviceContext, ofKind: kind, operation)
+        return self.withSpan(operationName, serviceContext: self.serviceContext, ofKind: kind, operation)
     }
 
     /// Execute the given operation within a newly created ``Span``,
@@ -139,13 +139,13 @@ extension HBRequest {
     /// - Throws: the error the `operation` has thrown (if any)
     public func withSpan<Return>(
         _ operationName: String,
-        context: ServiceContext,
+        serviceContext: ServiceContext,
         ofKind kind: SpanKind = .internal,
-        _ operation: (HBRequest, Span) -> EventLoopFuture<Return>
+        _ operation: (HBRequestContext, Span) -> EventLoopFuture<Return>
     ) -> EventLoopFuture<Return> {
-        let span = InstrumentationSystem.legacyTracer.startAnySpan(operationName, context: context, ofKind: kind)
-        return self.withServiceContext(span.context) { request in
-            return operation(request, span)
+        let span = InstrumentationSystem.legacyTracer.startAnySpan(operationName, context: serviceContext, ofKind: kind)
+        return self.withServiceContext(span.context) { context in
+            return operation(context, span)
                 .flatMapErrorThrowing { error in
                     span.recordError(error)
                     throw error
