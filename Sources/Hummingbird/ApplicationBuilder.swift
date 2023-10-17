@@ -70,7 +70,7 @@ public final class HBApplicationBuilder<RequestContext: HBRequestContext> {
     /// Initialize new Application
     public init(
         context: RequestContext.Type = HBBasicRequestContext.self,
-        configuration: HBApplication.Configuration = HBApplication.Configuration(),
+        configuration: HBApplicationConfiguration = HBApplicationConfiguration(),
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton
     ) {
         var logger = Logger(label: configuration.serverName ?? "HummingBird")

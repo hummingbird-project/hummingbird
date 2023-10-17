@@ -34,7 +34,7 @@ extension HBApplication {
                 head: request.head,
                 body: request.body
             )
-            let context = RequestContext.create(
+            let context = RequestContext(
                 applicationContext: self.applicationContext,
                 channel: context.channel,
                 logger: loggerWithRequestId(self.applicationContext.logger)

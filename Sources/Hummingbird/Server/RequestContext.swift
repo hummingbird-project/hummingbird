@@ -32,6 +32,18 @@ public struct EndpointPath: Sendable {
     private let _value: NIOLoopBoundBox<String?>
 }
 
+public struct HBRouterContext: Sendable {
+    /// Endpoint path
+    public var endpointPath: EndpointPath
+    /// Parameters extracted from URI
+    public var parameters: HBParameters
+
+    public init(eventLoop: EventLoop) {
+        self.endpointPath = .init(eventLoop: eventLoop)
+        self.parameters = .init()
+    }
+}
+
 public protocol HBRequestContext: Sendable {
     /// Application context
     var applicationContext: HBApplicationContext { get }
@@ -41,27 +53,26 @@ public protocol HBRequestContext: Sendable {
     var eventLoop: EventLoop { get }
     /// ByteBuffer allocator used by request
     var allocator: ByteBufferAllocator { get }
-    /// Endpoint path
-    var endpointPath: EndpointPath { get }
-    /// Parameters extracted from URI
-    var parameters: HBParameters { get set }
+    /// Router
+    var router: HBRouterContext { get set }
     /// Service context
     var serviceContext: ServiceContext { get }
-    /// Default init
+    /// initialize an `HBRequestContext`
+    /// - Parameters:
+    ///   - applicationContext: Context coming from Application
+    ///   - channel: Channel that created request and context
+    ///   - logger: Logger to use with request
     init(applicationContext: HBApplicationContext, channel: Channel, logger: Logger)
 }
 
 extension HBRequestContext {
-    static func create(applicationContext: HBApplicationContext, channel: Channel, logger: Logger) -> Self {
-        return .init(applicationContext: applicationContext, channel: channel, logger: logger)
-    }
-
+    /// default service context
     var serviceContext: ServiceContext { .topLevel }
-
+    /// Request ID, extracted from Logger
     var id: String { self.logger[metadataKey: "hb_id"]!.description }
 }
 
-/// Protocol for request context that stores the Channel that created it
+/// Protocol for request context that stores the remote address of connected client
 public protocol HBRemoteAddressRequestContext: HBRequestContext {
     /// Connected host address
     var remoteAddress: SocketAddress? { get }
@@ -79,10 +90,8 @@ public struct HBBasicRequestContext: HBRequestContext, HBRemoteAddressRequestCon
     public let applicationContext: HBApplicationContext
     /// Logger to use with Request
     public let logger: Logger
-    /// Endpoint path
-    public let endpointPath: EndpointPath
-    /// Parameters extracted during processing of request URI. These are available to you inside the route handler
-    public var parameters: HBParameters
+    /// Router context
+    public var router: HBRouterContext
 
     /// ServiceContext
     public var serviceContext: ServiceContext
@@ -109,8 +118,7 @@ public struct HBBasicRequestContext: HBRequestContext, HBRemoteAddressRequestCon
         self.channel = channel
         self.logger = logger
         self.serviceContext = .topLevel
-        self.parameters = .init()
-        self.endpointPath = .init(eventLoop: channel.eventLoop)
+        self.router = .init(eventLoop: channel.eventLoop)
     }
 }
 

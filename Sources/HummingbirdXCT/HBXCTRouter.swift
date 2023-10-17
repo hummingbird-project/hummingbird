@@ -35,10 +35,6 @@ extension HBTestRouterContextProtocol {
     ) {
         self.init(applicationContext: applicationContext, eventLoop: channel.eventLoop, logger: logger)
     }
-
-    static func create(applicationContext: HBApplicationContext, eventLoop: EventLoop, logger: Logger) -> Self {
-        return .init(applicationContext: applicationContext, eventLoop: eventLoop, logger: logger)
-    }
 }
 
 public struct HBTestRouterContext: HBTestRouterContextProtocol, HBRemoteAddressRequestContext {
@@ -47,18 +43,15 @@ public struct HBTestRouterContext: HBTestRouterContextProtocol, HBRemoteAddressR
         self.eventLoop = eventLoop
         self.logger = logger
         self.serviceContext = .topLevel
-        self.parameters = .init()
-        self.endpointPath = .init(eventLoop: eventLoop)
+        self.router = .init(eventLoop: eventLoop)
     }
 
     /// Application context
     public let applicationContext: HBApplicationContext
     /// Logger to use with Request
     public let logger: Logger
-    /// parameters
-    public var parameters: HBParameters
-    /// Endpoint path
-    public let endpointPath: EndpointPath
+    /// router context
+    public var router: HBRouterContext
     /// EventLoop request is running on
     public let eventLoop: EventLoop
     /// ByteBuffer allocator used by request
@@ -122,7 +115,7 @@ struct HBXCTRouter<RequestContext: HBTestRouterContextProtocol>: HBXCTApplicatio
                     head: .init(version: .http1_1, method: method, uri: uri, headers: headers),
                     body: .byteBuffer(body)
                 )
-                let context = RequestContext.create(
+                let context = RequestContext(
                     applicationContext: self.applicationContext,
                     eventLoop: eventLoop,
                     logger: HBApplication<RequestContext>.loggerWithRequestId(self.applicationContext.logger)

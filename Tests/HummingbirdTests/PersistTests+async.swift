@@ -23,23 +23,23 @@ final class AsyncPersistTests: XCTestCase {
 
         app.router.put("/persist/:tag") { request, context -> HTTPResponseStatus in
             guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
-            let tag = try context.parameters.require("tag")
+            let tag = try context.router.parameters.require("tag")
             try await persist.set(key: tag, value: String(buffer: buffer), request: request)
             return .ok
         }
         app.router.put("/persist/:tag/:time") { request, context -> HTTPResponseStatus in
-            guard let time = context.parameters.get("time", as: Int.self) else { throw HBHTTPError(.badRequest) }
+            guard let time = context.router.parameters.get("time", as: Int.self) else { throw HBHTTPError(.badRequest) }
             guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
-            let tag = try context.parameters.require("tag")
+            let tag = try context.router.parameters.require("tag")
             try await persist.set(key: tag, value: String(buffer: buffer), expires: .seconds(numericCast(time)), request: request)
             return .ok
         }
         app.router.get("/persist/:tag") { request, context -> String? in
-            let tag = try context.parameters.require("tag")
+            let tag = try context.router.parameters.require("tag")
             return try await persist.get(key: tag, as: String.self, request: request)
         }
         app.router.delete("/persist/:tag") { request, context -> HTTPResponseStatus in
-            let tag = try context.parameters.require("tag")
+            let tag = try context.router.parameters.require("tag")
             try await persist.remove(key: tag, request: request)
             return .noContent
         }
@@ -70,7 +70,7 @@ final class AsyncPersistTests: XCTestCase {
         let (app, persist) = try createApplication()
         app.router.put("/create/:tag") { request, context -> HTTPResponseStatus in
             guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
-            let tag = try context.parameters.require("tag")
+            let tag = try context.router.parameters.require("tag")
             try await persist.create(key: tag, value: String(buffer: buffer), request: request)
             return .ok
         }
@@ -92,7 +92,7 @@ final class AsyncPersistTests: XCTestCase {
         let (app, persist) = try createApplication()
         app.router.put("/create/:tag") { request, context -> HTTPResponseStatus in
             guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
-            let tag = try context.parameters.require("tag")
+            let tag = try context.router.parameters.require("tag")
             do {
                 try await persist.create(key: tag, value: String(buffer: buffer), request: request)
             } catch let error as HBPersistError where error == .duplicate {
@@ -166,13 +166,13 @@ final class AsyncPersistTests: XCTestCase {
         let (app, persist) = try createApplication()
 
         app.router.put("/codable/:tag") { request, context -> HTTPResponseStatus in
-            guard let tag = context.parameters.get("tag") else { throw HBHTTPError(.badRequest) }
+            guard let tag = context.router.parameters.get("tag") else { throw HBHTTPError(.badRequest) }
             guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
             try await persist.set(key: tag, value: TestCodable(buffer: String(buffer: buffer)), request: request)
             return .ok
         }
         app.router.get("/codable/:tag") { request, context -> String? in
-            guard let tag = context.parameters.get("tag") else { throw HBHTTPError(.badRequest) }
+            guard let tag = context.router.parameters.get("tag") else { throw HBHTTPError(.badRequest) }
             let value = try await persist.get(key: tag, as: TestCodable.self, request: request)
             return value?.buffer
         }

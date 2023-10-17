@@ -113,7 +113,7 @@ final class MiddlewareTests: XCTestCase {
     func testEndpointPathInGroup() async throws {
         struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
-                XCTAssertNotNil(context.endpointPath)
+                XCTAssertNotNil(context.router.endpointPath)
                 return next.respond(to: request, context: context)
             }
         }
