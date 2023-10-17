@@ -21,7 +21,7 @@ extension HBResponse {
     }
 }
 
-extension HBTypedResponse {
+extension HBEditedResponse {
     /// Set cookie on reponse patch
     ///
     /// Can be accessed via `request.response.setCookie(myCookie)`

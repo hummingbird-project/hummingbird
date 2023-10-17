@@ -74,27 +74,28 @@ extension Optional: HBResponseGenerator where Wrapped: HBResponseGenerator {
     }
 }
 
-public struct HBTypedResponse<Body: HBResponseGenerator>: HBResponseGenerator {
+public struct HBEditedResponse<Generator: HBResponseGenerator>: HBResponseGenerator {
     public var status: HTTPResponseStatus?
     public var headers: HTTPHeaders
-    public var body: Body
+    public var responseGenerator: Generator
 
     public init(
         status: HTTPResponseStatus? = nil,
         headers: HTTPHeaders = .init(),
-        body: Body
+        response: Generator
     ) {
         self.status = status
         self.headers = headers
-        self.body = body
+        self.responseGenerator = response
     }
 
     public func response(from request: HBRequest, context: HBRequestContext) throws -> HBResponse {
-        var response = try body.response(from: request, context: context)
+        var response = try responseGenerator.response(from: request, context: context)
         if let status = self.status {
             response.status = status
         }
         if self.headers.count > 0 {
+            // only add headers from generated response if they don't exist in override headers
             var headers = self.headers
             for (name, value) in response.headers {
                 if headers[name].first == nil {

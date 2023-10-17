@@ -385,10 +385,10 @@ final class ApplicationTests: XCTestCase {
     func testTypedResponse() async throws {
         let app = HBApplicationBuilder()
         app.router.delete("/hello") { _, _ in
-            return HBTypedResponse(
+            return HBEditedResponse(
                 status: .imATeapot,
                 headers: ["test": "value", "content-type": "application/json"],
-                body: "Hello"
+                response: "Hello"
             )
         }
         try await app.buildAndTest(.router) { client in
@@ -412,10 +412,10 @@ final class ApplicationTests: XCTestCase {
         let app = HBApplicationBuilder()
         app.encoder = JSONEncoder()
         app.router.patch("/hello") { _, _ in
-            return HBTypedResponse(
+            return HBEditedResponse(
                 status: .imATeapot,
                 headers: ["test": "value", "content-type": "application/json"],
-                body: Result(value: "true")
+                response: Result(value: "true")
             )
         }
         try await app.buildAndTest(.router) { client in
@@ -436,10 +436,10 @@ final class ApplicationTests: XCTestCase {
         let app = HBApplicationBuilder()
         app.router.delete("/hello") { _, context in
             return context.success(
-                HBTypedResponse(
+                HBEditedResponse(
                     status: .imATeapot,
                     headers: ["test": "value", "content-type": "application/json"],
-                    body: "Hello"
+                    response: "Hello"
                 )
             )
         }
