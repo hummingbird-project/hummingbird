@@ -67,9 +67,9 @@ public protocol HBRequestContext: Sendable {
 
 extension HBRequestContext {
     /// default service context
-    var serviceContext: ServiceContext { .topLevel }
+    public var serviceContext: ServiceContext { .topLevel }
     /// Request ID, extracted from Logger
-    var id: String { self.logger[metadataKey: "hb_id"]!.description }
+    public var id: String { self.logger[metadataKey: "hb_id"]!.description }
 }
 
 /// Protocol for request context that stores the remote address of connected client
