@@ -45,7 +45,7 @@ final class RouterTests: XCTestCase {
             }
         }
 
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(TestEndpointMiddleware())
         app.router.get("/test/:number") { _, _ in return "xxx" }
 
@@ -66,7 +66,7 @@ final class RouterTests: XCTestCase {
             }
         }
 
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(TestEndpointMiddleware())
         app.router.get("test") { _, context in
             return context.endpointPath
@@ -103,7 +103,7 @@ final class RouterTests: XCTestCase {
             }
         }
 
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(TestEndpointMiddleware())
         app.router.get("test/") { _, context in
             return context.endpointPath
@@ -146,7 +146,7 @@ final class RouterTests: XCTestCase {
 
     /// Test correct endpoints are called from group
     func testMethodEndpoint() async throws {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.router
             .group("/endpoint")
             .get { _, _ in
@@ -171,7 +171,7 @@ final class RouterTests: XCTestCase {
     /// Test middle in group is applied to group but not to routes outside
     /// group
     func testGroupMiddleware() async throws {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.router
             .group()
             .add(middleware: TestMiddleware())
@@ -193,7 +193,7 @@ final class RouterTests: XCTestCase {
     }
 
     func testEndpointMiddleware() async throws {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.router
             .group("/group")
             .add(middleware: TestMiddleware())
@@ -209,7 +209,7 @@ final class RouterTests: XCTestCase {
 
     /// Test middleware in parent group is applied to routes in child group
     func testGroupGroupMiddleware() async throws {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.router
             .group("/test")
             .add(middleware: TestMiddleware())
@@ -236,7 +236,7 @@ final class RouterTests: XCTestCase {
             }
         }
 
-        let app = HBApplicationBuilder(context: HBTestRouterContext2.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext2.self)
         app.router
             .group("/test")
             .add(middleware: TestGroupMiddleware(output: "route1"))
@@ -261,7 +261,7 @@ final class RouterTests: XCTestCase {
     }
 
     func testParameters() async throws {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.router
             .delete("/user/:id") { _, context -> String? in
                 return context.parameters.get("id", as: String.self)
@@ -275,7 +275,7 @@ final class RouterTests: XCTestCase {
     }
 
     func testParameterCollection() async throws {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.router
             .delete("/user/:username/:id") { _, context -> String? in
                 XCTAssertEqual(context.parameters.count, 2)
@@ -290,7 +290,7 @@ final class RouterTests: XCTestCase {
     }
 
     func testPartialCapture() async throws {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.router
             .get("/files/file.${ext}/${name}.jpg") { _, context -> String in
                 XCTAssertEqual(context.parameters.count, 2)
@@ -307,7 +307,7 @@ final class RouterTests: XCTestCase {
     }
 
     func testPartialWildcard() async throws {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.router
             .get("/files/file.*/*.jpg") { _, _ -> HTTPResponseStatus in
                 return .ok
@@ -324,7 +324,7 @@ final class RouterTests: XCTestCase {
 
     /// Test we have a request id and that it increments with each request
     func testRequestId() async throws {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.router.get("id") { _, context in
             return context.id.description
         }
@@ -344,7 +344,7 @@ final class RouterTests: XCTestCase {
 
     // Test redirect response
     func testRedirect() async throws {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.router.get("redirect") { _, _ in
             return HBResponse.redirect(to: "/other")
         }

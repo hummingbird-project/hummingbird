@@ -65,7 +65,7 @@ class CookieTests: XCTestCase {
     }
 
     func testSetCookie() async throws {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.router.post("/") { _, _ -> HBResponse in
             var response = HBResponse(status: .ok, headers: [:], body: .empty)
             response.setCookie(.init(name: "test", value: "value"))
@@ -79,7 +79,7 @@ class CookieTests: XCTestCase {
     }
 
     func testSetCookieViaRequest() async throws {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.router.post("/") { _, _ in
             return HBEditedResponse(headers: ["Set-Cookie": HBCookie(name: "test", value: "value").description], response: "Hello")
         }
@@ -91,7 +91,7 @@ class CookieTests: XCTestCase {
     }
 
     func testReadCookieFromRequest() async throws {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.router.post("/") { request, _ -> String? in
             return request.cookies["test"]?.value
         }

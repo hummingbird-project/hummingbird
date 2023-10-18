@@ -18,7 +18,7 @@ import XCTest
 
 final class AsyncPersistTests: XCTestCase {
     func createApplication() throws -> (HBApplicationBuilder<HBTestRouterContext>, HBPersistDriver) {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         let persist: HBPersistDriver = HBMemoryPersistDriver(eventLoopGroup: app.eventLoopGroup)
 
         app.router.put("/persist/:tag") { request, context -> HTTPResponseStatus in

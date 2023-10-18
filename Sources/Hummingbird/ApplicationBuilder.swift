@@ -69,7 +69,7 @@ public final class HBApplicationBuilder<RequestContext: HBRequestContext> {
 
     /// Initialize new Application
     public init(
-        context: RequestContext.Type = HBBasicRequestContext.self,
+        requestContext: RequestContext.Type = HBBasicRequestContext.self,
         configuration: HBApplicationConfiguration = HBApplicationConfiguration(),
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton
     ) {

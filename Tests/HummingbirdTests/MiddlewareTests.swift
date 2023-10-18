@@ -27,7 +27,7 @@ final class MiddlewareTests: XCTestCase {
                 }
             }
         }
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(TestMiddleware())
         app.router.get("/hello") { _, _ -> String in
             return "Hello"
@@ -50,7 +50,7 @@ final class MiddlewareTests: XCTestCase {
                 }
             }
         }
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(TestMiddleware(string: "first"))
         app.middleware.add(TestMiddleware(string: "second"))
         app.router.get("/hello") { _, _ -> String in
@@ -76,7 +76,7 @@ final class MiddlewareTests: XCTestCase {
                 }
             }
         }
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(TestMiddleware())
         app.router.get("/hello") { _, _ -> String in
             return "Hello"
@@ -98,7 +98,7 @@ final class MiddlewareTests: XCTestCase {
                 }
             }
         }
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(TestMiddleware())
 
         try await app.buildAndTest(.router) { client in
@@ -117,7 +117,7 @@ final class MiddlewareTests: XCTestCase {
                 return next.respond(to: request, context: context)
             }
         }
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.router.group()
             .add(middleware: TestMiddleware())
             .get("test") { _, _ in
@@ -130,7 +130,7 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testCORSUseOrigin() async throws {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBCORSMiddleware())
         app.router.get("/hello") { _, _ -> String in
             return "Hello"
@@ -144,7 +144,7 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testCORSUseAll() async throws {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBCORSMiddleware(allowOrigin: .all))
         app.router.get("/hello") { _, _ -> String in
             return "Hello"
@@ -158,7 +158,7 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testCORSOptions() async throws {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBCORSMiddleware(
             allowOrigin: .all,
             allowHeaders: ["content-type", "authorization"],
@@ -187,7 +187,7 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testRouteLoggingMiddleware() async throws {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBLogRequestsMiddleware(.debug))
         app.router.put("/hello") { _, context -> EventLoopFuture<String> in
             return context.failure(.badRequest)

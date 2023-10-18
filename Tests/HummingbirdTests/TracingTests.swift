@@ -34,7 +34,7 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBTracingMiddleware())
         app.router.get("users/:id") { _, _ -> String in
             return "42"
@@ -74,7 +74,7 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBTracingMiddleware())
         app.router.post("users") { _, _ -> String in
             throw HBHTTPError(.internalServerError)
@@ -115,7 +115,7 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBTracingMiddleware(recordingHeaders: [
             "accept", "content-type", "cache-control", "does-not-exist",
         ]))
@@ -173,7 +173,7 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBTracingMiddleware())
         app.router.post("/users") { _, _ -> HTTPResponseStatus in
             return .noContent
@@ -210,7 +210,7 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBTracingMiddleware())
         app.router.get("/") { _, _ -> HTTPResponseStatus in
             return .ok
@@ -247,7 +247,7 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBTracingMiddleware())
         try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/", method: .GET) { response in
@@ -285,7 +285,7 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBTracingMiddleware())
         app.router.get("/") { _, context -> HTTPResponseStatus in
             var serviceContext = context.serviceContext
@@ -318,7 +318,7 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBTracingMiddleware())
         app.router.get("/") { _, context -> HTTPResponseStatus in
             var serviceContext = context.serviceContext
@@ -367,7 +367,7 @@ final class TracingTests: XCTestCase {
         }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(SpanMiddleware())
         app.middleware.add(HBTracingMiddleware())
         app.router.get("/") { _, context -> EventLoopFuture<HTTPResponseStatus> in
@@ -401,7 +401,7 @@ extension TracingTests {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBTracingMiddleware())
         app.router.get("/") { _, _ -> HTTPResponseStatus in
             try await Task.sleep(nanoseconds: 1000)
@@ -444,7 +444,7 @@ extension TracingTests {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBTracingMiddleware())
         app.middleware.add(AsyncSpanMiddleware())
         app.router.get("/") { _, context -> HTTPResponseStatus in

@@ -184,7 +184,7 @@ final class MetricsTests: XCTestCase {
     }
 
     func testCounter() async throws {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBMetricsMiddleware())
         app.router.get("/hello") { _, _ -> String in
             return "Hello"
@@ -202,7 +202,7 @@ final class MetricsTests: XCTestCase {
     }
 
     func testError() async throws {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBMetricsMiddleware())
         app.router.get("/hello") { _, _ -> String in
             throw HBHTTPError(.badRequest)
@@ -221,7 +221,7 @@ final class MetricsTests: XCTestCase {
     }
 
     func testNotFoundError() async throws {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBMetricsMiddleware())
         app.router.get("/hello") { _, _ -> String in
             return "hello"
@@ -239,7 +239,7 @@ final class MetricsTests: XCTestCase {
     }
 
     func testParameterEndpoint() async throws {
-        let app = HBApplicationBuilder(context: HBTestRouterContext.self)
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBMetricsMiddleware())
         app.router.get("/user/:id") { _, _ -> String in
             throw HBHTTPError(.badRequest)
