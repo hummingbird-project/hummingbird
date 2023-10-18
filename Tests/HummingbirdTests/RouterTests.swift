@@ -40,7 +40,7 @@ final class RouterTests: XCTestCase {
     func testEndpointPath() async throws {
         struct TestEndpointMiddleware<Context: HBRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
-                guard let endpointPath = context.router.endpointPath.value else { return next.respond(to: request, context: context) }
+                guard let endpointPath = context.endpointPath else { return next.respond(to: request, context: context) }
                 return context.success(.init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath))))
             }
         }
@@ -61,7 +61,7 @@ final class RouterTests: XCTestCase {
     func testEndpointPathPrefix() async throws {
         struct TestEndpointMiddleware<Context: HBRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
-                guard let endpointPath = context.router.endpointPath.value else { return next.respond(to: request, context: context) }
+                guard let endpointPath = context.endpointPath else { return next.respond(to: request, context: context) }
                 return context.success(.init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath))))
             }
         }
@@ -69,13 +69,13 @@ final class RouterTests: XCTestCase {
         let app = HBApplicationBuilder(context: HBTestRouterContext.self)
         app.middleware.add(TestEndpointMiddleware())
         app.router.get("test") { _, context in
-            return context.router.endpointPath.value
+            return context.endpointPath
         }
         app.router.get { _, context in
-            return context.router.endpointPath.value
+            return context.endpointPath
         }
         app.router.post("/test2") { _, context in
-            return context.router.endpointPath.value
+            return context.endpointPath
         }
 
         try await app.buildAndTest(.router) { client in
@@ -98,7 +98,7 @@ final class RouterTests: XCTestCase {
     func testEndpointPathSuffix() async throws {
         struct TestEndpointMiddleware<Context: HBRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
-                guard let endpointPath = context.router.endpointPath.value else { return next.respond(to: request, context: context) }
+                guard let endpointPath = context.endpointPath else { return next.respond(to: request, context: context) }
                 return context.success(.init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath))))
             }
         }
@@ -106,20 +106,20 @@ final class RouterTests: XCTestCase {
         let app = HBApplicationBuilder(context: HBTestRouterContext.self)
         app.middleware.add(TestEndpointMiddleware())
         app.router.get("test/") { _, context in
-            return context.router.endpointPath.value
+            return context.endpointPath
         }
         app.router.post("test2") { _, context in
-            return context.router.endpointPath.value
+            return context.endpointPath
         }
         app.router
             .group("testGroup")
             .get { _, context in
-                return context.router.endpointPath.value
+                return context.endpointPath
             }
         app.router
             .group("testGroup2")
             .get("/") { _, context in
-                return context.router.endpointPath.value
+                return context.endpointPath
             }
         try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/test/", method: .GET) { response in
@@ -264,7 +264,7 @@ final class RouterTests: XCTestCase {
         let app = HBApplicationBuilder(context: HBTestRouterContext.self)
         app.router
             .delete("/user/:id") { _, context -> String? in
-                return context.router.parameters.get("id", as: String.self)
+                return context.parameters.get("id", as: String.self)
             }
         try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/user/1234", method: .DELETE) { response in
@@ -278,8 +278,8 @@ final class RouterTests: XCTestCase {
         let app = HBApplicationBuilder(context: HBTestRouterContext.self)
         app.router
             .delete("/user/:username/:id") { _, context -> String? in
-                XCTAssertEqual(context.router.parameters.count, 2)
-                return context.router.parameters.get("id", as: String.self)
+                XCTAssertEqual(context.parameters.count, 2)
+                return context.parameters.get("id", as: String.self)
             }
         try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/user/john/1234", method: .DELETE) { response in
@@ -293,9 +293,9 @@ final class RouterTests: XCTestCase {
         let app = HBApplicationBuilder(context: HBTestRouterContext.self)
         app.router
             .get("/files/file.${ext}/${name}.jpg") { _, context -> String in
-                XCTAssertEqual(context.router.parameters.count, 2)
-                let ext = try context.router.parameters.require("ext")
-                let name = try context.router.parameters.require("name")
+                XCTAssertEqual(context.parameters.count, 2)
+                let ext = try context.parameters.require("ext")
+                let name = try context.parameters.require("name")
                 return "\(name).\(ext)"
             }
         try await app.buildAndTest(.router) { client in
@@ -359,26 +359,13 @@ final class RouterTests: XCTestCase {
 
 public struct HBTestRouterContext2: HBTestRouterContextProtocol {
     public init(applicationContext: HBApplicationContext, eventLoop: EventLoop, logger: Logger) {
-        self.applicationContext = applicationContext
-        self.eventLoop = eventLoop
-        self.logger = logger
+        self.coreContext = .init(applicationContext: applicationContext, eventLoop: eventLoop, logger: logger)
         self.serviceContext = .topLevel
-        self.router = .init(eventLoop: eventLoop)
         self.string = ""
     }
 
-    /// Application context
-    public let applicationContext: HBApplicationContext
-    /// Logger to use with Request
-    public let logger: Logger
     /// parameters
-    public var router: HBRouterContext
-
-    /// EventLoop request is running on
-    public let eventLoop: EventLoop
-    /// ByteBuffer allocator used by request
-    public var allocator: ByteBufferAllocator { ByteBufferAllocator() }
-
+    public var coreContext: HBCoreRequestContext
     /// ServiceContext
     public var serviceContext: ServiceContext
     /// Connected remote host

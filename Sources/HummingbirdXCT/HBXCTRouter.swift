@@ -39,24 +39,12 @@ extension HBTestRouterContextProtocol {
 
 public struct HBTestRouterContext: HBTestRouterContextProtocol, HBRemoteAddressRequestContext {
     public init(applicationContext: HBApplicationContext, eventLoop: EventLoop, logger: Logger) {
-        self.applicationContext = applicationContext
-        self.eventLoop = eventLoop
-        self.logger = logger
+        self.coreContext = .init(applicationContext: applicationContext, eventLoop: eventLoop, logger: logger)
         self.serviceContext = .topLevel
-        self.router = .init(eventLoop: eventLoop)
     }
 
-    /// Application context
-    public let applicationContext: HBApplicationContext
-    /// Logger to use with Request
-    public let logger: Logger
     /// router context
-    public var router: HBRouterContext
-    /// EventLoop request is running on
-    public let eventLoop: EventLoop
-    /// ByteBuffer allocator used by request
-    public var allocator: ByteBufferAllocator { ByteBufferAllocator() }
-
+    public var coreContext: HBCoreRequestContext
     /// ServiceContext
     public var serviceContext: ServiceContext
     /// Connected remote host

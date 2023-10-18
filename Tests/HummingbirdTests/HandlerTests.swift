@@ -183,7 +183,7 @@ final class HandlerTests: XCTestCase {
     func testDecodeFail() async throws {
         struct DecodeTest: HBRequestDecodable {
             let name: String
-            
+
             func handle(request: HBRequest, context: HBRequestContext) -> HTTPResponseStatus {
                 return .ok
             }
@@ -203,7 +203,7 @@ final class HandlerTests: XCTestCase {
         struct ParameterTest: HBRouteHandler {
             let parameter: Int
             init(from request: HBRequest, context: HBRequestContext) throws {
-                self.parameter = try context.router.parameters.require("test", as: Int.self)
+                self.parameter = try context.parameters.require("test", as: Int.self)
             }
 
             func handle(request: HBRequest, context: HBRequestContext) -> String {

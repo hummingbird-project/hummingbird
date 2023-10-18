@@ -38,10 +38,10 @@ struct HBRouter<Context: HBRequestContext>: HBResponder {
         }
         var context = context
         if let parameters = result.parameters {
-            context.router.parameters = parameters
+            context.coreContext.parameters = parameters
         }
         // store endpoint path in request (mainly for metrics)
-        context.router.endpointPath.value = result.value.path
+        context.coreContext.endpointPath.value = result.value.path
         return responder.respond(to: request, context: context)
     }
 }
