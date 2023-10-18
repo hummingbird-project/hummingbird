@@ -79,9 +79,8 @@ class CookieTests: XCTestCase {
 
     func testSetCookieViaRequest() async throws {
         let app = HBApplicationBuilder()
-        app.router.post("/", options: .editResponse) { request, context -> String in
-            context.response.setCookie(.init(name: "test", value: "value"))
-            return "Hello"
+        app.router.post("/") { _, _ in
+            return HBEditedResponse(headers: ["Set-Cookie": HBCookie(name: "test", value: "value").description], response: "Hello")
         }
         try await app.buildAndTest(.router) { client in
             try await client.XCTExecute(uri: "/", method: .POST) { response in

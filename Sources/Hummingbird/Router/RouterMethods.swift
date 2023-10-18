@@ -24,8 +24,6 @@ public struct HBRouterMethodOptions: OptionSet {
 
     /// don't collate the request body, expect handler to stream it
     public static let streamBody: HBRouterMethodOptions = .init(rawValue: 1 << 0)
-    /// allow handler to edit response via `request.response`
-    public static let editResponse: HBRouterMethodOptions = .init(rawValue: 1 << 1)
 }
 
 /// Conform to `HBRouterMethods` to add standard router verb (get, post ...) methods
@@ -176,15 +174,7 @@ extension HBRouterMethods {
     ) -> HBResponder {
         // generate response from request. Moved repeated code into internal function
         func _respond(request: HBRequest, context: HBRequestContext) throws -> HBResponse {
-            let response: HBResponse
-            if options.contains(.editResponse) {
-                var context = context
-                context.response = .init()
-                response = try closure(request, context).patchedResponse(from: request, context: context)
-            } else {
-                response = try closure(request, context).response(from: request, context: context)
-            }
-            return response
+            return try closure(request, context).response(from: request, context: context)
         }
 
         if options.contains(.streamBody) {
@@ -225,14 +215,7 @@ extension HBRouterMethods {
     ) -> HBResponder {
         // generate response from request. Moved repeated code into internal function
         func _respond(request: HBRequest, context: HBRequestContext) -> EventLoopFuture<HBResponse> {
-            var context = context
-            let responseFuture: EventLoopFuture<HBResponse>
-            if options.contains(.editResponse) {
-                context.response = .init()
-                responseFuture = closure(request, context).flatMapThrowing { try $0.patchedResponse(from: request, context: context) }
-            } else {
-                responseFuture = closure(request, context).flatMapThrowing { try $0.response(from: request, context: context) }
-            }
+            let responseFuture = closure(request, context).flatMapThrowing { try $0.response(from: request, context: context) }
             return responseFuture.hop(to: context.eventLoop)
         }
 

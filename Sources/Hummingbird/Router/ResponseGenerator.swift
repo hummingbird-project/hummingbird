@@ -22,14 +22,6 @@ public protocol HBResponseGenerator {
     func response(from request: HBRequest, context: HBRequestContext) throws -> HBResponse
 }
 
-extension HBResponseGenerator {
-    /// Generate reponse based on the request this object came from and apply request patches
-    func patchedResponse(from request: HBRequest, context: HBRequestContext) throws -> HBResponse {
-        var r = try response(from: request, context: context)
-        return r.apply(patch: context.optionalResponse)
-    }
-}
-
 /// Extend Response to conform to ResponseGenerator
 extension HBResponse: HBResponseGenerator {
     /// Return self as the response
@@ -79,5 +71,39 @@ extension Optional: HBResponseGenerator where Wrapped: HBResponseGenerator {
         case .none:
             return HBResponse(status: .noContent, headers: [:], body: .empty)
         }
+    }
+}
+
+public struct HBEditedResponse<Generator: HBResponseGenerator>: HBResponseGenerator {
+    public var status: HTTPResponseStatus?
+    public var headers: HTTPHeaders
+    public var responseGenerator: Generator
+
+    public init(
+        status: HTTPResponseStatus? = nil,
+        headers: HTTPHeaders = .init(),
+        response: Generator
+    ) {
+        self.status = status
+        self.headers = headers
+        self.responseGenerator = response
+    }
+
+    public func response(from request: HBRequest, context: HBRequestContext) throws -> HBResponse {
+        var response = try responseGenerator.response(from: request, context: context)
+        if let status = self.status {
+            response.status = status
+        }
+        if self.headers.count > 0 {
+            // only add headers from generated response if they don't exist in override headers
+            var headers = self.headers
+            for (name, value) in response.headers {
+                if headers[name].first == nil {
+                    headers.add(name: name, value: value)
+                }
+            }
+            response.headers = headers
+        }
+        return response
     }
 }

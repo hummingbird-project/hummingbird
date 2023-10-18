@@ -382,13 +382,14 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    func testEditResponse() async throws {
+    func testTypedResponse() async throws {
         let app = HBApplicationBuilder()
-        app.router.delete("/hello", options: .editResponse) { _, context -> String in
-            context.response.headers.add(name: "test", value: "value")
-            context.response.headers.replaceOrAdd(name: "content-type", value: "application/json")
-            context.response.status = .imATeapot
-            return "Hello"
+        app.router.delete("/hello") { _, _ in
+            return HBEditedResponse(
+                status: .imATeapot,
+                headers: ["test": "value", "content-type": "application/json"],
+                response: "Hello"
+            )
         }
         try await app.buildAndTest(.router) { client in
 
@@ -404,13 +405,43 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    func testEditResponseFuture() async throws {
+    func testCodableTypedResponse() async throws {
+        struct Result: HBResponseEncodable {
+            let value: String
+        }
         let app = HBApplicationBuilder()
-        app.router.delete("/hello", options: .editResponse) { _, context -> EventLoopFuture<String> in
-            context.response.headers.add(name: "test", value: "value")
-            context.response.headers.replaceOrAdd(name: "content-type", value: "application/json")
-            context.response.status = .imATeapot
-            return context.success("Hello")
+        app.encoder = JSONEncoder()
+        app.router.patch("/hello") { _, _ in
+            return HBEditedResponse(
+                status: .imATeapot,
+                headers: ["test": "value", "content-type": "application/json"],
+                response: Result(value: "true")
+            )
+        }
+        try await app.buildAndTest(.router) { client in
+
+            try await client.XCTExecute(uri: "/hello", method: .PATCH) { response in
+                var body = try XCTUnwrap(response.body)
+                let string = body.readString(length: body.readableBytes)
+                XCTAssertEqual(response.status, .imATeapot)
+                XCTAssertEqual(response.headers["test"].first, "value")
+                XCTAssertEqual(response.headers["content-type"].count, 1)
+                XCTAssertEqual(response.headers["content-type"].first, "application/json")
+                XCTAssertEqual(string, #"{"value":"true"}"#)
+            }
+        }
+    }
+
+    func testTypedResponseFuture() async throws {
+        let app = HBApplicationBuilder()
+        app.router.delete("/hello") { _, context in
+            return context.success(
+                HBEditedResponse(
+                    status: .imATeapot,
+                    headers: ["test": "value", "content-type": "application/json"],
+                    response: "Hello"
+                )
+            )
         }
         try await app.buildAndTest(.router) { client in
 
