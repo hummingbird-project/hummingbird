@@ -203,7 +203,7 @@ public struct HBBasicRequestContext: HBRequestContext, HBRemoteAddressRequestCon
         channel: Channel,
         logger: Logger
     ) {
-        self.coreContext = .init(applicationContext: applicationContext, eventLoop: channel.eventLoop, logger: logger, allocator: channel.allocator)
+        self.coreContext = .init(applicationContext: applicationContext, channel: channel, logger: logger)
         self.channel = channel
         self.serviceContext = .topLevel
     }
