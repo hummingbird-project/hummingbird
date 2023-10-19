@@ -53,13 +53,6 @@ public struct HBTestRouterContext: HBTestRouterContextProtocol, HBRemoteAddressR
 
 /// Test sending values to requests to router. This does not setup a live server
 struct HBXCTRouter<RequestContext: HBTestRouterContextProtocol>: HBXCTApplication {
-    /// Dummy request context
-    struct XCTChannelContext: HBChannelContextProtocol {
-        let eventLoop: EventLoop
-        var allocator: ByteBufferAllocator { ByteBufferAllocator() }
-        var remoteAddress: SocketAddress? { return nil }
-    }
-
     let eventLoopGroup: EventLoopGroup
     let context: HBApplicationContext
     let responder: any HBResponder<RequestContext>
@@ -130,7 +123,8 @@ struct HBXCTRouter<RequestContext: HBTestRouterContextProtocol>: HBXCTApplicatio
                             case .stream(let streamer):
                                 var colllateBuffer = ByteBuffer()
                                 streamerReadLoop:
-                                    while true {
+                                    while true
+                                {
                                     switch try await streamer.read(on: eventLoop).get() {
                                     case .byteBuffer(var part):
                                         colllateBuffer.writeBuffer(&part)
