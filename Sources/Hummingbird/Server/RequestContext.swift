@@ -97,8 +97,10 @@ extension HBRequestContext {
     /// Application context
     @inlinable
     public var applicationContext: HBApplicationContext { coreContext.applicationContext }
-    /// EventLoop request is running on
+    /// EventLoop request is running on. This is unavailable in concurrency contexts as you
+    /// have already hopped off the EventLoop into a Task
     @inlinable
+    @available(*, noasync)
     public var eventLoop: EventLoop { coreContext.eventLoop }
     /// ByteBuffer allocator used by request
     @inlinable
