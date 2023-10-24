@@ -22,7 +22,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
     - name: SPM tests
-      run: swift test
+      run: swift test --enable-code-coverage
   linux:
     runs-on: ubuntu-latest
     strategy:
