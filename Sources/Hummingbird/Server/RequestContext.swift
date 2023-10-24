@@ -45,7 +45,7 @@ public struct HBCoreRequestContext: Sendable {
     let allocator: ByteBufferAllocator
     /// Logger to use with Request
     @usableFromInline
-    let logger: Logger
+    var logger: Logger
     /// Endpoint path
     @usableFromInline
     var endpointPath: EndpointPath
@@ -107,7 +107,11 @@ extension HBRequestContext {
     public var allocator: ByteBufferAllocator { coreContext.allocator }
     /// Logger to use with Request
     @inlinable
-    public var logger: Logger { coreContext.logger }
+    public var logger: Logger {
+        get { coreContext.logger }
+        set { coreContext.logger = newValue }
+    }
+
     /// Endpoint path
     @inlinable
     public var endpointPath: String? { coreContext.endpointPath.value }
