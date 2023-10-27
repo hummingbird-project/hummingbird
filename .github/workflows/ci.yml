@@ -19,7 +19,7 @@ on:
 
 jobs:
   macOS:
-    runs-on: macOS-latest
+    runs-on: macOS-13
     steps:
     - name: Checkout
       uses: actions/checkout@v3
