@@ -47,21 +47,15 @@ public struct JobIdentifier: Sendable, CustomStringConvertible, Codable {
 /// Job queue protocol.
 ///
 /// Defines how to push and pop jobs off a queue
-public protocol HBJobQueue: AnyObject {
-    /// Process to run at initialisation of Job Queue
-    /// - Returns: When queue initialisation is finished
-    func onInit(on: EventLoop) -> EventLoopFuture<Void>
+public protocol HBJobQueue: AsyncSequence, Sendable {
     /// Push Job onto queue
     /// - Returns: Queued job information
-    func push(_ job: HBJob, on: EventLoop) -> EventLoopFuture<HBQueuedJob>
-    /// Pop job off queue. Future will wait until a job is available
-    /// - Returns: Queued job information
-    func pop(on: EventLoop) -> EventLoopFuture<HBQueuedJob?>
+    @discardableResult func push(_ job: HBJob) async throws -> JobIdentifier
     /// This is called to say job has finished processing and it can be deleted
     /// - Returns: When deletion of job has finished
-    func finished(jobId: JobIdentifier, on: EventLoop) -> EventLoopFuture<Void>
+    func finished(jobId: JobIdentifier) async
     /// shutdown queue
-    func shutdown(on: EventLoop) -> EventLoopFuture<Void>
+    func shutdown() async throws
     /// time amount between each poll of queue
     var pollTime: TimeAmount { get }
 }
@@ -70,51 +64,17 @@ extension HBJobQueue {
     /// Default implememtatoin of `finish`. Does nothing
     /// - Parameters:
     ///   - jobId: Job Identifier
-    ///   - eventLoop: EventLoop to run process on
     /// - Returns: When deletion of job has finished. In this case immediately
-    public func finished(jobId: JobIdentifier, on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-        return eventLoop.makeSucceededVoidFuture()
-    }
-
-    /// Default implementation of `onInit`. Does nothing
-    /// - Parameter eventLoop: EventLoop to run process on
-    /// - Returns: When initialisation has finished. In this case immediately
-    public func onInit(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-        return eventLoop.makeSucceededVoidFuture()
-    }
+    public func finished(jobId: JobIdentifier) async throws {}
 
     /// Default implementation of `shutdown`. Does nothing
-    public func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-        return eventLoop.makeSucceededVoidFuture()
-    }
+    public func shutdown() async throws {}
 
     public var shutdownError: Error { return HBJobQueueShutdownError() }
-
-    /// Push job onto queue
-    /// - Parameters:
-    ///   - job: Job descriptor
-    ///   - maxRetryCount: Number of times you should retry job
-    /// - Returns: ID for job
-    @discardableResult public func enqueue(_ job: HBJob, on eventLoop: EventLoop) -> EventLoopFuture<JobIdentifier> {
-        return self.push(job, on: eventLoop).map(\.id)
-    }
 
     /// Queue workers poll the queue to get the latest jobs off the queue. This indicates the time amount
     /// between each poll of the queue
     public var pollTime: TimeAmount { .milliseconds(100) }
-}
-
-/// Job queue asynchronous enqueue
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-extension HBJobQueue {
-    /// Push job onto queue
-    /// - Parameters:
-    ///   - job: Job descriptor
-    ///   - maxRetryCount: Number of times you should retry job
-    /// - Returns: ID for job
-    @discardableResult public func enqueue(_ job: HBJob, on eventLoop: EventLoop) async throws -> JobIdentifier {
-        return try await self.push(job, on: eventLoop).map(\.id).get()
-    }
 }
 
 /// Error type for when a job queue is being shutdown

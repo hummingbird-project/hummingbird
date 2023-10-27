@@ -16,19 +16,16 @@ import Hummingbird
 import Logging
 
 /// Object handling a single job queue
-public final class HBJobQueueHandler {
-    public init(queue: HBJobQueue, numWorkers: Int, eventLoopGroup: EventLoopGroup, logger: Logger) {
+public final class HBJobQueueHandler: Service {
+    public init(queue: HBJobQueue, numWorkers: Int, logger: Logger) {
         self.queue = queue
-        self.workers = (0..<numWorkers).map { _ in
-            HBJobQueueWorker(queue: queue, eventLoop: eventLoopGroup.next(), logger: logger)
-        }
-        self.eventLoop = eventLoopGroup.next()
+        self.numWorkers = numWorkers
     }
 
     /// Push Job onto queue
     /// - Returns: Queued job information
-    @discardableResult public func enqueue(_ job: HBJob, on eventLoop: EventLoop) -> EventLoopFuture<JobIdentifier> {
-        self.queue.enqueue(job, on: eventLoop)
+    @discardableResult public func enqueue(_ job: HBJob, on eventLoop: EventLoop) async throws -> JobIdentifier {
+        try await self.queue.push(job)
     }
 
     /// Start queue workers
@@ -49,9 +46,8 @@ public final class HBJobQueueHandler {
         }
     }
 
-    private let eventLoop: EventLoop
     private let queue: HBJobQueue
-    private let workers: [HBJobQueueWorker]
+    private let numWorkers: Int
 }
 
 /// Job queue handler asynchronous enqueue
@@ -85,7 +81,7 @@ extension HBJobQueueHandler {
 /// app.jobs.registerQueue(.myQueue, queue: .memory)
 /// ```
 /// If you don't register the queue your application will crash as soon as you try to use it
-public struct HBJobQueueId: Hashable, ExpressibleByStringLiteral {
+public struct HBJobQueueId: Hashable, ExpressibleByStringLiteral, Sendable {
     public let id: String
 
     public init(stringLiteral: String) {
