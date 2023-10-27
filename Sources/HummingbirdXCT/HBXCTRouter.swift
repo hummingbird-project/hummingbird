@@ -69,15 +69,10 @@ struct HBXCTRouter<RequestContext: HBTestRouterContextProtocol>: HBXCTApplicatio
         self.responder = app.responder
     }
 
-    func shutdown() async throws {
-        try await self.context.threadPool.shutdownGracefully()
-    }
-
     /// Run test
     func run<Value>(_ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Value) async throws -> Value {
         let client = Client(eventLoopGroup: self.eventLoopGroup, responder: self.responder, applicationContext: self.context)
         let value = try await test(client)
-        try await self.shutdown()
         return value
     }
 

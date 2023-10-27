@@ -184,12 +184,13 @@ final class MetricsTests: XCTestCase {
     }
 
     func testCounter() async throws {
-        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
-        app.middleware.add(HBMetricsMiddleware())
-        app.router.get("/hello") { _, _ -> String in
+        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        router.middlewares.add(HBMetricsMiddleware())
+        router.get("/hello") { _, _ -> String in
             return "Hello"
         }
-        try await app.buildAndTest(.router) { client in
+        let app = HBApplication(responder: router.buildResponder())
+        try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/hello", method: .GET) { _ in }
         }
 
@@ -202,12 +203,13 @@ final class MetricsTests: XCTestCase {
     }
 
     func testError() async throws {
-        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
-        app.middleware.add(HBMetricsMiddleware())
-        app.router.get("/hello") { _, _ -> String in
+        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        router.middlewares.add(HBMetricsMiddleware())
+        router.get("/hello") { _, _ -> String in
             throw HBHTTPError(.badRequest)
         }
-        try await app.buildAndTest(.router) { client in
+        let app = HBApplication(responder: router.buildResponder())
+        try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/hello", method: .GET) { _ in }
         }
 
@@ -221,12 +223,13 @@ final class MetricsTests: XCTestCase {
     }
 
     func testNotFoundError() async throws {
-        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
-        app.middleware.add(HBMetricsMiddleware())
-        app.router.get("/hello") { _, _ -> String in
+        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        router.middlewares.add(HBMetricsMiddleware())
+        router.get("/hello") { _, _ -> String in
             return "hello"
         }
-        try await app.buildAndTest(.router) { client in
+        let app = HBApplication(responder: router.buildResponder())
+        try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/hello2", method: .GET) { _ in }
         }
 
@@ -239,12 +242,13 @@ final class MetricsTests: XCTestCase {
     }
 
     func testParameterEndpoint() async throws {
-        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
-        app.middleware.add(HBMetricsMiddleware())
-        app.router.get("/user/:id") { _, _ -> String in
+        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        router.middlewares.add(HBMetricsMiddleware())
+        router.get("/user/:id") { _, _ -> String in
             throw HBHTTPError(.badRequest)
         }
-        try await app.buildAndTest(.router) { client in
+        let app = HBApplication(responder: router.buildResponder())
+        try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/user/765", method: .GET) { _ in }
         }
 
