@@ -48,7 +48,7 @@ public enum XCTRouterTestingSetup {
 ///     }
 /// }
 /// ```
-extension HBApplicationBuilder {
+extension HBApplication {
     // MARK: Initialization
 
     /// Creates a version of `HBApplication` that can be used for testing code
@@ -56,17 +56,17 @@ extension HBApplicationBuilder {
     /// - Parameters:
     ///   - testing: indicates which type of testing framework we want
     ///   - configuration: configuration of application
-    public func buildAndTest<Value>(
+    public func test<Value>(
         _: XCTLiveTestingSetup,
         _ test: @escaping @Sendable (any HBXCTClientProtocol) async throws -> Value
     ) async throws -> Value {
         let app: any HBXCTApplication
-        app = HBXCTLive(builder: self)
+        app = HBXCTLive(app: self)
         return try await app.run(test)
     }
 }
 
-extension HBApplicationBuilder where RequestContext: HBTestRouterContextProtocol {
+extension HBApplication where RequestContext: HBTestRouterContextProtocol {
     // MARK: Initialization
 
     /// Creates a version of `HBApplication` that can be used for testing code
@@ -74,12 +74,12 @@ extension HBApplicationBuilder where RequestContext: HBTestRouterContextProtocol
     /// - Parameters:
     ///   - testing: indicates which type of testing framework we want
     ///   - configuration: configuration of application
-    public func buildAndTest<Value>(
+    public func test<Value>(
         _: XCTRouterTestingSetup,
         _ test: @escaping @Sendable (any HBXCTClientProtocol) async throws -> Value
     ) async throws -> Value {
         let app: any HBXCTApplication
-        app = HBXCTRouter(builder: self)
+        app = HBXCTRouter(app: self)
         return try await app.run(test)
     }
 }

@@ -42,15 +42,16 @@ final class HBXCTLive<RequestContext: HBRequestContext>: HBXCTApplication {
         }
     }
 
-    init(builder: HBApplicationBuilder<RequestContext>) {
-        builder.configuration = builder.configuration.with(address: .hostname("localhost", port: 0))
+    init(app: HBApplication<RequestContext>) {
+        var app = app
+        app.configuration = app.configuration.with(address: .hostname("localhost", port: 0))
         let promise = Promise<Int>()
-        builder.onServerRunning = { channel in
+        app.onServerRunning = { channel in
             await promise.complete(channel.localAddress!.port!)
         }
         self.timeout = .seconds(15)
         self.promise = promise
-        self.application = builder.build()
+        self.application = app
     }
 
     /// Start tests
@@ -60,7 +61,7 @@ final class HBXCTLive<RequestContext: HBRequestContext>: HBXCTApplication {
                 configuration: .init(
                     services: [self.application],
                     gracefulShutdownSignals: [.sigterm, .sigint],
-                    logger: self.application.context.logger
+                    logger: self.application.logger
                 )
             )
             group.addTask {

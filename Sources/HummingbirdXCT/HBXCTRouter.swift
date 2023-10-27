@@ -57,16 +57,16 @@ struct HBXCTRouter<RequestContext: HBTestRouterContextProtocol>: HBXCTApplicatio
     let context: HBApplicationContext
     let responder: any HBResponder<RequestContext>
 
-    init(builder: HBApplicationBuilder<RequestContext>) {
-        self.eventLoopGroup = builder.eventLoopGroup
+    init(app: HBApplication<RequestContext>) {
+        self.eventLoopGroup = app.eventLoopGroup
         self.context = HBApplicationContext(
-            threadPool: builder.threadPool,
-            configuration: builder.configuration,
-            logger: builder.logger,
-            encoder: builder.encoder,
-            decoder: builder.decoder
+            threadPool: app.threadPool,
+            configuration: app.configuration,
+            logger: app.logger,
+            encoder: app.encoder,
+            decoder: app.decoder
         )
-        self.responder = builder.router.buildResponder()
+        self.responder = app.responder
     }
 
     func shutdown() async throws {
