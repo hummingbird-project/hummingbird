@@ -20,7 +20,7 @@ extension HBRouterMethods {
     @discardableResult public func get<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping (HBRequest, HBRequestContext) async throws -> Output
+        use handler: @escaping (HBRequest, Context) async throws -> Output
     ) -> Self {
         return on(path, method: .GET, options: options, use: handler)
     }
@@ -29,7 +29,7 @@ extension HBRouterMethods {
     @discardableResult public func put<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping (HBRequest, HBRequestContext) async throws -> Output
+        use handler: @escaping (HBRequest, Context) async throws -> Output
     ) -> Self {
         return on(path, method: .PUT, options: options, use: handler)
     }
@@ -38,7 +38,7 @@ extension HBRouterMethods {
     @discardableResult public func delete<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping (HBRequest, HBRequestContext) async throws -> Output
+        use handler: @escaping (HBRequest, Context) async throws -> Output
     ) -> Self {
         return on(path, method: .DELETE, options: options, use: handler)
     }
@@ -47,7 +47,7 @@ extension HBRouterMethods {
     @discardableResult public func head<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping (HBRequest, HBRequestContext) async throws -> Output
+        use handler: @escaping (HBRequest, Context) async throws -> Output
     ) -> Self {
         return on(path, method: .HEAD, options: options, use: handler)
     }
@@ -56,7 +56,7 @@ extension HBRouterMethods {
     @discardableResult public func post<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping (HBRequest, HBRequestContext) async throws -> Output
+        use handler: @escaping (HBRequest, Context) async throws -> Output
     ) -> Self {
         return on(path, method: .POST, options: options, use: handler)
     }
@@ -65,15 +65,15 @@ extension HBRouterMethods {
     @discardableResult public func patch<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping (HBRequest, HBRequestContext) async throws -> Output
+        use handler: @escaping (HBRequest, Context) async throws -> Output
     ) -> Self {
         return on(path, method: .PATCH, options: options, use: handler)
     }
 
     func constructResponder<Output: HBResponseGenerator>(
         options: HBRouterMethodOptions = [],
-        use closure: @escaping (HBRequest, HBRequestContext) async throws -> Output
-    ) -> HBResponder {
+        use closure: @escaping (HBRequest, Context) async throws -> Output
+    ) -> any HBResponder<Context> {
         return HBAsyncCallbackResponder { request, context in
             var request = request
             if case .stream = request.body, !options.contains(.streamBody) {
@@ -94,7 +94,7 @@ extension HBRouterBuilder {
         _ path: String,
         method: HTTPMethod,
         options: HBRouterMethodOptions = [],
-        use closure: @escaping (HBRequest, HBRequestContext) async throws -> Output
+        use closure: @escaping (HBRequest, Context) async throws -> Output
     ) -> Self {
         let responder = constructResponder(options: options, use: closure)
         add(path, method: method, responder: responder)
@@ -109,7 +109,7 @@ extension HBRouterGroup {
         _ path: String = "",
         method: HTTPMethod,
         options: HBRouterMethodOptions = [],
-        use closure: @escaping (HBRequest, HBRequestContext) async throws -> Output
+        use closure: @escaping (HBRequest, Context) async throws -> Output
     ) -> Self {
         let responder = constructResponder(options: options, use: closure)
         let path = self.combinePaths(self.path, path)

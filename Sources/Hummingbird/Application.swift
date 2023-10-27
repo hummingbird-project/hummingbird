@@ -21,36 +21,36 @@ import NIOPosix
 import NIOTransportServices
 import ServiceLifecycle
 
-public struct HBApplication: Sendable {
-    public struct Context: Sendable {
-        /// thread pool used by application
-        public let threadPool: NIOThreadPool
-        /// Configuration
-        public let configuration: Configuration
-        /// Logger. Required to be a var by hummingbird-lambda
-        public let logger: Logger
-        /// Encoder used by router
-        public let encoder: HBResponseEncoder
-        /// decoder used by router
-        public let decoder: HBRequestDecoder
+public final class HBApplicationContext: Sendable {
+    /// thread pool used by application
+    public let threadPool: NIOThreadPool
+    /// Configuration
+    public let configuration: HBApplicationConfiguration
+    /// Logger. Required to be a var by hummingbird-lambda
+    public let logger: Logger
+    /// Encoder used by router
+    public let encoder: HBResponseEncoder
+    /// decoder used by router
+    public let decoder: HBRequestDecoder
 
-        public init(
-            threadPool: NIOThreadPool,
-            configuration: Configuration,
-            logger: Logger,
-            encoder: HBResponseEncoder,
-            decoder: HBRequestDecoder
-        ) {
-            self.threadPool = threadPool
-            self.configuration = configuration
-            self.logger = logger
-            self.encoder = encoder
-            self.decoder = decoder
-        }
+    public init(
+        threadPool: NIOThreadPool,
+        configuration: HBApplicationConfiguration,
+        logger: Logger,
+        encoder: HBResponseEncoder,
+        decoder: HBRequestDecoder
+    ) {
+        self.threadPool = threadPool
+        self.configuration = configuration
+        self.logger = logger
+        self.encoder = encoder
+        self.decoder = decoder
     }
+}
 
+public struct HBApplication<RequestContext: HBRequestContext>: Sendable {
     /// event loop group used by application
-    public let context: Context
+    public let context: HBApplicationContext
     // eventLoopGroup
     public let eventLoopGroup: EventLoopGroup
     // server
@@ -58,7 +58,7 @@ public struct HBApplication: Sendable {
     // date cache service
     internal let dateCache: HBDateCache
 
-    init(builder: HBApplicationBuilder) {
+    init(builder: HBApplicationBuilder<RequestContext>) {
         self.eventLoopGroup = builder.eventLoopGroup
         self.context = .init(
             threadPool: builder.threadPool,
@@ -90,8 +90,6 @@ public struct HBApplication: Sendable {
 }
 
 /// Conform to `Service` from `ServiceLifecycle`.
-/// TODO: Temporarily I have added unchecked Sendable conformance to the class as Sendable
-/// conformance is required by `Service`. I will need to revisit this.
 extension HBApplication: Service {
     public func run() async throws {
         try await withGracefulShutdownHandler {

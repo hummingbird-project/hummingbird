@@ -17,14 +17,19 @@
 /// Conforms to `HBResponder` so need to provide its own implementation of
 /// `func apply(to request: Request) -> EventLoopFuture<Response>`.
 ///
-struct HBRouter: HBResponder {
-    let trie: RouterPathTrie<HBEndpointResponders>
-    let notFoundResponder: HBResponder
+struct HBRouter<Context: HBRequestContext>: HBResponder {
+    let trie: RouterPathTrie<HBEndpointResponders<Context>>
+    let notFoundResponder: any HBResponder<Context>
+
+    init(context: Context.Type, trie: RouterPathTrie<HBEndpointResponders<Context>>, notFoundResponder: any HBResponder<Context>) {
+        self.trie = trie
+        self.notFoundResponder = notFoundResponder
+    }
 
     /// Respond to request by calling correct handler
     /// - Parameter request: HTTP request
     /// - Returns: EventLoopFuture that will be fulfilled with the Response
-    public func respond(to request: HBRequest, context: HBRequestContext) -> EventLoopFuture<HBResponse> {
+    public func respond(to request: HBRequest, context: Context) -> EventLoopFuture<HBResponse> {
         let path = request.uri.path
         guard let result = trie.getValueAndParameters(path),
               let responder = result.value.getResponder(for: request.method)
@@ -33,10 +38,10 @@ struct HBRouter: HBResponder {
         }
         var context = context
         if let parameters = result.parameters {
-            context.parameters = parameters
+            context.coreContext.parameters = parameters
         }
         // store endpoint path in request (mainly for metrics)
-        context.endpointPath = result.value.path
+        context.coreContext.endpointPath.value = result.value.path
         return responder.respond(to: request, context: context)
     }
 }

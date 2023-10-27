@@ -21,7 +21,7 @@ import Tracing
 /// You may opt in to recording a specific subset of HTTP request/response header values by passing
 /// a set of header names to ``init(recordingHeaders:)``.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-public struct HBTracingMiddleware: HBMiddleware {
+public struct HBTracingMiddleware<Context: HBTracingRequestContext & HBRemoteAddressRequestContext>: HBMiddleware {
     private let headerNamesToRecord: Set<RecordingHeader>
 
     /// Intialize a new HBTracingMiddleware.
@@ -37,7 +37,7 @@ public struct HBTracingMiddleware: HBMiddleware {
         self.init(recordingHeaders: [])
     }
 
-    public func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
+    public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
         var serviceContext = context.serviceContext
         InstrumentationSystem.instrument.extract(request.headers, into: &serviceContext, using: HTTPHeadersExtractor())
 

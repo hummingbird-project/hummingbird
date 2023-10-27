@@ -17,9 +17,12 @@ import NIOCore
 import NIOHTTP1
 
 /// Type of test framework
-public enum XCTTestingSetup {
+public enum XCTLiveTestingSetup {
     /// Sets up a live server and execute tests using a HTTP client.
     case live
+}
+
+public enum XCTRouterTestingSetup {
     /// Test writing requests directly to router.
     case router
 }
@@ -54,16 +57,29 @@ extension HBApplicationBuilder {
     ///   - testing: indicates which type of testing framework we want
     ///   - configuration: configuration of application
     public func buildAndTest<Value>(
-        _ testing: XCTTestingSetup,
+        _: XCTLiveTestingSetup,
         _ test: @escaping @Sendable (any HBXCTClientProtocol) async throws -> Value
     ) async throws -> Value {
         let app: any HBXCTApplication
-        switch testing {
-        case .router:
-            app = HBXCTRouter(builder: self)
-        case .live:
-            app = HBXCTLive(builder: self)
-        }
+        app = HBXCTLive(builder: self)
+        return try await app.run(test)
+    }
+}
+
+extension HBApplicationBuilder where RequestContext: HBTestRouterContextProtocol {
+    // MARK: Initialization
+
+    /// Creates a version of `HBApplication` that can be used for testing code
+    ///
+    /// - Parameters:
+    ///   - testing: indicates which type of testing framework we want
+    ///   - configuration: configuration of application
+    public func buildAndTest<Value>(
+        _: XCTRouterTestingSetup,
+        _ test: @escaping @Sendable (any HBXCTClientProtocol) async throws -> Value
+    ) async throws -> Value {
+        let app: any HBXCTApplication
+        app = HBXCTRouter(builder: self)
         return try await app.run(test)
     }
 }

@@ -30,26 +30,26 @@ import NIOHTTP1
 /// .put(":id", use: todoController.update)
 /// .delete(":id", use: todoController.delete)
 /// ```
-public struct HBRouterGroup: HBRouterMethods {
+public struct HBRouterGroup<Context: HBRequestContext>: HBRouterMethods {
     let path: String
-    let router: HBRouterBuilder
-    let middlewares: HBMiddlewareGroup
+    let router: HBRouterBuilder<Context>
+    let middlewares: HBMiddlewareGroup<Context>
 
-    init(path: String = "", middlewares: HBMiddlewareGroup = .init(), router: HBRouterBuilder) {
+    init(path: String = "", middlewares: HBMiddlewareGroup<Context> = .init(), router: HBRouterBuilder<Context>) {
         self.path = path
         self.router = router
         self.middlewares = middlewares
     }
 
     /// Add middleware to RouterEndpoint
-    @discardableResult public func add(middleware: HBMiddleware) -> HBRouterGroup {
+    @discardableResult public func add(middleware: any HBMiddleware<Context>) -> HBRouterGroup<Context> {
         self.middlewares.add(middleware)
         return self
     }
 
     /// Return a group inside the current group
     /// - Parameter path: path prefix to add to routes inside this group
-    @discardableResult public func group(_ path: String = "") -> HBRouterGroup {
+    @discardableResult public func group(_ path: String = "") -> HBRouterGroup<Context> {
         return HBRouterGroup(
             path: self.combinePaths(self.path, path),
             middlewares: .init(middlewares: self.middlewares.middlewares),
@@ -62,7 +62,7 @@ public struct HBRouterGroup: HBRouterMethods {
         _ path: String = "",
         method: HTTPMethod,
         options: HBRouterMethodOptions = [],
-        use closure: @escaping (HBRequest, HBRequestContext) throws -> Output
+        use closure: @escaping (HBRequest, Context) throws -> Output
     ) -> Self {
         let responder = constructResponder(options: options, use: closure)
         let path = self.combinePaths(self.path, path)
@@ -75,7 +75,7 @@ public struct HBRouterGroup: HBRouterMethods {
         _ path: String = "",
         method: HTTPMethod,
         options: HBRouterMethodOptions = [],
-        use closure: @escaping (HBRequest, HBRequestContext) -> EventLoopFuture<Output>
+        use closure: @escaping (HBRequest, Context) -> EventLoopFuture<Output>
     ) -> Self {
         let responder = constructResponder(options: options, use: closure)
         let path = self.combinePaths(self.path, path)

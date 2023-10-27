@@ -13,13 +13,14 @@
 //===----------------------------------------------------------------------===//
 
 @testable import Hummingbird
+import HummingbirdXCT
 import XCTest
 
 final class PersistTests: XCTestCase {
     static let redisHostname = HBEnvironment.shared.get("REDIS_HOSTNAME") ?? "localhost"
 
-    func createApplication() throws -> (HBApplicationBuilder, HBPersistDriver) {
-        let app = HBApplicationBuilder()
+    func createApplication() throws -> (HBApplicationBuilder<HBTestRouterContext>, HBPersistDriver) {
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         let persist = HBMemoryPersistDriver(eventLoopGroup: app.eventLoopGroup)
 
         app.router.put("/persist/:tag") { request, context -> EventLoopFuture<HTTPResponseStatus> in

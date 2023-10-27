@@ -15,17 +15,7 @@
 import Tracing
 
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-extension HBRequestContext {
-    /// ServiceContext attached to request. Used to propagate serviceContext to child functions
-    ///
-    /// Attaching serviceContext to the request should be used when we aren't inside an async
-    /// function and serviceContext cannot be propagated via Task local variables. Otherwise
-    /// serviceContext should be propagated using Task local variables using `ServiceContext.$current.withValue(_)`
-    public var serviceContext: ServiceContext {
-        get { self.extensions.get(\.serviceContext) ?? ServiceContext.topLevel }
-        set { self.extensions.set(\.serviceContext, value: newValue) }
-    }
-
+extension HBTracingRequestContext {
     /// Execute the given operation with edited request that includes serviceContext.
     ///
     /// Be sure to use the ``HBRequest`` passed to the closure as that includes the serviceContext.
@@ -36,7 +26,7 @@ extension HBRequestContext {
     ///   - serviceContext: ServiceContext to attach to request
     ///   - operation: operation to run
     /// - Returns: return value of operation
-    public func withServiceContext<Return>(_ serviceContext: ServiceContext, _ operation: (HBRequestContext) throws -> Return) rethrows -> Return {
+    public func withServiceContext<Return>(_ serviceContext: ServiceContext, _ operation: (Self) throws -> Return) rethrows -> Return {
         var context = self
         context.serviceContext = serviceContext
         return try operation(context)
@@ -62,7 +52,7 @@ extension HBRequestContext {
     public func withSpan<Return>(
         _ operationName: String,
         ofKind kind: SpanKind = .internal,
-        _ operation: (HBRequestContext, Span) throws -> Return
+        _ operation: (Self, Span) throws -> Return
     ) rethrows -> Return {
         return try self.withSpan(operationName, serviceContext: self.serviceContext, ofKind: kind, operation)
     }
@@ -89,7 +79,7 @@ extension HBRequestContext {
         _ operationName: String,
         serviceContext: ServiceContext,
         ofKind kind: SpanKind = .internal,
-        _ operation: (HBRequestContext, Span) throws -> Return
+        _ operation: (Self, Span) throws -> Return
     ) rethrows -> Return {
         let span = InstrumentationSystem.legacyTracer.startAnySpan(operationName, context: serviceContext, ofKind: kind)
         defer { span.end() }
@@ -119,7 +109,7 @@ extension HBRequestContext {
     public func withSpan<Return>(
         _ operationName: String,
         ofKind kind: SpanKind = .internal,
-        _ operation: (HBRequestContext, Span) -> EventLoopFuture<Return>
+        _ operation: (Self, Span) -> EventLoopFuture<Return>
     ) -> EventLoopFuture<Return> {
         return self.withSpan(operationName, serviceContext: self.serviceContext, ofKind: kind, operation)
     }
@@ -141,7 +131,7 @@ extension HBRequestContext {
         _ operationName: String,
         serviceContext: ServiceContext,
         ofKind kind: SpanKind = .internal,
-        _ operation: (HBRequestContext, Span) -> EventLoopFuture<Return>
+        _ operation: (Self, Span) -> EventLoopFuture<Return>
     ) -> EventLoopFuture<Return> {
         let span = InstrumentationSystem.legacyTracer.startAnySpan(operationName, context: serviceContext, ofKind: kind)
         return self.withServiceContext(span.context) { context in

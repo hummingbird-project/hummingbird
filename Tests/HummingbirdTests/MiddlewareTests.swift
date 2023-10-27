@@ -18,8 +18,8 @@ import XCTest
 
 final class MiddlewareTests: XCTestCase {
     func testMiddleware() async throws {
-        struct TestMiddleware: HBMiddleware {
-            func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
+        struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
+            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
                 return next.respond(to: request, context: context).map { response in
                     var response = response
                     response.headers.replaceOrAdd(name: "middleware", value: "TestMiddleware")
@@ -27,7 +27,7 @@ final class MiddlewareTests: XCTestCase {
                 }
             }
         }
-        let app = HBApplicationBuilder()
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(TestMiddleware())
         app.router.get("/hello") { _, _ -> String in
             return "Hello"
@@ -40,9 +40,9 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareOrder() async throws {
-        struct TestMiddleware: HBMiddleware {
+        struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
             let string: String
-            func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
+            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
                 return next.respond(to: request, context: context).map { response in
                     var response = response
                     response.headers.add(name: "middleware", value: self.string)
@@ -50,7 +50,7 @@ final class MiddlewareTests: XCTestCase {
                 }
             }
         }
-        let app = HBApplicationBuilder()
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(TestMiddleware(string: "first"))
         app.middleware.add(TestMiddleware(string: "second"))
         app.router.get("/hello") { _, _ -> String in
@@ -66,8 +66,8 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareRunOnce() async throws {
-        struct TestMiddleware: HBMiddleware {
-            func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
+        struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
+            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
                 return next.respond(to: request, context: context).map { response in
                     var response = response
                     XCTAssertNil(response.headers["alreadyRun"].first)
@@ -76,7 +76,7 @@ final class MiddlewareTests: XCTestCase {
                 }
             }
         }
-        let app = HBApplicationBuilder()
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(TestMiddleware())
         app.router.get("/hello") { _, _ -> String in
             return "Hello"
@@ -88,8 +88,8 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareRunWhenNoRouteFound() async throws {
-        struct TestMiddleware: HBMiddleware {
-            func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
+        struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
+            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
                 return next.respond(to: request, context: context).flatMapError { error in
                     guard let httpError = error as? HBHTTPError, httpError.status == .notFound else {
                         return context.failure(error)
@@ -98,7 +98,7 @@ final class MiddlewareTests: XCTestCase {
                 }
             }
         }
-        let app = HBApplicationBuilder()
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(TestMiddleware())
 
         try await app.buildAndTest(.router) { client in
@@ -111,17 +111,17 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testEndpointPathInGroup() async throws {
-        struct TestMiddleware: HBMiddleware {
-            func apply(to request: HBRequest, context: HBRequestContext, next: HBResponder) -> EventLoopFuture<HBResponse> {
+        struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
+            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
                 XCTAssertNotNil(context.endpointPath)
                 return next.respond(to: request, context: context)
             }
         }
-        let app = HBApplicationBuilder()
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.router.group()
             .add(middleware: TestMiddleware())
-            .get("test") { _, _ in 
-                return "test" 
+            .get("test") { _, _ in
+                return "test"
             }
 
         try await app.buildAndTest(.router) { client in
@@ -130,7 +130,7 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testCORSUseOrigin() async throws {
-        let app = HBApplicationBuilder()
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBCORSMiddleware())
         app.router.get("/hello") { _, _ -> String in
             return "Hello"
@@ -144,7 +144,7 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testCORSUseAll() async throws {
-        let app = HBApplicationBuilder()
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBCORSMiddleware(allowOrigin: .all))
         app.router.get("/hello") { _, _ -> String in
             return "Hello"
@@ -158,7 +158,7 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testCORSOptions() async throws {
-        let app = HBApplicationBuilder()
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBCORSMiddleware(
             allowOrigin: .all,
             allowHeaders: ["content-type", "authorization"],
@@ -187,9 +187,9 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testRouteLoggingMiddleware() async throws {
-        let app = HBApplicationBuilder()
+        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.middleware.add(HBLogRequestsMiddleware(.debug))
-        app.router.put("/hello") { request, context -> EventLoopFuture<String> in
+        app.router.put("/hello") { _, context -> EventLoopFuture<String> in
             return context.failure(.badRequest)
         }
         try await app.buildAndTest(.router) { client in

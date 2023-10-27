@@ -45,11 +45,11 @@ import NIOHTTP1
 /// Both of these match routes which start with "/user" and the next path segment being anything.
 /// The second version extracts the path segment out and adds it to `HBRequest.parameters` with the
 /// key "id".
-public final class HBRouterBuilder: HBRouterMethods {
-    var trie: RouterPathTrie<HBEndpointResponders>
-    public let middlewares: HBMiddlewareGroup
+public final class HBRouterBuilder<Context: HBRequestContext>: HBRouterMethods {
+    var trie: RouterPathTrie<HBEndpointResponders<Context>>
+    public let middlewares: HBMiddlewareGroup<Context>
 
-    public init() {
+    public init(context: Context.Type) {
         self.trie = RouterPathTrie()
         self.middlewares = .init()
     }
@@ -59,7 +59,7 @@ public final class HBRouterBuilder: HBRouterMethods {
     ///   - path: URI path
     ///   - method: http method
     ///   - responder: handler to call
-    public func add(_ path: String, method: HTTPMethod, responder: HBResponder) {
+    public func add(_ path: String, method: HTTPMethod, responder: any HBResponder<Context>) {
         // ensure path starts with a "/" and doesn't end with a "/"
         let path = "/\(path.dropSuffix("/").dropPrefix("/"))"
         self.trie.addEntry(.init(path), value: HBEndpointResponders(path: path)) { node in
@@ -67,13 +67,13 @@ public final class HBRouterBuilder: HBRouterMethods {
         }
     }
 
-    func endpoint(_ path: String) -> HBEndpointResponders? {
+    func endpoint(_ path: String) -> HBEndpointResponders<Context>? {
         self.trie.getValueAndParameters(path)?.value
     }
 
     /// build router
-    public func buildRouter() -> HBResponder {
-        HBRouter(trie: self.trie, notFoundResponder: self.middlewares.constructResponder(finalResponder: NotFoundResponder()))
+    public func buildRouter() -> any HBResponder<Context> {
+        HBRouter(context: Context.self, trie: self.trie, notFoundResponder: self.middlewares.constructResponder(finalResponder: NotFoundResponder<Context>()))
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
@@ -81,7 +81,7 @@ public final class HBRouterBuilder: HBRouterMethods {
         _ path: String,
         method: HTTPMethod,
         options: HBRouterMethodOptions = [],
-        use closure: @escaping (HBRequest, HBRequestContext) throws -> Output
+        use closure: @escaping (HBRequest, Context) throws -> Output
     ) -> Self {
         let responder = constructResponder(options: options, use: closure)
         self.add(path, method: method, responder: responder)
@@ -93,7 +93,7 @@ public final class HBRouterBuilder: HBRouterMethods {
         _ path: String,
         method: HTTPMethod,
         options: HBRouterMethodOptions = [],
-        use closure: @escaping (HBRequest, HBRequestContext) -> EventLoopFuture<Output>
+        use closure: @escaping (HBRequest, Context) -> EventLoopFuture<Output>
     ) -> Self {
         let responder = constructResponder(options: options, use: closure)
         self.add(path, method: method, responder: responder)
@@ -102,14 +102,14 @@ public final class HBRouterBuilder: HBRouterMethods {
 
     /// return new `RouterGroup`
     /// - Parameter path: prefix to add to paths inside the group
-    public func group(_ path: String = "") -> HBRouterGroup {
+    public func group(_ path: String = "") -> HBRouterGroup<Context> {
         return .init(path: path, router: self)
     }
 }
 
 /// Responder that return a not found error
-struct NotFoundResponder: HBResponder {
-    func respond(to request: HBRequest, context: HBRequestContext) -> NIOCore.EventLoopFuture<HBResponse> {
+struct NotFoundResponder<Context: HBRequestContext>: HBResponder {
+    func respond(to request: HBRequest, context: Context) -> NIOCore.EventLoopFuture<HBResponse> {
         return context.eventLoop.makeFailedFuture(HBHTTPError(.notFound))
     }
 }

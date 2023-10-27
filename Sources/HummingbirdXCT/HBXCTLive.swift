@@ -22,7 +22,7 @@ import ServiceLifecycle
 import XCTest
 
 /// Test using a live server
-final class HBXCTLive: HBXCTApplication {
+final class HBXCTLive<RequestContext: HBRequestContext>: HBXCTApplication {
     struct Client: HBXCTClientProtocol {
         let client: HBXCTClient
 
@@ -42,7 +42,7 @@ final class HBXCTLive: HBXCTApplication {
         }
     }
 
-    init(builder: HBApplicationBuilder) {
+    init(builder: HBApplicationBuilder<RequestContext>) {
         builder.configuration = builder.configuration.with(address: .hostname("localhost", port: 0))
         let promise = Promise<Int>()
         builder.onServerRunning = { channel in
@@ -85,7 +85,7 @@ final class HBXCTLive: HBXCTApplication {
         await self.promise.complete(channel.localAddress!.port!)
     }
 
-    let application: HBApplication
+    let application: HBApplication<RequestContext>
     let promise: Promise<Int>
     let timeout: TimeAmount
 }

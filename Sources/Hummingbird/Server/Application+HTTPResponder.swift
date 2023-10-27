@@ -20,8 +20,8 @@ import NIOHTTP1
 
 extension HBApplication {
     struct Responder: HBHTTPResponder {
-        let responder: HBResponder
-        let applicationContext: HBApplication.Context
+        let responder: any HBResponder<RequestContext>
+        let applicationContext: HBApplicationContext
         let dateCache: HBDateCache
 
         /// Return EventLoopFuture that will be fulfilled with the HTTP response for the supplied HTTP request
@@ -34,9 +34,10 @@ extension HBApplication {
                 head: request.head,
                 body: request.body
             )
-            let context = HBRequestContext(
+            let context = RequestContext(
                 applicationContext: self.applicationContext,
-                channelContext: ChannelRequestContext(channel: context.channel)
+                channel: context.channel,
+                logger: loggerWithRequestId(self.applicationContext.logger)
             )
             let httpVersion = request.version
             // respond to request
@@ -55,11 +56,24 @@ extension HBApplication {
         }
     }
 
-    /// Context object for Channel to be provided to HBRequest
-    struct ChannelRequestContext: HBChannelContextProtocol {
-        let channel: Channel
-        var eventLoop: EventLoop { return self.channel.eventLoop }
-        var allocator: ByteBufferAllocator { return self.channel.allocator }
-        var remoteAddress: SocketAddress? { return self.channel.remoteAddress }
+    public static func loggerWithRequestId(_ logger: Logger) -> Logger {
+        let requestId = globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
+        return logger.with(metadataKey: "hb_id", value: .stringConvertible(requestId))
     }
 }
+
+extension Logger {
+    /// Create new Logger with additional metadata value
+    /// - Parameters:
+    ///   - metadataKey: Metadata key
+    ///   - value: Metadata value
+    /// - Returns: Logger
+    func with(metadataKey: String, value: MetadataValue) -> Logger {
+        var logger = self
+        logger[metadataKey: metadataKey] = value
+        return logger
+    }
+}
+
+/// Current global request ID
+private let globalRequestID = ManagedAtomic(0)
