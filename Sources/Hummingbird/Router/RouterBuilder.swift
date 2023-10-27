@@ -23,13 +23,13 @@ import NIOHTTP1
 /// `head`, `post` and `patch`.  The route handler closures all return objects conforming to
 /// `HBResponseGenerator`.  This allows us to support routes which return a multitude of types eg
 /// ```
-/// app.router.get("string") { _ -> String in
+/// router.get("string") { _ -> String in
 ///     return "string"
 /// }
-/// app.router.post("status") { _ -> HTTPResponseStatus in
+/// router.post("status") { _ -> HTTPResponseStatus in
 ///     return .ok
 /// }
-/// app.router.data("data") { request -> ByteBuffer in
+/// router.data("data") { request -> ByteBuffer in
 ///     return context.allocator.buffer(string: "buffer")
 /// }
 /// ```
@@ -39,8 +39,8 @@ import NIOHTTP1
 /// The default `Router` setup in `HBApplication` is the `TrieRouter` . This uses a
 /// trie to partition all the routes for faster access. It also supports wildcards and parameter extraction
 /// ```
-/// app.router.get("user/*", use: anyUser)
-/// app.router.get("user/:id", use: userWithId)
+/// router.get("user/*", use: anyUser)
+/// router.get("user/:id", use: userWithId)
 /// ```
 /// Both of these match routes which start with "/user" and the next path segment being anything.
 /// The second version extracts the path segment out and adds it to `HBRequest.parameters` with the
@@ -68,7 +68,7 @@ public final class HBRouterBuilder<Context: HBRequestContext>: HBRouterMethods {
     }
 
     /// build router
-    public func buildResponder() -> any HBResponder<Context> {
+    public func buildResponder() -> some HBResponder<Context> {
         HBRouter(context: Context.self, trie: self.trie.build(), notFoundResponder: self.middlewares.constructResponder(finalResponder: NotFoundResponder<Context>()))
     }
 

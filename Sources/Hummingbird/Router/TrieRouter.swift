@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// URI Path Trie
+/// URI Path Trie Builder
 struct RouterPathTrieBuilder<Value: Sendable> {
     var root: Node
 
@@ -20,6 +20,11 @@ struct RouterPathTrieBuilder<Value: Sendable> {
         self.root = Node(key: .null, output: nil)
     }
 
+    /// Add Entry to Trie
+    /// - Parameters:
+    ///   - entry: Path for entry
+    ///   - value: Value to add to this path if one does not exist already
+    ///   - onAdd: How to edit the value at this path
     func addEntry(_ entry: RouterPath, value: @autoclosure () -> Value, onAdd: (Node) -> Void = { _ in }) {
         var node = self.root
         for key in entry {
@@ -75,13 +80,19 @@ struct RouterPathTrieBuilder<Value: Sendable> {
     }
 }
 
+/// Trie used by HBRouter responder
 struct RouterPathTrie<Value: Sendable>: Sendable {
     let root: Node
 
+    /// Initialise RouterPathTrie
+    /// - Parameter root: Root node of trie
     init(root: Node) {
         self.root = root
     }
 
+    /// Get value from trie and any parameters from capture nodes
+    /// - Parameter path: Path to process
+    /// - Returns: value and parameters
     func getValueAndParameters(_ path: String) -> (value: Value, parameters: HBParameters?)? {
         let pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
         var parameters: HBParameters?
@@ -112,6 +123,7 @@ struct RouterPathTrie<Value: Sendable>: Sendable {
         return nil
     }
 
+    /// Internally used Node to describe static trie
     struct Node: Sendable {
         let key: RouterPath.Element
         let children: [Node]
@@ -137,7 +149,7 @@ struct RouterPathTrie<Value: Sendable>: Sendable {
 }
 
 extension Optional where Wrapped == HBParameters {
-    mutating func set(_ s: Substring, value: Substring) {
+    fileprivate mutating func set(_ s: Substring, value: Substring) {
         switch self {
         case .some(var parameters):
             parameters.set(s, value: value)
@@ -147,7 +159,7 @@ extension Optional where Wrapped == HBParameters {
         }
     }
 
-    mutating func setCatchAll(_ value: Substring) {
+    fileprivate mutating func setCatchAll(_ value: Substring) {
         switch self {
         case .some(var parameters):
             parameters.setCatchAll(value)
