@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// URI Path Trie
-struct RouterPathTrie<Value> {
+struct RouterPathTrieBuilder<Value: Sendable> {
     var root: Node
 
     init() {
@@ -31,6 +31,55 @@ struct RouterPathTrie<Value> {
             node.value = value()
             onAdd(node)
         }
+    }
+
+    func build() -> RouterPathTrie<Value> {
+        .init(root: self.root.build())
+    }
+
+    /// Trie Node. Each node represents one component of a URI path
+    final class Node {
+        let key: RouterPath.Element
+        var children: [Node]
+        var value: Value?
+
+        init(key: RouterPath.Element, output: Value?) {
+            self.key = key
+            self.value = output
+            self.children = []
+        }
+
+        func addChild(key: RouterPath.Element, output: Value?) -> Node {
+            if let child = getChild(key) {
+                return child
+            }
+            let node = Node(key: key, output: output)
+            self.children.append(node)
+            return node
+        }
+
+        func getChild(_ key: RouterPath.Element) -> Node? {
+            return self.children.first { $0.key == key }
+        }
+
+        func getChild(_ key: Substring) -> Node? {
+            if let child = self.children.first(where: { $0.key == key }) {
+                return child
+            }
+            return self.children.first { $0.key ~= key }
+        }
+
+        func build() -> RouterPathTrie<Value>.Node {
+            return .init(key: self.key, value: self.value, children: self.children.map { $0.build() })
+        }
+    }
+}
+
+struct RouterPathTrie<Value: Sendable>: Sendable {
+    let root: Node
+
+    init(root: Node) {
+        self.root = root
     }
 
     func getValueAndParameters(_ path: String) -> (value: Value, parameters: HBParameters?)? {
@@ -63,25 +112,15 @@ struct RouterPathTrie<Value> {
         return nil
     }
 
-    /// Trie Node. Each node represents one component of a URI path
-    final class Node {
+    struct Node: Sendable {
         let key: RouterPath.Element
-        var children: [Node]
-        var value: Value?
+        let children: [Node]
+        let value: Value?
 
-        init(key: RouterPath.Element, output: Value?) {
+        init(key: RouterPath.Element, value: Value?, children: [Node]) {
             self.key = key
-            self.value = output
-            self.children = []
-        }
-
-        func addChild(key: RouterPath.Element, output: Value?) -> Node {
-            if let child = getChild(key) {
-                return child
-            }
-            let node = Node(key: key, output: output)
-            self.children.append(node)
-            return node
+            self.value = value
+            self.children = children
         }
 
         func getChild(_ key: RouterPath.Element) -> Node? {

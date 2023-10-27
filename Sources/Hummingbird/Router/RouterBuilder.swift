@@ -46,11 +46,11 @@ import NIOHTTP1
 /// The second version extracts the path segment out and adds it to `HBRequest.parameters` with the
 /// key "id".
 public final class HBRouterBuilder<Context: HBRequestContext>: HBRouterMethods {
-    var trie: RouterPathTrie<HBEndpointResponders<Context>>
+    var trie: RouterPathTrieBuilder<HBEndpointResponders<Context>>
     public let middlewares: HBMiddlewareGroup<Context>
 
-    public init(context: Context.Type) {
-        self.trie = RouterPathTrie()
+    public init(context: Context.Type = HBBasicRequestContext.self) {
+        self.trie = RouterPathTrieBuilder()
         self.middlewares = .init()
     }
 
@@ -67,13 +67,9 @@ public final class HBRouterBuilder<Context: HBRequestContext>: HBRouterMethods {
         }
     }
 
-    func endpoint(_ path: String) -> HBEndpointResponders<Context>? {
-        self.trie.getValueAndParameters(path)?.value
-    }
-
     /// build router
-    public func buildRouter() -> any HBResponder<Context> {
-        HBRouter(context: Context.self, trie: self.trie, notFoundResponder: self.middlewares.constructResponder(finalResponder: NotFoundResponder<Context>()))
+    public func buildResponder() -> any HBResponder<Context> {
+        HBRouter(context: Context.self, trie: self.trie.build(), notFoundResponder: self.middlewares.constructResponder(finalResponder: NotFoundResponder<Context>()))
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
