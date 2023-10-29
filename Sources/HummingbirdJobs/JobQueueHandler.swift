@@ -12,85 +12,80 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AsyncAlgorithms
 import Hummingbird
 import Logging
+import ServiceLifecycle
 
 /// Object handling a single job queue
-public final class HBJobQueueHandler: Service {
-    public init(queue: HBJobQueue, numWorkers: Int, logger: Logger) {
+public final class HBJobQueueHandler<Queue: HBJobQueue>: Service {
+    public init(queue: Queue, numWorkers: Int, logger: Logger) {
         self.queue = queue
         self.numWorkers = numWorkers
+        self.logger = logger
     }
 
     /// Push Job onto queue
     /// - Returns: Queued job information
-    @discardableResult public func enqueue(_ job: HBJob, on eventLoop: EventLoop) async throws -> JobIdentifier {
+    @discardableResult public func enqueue(_ job: HBJob) async throws -> JobIdentifier {
         try await self.queue.push(job)
     }
 
-    /// Start queue workers
-    public func start() {
-        self.queue.onInit(on: self.eventLoop).whenComplete { _ in
-            self.workers.forEach {
-                $0.start()
+    public func run() async throws {
+        try await withGracefulShutdownHandler {
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                var iterator = self.queue.makeAsyncIterator()
+                for _ in 0..<self.numWorkers {
+                    if let job = try await iterator.next() {
+                        try await self.runJob(job)
+                    }
+                }
+                for try await job in self.queue {
+                    group.addTask {
+                        try await self.runJob(job)
+                    }
+                    try await group.next()
+                }
+                group.cancelAll()
+            }
+            await self.queue.shutdownGracefully()
+        } onGracefulShutdown: {
+            Task {
+                await self.queue.stop()
             }
         }
     }
 
-    /// Shutdown queue workers and queue
-    public func shutdown() -> EventLoopFuture<Void> {
-        // shutdown all workers
-        let shutdownFutures: [EventLoopFuture<Void>] = self.workers.map { $0.shutdown() }
-        return EventLoopFuture.andAllComplete(shutdownFutures, on: self.eventLoop).flatMap { _ in
-            self.queue.shutdown(on: self.eventLoop)
+    func runJob(_ queuedJob: HBQueuedJob) async throws {
+        var logger = logger
+        logger[metadataKey: "hb_job_id"] = .stringConvertible(queuedJob.id)
+        logger[metadataKey: "hb_job_type"] = .string(String(describing: type(of: queuedJob.job.job)))
+
+        let job = queuedJob.job
+        var count = type(of: job.job).maxRetryCount
+        logger.trace("Starting Job")
+        while true {
+            do {
+                try await job.job.execute(logger: self.logger)
+                break
+            } catch is CancellationError {
+                logger.error("Job cancelled")
+                return
+            } catch {
+                if count == 0 {
+                    logger.error("Job failed")
+                    try await self.queue.failed(jobId: queuedJob.id)
+                    return
+                }
+                count -= 1
+                logger.debug("Retrying Job")
+            }
         }
+        logger.trace("Finished Job")
+        try await self.queue.finished(jobId: queuedJob.id)
     }
 
-    private let queue: HBJobQueue
+    private let queue: Queue
     private let numWorkers: Int
-}
-
-/// Job queue handler asynchronous enqueue
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-extension HBJobQueueHandler {
-    /// Push job onto queue
-    /// - Parameters:
-    ///   - job: Job descriptor
-    ///   - maxRetryCount: Number of times you should retry job
-    /// - Returns: ID for job
-    @discardableResult public func enqueue(_ job: HBJob, on eventLoop: EventLoop) async throws -> JobIdentifier {
-        try await self.enqueue(job, on: eventLoop).get()
-    }
-
-    /// Shutdown queue workers and queue
-    public func shutdown() async throws {
-        try await self.shutdown().get()
-    }
-}
-
-/// Job queue id
-///
-/// If you want to add a new task queue. Extend this class to include a new id
-/// ```
-/// extension HBJobQueueId {
-///     public static var `myQueue`: HBJobQueueId { "myQueue" }
-/// }
-/// ```
-/// and register new queue with tasks handler
-/// ```
-/// app.jobs.registerQueue(.myQueue, queue: .memory)
-/// ```
-/// If you don't register the queue your application will crash as soon as you try to use it
-public struct HBJobQueueId: Hashable, ExpressibleByStringLiteral, Sendable {
-    public let id: String
-
-    public init(stringLiteral: String) {
-        self.id = stringLiteral
-    }
-
-    public init(_ string: String) {
-        self.id = string
-    }
-
-    public static var `default`: HBJobQueueId { "_hb_default_" }
+    let logger: Logger
 }

@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -19,7 +19,7 @@ import NIO
 /// Protocol for job description
 ///
 /// For a job to be decodable, it has to be registered. Call `MyJob.register()` to register a job.
-public protocol HBJob: Codable {
+public protocol HBJob: Codable, Sendable {
     /// Unique Job name
     static var name: String { get }
 
@@ -28,7 +28,7 @@ public protocol HBJob: Codable {
 
     /// Execute job
     /// - Returns: EventLoopFuture that is fulfulled when job is done
-    func execute(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Void>
+    func execute(logger: Logger) async throws
 }
 
 extension HBJob {
