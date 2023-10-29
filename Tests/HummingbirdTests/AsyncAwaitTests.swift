@@ -84,7 +84,7 @@ final class AsyncAwaitTests: XCTestCase {
     }
 
     func testAsyncRouteHandler() async throws {
-        struct AsyncTest: HBAsyncRouteHandler {
+        struct AsyncTest: HBRouteHandler {
             let name: String
             init(from request: HBRequest, context: HBRequestContext) throws {
                 self.name = try context.parameters.require("name")

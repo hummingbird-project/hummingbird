@@ -84,34 +84,36 @@ public struct HBCORSMiddleware<Context: HBRequestContext>: HBMiddleware {
 
     /// apply CORS middleware
     public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
-        // if no origin header then don't apply CORS
-        guard request.headers["origin"].first != nil else { return next.respond(to: request, context: context) }
-
-        if request.method == .OPTIONS {
-            // if request is OPTIONS then return CORS headers and skip the rest of the middleware chain
-            var headers: HTTPHeaders = [
-                "access-control-allow-origin": allowOrigin.value(for: request) ?? "",
-            ]
-            headers.add(name: "access-control-allow-headers", value: self.allowHeaders)
-            headers.add(name: "access-control-allow-methods", value: self.allowMethods)
-            if self.allowCredentials {
-                headers.add(name: "access-control-allow-credentials", value: "true")
-            }
-            if let maxAge = self.maxAge {
-                headers.add(name: "access-control-max-age", value: maxAge)
-            }
-            if let exposedHeaders = self.exposedHeaders {
-                headers.add(name: "access-control-expose-headers", value: exposedHeaders)
-            }
-            if case .originBased = self.allowOrigin {
-                headers.add(name: "vary", value: "Origin")
+        context.eventLoop.makeFutureWithTask {
+            // if no origin header then don't apply CORS
+            guard request.headers["origin"].first != nil else { 
+                return try await next.respond(to: request, context: context) 
             }
 
-            return context.success(HBResponse(status: .noContent, headers: headers, body: .empty))
-        } else {
-            // if not OPTIONS then run rest of middleware chain and add origin value at the end
-            return next.respond(to: request, context: context).map { response in
-                var response = response
+            if request.method == .OPTIONS {
+                // if request is OPTIONS then return CORS headers and skip the rest of the middleware chain
+                var headers: HTTPHeaders = [
+                    "access-control-allow-origin": allowOrigin.value(for: request) ?? "",
+                ]
+                headers.add(name: "access-control-allow-headers", value: self.allowHeaders)
+                headers.add(name: "access-control-allow-methods", value: self.allowMethods)
+                if self.allowCredentials {
+                    headers.add(name: "access-control-allow-credentials", value: "true")
+                }
+                if let maxAge = self.maxAge {
+                    headers.add(name: "access-control-max-age", value: maxAge)
+                }
+                if let exposedHeaders = self.exposedHeaders {
+                    headers.add(name: "access-control-expose-headers", value: exposedHeaders)
+                }
+                if case .originBased = self.allowOrigin {
+                    headers.add(name: "vary", value: "Origin")
+                }
+
+                return HBResponse(status: .noContent, headers: headers, body: .empty)
+            } else {
+                // if not OPTIONS then run rest of middleware chain and add origin value at the end
+                var response = try await next.respond(to: request, context: context)
                 response.headers.add(name: "access-control-allow-origin", value: self.allowOrigin.value(for: request) ?? "")
                 if self.allowCredentials {
                     response.headers.add(name: "access-control-allow-credentials", value: "true")

@@ -77,25 +77,13 @@ public final class HBRouterBuilder<Context: HBRequestContext>: HBRouterMethods {
         _ path: String,
         method: HTTPMethod,
         options: HBRouterMethodOptions = [],
-        use closure: @escaping (HBRequest, Context) throws -> Output
+        use closure: @escaping (HBRequest, Context) async throws -> Output
     ) -> Self {
         let responder = constructResponder(options: options, use: closure)
         self.add(path, method: method, responder: responder)
         return self
     }
-
-    /// Add path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func on<Output: HBResponseGenerator>(
-        _ path: String,
-        method: HTTPMethod,
-        options: HBRouterMethodOptions = [],
-        use closure: @escaping (HBRequest, Context) -> EventLoopFuture<Output>
-    ) -> Self {
-        let responder = constructResponder(options: options, use: closure)
-        self.add(path, method: method, responder: responder)
-        return self
-    }
-
+    
     /// return new `RouterGroup`
     /// - Parameter path: prefix to add to paths inside the group
     public func group(_ path: String = "") -> HBRouterGroup<Context> {
@@ -105,7 +93,7 @@ public final class HBRouterBuilder<Context: HBRequestContext>: HBRouterMethods {
 
 /// Responder that return a not found error
 struct NotFoundResponder<Context: HBRequestContext>: HBResponder {
-    func respond(to request: HBRequest, context: Context) -> NIOCore.EventLoopFuture<HBResponse> {
-        return context.eventLoop.makeFailedFuture(HBHTTPError(.notFound))
+    func respond(to request: HBRequest, context: Context) async throws -> HBResponse {
+        throw HBHTTPError(.notFound)
     }
 }

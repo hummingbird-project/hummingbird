@@ -27,9 +27,8 @@ final class ApplicationTests: XCTestCase {
 
     func testGetRoute() async throws {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.get("/hello") { _, context -> EventLoopFuture<ByteBuffer> in
-            let buffer = context.allocator.buffer(string: "GET: Hello")
-            return context.eventLoop.makeSucceededFuture(buffer)
+        router.get("/hello") { _, context -> ByteBuffer in
+            return context.allocator.buffer(string: "GET: Hello")
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -146,9 +145,9 @@ final class ApplicationTests: XCTestCase {
 
     func testQueryRoute() async throws {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.post("/query") { request, context -> EventLoopFuture<ByteBuffer> in
+        router.post("/query") { request, context -> ByteBuffer in
             let buffer = context.allocator.buffer(string: request.uri.queryParameters["test"].map { String($0) } ?? "")
-            return context.eventLoop.makeSucceededFuture(buffer)
+            return context.allocator.buffer(string: request.uri.queryParameters["test"].map { String($0) } ?? "")
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -196,12 +195,11 @@ final class ApplicationTests: XCTestCase {
 
     func testEventLoopFutureArray() async throws {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.patch("array") { _, context -> EventLoopFuture<[String]> in
-            return context.success(["yes", "no"])
+        router.patch("array") { _, context -> [String] in
+            return ["yes", "no"]
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-
             try await client.XCTExecute(uri: "/array", method: .PATCH) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "[\"yes\", \"no\"]")
@@ -248,16 +246,16 @@ final class ApplicationTests: XCTestCase {
             }
             return HBResponse(status: .ok, headers: [:], body: .stream(RequestStreamer(stream: stream)))
         }
-        router.post("size", options: .streamBody) { request, context -> EventLoopFuture<String> in
+        router.post("size", options: .streamBody) { request, context -> String in
             guard let stream = request.body.stream else {
-                return context.failure(.badRequest)
+                throw HBHTTPError(.badRequest)
             }
             let size = ManagedAtomic(0)
-            return stream.consumeAll(on: context.eventLoop) { buffer in
+            _ = try await stream.consumeAll(on: context.eventLoop) { buffer in
                 size.wrappingIncrement(by: buffer.readableBytes, ordering: .relaxed)
                 return context.success(())
-            }
-            .map { _ in size.load(ordering: .relaxed).description }
+            }.get()
+            return size.load(ordering: .relaxed).description
         }
         let app = HBApplication(responder: router.buildResponder())
 
@@ -362,8 +360,8 @@ final class ApplicationTests: XCTestCase {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router
             .group("/echo-body")
-            .post { request, context -> EventLoopFuture<ByteBuffer?> in
-                return context.success(request.body.buffer)
+            .post { request, context -> ByteBuffer? in
+                return request.body.buffer
             }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -455,12 +453,10 @@ final class ApplicationTests: XCTestCase {
     func testTypedResponseFuture() async throws {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.delete("/hello") { _, context in
-            return context.success(
-                HBEditedResponse(
-                    status: .imATeapot,
-                    headers: ["test": "value", "content-type": "application/json"],
-                    response: "Hello"
-                )
+            HBEditedResponse(
+                status: .imATeapot,
+                headers: ["test": "value", "content-type": "application/json"],
+                response: "Hello"
             )
         }
         let app = HBApplication(responder: router.buildResponder())

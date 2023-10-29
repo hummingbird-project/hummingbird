@@ -51,13 +51,13 @@ struct HBPropagateServiceContextResponder<Context: HBTracingRequestContext>: HBR
     let responder: any HBResponder<Context>
     let context: Context
 
-    func respond(to request: HBRequest, context: Context) -> EventLoopFuture<HBResponse> {
+    func respond(to request: HBRequest, context: Context) async throws -> HBResponse {
         if let serviceContext = ServiceContext.$current.get() {
-            return context.withServiceContext(serviceContext) { context in
-                self.responder.respond(to: request, context: context)
+            return try await context.withServiceContext(serviceContext) { context in
+                try await self.responder.respond(to: request, context: context)
             }
         } else {
-            return self.responder.respond(to: request, context: context)
+            return try await self.responder.respond(to: request, context: context)
         }
     }
 }

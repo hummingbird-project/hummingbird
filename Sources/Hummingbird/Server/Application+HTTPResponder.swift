@@ -40,8 +40,11 @@ extension HBApplication {
                 logger: loggerWithRequestId(self.applicationContext.logger)
             )
             let httpVersion = request.version
+            
             // respond to request
-            self.responder.respond(to: request, context: context).whenComplete { result in
+            context.eventLoop.makeFutureWithTask {
+                try await self.responder.respond(to: request, context: context)   
+            }.whenComplete { result in
                 switch result {
                 case .success(let response):
                     var response = response

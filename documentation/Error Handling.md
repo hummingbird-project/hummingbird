@@ -21,7 +21,7 @@ In the situation where you have a route that returns an `EventLoopFuture` you ar
 ```swift
 app.get("user") { request -> EventLoopFuture<User> in
     guard let userId = request.uri.queryParameters.get("id", as: Int.self) else {
-        return context.failure(.badRequest, message: "Invalid user id")
+        throw HBHTTPError(.badRequest, message: "Invalid user id")
     }
     ...
 }

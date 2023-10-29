@@ -304,10 +304,10 @@ class HummingbirdFilesTests: XCTestCase {
     func testWrite() async throws {
         let filename = "testWrite.txt"
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.put("store") { request, context -> EventLoopFuture<HTTPResponseStatus> in
+        router.put("store") { request, context -> HTTPResponseStatus in
             let fileIO = HBFileIO(threadPool: context.applicationContext.threadPool)
-            return fileIO.writeFile(contents: request.body, path: filename, context: context, logger: context.logger)
-                .map { .ok }
+            try await fileIO.writeFile(contents: request.body, path: filename, context: context, logger: context.logger)
+            return .ok
         }
         let app = HBApplication(responder: router.buildResponder())
 
@@ -327,10 +327,10 @@ class HummingbirdFilesTests: XCTestCase {
     func testWriteLargeFile() async throws {
         let filename = "testWriteLargeFile.txt"
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.put("store") { request, context -> EventLoopFuture<HTTPResponseStatus> in
+        router.put("store") { request, context -> HTTPResponseStatus in
             let fileIO = HBFileIO(threadPool: context.applicationContext.threadPool)
-            return fileIO.writeFile(contents: request.body, path: filename, context: context, logger: context.logger)
-                .map { .ok }
+            try await fileIO.writeFile(contents: request.body, path: filename, context: context, logger: context.logger).get()
+            return .ok
         }
         let app = HBApplication(responder: router.buildResponder())
 

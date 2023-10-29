@@ -25,10 +25,10 @@ public struct HBMetricsMiddleware<Context: HBRequestContext>: HBMiddleware {
     public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
         let startTime = DispatchTime.now().uptimeNanoseconds
 
-        let responseFuture = next.respond(to: request, context: context)
-        responseFuture.whenComplete { result in
-            switch result {
-            case .success:
+        let promise = context.eventLoop.makePromise(of: HBResponse.self)
+        promise.completeWithTask {
+            do {
+                let response = try await next.respond(to: request, context: context)
                 // need to create dimensions once request has been responded to ensure
                 // we have the correct endpoint path
                 let dimensions: [(String, String)] = [
@@ -41,8 +41,8 @@ public struct HBMetricsMiddleware<Context: HBRequestContext>: HBMiddleware {
                     dimensions: dimensions,
                     preferredDisplayUnit: .seconds
                 ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
-
-            case .failure:
+                return response
+            } catch {
                 // need to create dimensions once request has been responded to ensure
                 // we have the correct endpoint path
                 let dimensions: [(String, String)]
@@ -59,8 +59,9 @@ public struct HBMetricsMiddleware<Context: HBRequestContext>: HBMiddleware {
                     ]
                 }
                 Counter(label: "hb_errors", dimensions: dimensions).increment()
+                throw error
             }
         }
-        return responseFuture
+        return promise.futureResult
     }
 }

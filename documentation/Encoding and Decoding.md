@@ -49,7 +49,7 @@ struct User: Decodable {
 app.router.post("user") { request -> EventLoopFuture<HTTPResponseStatus> in
     // decode user from request
     guard let user = try? request.decode(as: User.self) else {
-        return context.failure(.badRequest)
+        throw HBHTTPError(.badRequest)
     }
     // create user and if ok return `.ok` status
     return createUser(user, on: context.eventLoop)

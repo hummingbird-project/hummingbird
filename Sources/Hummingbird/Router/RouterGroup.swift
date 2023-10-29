@@ -57,25 +57,12 @@ public struct HBRouterGroup<Context: HBRequestContext>: HBRouterMethods {
         )
     }
 
-    /// Add path for closure returning type conforming to ResponseFutureEncodable
+    /// Add path for closure returning type using async/await
     @discardableResult public func on<Output: HBResponseGenerator>(
         _ path: String = "",
         method: HTTPMethod,
         options: HBRouterMethodOptions = [],
-        use closure: @escaping (HBRequest, Context) throws -> Output
-    ) -> Self {
-        let responder = constructResponder(options: options, use: closure)
-        let path = self.combinePaths(self.path, path)
-        self.router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
-        return self
-    }
-
-    /// Add path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func on<Output: HBResponseGenerator>(
-        _ path: String = "",
-        method: HTTPMethod,
-        options: HBRouterMethodOptions = [],
-        use closure: @escaping (HBRequest, Context) -> EventLoopFuture<Output>
+        use closure: @Sendable @escaping (HBRequest, Context) async throws -> Output
     ) -> Self {
         let responder = constructResponder(options: options, use: closure)
         let path = self.combinePaths(self.path, path)

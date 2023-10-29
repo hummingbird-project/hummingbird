@@ -38,74 +38,74 @@ public struct HBTracingMiddleware<Context: HBTracingRequestContext & HBRemoteAdd
     }
 
     public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
-        var serviceContext = context.serviceContext
-        InstrumentationSystem.instrument.extract(request.headers, into: &serviceContext, using: HTTPHeadersExtractor())
+        return context.eventLoop.makeFutureWithTask {
+            var serviceContext = context.serviceContext
+            InstrumentationSystem.instrument.extract(request.headers, into: &serviceContext, using: HTTPHeadersExtractor())
 
-        let operationName: String = {
-            guard let endpointPath = context.endpointPath else {
-                return "HTTP \(request.method.rawValue) route not found"
-            }
-            return endpointPath
-        }()
-
-        return context.withSpan(operationName, serviceContext: serviceContext, ofKind: .server) { context, span in
-            span.updateAttributes { attributes in
-                attributes["http.method"] = request.method.rawValue
-                attributes["http.target"] = request.uri.path
-                attributes["http.flavor"] = "\(request.version.major).\(request.version.minor)"
-                attributes["http.scheme"] = request.uri.scheme?.rawValue
-                attributes["http.user_agent"] = request.headers.first(name: "user-agent")
-                attributes["http.request_content_length"] = request.headers["content-length"].first.map { Int($0) } ?? nil
-
-                attributes["net.host.name"] = context.applicationContext.configuration.address.host
-                attributes["net.host.port"] = context.applicationContext.configuration.address.port
-
-                if let remoteAddress = context.remoteAddress {
-                    attributes["net.sock.peer.port"] = remoteAddress.port
-
-                    switch remoteAddress.protocol {
-                    case .inet:
-                        attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
-                    case .inet6:
-                        attributes["net.sock.family"] = "inet6"
-                        attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
-                    case .unix:
-                        attributes["net.sock.family"] = "unix"
-                        attributes["net.sock.peer.addr"] = remoteAddress.pathname
-                    default:
-                        break
-                    }
+            let operationName: String = {
+                guard let endpointPath = context.endpointPath else {
+                    return "HTTP \(request.method.rawValue) route not found"
                 }
-                attributes = self.recordHeaders(request.headers, toSpanAttributes: attributes, withPrefix: "http.request.header.")
-            }
+                return endpointPath
+            }()
 
-            return next.respond(to: request, context: context)
-                .always { result in
-                    switch result {
-                    case .success(let response):
-                        span.updateAttributes { attributes in
-                            attributes = self.recordHeaders(response.headers, toSpanAttributes: attributes, withPrefix: "http.response.header.")
+            return try await context.withSpan(operationName, serviceContext: serviceContext, ofKind: .server) { context, span in
+                span.updateAttributes { attributes in
+                    attributes["http.method"] = request.method.rawValue
+                    attributes["http.target"] = request.uri.path
+                    attributes["http.flavor"] = "\(request.version.major).\(request.version.minor)"
+                    attributes["http.scheme"] = request.uri.scheme?.rawValue
+                    attributes["http.user_agent"] = request.headers.first(name: "user-agent")
+                    attributes["http.request_content_length"] = request.headers["content-length"].first.map { Int($0) } ?? nil
 
-                            attributes["http.status_code"] = Int(response.status.code)
-                            switch response.body {
-                            case .byteBuffer(let buffer):
-                                attributes["http.response_content_length"] = buffer.readableBytes
-                            case .stream:
-                                attributes["http.response_content_length"] = response.headers["content-length"].first.map { Int($0) } ?? nil
-                            case .empty:
-                                break
-                            }
-                        }
-                    case .failure(let error):
-                        if let httpError = error as? HBHTTPResponseError {
-                            span.attributes["http.status_code"] = Int(httpError.status.code)
+                    attributes["net.host.name"] = context.applicationContext.configuration.address.host
+                    attributes["net.host.port"] = context.applicationContext.configuration.address.port
 
-                            if 500..<600 ~= httpError.status.code {
-                                span.setStatus(.init(code: .error))
-                            }
+                    if let remoteAddress = context.remoteAddress {
+                        attributes["net.sock.peer.port"] = remoteAddress.port
+
+                        switch remoteAddress.protocol {
+                        case .inet:
+                            attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
+                        case .inet6:
+                            attributes["net.sock.family"] = "inet6"
+                            attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
+                        case .unix:
+                            attributes["net.sock.family"] = "unix"
+                            attributes["net.sock.peer.addr"] = remoteAddress.pathname
+                        default:
+                            break
                         }
                     }
+                    attributes = self.recordHeaders(request.headers, toSpanAttributes: attributes, withPrefix: "http.request.header.")
                 }
+
+                do {
+                    let response = try await next.respond(to: request, context: context)
+                    span.updateAttributes { attributes in
+                        attributes = self.recordHeaders(response.headers, toSpanAttributes: attributes, withPrefix: "http.response.header.")
+
+                        attributes["http.status_code"] = Int(response.status.code)
+                        switch response.body {
+                        case .byteBuffer(let buffer):
+                            attributes["http.response_content_length"] = buffer.readableBytes
+                        case .stream:
+                            attributes["http.response_content_length"] = response.headers["content-length"].first.map { Int($0) } ?? nil
+                        case .empty:
+                            break
+                        }
+                    }
+                    return response
+                } catch let error as HBHTTPResponseError {
+                    span.attributes["http.status_code"] = Int(error.status.code)
+
+                    if 500..<600 ~= error.status.code {
+                        span.setStatus(.init(code: .error))
+                    }
+
+                    throw error
+                }
+            }
         }
     }
 
