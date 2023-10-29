@@ -22,7 +22,7 @@ public struct HBJobInstance: Codable {
     public let job: HBJob
 
     /// Initialize a queue job
-    init(_ job: HBJob) {
+    public init(_ job: HBJob) {
         self.job = job
         self.createdAt = Date()
     }

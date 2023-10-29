@@ -36,13 +36,13 @@ public final class HBJobQueueHandler<Queue: HBJobQueue>: Service {
             try await withThrowingTaskGroup(of: Void.self) { group in
                 var iterator = self.queue.makeAsyncIterator()
                 for _ in 0..<self.numWorkers {
-                    if let job = try await iterator.next() {
+                    if let job = try await self.getNextJob(&iterator) {
                         group.addTask {
                             try await self.runJob(job)
                         }
                     }
                 }
-                for try await job in self.queue {
+                while let job = try await self.getNextJob(&iterator) {
                     try await group.next()
                     group.addTask {
                         try await self.runJob(job)
@@ -54,6 +54,17 @@ public final class HBJobQueueHandler<Queue: HBJobQueue>: Service {
         } onGracefulShutdown: {
             Task {
                 await self.queue.stop()
+            }
+        }
+    }
+
+    func getNextJob(_ queueIterator: inout Queue.AsyncIterator) async throws -> HBQueuedJob? {
+        while true {
+            do {
+                let job = try await queueIterator.next()
+                return job
+            } catch let error as JobQueueError where error == JobQueueError.decodeJobFailed {
+                self.logger.error("Job failed to decode.")
             }
         }
     }
