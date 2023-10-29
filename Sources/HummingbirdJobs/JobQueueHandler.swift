@@ -41,10 +41,10 @@ public final class HBJobQueueHandler<Queue: HBJobQueue>: Service {
                     }
                 }
                 for try await job in self.queue {
+                    try await group.next()
                     group.addTask {
                         try await self.runJob(job)
                     }
-                    try await group.next()
                 }
                 group.cancelAll()
             }
