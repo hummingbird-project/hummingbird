@@ -32,7 +32,6 @@ public struct HBCallbackResponder<Context: HBRequestContext>: HBResponder {
         self.callback = callback
     }
 
-    /// Return EventLoopFuture that will be fulfilled with response to the request supplied
     public func respond(to request: HBRequest, context: Context) async throws -> HBResponse {
         return try await ServiceContext.$current.withValue(context.serviceContext) {
             try await self.callback(request, context)
