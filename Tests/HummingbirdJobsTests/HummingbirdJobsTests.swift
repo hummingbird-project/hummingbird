@@ -12,7 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import HummingbirdJobs
+import Atomics
+import HummingbirdJobs
 import ServiceLifecycle
 import XCTest
 
@@ -80,13 +81,20 @@ final class HummingbirdJobsTests: XCTestCase {
     func testMultipleWorkers() async throws {
         struct TestJob: HBJob {
             static let name = "testBasic"
+            static let runningJobCounter = ManagedAtomic(0)
+            static let maxRunningJobCounter = ManagedAtomic(0)
             static let expectation = XCTestExpectation(description: "Jobs Completed")
 
             let value: Int
             func execute(logger: Logger) async throws {
-                print(self.value)
+                let runningJobs = Self.runningJobCounter.wrappingIncrementThenLoad(by: 1, ordering: .relaxed)
+                if runningJobs > Self.maxRunningJobCounter.load(ordering: .relaxed) {
+                    Self.maxRunningJobCounter.store(runningJobs, ordering: .relaxed)
+                }
                 try await Task.sleep(for: .milliseconds(Int.random(in: 10..<50)))
+                print(self.value)
                 Self.expectation.fulfill()
+                Self.runningJobCounter.wrappingDecrement(by: 1, ordering: .relaxed)
             }
         }
         TestJob.register()
@@ -110,10 +118,13 @@ final class HummingbirdJobsTests: XCTestCase {
             try await jobQueueHandler.enqueue(TestJob(value: 10))
 
             wait(for: [TestJob.expectation], timeout: 5)
+            XCTAssertGreaterThan(TestJob.maxRunningJobCounter.load(ordering: .relaxed), 1)
+            XCTAssertLessThanOrEqual(TestJob.maxRunningJobCounter.load(ordering: .relaxed), 4)
         }
     }
 
     func testErrorRetryCount() async throws {
+        let failedJobCount = ManagedAtomic(0)
         struct FailedError: Error {}
 
         struct TestJob: HBJob {
@@ -130,7 +141,7 @@ final class HummingbirdJobsTests: XCTestCase {
         var logger = Logger(label: "HummingbirdJobsTests")
         logger.logLevel = .trace
         let jobQueueHandler = HBJobQueueHandler(
-            queue: HBMemoryJobQueue(),
+            queue: HBMemoryJobQueue { _, _ in failedJobCount.wrappingIncrement(by: 1, ordering: .relaxed) },
             numWorkers: 4,
             logger: logger
         )
@@ -139,6 +150,7 @@ final class HummingbirdJobsTests: XCTestCase {
 
             wait(for: [TestJob.expectation], timeout: 5)
         }
+        XCTAssertEqual(failedJobCount.load(ordering: .relaxed), 1)
     }
     /*
      func testShutdown() throws {

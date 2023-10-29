@@ -37,7 +37,9 @@ public final class HBJobQueueHandler<Queue: HBJobQueue>: Service {
                 var iterator = self.queue.makeAsyncIterator()
                 for _ in 0..<self.numWorkers {
                     if let job = try await iterator.next() {
-                        try await self.runJob(job)
+                        group.addTask {
+                            try await self.runJob(job)
+                        }
                     }
                 }
                 for try await job in self.queue {
@@ -68,13 +70,14 @@ public final class HBJobQueueHandler<Queue: HBJobQueue>: Service {
             do {
                 try await job.job.execute(logger: self.logger)
                 break
-            } catch is CancellationError {
+            } catch let error as CancellationError {
                 logger.error("Job cancelled")
+                try await self.queue.failed(jobId: queuedJob.id, error: error)
                 return
             } catch {
                 if count == 0 {
                     logger.error("Job failed")
-                    try await self.queue.failed(jobId: queuedJob.id)
+                    try await self.queue.failed(jobId: queuedJob.id, error: error)
                     return
                 }
                 count -= 1

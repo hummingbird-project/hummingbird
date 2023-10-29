@@ -21,22 +21,12 @@ public final class HBMemoryJobQueue: HBJobQueue {
 
     /// queue of jobs
     fileprivate let queue: Internal
-
-    public struct AsyncIterator: AsyncIteratorProtocol {
-        fileprivate let queue: Internal
-
-        public func next() async throws -> Element? {
-            try await self.queue.next()
-        }
-    }
-
-    public func makeAsyncIterator() -> AsyncIterator {
-        .init(queue: self.queue)
-    }
+    private let onFailedJob: @Sendable (HBQueuedJob, any Error) -> Void
 
     /// Initialise In memory job queue
-    public init() {
+    public init(onFailedJob: @escaping @Sendable (HBQueuedJob, any Error) -> Void = { _, _ in }) {
         self.queue = .init()
+        self.onFailedJob = onFailedJob
     }
 
     /// Shutdown queue
@@ -58,18 +48,26 @@ public final class HBMemoryJobQueue: HBJobQueue {
         try await self.queue.push(job)
     }
 
-    public func finished(jobId: JobIdentifier) async throws {}
+    public func finished(jobId: JobIdentifier) async throws {
+        await self.queue.clearPendingJob(jobId: jobId)
+    }
 
-    public func failed(jobId: JobIdentifier) async throws {}
+    public func failed(jobId: JobIdentifier, error: any Error) async throws {
+        if let job = await self.queue.clearAndReturnPendingJob(jobId: jobId) {
+            self.onFailedJob(.init(id: jobId, job: job), error)
+        }
+    }
 
     /// Internal actor managing the job queue
     fileprivate actor Internal {
         var queue: Deque<Data>
+        var pendingJobs: [JobIdentifier: HBJobInstance]
         var isStopped: Bool
 
         init() {
             self.queue = .init()
             self.isStopped = false
+            self.pendingJobs = .init()
         }
 
         func push(_ job: HBJob) throws -> JobIdentifier {
@@ -77,6 +75,16 @@ public final class HBMemoryJobQueue: HBJobQueue {
             let jsonData = try JSONEncoder().encode(queuedJob)
             self.queue.append(jsonData)
             return queuedJob.id
+        }
+
+        func clearPendingJob(jobId: JobIdentifier) {
+            self.pendingJobs[jobId] = nil
+        }
+
+        func clearAndReturnPendingJob(jobId: JobIdentifier) -> HBJobInstance? {
+            let instance = self.pendingJobs[jobId]
+            self.pendingJobs[jobId] = nil
+            return instance
         }
 
         func next() async throws -> HBQueuedJob? {
@@ -87,6 +95,7 @@ public final class HBMemoryJobQueue: HBJobQueue {
                 if let data = queue.popFirst() {
                     do {
                         let job = try JSONDecoder().decode(HBQueuedJob.self, from: data)
+                        self.pendingJobs[job.id] = job.job
                         return job
                     } catch {
                         throw JobQueueError.decodeJobFailed
@@ -101,9 +110,22 @@ public final class HBMemoryJobQueue: HBJobQueue {
         }
 
         func shutdown() {
+            assert(self.pendingJobs.count == 0)
             self.isStopped = true
         }
     }
 }
 
-extension HBMemoryJobQueue {}
+extension HBMemoryJobQueue {
+    public struct AsyncIterator: AsyncIteratorProtocol {
+        fileprivate let queue: Internal
+
+        public func next() async throws -> Element? {
+            try await self.queue.next()
+        }
+    }
+
+    public func makeAsyncIterator() -> AsyncIterator {
+        .init(queue: self.queue)
+    }
+}

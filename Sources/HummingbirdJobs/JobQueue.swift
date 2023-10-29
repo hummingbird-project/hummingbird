@@ -26,7 +26,7 @@ public protocol HBJobQueue: AsyncSequence, Sendable where Element == HBQueuedJob
     /// This is called to say job has finished processing and it can be deleted
     func finished(jobId: JobIdentifier) async throws
     /// This is called to say job has failed to run and should be put aside
-    func failed(jobId: JobIdentifier) async throws
+    func failed(jobId: JobIdentifier, error: any Error) async throws
     /// stop serving jobs
     func stop() async
     /// shutdown queue

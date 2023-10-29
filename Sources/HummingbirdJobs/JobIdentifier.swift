@@ -15,7 +15,7 @@
 import Foundation
 
 /// Identifier for Job
-public struct JobIdentifier: Sendable, CustomStringConvertible, Codable {
+public struct JobIdentifier: Sendable, CustomStringConvertible, Codable, Hashable {
     let id: String
 
     init() {
