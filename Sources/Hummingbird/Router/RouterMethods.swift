@@ -175,7 +175,7 @@ extension HBRouterMethods {
         use closure: @escaping (HBRequest, Context) throws -> Output
     ) -> HBCallbackResponder<Context> {
         // generate response from request. Moved repeated code into internal function
-        func _respond(request: HBRequest, context: Context) throws -> HBResponse {
+        @Sendable func _respond(request: HBRequest, context: Context) throws -> HBResponse {
             return try closure(request, context).response(from: request, context: context)
         }
 
@@ -216,7 +216,7 @@ extension HBRouterMethods {
         use closure: @escaping (HBRequest, Context) -> EventLoopFuture<Output>
     ) -> HBCallbackResponder<Context> {
         // generate response from request. Moved repeated code into internal function
-        func _respond(request: HBRequest, context: Context) -> EventLoopFuture<HBResponse> {
+        @Sendable func _respond(request: HBRequest, context: Context) -> EventLoopFuture<HBResponse> {
             let responseFuture = closure(request, context).flatMapThrowing { try $0.response(from: request, context: context) }
             return responseFuture.hop(to: context.eventLoop)
         }
@@ -227,7 +227,6 @@ extension HBRouterMethods {
             }
         } else {
             return HBCallbackResponder { request, context in
-                var request = request
                 if case .byteBuffer = request.body {
                     return _respond(request: request, context: context)
                 } else {
@@ -235,6 +234,7 @@ extension HBRouterMethods {
                         maxSize: context.applicationContext.configuration.maxUploadSize,
                         on: context.eventLoop
                     ).flatMap { buffer in
+                        var request = request
                         request.body = .byteBuffer(buffer)
                         return _respond(request: request, context: context)
                     }

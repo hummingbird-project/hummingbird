@@ -17,10 +17,11 @@ import XCTest
 
 class TrieRouterTests: XCTestCase {
     func testPathComponentsTrie() {
-        let trie = RouterPathTrie<String>()
-        trie.addEntry("/usr/local/bin", value: "test1")
-        trie.addEntry("/usr/bin", value: "test2")
-        trie.addEntry("/Users/*/bin", value: "test3")
+        let trieBuilder = RouterPathTrieBuilder<String>()
+        trieBuilder.addEntry("/usr/local/bin", value: "test1")
+        trieBuilder.addEntry("/usr/bin", value: "test2")
+        trieBuilder.addEntry("/Users/*/bin", value: "test3")
+        let trie = trieBuilder.build()
 
         XCTAssertEqual(trie.getValueAndParameters("/usr/local/bin")?.value, "test1")
         XCTAssertEqual(trie.getValueAndParameters("/usr/bin")?.value, "test2")
@@ -29,17 +30,19 @@ class TrieRouterTests: XCTestCase {
     }
 
     func testRootNode() {
-        let trie = RouterPathTrie<String>()
-        trie.addEntry("", value: "test1")
+        let trieBuilder = RouterPathTrieBuilder<String>()
+        trieBuilder.addEntry("", value: "test1")
+        let trie = trieBuilder.build()
         XCTAssertEqual(trie.getValueAndParameters("/")?.value, "test1")
         XCTAssertEqual(trie.getValueAndParameters("")?.value, "test1")
     }
 
     func testWildcard() {
-        let trie = RouterPathTrie<String>()
-        trie.addEntry("users/*", value: "test1")
-        trie.addEntry("users/*/fowler", value: "test2")
-        trie.addEntry("users/*/*", value: "test3")
+        let trieBuilder = RouterPathTrieBuilder<String>()
+        trieBuilder.addEntry("users/*", value: "test1")
+        trieBuilder.addEntry("users/*/fowler", value: "test2")
+        trieBuilder.addEntry("users/*/*", value: "test3")
+        let trie = trieBuilder.build()
         XCTAssertNil(trie.getValueAndParameters("/users"))
         XCTAssertEqual(trie.getValueAndParameters("/users/adam")?.value, "test1")
         XCTAssertEqual(trie.getValueAndParameters("/users/adam/fowler")?.value, "test2")
@@ -47,9 +50,10 @@ class TrieRouterTests: XCTestCase {
     }
 
     func testGetParameters() {
-        let trie = RouterPathTrie<String>()
-        trie.addEntry("users/:user", value: "test1")
-        trie.addEntry("users/:user/name", value: "john smith")
+        let trieBuilder = RouterPathTrieBuilder<String>()
+        trieBuilder.addEntry("users/:user", value: "test1")
+        trieBuilder.addEntry("users/:user/name", value: "john smith")
+        let trie = trieBuilder.build()
         XCTAssertNil(trie.getValueAndParameters("/user/"))
         XCTAssertEqual(trie.getValueAndParameters("/users/1234")?.parameters?.get("user"), "1234")
         XCTAssertEqual(trie.getValueAndParameters("/users/1234/name")?.parameters?.get("user"), "1234")
@@ -57,8 +61,9 @@ class TrieRouterTests: XCTestCase {
     }
 
     func testRecursiveWildcard() {
-        let trie = RouterPathTrie<String>()
-        trie.addEntry("**", value: "**")
+        let trieBuilder = RouterPathTrieBuilder<String>()
+        trieBuilder.addEntry("**", value: "**")
+        let trie = trieBuilder.build()
         XCTAssertEqual(trie.getValueAndParameters("/one")?.value, "**")
         XCTAssertEqual(trie.getValueAndParameters("/one/two")?.value, "**")
         XCTAssertEqual(trie.getValueAndParameters("/one/two/three")?.value, "**")
@@ -66,9 +71,10 @@ class TrieRouterTests: XCTestCase {
     }
 
     func testRecursiveWildcardWithPrefix() {
-        let trie = RouterPathTrie<String>()
-        trie.addEntry("Test/**", value: "true")
-        trie.addEntry("Test2/:test/**", value: "true")
+        let trieBuilder = RouterPathTrieBuilder<String>()
+        trieBuilder.addEntry("Test/**", value: "true")
+        trieBuilder.addEntry("Test2/:test/**", value: "true")
+        let trie = trieBuilder.build()
         XCTAssertNil(trie.getValueAndParameters("/notTest/hello"))
         XCTAssertNil(trie.getValueAndParameters("/Test/")?.value, "true")
         XCTAssertEqual(trie.getValueAndParameters("/Test/one")?.value, "true")
@@ -81,10 +87,11 @@ class TrieRouterTests: XCTestCase {
     }
 
     func testPrefixWildcard() {
-        let trie = RouterPathTrie<String>()
-        trie.addEntry("*.jpg", value: "jpg")
-        trie.addEntry("test/*.jpg", value: "testjpg")
-        trie.addEntry("*.app/config.json", value: "app")
+        let trieBuilder = RouterPathTrieBuilder<String>()
+        trieBuilder.addEntry("*.jpg", value: "jpg")
+        trieBuilder.addEntry("test/*.jpg", value: "testjpg")
+        trieBuilder.addEntry("*.app/config.json", value: "app")
+        let trie = trieBuilder.build()
         XCTAssertNil(trie.getValueAndParameters("/hello.png"))
         XCTAssertEqual(trie.getValueAndParameters("/hello.jpg")?.value, "jpg")
         XCTAssertEqual(trie.getValueAndParameters("/test/hello.jpg")?.value, "testjpg")
@@ -92,10 +99,11 @@ class TrieRouterTests: XCTestCase {
     }
 
     func testSuffixWildcard() {
-        let trie = RouterPathTrie<String>()
-        trie.addEntry("file.*", value: "file")
-        trie.addEntry("test/file.*", value: "testfile")
-        trie.addEntry("file.*/test", value: "filetest")
+        let trieBuilder = RouterPathTrieBuilder<String>()
+        trieBuilder.addEntry("file.*", value: "file")
+        trieBuilder.addEntry("test/file.*", value: "testfile")
+        trieBuilder.addEntry("file.*/test", value: "filetest")
+        let trie = trieBuilder.build()
         XCTAssertNil(trie.getValueAndParameters("/file2.png"))
         XCTAssertEqual(trie.getValueAndParameters("/file.jpg")?.value, "file")
         XCTAssertEqual(trie.getValueAndParameters("/test/file.jpg")?.value, "testfile")
@@ -103,10 +111,11 @@ class TrieRouterTests: XCTestCase {
     }
 
     func testPrefixCapture() {
-        let trie = RouterPathTrie<String>()
-        trie.addEntry("${file}.jpg", value: "jpg")
-        trie.addEntry("test/${file}.jpg", value: "testjpg")
-        trie.addEntry("${app}.app/config.json", value: "app")
+        let trieBuilder = RouterPathTrieBuilder<String>()
+        trieBuilder.addEntry("${file}.jpg", value: "jpg")
+        trieBuilder.addEntry("test/${file}.jpg", value: "testjpg")
+        trieBuilder.addEntry("${app}.app/config.json", value: "app")
+        let trie = trieBuilder.build()
         XCTAssertNil(trie.getValueAndParameters("/hello.png"))
         XCTAssertEqual(trie.getValueAndParameters("/hello.jpg")?.parameters?.get("file"), "hello")
         XCTAssertEqual(trie.getValueAndParameters("/test/hello.jpg")?.parameters?.get("file"), "hello")
@@ -114,10 +123,11 @@ class TrieRouterTests: XCTestCase {
     }
 
     func testSuffixCapture() {
-        let trie = RouterPathTrie<String>()
-        trie.addEntry("file.${ext}", value: "file")
-        trie.addEntry("test/file.${ext}", value: "testfile")
-        trie.addEntry("file.${ext}/test", value: "filetest")
+        let trieBuilder = RouterPathTrieBuilder<String>()
+        trieBuilder.addEntry("file.${ext}", value: "file")
+        trieBuilder.addEntry("test/file.${ext}", value: "testfile")
+        trieBuilder.addEntry("file.${ext}/test", value: "filetest")
+        let trie = trieBuilder.build()
         XCTAssertNil(trie.getValueAndParameters("/file2.png"))
         XCTAssertEqual(trie.getValueAndParameters("/file.jpg")?.parameters?.get("ext"), "jpg")
         XCTAssertEqual(trie.getValueAndParameters("/test/file.jpg")?.parameters?.get("ext"), "jpg")
@@ -125,14 +135,16 @@ class TrieRouterTests: XCTestCase {
     }
 
     func testPrefixFullComponentCapture() {
-        let trie = RouterPathTrie<String>()
-        trie.addEntry("${text}", value: "test")
+        let trieBuilder = RouterPathTrieBuilder<String>()
+        trieBuilder.addEntry("${text}", value: "test")
+        let trie = trieBuilder.build()
         XCTAssertEqual(trie.getValueAndParameters("/file.jpg")?.parameters?.get("text"), "file.jpg")
     }
 
     func testIncompletSuffixCapture() {
-        let trie = RouterPathTrie<String>()
-        trie.addEntry("text}", value: "test")
+        let trieBuilder = RouterPathTrieBuilder<String>()
+        trieBuilder.addEntry("text}", value: "test")
+        let trie = trieBuilder.build()
         XCTAssertEqual(trie.getValueAndParameters("/text}")?.value, "test")
         XCTAssertNil(trie.getValueAndParameters("/text"))
     }

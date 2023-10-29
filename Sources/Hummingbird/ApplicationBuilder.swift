@@ -134,7 +134,7 @@ public final class HBApplicationBuilder<RequestContext: HBRequestContext> {
 
     /// Construct the RequestResponder from the middleware group and router
     func constructResponder() -> any HBResponder<RequestContext> {
-        return self.router.buildRouter()
+        return self.router.buildResponder()
     }
 
     public func addChannelHandler(_ handler: @autoclosure @escaping @Sendable () -> any RemovableChannelHandler) {

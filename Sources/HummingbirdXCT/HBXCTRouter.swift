@@ -66,7 +66,7 @@ struct HBXCTRouter<RequestContext: HBTestRouterContextProtocol>: HBXCTApplicatio
             encoder: builder.encoder,
             decoder: builder.decoder
         )
-        self.responder = builder.router.buildRouter()
+        self.responder = builder.router.buildResponder()
     }
 
     func shutdown() async throws {

@@ -19,7 +19,7 @@ import NIOCore
 import NIOPosix
 
 /// Manages File reading and writing.
-public struct HBFileIO {
+public struct HBFileIO: Sendable {
     let fileIO: NonBlockingFileIO
     let chunkSize: Int
 
