@@ -53,7 +53,7 @@ class HummingbirdFilesTests: XCTestCase {
         }
     }
 
-    func testRead() async throws {
+    func testReadFileIO() async throws {
         let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
         app.router.get("test.jpg") { _, context -> HBResponse in
             let fileIO = HBFileIO(threadPool: context.applicationContext.threadPool)
