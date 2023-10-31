@@ -24,7 +24,6 @@ final class PersistTests: XCTestCase {
         let persist = HBMemoryPersistDriver()
 
         router.put("/persist/:tag") { request, context -> HTTPResponseStatus in
-            guard let tag = context.parameters.get("tag") else { throw HBHTTPError(.badRequest) }
             guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
             let tag = try context.parameters.require("tag")
             try await persist.set(key: tag, value: String(buffer: buffer), request: request)
@@ -66,7 +65,6 @@ final class PersistTests: XCTestCase {
         let (router, persist) = try createRouter()
 
         router.put("/create/:tag") { request, context -> HTTPResponseStatus in
-            guard let tag = context.parameters.get("tag") else { throw HBHTTPError(.badRequest) }
             guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
             let tag = try context.parameters.require("tag")
             try await persist.create(key: tag, value: String(buffer: buffer), request: request)
@@ -86,7 +84,6 @@ final class PersistTests: XCTestCase {
     func testDoubleCreateFail() async throws {
         let (router, persist) = try createRouter()
         router.put("/create/:tag") { request, context -> HTTPResponseStatus in
-            guard let tag = context.parameters.get("tag") else { throw HBHTTPError(.badRequest) }
             guard let buffer = request.body.buffer else { throw HBHTTPError(.badRequest) }
             let tag = try context.parameters.require("tag")
             do {

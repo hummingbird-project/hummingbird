@@ -54,8 +54,8 @@ class HummingbirdFilesTests: XCTestCase {
     }
 
     func testReadFileIO() async throws {
-        let app = HBApplicationBuilder(requestContext: HBTestRouterContext.self)
-        app.router.get("test.jpg") { _, context -> HBResponse in
+        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        router.get("test.jpg") { _, context -> HBResponse in
             let fileIO = HBFileIO(threadPool: context.applicationContext.threadPool)
             let body = try await fileIO.loadFile(path: "test.jpg", context: context, logger: context.logger)
             return .init(status: .ok, headers: [:], body: body)
@@ -66,7 +66,9 @@ class HummingbirdFilesTests: XCTestCase {
         XCTAssertNoThrow(try data.write(to: fileURL))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        try await app.buildAndTest(.router) { client in
+        let app = HBApplication(responder: router.buildResponder())
+
+        try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/test.jpg", method: .GET) { response in
                 XCTAssertEqual(response.body, buffer)
             }
