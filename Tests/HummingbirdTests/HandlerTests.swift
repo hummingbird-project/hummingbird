@@ -168,8 +168,8 @@ final class HandlerTests: XCTestCase {
     func testDecodeFutureResponse() async throws {
         struct DecodeTest: HBRequestDecodable {
             let name: String
-            func handle(request: HBRequest, context: HBRequestContext) -> EventLoopFuture<String> {
-                return context.success("Hello \(self.name)")
+            func handle(request: HBRequest, context: HBRequestContext) async throws -> String {
+                "Hello \(self.name)"
             }
         }
         let router = HBRouterBuilder(context: HBTestRouterContext.self)

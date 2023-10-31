@@ -15,21 +15,22 @@
 import Atomics
 import Logging
 import NIOCore
+import NIOConcurrencyHelpers
 import Tracing
 
 /// Endpoint path storage
 public struct EndpointPath: Sendable {
     public init(eventLoop: EventLoop) {
-        self._value = .init(nil, eventLoop: eventLoop)
+        self._value = .init(nil)
     }
 
     /// Endpoint path
     public internal(set) var value: String? {
-        get { self._value.value }
-        nonmutating set { self._value.value = newValue }
+        get { self._value.withLockedValue{ $0 } }
+        nonmutating set { self._value.withLockedValue { $0 = newValue } }
     }
 
-    private let _value: NIOLoopBoundBox<String?>
+    private let _value: NIOLockedValueBox<String?>
 }
 
 /// Request context values required by Hummingbird itself.

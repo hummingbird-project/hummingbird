@@ -38,6 +38,12 @@ public struct HBTracingMiddleware<Context: HBTracingRequestContext & HBRemoteAdd
     }
 
     public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
+        return context.eventLoop.makeFutureWithTask {
+            try await apply(to: request, context: context, next: next)
+        }
+    }
+
+    public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
         var serviceContext = context.serviceContext
         InstrumentationSystem.instrument.extract(request.headers, into: &serviceContext, using: HTTPHeadersExtractor())
 
@@ -48,7 +54,7 @@ public struct HBTracingMiddleware<Context: HBTracingRequestContext & HBRemoteAdd
             return endpointPath
         }()
 
-        return context.withSpan(operationName, serviceContext: serviceContext, ofKind: .server) { context, span in
+        return try await context.withSpan(operationName, serviceContext: serviceContext, ofKind: .server) { context, span in
             span.updateAttributes { attributes in
                 attributes["http.method"] = request.method.rawValue
                 attributes["http.target"] = request.uri.path
@@ -79,33 +85,31 @@ public struct HBTracingMiddleware<Context: HBTracingRequestContext & HBRemoteAdd
                 attributes = self.recordHeaders(request.headers, toSpanAttributes: attributes, withPrefix: "http.request.header.")
             }
 
-            return next.respond(to: request, context: context)
-                .always { result in
-                    switch result {
-                    case .success(let response):
-                        span.updateAttributes { attributes in
-                            attributes = self.recordHeaders(response.headers, toSpanAttributes: attributes, withPrefix: "http.response.header.")
+            do {
+                let response = try await next.respond(to: request, context: context)
+                span.updateAttributes { attributes in
+                    attributes = self.recordHeaders(response.headers, toSpanAttributes: attributes, withPrefix: "http.response.header.")
 
-                            attributes["http.status_code"] = Int(response.status.code)
-                            switch response.body {
-                            case .byteBuffer(let buffer):
-                                attributes["http.response_content_length"] = buffer.readableBytes
-                            case .stream:
-                                attributes["http.response_content_length"] = response.headers["content-length"].first.map { Int($0) } ?? nil
-                            case .empty:
-                                break
-                            }
-                        }
-                    case .failure(let error):
-                        if let httpError = error as? HBHTTPResponseError {
-                            span.attributes["http.status_code"] = Int(httpError.status.code)
-
-                            if 500..<600 ~= httpError.status.code {
-                                span.setStatus(.init(code: .error))
-                            }
-                        }
+                    attributes["http.status_code"] = Int(response.status.code)
+                    switch response.body {
+                    case .byteBuffer(let buffer):
+                        attributes["http.response_content_length"] = buffer.readableBytes
+                    case .stream:
+                        attributes["http.response_content_length"] = response.headers["content-length"].first.map { Int($0) } ?? nil
+                    case .empty:
+                        break
                     }
                 }
+                return response
+            } catch let error as HBHTTPResponseError {
+                span.attributes["http.status_code"] = Int(error.status.code)
+
+                if 500..<600 ~= error.status.code {
+                    span.setStatus(.init(code: .error))
+                }
+
+                throw error
+            }
         }
     }
 

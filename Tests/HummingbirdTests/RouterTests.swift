@@ -221,7 +221,7 @@ final class RouterTests: XCTestCase {
             .add(middleware: TestMiddleware())
             .group("/group")
             .get { _, context in
-                return context.success("hello")
+                return "hello"
             }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -248,12 +248,12 @@ final class RouterTests: XCTestCase {
             .group("/test")
             .add(middleware: TestGroupMiddleware(output: "route1"))
             .get { _, context in
-                return context.success(context.string)
+                return context.string
             }
             .group("/group")
             .add(middleware: TestGroupMiddleware(output: "route2"))
             .get { _, context in
-                return context.success(context.string)
+                return context.string
             }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in

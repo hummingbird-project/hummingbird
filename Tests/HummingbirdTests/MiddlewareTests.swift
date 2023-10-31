@@ -93,11 +93,12 @@ final class MiddlewareTests: XCTestCase {
     func testMiddlewareRunWhenNoRouteFound() async throws {
         struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
-                return next.respond(to: request, context: context).flatMapError { error in
-                    guard let httpError = error as? HBHTTPError, httpError.status == .notFound else {
-                        return context.failure(error)
+                return context.eventLoop.makeFutureWithTask {
+                    do {
+                        return try await next.respond(to: request, context: context)
+                    } catch let error as HBHTTPError where error.status == .notFound {
+                        throw HBHTTPError(.notFound, message: "Edited error")
                     }
-                    return context.failure(.notFound, message: "Edited error")
                 }
             }
         }
@@ -197,8 +198,8 @@ final class MiddlewareTests: XCTestCase {
     func testRouteLoggingMiddleware() async throws {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.middlewares.add(HBLogRequestsMiddleware(.debug))
-        router.put("/hello") { _, context -> EventLoopFuture<String> in
-            return context.failure(.badRequest)
+        router.put("/hello") { _, context -> String in
+            throw HBHTTPError(.badRequest)
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in

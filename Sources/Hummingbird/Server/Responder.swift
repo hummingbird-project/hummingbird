@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import NIOCore
+import ServiceContextModule
 
 /// Protocol for object that produces a response given a request
 ///
@@ -20,19 +21,20 @@ import NIOCore
 public protocol HBResponder<Context>: Sendable {
     associatedtype Context: HBRequestContext
     /// Return EventLoopFuture that will be fulfilled with response to the request supplied
-    func respond(to request: HBRequest, context: Context) -> EventLoopFuture<HBResponse>
+    func respond(to request: HBRequest, context: Context) async throws -> HBResponse
 }
 
 /// Responder that calls supplied closure
 public struct HBCallbackResponder<Context: HBRequestContext>: HBResponder {
-    let callback: @Sendable (HBRequest, Context) -> EventLoopFuture<HBResponse>
+    let callback: @Sendable (HBRequest, Context ) async throws -> HBResponse
 
-    public init(callback: @escaping @Sendable (HBRequest, Context) -> EventLoopFuture<HBResponse>) {
+    public init(callback: @escaping @Sendable (HBRequest, Context) async throws -> HBResponse) {
         self.callback = callback
     }
 
-    /// Return EventLoopFuture that will be fulfilled with response to the request supplied
-    public func respond(to request: HBRequest, context: Context) -> EventLoopFuture<HBResponse> {
-        return self.callback(request, context)
+    public func respond(to request: HBRequest, context: Context) async throws -> HBResponse {
+        return try await ServiceContext.$current.withValue(context.serviceContext) {
+            try await self.callback(request, context)
+        }
     }
 }

@@ -330,7 +330,7 @@ final class TracingTests: XCTestCase {
         router.get("/") { _, context -> HTTPResponseStatus in
             var serviceContext = context.serviceContext
             serviceContext.testID = "test"
-            return context.withSpan("TestSpan", serviceContext: serviceContext, ofKind: .client) { _, span in
+            return await context.withSpan("TestSpan", serviceContext: serviceContext, ofKind: .client) { _, span in
                 span.attributes["test-attribute"] = 42
                 return .ok
             }
@@ -361,10 +361,17 @@ final class TracingTests: XCTestCase {
 
         struct SpanMiddleware<Context: HBTracingRequestContext>: HBMiddleware {
             public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
+                return context.eventLoop.makeFutureWithTask {
+                    try await apply(to: request, context: context, next: next)
+                }
+            }
+
+            public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 var serviceContext = context.serviceContext
                 serviceContext.testID = "testMiddleware"
-                return context.withSpan("TestSpan", serviceContext: serviceContext, ofKind: .server) { context, _ in
-                    next.respond(to: request, context: context)
+
+                return try await context.withSpan("TestSpan", serviceContext: serviceContext, ofKind: .server) { context, _ in
+                    try await next.respond(to: request, context: context)
                 }
             }
         }
@@ -378,8 +385,9 @@ final class TracingTests: XCTestCase {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.middlewares.add(SpanMiddleware())
         router.middlewares.add(HBTracingMiddleware())
-        router.get("/") { _, context -> EventLoopFuture<HTTPResponseStatus> in
-            return context.eventLoop.scheduleTask(in: .milliseconds(2)) { return .ok }.futureResult
+        router.get("/") { _, context -> HTTPResponseStatus in
+            return .ok
+            try await Task.sleep(for: .milliseconds(2))
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -459,7 +467,7 @@ extension TracingTests {
         router.middlewares.add(AsyncSpanMiddleware())
         router.get("/") { _, context -> HTTPResponseStatus in
             try await Task.sleep(nanoseconds: 1000)
-            return context.withSpan("testing", ofKind: .server) { _, _ in
+            return await context.withSpan("testing", ofKind: .server) { _, _ in
                 return .ok
             }
         }

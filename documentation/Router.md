@@ -88,10 +88,10 @@ struct AddOrder: HBRouteHandler {
         self.input = try request.decode(as: Input.self)
         self.user = try request.auth.require(User.self)
     }
-    func handle(request: HBRequest) -> EventLoopFuture<Output> {
+    func handle(request: HBRequest) async throws -> Output {
         let order = Order(user: self.user.id, details: self.input)
-        return order.save(on: request.db)
-            .map { .init(id: order.id) }
+        try await order.save(on: request.db)
+        return Output(id: order.id)
     }
 }
 ```
@@ -108,7 +108,7 @@ By default Hummingbird will collate the contents of your request body into one B
 ```swift
 application.router.post("size", options: .streamBody) { request -> EventLoopFuture<String> in
     guard let stream = request.body.stream else { 
-        return context.failure(.badRequest)
+        throw HBHTTPError(.badRequest)
     }
     var size = 0
     return stream.consumeAll(on: context.eventLoop) { buffer in

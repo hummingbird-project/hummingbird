@@ -40,7 +40,7 @@
 public protocol HBRouteHandler {
     associatedtype _Output
     init(from: HBRequest, context: HBRequestContext) throws
-    func handle(request: HBRequest, context: HBRequestContext) throws -> _Output
+    func handle(request: HBRequest, context: HBRequestContext) async throws -> _Output
 }
 
 extension HBRouterMethods {
@@ -53,25 +53,7 @@ extension HBRouterMethods {
     ) -> Self where Handler._Output == _Output {
         return self.on(path, method: method, options: options) { request, context -> _Output in
             let handler = try Handler(from: request, context: context)
-            return try handler.handle(request: request, context: context)
-        }
-    }
-
-    /// Add path for `HBRouteHandler` that returns an `EventLoopFuture` specialized with a type conforming
-    /// to `HBResponseGenerator`
-    @discardableResult func on<Handler: HBRouteHandler, _Output: HBResponseGenerator>(
-        _ path: String,
-        method: HTTPMethod,
-        options: HBRouterMethodOptions = [],
-        use handlerType: Handler.Type
-    ) -> Self where Handler._Output == EventLoopFuture<_Output> {
-        return self.on(path, method: method, options: options) { request, context -> EventLoopFuture<_Output> in
-            do {
-                let handler = try Handler(from: request, context: context)
-                return try handler.handle(request: request, context: context)
-            } catch {
-                return context.failure(error)
-            }
+            return try await handler.handle(request: request, context: context)
         }
     }
 
@@ -126,60 +108,6 @@ extension HBRouterMethods {
         options: HBRouterMethodOptions = [],
         use handler: Handler.Type
     ) -> Self where Handler._Output == _Output {
-        return self.on(path, method: .PATCH, options: options, use: handler)
-    }
-
-    /// GET path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func get<Handler: HBRouteHandler, _Output: HBResponseGenerator>(
-        _ path: String = "",
-        options: HBRouterMethodOptions = [],
-        use handler: Handler.Type
-    ) -> Self where Handler._Output == EventLoopFuture<_Output> {
-        return self.on(path, method: .GET, options: options, use: handler)
-    }
-
-    /// PUT path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func put<Handler: HBRouteHandler, _Output: HBResponseGenerator>(
-        _ path: String = "",
-        options: HBRouterMethodOptions = [],
-        use handler: Handler.Type
-    ) -> Self where Handler._Output == EventLoopFuture<_Output> {
-        return self.on(path, method: .PUT, options: options, use: handler)
-    }
-
-    /// POST path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func post<Handler: HBRouteHandler, _Output: HBResponseGenerator>(
-        _ path: String = "",
-        options: HBRouterMethodOptions = [],
-        use handler: Handler.Type
-    ) -> Self where Handler._Output == EventLoopFuture<_Output> {
-        return self.on(path, method: .POST, options: options, use: handler)
-    }
-
-    /// HEAD path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func head<Handler: HBRouteHandler, _Output: HBResponseGenerator>(
-        _ path: String = "",
-        options: HBRouterMethodOptions = [],
-        use handler: Handler.Type
-    ) -> Self where Handler._Output == EventLoopFuture<_Output> {
-        return self.on(path, method: .HEAD, options: options, use: handler)
-    }
-
-    /// DELETE path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func delete<Handler: HBRouteHandler, _Output: HBResponseGenerator>(
-        _ path: String = "",
-        options: HBRouterMethodOptions = [],
-        use handler: Handler.Type
-    ) -> Self where Handler._Output == EventLoopFuture<_Output> {
-        return self.on(path, method: .DELETE, options: options, use: handler)
-    }
-
-    /// PATCH path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func patch<Handler: HBRouteHandler, _Output: HBResponseGenerator>(
-        _ path: String = "",
-        options: HBRouterMethodOptions = [],
-        use handler: Handler.Type
-    ) -> Self where Handler._Output == EventLoopFuture<_Output> {
         return self.on(path, method: .PATCH, options: options, use: handler)
     }
 }

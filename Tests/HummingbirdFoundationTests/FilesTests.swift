@@ -53,6 +53,29 @@ class HummingbirdFilesTests: XCTestCase {
         }
     }
 
+    func testReadFileIO() async throws {
+        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        router.get("test.jpg") { _, context -> HBResponse in
+            let fileIO = HBFileIO(threadPool: context.applicationContext.threadPool)
+            let body = try await fileIO.loadFile(path: "test.jpg", context: context, logger: context.logger)
+            return .init(status: .ok, headers: [:], body: body)
+        }
+        let buffer = self.randomBuffer(size: 320_003)
+        let data = Data(buffer: buffer)
+        let fileURL = URL(fileURLWithPath: "test.jpg")
+        XCTAssertNoThrow(try data.write(to: fileURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+
+        let app = HBApplication(responder: router.buildResponder())
+
+        try await app.test(.router) { client in
+            try await client.XCTExecute(uri: "/test.jpg", method: .GET) { response in
+                XCTAssertEqual(response.body, buffer)
+            }
+        }
+    }
+
+
     func testReadLargeFile() async throws {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.middlewares.add(HBFileMiddleware("."))
@@ -304,10 +327,10 @@ class HummingbirdFilesTests: XCTestCase {
     func testWrite() async throws {
         let filename = "testWrite.txt"
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.put("store") { request, context -> EventLoopFuture<HTTPResponseStatus> in
+        router.put("store") { request, context -> HTTPResponseStatus in
             let fileIO = HBFileIO(threadPool: context.applicationContext.threadPool)
-            return fileIO.writeFile(contents: request.body, path: filename, context: context, logger: context.logger)
-                .map { .ok }
+            try await fileIO.writeFile(contents: request.body, path: filename, context: context, logger: context.logger)
+            return .ok
         }
         let app = HBApplication(responder: router.buildResponder())
 
@@ -327,10 +350,10 @@ class HummingbirdFilesTests: XCTestCase {
     func testWriteLargeFile() async throws {
         let filename = "testWriteLargeFile.txt"
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.put("store") { request, context -> EventLoopFuture<HTTPResponseStatus> in
+        router.put("store") { request, context -> HTTPResponseStatus in
             let fileIO = HBFileIO(threadPool: context.applicationContext.threadPool)
-            return fileIO.writeFile(contents: request.body, path: filename, context: context, logger: context.logger)
-                .map { .ok }
+            try await fileIO.writeFile(contents: request.body, path: filename, context: context, logger: context.logger).get()
+            return .ok
         }
         let app = HBApplication(responder: router.buildResponder())
 

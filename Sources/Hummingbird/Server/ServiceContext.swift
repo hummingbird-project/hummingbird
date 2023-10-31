@@ -26,10 +26,10 @@ extension HBTracingRequestContext {
     ///   - serviceContext: ServiceContext to attach to request
     ///   - operation: operation to run
     /// - Returns: return value of operation
-    public func withServiceContext<Return>(_ serviceContext: ServiceContext, _ operation: (Self) throws -> Return) rethrows -> Return {
+    public func withServiceContext<Return>(_ serviceContext: ServiceContext, _ operation: (Self) async throws -> Return) async rethrows -> Return {
         var context = self
         context.serviceContext = serviceContext
-        return try operation(context)
+        return try await operation(context)
     }
 
     /// Execute the given operation within a newly created ``Span``
@@ -52,9 +52,9 @@ extension HBTracingRequestContext {
     public func withSpan<Return>(
         _ operationName: String,
         ofKind kind: SpanKind = .internal,
-        _ operation: (Self, Span) throws -> Return
-    ) rethrows -> Return {
-        return try self.withSpan(operationName, serviceContext: self.serviceContext, ofKind: kind, operation)
+        _ operation: (Self, Span) async throws -> Return
+    ) async rethrows -> Return {
+        return try await self.withSpan(operationName, serviceContext: self.serviceContext, ofKind: kind, operation)
     }
 
     /// Execute a specific task within a newly created ``Span``.
@@ -79,69 +79,17 @@ extension HBTracingRequestContext {
         _ operationName: String,
         serviceContext: ServiceContext,
         ofKind kind: SpanKind = .internal,
-        _ operation: (Self, Span) throws -> Return
-    ) rethrows -> Return {
+        _ operation: (Self, Span) async throws -> Return
+    ) async rethrows -> Return {
         let span = InstrumentationSystem.legacyTracer.startAnySpan(operationName, context: serviceContext, ofKind: kind)
         defer { span.end() }
-        return try self.withServiceContext(span.context) { request in
+        return try await self.withServiceContext(span.context) { request in
             do {
-                return try operation(request, span)
+                return try await operation(request, span)
             } catch {
                 span.recordError(error)
                 throw error
             }
-        }
-    }
-
-    /// Execute the given operation within a newly created ``Span``
-    ///
-    /// Calls operation with edited request that includes the serviceContext from span, and the span. Be sure to use the
-    /// `HBRequest` passed to the closure as that includes the serviceContext
-    ///
-    /// DO NOT `end()` the passed in span manually. It will be ended automatically when the `operation` returns.
-    ///
-    /// - Parameters:
-    ///   - operationName: The name of the operation being traced. This may be a handler function, database call, ...
-    ///   - kind: The ``SpanKind`` of the ``Span`` to be created. Defaults to ``SpanKind/internal``.
-    ///   - operation: operation to wrap in a span start/end and execute immediately
-    /// - Returns: the value returned by `operation`
-    /// - Throws: the error the `operation` has thrown (if any)
-    public func withSpan<Return>(
-        _ operationName: String,
-        ofKind kind: SpanKind = .internal,
-        _ operation: (Self, Span) -> EventLoopFuture<Return>
-    ) -> EventLoopFuture<Return> {
-        return self.withSpan(operationName, serviceContext: self.serviceContext, ofKind: kind, operation)
-    }
-
-    /// Execute the given operation within a newly created ``Span``,
-    ///
-    /// Calls operation with edited request that includes the serviceContext, and the span. Be sure to use the
-    /// `HBRequest` passed to the closure as that includes the serviceContext
-    ///
-    /// DO NOT `end()` the passed in span manually. It will be ended automatically when the `operation` returns.
-    ///
-    /// - Parameters:
-    ///   - operationName: The name of the operation being traced. This may be a handler function, database call, ...
-    ///   - kind: The ``SpanKind`` of the ``Span`` to be created. Defaults to ``SpanKind/internal``.
-    ///   - operation: operation to wrap in a span start/end and execute immediately
-    /// - Returns: the value returned by `operation`
-    /// - Throws: the error the `operation` has thrown (if any)
-    public func withSpan<Return>(
-        _ operationName: String,
-        serviceContext: ServiceContext,
-        ofKind kind: SpanKind = .internal,
-        _ operation: (Self, Span) -> EventLoopFuture<Return>
-    ) -> EventLoopFuture<Return> {
-        let span = InstrumentationSystem.legacyTracer.startAnySpan(operationName, context: serviceContext, ofKind: kind)
-        return self.withServiceContext(span.context) { context in
-            return operation(context, span)
-                .flatMapErrorThrowing { error in
-                    span.recordError(error)
-                    throw error
-                }.always { _ in
-                    span.end()
-                }
         }
     }
 }
