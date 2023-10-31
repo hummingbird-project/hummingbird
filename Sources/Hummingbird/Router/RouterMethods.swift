@@ -36,7 +36,7 @@ public protocol HBRouterMethods {
         _ path: String,
         method: HTTPMethod,
         options: HBRouterMethodOptions,
-        use: @escaping (HBRequest, Context) async throws -> Output
+        use: @Sendable @escaping (HBRequest, Context) async throws -> Output
     ) -> Self
 
     /// add group
@@ -48,7 +48,7 @@ extension HBRouterMethods {
     @discardableResult public func get<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping (HBRequest, Context) async throws -> Output
+        use handler: @Sendable @escaping (HBRequest, Context) async throws -> Output
     ) -> Self {
         return on(path, method: .GET, options: options, use: handler)
     }
@@ -57,7 +57,7 @@ extension HBRouterMethods {
     @discardableResult public func put<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping (HBRequest, Context) async throws -> Output
+        use handler: @Sendable @escaping (HBRequest, Context) async throws -> Output
     ) -> Self {
         return on(path, method: .PUT, options: options, use: handler)
     }
@@ -66,7 +66,7 @@ extension HBRouterMethods {
     @discardableResult public func delete<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping (HBRequest, Context) async throws -> Output
+        use handler: @Sendable @escaping (HBRequest, Context) async throws -> Output
     ) -> Self {
         return on(path, method: .DELETE, options: options, use: handler)
     }
@@ -75,7 +75,7 @@ extension HBRouterMethods {
     @discardableResult public func head<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping (HBRequest, Context) async throws -> Output
+        use handler: @Sendable @escaping (HBRequest, Context) async throws -> Output
     ) -> Self {
         return on(path, method: .HEAD, options: options, use: handler)
     }
@@ -84,7 +84,7 @@ extension HBRouterMethods {
     @discardableResult public func post<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping (HBRequest, Context) async throws -> Output
+        use handler: @Sendable @escaping (HBRequest, Context) async throws -> Output
     ) -> Self {
         return on(path, method: .POST, options: options, use: handler)
     }
@@ -93,14 +93,14 @@ extension HBRouterMethods {
     @discardableResult public func patch<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @escaping (HBRequest, Context) async throws -> Output
+        use handler: @Sendable @escaping (HBRequest, Context) async throws -> Output
     ) -> Self {
         return on(path, method: .PATCH, options: options, use: handler)
     }
 
     func constructResponder<Output: HBResponseGenerator>(
         options: HBRouterMethodOptions,
-        use closure: @escaping (HBRequest, Context) async throws -> Output
+        use closure: @Sendable @escaping (HBRequest, Context) async throws -> Output
     ) -> HBCallbackResponder<Context> {
         // generate response from request. Moved repeated code into internal function
         @Sendable func _respond(request: HBRequest, context: Context) async throws -> HBResponse {

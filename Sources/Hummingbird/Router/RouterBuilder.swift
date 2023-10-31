@@ -93,7 +93,7 @@ public final class HBRouterBuilder<Context: HBRequestContext>: HBRouterMethods {
 
 /// Responder that return a not found error
 struct NotFoundResponder<Context: HBRequestContext>: HBResponder {
-    func respond(to request: HBRequest, context: Context) async throws -> HBResponse {
+    func respond(to request: HBRequest, context: Context) throws -> HBResponse {
         throw HBHTTPError(.notFound)
     }
 }

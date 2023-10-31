@@ -386,7 +386,8 @@ final class TracingTests: XCTestCase {
         router.middlewares.add(SpanMiddleware())
         router.middlewares.add(HBTracingMiddleware())
         router.get("/") { _, context -> HTTPResponseStatus in
-            return try await context.eventLoop.scheduleTask(in: .milliseconds(2)) { return .ok }.futureResult.get()
+            return .ok
+            try await Task.sleep(for: .milliseconds(2))
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
