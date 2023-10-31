@@ -66,7 +66,7 @@ extension HBApplication {
     }
 }
 
-extension HBApplication where RequestContext: HBTestRouterContextProtocol {
+extension HBApplication where Responder.Context: HBTestRouterContextProtocol {
     // MARK: Initialization
 
     /// Creates a version of `HBApplication` that can be used for testing code

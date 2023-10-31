@@ -52,12 +52,12 @@ public struct HBTestRouterContext: HBTestRouterContextProtocol, HBRemoteAddressR
 }
 
 /// Test sending values to requests to router. This does not setup a live server
-struct HBXCTRouter<RequestContext: HBTestRouterContextProtocol>: HBXCTApplication {
+struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Context: HBTestRouterContextProtocol {
     let eventLoopGroup: EventLoopGroup
     let context: HBApplicationContext
-    let responder: any HBResponder<RequestContext>
+    let responder: Responder
 
-    init(app: HBApplication<RequestContext>) {
+    init(app: HBApplication<Responder>) {
         self.eventLoopGroup = app.eventLoopGroup
         self.context = HBApplicationContext(
             threadPool: app.threadPool,
@@ -80,7 +80,7 @@ struct HBXCTRouter<RequestContext: HBTestRouterContextProtocol>: HBXCTApplicatio
     /// resulting response back to XCT response type
     struct Client: HBXCTClientProtocol {
         let eventLoopGroup: EventLoopGroup
-        let responder: any HBResponder<RequestContext>
+        let responder: Responder
         let applicationContext: HBApplicationContext
 
         func execute(uri: String, method: HTTPMethod, headers: HTTPHeaders, body: ByteBuffer?) async throws -> HBXCTResponse {
@@ -91,10 +91,10 @@ struct HBXCTRouter<RequestContext: HBTestRouterContextProtocol>: HBXCTApplicatio
                     head: .init(version: .http1_1, method: method, uri: uri, headers: headers),
                     body: .byteBuffer(body)
                 )
-                let context = RequestContext(
+                let context = Responder.Context(
                     applicationContext: self.applicationContext,
                     eventLoop: eventLoop,
-                    logger: HBApplication<RequestContext>.loggerWithRequestId(self.applicationContext.logger)
+                    logger: HBApplication<Responder>.loggerWithRequestId(self.applicationContext.logger)
                 )
                 return self.responder.respond(to: request, context: context)
                     .flatMapErrorThrowing { error in

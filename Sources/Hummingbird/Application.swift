@@ -83,7 +83,7 @@ public final class HBApplicationContext: Sendable {
 /// try await app.buildAndRun()
 /// ```
 /// Editing the application builder setup after calling `build` will produce undefined behaviour.
-public struct HBApplication<RequestContext: HBRequestContext> {
+public struct HBApplication<Responder: HBResponder> {
     // MARK: Member variables
 
     /// event loop group used by application
@@ -91,7 +91,7 @@ public struct HBApplication<RequestContext: HBRequestContext> {
     /// thread pool used by application
     public let threadPool: NIOThreadPool
     /// routes requests to requestResponders based on URI
-    public let responder: any HBResponder<RequestContext>
+    public let responder: Responder
     /// Configuration
     public var configuration: HBApplicationConfiguration
     /// Logger
@@ -109,7 +109,7 @@ public struct HBApplication<RequestContext: HBRequestContext> {
 
     /// Initialize new Application
     public init(
-        responder: any HBResponder<RequestContext>,
+        responder: Responder,
         configuration: HBApplicationConfiguration = HBApplicationConfiguration(),
         threadPool: NIOThreadPool = .singleton,
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton
@@ -166,7 +166,7 @@ extension HBApplication: Service {
             decoder: self.decoder
         )
         let dateCache = HBDateCache()
-        let responder = Responder(
+        let responder = HTTPResponder(
             responder: self.responder,
             applicationContext: context,
             dateCache: dateCache
