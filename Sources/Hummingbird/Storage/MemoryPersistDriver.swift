@@ -21,7 +21,8 @@ import NIOCore
 
 /// In memory driver for persist system for storing persistent cross request key/value pairs
 public final class HBMemoryPersistDriver: HBPersistDriver {
-    public init(eventLoopGroup: EventLoopGroup) {
+    public init(eventLoopGroupProvider: EventLoopGroupProvider = .singleton) {
+        let eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
         self.eventLoop = eventLoopGroup.next()
         self.values = [:]
         self.task = self.eventLoop.scheduleRepeatedTask(initialDelay: .hours(1), delay: .hours(1)) { _ in

@@ -19,8 +19,8 @@ import NIOCore
 import NIOHTTP1
 
 extension HBApplication {
-    struct Responder: HBHTTPResponder {
-        let responder: any HBResponder<RequestContext>
+    struct HTTPResponder: HBHTTPResponder {
+        let responder: Responder
         let applicationContext: HBApplicationContext
         let dateCache: HBDateCache
 
@@ -34,7 +34,7 @@ extension HBApplication {
                 head: request.head,
                 body: request.body
             )
-            let context = RequestContext(
+            let context = Responder.Context(
                 applicationContext: self.applicationContext,
                 channel: context.channel,
                 logger: loggerWithRequestId(self.applicationContext.logger)

@@ -48,7 +48,7 @@ public struct HBFileMiddleware<Context: HBRequestContext>: HBMiddleware {
         cacheControl: HBCacheControl = .init([]),
         searchForIndexHtml: Bool = false,
         threadPool: NIOThreadPool = NIOThreadPool.singleton,
-        logger: Logger
+        logger: Logger = Logger(label: "HBFileMiddleware")
     ) {
         self.rootFolder = URL(fileURLWithPath: rootFolder)
         self.threadPool = threadPool

@@ -52,32 +52,27 @@ public struct HBTestRouterContext: HBTestRouterContextProtocol, HBRemoteAddressR
 }
 
 /// Test sending values to requests to router. This does not setup a live server
-struct HBXCTRouter<RequestContext: HBTestRouterContextProtocol>: HBXCTApplication {
+struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Context: HBTestRouterContextProtocol {
     let eventLoopGroup: EventLoopGroup
     let context: HBApplicationContext
-    let responder: any HBResponder<RequestContext>
+    let responder: Responder
 
-    init(builder: HBApplicationBuilder<RequestContext>) {
-        self.eventLoopGroup = builder.eventLoopGroup
+    init(app: HBApplication<Responder>) {
+        self.eventLoopGroup = app.eventLoopGroup
         self.context = HBApplicationContext(
-            threadPool: builder.threadPool,
-            configuration: builder.configuration,
-            logger: builder.logger,
-            encoder: builder.encoder,
-            decoder: builder.decoder
+            threadPool: app.threadPool,
+            configuration: app.configuration,
+            logger: app.logger,
+            encoder: app.encoder,
+            decoder: app.decoder
         )
-        self.responder = builder.router.buildResponder()
-    }
-
-    func shutdown() async throws {
-        try await self.context.threadPool.shutdownGracefully()
+        self.responder = app.responder
     }
 
     /// Run test
     func run<Value>(_ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Value) async throws -> Value {
         let client = Client(eventLoopGroup: self.eventLoopGroup, responder: self.responder, applicationContext: self.context)
         let value = try await test(client)
-        try await self.shutdown()
         return value
     }
 
@@ -85,7 +80,7 @@ struct HBXCTRouter<RequestContext: HBTestRouterContextProtocol>: HBXCTApplicatio
     /// resulting response back to XCT response type
     struct Client: HBXCTClientProtocol {
         let eventLoopGroup: EventLoopGroup
-        let responder: any HBResponder<RequestContext>
+        let responder: Responder
         let applicationContext: HBApplicationContext
 
         func execute(uri: String, method: HTTPMethod, headers: HTTPHeaders, body: ByteBuffer?) async throws -> HBXCTResponse {
@@ -96,10 +91,10 @@ struct HBXCTRouter<RequestContext: HBTestRouterContextProtocol>: HBXCTApplicatio
                     head: .init(version: .http1_1, method: method, uri: uri, headers: headers),
                     body: .byteBuffer(body)
                 )
-                let context = RequestContext(
+                let context = Responder.Context(
                     applicationContext: self.applicationContext,
                     eventLoop: eventLoop,
-                    logger: HBApplication<RequestContext>.loggerWithRequestId(self.applicationContext.logger)
+                    logger: HBApplication<Responder>.loggerWithRequestId(self.applicationContext.logger)
                 )
                 return self.responder.respond(to: request, context: context)
                     .flatMapErrorThrowing { error in

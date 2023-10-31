@@ -23,7 +23,27 @@ let port = HBEnvironment.shared.get("SERVER_PORT", as: Int.self) ?? 8080
 // create app
 let elg = MultiThreadedEventLoopGroup(numberOfThreads: 2)
 defer { try? elg.syncShutdownGracefully() }
-let app = HBApplicationBuilder(
+var router = HBRouterBuilder()
+// number of raw requests
+// ./wrk -c 128 -d 15s -t 8 http://localhost:8080
+router.get { _, _ in
+    return "Hello, world"
+}
+
+// request with a body
+// ./wrk -c 128 -d 15s -t 8 -s scripts/post.lua http://localhost:8080
+router.post { request, _ in
+    return request.body.buffer
+}
+
+// return JSON
+// ./wrk -c 128 -d 15s -t 8 http://localhost:8080/json
+router.get("json") { _, _ in
+    return ["message": "Hello, world"]
+}
+
+var app = HBApplication(
+    responder: router.buildResponder(),
     configuration: .init(
         address: .hostname(hostname, port: port),
         serverName: "Hummingbird"
@@ -36,23 +56,5 @@ app.decoder = JSONDecoder()
 
 // configure app
 
-// number of raw requests
-// ./wrk -c 128 -d 15s -t 8 http://localhost:8080
-app.router.get { _, _ in
-    return "Hello, world"
-}
-
-// request with a body
-// ./wrk -c 128 -d 15s -t 8 -s scripts/post.lua http://localhost:8080
-app.router.post { request, _ in
-    return request.body.buffer
-}
-
-// return JSON
-// ./wrk -c 128 -d 15s -t 8 http://localhost:8080/json
-app.router.get("json") { _, _ in
-    return ["message": "Hello, world"]
-}
-
 // run app
-try await app.buildAndRun()
+try await app.runService()
