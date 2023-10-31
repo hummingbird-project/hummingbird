@@ -55,7 +55,7 @@ app.router.post("user") { request async throws -> HTTPResponseStatus in
     return try await createUser(user)
 }
 ```
-Like the standard `Decoder.decode` functions `HBRequest.decode` can throw an error if decoding fails. In this situation when I received a decode error I return a failed `EventLoopFuture`. I use the function `HBcontext.failure` to generate the failed `EventLoopFuture`.
+Like the standard `Decoder.decode` functions `HBRequest.decode` can throw an error if decoding fails. In this situation when I received a decode error I throw a bad request error. I HBHTTPError to ensure that the error gets converted to an HTTP response with that status code.
 
 ## Encoding Responses
 
