@@ -84,9 +84,10 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
         let applicationContext: HBApplicationContext
 
         func execute(uri: String, method: HTTPMethod, headers: HTTPHeaders, body: ByteBuffer?) async throws -> HBXCTResponse {
-            let eventLoop = self.eventLoopGroup.any()
+            let response: HBResponse
+            let eventLoop = eventLoopGroup.next()
 
-            return try await eventLoop.flatSubmit {
+            do {
                 let request = HBRequest(
                     head: .init(version: .http1_1, method: method, uri: uri, headers: headers),
                     body: .byteBuffer(body)
@@ -96,44 +97,37 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                     eventLoop: eventLoop,
                     logger: HBApplication<Responder>.loggerWithRequestId(self.applicationContext.logger)
                 )
-                return self.responder.respond(to: request, context: context)
-                    .flatMapErrorThrowing { error in
-                        switch error {
-                        case let error as HBHTTPResponseError:
-                            let httpResponse = error.response(version: .http1_1, allocator: ByteBufferAllocator())
-                            return HBResponse(status: httpResponse.head.status, headers: httpResponse.head.headers, body: httpResponse.body)
-                        default:
-                            return HBResponse(status: .internalServerError)
+
+                response = try await self.responder.respond(to: request, context: context)
+            } catch let error as HBHTTPResponseError {
+                let httpResponse = error.response(version: .http1_1, allocator: ByteBufferAllocator())
+                response = HBResponse(status: httpResponse.head.status, headers: httpResponse.head.headers, body: httpResponse.body)
+            } catch {
+                response = HBResponse(status: .internalServerError)   
+            }
+
+
+                let body: ByteBuffer?
+                switch response.body {
+                case .byteBuffer(let buffer):
+                    body = buffer
+                case .empty:
+                    body = nil
+                case .stream(let streamer):
+                    var colllateBuffer = ByteBuffer()
+                    streamerReadLoop:
+                        while true
+                    {
+                        switch try await streamer.read(on: eventLoop).get() {
+                        case .byteBuffer(var part):
+                            colllateBuffer.writeBuffer(&part)
+                        case .end:
+                            break streamerReadLoop
                         }
                     }
-                    .flatMap { response in
-                        let promise = eventLoop.makePromise(of: HBXCTResponse.self)
-                        promise.completeWithTask {
-                            let body: ByteBuffer?
-                            switch response.body {
-                            case .byteBuffer(let buffer):
-                                body = buffer
-                            case .empty:
-                                body = nil
-                            case .stream(let streamer):
-                                var colllateBuffer = ByteBuffer()
-                                streamerReadLoop:
-                                    while true
-                                {
-                                    switch try await streamer.read(on: eventLoop).get() {
-                                    case .byteBuffer(var part):
-                                        colllateBuffer.writeBuffer(&part)
-                                    case .end:
-                                        break streamerReadLoop
-                                    }
-                                }
-                                body = colllateBuffer
-                            }
-                            return HBXCTResponse(status: response.status, headers: response.headers, body: body)
-                        }
-                        return promise.futureResult
-                    }
-            }.get()
+                    body = colllateBuffer
+                }
+            return HBXCTResponse(status: response.status, headers: response.headers, body: body)
         }
     }
 }

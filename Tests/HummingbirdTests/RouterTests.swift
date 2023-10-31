@@ -27,21 +27,19 @@ final class RouterTests: XCTestCase {
             self.output = output
         }
 
-        func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
-            return next.respond(to: request, context: context).map { response in
-                var response = response
-                response.headers.replaceOrAdd(name: "middleware", value: self.output)
-                return response
-            }
+        func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+            var response = try await next.respond(to: request, context: context)
+            response.headers.replaceOrAdd(name: "middleware", value: self.output)
+            return response
         }
     }
 
     /// Test endpointPath is set
     func testEndpointPath() async throws {
         struct TestEndpointMiddleware<Context: HBRequestContext>: HBMiddleware {
-            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
-                guard let endpointPath = context.endpointPath else { return next.respond(to: request, context: context) }
-                return context.success(.init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath))))
+            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+                guard let endpointPath = context.endpointPath else { return try await next.respond(to: request, context: context) }
+                return .init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath)))
             }
         }
 
@@ -61,9 +59,9 @@ final class RouterTests: XCTestCase {
     /// Test endpointPath is prefixed with a "/"
     func testEndpointPathPrefix() async throws {
         struct TestEndpointMiddleware<Context: HBRequestContext>: HBMiddleware {
-            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
-                guard let endpointPath = context.endpointPath else { return next.respond(to: request, context: context) }
-                return context.success(.init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath))))
+            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+                guard let endpointPath = context.endpointPath else { return try await next.respond(to: request, context: context) }
+                return .init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath)))
             }
         }
 
@@ -99,9 +97,9 @@ final class RouterTests: XCTestCase {
     /// Test endpointPath doesn't have "/" at end
     func testEndpointPathSuffix() async throws {
         struct TestEndpointMiddleware<Context: HBRequestContext>: HBMiddleware {
-            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
-                guard let endpointPath = context.endpointPath else { return next.respond(to: request, context: context) }
-                return context.success(.init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath))))
+            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+                guard let endpointPath = context.endpointPath else { return try await next.respond(to: request, context: context) }
+                return .init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath)))
             }
         }
 
@@ -236,10 +234,10 @@ final class RouterTests: XCTestCase {
         struct TestGroupMiddleware: HBMiddleware {
             let output: String
 
-            func apply(to request: HBRequest, context: HBTestRouterContext2, next: any HBResponder<HBTestRouterContext2>) -> EventLoopFuture<HBResponse> {
+            func apply(to request: HBRequest, context: HBTestRouterContext2, next: any HBResponder<HBTestRouterContext2>) async throws -> HBResponse {
                 var context = context
                 context.string = self.output
-                return next.respond(to: request, context: context)
+                return try await next.respond(to: request, context: context)
             }
         }
 
