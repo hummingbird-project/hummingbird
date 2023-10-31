@@ -330,7 +330,7 @@ final class TracingTests: XCTestCase {
         router.get("/") { _, context -> HTTPResponseStatus in
             var serviceContext = context.serviceContext
             serviceContext.testID = "test"
-            return try await context.withSpan("TestSpan", serviceContext: serviceContext, ofKind: .client) { _, span in
+            return await context.withSpan("TestSpan", serviceContext: serviceContext, ofKind: .client) { _, span in
                 span.attributes["test-attribute"] = 42
                 return .ok
             }
@@ -362,12 +362,16 @@ final class TracingTests: XCTestCase {
         struct SpanMiddleware<Context: HBTracingRequestContext>: HBMiddleware {
             public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
                 return context.eventLoop.makeFutureWithTask {
-                    var serviceContext = context.serviceContext
-                    serviceContext.testID = "testMiddleware"
+                    try await apply(to: request, context: context, next: next)
+                }
+            }
 
-                    return try await context.withSpan("TestSpan", serviceContext: serviceContext, ofKind: .server) { context, _ in
-                        try await next.respond(to: request, context: context)
-                    }
+            public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+                var serviceContext = context.serviceContext
+                serviceContext.testID = "testMiddleware"
+
+                return try await context.withSpan("TestSpan", serviceContext: serviceContext, ofKind: .server) { context, _ in
+                    try await next.respond(to: request, context: context)
                 }
             }
         }
@@ -462,7 +466,7 @@ extension TracingTests {
         router.middlewares.add(AsyncSpanMiddleware())
         router.get("/") { _, context -> HTTPResponseStatus in
             try await Task.sleep(nanoseconds: 1000)
-            return try await context.withSpan("testing", ofKind: .server) { _, _ in
+            return await context.withSpan("testing", ofKind: .server) { _, _ in
                 return .ok
             }
         }
