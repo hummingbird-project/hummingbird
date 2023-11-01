@@ -169,7 +169,9 @@ final class HummingbirdJobsTests: XCTestCase {
     func testShutdownJob() async throws {
         struct TestJob: HBJob {
             static let name = "testShutdownJob"
+            static let expectation = AsyncExpectation(1)
             func execute(logger: Logger) async throws {
+                await Self.expectation.fulfill()
                 try await Task.sleep(for: .milliseconds(1000))
             }
         }
@@ -189,6 +191,7 @@ final class HummingbirdJobsTests: XCTestCase {
         )
         try await testJobQueue(jobQueueHandler) {
             try await jobQueueHandler.enqueue(TestJob())
+            try await TestJob.expectation.wait()
         }
 
         XCTAssertEqual(cancelledJobCount.load(ordering: .relaxed), 1)
