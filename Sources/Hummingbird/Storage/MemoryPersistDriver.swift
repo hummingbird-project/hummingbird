@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information

@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -15,6 +15,7 @@
 import Atomics
 import Hummingbird
 import HummingbirdXCT
+import NIOCore
 import NIOHTTP1
 import XCTest
 
@@ -194,7 +195,7 @@ final class ApplicationTests: XCTestCase {
 
     func testEventLoopFutureArray() async throws {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.patch("array") { _, context -> [String] in
+        router.patch("array") { _, _ -> [String] in
             return ["yes", "no"]
         }
         let app = HBApplication(responder: router.buildResponder())
@@ -245,16 +246,15 @@ final class ApplicationTests: XCTestCase {
             }
             return HBResponse(status: .ok, headers: [:], body: .stream(RequestStreamer(stream: stream)))
         }
-        router.post("size", options: .streamBody) { request, context -> String in
+        router.post("size", options: .streamBody) { request, _ -> String in
             guard let stream = request.body.stream else {
                 throw HBHTTPError(.badRequest)
             }
-            let size = ManagedAtomic(0)
-            _ = try await stream.consumeAll(on: context.eventLoop) { buffer in
-                size.wrappingIncrement(by: buffer.readableBytes, ordering: .relaxed)
-                return context.success(())
-            }.get()
-            return size.load(ordering: .relaxed).description
+            var size = 0
+            for try await buffer in stream.sequence {
+                size += buffer.readableBytes
+            }
+            return size.description
         }
         let app = HBApplication(responder: router.buildResponder())
 
@@ -358,7 +358,7 @@ final class ApplicationTests: XCTestCase {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router
             .group("/echo-body")
-            .post { request, context -> ByteBuffer? in
+            .post { request, _ -> ByteBuffer? in
                 return request.body.buffer
             }
         let app = HBApplication(responder: router.buildResponder())
@@ -450,7 +450,7 @@ final class ApplicationTests: XCTestCase {
 
     func testTypedResponseFuture() async throws {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.delete("/hello") { _, context in
+        router.delete("/hello") { _, _ in
             HBEditedResponse(
                 status: .imATeapot,
                 headers: ["test": "value", "content-type": "application/json"],

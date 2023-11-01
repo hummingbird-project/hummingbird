@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2022 the Hummingbird authors
+// Copyright (c) 2021-2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -14,8 +14,8 @@
 
 import Atomics
 import Logging
-import NIOCore
 import NIOConcurrencyHelpers
+import NIOCore
 import Tracing
 
 /// Endpoint path storage
@@ -26,7 +26,7 @@ public struct EndpointPath: Sendable {
 
     /// Endpoint path
     public internal(set) var value: String? {
-        get { self._value.withLockedValue{ $0 } }
+        get { self._value.withLockedValue { $0 } }
         nonmutating set { self._value.withLockedValue { $0 = newValue } }
     }
 

@@ -16,6 +16,7 @@ import Atomics
 @testable import Hummingbird
 import HummingbirdXCT
 import Logging
+import NIOCore
 import Tracing
 import XCTest
 
@@ -218,7 +219,7 @@ final class RouterTests: XCTestCase {
             .group("/test")
             .add(middleware: TestMiddleware())
             .group("/group")
-            .get { _, context in
+            .get { _, _ in
                 return "hello"
             }
         let app = HBApplication(responder: router.buildResponder())

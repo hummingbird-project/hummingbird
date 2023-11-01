@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -11,7 +11,9 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 //===----------------------------------------------------------------------===//
+
 import HummingbirdCore
+import NIOCore
 
 /// Response body streamer which uses an AsyncSequence as its input.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
