@@ -86,9 +86,9 @@ public struct HBFileMiddleware<Context: HBRequestContext>: HBMiddleware {
                 throw HBHTTPError(.badRequest)
             }
 
-            var fullPath = self.rootFolder.appendingPathComponent(path)
+            let fileResult = try await self.threadPool.runIfActive { () -> FileResult in
+                var fullPath = self.rootFolder.appendingPathComponent(path)
 
-            let fileResult = try await self.threadPool.runIfActive(eventLoop: context.eventLoop) { () -> FileResult in
                 let modificationDate: Date?
                 let contentSize: Int?
                 do {
@@ -184,24 +184,24 @@ public struct HBFileMiddleware<Context: HBRequestContext>: HBMiddleware {
                             // override content-length set above
                             headers.replaceOrAdd(name: "content-length", value: String(describing: upperBound - lowerBound + 1))
                         }
-                        return .loadFile(headers, range)
+                        return .loadFile(fullPath.relativePath, headers, range)
                     }
                 }
-                return .loadFile(headers, nil)
-            }.get()
+                return .loadFile(fullPath.relativePath, headers, nil)
+            }
 
             switch fileResult {
             case .notModified(let headers):
                 return HBResponse(status: .notModified, headers: headers)
-            case .loadFile(let headers, let range):
+            case .loadFile(let fullPath, let headers, let range):
                 switch request.method {
                 case .GET:
                     if let range = range {
-                        let (body, _) = try await self.fileIO.loadFile(path: fullPath.relativePath, range: range, context: context, logger: context.logger).get()
+                        let (body, _) = try await self.fileIO.loadFile(path: fullPath, range: range, context: context, logger: context.logger).get()
                         return HBResponse(status: .partialContent, headers: headers, body: body)
                     }
 
-                    let body = try await self.fileIO.loadFile(path: fullPath.relativePath, context: context, logger: context.logger).get()
+                    let body = try await self.fileIO.loadFile(path: fullPath, context: context, logger: context.logger).get()
                     return HBResponse(status: .ok, headers: headers, body: body)
 
                 case .HEAD:
@@ -217,7 +217,7 @@ public struct HBFileMiddleware<Context: HBRequestContext>: HBMiddleware {
     /// Whether to return data from the file or a not modified response
     private enum FileResult {
         case notModified(HTTPHeaders)
-        case loadFile(HTTPHeaders, ClosedRange<Int>?)
+        case loadFile(String, HTTPHeaders, ClosedRange<Int>?)
     }
 }
 

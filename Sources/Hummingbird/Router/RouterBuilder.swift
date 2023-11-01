@@ -77,7 +77,7 @@ public final class HBRouterBuilder<Context: HBRequestContext>: HBRouterMethods {
         _ path: String,
         method: HTTPMethod,
         options: HBRouterMethodOptions = [],
-        use closure: @escaping (HBRequest, Context) async throws -> Output
+        use closure: @escaping @Sendable (HBRequest, Context) async throws -> Output
     ) -> Self {
         let responder = constructResponder(options: options, use: closure)
         self.add(path, method: method, responder: responder)
