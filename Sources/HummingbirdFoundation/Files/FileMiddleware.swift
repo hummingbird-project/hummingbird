@@ -70,25 +70,25 @@ public struct HBFileMiddleware<Context: HBRequestContext>: HBMiddleware {
         logger.info("FileMiddleware serving from \(workingFolder)\(rootFolder)")
     }
 
-    public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
-        // if next responder returns a 404 then check if file exists
-        let response: EventLoopFuture<HBResponse> = next.respond(to: request, context: context)
-        return response.flatMapError { error -> EventLoopFuture<HBResponse> in
+    public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+        do {
+            return try await next.respond(to: request, context: context)
+        } catch {
             guard let httpError = error as? HBHTTPError, httpError.status == .notFound else {
-                return context.failure(error)
+                throw error
             }
 
             guard let path = request.uri.path.removingPercentEncoding else {
-                return context.failure(.badRequest)
+                throw HBHTTPError(.badRequest)
             }
 
             guard !path.contains("..") else {
-                return context.failure(.badRequest)
+                throw HBHTTPError(.badRequest)
             }
 
-            var fullPath = self.rootFolder.appendingPathComponent(path)
+            let fileResult = try await self.threadPool.runIfActive { () -> FileResult in
+                var fullPath = self.rootFolder.appendingPathComponent(path)
 
-            return self.threadPool.runIfActive(eventLoop: context.eventLoop) { () -> FileResult in
                 let modificationDate: Date?
                 let contentSize: Int?
                 do {
@@ -184,34 +184,31 @@ public struct HBFileMiddleware<Context: HBRequestContext>: HBMiddleware {
                             // override content-length set above
                             headers.replaceOrAdd(name: "content-length", value: String(describing: upperBound - lowerBound + 1))
                         }
-                        return .loadFile(headers, range)
+                        return .loadFile(fullPath.relativePath, headers, range)
                     }
                 }
-                return .loadFile(headers, nil)
-            }.flatMap { (result: FileResult) -> EventLoopFuture<HBResponse> in
-                switch result {
-                case .notModified(let headers):
-                    return context.eventLoop.makeSucceededFuture(HBResponse(status: .notModified, headers: headers))
-                case .loadFile(let headers, let range):
-                    switch request.method {
-                    case .GET:
-                        if let range = range {
-                            return self.fileIO.loadFile(path: fullPath.relativePath, range: range, context: context, logger: context.logger)
-                                .map { body, _ in
-                                    return HBResponse(status: .partialContent, headers: headers, body: body)
-                                }
-                        }
-                        return self.fileIO.loadFile(path: fullPath.relativePath, context: context, logger: context.logger)
-                            .map { body in
-                                return HBResponse(status: .ok, headers: headers, body: body)
-                            }
+                return .loadFile(fullPath.relativePath, headers, nil)
+            }
 
-                    case .HEAD:
-                        return context.success(HBResponse(status: .ok, headers: headers, body: .empty))
-
-                    default:
-                        return context.failure(error)
+            switch fileResult {
+            case .notModified(let headers):
+                return HBResponse(status: .notModified, headers: headers)
+            case .loadFile(let fullPath, let headers, let range):
+                switch request.method {
+                case .GET:
+                    if let range = range {
+                        let (body, _) = try await self.fileIO.loadFile(path: fullPath, range: range, context: context, logger: context.logger).get()
+                        return HBResponse(status: .partialContent, headers: headers, body: body)
                     }
+
+                    let body = try await self.fileIO.loadFile(path: fullPath, context: context, logger: context.logger).get()
+                    return HBResponse(status: .ok, headers: headers, body: body)
+
+                case .HEAD:
+                    return HBResponse(status: .ok, headers: headers, body: .empty)
+
+                default:
+                    throw error
                 }
             }
         }
@@ -220,7 +217,7 @@ public struct HBFileMiddleware<Context: HBRequestContext>: HBMiddleware {
     /// Whether to return data from the file or a not modified response
     private enum FileResult {
         case notModified(HTTPHeaders)
-        case loadFile(HTTPHeaders, ClosedRange<Int>?)
+        case loadFile(String, HTTPHeaders, ClosedRange<Int>?)
     }
 }
 

@@ -41,7 +41,7 @@ import NIOCore
 /// ```
 public protocol HBMiddleware<Context>: Sendable {
     associatedtype Context: HBRequestContext
-    func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse>
+    func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse
 }
 
 struct MiddlewareResponder<Context: HBRequestContext>: HBResponder {
@@ -49,6 +49,6 @@ struct MiddlewareResponder<Context: HBRequestContext>: HBResponder {
     let next: any HBResponder<Context>
 
     func respond(to request: HBRequest, context: Context) async throws -> HBResponse {
-        return try await self.middleware.apply(to: request, context: context, next: self.next).get()
+        return try await self.middleware.apply(to: request, context: context, next: self.next)
     }
 }

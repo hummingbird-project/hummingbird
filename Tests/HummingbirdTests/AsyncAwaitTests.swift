@@ -62,27 +62,6 @@ final class AsyncAwaitTests: XCTestCase {
         }
     }
 
-    func testAsyncMiddleware() async throws {
-        struct AsyncTestMiddleware<Context: HBRequestContext>: HBAsyncMiddleware {
-            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
-                var response = try await next.respond(to: request, context: context)
-                response.headers.add(name: "async", value: "true")
-                return response
-            }
-        }
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.middlewares.add(AsyncTestMiddleware())
-        router.get("/hello") { _, _ -> String in
-            "hello"
-        }
-        let app = HBApplication(responder: router.buildResponder())
-        try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/hello", method: .GET) { response in
-                XCTAssertEqual(response.headers["async"].first, "true")
-            }
-        }
-    }
-
     func testAsyncRouteHandler() async throws {
         struct AsyncTest: HBRouteHandler {
             let name: String

@@ -37,12 +37,6 @@ public struct HBTracingMiddleware<Context: HBTracingRequestContext & HBRemoteAdd
         self.init(recordingHeaders: [])
     }
 
-    public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
-        return context.eventLoop.makeFutureWithTask {
-            try await apply(to: request, context: context, next: next)
-        }
-    }
-
     public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
         var serviceContext = context.serviceContext
         InstrumentationSystem.instrument.extract(request.headers, into: &serviceContext, using: HTTPHeadersExtractor())

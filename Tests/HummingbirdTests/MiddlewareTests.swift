@@ -19,12 +19,10 @@ import XCTest
 final class MiddlewareTests: XCTestCase {
     func testMiddleware() async throws {
         struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
-            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
-                return next.respond(to: request, context: context).map { response in
-                    var response = response
-                    response.headers.replaceOrAdd(name: "middleware", value: "TestMiddleware")
-                    return response
-                }
+            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+                var response = try await next.respond(to: request, context: context)
+                response.headers.replaceOrAdd(name: "middleware", value: "TestMiddleware")
+                return response
             }
         }
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
@@ -43,12 +41,10 @@ final class MiddlewareTests: XCTestCase {
     func testMiddlewareOrder() async throws {
         struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
             let string: String
-            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
-                return next.respond(to: request, context: context).map { response in
-                    var response = response
-                    response.headers.add(name: "middleware", value: self.string)
-                    return response
-                }
+            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+                var response = try await next.respond(to: request, context: context)
+                response.headers.add(name: "middleware", value: self.string)
+                return response
             }
         }
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
@@ -69,13 +65,11 @@ final class MiddlewareTests: XCTestCase {
 
     func testMiddlewareRunOnce() async throws {
         struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
-            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
-                return next.respond(to: request, context: context).map { response in
-                    var response = response
-                    XCTAssertNil(response.headers["alreadyRun"].first)
-                    response.headers.add(name: "alreadyRun", value: "true")
-                    return response
-                }
+            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+                var response = try await next.respond(to: request, context: context)
+                XCTAssertNil(response.headers["alreadyRun"].first)
+                response.headers.add(name: "alreadyRun", value: "true")
+                return response
             }
         }
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
@@ -92,13 +86,11 @@ final class MiddlewareTests: XCTestCase {
 
     func testMiddlewareRunWhenNoRouteFound() async throws {
         struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
-            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
-                return context.eventLoop.makeFutureWithTask {
-                    do {
-                        return try await next.respond(to: request, context: context)
-                    } catch let error as HBHTTPError where error.status == .notFound {
-                        throw HBHTTPError(.notFound, message: "Edited error")
-                    }
+            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+                do {
+                    return try await next.respond(to: request, context: context)
+                } catch let error as HBHTTPError where error.status == .notFound {
+                    throw HBHTTPError(.notFound, message: "Edited error")
                 }
             }
         }
@@ -117,9 +109,9 @@ final class MiddlewareTests: XCTestCase {
 
     func testEndpointPathInGroup() async throws {
         struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
-            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
+            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 XCTAssertNotNil(context.endpointPath)
-                return next.respond(to: request, context: context)
+                return try await next.respond(to: request, context: context)
             }
         }
         let router = HBRouterBuilder(context: HBTestRouterContext.self)

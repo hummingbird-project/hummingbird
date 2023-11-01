@@ -355,17 +355,11 @@ final class TracingTests: XCTestCase {
 
     /// And SpanMiddleware in front of tracing middleware and set serviceContext value and use
     /// EventLoopFuture version of `request.withSpan` to call next.respond
-    func testServiceContextPropagationEventLoopFuture() async throws {
+    func testServiceContextPropagationInMiddleware() async throws {
         let expectation = expectation(description: "Expected span to be ended.")
         expectation.expectedFulfillmentCount = 2
 
         struct SpanMiddleware<Context: HBTracingRequestContext>: HBMiddleware {
-            public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
-                return context.eventLoop.makeFutureWithTask {
-                    try await apply(to: request, context: context, next: next)
-                }
-            }
-
             public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 var serviceContext = context.serviceContext
                 serviceContext.testID = "testMiddleware"
@@ -440,55 +434,6 @@ extension TracingTests {
         let span2 = tracer.spans[1]
 
         XCTAssertEqual(span2.context.traceID, span.context.traceID)
-    }
-
-    /// Test serviceContext is propagated to AsyncMiddleware and any serviceContext added in AsyncMiddleware is
-    /// propagated to route code
-    func testServiceContextPropagationAsyncMiddleware() async throws {
-        struct AsyncSpanMiddleware<Context: HBTracingRequestContext>: HBAsyncMiddleware {
-            public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
-                var serviceContext = context.serviceContext
-                serviceContext.testID = "testAsyncMiddleware"
-                return try await InstrumentationSystem.legacyTracer.withAnySpan("TestSpan", context: serviceContext, ofKind: .server) { _ in
-                    try await next.respond(to: request, context: context)
-                }
-            }
-        }
-
-        let expectation = expectation(description: "Expected span to be ended.")
-        expectation.expectedFulfillmentCount = 3
-
-        let tracer = TestTracer()
-        tracer.onEndSpan = { _ in expectation.fulfill() }
-        InstrumentationSystem.bootstrapInternal(tracer)
-
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.middlewares.add(HBTracingMiddleware())
-        router.middlewares.add(AsyncSpanMiddleware())
-        router.get("/") { _, context -> HTTPResponseStatus in
-            try await Task.sleep(nanoseconds: 1000)
-            return await context.withSpan("testing", ofKind: .server) { _, _ in
-                return .ok
-            }
-        }
-        let app = HBApplication(responder: router.buildResponder())
-        try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .GET) { response in
-                XCTAssertEqual(response.status, .ok)
-            }
-        }
-
-        await self.wait(for: [expectation], timeout: 1)
-
-        XCTAssertEqual(tracer.spans.count, 3)
-        let span1 = tracer.spans[0]
-        let span2 = tracer.spans[1]
-        let span3 = tracer.spans[2]
-
-        XCTAssertEqual(span1.context.traceID, span2.context.traceID)
-        XCTAssertEqual(span2.context.traceID, span3.context.traceID)
-        XCTAssertEqual(span2.context.testID, "testAsyncMiddleware")
-        XCTAssertEqual(span3.context.testID, "testAsyncMiddleware")
     }
 }
 

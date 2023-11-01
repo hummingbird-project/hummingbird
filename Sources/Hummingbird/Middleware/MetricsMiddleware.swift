@@ -22,12 +22,6 @@ import Metrics
 public struct HBMetricsMiddleware<Context: HBRequestContext>: HBMiddleware {
     public init() {}
 
-    public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
-        context.eventLoop.makeFutureWithTask {
-            try await apply(to: request, context: context, next: next)
-        }
-    }
-
     public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
         let startTime = DispatchTime.now().uptimeNanoseconds
 

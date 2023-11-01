@@ -146,7 +146,6 @@ final class ApplicationTests: XCTestCase {
     func testQueryRoute() async throws {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.post("/query") { request, context -> ByteBuffer in
-            let buffer = context.allocator.buffer(string: request.uri.queryParameters["test"].map { String($0) } ?? "")
             return context.allocator.buffer(string: request.uri.queryParameters["test"].map { String($0) } ?? "")
         }
         let app = HBApplication(responder: router.buildResponder())
@@ -313,11 +312,10 @@ final class ApplicationTests: XCTestCase {
 
     func testCollateBody() async throws {
         struct CollateMiddleware<Context: HBRequestContext>: HBMiddleware {
-            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) -> EventLoopFuture<HBResponse> {
-                return context.collateBody(of: request).flatMap { request in
-                    context.logger.info("Buffer size: \(request.body.buffer!.readableBytes)")
-                    return next.respond(to: request, context: context)
-                }
+            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+                let request = try await context.collateBody(of: request).get()
+                context.logger.info("Buffer size: \(request.body.buffer!.readableBytes)")
+                return try await next.respond(to: request, context: context)
             }
         }
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
