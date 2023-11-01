@@ -14,6 +14,7 @@
 
 import Atomics
 import HummingbirdJobs
+import HummingbirdXCT
 import ServiceLifecycle
 import XCTest
 
@@ -45,18 +46,16 @@ final class HummingbirdJobsTests: XCTestCase {
     func testBasic() async throws {
         struct TestJob: HBJob {
             static let name = "testBasic"
-            static let expectation = XCTestExpectation(description: "Jobs Completed")
+            static let expectation = AsyncExpectation(10)
 
             let value: Int
             func execute(logger: Logger) async throws {
                 print(self.value)
                 try await Task.sleep(for: .milliseconds(Int.random(in: 10..<50)))
-                Self.expectation.fulfill()
+                await Self.expectation.fulfill()
             }
         }
         TestJob.register()
-        TestJob.expectation.expectedFulfillmentCount = 10
-
         let jobQueueHandler = HBJobQueueHandler(
             queue: HBMemoryJobQueue(),
             numWorkers: 1,
@@ -74,7 +73,7 @@ final class HummingbirdJobsTests: XCTestCase {
             try await jobQueueHandler.enqueue(TestJob(value: 9))
             try await jobQueueHandler.enqueue(TestJob(value: 10))
 
-            wait(for: [TestJob.expectation], timeout: 5)
+            try await withTimeout(timeout: .seconds(5)) { try await TestJob.expectation.wait() }
         }
     }
 
@@ -83,7 +82,7 @@ final class HummingbirdJobsTests: XCTestCase {
             static let name = "testBasic"
             static let runningJobCounter = ManagedAtomic(0)
             static let maxRunningJobCounter = ManagedAtomic(0)
-            static let expectation = XCTestExpectation(description: "Jobs Completed")
+            static let expectation = AsyncExpectation(10)
 
             let value: Int
             func execute(logger: Logger) async throws {
@@ -93,12 +92,11 @@ final class HummingbirdJobsTests: XCTestCase {
                 }
                 try await Task.sleep(for: .milliseconds(Int.random(in: 10..<50)))
                 print(self.value)
-                Self.expectation.fulfill()
+                await Self.expectation.fulfill()
                 Self.runningJobCounter.wrappingDecrement(by: 1, ordering: .relaxed)
             }
         }
         TestJob.register()
-        TestJob.expectation.expectedFulfillmentCount = 10
 
         let jobQueueHandler = HBJobQueueHandler(
             queue: HBMemoryJobQueue(),
@@ -117,7 +115,8 @@ final class HummingbirdJobsTests: XCTestCase {
             try await jobQueueHandler.enqueue(TestJob(value: 9))
             try await jobQueueHandler.enqueue(TestJob(value: 10))
 
-            wait(for: [TestJob.expectation], timeout: 5)
+            try await withTimeout(timeout: .seconds(5)) { try await TestJob.expectation.wait() }
+
             XCTAssertGreaterThan(TestJob.maxRunningJobCounter.load(ordering: .relaxed), 1)
             XCTAssertLessThanOrEqual(TestJob.maxRunningJobCounter.load(ordering: .relaxed), 4)
         }
@@ -130,14 +129,13 @@ final class HummingbirdJobsTests: XCTestCase {
         struct TestJob: HBJob {
             static let name = "testErrorRetryCount"
             static let maxRetryCount = 3
-            static let expectation = XCTestExpectation(description: "Jobs Completed")
+            static let expectation = AsyncExpectation(4)
             func execute(logger: Logger) async throws {
-                Self.expectation.fulfill()
+                await Self.expectation.fulfill()
                 throw FailedError()
             }
         }
         TestJob.register()
-        TestJob.expectation.expectedFulfillmentCount = 4
         var logger = Logger(label: "HummingbirdJobsTests")
         logger.logLevel = .trace
         let jobQueueHandler = HBJobQueueHandler(
@@ -148,7 +146,7 @@ final class HummingbirdJobsTests: XCTestCase {
         try await testJobQueue(jobQueueHandler) {
             try await jobQueueHandler.enqueue(TestJob())
 
-            wait(for: [TestJob.expectation], timeout: 5)
+            try await withTimeout(timeout: .seconds(5)) { try await TestJob.expectation.wait() }
         }
         XCTAssertEqual(failedJobCount.load(ordering: .relaxed), 1)
     }
