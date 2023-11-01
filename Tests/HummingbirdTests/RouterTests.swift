@@ -372,14 +372,11 @@ final class RouterTests: XCTestCase {
 public struct HBTestRouterContext2: HBTestRouterContextProtocol {
     public init(applicationContext: HBApplicationContext, eventLoop: EventLoop, logger: Logger) {
         self.coreContext = .init(applicationContext: applicationContext, eventLoop: eventLoop, logger: logger)
-        self.serviceContext = .topLevel
         self.string = ""
     }
 
     /// parameters
     public var coreContext: HBCoreRequestContext
-    /// ServiceContext
-    public var serviceContext: ServiceContext
     /// Connected remote host
     public var remoteAddress: SocketAddress? { nil }
 

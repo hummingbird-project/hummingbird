@@ -172,7 +172,7 @@ final class HummingbirdJobsTests: XCTestCase {
         struct TestJob: HBJob {
             static let name = "testShutdownJob"
             func execute(logger: Logger) async throws {
-                try await Task.sleep(for: .milliseconds(100))
+                try await Task.sleep(for: .milliseconds(1000))
             }
         }
         TestJob.register()

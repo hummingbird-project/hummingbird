@@ -19,7 +19,7 @@ import NIOCore
 import NIOPosix
 import Tracing
 
-public protocol HBTestRouterContextProtocol: HBTracingRequestContext {
+public protocol HBTestRouterContextProtocol: HBRequestContext {
     init(applicationContext: HBApplicationContext, eventLoop: EventLoop, logger: Logger)
 }
 
@@ -37,18 +37,13 @@ extension HBTestRouterContextProtocol {
     }
 }
 
-public struct HBTestRouterContext: HBTestRouterContextProtocol, HBRemoteAddressRequestContext {
+public struct HBTestRouterContext: HBTestRouterContextProtocol {
     public init(applicationContext: HBApplicationContext, eventLoop: EventLoop, logger: Logger) {
         self.coreContext = .init(applicationContext: applicationContext, eventLoop: eventLoop, logger: logger)
-        self.serviceContext = .topLevel
     }
 
     /// router context
     public var coreContext: HBCoreRequestContext
-    /// ServiceContext
-    public var serviceContext: ServiceContext
-    /// Connected remote host
-    public var remoteAddress: SocketAddress? { nil }
 }
 
 /// Test sending values to requests to router. This does not setup a live server
@@ -85,7 +80,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
 
         func execute(uri: String, method: HTTPMethod, headers: HTTPHeaders, body: ByteBuffer?) async throws -> HBXCTResponse {
             let response: HBResponse
-            let eventLoop = eventLoopGroup.next()
+            let eventLoop = self.eventLoopGroup.next()
 
             do {
                 let request = HBRequest(
@@ -103,30 +98,29 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                 let httpResponse = error.response(version: .http1_1, allocator: ByteBufferAllocator())
                 response = HBResponse(status: httpResponse.head.status, headers: httpResponse.head.headers, body: httpResponse.body)
             } catch {
-                response = HBResponse(status: .internalServerError)   
+                response = HBResponse(status: .internalServerError)
             }
 
-
-                let body: ByteBuffer?
-                switch response.body {
-                case .byteBuffer(let buffer):
-                    body = buffer
-                case .empty:
-                    body = nil
-                case .stream(let streamer):
-                    var colllateBuffer = ByteBuffer()
-                    streamerReadLoop:
-                        while true
-                    {
-                        switch try await streamer.read(on: eventLoop).get() {
-                        case .byteBuffer(var part):
-                            colllateBuffer.writeBuffer(&part)
-                        case .end:
-                            break streamerReadLoop
-                        }
+            let body: ByteBuffer?
+            switch response.body {
+            case .byteBuffer(let buffer):
+                body = buffer
+            case .empty:
+                body = nil
+            case .stream(let streamer):
+                var colllateBuffer = ByteBuffer()
+                streamerReadLoop:
+                    while true
+                {
+                    switch try await streamer.read(on: eventLoop).get() {
+                    case .byteBuffer(var part):
+                        colllateBuffer.writeBuffer(&part)
+                    case .end:
+                        break streamerReadLoop
                     }
-                    body = colllateBuffer
                 }
+                body = colllateBuffer
+            }
             return HBXCTResponse(status: response.status, headers: response.headers, body: body)
         }
     }

@@ -84,8 +84,6 @@ public struct HBCoreRequestContext: Sendable {
 public protocol HBRequestContext: Sendable {
     /// Core context
     var coreContext: HBCoreRequestContext { get set }
-    /// Service context
-    var serviceContext: ServiceContext { get }
     /// initialize an `HBRequestContext`
     /// - Parameters:
     ///   - applicationContext: Context coming from Application
@@ -119,9 +117,6 @@ extension HBRequestContext {
     /// Parameters extracted from URI
     @inlinable
     public var parameters: HBParameters { coreContext.parameters }
-    /// default service context
-    @inlinable
-    public var serviceContext: ServiceContext { .topLevel }
     /// Request ID, extracted from Logger
     @inlinable
     public var id: String { self.logger[metadataKey: "hb_id"]!.description }
@@ -184,18 +179,10 @@ public protocol HBRemoteAddressRequestContext: HBRequestContext {
     var remoteAddress: SocketAddress? { get }
 }
 
-/// Protocol for request context that supports tracing
-public protocol HBTracingRequestContext: HBRequestContext {
-    /// service context
-    var serviceContext: ServiceContext { get set }
-}
-
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
-public struct HBBasicRequestContext: HBRequestContext, HBRemoteAddressRequestContext, HBTracingRequestContext {
+public struct HBBasicRequestContext: HBRequestContext, HBRemoteAddressRequestContext {
     /// core context
     public var coreContext: HBCoreRequestContext
-    /// ServiceContext
-    public var serviceContext: ServiceContext
     /// Channel context
     let channel: Channel
     /// Connected host address
@@ -212,6 +199,5 @@ public struct HBBasicRequestContext: HBRequestContext, HBRemoteAddressRequestCon
     ) {
         self.coreContext = .init(applicationContext: applicationContext, channel: channel, logger: logger)
         self.channel = channel
-        self.serviceContext = .topLevel
     }
 }

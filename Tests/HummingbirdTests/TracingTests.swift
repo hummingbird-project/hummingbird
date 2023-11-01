@@ -293,10 +293,10 @@ final class TracingTests: XCTestCase {
 
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.middlewares.add(HBTracingMiddleware())
-        router.get("/") { _, context -> HTTPResponseStatus in
-            var serviceContext = context.serviceContext
+        router.get("/") { _, _ -> HTTPResponseStatus in
+            var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
             serviceContext.testID = "test"
-            let span = InstrumentationSystem.legacyTracer.startAnySpan("testing", context: serviceContext, ofKind: .server)
+            let span = InstrumentationSystem.tracer.startSpan("testing", context: serviceContext, ofKind: .server)
             span.end()
             return .ok
         }
@@ -327,10 +327,10 @@ final class TracingTests: XCTestCase {
 
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.middlewares.add(HBTracingMiddleware())
-        router.get("/") { _, context -> HTTPResponseStatus in
-            var serviceContext = context.serviceContext
+        router.get("/") { _, _ -> HTTPResponseStatus in
+            var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
             serviceContext.testID = "test"
-            return await context.withSpan("TestSpan", serviceContext: serviceContext, ofKind: .client) { _, span in
+            return InstrumentationSystem.tracer.withSpan("TestSpan", context: serviceContext, ofKind: .client) { span in
                 span.attributes["test-attribute"] = 42
                 return .ok
             }
@@ -359,12 +359,12 @@ final class TracingTests: XCTestCase {
         let expectation = expectation(description: "Expected span to be ended.")
         expectation.expectedFulfillmentCount = 2
 
-        struct SpanMiddleware<Context: HBTracingRequestContext>: HBMiddleware {
+        struct SpanMiddleware<Context: HBRequestContext>: HBMiddleware {
             public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
-                var serviceContext = context.serviceContext
+                var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
                 serviceContext.testID = "testMiddleware"
 
-                return try await context.withSpan("TestSpan", serviceContext: serviceContext, ofKind: .server) { context, _ in
+                return try await InstrumentationSystem.tracer.withSpan("TestSpan", context: serviceContext, ofKind: .server) { _ in
                     try await next.respond(to: request, context: context)
                 }
             }
@@ -379,7 +379,7 @@ final class TracingTests: XCTestCase {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.middlewares.add(SpanMiddleware())
         router.middlewares.add(HBTracingMiddleware())
-        router.get("/") { _, context -> HTTPResponseStatus in
+        router.get("/") { _, _ -> HTTPResponseStatus in
             try await Task.sleep(for: .milliseconds(2))
             return .ok
         }

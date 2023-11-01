@@ -26,15 +26,13 @@ public protocol HBResponder<Context>: Sendable {
 
 /// Responder that calls supplied closure
 public struct HBCallbackResponder<Context: HBRequestContext>: HBResponder {
-    let callback: @Sendable (HBRequest, Context ) async throws -> HBResponse
+    let callback: @Sendable (HBRequest, Context) async throws -> HBResponse
 
     public init(callback: @escaping @Sendable (HBRequest, Context) async throws -> HBResponse) {
         self.callback = callback
     }
 
     public func respond(to request: HBRequest, context: Context) async throws -> HBResponse {
-        return try await ServiceContext.$current.withValue(context.serviceContext) {
-            try await self.callback(request, context)
-        }
+        try await self.callback(request, context)
     }
 }
