@@ -12,61 +12,43 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if os(Linux)
-import Glibc
-#else
-import Darwin.C
-#endif
+import AsyncAlgorithms
+import Atomics
 import NIOCore
 
 /// In memory driver for persist system for storing persistent cross request key/value pairs
-public final class HBMemoryPersistDriver: HBPersistDriver {
-    public init(eventLoopGroupProvider: EventLoopGroupProvider = .singleton) {
-        let eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
-        self.eventLoop = eventLoopGroup.next()
+public actor HBMemoryPersistDriver<C: Clock>: HBPersistDriver where C.Duration == Duration {
+    public init(_ clock: C = .suspending) {
         self.values = [:]
-        self.task = self.eventLoop.scheduleRepeatedTask(initialDelay: .hours(1), delay: .hours(1)) { _ in
-            self.tidy()
-        }
+        self.clock = clock
     }
 
-    public func shutdown() {
-        self.task?.cancel()
+    public func create<Object: Codable>(key: String, value: Object, expires: Duration?) async throws {
+        guard self.values[key] == nil else { throw HBPersistError.duplicate }
+        self.values[key] = .init(value: value, expires: expires.map { self.clock.now.advanced(by: $0) })
     }
 
-    public func create<Object: Codable>(key: String, value: Object, expires: TimeAmount?, request: HBRequest) -> EventLoopFuture<Void> {
-        return self.eventLoop.submit {
-            guard self.values[key] == nil else { throw HBPersistError.duplicate }
-            self.values[key] = .init(value: value, expires: expires)
-        }
+    public func set<Object: Codable>(key: String, value: Object, expires: Duration?) async throws {
+        self.values[key] = .init(value: value, expires: expires.map { self.clock.now.advanced(by: $0) })
     }
 
-    public func set<Object: Codable>(key: String, value: Object, expires: TimeAmount?, request: HBRequest) -> EventLoopFuture<Void> {
-        return self.eventLoop.submit {
-            self.values[key] = .init(value: value, expires: expires)
-        }
+    public func get<Object: Codable>(key: String, as: Object.Type) async throws -> Object? {
+        guard let item = self.values[key] else { return nil }
+        guard let expires = item.expires else { return item.value as? Object }
+        guard self.clock.now <= expires else { return nil }
+        return item.value as? Object
     }
 
-    public func get<Object: Codable>(key: String, as: Object.Type, request: HBRequest) -> EventLoopFuture<Object?> {
-        return self.eventLoop.submit {
-            guard let item = self.values[key] else { return nil }
-            guard let expires = item.epochExpires else { return item.value as? Object }
-            guard Item.getEpochTime() <= expires else { return nil }
-            return item.value as? Object
-        }
+    public func remove(key: String) async throws {
+        self.values[key] = nil
     }
 
-    public func remove(key: String, request: HBRequest) -> EventLoopFuture<Void> {
-        return self.eventLoop.submit {
-            self.values[key] = nil
-        }
-    }
-
+    /// Delete any values that have expired
     private func tidy() {
-        let currentTime = Item.getEpochTime()
+        let now = self.clock.now
         self.values = self.values.compactMapValues {
-            if let expires = $0.epochExpires {
-                if expires > currentTime {
+            if let expires = $0.expires {
+                if expires > now {
                     return nil
                 }
             }
@@ -77,26 +59,24 @@ public final class HBMemoryPersistDriver: HBPersistDriver {
     struct Item {
         /// value stored
         let value: Codable
-        /// epoch time for when item expires
-        let epochExpires: Int?
+        /// time when item expires
+        let expires: C.Instant?
 
-        init(value: Codable, expires: TimeAmount?) {
+        init(value: Codable, expires: C.Instant?) {
             self.value = value
-            self.epochExpires = expires.map { Self.getEpochTime() + Int($0.nanoseconds / 1_000_000_000) }
-        }
-
-        static func getEpochTime() -> Int {
-            var timeVal = timeval.init()
-            gettimeofday(&timeVal, nil)
-            return timeVal.tv_sec
+            self.expires = expires
         }
     }
 
-    let eventLoop: EventLoop
-    var values: [String: Item]
-    var task: RepeatedTask?
-}
+    public func run() async throws {
+        let cancelled = ManagedAtomic(false)
+        let timerSequence = AsyncTimerSequence(interval: .seconds(600), clock: .suspending)
+            .cancelOnGracefulShutdown()
+        for try await _ in timerSequence {
+            self.tidy()
+        }
+    }
 
-// We are able to conform HBMemoryPersistDriver to `@unchecked Sendable` as the value dictionary
-// is only ever access on the one event loop and the task is only set in the `init`
-extension HBMemoryPersistDriver: @unchecked Sendable {}
+    var values: [String: Item]
+    let clock: C
+}
