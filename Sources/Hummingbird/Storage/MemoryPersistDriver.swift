@@ -59,7 +59,7 @@ public actor HBMemoryPersistDriver<C: Clock>: HBPersistDriver where C.Duration =
     struct Item {
         /// value stored
         let value: Codable
-        /// epoch time for when item expires
+        /// time when item expires
         let expires: C.Instant?
 
         init(value: Codable, expires: C.Instant?) {
