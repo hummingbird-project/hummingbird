@@ -313,7 +313,7 @@ final class ApplicationTests: XCTestCase {
     func testCollateBody() async throws {
         struct CollateMiddleware<Context: HBRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
-                let request = try await context.collateBody(of: request).get()
+                let request = try await context.collateBody(of: request)
                 context.logger.info("Buffer size: \(request.body.buffer!.readableBytes)")
                 return try await next.respond(to: request, context: context)
             }
