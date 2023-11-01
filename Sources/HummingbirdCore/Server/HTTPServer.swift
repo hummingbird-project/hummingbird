@@ -202,7 +202,9 @@ public actor HBHTTPServer {
         )
         let additionalChannelHandlers = self.additionalChannelHandlers
         @Sendable func childChannelInitializer(channel: Channel) -> EventLoopFuture<Void> {
-            let childHandlers = additionalChannelHandlers() + [HBHTTPServerHandler(responder: responder, configuration: handlerConfiguration)]
+            let childHandlers = additionalChannelHandlers() + [
+                HBHTTPServerHandler(responder: responder, configuration: handlerConfiguration, logger: self.logger),
+            ]
             return httpChannelInitializer.initialize(channel: channel, childHandlers: childHandlers, configuration: self.configuration)
         }
 

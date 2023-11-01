@@ -29,33 +29,23 @@ extension HBApplication {
         ///   - request: request
         ///   - context: context from ChannelHandler
         /// - Returns: response
-        public func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
+        func respond(to request: HBHTTPRequest, channel: Channel) async throws -> HBHTTPResponse {
             let request = HBRequest(
                 head: request.head,
                 body: request.body
             )
             let context = Responder.Context(
                 applicationContext: self.applicationContext,
-                channel: context.channel,
+                channel: channel,
                 logger: loggerWithRequestId(self.applicationContext.logger)
             )
             let httpVersion = request.version
-            
-            // respond to request
-            context.eventLoop.makeFutureWithTask {
-                try await self.responder.respond(to: request, context: context)   
-            }.whenComplete { result in
-                switch result {
-                case .success(let response):
-                    var response = response
-                    response.headers.add(name: "Date", value: self.dateCache.date)
-                    let responseHead = HTTPResponseHead(version: httpVersion, status: response.status, headers: response.headers)
-                    onComplete(.success(HBHTTPResponse(head: responseHead, body: response.body)))
 
-                case .failure(let error):
-                    return onComplete(.failure(error))
-                }
-            }
+            // respond to request
+            var response = try await self.responder.respond(to: request, context: context)
+            response.headers.add(name: "Date", value: self.dateCache.date)
+            let responseHead = HTTPResponseHead(version: httpVersion, status: response.status, headers: response.headers)
+            return HBHTTPResponse(head: responseHead, body: response.body)
         }
     }
 
