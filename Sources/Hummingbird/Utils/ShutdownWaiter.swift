@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import ServiceLifecycle
+
 actor ShutdownWaiter {
     private var taskContinuation: CheckedContinuation<Void, Never>?
 

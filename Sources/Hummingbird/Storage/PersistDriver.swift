@@ -71,26 +71,3 @@ extension HBPersistDriver {
         await ShutdownWaiter().wait()
     }
 }
-
-actor ShutdownWaiter {
-    private var taskContinuation: CheckedContinuation<Void, Never>?
-
-    init() {}
-
-    func wait() async {
-        await withGracefulShutdownHandler {
-            await withCheckedContinuation { continuation in
-                self.taskContinuation = continuation
-            }
-        } onGracefulShutdown: {
-            Task {
-                await self.stop()
-            }
-        }
-    }
-
-    private func stop() {
-        self.taskContinuation?.resume()
-        self.taskContinuation = nil
-    }
-}

@@ -12,11 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if os(Linux)
-import Glibc
-#else
-import Darwin.C
-#endif
+import AsyncAlgorithms
+import Atomics
 import NIOCore
 
 /// In memory driver for persist system for storing persistent cross request key/value pairs
@@ -46,16 +43,17 @@ public actor HBMemoryPersistDriver<C: Clock>: HBPersistDriver where C.Duration =
         self.values[key] = nil
     }
 
+    /// Delete any values that have expired
     private func tidy() {
-        /*        let currentTime = Item.getEpochTime()
-         self.values = self.values.compactMapValues {
-             if let expires = $0.epochExpires {
-                 if expires > currentTime {
-                     return nil
-                 }
-             }
-             return $0
-         }*/
+        let now = self.clock.now
+        self.values = self.values.compactMapValues {
+            if let expires = $0.expires {
+                if expires > now {
+                    return nil
+                }
+            }
+            return $0
+        }
     }
 
     struct Item {
@@ -67,6 +65,15 @@ public actor HBMemoryPersistDriver<C: Clock>: HBPersistDriver where C.Duration =
         init(value: Codable, expires: C.Instant?) {
             self.value = value
             self.expires = expires
+        }
+    }
+
+    public func run() async throws {
+        let cancelled = ManagedAtomic(false)
+        let timerSequence = AsyncTimerSequence(interval: .seconds(600), clock: .suspending)
+            .cancelOnGracefulShutdown()
+        for try await _ in timerSequence {
+            self.tidy()
         }
     }
 
