@@ -25,7 +25,6 @@ public protocol HBPersistDriver: Service {
     ///   - key: Key to store value against
     ///   - value: Codable value to store
     ///   - expires: If non-nil defines time that value will expire
-    ///   - request: Request making this call
     func create<Object: Codable>(key: String, value: Object, expires: Duration?) async throws
 
     /// set value for key. If value already exists overwrite it
@@ -33,21 +32,18 @@ public protocol HBPersistDriver: Service {
     ///   - key: Key to store value against
     ///   - value: Codable value to store
     ///   - expires: If non-nil defines time that value will expire
-    ///   - request: Request making this call
     func set<Object: Codable>(key: String, value: Object, expires: Duration?) async throws
 
     /// get value for key
     /// - Parameters:
     ///   - key: Key used to look for value
     ///   - as: Type you want value to be returned as. If it cannot be returned as this value then nil will be returned
-    ///   - request: Request making this call
     func get<Object: Codable>(key: String, as: Object.Type) async throws -> Object?
 
     /// remove value associated with key
     /// - Parameters:
     ///   - key: Key used to look for value
-    ///   - request: Request making this call
-    func remove(key: String, request: HBRequest) async throws
+    func remove(key: String) async throws
 }
 
 extension HBPersistDriver {
@@ -58,7 +54,6 @@ extension HBPersistDriver {
     /// - Parameters:
     ///   - key: Key to store value against
     ///   - value: Codable value to store
-    ///   - request: Request making this call
     func create<Object: Codable>(key: String, value: Object) async throws {
         try await self.create(key: key, value: value, expires: nil)
     }
@@ -68,7 +63,6 @@ extension HBPersistDriver {
     ///   - key: Key to store value against
     ///   - value: Codable value to store
     ///   - expires: If non-nil defines time that value will expire
-    ///   - request: Request making this call
     func set<Object: Codable>(key: String, value: Object) async throws {
         try await self.set(key: key, value: value, expires: nil)
     }

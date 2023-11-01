@@ -42,7 +42,7 @@ public actor HBMemoryPersistDriver<C: Clock>: HBPersistDriver where C.Duration =
         return item.value as? Object
     }
 
-    public func remove(key: String, request: HBRequest) async throws {
+    public func remove(key: String) async throws {
         self.values[key] = nil
     }
 
