@@ -16,15 +16,13 @@ import HummingbirdCore
 import NIOHTTP1
 
 /// Holds all the required to generate a HTTP Response
-public struct HBResponse: Sendable, HBSendableExtensible {
+public struct HBResponse: Sendable {
     /// response status
     public var status: HTTPResponseStatus
     /// response headers
     public var headers: HTTPHeaders
     /// response body
     public var body: HBResponseBody
-    /// Response extensions
-    public var extensions: HBSendableExtensions<HBResponse>
 
     /// Create an `HBResponse`
     ///
@@ -36,7 +34,6 @@ public struct HBResponse: Sendable, HBSendableExtensible {
         self.status = status
         self.headers = headers
         self.body = body
-        self.extensions = .init()
     }
 }
 
