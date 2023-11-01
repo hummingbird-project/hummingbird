@@ -21,7 +21,7 @@ import Tracing
 /// You may opt in to recording a specific subset of HTTP request/response header values by passing
 /// a set of header names to ``init(recordingHeaders:)``.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-public struct HBTracingMiddleware<Context: HBTracingRequestContext & HBRemoteAddressRequestContext>: HBMiddleware {
+public struct HBTracingMiddleware<Context: HBRequestContext>: HBMiddleware {
     private let headerNamesToRecord: Set<RecordingHeader>
 
     /// Intialize a new HBTracingMiddleware.
@@ -38,7 +38,7 @@ public struct HBTracingMiddleware<Context: HBTracingRequestContext & HBRemoteAdd
     }
 
     public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
-        var serviceContext = context.serviceContext
+        var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
         InstrumentationSystem.instrument.extract(request.headers, into: &serviceContext, using: HTTPHeadersExtractor())
 
         let operationName: String = {
@@ -48,7 +48,7 @@ public struct HBTracingMiddleware<Context: HBTracingRequestContext & HBRemoteAdd
             return endpointPath
         }()
 
-        return try await context.withSpan(operationName, serviceContext: serviceContext, ofKind: .server) { context, span in
+        return try await InstrumentationSystem.tracer.withSpan(operationName, context: serviceContext, ofKind: .server) { span in
             span.updateAttributes { attributes in
                 attributes["http.method"] = request.method.rawValue
                 attributes["http.target"] = request.uri.path
@@ -60,7 +60,7 @@ public struct HBTracingMiddleware<Context: HBTracingRequestContext & HBRemoteAdd
                 attributes["net.host.name"] = context.applicationContext.configuration.address.host
                 attributes["net.host.port"] = context.applicationContext.configuration.address.port
 
-                if let remoteAddress = context.remoteAddress {
+                if let remoteAddress = (context as? HBRemoteAddressRequestContext)?.remoteAddress {
                     attributes["net.sock.peer.port"] = remoteAddress.port
 
                     switch remoteAddress.protocol {
