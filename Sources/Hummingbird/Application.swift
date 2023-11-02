@@ -20,6 +20,7 @@ import NIOHTTP1
 import NIOPosix
 import NIOTransportServices
 import ServiceLifecycle
+import UnixSignals
 
 /// Where should the application get its EventLoopGroup from
 public enum EventLoopGroupProvider {
@@ -104,6 +105,8 @@ public struct HBApplication<Responder: HBResponder> {
     public var onServerRunning: @Sendable (Channel) async -> Void
     /// additional channel handlers
     var additionalChannelHandlers: [@Sendable () -> any RemovableChannelHandler]
+    /// services attached to the application.
+    var services: [any Service]
 
     // MARK: Initialization
 
@@ -137,17 +140,24 @@ public struct HBApplication<Responder: HBResponder> {
 
         self.eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
         self.threadPool = threadPool
+        self.services = []
     }
 
     // MARK: Methods
 
+    ///  Add service to be managed by application ServiceGroup
+    /// - Parameter service: service to be added
+    public mutating func addService(_ service: any Service) {
+        self.services.append(service)
+    }
+
     /// Helper function that runs application inside a ServiceGroup which will gracefully
     /// shutdown on signals SIGINT, SIGTERM
-    public func runService() async throws {
+    public func runService(gracefulShutdownSignals: [UnixSignal] = [.sigterm, .sigint]) async throws {
         let serviceGroup = ServiceGroup(
             configuration: .init(
                 services: [self],
-                gracefulShutdownSignals: [.sigterm, .sigint],
+                gracefulShutdownSignals: gracefulShutdownSignals,
                 logger: self.logger
             )
         )
@@ -180,7 +190,7 @@ extension HBApplication: Service {
             logger: self.logger
         )
         try await withGracefulShutdownHandler {
-            let services: [any Service] = [server, dateCache]
+            let services: [any Service] = [server, dateCache] + self.services
             let serviceGroup = ServiceGroup(
                 configuration: .init(services: services, logger: self.logger)
             )
