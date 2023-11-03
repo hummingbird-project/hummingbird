@@ -70,7 +70,7 @@ final class AsyncAwaitTests: XCTestCase {
             }
 
             func handle(request: HBRequest, context: HBRequestContext) async throws -> String {
-                return try await context.success("Hello \(self.name)").get()
+                return "Hello \(self.name)"
             }
         }
         let router = HBRouterBuilder(context: HBTestRouterContext.self)

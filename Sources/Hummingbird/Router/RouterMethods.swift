@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -44,7 +44,7 @@ public protocol HBRouterMethods {
 }
 
 extension HBRouterMethods {
-        /// GET path for async closure returning type conforming to ResponseEncodable
+    /// GET path for async closure returning type conforming to ResponseEncodable
     @discardableResult public func get<Output: HBResponseGenerator>(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
@@ -118,9 +118,8 @@ extension HBRouterMethods {
                     return try await _respond(request: request, context: context)
                 } else {
                     let buffer = try await request.body.consumeBody(
-                        maxSize: context.applicationContext.configuration.maxUploadSize,
-                        on: context.eventLoop
-                    ).get()
+                        maxSize: context.applicationContext.configuration.maxUploadSize
+                    )
                     var request = request
                     request.body = .byteBuffer(buffer)
                     return try await _respond(request: request, context: context)
