@@ -56,22 +56,23 @@ final class HummingbirdJobsTests: XCTestCase {
             }
         }
         TestJob.register()
+        let jobQueue = HBMemoryJobQueue()
         let jobQueueHandler = HBJobQueueHandler(
-            queue: HBMemoryJobQueue(),
+            queue: jobQueue,
             numWorkers: 1,
             logger: Logger(label: "HummingbirdJobsTests")
         )
         try await testJobQueue(jobQueueHandler) {
-            try await jobQueueHandler.enqueue(TestJob(value: 1))
-            try await jobQueueHandler.enqueue(TestJob(value: 2))
-            try await jobQueueHandler.enqueue(TestJob(value: 3))
-            try await jobQueueHandler.enqueue(TestJob(value: 4))
-            try await jobQueueHandler.enqueue(TestJob(value: 5))
-            try await jobQueueHandler.enqueue(TestJob(value: 6))
-            try await jobQueueHandler.enqueue(TestJob(value: 7))
-            try await jobQueueHandler.enqueue(TestJob(value: 8))
-            try await jobQueueHandler.enqueue(TestJob(value: 9))
-            try await jobQueueHandler.enqueue(TestJob(value: 10))
+            try await jobQueue.push(TestJob(value: 1))
+            try await jobQueue.push(TestJob(value: 2))
+            try await jobQueue.push(TestJob(value: 3))
+            try await jobQueue.push(TestJob(value: 4))
+            try await jobQueue.push(TestJob(value: 5))
+            try await jobQueue.push(TestJob(value: 6))
+            try await jobQueue.push(TestJob(value: 7))
+            try await jobQueue.push(TestJob(value: 8))
+            try await jobQueue.push(TestJob(value: 9))
+            try await jobQueue.push(TestJob(value: 10))
 
             try await withTimeout(timeout: .seconds(5)) { try await TestJob.expectation.wait() }
         }
@@ -98,22 +99,23 @@ final class HummingbirdJobsTests: XCTestCase {
         }
         TestJob.register()
 
+        let jobQueue = HBMemoryJobQueue()
         let jobQueueHandler = HBJobQueueHandler(
-            queue: HBMemoryJobQueue(),
+            queue: jobQueue,
             numWorkers: 4,
             logger: Logger(label: "HummingbirdJobsTests")
         )
         try await testJobQueue(jobQueueHandler) {
-            try await jobQueueHandler.enqueue(TestJob(value: 1))
-            try await jobQueueHandler.enqueue(TestJob(value: 2))
-            try await jobQueueHandler.enqueue(TestJob(value: 3))
-            try await jobQueueHandler.enqueue(TestJob(value: 4))
-            try await jobQueueHandler.enqueue(TestJob(value: 5))
-            try await jobQueueHandler.enqueue(TestJob(value: 6))
-            try await jobQueueHandler.enqueue(TestJob(value: 7))
-            try await jobQueueHandler.enqueue(TestJob(value: 8))
-            try await jobQueueHandler.enqueue(TestJob(value: 9))
-            try await jobQueueHandler.enqueue(TestJob(value: 10))
+            try await jobQueue.push(TestJob(value: 1))
+            try await jobQueue.push(TestJob(value: 2))
+            try await jobQueue.push(TestJob(value: 3))
+            try await jobQueue.push(TestJob(value: 4))
+            try await jobQueue.push(TestJob(value: 5))
+            try await jobQueue.push(TestJob(value: 6))
+            try await jobQueue.push(TestJob(value: 7))
+            try await jobQueue.push(TestJob(value: 8))
+            try await jobQueue.push(TestJob(value: 9))
+            try await jobQueue.push(TestJob(value: 10))
 
             try await withTimeout(timeout: .seconds(5)) { try await TestJob.expectation.wait() }
 
@@ -138,13 +140,14 @@ final class HummingbirdJobsTests: XCTestCase {
         TestJob.register()
         var logger = Logger(label: "HummingbirdJobsTests")
         logger.logLevel = .trace
+        let jobQueue = HBMemoryJobQueue { _, _ in failedJobCount.wrappingIncrement(by: 1, ordering: .relaxed) }
         let jobQueueHandler = HBJobQueueHandler(
-            queue: HBMemoryJobQueue { _, _ in failedJobCount.wrappingIncrement(by: 1, ordering: .relaxed) },
+            queue: jobQueue,
             numWorkers: 4,
             logger: logger
         )
         try await testJobQueue(jobQueueHandler) {
-            try await jobQueueHandler.enqueue(TestJob())
+            try await jobQueue.push(TestJob())
 
             try await withTimeout(timeout: .seconds(5)) { try await TestJob.expectation.wait() }
         }
@@ -180,17 +183,18 @@ final class HummingbirdJobsTests: XCTestCase {
         let cancelledJobCount = ManagedAtomic(0)
         var logger = Logger(label: "HummingbirdJobsTests")
         logger.logLevel = .trace
+        let jobQueue = HBMemoryJobQueue { _, error in
+            if error is CancellationError {
+                cancelledJobCount.wrappingIncrement(by: 1, ordering: .relaxed)
+            }
+        }
         let jobQueueHandler = HBJobQueueHandler(
-            queue: HBMemoryJobQueue { _, error in
-                if error is CancellationError {
-                    cancelledJobCount.wrappingIncrement(by: 1, ordering: .relaxed)
-                }
-            },
+            queue: jobQueue,
             numWorkers: 4,
             logger: logger
         )
         try await testJobQueue(jobQueueHandler) {
-            try await jobQueueHandler.enqueue(TestJob())
+            try await jobQueue.push(TestJob())
             try await TestJob.expectation.wait()
         }
 
@@ -213,14 +217,15 @@ final class HummingbirdJobsTests: XCTestCase {
         }
         TestJob2.register()
 
+        let jobQueue = HBMemoryJobQueue()
         let jobQueueHandler = HBJobQueueHandler(
-            queue: HBMemoryJobQueue(),
+            queue: jobQueue,
             numWorkers: 1,
             logger: Logger(label: "HummingbirdJobsTests")
         )
         try await testJobQueue(jobQueueHandler) {
-            try await jobQueueHandler.enqueue(TestJob1())
-            try await jobQueueHandler.enqueue(TestJob2(value: "test"))
+            try await jobQueue.push(TestJob1())
+            try await jobQueue.push(TestJob2(value: "test"))
             // stall to give job chance to start running
             try await Task.sleep(for: .milliseconds(500))
         }

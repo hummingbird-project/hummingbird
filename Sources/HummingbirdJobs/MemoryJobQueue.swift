@@ -44,7 +44,7 @@ public final class HBMemoryJobQueue: HBJobQueue {
     ///   - job: Job
     ///   - eventLoop: Eventloop to run process on (ignored in this case)
     /// - Returns: Queued job
-    public func push(_ job: HBJob) async throws -> JobIdentifier {
+    @discardableResult public func push(_ job: HBJob) async throws -> JobIdentifier {
         try await self.queue.push(job)
     }
 

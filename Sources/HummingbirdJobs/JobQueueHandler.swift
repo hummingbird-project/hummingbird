@@ -25,13 +25,9 @@ public final class HBJobQueueHandler<Queue: HBJobQueue>: Service {
         self.logger = logger
     }
 
-    /// Push Job onto queue
-    /// - Returns: Queued job information
-    @discardableResult public func enqueue(_ job: HBJob) async throws -> JobIdentifier {
-        try await self.queue.push(job)
-    }
-
     public func run() async throws {
+        try await self.queue.onInit()
+
         try await withGracefulShutdownHandler {
             try await withThrowingTaskGroup(of: Void.self) { group in
                 var iterator = self.queue.makeAsyncIterator()
