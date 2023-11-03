@@ -31,6 +31,9 @@ public func withTimeout<T>(timeout: Duration, _ process: @escaping @Sendable () 
             try await Task.sleep(for: timeout)
             throw TimeoutError()
         }
+        defer {
+            group.cancelAll()
+        }
         return try await group.next()!
     }
 }
