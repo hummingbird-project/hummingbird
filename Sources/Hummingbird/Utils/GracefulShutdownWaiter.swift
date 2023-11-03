@@ -17,9 +17,9 @@ import ServiceLifecycle
 public actor GracefulShutdownWaiter {
     private var taskContinuation: CheckedContinuation<Void, Never>?
 
-    init() {}
+    public init() {}
 
-    func wait() async {
+    public func wait() async {
         await withGracefulShutdownHandler {
             await withCheckedContinuation { continuation in
                 self.taskContinuation = continuation
