@@ -46,29 +46,10 @@ import NIOCore
 /// try server.start(responder: HelloResponder()).wait()
 /// ```
 public protocol HBHTTPResponder {
-    /// Called when HTTP server handler is added to channel
-    func handlerAdded(context: ChannelHandlerContext)
-
-    /// Called when HTTP server handler is removed from channel
-    func handlerRemoved(context: ChannelHandlerContext)
-
     /// Passes request to be responded to and function to call when response is ready. It is required your implementation
     /// calls `onComplete` otherwise the server will never receive a response
     /// - Parameters:
     ///   - request: HTTP request
     ///   - context: ChannelHandlerContext from channel that request was served on.
-    func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void)
-
-    /// Logger used by responder
-    var logger: Logger { get }
-}
-
-extension HBHTTPResponder {
-    public func handlerAdded(context: ChannelHandlerContext) {}
-    public func handlerRemoved(context: ChannelHandlerContext) {}
-    public var logger: Logger { HBNoLog.logger }
-}
-
-private enum HBNoLog {
-    static let logger = Logger(label: "no-log", factory: { _ in SwiftLogNoOpLogHandler() })
+    func respond(to request: HBHTTPRequest, channel: Channel) async throws -> HBHTTPResponse
 }

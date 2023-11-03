@@ -11,11 +11,10 @@ public enum TestErrors: Error {
 
 /// Basic responder that just returns "Hello" in body
 public struct HelloResponder: HBHTTPResponder {
-    public func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
+    public func respond(to request: HBHTTPRequest, channel: Channel) async throws -> HBHTTPResponse {
         let responseHead = HTTPResponseHead(version: .init(major: 1, minor: 1), status: .ok)
-        let responseBody = context.channel.allocator.buffer(string: "Hello")
-        let response = HBHTTPResponse(head: responseHead, body: .byteBuffer(responseBody))
-        onComplete(.success(response))
+        let responseBody = channel.allocator.buffer(string: "Hello")
+        return HBHTTPResponse(head: responseHead, body: .byteBuffer(responseBody))
     }
 }
 

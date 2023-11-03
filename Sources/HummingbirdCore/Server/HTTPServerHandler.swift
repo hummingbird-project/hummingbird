@@ -41,6 +41,7 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
     }
 
     let responder: HBHTTPResponder
+    let logger: Logger
     let configuration: Configuration
     var requestsInProgress: Int
     var closeAfterResponseWritten: Bool
@@ -49,21 +50,14 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
     /// handler state
     var state: State
 
-    init(responder: HBHTTPResponder, configuration: Configuration) {
+    init(responder: HBHTTPResponder, configuration: Configuration, logger: Logger) {
         self.responder = responder
         self.configuration = configuration
         self.requestsInProgress = 0
         self.closeAfterResponseWritten = false
         self.propagatedError = nil
         self.state = .idle
-    }
-
-    func handlerAdded(context: ChannelHandlerContext) {
-        self.responder.handlerAdded(context: context)
-    }
-
-    func handlerRemoved(context: ChannelHandlerContext) {
-        self.responder.handlerRemoved(context: context)
+        self.logger = logger
     }
 
     /// Read HTTP parts and convert into HBHTTPRequest and send to `readRequest`
@@ -143,7 +137,12 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
         self.requestsInProgress += 1
 
         // respond to request
-        self.responder.respond(to: request, context: context) { result in
+        let promise = context.eventLoop.makePromise(of: HBHTTPResponse.self)
+        let channel = context.channel
+        promise.completeWithTask {
+            try await self.responder.respond(to: request, channel: channel)
+        }
+        promise.futureResult.whenComplete { result in
             // should we keep the channel open after responding.
             var response: HBHTTPResponse
             switch result {
@@ -192,11 +191,11 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
         switch error {
         case let httpError as HBHTTPResponseError:
             // this is a processed error so don't log as Error
-            self.responder.logger.debug("Error: \(error)")
+            self.logger.trace("Error: \(error)")
             return httpError.response(version: version, allocator: context.channel.allocator)
         default:
             // this error has not been recognised
-            self.responder.logger.info("Error: \(error)")
+            self.logger.trace("Error: \(error)")
             return HBHTTPResponse(
                 head: .init(version: version, status: .internalServerError),
                 body: .empty
@@ -270,19 +269,19 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
             // close the connection
             if case .idle = self.state {
             } else {
-                self.responder.logger.trace("Idle read timeout, so close channel")
+                self.logger.trace("Idle read timeout, so close channel")
                 self.close(context: context)
             }
 
         case let evt as IdleStateHandler.IdleStateEvent where evt == .write:
             // if we get an idle write event and are not currently processing a request
             if self.requestsInProgress == 0 {
-                self.responder.logger.trace("Idle write timeout, so close channel")
+                self.logger.trace("Idle write timeout, so close channel")
                 self.close(context: context)
             }
 
         default:
-            self.responder.logger.debug("Unhandled event \(event)")
+            self.logger.trace("Unhandled event \(event)")
             context.fireUserInboundEventTriggered(event)
         }
     }
