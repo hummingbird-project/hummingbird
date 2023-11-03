@@ -14,7 +14,7 @@
 
 import ServiceLifecycle
 
-actor ShutdownWaiter {
+public actor GracefulShutdownWaiter {
     private var taskContinuation: CheckedContinuation<Void, Never>?
 
     init() {}

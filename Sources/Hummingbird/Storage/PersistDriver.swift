@@ -68,7 +68,7 @@ extension HBPersistDriver {
     }
 
     public func run() async throws {
-        await ShutdownWaiter().wait()
+        await GracefulShutdownWaiter().wait()
         try await self.shutdown()
     }
 }
