@@ -69,7 +69,6 @@ public actor HBMemoryPersistDriver<C: Clock>: HBPersistDriver where C.Duration =
     }
 
     public func run() async throws {
-        let cancelled = ManagedAtomic(false)
         let timerSequence = AsyncTimerSequence(interval: .seconds(600), clock: .suspending)
             .cancelOnGracefulShutdown()
         for try await _ in timerSequence {
