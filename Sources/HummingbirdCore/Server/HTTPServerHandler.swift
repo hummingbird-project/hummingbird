@@ -164,28 +164,6 @@ final class HBHTTPServerHandler: ChannelDuplexHandler, RemovableChannelHandler {
                 }
             }
         }
-        /* self.responder.respond(to: request, context: context) { result in
-             // should we keep the channel open after responding.
-             var response: HBHTTPResponse
-             switch result {
-             case .failure(let error):
-                 response = self.getErrorResponse(context: context, error: error, version: httpVersion)
-
-             case .success(let successfulResponse):
-                 response = successfulResponse
-             }
-             if httpVersion.major == 1 {
-                 response.head.headers.replaceOrAdd(name: "connection", value: keepAlive ? "keep-alive" : "close")
-             }
-             // if we are already running inside the context eventloop don't use `EventLoop.execute`
-             if context.eventLoop.inEventLoop {
-                 self.writeResponse(context: context, response: response, streamer: streamer, keepAlive: keepAlive)
-             } else {
-                 context.eventLoop.execute {
-                     self.writeResponse(context: context, response: response, streamer: streamer, keepAlive: keepAlive)
-                 }
-             }
-         } */
     }
 
     func writeResponse(context: ChannelHandlerContext, response: HBHTTPResponse, streamer: HBByteBufferStreamer?, keepAlive: Bool) {
