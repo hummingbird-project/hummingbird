@@ -16,6 +16,7 @@ import Atomics
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
+import NIOPosix
 import Tracing
 
 /// Endpoint path storage
@@ -96,8 +97,12 @@ extension HBRequestContext {
     /// Application context
     @inlinable
     public var applicationContext: HBApplicationContext { coreContext.applicationContext }
+    /// ThreadPool attached to application
+    @inlinable
+    public var threadPool: NIOThreadPool { self.coreContext.applicationContext.threadPool }
     /// EventLoop request is running on. This is unavailable in concurrency contexts as you
     /// have already hopped off the EventLoop into a Task
+    /// ThreadPool attached to application
     @inlinable
     @available(*, noasync)
     public var eventLoop: EventLoop { coreContext.eventLoop }

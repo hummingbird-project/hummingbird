@@ -56,7 +56,7 @@ class HummingbirdFilesTests: XCTestCase {
     func testReadFileIO() async throws {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.get("test.jpg") { _, context -> HBResponse in
-            let fileIO = HBFileIO(threadPool: context.applicationContext.threadPool)
+            let fileIO = HBFileIO(threadPool: context.threadPool)
             let body = try await fileIO.loadFile(path: "test.jpg", context: context, logger: context.logger)
             return .init(status: .ok, headers: [:], body: body)
         }
@@ -74,7 +74,6 @@ class HummingbirdFilesTests: XCTestCase {
             }
         }
     }
-
 
     func testReadLargeFile() async throws {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
@@ -328,7 +327,7 @@ class HummingbirdFilesTests: XCTestCase {
         let filename = "testWrite.txt"
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.put("store") { request, context -> HTTPResponseStatus in
-            let fileIO = HBFileIO(threadPool: context.applicationContext.threadPool)
+            let fileIO = HBFileIO(threadPool: context.threadPool)
             try await fileIO.writeFile(contents: request.body, path: filename, context: context, logger: context.logger)
             return .ok
         }
@@ -351,7 +350,7 @@ class HummingbirdFilesTests: XCTestCase {
         let filename = "testWriteLargeFile.txt"
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.put("store") { request, context -> HTTPResponseStatus in
-            let fileIO = HBFileIO(threadPool: context.applicationContext.threadPool)
+            let fileIO = HBFileIO(threadPool: context.threadPool)
             try await fileIO.writeFile(contents: request.body, path: filename, context: context, logger: context.logger).get()
             return .ok
         }
