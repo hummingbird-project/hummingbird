@@ -1,11 +1,11 @@
-// swift-tools-version:5.7
+// swift-tools-version:5.9
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
     name: "hummingbird",
-    platforms: [.macOS(.v13), .iOS(.v16), .tvOS(.v16)],
+    platforms: [.macOS(.v14), .iOS(.v17), .tvOS(.v17)],
     products: [
         .library(name: "Hummingbird", targets: ["Hummingbird"]),
         .library(name: "HummingbirdFoundation", targets: ["HummingbirdFoundation"]),
@@ -65,6 +65,16 @@ let package = Package(
             .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
             .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
         ]),
+        .target(name: "HummingbirdCoreAsync", dependencies: [
+            .product(name: "Logging", package: "swift-log"),
+            .product(name: "NIOCore", package: "swift-nio"),
+            .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
+            .product(name: "NIOExtras", package: "swift-nio-extras"),
+            .product(name: "NIOHTTP1", package: "swift-nio"),
+            .product(name: "NIOPosix", package: "swift-nio"),
+            .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
+            .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
+        ]),
         .target(name: "HummingbirdCoreXCT", dependencies: [
             .product(name: "NIOCore", package: "swift-nio"),
             .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
@@ -112,6 +122,14 @@ let package = Package(
                 .product(name: "NIOEmbedded", package: "swift-nio"),
             ],
             resources: [.process("Certificates")]
+        ),
+        .testTarget(
+            name: "HummingbirdCoreAsyncTests",
+            dependencies:
+            [
+                .byName(name: "HummingbirdCoreAsync"),
+                .byName(name: "HummingbirdCoreXCT"),
+            ]
         ),
     ]
 )
