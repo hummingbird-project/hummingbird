@@ -15,7 +15,7 @@
 import Foundation
 
 /// Holder for all data related to a job
-public struct HBJobInstance: Codable {
+public struct HBJobInstance: Codable, Sendable {
     /// Time created
     public let createdAt: Date
     /// Job data
@@ -48,7 +48,7 @@ public struct HBJobInstance: Codable {
 }
 
 /// Queued job. Includes job, plus the id for the job
-public struct HBQueuedJob: Codable {
+public struct HBQueuedJob: Codable, Sendable {
     /// Job id
     public let id: JobIdentifier
     /// Job data
