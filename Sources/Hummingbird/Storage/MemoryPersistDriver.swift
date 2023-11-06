@@ -23,16 +23,16 @@ public actor HBMemoryPersistDriver<C: Clock>: HBPersistDriver where C.Duration =
         self.clock = clock
     }
 
-    public func create<Object: Codable>(key: String, value: Object, expires: Duration?) async throws {
+    public func create<Object: Codable & Sendable>(key: String, value: Object, expires: Duration?) async throws {
         guard self.values[key] == nil else { throw HBPersistError.duplicate }
         self.values[key] = .init(value: value, expires: expires.map { self.clock.now.advanced(by: $0) })
     }
 
-    public func set<Object: Codable>(key: String, value: Object, expires: Duration?) async throws {
+    public func set<Object: Codable & Sendable>(key: String, value: Object, expires: Duration?) async throws {
         self.values[key] = .init(value: value, expires: expires.map { self.clock.now.advanced(by: $0) })
     }
 
-    public func get<Object: Codable>(key: String, as: Object.Type) async throws -> Object? {
+    public func get<Object: Codable & Sendable>(key: String, as: Object.Type) async throws -> Object? {
         guard let item = self.values[key] else { return nil }
         guard let expires = item.expires else { return item.value as? Object }
         guard self.clock.now <= expires else { return nil }
@@ -58,11 +58,11 @@ public actor HBMemoryPersistDriver<C: Clock>: HBPersistDriver where C.Duration =
 
     struct Item {
         /// value stored
-        let value: Codable
+        let value: Codable & Sendable
         /// time when item expires
         let expires: C.Instant?
 
-        init(value: Codable, expires: C.Instant?) {
+        init(value: Codable & Sendable, expires: C.Instant?) {
             self.value = value
             self.expires = expires
         }
