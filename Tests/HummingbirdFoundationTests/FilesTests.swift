@@ -351,7 +351,7 @@ class HummingbirdFilesTests: XCTestCase {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.put("store") { request, context -> HTTPResponseStatus in
             let fileIO = HBFileIO(threadPool: context.threadPool)
-            try await fileIO.writeFile(contents: request.body, path: filename, context: context, logger: context.logger).get()
+            try await fileIO.writeFile(contents: request.body, path: filename, context: context, logger: context.logger)
             return .ok
         }
         let app = HBApplication(responder: router.buildResponder())
