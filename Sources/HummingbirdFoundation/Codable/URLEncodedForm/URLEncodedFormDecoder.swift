@@ -64,7 +64,7 @@ public struct URLEncodedFormDecoder: Sendable {
     ///   - userInfo: user info to supply to decoder
     public init(
         dateDecodingStrategy: URLEncodedFormDecoder.DateDecodingStrategy = .deferredToDate,
-        userInfo: [CodingUserInfoKey: Any] = [:]
+        userInfo: [CodingUserInfoKey: Sendable] = [:]
     ) {
         self.dateDecodingStrategy = dateDecodingStrategy
         self.userInfo = userInfo
