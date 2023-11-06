@@ -15,7 +15,9 @@
 import Foundation
 
 extension HBDateCache {
-    static var rfc1123Formatter: DateFormatter = {
+    /// Date formatter as per section 5.2.14 of RFC 1123
+    /// https://www.rfc-editor.org/rfc/rfc1123#page-55
+    static let rfc1123Formatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "EEE, d MMM yyy HH:mm:ss z"
