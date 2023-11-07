@@ -180,7 +180,8 @@ class HummingBirdCoreAsyncTests: XCTestCase {
             }
         }
         try await testServer(
-            childChannelSetup: HTTP1Channel(additionalChannelHandlers: [CreateErrorHandler()]) { _, _ in
+            childChannelSetup: HTTP1Channel(additionalChannelHandlers: [CreateErrorHandler()]) { request, _ in
+                _ = try await request.body.collect(upTo: .max)
                 return HBHTTPResponse(status: .ok)
             },
             configuration: .init(address: .hostname(port: 0)),
@@ -210,30 +211,24 @@ class HummingBirdCoreAsyncTests: XCTestCase {
             XCTAssertEqual(response2.status, .accepted)
         }
     }
+
+    /// test server closes connection if "connection" header is set to "close"
+    func testConnectionClose() async throws {
+        try await testServer(
+            childChannelSetup: HTTP1Channel(helloResponder),
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
+            logger: Logger(label: "HB")
+        ) { client in
+            try await withTimeout(.seconds(5)) {
+                _ = try await client.get("/", headers: ["connection": "close"])
+                let channel = try await client.channelPromise.futureResult.get()
+                try await channel.closeFuture.get()
+            }
+        }
+    }
+
     /*
-     /// test server closes connection if "connection" header is set to "close"
-     func testConnectionClose() async throws {
-         let server = HBHTTPServer(
-             group: Self.eventLoopGroup,
-             configuration: .init(address: .hostname(port: 0)),
-             responder: HelloResponder(),
-             logger: Logger(label: "HB")
-         )
-         try await testServer(server) { client in
-             try await withTimeout(.seconds(5)) {
-                 _ = try await client.get("/", headers: ["connection": "close"])
-                 let channel = try await client.channelPromise.futureResult.get()
-                 try await channel.closeFuture.get()
-             }
-         }
-     }
-
-     func testBodyDescription() {
-         XCTAssertEqual(HBRequestBody.byteBuffer(nil).description, "empty")
-         XCTAssertEqual(HBRequestBody.byteBuffer(self.randomBuffer(size: 64)).description, "64 bytes")
-         XCTAssertEqual(HBRequestBody.byteBuffer(.init(string: "Test String")).description, "\"Test String\"")
-     }
-
      func testReadIdleHandler() async throws {
          /// Channel Handler for serializing request header and data
          final class HTTPServerIncompleteRequest: ChannelInboundHandler, RemovableChannelHandler {

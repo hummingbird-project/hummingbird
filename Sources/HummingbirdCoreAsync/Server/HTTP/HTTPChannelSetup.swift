@@ -21,20 +21,26 @@ public protocol HTTPChannelSetup: HBChannelSetup where In == HTTPServerRequestPa
     var responder: @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse { get }
 }
 
+/// Internal error thrown when an unexpected HTTP part is received eg we didn't receive
+/// a head part when we expected one
+enum HTTPChannelError: Error {
+    case unexpectedHTTPPart(HTTPServerRequestPart)
+    case closeConnection
+}
+
 extension HTTPChannelSetup {
     public func handle(asyncChannel: NIOAsyncChannel<In, Out>, logger: Logger) async {
         do {
-            try await withThrowingDiscardingTaskGroup { group in
+            try await withThrowingTaskGroup(of: Void.self) { group in
                 let responseWriter = HBHTTPServerBodyWriter(outbound: asyncChannel.outbound)
                 var iterator = asyncChannel.inbound.makeAsyncIterator()
-                while true {
-                    guard let part = try await iterator.next() else { break }
+                while let part = try await iterator.next() {
                     guard case .head(let head) = part else {
-                        print("Unexpected HTTP part")
-                        fatalError()
+                        throw HTTPChannelError.unexpectedHTTPPart(part)
                     }
                     let body = HBRequestBody()
                     let request = HBHTTPRequest(head: head, body: body)
+                    // add task processing request and writing response
                     group.addTask {
                         let response: HBHTTPResponse
                         do {
@@ -43,13 +49,22 @@ extension HTTPChannelSetup {
                             response = self.getErrorResponse(from: error, allocator: asyncChannel.channel.allocator)
                         }
                         let head = HTTPResponseHead(version: .http1_1, status: response.status, headers: response.headers)
-                        try await asyncChannel.outbound.write(.head(head))
-                        try await response.body.write(responseWriter)
-                        try await asyncChannel.outbound.write(.end(nil))
-                        // flush request body
-                        for try await _ in request.body {}
+                        do {
+                            try await asyncChannel.outbound.write(.head(head))
+                            try await response.body.write(responseWriter)
+                            try await asyncChannel.outbound.write(.end(nil))
+                            // flush request body
+                            for try await _ in request.body {}
+                        } catch {
+                            // flush request body
+                            for try await _ in request.body {}
+                            throw error
+                        }
+                        if request.head.headers["connection"].first == "close" {
+                            throw HTTPChannelError.closeConnection
+                        }
                     }
-
+                    // send body parts to request
                     do {
                         // pass body part to request
                         while case .body(let buffer) = try await iterator.next() {
@@ -57,9 +72,10 @@ extension HTTPChannelSetup {
                         }
                         body.finish()
                     } catch {
+                        // pass failed to read full http body to request
                         body.fail(error)
-                        throw error
                     }
+                    try await group.next()
                 }
             }
         } catch {
