@@ -103,8 +103,15 @@ extension HBRouterMethods {
         use closure: @Sendable @escaping (HBRequest, Context) async throws -> Output
     ) -> HBCallbackResponder<Context> {
         return HBCallbackResponder { request, context in
-            let output = try await closure(request, context)
-            return try output.response(from: request, context: context)
+            if options.contains(.streamBody) {
+                let output = try await closure(request, context)
+                return try output.response(from: request, context: context)
+            } else {
+                var request = request
+                request.body = try await request.body.collate(maxSize: context.applicationContext.configuration.maxUploadSize)
+                let output = try await closure(request, context)
+                return try output.response(from: request, context: context)
+            }
         }
     }
 }

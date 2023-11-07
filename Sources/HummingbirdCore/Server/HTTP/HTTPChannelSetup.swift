@@ -38,7 +38,8 @@ extension HTTPChannelSetup {
                     guard case .head(let head) = part else {
                         throw HTTPChannelError.unexpectedHTTPPart(part)
                     }
-                    let body = HBRequestBody()
+                    let bodyStream = HBStreamedRequestBody()
+                    let body = HBRequestBody.stream(bodyStream)
                     let request = HBHTTPRequest(head: head, body: body)
                     // add task processing request and writing response
                     group.addTask {
@@ -68,12 +69,12 @@ extension HTTPChannelSetup {
                     do {
                         // pass body part to request
                         while case .body(let buffer) = try await iterator.next() {
-                            await body.send(buffer)
+                            await bodyStream.send(buffer)
                         }
-                        body.finish()
+                        bodyStream.finish()
                     } catch {
                         // pass failed to read full http body to request
-                        body.fail(error)
+                        bodyStream.fail(error)
                     }
                     try await group.next()
                 }
