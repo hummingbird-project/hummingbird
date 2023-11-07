@@ -129,7 +129,7 @@ final class TracingTests: XCTestCase {
             return HBResponse(
                 status: .ok,
                 headers: headers,
-                body: .byteBuffer(ByteBuffer(string: "42"))
+                body: .init(byteBuffer: ByteBuffer(string: "42"))
             )
         }
         let app = HBApplication(responder: router.buildResponder())
@@ -201,6 +201,7 @@ final class TracingTests: XCTestCase {
             "http.method": "POST",
             "http.target": "/users",
             "http.status_code": 204,
+            "http.response_content_length": 0,
             "net.host.name": "127.0.0.1",
             "net.host.port": 8080,
             "http.flavor": "1.1",
@@ -239,6 +240,7 @@ final class TracingTests: XCTestCase {
             "http.method": "GET",
             "http.target": "/",
             "http.status_code": 200,
+            "http.response_content_length": 0,
             "net.host.name": "127.0.0.1",
             "net.host.port": 8080,
             "http.flavor": "1.1",

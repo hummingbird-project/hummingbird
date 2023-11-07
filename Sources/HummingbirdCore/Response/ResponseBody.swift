@@ -20,7 +20,7 @@ public protocol HBResponseBodyWriter {
 
 /// Response body
 public struct HBResponseBody: Sendable {
-    let write: @Sendable (any HBResponseBodyWriter) async throws -> Void
+    public let write: @Sendable (any HBResponseBodyWriter) async throws -> Void
     public let contentLength: Int?
 
     /// Initialise HBResponseBody with closure writing body contents

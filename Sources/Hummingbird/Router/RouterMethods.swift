@@ -108,7 +108,11 @@ extension HBRouterMethods {
                 return try output.response(from: request, context: context)
             } else {
                 var request = request
-                request.body = try await request.body.collate(maxSize: context.applicationContext.configuration.maxUploadSize)
+                do {
+                    request.body = try await request.body.collate(maxSize: context.applicationContext.configuration.maxUploadSize)
+                } catch {
+                    throw HBHTTPError(.payloadTooLarge)
+                }
                 let output = try await closure(request, context)
                 return try output.response(from: request, context: context)
             }

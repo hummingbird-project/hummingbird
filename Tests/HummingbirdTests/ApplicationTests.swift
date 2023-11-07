@@ -63,8 +63,8 @@ final class ApplicationTests: XCTestCase {
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.live) { client in
             try await client.XCTExecute(uri: "/hello", method: .GET) { response in
-                XCTAssertEqual(response.headers["connection"].first, "keep-alive")
                 XCTAssertEqual(response.headers["content-length"].first, "5")
+                XCTAssertNotNil(response.headers["date"].first)
             }
         }
     }
@@ -212,14 +212,15 @@ final class ApplicationTests: XCTestCase {
         router
             .group("/echo-body")
             .post { request, _ -> HBResponse in
-                let body: HBResponseBody = request.body.buffer.map { .byteBuffer($0) } ?? .empty
-                return .init(status: .ok, headers: [:], body: body)
+                guard case .byteBuffer(let buffer) = request.body else { return .init(status: .ok) }
+                return .init(status: .ok, headers: [:], body: .init(byteBuffer: buffer))
             }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router.buildResponder(), configuration: .init(maxUploadSize: 2 * 1024 * 1024))
         try await app.test(.router) { client in
 
             let buffer = self.randomBuffer(size: 1_140_000)
             try await client.XCTExecute(uri: "/echo-body", method: .POST, body: buffer) { response in
+                XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(response.body, buffer)
             }
         }
@@ -229,29 +230,11 @@ final class ApplicationTests: XCTestCase {
     func testStreaming() async throws {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.post("streaming", options: .streamBody) { request, _ -> HBResponse in
-            guard let stream = request.body.stream else { throw HBHTTPError(.badRequest) }
-            struct RequestStreamer: HBResponseBodyStreamer {
-                let stream: HBStreamerProtocol
-
-                func read(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput> {
-                    return self.stream.consume(on: eventLoop).map { chunk in
-                        switch chunk {
-                        case .byteBuffer(let buffer):
-                            return .byteBuffer(buffer)
-                        case .end:
-                            return .end
-                        }
-                    }
-                }
-            }
-            return HBResponse(status: .ok, headers: [:], body: .stream(RequestStreamer(stream: stream)))
+            return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
         }
         router.post("size", options: .streamBody) { request, _ -> String in
-            guard let stream = request.body.stream else {
-                throw HBHTTPError(.badRequest)
-            }
             var size = 0
-            for try await buffer in stream.sequence {
+            for try await buffer in request.body {
                 size += buffer.readableBytes
             }
             return size.description
@@ -266,7 +249,8 @@ final class ApplicationTests: XCTestCase {
                 XCTAssertEqual(response.body, buffer)
             }
             try await client.XCTExecute(uri: "/streaming", method: .POST) { response in
-                XCTAssertEqual(response.status, .badRequest)
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(response.body, ByteBuffer())
             }
             try await client.XCTExecute(uri: "/size", method: .POST, body: buffer) { response in
                 let body = try XCTUnwrap(response.body)
@@ -279,33 +263,18 @@ final class ApplicationTests: XCTestCase {
     func testStreamingSmallBuffer() async throws {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.post("streaming", options: .streamBody) { request, _ -> HBResponse in
-            guard let stream = request.body.stream else { throw HBHTTPError(.badRequest) }
-            struct RequestStreamer: HBResponseBodyStreamer {
-                let stream: HBStreamerProtocol
-
-                func read(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput> {
-                    return self.stream.consume(on: eventLoop).map { chunk in
-                        switch chunk {
-                        case .byteBuffer(let buffer):
-                            return .byteBuffer(buffer)
-                        case .end:
-                            return .end
-                        }
-                    }
-                }
-            }
-            return HBResponse(status: .ok, headers: [:], body: .stream(RequestStreamer(stream: stream)))
+            return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-
             let buffer = self.randomBuffer(size: 64)
             try await client.XCTExecute(uri: "/streaming", method: .POST, body: buffer) { response in
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(response.body, buffer)
             }
             try await client.XCTExecute(uri: "/streaming", method: .POST) { response in
-                XCTAssertEqual(response.status, .badRequest)
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(response.body, ByteBuffer())
             }
         }
     }
@@ -313,21 +282,23 @@ final class ApplicationTests: XCTestCase {
     func testCollateBody() async throws {
         struct CollateMiddleware<Context: HBRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
-                let request = try await context.collateBody(of: request)
-                context.logger.info("Buffer size: \(request.body.buffer!.readableBytes)")
+                var request = request
+                request.body = try await request.body.collate(maxSize: context.applicationContext.configuration.maxUploadSize)
                 return try await next.respond(to: request, context: context)
             }
         }
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.middlewares.add(CollateMiddleware())
-        router.put("/hello") { _, _ -> HTTPResponseStatus in
-            return .ok
+        router.put("/hello") { request, _ -> String in
+            guard case .byteBuffer(let buffer) = request.body else { throw HBHTTPError(.internalServerError) }
+            return buffer.readableBytes.description
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
 
             let buffer = self.randomBuffer(size: 512_000)
             try await client.XCTExecute(uri: "/hello", method: .PUT, body: buffer) { response in
+                XCTAssertEqual(response.body.map { String(buffer: $0) }, "512000")
                 XCTAssertEqual(response.status, .ok)
             }
         }
@@ -338,28 +309,8 @@ final class ApplicationTests: XCTestCase {
         router
             .group("/echo-body")
             .post { request, _ -> ByteBuffer? in
-                return request.body.buffer
-            }
-        let app = HBApplication(responder: router.buildResponder())
-        try await app.test(.router) { client in
-
-            let buffer = self.randomBuffer(size: 64)
-            try await client.XCTExecute(uri: "/echo-body", method: .POST, body: buffer) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(response.body, buffer)
-            }
-            try await client.XCTExecute(uri: "/echo-body", method: .POST) { response in
-                XCTAssertEqual(response.status, .noContent)
-            }
-        }
-    }
-
-    func testELFOptional() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router
-            .group("/echo-body")
-            .post { request, _ -> ByteBuffer? in
-                return request.body.buffer
+                guard case .byteBuffer(let buffer) = request.body, buffer.readableBytes > 0 else { return nil }
+                return buffer
             }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -444,30 +395,6 @@ final class ApplicationTests: XCTestCase {
                 XCTAssertEqual(response.headers["content-type"].count, 1)
                 XCTAssertEqual(response.headers["content-type"].first, "application/json")
                 XCTAssertEqual(string, #"{"value":"true"}"#)
-            }
-        }
-    }
-
-    func testTypedResponseFuture() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.delete("/hello") { _, _ in
-            HBEditedResponse(
-                status: .imATeapot,
-                headers: ["test": "value", "content-type": "application/json"],
-                response: "Hello"
-            )
-        }
-        let app = HBApplication(responder: router.buildResponder())
-        try await app.test(.router) { client in
-
-            try await client.XCTExecute(uri: "/hello", method: .DELETE) { response in
-                var body = try XCTUnwrap(response.body)
-                let string = body.readString(length: body.readableBytes)
-                XCTAssertEqual(response.status, .imATeapot)
-                XCTAssertEqual(response.headers["test"].first, "value")
-                XCTAssertEqual(response.headers["content-type"].count, 1)
-                XCTAssertEqual(response.headers["content-type"].first, "application/json")
-                XCTAssertEqual(string, "Hello")
             }
         }
     }

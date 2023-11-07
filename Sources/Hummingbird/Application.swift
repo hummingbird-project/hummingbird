@@ -189,7 +189,11 @@ extension HBApplication: Service {
             )
             // respond to request
             var response = try await self.responder.respond(to: request, context: context)
-            response.headers.add(name: "Date", value: dateCache.date)
+            response.headers.add(name: "date", value: dateCache.date)
+            // server name header
+            if let serverName = self.configuration.serverName {
+                response.headers.add(name: "server", value: serverName)
+            }
             return HBHTTPResponse(status: response.status, headers: response.headers, body: response.body)
         }
         let server = HBServer(

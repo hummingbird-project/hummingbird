@@ -63,7 +63,7 @@ public struct HBStreamedRequestBody: Sendable, AsyncSequence {
     private var channel: AsyncThrowingChannel<ByteBuffer, Error>
 
     /// Creates a new HTTP request body
-    public init() {
+    @_spi(HBXCT) public init() {
         self.channel = .init()
     }
 
@@ -74,17 +74,17 @@ public struct HBStreamedRequestBody: Sendable, AsyncSequence {
 
 extension HBStreamedRequestBody {
     /// push a single ByteBuffer to the HTTP request body stream
-    func send(_ buffer: ByteBuffer) async {
+    @_spi(HBXCT) public func send(_ buffer: ByteBuffer) async {
         await self.channel.send(buffer)
     }
 
     /// pass error to HTTP request body
-    func fail(_ error: Error) {
+    @_spi(HBXCT) public func fail(_ error: Error) {
         self.channel.fail(error)
     }
 
     /// Finish HTTP request body stream
-    func finish() {
+    @_spi(HBXCT) public func finish() {
         self.channel.finish()
     }
 }
