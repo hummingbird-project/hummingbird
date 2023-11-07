@@ -349,14 +349,14 @@ class HummingbirdFilesTests: XCTestCase {
     func testWriteLargeFile() async throws {
         let filename = "testWriteLargeFile.txt"
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.put("store") { request, context -> HTTPResponseStatus in
+        router.put("store", options: .streamBody) { request, context -> HTTPResponseStatus in
             let fileIO = HBFileIO(threadPool: context.threadPool)
-            try await fileIO.writeFile(contents: request.body, path: filename, context: context, logger: context.logger).get()
+            try await fileIO.writeFile(contents: request.body, path: filename, context: context, logger: context.logger)
             return .ok
         }
         let app = HBApplication(responder: router.buildResponder())
 
-        try await app.test(.router) { client in
+        try await app.test(.live) { client in
             let buffer = self.randomBuffer(size: 400_000)
             try await client.XCTExecute(uri: "/store", method: .PUT, body: buffer) { response in
                 XCTAssertEqual(response.status, .ok)
