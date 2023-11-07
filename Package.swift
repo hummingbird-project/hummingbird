@@ -85,11 +85,11 @@ let package = Package(
             .product(name: "NIOCore", package: "swift-nio"),
             .product(name: "NIOSSL", package: "swift-nio-ssl"),
         ]),
-        /*        .executableTarget(name: "PerformanceTest", dependencies: [
-                .byName(name: "Hummingbird"),
-                .byName(name: "HummingbirdFoundation"),
-                .product(name: "NIOPosix", package: "swift-nio"),
-            ]),*/
+        .executableTarget(name: "PerformanceTest", dependencies: [
+            .byName(name: "Hummingbird"),
+            .byName(name: "HummingbirdFoundation"),
+            .product(name: "NIOPosix", package: "swift-nio"),
+        ]),
         // test targets
         /*        .testTarget(name: "HummingbirdTests", dependencies: [
                 .byName(name: "Hummingbird"),
