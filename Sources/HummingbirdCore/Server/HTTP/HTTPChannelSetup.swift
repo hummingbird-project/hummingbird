@@ -79,8 +79,11 @@ extension HTTPChannelSetup {
                     try await group.next()
                 }
             }
+        } catch HTTPChannelError.closeConnection {
+            // channel is being closed because we received a connection: close header
         } catch {
             // we got here because we failed to either read or write to the channel
+            logger.info("Failed to read/write to Channel. Connection must be closed")
         }
         asyncChannel.outbound.finish()
     }
