@@ -48,7 +48,7 @@ extension HTTPChannelSetup {
                         } catch {
                             response = self.getErrorResponse(from: error, allocator: asyncChannel.channel.allocator)
                         }
-                        let head = HTTPResponseHead(version: .http1_1, status: response.status, headers: response.headers)
+                        let head = HTTPResponseHead(version: request.head.version, status: response.status, headers: response.headers)
                         do {
                             try await asyncChannel.outbound.write(.head(head))
                             try await response.body.write(responseWriter)
