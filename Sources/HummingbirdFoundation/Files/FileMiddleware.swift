@@ -205,7 +205,7 @@ public struct HBFileMiddleware<Context: HBRequestContext>: HBMiddleware {
                     return HBResponse(status: .ok, headers: headers, body: body)
 
                 case .HEAD:
-                    return HBResponse(status: .ok, headers: headers, body: .empty)
+                    return HBResponse(status: .ok, headers: headers, body: .init())
 
                 default:
                     throw error
