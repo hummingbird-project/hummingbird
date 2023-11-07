@@ -96,10 +96,10 @@ let package = Package(
             .byName(name: "HummingbirdFoundation"),
             .byName(name: "HummingbirdXCT"),
         ]),
-        /*   .testTarget(name: "HummingbirdFoundationTests", dependencies: [
-                .byName(name: "HummingbirdFoundation"),
-                .byName(name: "HummingbirdXCT"),
-            ]),*/
+        .testTarget(name: "HummingbirdFoundationTests", dependencies: [
+            .byName(name: "HummingbirdFoundation"),
+            .byName(name: "HummingbirdXCT"),
+        ]),
         .testTarget(name: "HummingbirdJobsTests", dependencies: [
             .byName(name: "HummingbirdJobs"),
             .byName(name: "HummingbirdXCT"),

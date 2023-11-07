@@ -189,7 +189,7 @@ class HummingbirdFilesTests: XCTestCase {
 
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/testHead.txt", method: .HEAD) { response in
-                XCTAssertNil(response.body)
+                XCTAssertEqual(response.body?.readableBytes ?? 0, 0)
                 XCTAssertEqual(response.headers["Content-Length"].first, text.utf8.count.description)
                 XCTAssertEqual(response.headers["content-type"].first, "text/plain")
                 let responseDateString = try XCTUnwrap(response.headers["modified-date"].first)

@@ -67,7 +67,7 @@ class CookieTests: XCTestCase {
     func testSetCookie() async throws {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.post("/") { _, _ -> HBResponse in
-            var response = HBResponse(status: .ok, headers: [:], body: .empty)
+            var response = HBResponse(status: .ok, headers: [:], body: .init())
             response.setCookie(.init(name: "test", value: "value"))
             return response
         }
