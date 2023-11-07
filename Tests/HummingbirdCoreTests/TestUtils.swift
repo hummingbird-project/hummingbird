@@ -35,14 +35,14 @@ public enum TestErrors: Error {
 ///
 /// Creates test client, runs test function abd ensures everything is
 /// shutdown correctly
-public func testServer<ChannelSetup: HBChannelSetup>(
+public func testServer<ChannelSetup: HBChannelSetup, Value: Sendable>(
     childChannelSetup: ChannelSetup,
     configuration: HBServerConfiguration,
     eventLoopGroup: EventLoopGroup,
     logger: Logger,
     clientConfiguration: HBXCTClient.Configuration = .init(),
-    _ test: @escaping @Sendable (HBXCTClient) async throws -> Void
-) async throws {
+    _ test: @escaping @Sendable (HBXCTClient) async throws -> Value
+) async throws -> Value {
     try await withThrowingTaskGroup(of: Void.self) { group in
         let promise = Promise<Int>()
         let server = HBServer(
@@ -68,16 +68,11 @@ public func testServer<ChannelSetup: HBChannelSetup>(
             configuration: clientConfiguration,
             eventLoopGroupProvider: .createNew
         )
-        group.addTask {
-            client.connect()
-            try await test(client)
-        }
-        var iterator = group.makeAsyncIterator()
-        do {
-            try await iterator.next()
-        } catch {}
+        client.connect()
+        let value = try await test(client)
         await serviceGroup.triggerGracefulShutdown()
         try await client.shutdown()
+        return value
     }
 }
 

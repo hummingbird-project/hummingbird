@@ -201,7 +201,7 @@ public actor HBServer<ChannelSetup: HBChannelSetup>: Service {
     public func makeServer(childChannelSetup: ChannelSetup, configuration: HBServerConfiguration) async throws -> (AsyncServerChannel, ServerQuiescingHelper) {
         let quiescingHelper = ServerQuiescingHelper(group: self.eventLoopGroup)
         let bootstrap: ServerBootstrapProtocol
-        #if canImport(Network) && TS_ASYNC_SUPPORT
+        #if canImport(Network)
         if let tsBootstrap = self.createTSBootstrap(
             configuration: configuration,
             quiescingHelper: quiescingHelper
@@ -211,7 +211,7 @@ public actor HBServer<ChannelSetup: HBChannelSetup>: Service {
             #if os(iOS) || os(tvOS)
             self.logger.warning("Running BSD sockets on iOS or tvOS is not recommended. Please use NIOTSEventLoopGroup, to run with the Network framework")
             #endif
-            if self.configuration.tlsOptions.options != nil {
+            if configuration.tlsOptions.options != nil {
                 self.logger.warning("tlsOptions set in Configuration will not be applied to a BSD sockets server. Please use NIOTSEventLoopGroup, to run with the Network framework")
             }
             bootstrap = self.createSocketsBootstrap(
@@ -290,7 +290,7 @@ public actor HBServer<ChannelSetup: HBChannelSetup>: Service {
             .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
     }
 
-    #if canImport(Network) && TS_ASYNC_SUPPORT
+    #if canImport(Network)
     /// create a NIOTransportServices bootstrap using Network.framework
     @available(macOS 10.14, iOS 12, tvOS 12, *)
     private func createTSBootstrap(
@@ -337,11 +337,19 @@ protocol ServerBootstrapProtocol {
 // Extend both `ServerBootstrap` and `NIOTSListenerBootstrap` to conform to `ServerBootstrapProtocol`
 extension ServerBootstrap: ServerBootstrapProtocol {}
 
-#if canImport(Network) && TS_ASYNC_SUPPORT
+#if canImport(Network)
 @available(macOS 10.14, iOS 12, tvOS 12, *)
 extension NIOTSListenerBootstrap: ServerBootstrapProtocol {
     // need to be able to extend `NIOTSListenerBootstrap` to conform to `ServerBootstrapProtocol`
     // before we can use TransportServices
+    func bind<Output: Sendable>(
+        unixDomainSocketPath: String,
+        cleanupExistingSocketFile: Bool,
+        serverBackPressureStrategy: NIOAsyncSequenceProducerBackPressureStrategies.HighLowWatermark?,
+        childChannelInitializer: @escaping @Sendable (Channel) -> EventLoopFuture<Output>
+    ) async throws -> NIOAsyncChannel<Output, Never> {
+        preconditionFailure("Binding to a unixDomainSocketPath is currently not available")
+    }
 }
 #endif
 
