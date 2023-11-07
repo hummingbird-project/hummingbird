@@ -18,7 +18,7 @@ import NIOHTTP1
 
 /// Protocol for HTTP channels
 public protocol HTTPChannelSetup: HBChannelSetup where In == HTTPServerRequestPart, Out == SendableHTTPServerResponsePart {
-    var responder: @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse { get }
+    var responder: @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse { get set }
 }
 
 /// Internal error thrown when an unexpected HTTP part is received eg we didn't receive
@@ -29,7 +29,7 @@ enum HTTPChannelError: Error {
 }
 
 extension HTTPChannelSetup {
-    public func handle(asyncChannel: NIOAsyncChannel<In, Out>, logger: Logger) async {
+    public func handle(asyncChannel: NIOAsyncChannel<HTTPServerRequestPart, SendableHTTPServerResponsePart>, logger: Logger) async {
         do {
             try await withThrowingTaskGroup(of: Void.self) { group in
                 let responseWriter = HBHTTPServerBodyWriter(outbound: asyncChannel.outbound)

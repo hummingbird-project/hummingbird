@@ -85,7 +85,7 @@ public final class HBApplicationContext: Sendable {
 /// try await app.buildAndRun()
 /// ```
 /// Editing the application builder setup after calling `build` will produce undefined behaviour.
-public struct HBApplication<Responder: HBResponder> {
+public struct HBApplication<Responder: HBResponder, ChannelSetup: HTTPChannelSetup> {
     // MARK: Member variables
 
     /// event loop group used by application
@@ -104,6 +104,8 @@ public struct HBApplication<Responder: HBResponder> {
     public var decoder: HBRequestDecoder
     /// on server running
     public var onServerRunning: @Sendable (Channel) async -> Void
+    /// Server channel setup
+    let channelSetup: ChannelSetup
     /// additional channel handlers
     var additionalChannelHandlers: [@Sendable () -> any RemovableChannelHandler]
     /// services attached to the application.
@@ -114,6 +116,7 @@ public struct HBApplication<Responder: HBResponder> {
     /// Initialize new Application
     public init(
         responder: Responder,
+        channelSetup: ChannelSetup = HTTP1Channel(),
         configuration: HBApplicationConfiguration = HBApplicationConfiguration(),
         threadPool: NIOThreadPool = .singleton,
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton
@@ -123,6 +126,7 @@ public struct HBApplication<Responder: HBResponder> {
         self.logger = logger
 
         self.responder = responder
+        self.channelSetup = channelSetup
         self.configuration = configuration
         self.encoder = NullEncoder()
         self.decoder = NullDecoder()
@@ -196,8 +200,12 @@ extension HBApplication: Service {
             }
             return HBHTTPResponse(status: response.status, headers: response.headers, body: response.body)
         }
+        // update channel with responder
+        var channelSetup = self.channelSetup
+        channelSetup.responder = respond
+        // create server
         let server = HBServer(
-            childChannelSetup: HTTP1Channel(additionalChannelHandlers: self.additionalChannelHandlers.map { $0() }, responder: respond),
+            childChannelSetup: channelSetup,
             configuration: self.configuration.httpServer,
             onServerRunning: self.onServerRunning,
             eventLoopGroup: self.eventLoopGroup,

@@ -54,7 +54,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
     let context: HBApplicationContext
     let responder: Responder
 
-    init(app: HBApplication<Responder>) {
+    init(app: HBApplication<Responder, HTTP1Channel>) {
         self.eventLoopGroup = app.eventLoopGroup
         self.context = HBApplicationContext(
             threadPool: app.threadPool,
@@ -92,7 +92,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                 let context = Responder.Context(
                     applicationContext: self.applicationContext,
                     eventLoop: eventLoop,
-                    logger: HBApplication<Responder>.loggerWithRequestId(self.applicationContext.logger)
+                    logger: HBApplication<Responder, HTTP1Channel>.loggerWithRequestId(self.applicationContext.logger)
                 )
 
                 group.addTask {

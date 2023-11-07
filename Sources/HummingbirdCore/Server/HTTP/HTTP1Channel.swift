@@ -22,7 +22,7 @@ public struct HTTP1Channel: HTTPChannelSetup {
 
     public init(
         additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = [],
-        responder: @escaping @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse
+        responder: @escaping @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse = { _, _ in throw HBHTTPError(.notImplemented) }
     ) {
         self.additionalChannelHandlers = additionalChannelHandlers
         self.responder = responder
@@ -42,6 +42,6 @@ public struct HTTP1Channel: HTTPChannelSetup {
         }
     }
 
-    public let responder: @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse
+    public var responder: @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse
     let additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
 }

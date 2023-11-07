@@ -12,7 +12,7 @@ public struct HTTP1WithTLSChannel: HTTPChannelSetup {
     public init(
         tlsConfiguration: TLSConfiguration,
         additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = [],
-        responder: @escaping @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse
+        responder: @escaping @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse = { _, _ in throw HBHTTPError(.notImplemented) }
     ) throws {
         var tlsConfiguration = tlsConfiguration
         tlsConfiguration.applicationProtocols.append("http/1.1")
@@ -36,33 +36,7 @@ public struct HTTP1WithTLSChannel: HTTPChannelSetup {
         }
     }
 
-    public let responder: @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse
+    public var responder: @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse
     let sslContext: NIOSSLContext
     let additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
 }
-
-/* public struct HTTP1WithTLSChannel: HBChannelSetup {
-     public init(tlsConfiguration: TLSConfiguration) throws {
-         var tlsConfiguration = tlsConfiguration
-         tlsConfiguration.applicationProtocols.append("http/1.1")
-         self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
-     }
-
-     /// Initialize HTTP1 channel
-     /// - Parameters:
-     ///   - channel: channel
-     ///   - childHandlers: Channel handlers to add
-     ///   - configuration: server configuration
-     public func initialize(channel: Channel, childHandlers: [RemovableChannelHandler], configuration: HBHTTPServer.Configuration) -> EventLoopFuture<Void> {
-         return channel.eventLoop.makeCompletedFuture {
-             try channel.pipeline.syncOperations.addHandler(NIOSSLServerHandler(context: self.sslContext))
-             try channel.pipeline.syncOperations.configureHTTPServerPipeline(
-                 withPipeliningAssistance: configuration.withPipeliningAssistance,
-                 withErrorHandling: true
-             )
-             try channel.pipeline.syncOperations.addHandlers(childHandlers)
-         }
-     }
-
-     let sslContext: NIOSSLContext
- } */
