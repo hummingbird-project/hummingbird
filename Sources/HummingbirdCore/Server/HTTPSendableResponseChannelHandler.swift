@@ -19,11 +19,13 @@ import NIOHTTP1
 public typealias SendableHTTPServerResponsePart = HTTPPart<HTTPResponseHead, ByteBuffer>
 
 /// Channel to convert HTTPServerResponsePart to the Sendable type HBHTTPServerResponsePart
-final class HBHTTPSendableResponseChannelHandler: ChannelOutboundHandler, RemovableChannelHandler {
-    typealias OutboundIn = SendableHTTPServerResponsePart
-    typealias OutboundOut = HTTPServerResponsePart
+public final class HBHTTPSendableResponseChannelHandler: ChannelOutboundHandler, RemovableChannelHandler {
+    public typealias OutboundIn = SendableHTTPServerResponsePart
+    public typealias OutboundOut = HTTPServerResponsePart
 
-    func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
+    public init() {}
+
+    public func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
         let part = unwrapOutboundIn(data)
         switch part {
         case .head(let head):

@@ -22,7 +22,7 @@ public struct HTTP1Channel: HTTPChannelSetup {
 
     public init(
         additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = [],
-        _ responder: @escaping @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse
+        responder: @escaping @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse
     ) {
         self.additionalChannelHandlers = additionalChannelHandlers
         self.responder = responder

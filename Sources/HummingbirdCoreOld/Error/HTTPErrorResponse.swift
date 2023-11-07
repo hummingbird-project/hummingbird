@@ -32,13 +32,18 @@ extension HBHTTPResponseError {
     /// Generate response from error
     /// - Parameter allocator: Byte buffer allocator used to allocate message body
     /// - Returns: Response
-    public func response(allocator: ByteBufferAllocator) -> HBHTTPResponse {
+    public func response(version: HTTPVersion, allocator: ByteBufferAllocator) -> HBHTTPResponse {
+        var headers: HTTPHeaders = self.headers
+
         let body: HBResponseBody
         if let buffer = self.body(allocator: allocator) {
-            body = .init(byteBuffer: buffer)
+            body = .byteBuffer(buffer)
+            headers.replaceOrAdd(name: "content-length", value: String(describing: buffer.readableBytes))
         } else {
-            body = .init()
+            body = .empty
+            headers.replaceOrAdd(name: "content-length", value: "0")
         }
-        return .init(status: status, headers: headers, body: body)
+        let responseHead = HTTPResponseHead(version: version, status: self.status, headers: headers)
+        return .init(head: responseHead, body: body)
     }
 }

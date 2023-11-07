@@ -12,41 +12,65 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if canImport(Network)
+
 import HummingbirdCore
 import HummingbirdCoreXCT
-import HummingbirdTLS
 import Logging
+import Network
 import NIOCore
 import NIOHTTP1
-import NIOPosix
 import NIOSSL
 import NIOTransportServices
 import XCTest
 
-class HummingBirdTLSTests: XCTestCase {
+class TransportServicesTests: XCTestCase {
+    func randomBuffer(size: Int) -> ByteBuffer {
+        var data = [UInt8](repeating: 0, count: size)
+        data = data.map { _ in UInt8.random(in: 0...255) }
+        return ByteBufferAllocator().buffer(bytes: data)
+    }
+
     func testConnect() async throws {
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
-        try await testServer(
-            childChannelSetup: HTTP1WithTLSChannel(tlsConfiguration: self.getServerTLSConfiguration(), responder: helloResponder),
-            configuration: .init(address: .hostname(port: 0), serverName: testServerName),
-            eventLoopGroup: eventLoopGroup,
-            logger: Logger(label: "HB"),
-            clientConfiguration: .init(tlsConfiguration: self.getClientTLSConfiguration(), serverName: testServerName)
-        ) { client in
+        let eventLoopGroup = NIOTSEventLoopGroup()
+        let server = HBHTTPServer(
+            group: eventLoopGroup,
+            configuration: .init(address: .hostname(port: 0)),
+            responder: HelloResponder(),
+            logger: Logger(label: "HB")
+        )
+        try await testServer(server) { client in
             let response = try await client.get("/")
             var body = try XCTUnwrap(response.body)
             XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
         }
     }
 
-    func getServerTLSConfiguration() throws -> TLSConfiguration {
-        let caCertificate = try NIOSSLCertificate(bytes: [UInt8](caCertificateData.utf8), format: .pem)
-        let certificate = try NIOSSLCertificate(bytes: [UInt8](serverCertificateData.utf8), format: .pem)
-        let privateKey = try NIOSSLPrivateKey(bytes: [UInt8](serverPrivateKeyData.utf8), format: .pem)
-        var tlsConfig = TLSConfiguration.makeServerConfiguration(certificateChain: [.certificate(certificate)], privateKey: .privateKey(privateKey))
-        tlsConfig.trustRoots = .certificates([caCertificate])
-        return tlsConfig
+    func testTLS() async throws {
+        let eventLoopGroup = NIOTSEventLoopGroup()
+        let p12Path = Bundle.module.path(forResource: "server", ofType: "p12")!
+        let tlsOptions = try XCTUnwrap(TSTLSOptions.options(
+            serverIdentity: .p12(filename: p12Path, password: "MyPassword")
+        ))
+        let configuration = HBHTTPServer.Configuration(
+            address: .hostname(port: 0),
+            serverName: testServerName,
+            tlsOptions: tlsOptions
+        )
+        let server = HBHTTPServer(
+            group: eventLoopGroup,
+            configuration: configuration,
+            responder: HelloResponder(),
+            logger: Logger(label: "HB")
+        )
+        try await testServer(
+            server,
+            clientConfiguration: .init(tlsConfiguration: self.getClientTLSConfiguration(), serverName: testServerName)
+        ) { client in
+            let response = try await client.get("/")
+            var body = try XCTUnwrap(response.body)
+            XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
+        }
     }
 
     func getClientTLSConfiguration() throws -> TLSConfiguration {
@@ -60,3 +84,5 @@ class HummingBirdTLSTests: XCTestCase {
         return tlsConfig
     }
 }
+
+#endif

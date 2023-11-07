@@ -16,22 +16,22 @@ import Logging
 import NIOCore
 import NIOHTTP1
 
-class HBHTTPUserEventHandler: ChannelDuplexHandler, RemovableChannelHandler {
-    typealias InboundIn = HTTPServerRequestPart
-    typealias InboundOut = HTTPServerRequestPart
-    typealias OutboundIn = HTTPServerResponsePart
-    typealias OutboundOut = HTTPServerResponsePart
+public class HBHTTPUserEventHandler: ChannelDuplexHandler, RemovableChannelHandler {
+    public typealias InboundIn = HTTPServerRequestPart
+    public typealias InboundOut = HTTPServerRequestPart
+    public typealias OutboundIn = HTTPServerResponsePart
+    public typealias OutboundOut = HTTPServerResponsePart
 
     var closeAfterResponseWritten: Bool = false
     var requestsBeingRead: Int = 0
     var requestsInProgress: Int = 0
     let logger: Logger
 
-    init(logger: Logger) {
+    public init(logger: Logger) {
         self.logger = logger
     }
 
-    func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
+    public func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
         let part = unwrapOutboundIn(data)
         if case .end = part {
             self.requestsInProgress -= 1
@@ -45,7 +45,7 @@ class HBHTTPUserEventHandler: ChannelDuplexHandler, RemovableChannelHandler {
         }
     }
 
-    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+    public func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let part = self.unwrapInboundIn(data)
         switch part {
         case .head:
@@ -62,7 +62,7 @@ class HBHTTPUserEventHandler: ChannelDuplexHandler, RemovableChannelHandler {
         context.fireChannelRead(data)
     }
 
-    func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
+    public func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
         switch event {
         case is ChannelShouldQuiesceEvent:
             // we received a quiesce event. If we have any requests in progress we should

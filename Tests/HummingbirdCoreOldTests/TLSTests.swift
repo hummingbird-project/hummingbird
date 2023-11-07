@@ -27,11 +27,15 @@ class HummingBirdTLSTests: XCTestCase {
     func testConnect() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
-        try await testServer(
-            childChannelSetup: HTTP1WithTLSChannel(tlsConfiguration: self.getServerTLSConfiguration(), responder: helloResponder),
+        let server = try HBHTTPServer(
+            group: eventLoopGroup,
             configuration: .init(address: .hostname(port: 0), serverName: testServerName),
-            eventLoopGroup: eventLoopGroup,
-            logger: Logger(label: "HB"),
+            responder: HelloResponder(),
+            childChannelInitializer: HTTP1WithTLSChannel(tlsConfiguration: self.getServerTLSConfiguration()),
+            logger: Logger(label: "HB")
+        )
+        try await testServer(
+            server,
             clientConfiguration: .init(tlsConfiguration: self.getClientTLSConfiguration(), serverName: testServerName)
         ) { client in
             let response = try await client.get("/")
