@@ -85,8 +85,8 @@ public struct HBCORSMiddleware<Context: HBRequestContext>: HBMiddleware {
     /// apply CORS middleware
     public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
         // if no origin header then don't apply CORS
-        guard request.headers["origin"].first != nil else { 
-            return try await next.respond(to: request, context: context) 
+        guard request.headers["origin"].first != nil else {
+            return try await next.respond(to: request, context: context)
         }
 
         if request.method == .OPTIONS {
@@ -109,7 +109,7 @@ public struct HBCORSMiddleware<Context: HBRequestContext>: HBMiddleware {
                 headers.add(name: "vary", value: "Origin")
             }
 
-            return HBResponse(status: .noContent, headers: headers, body: .empty)
+            return HBResponse(status: .noContent, headers: headers, body: .init())
         } else {
             // if not OPTIONS then run rest of middleware chain and add origin value at the end
             var response = try await next.respond(to: request, context: context)

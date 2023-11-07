@@ -102,29 +102,9 @@ extension HBRouterMethods {
         options: HBRouterMethodOptions,
         use closure: @Sendable @escaping (HBRequest, Context) async throws -> Output
     ) -> HBCallbackResponder<Context> {
-        // generate response from request. Moved repeated code into internal function
-        @Sendable func _respond(request: HBRequest, context: Context) async throws -> HBResponse {
+        return HBCallbackResponder { request, context in
             let output = try await closure(request, context)
             return try output.response(from: request, context: context)
-        }
-
-        if options.contains(.streamBody) {
-            return HBCallbackResponder { request, context in
-                return try await _respond(request: request, context: context)
-            }
-        } else {
-            return HBCallbackResponder { request, context in
-                if case .byteBuffer = request.body {
-                    return try await _respond(request: request, context: context)
-                } else {
-                    let buffer = try await request.body.consumeBody(
-                        maxSize: context.applicationContext.configuration.maxUploadSize
-                    )
-                    var request = request
-                    request.body = .byteBuffer(buffer)
-                    return try await _respond(request: request, context: context)
-                }
-            }
         }
     }
 }

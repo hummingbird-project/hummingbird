@@ -21,7 +21,7 @@ public protocol HBResponseBodyWriter {
 /// Response body
 public struct HBResponseBody: Sendable {
     let write: @Sendable (any HBResponseBodyWriter) async throws -> Void
-    let contentLength: Int?
+    public let contentLength: Int?
 
     /// Initialise HBResponseBody with closure writing body contents
     /// - Parameters:

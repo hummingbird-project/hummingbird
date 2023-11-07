@@ -33,7 +33,7 @@ extension String: HBResponseGenerator {
     /// Generate response holding string
     public func response(from request: HBRequest, context: HBRequestContext) -> HBResponse {
         let buffer = context.allocator.buffer(string: self)
-        return HBResponse(status: .ok, headers: ["content-type": "text/plain; charset=utf-8"], body: .byteBuffer(buffer))
+        return HBResponse(status: .ok, headers: ["content-type": "text/plain; charset=utf-8"], body: .init(byteBuffer: buffer))
     }
 }
 
@@ -42,7 +42,7 @@ extension Substring: HBResponseGenerator {
     /// Generate response holding string
     public func response(from request: HBRequest, context: HBRequestContext) -> HBResponse {
         let buffer = context.allocator.buffer(substring: self)
-        return HBResponse(status: .ok, headers: ["content-type": "text/plain; charset=utf-8"], body: .byteBuffer(buffer))
+        return HBResponse(status: .ok, headers: ["content-type": "text/plain; charset=utf-8"], body: .init(byteBuffer: buffer))
     }
 }
 
@@ -50,7 +50,7 @@ extension Substring: HBResponseGenerator {
 extension ByteBuffer: HBResponseGenerator {
     /// Generate response holding bytebuffer
     public func response(from request: HBRequest, context: HBRequestContext) -> HBResponse {
-        HBResponse(status: .ok, headers: ["content-type": "application/octet-stream"], body: .byteBuffer(self))
+        HBResponse(status: .ok, headers: ["content-type": "application/octet-stream"], body: .init(byteBuffer: self))
     }
 }
 
@@ -58,7 +58,7 @@ extension ByteBuffer: HBResponseGenerator {
 extension HTTPResponseStatus: HBResponseGenerator {
     /// Generate response with this response status code
     public func response(from request: HBRequest, context: HBRequestContext) -> HBResponse {
-        HBResponse(status: self, headers: [:], body: .empty)
+        HBResponse(status: self, headers: [:], body: .init())
     }
 }
 
@@ -69,7 +69,7 @@ extension Optional: HBResponseGenerator where Wrapped: HBResponseGenerator {
         case .some(let wrapped):
             return try wrapped.response(from: request, context: context)
         case .none:
-            return HBResponse(status: .noContent, headers: [:], body: .empty)
+            return HBResponse(status: .noContent, headers: [:], body: .init())
         }
     }
 }
@@ -105,5 +105,25 @@ public struct HBEditedResponse<Generator: HBResponseGenerator>: HBResponseGenera
             response.headers = headers
         }
         return response
+    }
+}
+
+/// Extend AsyncThrowingStream to conform to `HBResponseGenerator` so it can be returned
+/// from a route
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+extension AsyncThrowingStream: HBResponseGenerator where Element == ByteBuffer {
+    /// Return self as the response
+    public func response(from request: HBRequest, context: HBRequestContext) -> HBResponse {
+        return .init(status: .ok, body: .init(asyncSequence: self))
+    }
+}
+
+/// Extend AsyncStream to conform to `HBResponseGenerator` so it can be returned from
+/// a route
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+extension AsyncStream: HBResponseGenerator where Element == ByteBuffer {
+    /// Return self as the response
+    public func response(from request: HBRequest, context: HBRequestContext) -> HBResponse {
+        return .init(status: .ok, body: .init(asyncSequence: self))
     }
 }

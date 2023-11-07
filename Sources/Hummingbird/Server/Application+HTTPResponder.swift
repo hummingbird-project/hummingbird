@@ -18,7 +18,7 @@ import Logging
 import NIOCore
 import NIOHTTP1
 
-extension HBApplication {
+/*extension HBApplication {
     struct HTTPResponder: HBHTTPResponder {
         let responder: Responder
         let applicationContext: HBApplicationContext
@@ -53,20 +53,5 @@ extension HBApplication {
         let requestId = globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
         return logger.with(metadataKey: "hb_id", value: .stringConvertible(requestId))
     }
-}
+}*/
 
-extension Logger {
-    /// Create new Logger with additional metadata value
-    /// - Parameters:
-    ///   - metadataKey: Metadata key
-    ///   - value: Metadata value
-    /// - Returns: Logger
-    func with(metadataKey: String, value: MetadataValue) -> Logger {
-        var logger = self
-        logger[metadataKey: metadataKey] = value
-        return logger
-    }
-}
-
-/// Current global request ID
-private let globalRequestID = ManagedAtomic(0)

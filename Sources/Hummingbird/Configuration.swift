@@ -228,7 +228,7 @@ public struct HBApplicationConfiguration: Sendable {
 
     /// return HTTP server configuration
     #if canImport(Network)
-    var httpServer: HBHTTPServer.Configuration {
+    var httpServer: HBServerConfiguration {
         return .init(
             address: self.address,
             serverName: self.serverName,
@@ -240,7 +240,7 @@ public struct HBApplicationConfiguration: Sendable {
         )
     }
     #else
-    var httpServer: HBHTTPServer.Configuration {
+    var httpServer: HBServerConfiguration {
         return .init(
             address: self.address,
             serverName: self.serverName,

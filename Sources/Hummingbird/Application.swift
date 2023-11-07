@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Atomics
 import Dispatch
 import HummingbirdCore
 import Logging
@@ -176,17 +177,26 @@ extension HBApplication: Service {
             decoder: self.decoder
         )
         let dateCache = HBDateCache()
-        let responder = HTTPResponder(
-            responder: self.responder,
-            applicationContext: context,
-            dateCache: dateCache
-        )
-        let server = HBHTTPServer(
-            group: self.eventLoopGroup,
+        @Sendable func respond(to request: HBHTTPRequest, channel: Channel) async throws -> HBHTTPResponse {
+            let request = HBRequest(
+                head: request.head,
+                body: request.body
+            )
+            let context = Responder.Context(
+                applicationContext: context,
+                channel: channel,
+                logger: HBApplication.loggerWithRequestId(context.logger)
+            )
+            // respond to request
+            var response = try await self.responder.respond(to: request, context: context)
+            response.headers.add(name: "Date", value: dateCache.date)
+            return HBHTTPResponse(status: response.status, headers: response.headers, body: response.body)
+        }
+        let server = HBServer(
+            childChannelSetup: HTTP1Channel(additionalChannelHandlers: self.additionalChannelHandlers.map { $0() }, responder: respond),
             configuration: self.configuration.httpServer,
-            responder: responder,
-            additionalChannelHandlers: self.additionalChannelHandlers.map { $0() },
             onServerRunning: self.onServerRunning,
+            eventLoopGroup: self.eventLoopGroup,
             logger: self.logger
         )
         try await withGracefulShutdownHandler {
@@ -201,8 +211,29 @@ extension HBApplication: Service {
             }
         }
     }
+
+    public static func loggerWithRequestId(_ logger: Logger) -> Logger {
+        let requestId = globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
+        return logger.with(metadataKey: "hb_id", value: .stringConvertible(requestId))
+    }
 }
 
 extension HBApplication: CustomStringConvertible {
     public var description: String { "HBApplication" }
 }
+
+extension Logger {
+    /// Create new Logger with additional metadata value
+    /// - Parameters:
+    ///   - metadataKey: Metadata key
+    ///   - value: Metadata value
+    /// - Returns: Logger
+    func with(metadataKey: String, value: MetadataValue) -> Logger {
+        var logger = self
+        logger[metadataKey: metadataKey] = value
+        return logger
+    }
+}
+
+/// Current global request ID
+private let globalRequestID = ManagedAtomic(0)

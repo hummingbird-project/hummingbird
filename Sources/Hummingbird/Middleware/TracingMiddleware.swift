@@ -85,14 +85,7 @@ public struct HBTracingMiddleware<Context: HBRequestContext>: HBMiddleware {
                     attributes = self.recordHeaders(response.headers, toSpanAttributes: attributes, withPrefix: "http.response.header.")
 
                     attributes["http.status_code"] = Int(response.status.code)
-                    switch response.body {
-                    case .byteBuffer(let buffer):
-                        attributes["http.response_content_length"] = buffer.readableBytes
-                    case .stream:
-                        attributes["http.response_content_length"] = response.headers["content-length"].first.map { Int($0) } ?? nil
-                    case .empty:
-                        break
-                    }
+                    attributes["http.response_content_length"] = response.body.contentLength
                 }
                 return response
             } catch let error as HBHTTPResponseError {

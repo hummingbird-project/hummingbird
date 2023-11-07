@@ -30,7 +30,7 @@ public struct HBResponse: Sendable {
     ///   - status: response status
     ///   - headers: response headers
     ///   - body: response body
-    public init(status: HTTPResponseStatus, headers: HTTPHeaders = [:], body: HBResponseBody = .empty) {
+    public init(status: HTTPResponseStatus, headers: HTTPHeaders = [:], body: HBResponseBody = .init()) {
         self.status = status
         self.headers = headers
         self.body = body

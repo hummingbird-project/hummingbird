@@ -37,7 +37,7 @@ struct NullEncoder: HBResponseEncoder {
         return HBResponse(
             status: .ok,
             headers: ["content-type": "text/plain; charset=utf-8"],
-            body: .byteBuffer(context.allocator.buffer(string: "\(value)"))
+            body: .init(byteBuffer: context.allocator.buffer(string: "\(value)"))
         )
     }
 }

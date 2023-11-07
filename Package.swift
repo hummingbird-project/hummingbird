@@ -7,7 +7,8 @@ let package = Package(
     name: "hummingbird",
     platforms: [.macOS(.v14), .iOS(.v17), .tvOS(.v17)],
     products: [
-        // .library(name: "Hummingbird", targets: ["Hummingbird"]),
+        .library(name: "Hummingbird", targets: ["Hummingbird"]),
+        .library(name: "Hummingbird", targets: ["HummingbirdCore"]),
         // .library(name: "HummingbirdFoundation", targets: ["HummingbirdFoundation"]),
         // .library(name: "HummingbirdJobs", targets: ["HummingbirdJobs"]),
         // .library(name: "HummingbirdXCT", targets: ["HummingbirdXCT"]),
@@ -26,35 +27,35 @@ let package = Package(
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.0.0"),
     ],
     targets: [
-        /*        .target(name: "Hummingbird", dependencies: [
-             .byName(name: "HummingbirdCore"),
-             .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
-             .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
-             .product(name: "Logging", package: "swift-log"),
-             .product(name: "Metrics", package: "swift-metrics"),
-             .product(name: "Tracing", package: "swift-distributed-tracing"),
-             .product(name: "NIOCore", package: "swift-nio"),
-             .product(name: "NIOPosix", package: "swift-nio"),
-             .product(name: "NIOHTTP1", package: "swift-nio"),
-         ]),
-         .target(name: "HummingbirdFoundation", dependencies: [
-             .byName(name: "Hummingbird"),
-             .product(name: "NIOCore", package: "swift-nio"),
-             .product(name: "NIOPosix", package: "swift-nio"),
-             .product(name: "NIOFoundationCompat", package: "swift-nio"),
-         ]),
-         .target(name: "HummingbirdJobs", dependencies: [
-             .byName(name: "Hummingbird"),
-             .product(name: "Logging", package: "swift-log"),
-         ]),
-         .target(name: "HummingbirdXCT", dependencies: [
-             .byName(name: "Hummingbird"),
-             .byName(name: "HummingbirdCoreXCT"),
-             .product(name: "NIOCore", package: "swift-nio"),
-             .product(name: "NIOEmbedded", package: "swift-nio"),
-             .product(name: "NIOPosix", package: "swift-nio"),
-             .product(name: "NIOHTTP1", package: "swift-nio"),
-         ]),*/
+        .target(name: "Hummingbird", dependencies: [
+            .byName(name: "HummingbirdCore"),
+            .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
+            .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
+            .product(name: "Logging", package: "swift-log"),
+            .product(name: "Metrics", package: "swift-metrics"),
+            .product(name: "Tracing", package: "swift-distributed-tracing"),
+            .product(name: "NIOCore", package: "swift-nio"),
+            .product(name: "NIOPosix", package: "swift-nio"),
+            .product(name: "NIOHTTP1", package: "swift-nio"),
+        ]),
+        /* .target(name: "HummingbirdFoundation", dependencies: [
+                .byName(name: "Hummingbird"),
+                .product(name: "NIOCore", package: "swift-nio"),
+                .product(name: "NIOPosix", package: "swift-nio"),
+                .product(name: "NIOFoundationCompat", package: "swift-nio"),
+            ]),
+            .target(name: "HummingbirdJobs", dependencies: [
+                .byName(name: "Hummingbird"),
+                .product(name: "Logging", package: "swift-log"),
+            ]),
+            .target(name: "HummingbirdXCT", dependencies: [
+                .byName(name: "Hummingbird"),
+                .byName(name: "HummingbirdCoreXCT"),
+                .product(name: "NIOCore", package: "swift-nio"),
+                .product(name: "NIOEmbedded", package: "swift-nio"),
+                .product(name: "NIOPosix", package: "swift-nio"),
+                .product(name: "NIOHTTP1", package: "swift-nio"),
+            ]), */
         .target(name: "HummingbirdCore", dependencies: [
             .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
             .product(name: "Logging", package: "swift-log"),
