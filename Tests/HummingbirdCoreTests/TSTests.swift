@@ -47,30 +47,22 @@ class TransportServicesTests: XCTestCase {
     }
 
     func testTLS() async throws {
-        /*        let eventLoopGroup = NIOTSEventLoopGroup()
-         let p12Path = Bundle.module.path(forResource: "server", ofType: "p12")!
-         let tlsOptions = try XCTUnwrap(TSTLSOptions.options(
-             serverIdentity: .p12(filename: p12Path, password: "MyPassword")
-         ))
-         let configuration = HBHTTPServer.Configuration(
-             address: .hostname(port: 0),
-             serverName: testServerName,
-             tlsOptions: tlsOptions
-         )
-         let server = HBHTTPServer(
-             group: eventLoopGroup,
-             configuration: configuration,
-             responder: HelloResponder(),
-             logger: Logger(label: "HB")
-         )
-         try await testServer(
-             server,
-             clientConfiguration: .init(tlsConfiguration: self.getClientTLSConfiguration(), serverName: testServerName)
-         ) { client in
-             let response = try await client.get("/")
-             var body = try XCTUnwrap(response.body)
-             XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
-         }*/
+        let eventLoopGroup = NIOTSEventLoopGroup()
+        let p12Path = Bundle.module.path(forResource: "server", ofType: "p12")!
+        let tlsOptions = try XCTUnwrap(TSTLSOptions.options(
+            serverIdentity: .p12(filename: p12Path, password: "MyPassword")
+        ))
+        try await testServer(
+            childChannelSetup: HTTP1Channel(responder: helloResponder),
+            configuration: .init(address: .hostname(port: 0), serverName: testServerName, tlsOptions: tlsOptions),
+            eventLoopGroup: eventLoopGroup,
+            logger: Logger(label: "HB"),
+            clientConfiguration: .init(tlsConfiguration: self.getClientTLSConfiguration(), serverName: testServerName)
+        ) { client in
+            let response = try await client.get("/")
+            var body = try XCTUnwrap(response.body)
+            XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
+        }
     }
 
     func getClientTLSConfiguration() throws -> TLSConfiguration {
