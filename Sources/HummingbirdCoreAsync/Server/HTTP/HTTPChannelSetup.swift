@@ -58,13 +58,12 @@ extension HTTPChannelSetup {
                         body.finish()
                     } catch {
                         body.fail(error)
-                        group.cancelAll()
+                        throw error
                     }
                 }
             }
         } catch {
-            print(error)
-            fatalError()
+            // we got here because we failed to either read or write to the channel
         }
         asyncChannel.outbound.finish()
     }
