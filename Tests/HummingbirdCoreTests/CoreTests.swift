@@ -241,59 +241,66 @@ class HummingBirdCoreTests: XCTestCase {
         }
     }
 
-    /*
-     func testReadIdleHandler() async throws {
-         /// Channel Handler for serializing request header and data
-         final class HTTPServerIncompleteRequest: ChannelInboundHandler, RemovableChannelHandler {
-             typealias InboundIn = HTTPServerRequestPart
-             typealias InboundOut = HTTPServerRequestPart
+    func testReadIdleHandler() async throws {
+        /// Channel Handler for serializing request header and data
+        final class HTTPServerIncompleteRequest: ChannelInboundHandler, RemovableChannelHandler {
+            typealias InboundIn = HTTPServerRequestPart
+            typealias InboundOut = HTTPServerRequestPart
 
-             func channelRead(context: ChannelHandlerContext, data: NIOAny) {
-                 let part = self.unwrapInboundIn(data)
-                 switch part {
-                 case .end:
-                     break
-                 default:
-                     context.fireChannelRead(data)
-                 }
-             }
-         }
-         let server = HBHTTPServer(
-             group: Self.eventLoopGroup,
-             configuration: .init(address: .hostname(port: 0)),
-             responder: HelloResponder(),
-             additionalChannelHandlers: [HTTPServerIncompleteRequest(), IdleStateHandler(readTimeout: .seconds(1))],
-             logger: Logger(label: "HB")
-         )
-         try await testServer(server) { client in
-             try await withTimeout(.seconds(5)) {
-                 do {
-                     _ = try await client.get("/", headers: ["connection": "keep-alive"])
-                     XCTFail("Should not get here")
-                 } catch HBXCTClient.Error.connectionClosing {
-                 } catch {
-                     XCTFail("Unexpected error: \(error)")
-                 }
-             }
-         }
-     }
+            func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+                let part = self.unwrapInboundIn(data)
+                switch part {
+                case .end:
+                    break
+                default:
+                    context.fireChannelRead(data)
+                }
+            }
+        }
+        try await testServer(
+            childChannelSetup: HTTP1Channel(
+                additionalChannelHandlers: [HTTPServerIncompleteRequest(), IdleStateHandler(readTimeout: .seconds(1))],
+                responder: { request, _ in
+                    _ = try await request.body.collect(upTo: .max)
+                    return .init(status: .ok)
+                }
+            ),
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
+            logger: Logger(label: "HB")
+        ) { client in
+            try await withTimeout(.seconds(5)) {
+                do {
+                    _ = try await client.get("/", headers: ["connection": "keep-alive"])
+                    XCTFail("Should not get here")
+                } catch HBXCTClient.Error.connectionClosing {
+                } catch {
+                    XCTFail("Unexpected error: \(error)")
+                }
+            }
+        }
+    }
 
-     func testWriteIdleTimeout() async throws {
-         let server = HBHTTPServer(
-             group: Self.eventLoopGroup,
-             configuration: .init(address: .hostname(port: 0)),
-             responder: HelloResponder(),
-             additionalChannelHandlers: [IdleStateHandler(writeTimeout: .seconds(1))],
-             logger: Logger(label: "HB")
-         )
-         try await testServer(server) { client in
-             try await withTimeout(.seconds(5)) {
-                 _ = try await client.get("/", headers: ["connection": "keep-alive"])
-                 let channel = try await client.channelPromise.futureResult.get()
-                 try await channel.closeFuture.get()
-             }
-         }
-     }*/
+    func testWriteIdleTimeout() async throws {
+        try await testServer(
+            childChannelSetup: HTTP1Channel(
+                additionalChannelHandlers: [IdleStateHandler(writeTimeout: .seconds(1))],
+                responder: { request, _ in
+                    _ = try await request.body.collect(upTo: .max)
+                    return .init(status: .ok)
+                }
+            ),
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
+            logger: Logger(label: "HB")
+        ) { client in
+            try await withTimeout(.seconds(5)) {
+                _ = try await client.get("/", headers: ["connection": "keep-alive"])
+                let channel = try await client.channelPromise.futureResult.get()
+                try await channel.closeFuture.get()
+            }
+        }
+    }
 }
 
 struct DelayAsyncSequence<CoreSequence: AsyncSequence>: AsyncSequence {
