@@ -19,7 +19,7 @@ import NIOCore
 import NIOPosix
 
 struct MyRequestContext: HBRequestContext {
-        /// core context
+    /// core context
     public var coreContext: HBCoreRequestContext
 
     ///  Initialize an `HBRequestContext`
