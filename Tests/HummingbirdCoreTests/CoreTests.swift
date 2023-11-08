@@ -59,6 +59,21 @@ class HummingBirdCoreTests: XCTestCase {
         }
     }
 
+    func testMultipleRequests() async throws {
+        try await testServer(
+            childChannelSetup: HTTP1Channel(responder: helloResponder),
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
+            logger: Logger(label: "HB")
+        ) { client in
+            for _ in 0..<10 {
+                let response = try await client.post("/", body: ByteBuffer(string: "Hello"))
+                var body = try XCTUnwrap(response.body)
+                XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
+            }
+        }
+    }
+
     func testError() async throws {
         try await testServer(
             childChannelSetup: HTTP1Channel { _, _ in throw HBHTTPError(.unauthorized) },

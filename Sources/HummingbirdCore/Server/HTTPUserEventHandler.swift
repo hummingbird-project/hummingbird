@@ -56,9 +56,6 @@ public class HBHTTPUserEventHandler: ChannelDuplexHandler, RemovableChannelHandl
         default:
             break
         }
-        if case .head = part {
-            self.requestsInProgress += 1
-        }
         context.fireChannelRead(data)
     }
 
