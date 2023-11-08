@@ -14,16 +14,35 @@
 
 import Hummingbird
 import HummingbirdFoundation
+import Logging
+import NIOCore
 import NIOPosix
+
+struct MyRequestContext: HBRequestContext {
+        /// core context
+    public var coreContext: HBCoreRequestContext
+
+    ///  Initialize an `HBRequestContext`
+    /// - Parameters:
+    ///   - applicationContext: Context from Application that instigated the request
+    ///   - channelContext: Context providing source for EventLoop
+    public init(
+        applicationContext: HBApplicationContext,
+        channel: Channel,
+        logger: Logger
+    ) {
+        self.coreContext = .init(applicationContext: applicationContext, channel: channel, logger: logger)
+    }
+}
 
 // get environment
 let hostname = HBEnvironment.shared.get("SERVER_HOSTNAME") ?? "127.0.0.1"
 let port = HBEnvironment.shared.get("SERVER_PORT", as: Int.self) ?? 8080
 
 // create app
-let elg = MultiThreadedEventLoopGroup(numberOfThreads: 2)
+let elg = MultiThreadedEventLoopGroup(numberOfThreads: 4)
 defer { try? elg.syncShutdownGracefully() }
-var router = HBRouterBuilder()
+var router = HBRouterBuilder(context: MyRequestContext.self)
 // number of raw requests
 // ./wrk -c 128 -d 15s -t 8 http://localhost:8080
 router.get { _, _ in
