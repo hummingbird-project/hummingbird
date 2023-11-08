@@ -107,23 +107,3 @@ public struct HBEditedResponse<Generator: HBResponseGenerator>: HBResponseGenera
         return response
     }
 }
-
-/// Extend AsyncThrowingStream to conform to `HBResponseGenerator` so it can be returned
-/// from a route
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-extension AsyncThrowingStream: HBResponseGenerator where Element == ByteBuffer {
-    /// Return self as the response
-    public func response(from request: HBRequest, context: HBRequestContext) -> HBResponse {
-        return .init(status: .ok, body: .init(asyncSequence: self))
-    }
-}
-
-/// Extend AsyncStream to conform to `HBResponseGenerator` so it can be returned from
-/// a route
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-extension AsyncStream: HBResponseGenerator where Element == ByteBuffer {
-    /// Return self as the response
-    public func response(from request: HBRequest, context: HBRequestContext) -> HBResponse {
-        return .init(status: .ok, body: .init(asyncSequence: self))
-    }
-}
