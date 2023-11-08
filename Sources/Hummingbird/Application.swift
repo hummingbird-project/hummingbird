@@ -106,8 +106,6 @@ public struct HBApplication<Responder: HBResponder, ChannelSetup: HTTPChannelSet
     public var onServerRunning: @Sendable (Channel) async -> Void
     /// Server channel setup
     let channelSetup: ChannelSetup
-    /// additional channel handlers
-    var additionalChannelHandlers: [@Sendable () -> any RemovableChannelHandler]
     /// services attached to the application.
     var services: [any Service]
 
@@ -131,17 +129,6 @@ public struct HBApplication<Responder: HBResponder, ChannelSetup: HTTPChannelSet
         self.encoder = NullEncoder()
         self.decoder = NullDecoder()
         self.onServerRunning = { _ in }
-        // add idle read, write handlers
-        if let idleTimeoutConfiguration = configuration.idleTimeoutConfiguration {
-            self.additionalChannelHandlers = [{
-                IdleStateHandler(
-                    readTimeout: idleTimeoutConfiguration.readTimeout,
-                    writeTimeout: idleTimeoutConfiguration.writeTimeout
-                )
-            }]
-        } else {
-            self.additionalChannelHandlers = []
-        }
 
         self.eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
         self.threadPool = threadPool
