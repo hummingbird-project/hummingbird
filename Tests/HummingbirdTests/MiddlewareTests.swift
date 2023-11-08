@@ -17,6 +17,12 @@ import HummingbirdXCT
 import XCTest
 
 final class MiddlewareTests: XCTestCase {
+    func randomBuffer(size: Int) -> ByteBuffer {
+        var data = [UInt8](repeating: 0, count: size)
+        data = data.map { _ in UInt8.random(in: 0...255) }
+        return ByteBufferAllocator().buffer(bytes: data)
+    }
+
     func testMiddleware() async throws {
         struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
@@ -127,6 +133,44 @@ final class MiddlewareTests: XCTestCase {
         }
     }
 
+    func testMiddlewareResponseBodyWriter() async throws {
+        struct TransformWriter: HBResponseBodyWriter {
+            let parentWriter: any HBResponseBodyWriter
+            let allocator: ByteBufferAllocator
+
+            func write(_ buffer: ByteBuffer) async throws {
+                let output = self.allocator.buffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
+                try await self.parentWriter.write(output)
+            }
+        }
+        struct TransformMiddleware<Context: HBRequestContext>: HBMiddleware {
+            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+                let response = try await next.respond(to: request, context: context)
+                var editedResponse = response
+                editedResponse.body = .init { writer in
+                    let transformWriter = TransformWriter(parentWriter: writer, allocator: context.allocator)
+                    try await response.body.write(transformWriter)
+                }
+                return editedResponse
+            }
+        }
+        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        router.group()
+            .add(middleware: TransformMiddleware())
+            .get("test", options: .streamBody) { request, _ in
+                return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
+            }
+        let app = HBApplication(responder: router.buildResponder())
+
+        try await app.test(.router) { client in
+            let buffer = self.randomBuffer(size: 64000)
+            try await client.XCTExecute(uri: "/test", method: .GET, body: buffer) { response in
+                let expectedOutput = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
+                XCTAssertEqual(expectedOutput, response.body)
+            }
+        }
+    }
+
     func testCORSUseOrigin() async throws {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.middlewares.add(HBCORSMiddleware())
@@ -190,7 +234,7 @@ final class MiddlewareTests: XCTestCase {
     func testRouteLoggingMiddleware() async throws {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.middlewares.add(HBLogRequestsMiddleware(.debug))
-        router.put("/hello") { _, context -> String in
+        router.put("/hello") { _, _ -> String in
             throw HBHTTPError(.badRequest)
         }
         let app = HBApplication(responder: router.buildResponder())
