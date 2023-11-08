@@ -17,7 +17,7 @@ import NIOCore
 import NIOHTTP1
 
 /// Protocol for HTTP channels
-public protocol HTTPChannelSetup: HBChannelSetup where In == HTTPServerRequestPart, Out == SendableHTTPServerResponsePart {
+public protocol HTTPChannelHandler: HBChannelSetup where In == HTTPServerRequestPart, Out == SendableHTTPServerResponsePart {
     var responder: @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse { get set }
 }
 
@@ -28,8 +28,8 @@ enum HTTPChannelError: Error {
     case closeConnection
 }
 
-extension HTTPChannelSetup {
-    public func handle(asyncChannel: NIOAsyncChannel<HTTPServerRequestPart, SendableHTTPServerResponsePart>, logger: Logger) async {
+extension HTTPChannelHandler {
+    public func handleHTTP(asyncChannel: NIOAsyncChannel<HTTPServerRequestPart, SendableHTTPServerResponsePart>, logger: Logger) async {
         do {
             try await withThrowingTaskGroup(of: Void.self) { group in
                 let responseWriter = HBHTTPServerBodyWriter(outbound: asyncChannel.outbound)

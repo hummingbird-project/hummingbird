@@ -23,7 +23,7 @@ import ServiceLifecycle
 import XCTest
 
 /// Test using a live server
-final class HBXCTLive<Responder: HBResponder, ChannelSetup: HTTPChannelSetup>: HBXCTApplication {
+final class HBXCTLive<Responder: HBResponder, ChannelSetup: HBChannelSetup & HTTPChannelHandler>: HBXCTApplication {
     struct Client: HBXCTClientProtocol {
         let client: HBXCTClient
 

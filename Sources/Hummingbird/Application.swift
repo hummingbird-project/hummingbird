@@ -85,7 +85,7 @@ public final class HBApplicationContext: Sendable {
 /// try await app.buildAndRun()
 /// ```
 /// Editing the application builder setup after calling `build` will produce undefined behaviour.
-public struct HBApplication<Responder: HBResponder, ChannelSetup: HTTPChannelSetup> {
+public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup & HTTPChannelHandler> {
     // MARK: Member variables
 
     /// event loop group used by application

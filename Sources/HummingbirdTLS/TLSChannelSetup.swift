@@ -5,7 +5,7 @@ import NIOHTTP1
 import NIOSSL
 
 /// Setup child channel for HTTP1 with TLS
-public struct HTTP1WithTLSChannel: HTTPChannelSetup {
+public struct HTTP1WithTLSChannel: HBChannelSetup, HTTPChannelHandler {
     public typealias In = HTTPServerRequestPart
     public typealias Out = SendableHTTPServerResponsePart
 
@@ -34,6 +34,10 @@ public struct HTTP1WithTLSChannel: HTTPChannelSetup {
             )
             try channel.pipeline.syncOperations.addHandlers(childChannelHandlers)
         }
+    }
+
+    public func handle(asyncChannel: NIOCore.NIOAsyncChannel<NIOHTTP1.HTTPServerRequestPart, HummingbirdCore.SendableHTTPServerResponsePart>, logger: Logging.Logger) async {
+        await handleHTTP(asyncChannel: asyncChannel, logger: logger)
     }
 
     public var responder: @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse
