@@ -35,13 +35,13 @@ public class HBHTTPUserEventHandler: ChannelDuplexHandler, RemovableChannelHandl
         let part = unwrapOutboundIn(data)
         if case .end = part {
             self.requestsInProgress -= 1
-            context.writeAndFlush(data, promise: promise)
+            context.write(data, promise: promise)
             if self.closeAfterResponseWritten {
                 context.close(promise: nil)
                 self.closeAfterResponseWritten = false
             }
         } else {
-            context.writeAndFlush(data, promise: promise)
+            context.write(data, promise: promise)
         }
     }
 
@@ -73,7 +73,7 @@ public class HBHTTPUserEventHandler: ChannelDuplexHandler, RemovableChannelHandl
                 context.close(promise: nil)
             }
 
-        case let evt as IdleStateHandler.IdleStateEvent where evt == .read:
+        case IdleStateHandler.IdleStateEvent.read:
             // if we get an idle read event and we haven't completed reading the request
             // close the connection
             if self.requestsBeingRead > 0 {
@@ -81,7 +81,7 @@ public class HBHTTPUserEventHandler: ChannelDuplexHandler, RemovableChannelHandl
                 context.close(promise: nil)
             }
 
-        case let evt as IdleStateHandler.IdleStateEvent where evt == .write:
+        case IdleStateHandler.IdleStateEvent.write:
             // if we get an idle write event and are not currently processing a request
             if self.requestsInProgress == 0 {
                 self.logger.trace("Idle write timeout, so close channel")

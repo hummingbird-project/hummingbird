@@ -29,11 +29,11 @@ public final class HBHTTPSendableResponseChannelHandler: ChannelOutboundHandler,
         let part = unwrapOutboundIn(data)
         switch part {
         case .head(let head):
-            context.writeAndFlush(self.wrapOutboundOut(.head(head)), promise: promise)
+            context.write(self.wrapOutboundOut(.head(head)), promise: promise)
         case .body(let buffer):
-            context.writeAndFlush(self.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: promise)
+            context.write(self.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: promise)
         case .end:
-            context.writeAndFlush(self.wrapOutboundOut(.end(nil)), promise: promise)
+            context.write(self.wrapOutboundOut(.end(nil)), promise: promise)
         }
     }
 }
