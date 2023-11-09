@@ -85,7 +85,7 @@ public struct HBCORSMiddleware<Context: HBRequestContext>: HBMiddleware {
     /// apply CORS middleware
     public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
         // if no origin header then don't apply CORS
-        guard request.headers["origin"].first != nil else {
+        guard request.headers.contains(name: "origin") else {
             return try await next.respond(to: request, context: context)
         }
 
