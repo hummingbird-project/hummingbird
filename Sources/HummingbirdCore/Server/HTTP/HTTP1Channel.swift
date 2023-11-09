@@ -35,7 +35,7 @@ public struct HTTP1Channel: HBChannelSetup, HTTPChannelHandler {
         ]
         return channel.eventLoop.makeCompletedFuture {
             try channel.pipeline.syncOperations.configureHTTPServerPipeline(
-                withPipeliningAssistance: configuration.withPipeliningAssistance,
+                withPipeliningAssistance: false,
                 withErrorHandling: true
             )
             try channel.pipeline.syncOperations.addHandlers(childChannelHandlers)

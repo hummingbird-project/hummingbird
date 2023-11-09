@@ -42,10 +42,6 @@ public struct HBApplicationConfiguration: Sendable {
     public let backlog: Int
     /// Allows socket to be bound to an address that is already in use.
     public let reuseAddress: Bool
-    /// Disables the Nagle algorithm for send coalescing.
-    public let tcpNoDelay: Bool
-    /// Pipelining ensures that only one http request is processed at one time
-    public let enableHttpPipelining: Bool
     #if canImport(Network)
     /// TLS options for NIO Transport services
     public let tlsOptions: TSTLSOptions
@@ -71,8 +67,6 @@ public struct HBApplicationConfiguration: Sendable {
     ///   - backlog: the maximum length for the queue of pending connections.  If a connection request arrives with the queue full,
     ///         the client may receive an error with an indication of ECONNREFUSE
     ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
-    ///   - tcpNoDelay: Disables the Nagle algorithm for send coalescing.
-    ///   - enableHttpPipelining: Pipelining ensures that only one http request is processed at one time
     ///   - threadPoolSize: Number of threads in application thread pool
     ///   - logLevel: Logging level
     ///   - noHTTPServer: Don't start up the HTTP server.
@@ -84,8 +78,6 @@ public struct HBApplicationConfiguration: Sendable {
         maxStreamingBufferSize: Int = 1 * 1024 * 1024,
         backlog: Int = 256,
         reuseAddress: Bool = true,
-        tcpNoDelay: Bool = false,
-        enableHttpPipelining: Bool = true,
         threadPoolSize: Int = 2,
         logLevel: Logger.Level? = nil,
         noHTTPServer: Bool = false
@@ -99,8 +91,6 @@ public struct HBApplicationConfiguration: Sendable {
         self.maxStreamingBufferSize = maxStreamingBufferSize
         self.backlog = backlog
         self.reuseAddress = reuseAddress
-        self.tcpNoDelay = tcpNoDelay
-        self.enableHttpPipelining = enableHttpPipelining
         #if canImport(Network)
         self.tlsOptions = .none
         #endif
@@ -126,7 +116,6 @@ public struct HBApplicationConfiguration: Sendable {
     ///   - maxUploadSize: Maximum upload size allowed for routes that don't stream the request payload
     ///   - maxStreamingBufferSize: Maximum size of data in flight while streaming request payloads before back pressure is applied.
     ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
-    ///   - enableHttpPipelining: Pipelining ensures that only one http request is processed at one time
     ///   - threadPoolSize: Number of threads in application thread pool
     ///   - logLevel: Logging level
     ///   - noHTTPServer: Don't start up the HTTP server.
@@ -138,7 +127,6 @@ public struct HBApplicationConfiguration: Sendable {
         maxStreamedUploadSize: Int = 4 * 1024 * 1024,
         maxStreamingBufferSize: Int = 1 * 1024 * 1024,
         reuseAddress: Bool = true,
-        enableHttpPipelining: Bool = true,
         threadPoolSize: Int = 2,
         logLevel: Logger.Level? = nil,
         noHTTPServer: Bool = false,
@@ -153,8 +141,6 @@ public struct HBApplicationConfiguration: Sendable {
         self.maxStreamingBufferSize = maxStreamingBufferSize
         self.backlog = 256 // not used by Network framework
         self.reuseAddress = reuseAddress
-        self.tcpNoDelay = true // not used by Network framework
-        self.enableHttpPipelining = enableHttpPipelining
         self.tlsOptions = tlsOptions
 
         self.threadPoolSize = threadPoolSize
@@ -179,8 +165,6 @@ public struct HBApplicationConfiguration: Sendable {
         maxStreamingBufferSize: Int? = nil,
         backlog: Int? = nil,
         reuseAddress: Bool? = nil,
-        tcpNoDelay: Bool? = nil,
-        enableHttpPipelining: Bool? = nil,
         threadPoolSize: Int? = nil,
         logLevel: Logger.Level? = nil
     ) -> Self {
@@ -191,8 +175,6 @@ public struct HBApplicationConfiguration: Sendable {
             maxStreamingBufferSize: maxStreamingBufferSize ?? self.maxStreamingBufferSize,
             backlog: backlog ?? self.backlog,
             reuseAddress: reuseAddress ?? self.reuseAddress,
-            tcpNoDelay: tcpNoDelay ?? self.tcpNoDelay,
-            enableHttpPipelining: enableHttpPipelining ?? self.enableHttpPipelining,
             threadPoolSize: threadPoolSize ?? self.threadPoolSize,
             logLevel: logLevel ?? self.logLevel
         )
@@ -205,8 +187,8 @@ public struct HBApplicationConfiguration: Sendable {
             address: self.address,
             serverName: self.serverName,
             maxStreamingBufferSize: self.maxStreamingBufferSize,
+            backlog: self.backlog,
             reuseAddress: self.reuseAddress,
-            withPipeliningAssistance: self.enableHttpPipelining,
             tlsOptions: self.tlsOptions
         )
     }
@@ -217,9 +199,7 @@ public struct HBApplicationConfiguration: Sendable {
             serverName: self.serverName,
             maxStreamingBufferSize: self.maxStreamingBufferSize,
             backlog: self.backlog,
-            reuseAddress: self.reuseAddress,
-            tcpNoDelay: self.tcpNoDelay,
-            withPipeliningAssistance: self.enableHttpPipelining
+            reuseAddress: self.reuseAddress
         )
     }
     #endif

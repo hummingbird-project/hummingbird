@@ -29,7 +29,7 @@ public struct HTTP1WithTLSChannel: HBChannelSetup, HTTPChannelHandler {
         return channel.eventLoop.makeCompletedFuture {
             try channel.pipeline.syncOperations.addHandler(NIOSSLServerHandler(context: self.sslContext))
             try channel.pipeline.syncOperations.configureHTTPServerPipeline(
-                withPipeliningAssistance: configuration.withPipeliningAssistance,
+                withPipeliningAssistance: false,
                 withErrorHandling: true
             )
             try channel.pipeline.syncOperations.addHandlers(childChannelHandlers)
