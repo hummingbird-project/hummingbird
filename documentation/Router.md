@@ -48,7 +48,7 @@ You can extract parameters out of the URI by prefixing the path with a colon. Th
 ```swift
 let app = HBApplication()
 app.router.get("/user/:id") { request in
-    let id = request.parameters.get("id", as: Int.self) else { throw HBHTTPError(.badRequest) }
+    guard let id = request.parameters.get("id", as: Int.self) else { throw HBHTTPError(.badRequest) }
     return getUser(id: id)
 }
 ```
