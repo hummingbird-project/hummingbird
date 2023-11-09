@@ -17,7 +17,7 @@ import NIOCore
 import NIOHTTP1
 
 /// Protocol for HTTP channels
-public protocol HTTPChannelHandler: HBChannelSetup where In == HTTPServerRequestPart, Out == SendableHTTPServerResponsePart {
+public protocol HTTPChannelHandler: HBChannelSetup {
     var responder: @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse { get set }
 }
 
