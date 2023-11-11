@@ -18,7 +18,7 @@ import NIOHTTP1
 import ServiceContextModule
 
 /// Router
-public struct Router<Context: HBRequestContext, Handler: MiddlewareProtocol>: MiddlewareProtocol where Handler.Input == HBRequest, Handler.Output == HBResponse, Handler.Context == Context
+public struct HBRouter<Context: HBRequestContext, Handler: MiddlewareProtocol>: MiddlewareProtocol where Handler.Input == HBRequest, Handler.Output == HBResponse, Handler.Context == Context
 {
     public typealias Input = HBRequest
     public typealias Output = HBResponse
@@ -45,7 +45,7 @@ public struct Router<Context: HBRequestContext, Handler: MiddlewareProtocol>: Mi
 }
 
 /// extend Router to conform to HBResponder so we can use it to process `HBRequest``
-extension Router: HBResponder where Handler.Input == HBRequest, Handler.Output == HBResponse {
+extension HBRouter: HBResponder {
     public func respond(to request: Input, context: Context) async throws -> Output {
         try await self.handle(request, context: context) { _, _ in
             throw HBHTTPError(.notFound)

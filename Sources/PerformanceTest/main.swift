@@ -46,7 +46,7 @@ let routerGroup = RouteGroup("test", context: MyRequestContext.self) {
     }
 }
 
-func JsonRouteGroup<Context: HBRequestContext>() -> some MiddlewareProtocol<HBRequest, HBResponse, Context> {
+func JsonRouteGroup<Context: HBRequestContext>() -> some HBMiddlewareProtocol<Context> {
     return RouteGroup("json", context: Context.self) {
         Route(.GET) { _, _ in
             return ["message": "Hello, world"]
@@ -57,7 +57,7 @@ func JsonRouteGroup<Context: HBRequestContext>() -> some MiddlewareProtocol<HBRe
 // create app
 let elg = MultiThreadedEventLoopGroup(numberOfThreads: 4)
 defer { try? elg.syncShutdownGracefully() }
-var router = Router(context: MyRequestContext.self) {
+var router = HBRouter(context: MyRequestContext.self) {
     HBLogRequestsMiddleware(.info)
     Route(.GET) { _, _ in
         return "Hello, world"

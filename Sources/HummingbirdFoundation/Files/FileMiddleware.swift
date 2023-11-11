@@ -15,6 +15,7 @@
 import Foundation
 import Hummingbird
 import Logging
+import MiddlewareModule
 import NIOCore
 import NIOPosix
 

@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import MiddlewareModule
 import NIOCore
 
 /// Middleware implementing Cross-Origin Resource Sharing (CORS) headers.

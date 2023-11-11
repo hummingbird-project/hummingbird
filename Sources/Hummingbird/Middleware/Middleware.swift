@@ -14,7 +14,4 @@
 
 import MiddlewareModule
 
-public protocol HBMiddlewareProtocol<Context>: MiddlewareProtocol {
-    associatedtype Input = HBRequest
-    associatedtype Output = HBResponse
-}
+public protocol HBMiddlewareProtocol<Context>: MiddlewareProtocol where Input == HBRequest, Output == HBResponse {}

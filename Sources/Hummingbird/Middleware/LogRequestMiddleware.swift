@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import MiddlewareModule
 import Logging
 
 /// Middleware outputting to log for every call to server

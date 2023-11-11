@@ -14,6 +14,7 @@
 
 import Dispatch
 import Metrics
+import MiddlewareModule
 
 /// Middleware recording metrics for each request
 ///

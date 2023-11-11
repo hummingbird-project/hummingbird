@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import MiddlewareModule
 import Tracing
 
 /// Middleware creating Distributed Tracing spans for each request.
