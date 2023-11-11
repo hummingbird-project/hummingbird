@@ -29,6 +29,7 @@ let package = Package(
     targets: [
         .target(name: "Hummingbird", dependencies: [
             .byName(name: "HummingbirdCore"),
+            .byName(name: "MiddlewareModule"),
             .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
             .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
             .product(name: "Logging", package: "swift-log"),
@@ -85,6 +86,7 @@ let package = Package(
             .product(name: "NIOCore", package: "swift-nio"),
             .product(name: "NIOSSL", package: "swift-nio-ssl"),
         ]),
+        .target(name: "MiddlewareModule", dependencies: []),
         .executableTarget(name: "PerformanceTest", dependencies: [
             .byName(name: "Hummingbird"),
             .byName(name: "HummingbirdFoundation"),

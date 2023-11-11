@@ -50,10 +50,13 @@ public struct HBCoreRequestContext: Sendable {
     var logger: Logger
     /// Endpoint path
     @usableFromInline
-    var endpointPath: EndpointPath
+    let resolvedEndpointPath: EndpointPath
     /// Parameters extracted from URI
     @usableFromInline
     var parameters: HBParameters
+    /// remaining path components to match
+    @usableFromInline
+    var remainingPathComponents: ArraySlice<Substring>
 
     @inlinable
     public init(
@@ -66,8 +69,9 @@ public struct HBCoreRequestContext: Sendable {
         self.eventLoop = eventLoop
         self.allocator = allocator
         self.logger = logger
-        self.endpointPath = .init()
+        self.resolvedEndpointPath = .init()
         self.parameters = .init()
+        self.remainingPathComponents = .init()
     }
 
     @inlinable
@@ -118,10 +122,11 @@ extension HBRequestContext {
 
     /// Endpoint path
     @inlinable
-    public var endpointPath: String? { coreContext.endpointPath.value }
+    public var resolvedEndpointPath: String? { coreContext.resolvedEndpointPath.value }
     /// Parameters extracted from URI
     @inlinable
     public var parameters: HBParameters { coreContext.parameters }
+
     /// Request ID, extracted from Logger
     @inlinable
     public var id: String { self.logger[metadataKey: "hb_id"]!.description }

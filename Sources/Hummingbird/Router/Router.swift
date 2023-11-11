@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2023 the Hummingbird authors
+// Copyright (c) 2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,36 +12,43 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// Directs requests to handlers based on the request uri and method.
-///
-/// Conforms to `HBResponder` so need to provide its own implementation of
-/// `func apply(to request: Request) -> EventLoopFuture<Response>`.
-///
-struct HBRouter<Context: HBRequestContext>: HBResponder {
-    let trie: RouterPathTrie<HBEndpointResponders<Context>>
-    let notFoundResponder: any HBResponder<Context>
+import MiddlewareModule
+import NIOCore
+import NIOHTTP1
+import ServiceContextModule
 
-    init(context: Context.Type, trie: RouterPathTrie<HBEndpointResponders<Context>>, notFoundResponder: any HBResponder<Context>) {
-        self.trie = trie
-        self.notFoundResponder = notFoundResponder
+/// Router
+public struct Router<Context: HBRequestContext, Handler: MiddlewareProtocol>: MiddlewareProtocol where Handler.Input == HBRequest, Handler.Output == HBResponse, Handler.Context == Context
+{
+    public typealias Input = HBRequest
+    public typealias Output = HBResponse
+
+    let handler: Handler
+
+    public init(handler: Handler) {
+        self.handler = handler
     }
 
-    /// Respond to request by calling correct handler
-    /// - Parameter request: HTTP request
-    /// - Returns: EventLoopFuture that will be fulfilled with the Response
-    public func respond(to request: HBRequest, context: Context) async throws -> HBResponse {
-        let path = request.uri.path
-        guard let result = trie.getValueAndParameters(path),
-              let responder = result.value.getResponder(for: request.method)
-        else {
-            return try await self.notFoundResponder.respond(to: request, context: context)
-        }
+    public init(@MiddlewareBuilder<Input, Output, Context> builder: () -> Handler) {
+        self.handler = builder()
+    }
+
+    public init(context: Context.Type, @MiddlewareBuilder<Input, Output, Context> builder: () -> Handler) {
+        self.handler = builder()
+    }
+
+    public func handle(_ input: Input, context: Context, next: (Input, Context) async throws -> Output) async throws -> Output {
         var context = context
-        if let parameters = result.parameters {
-            context.coreContext.parameters = parameters
+        context.coreContext.remainingPathComponents = input.uri.path.split(separator: "/")[...]
+        return try await self.handler.handle(input, context: context, next: next)
+    }
+}
+
+/// extend Router to conform to HBResponder so we can use it to process `HBRequest``
+extension Router: HBResponder where Handler.Input == HBRequest, Handler.Output == HBResponse {
+    public func respond(to request: Input, context: Context) async throws -> Output {
+        try await self.handle(request, context: context) { _, _ in
+            throw HBHTTPError(.notFound)
         }
-        // store endpoint path in request (mainly for metrics)
-        context.coreContext.endpointPath.value = result.value.path
-        return try await responder.respond(to: request, context: context)
     }
 }

@@ -19,18 +19,18 @@ import Metrics
 ///
 /// Records the number of requests, the request duration and how many errors were thrown. Each metric has additional
 /// dimensions URI and method.
-public struct HBMetricsMiddleware<Context: HBRequestContext>: HBMiddleware {
+public struct HBMetricsMiddleware<Context: HBRequestContext>: HBMiddlewareProtocol {
     public init() {}
 
-    public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+    public func handle(_ request: HBRequest, context: Context, next: (Input, Context) async throws -> Output) async throws -> HBResponse {
         let startTime = DispatchTime.now().uptimeNanoseconds
 
         do {
-            let response = try await next.respond(to: request, context: context)
+            let response = try await next(request, context)
             // need to create dimensions once request has been responded to ensure
             // we have the correct endpoint path
             let dimensions: [(String, String)] = [
-                ("hb_uri", context.endpointPath ?? request.uri.path),
+                ("hb_uri", context.resolvedEndpointPath ?? request.uri.path),
                 ("hb_method", request.method.rawValue),
             ]
             Counter(label: "hb_requests", dimensions: dimensions).increment()
@@ -45,7 +45,7 @@ public struct HBMetricsMiddleware<Context: HBRequestContext>: HBMiddleware {
             // we have the correct endpoint path
             let dimensions: [(String, String)]
             // Don't record uri in 404 errors, to avoid spamming of metrics
-            if let endpointPath = context.endpointPath {
+            if let endpointPath = context.resolvedEndpointPath {
                 dimensions = [
                     ("hb_uri", endpointPath),
                     ("hb_method", request.method.rawValue),

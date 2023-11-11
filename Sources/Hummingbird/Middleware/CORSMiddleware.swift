@@ -20,7 +20,7 @@ import NIOCore
 /// then return an empty body with all the standard CORS headers otherwise send
 /// request onto the next handler and when you receive the response add a
 /// "access-control-allow-origin" header
-public struct HBCORSMiddleware<Context: HBRequestContext>: HBMiddleware {
+public struct HBCORSMiddleware<Context>: HBMiddlewareProtocol {
     /// Defines what origins are allowed
     public enum AllowOrigin: Sendable {
         case none
@@ -83,10 +83,10 @@ public struct HBCORSMiddleware<Context: HBRequestContext>: HBMiddleware {
     }
 
     /// apply CORS middleware
-    public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+    public func handle(_ request: HBRequest, context: Context, next: (Input, Context) async throws -> Output) async throws -> HBResponse {
         // if no origin header then don't apply CORS
         guard request.headers.contains(name: "origin") else {
-            return try await next.respond(to: request, context: context)
+            return try await next(request, context)
         }
 
         if request.method == .OPTIONS {
@@ -112,7 +112,7 @@ public struct HBCORSMiddleware<Context: HBRequestContext>: HBMiddleware {
             return HBResponse(status: .noContent, headers: headers, body: .init())
         } else {
             // if not OPTIONS then run rest of middleware chain and add origin value at the end
-            var response = try await next.respond(to: request, context: context)
+            var response = try await next(request, context)
             response.headers.add(name: "access-control-allow-origin", value: self.allowOrigin.value(for: request) ?? "")
             if self.allowCredentials {
                 response.headers.add(name: "access-control-allow-credentials", value: "true")

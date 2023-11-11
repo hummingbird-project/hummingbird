@@ -28,7 +28,7 @@ import NIOPosix
 /// "if-modified-since", "if-none-match", "if-range" and 'range" headers. It will output "content-length",
 /// "modified-date", "eTag", "content-type", "cache-control" and "content-range" headers where
 /// they are relevant.
-public struct HBFileMiddleware<Context: HBRequestContext>: HBMiddleware {
+public struct HBFileMiddleware<Context: HBRequestContext>: HBMiddlewareProtocol {
     struct IsDirectoryError: Error {}
 
     let rootFolder: URL
@@ -70,9 +70,9 @@ public struct HBFileMiddleware<Context: HBRequestContext>: HBMiddleware {
         logger.info("FileMiddleware serving from \(workingFolder)\(rootFolder)")
     }
 
-    public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+    public func handle(_ request: HBRequest, context: Context, next: (Input, Context) async throws -> Output) async throws -> HBResponse {
         do {
-            return try await next.respond(to: request, context: context)
+            return try await next(request, context)
         } catch {
             guard let httpError = error as? HBHTTPError, httpError.status == .notFound else {
                 throw error

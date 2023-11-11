@@ -27,13 +27,13 @@
 /// }
 /// application.router.put("user", use: CreateUser.self)
 ///
-public protocol HBRequestDecodable: HBRouteHandler, Decodable {}
+/* public protocol HBRequestDecodable: HBRouteHandler, Decodable {}
 
-extension HBRequestDecodable {
-    /// Create using `Codable` interfaces
-    /// - Parameter request: request
-    /// - Throws: HBHTTPError
-    public init(from request: HBRequest, context: HBRequestContext) throws {
-        self = try request.decode(as: Self.self, using: context)
-    }
-}
+ extension HBRequestDecodable {
+     /// Create using `Codable` interfaces
+     /// - Parameter request: request
+     /// - Throws: HBHTTPError
+     public init(from request: HBRequest, context: HBRequestContext) throws {
+         self = try request.decode(as: Self.self, using: context)
+     }
+ } */

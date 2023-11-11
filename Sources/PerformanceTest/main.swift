@@ -15,6 +15,7 @@
 import Hummingbird
 import HummingbirdFoundation
 import Logging
+import MiddlewareModule
 import NIOCore
 import NIOPosix
 
@@ -39,30 +40,37 @@ struct MyRequestContext: HBRequestContext {
 let hostname = HBEnvironment.shared.get("SERVER_HOSTNAME") ?? "127.0.0.1"
 let port = HBEnvironment.shared.get("SERVER_PORT", as: Int.self) ?? 8080
 
+let routerGroup = RouteGroup("test", context: MyRequestContext.self) {
+    Route(.GET) { _, _ in
+        return "test"
+    }
+}
+
+func JsonRouteGroup<Context: HBRequestContext>() -> some MiddlewareProtocol<HBRequest, HBResponse, Context> {
+    return RouteGroup("json", context: Context.self) {
+        Route(.GET) { _, _ in
+            return ["message": "Hello, world"]
+        }
+    }
+}
+
 // create app
 let elg = MultiThreadedEventLoopGroup(numberOfThreads: 4)
 defer { try? elg.syncShutdownGracefully() }
-var router = HBRouterBuilder(context: MyRequestContext.self)
-// number of raw requests
-// ./wrk -c 128 -d 15s -t 8 http://localhost:8080
-router.get { _, _ in
-    return "Hello, world"
-}
-
-// request with a body
-// ./wrk -c 128 -d 15s -t 8 -s scripts/post.lua http://localhost:8080
-router.post(options: .streamBody) { request, _ in
-    return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
-}
-
-// return JSON
-// ./wrk -c 128 -d 15s -t 8 http://localhost:8080/json
-router.get("json") { _, _ in
-    return ["message": "Hello, world"]
+var router = Router(context: MyRequestContext.self) {
+    HBLogRequestsMiddleware(.info)
+    Route(.GET) { _, _ in
+        return "Hello, world"
+    }
+    Route(.POST) { request, _ in
+        let buffer = try await request.body.consumeBody(maxSize: .max)
+        return buffer
+    }
+    JsonRouteGroup()
 }
 
 var app = HBApplication(
-    responder: router.buildResponder(),
+    responder: router,
     configuration: .init(
         address: .hostname(hostname, port: port),
         serverName: "Hummingbird"

@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 /// Split router path into components
-struct RouterPath: ExpressibleByStringLiteral {
-    enum Element: Equatable {
+public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConvertible, Collection {
+    public enum Element: Sendable, Equatable, CustomStringConvertible {
         case path(Substring)
         case capture(Substring)
         case prefixCapture(suffix: Substring, parameter: Substring) // *.jpg
@@ -23,28 +23,25 @@ struct RouterPath: ExpressibleByStringLiteral {
         case prefixWildcard(Substring) // *.jpg
         case suffixWildcard(Substring) // file.*
         case recursiveWildcard
-        case null
 
-        static func ~= <S: StringProtocol>(lhs: Element, rhs: S) -> Bool {
-            switch lhs {
-            case .path(let lhs):
-                return lhs == rhs
-            case .capture:
-                return true
-            case .prefixCapture(let suffix, _):
-                return rhs.hasSuffix(suffix)
-            case .suffixCapture(let prefix, _):
-                return rhs.hasPrefix(prefix)
+        public var description: String {
+            switch self {
+            case .path(let path):
+                return String(path)
+            case .capture(let parameter):
+                return "${\(parameter)}"
+            case .prefixCapture(let suffix, let parameter):
+                return "${\(parameter)}\(suffix)"
+            case .suffixCapture(let prefix, let parameter):
+                return "\(prefix)${\(parameter)}"
             case .wildcard:
-                return true
+                return "*"
             case .prefixWildcard(let suffix):
-                return rhs.hasSuffix(suffix)
+                return "*\(suffix)"
             case .suffixWildcard(let prefix):
-                return rhs.hasPrefix(prefix)
+                return "\(prefix)*"
             case .recursiveWildcard:
-                return true
-            case .null:
-                return false
+                return "**"
             }
         }
 
@@ -60,7 +57,7 @@ struct RouterPath: ExpressibleByStringLiteral {
 
     let components: [Element]
 
-    init(_ value: String) {
+    public init(_ value: String) {
         let split = value.split(separator: "/", omittingEmptySubsequences: true)
         self.components = split.map { component in
             if component.first == ":" {
@@ -97,20 +94,96 @@ struct RouterPath: ExpressibleByStringLiteral {
         }
     }
 
-    init(stringLiteral value: String) {
+    public init(stringLiteral value: String) {
         self.init(value)
+    }
+
+    public var description: String {
+        self.components.map(\.description).joined(separator: "/")
+    }
+
+    func matchAll<Context: HBRequestContext>(_ context: Context) -> Context? {
+        if self.components.count != context.coreContext.remainingPathComponents.count {
+            if case .recursiveWildcard = self.components.last {
+                if self.components.count > context.coreContext.remainingPathComponents.count + 1 {
+                    return nil
+                }
+            } else {
+                return nil
+            }
+        }
+        return self.match(context)
+    }
+
+    func matchPrefix<Context: HBRequestContext>(_ context: Context) -> Context? {
+        if self.components.count > context.coreContext.remainingPathComponents.count {
+            return nil
+        }
+        return self.match(context)
+    }
+
+    private func match<Context: HBRequestContext>(_ context: Context) -> Context? {
+        var pathIterator = context.coreContext.remainingPathComponents.makeIterator()
+        var context = context
+        for component in self.components {
+            switch component {
+            case .path(let lhs):
+                if lhs != pathIterator.next()! {
+                    return nil
+                }
+            case .capture(let key):
+                context.coreContext.parameters.set(key, value: pathIterator.next()!)
+
+            case .prefixCapture(let suffix, let key):
+                let pathComponent = pathIterator.next()!
+                if pathComponent.hasSuffix(suffix) {
+                    context.coreContext.parameters.set(key, value: pathComponent.dropLast(suffix.count))
+                } else {
+                    return nil
+                }
+            case .suffixCapture(let prefix, let key):
+                let pathComponent = pathIterator.next()!
+                if pathComponent.hasPrefix(prefix) {
+                    context.coreContext.parameters.set(key, value: pathComponent.dropFirst(prefix.count))
+                } else {
+                    return nil
+                }
+            case .wildcard:
+                break
+            case .prefixWildcard(let suffix):
+                if pathIterator.next()!.hasSuffix(suffix) {
+                } else {
+                    return nil
+                }
+            case .suffixWildcard(let prefix):
+                if pathIterator.next()!.hasPrefix(prefix) {
+                } else {
+                    return nil
+                }
+            case .recursiveWildcard:
+                var paths = pathIterator.next().map { [$0] } ?? []
+                while let pathComponent = pathIterator.next() {
+                    paths.append(pathComponent)
+                }
+                context.coreContext.parameters.setCatchAll(paths.joined(separator: "/")[...])
+                context.coreContext.remainingPathComponents = []
+                return context
+            }
+        }
+        context.coreContext.remainingPathComponents = context.coreContext.remainingPathComponents.dropFirst(self.components.count)
+        return context
     }
 }
 
-extension RouterPath: Collection {
-    func index(after i: Int) -> Int {
+extension RouterPath {
+    public func index(after i: Int) -> Int {
         return self.components.index(after: i)
     }
 
-    subscript(_ index: Int) -> RouterPath.Element {
+    public subscript(_ index: Int) -> RouterPath.Element {
         return self.components[index]
     }
 
-    var startIndex: Int { self.components.startIndex }
-    var endIndex: Int { self.components.endIndex }
+    public var startIndex: Int { self.components.startIndex }
+    public var endIndex: Int { self.components.endIndex }
 }

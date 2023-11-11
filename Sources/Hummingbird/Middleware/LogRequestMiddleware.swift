@@ -15,7 +15,7 @@
 import Logging
 
 /// Middleware outputting to log for every call to server
-public struct HBLogRequestsMiddleware<Context: HBRequestContext>: HBMiddleware {
+public struct HBLogRequestsMiddleware<Context: HBRequestContext>: HBMiddlewareProtocol {
     let logLevel: Logger.Level
     let includeHeaders: Bool
 
@@ -24,7 +24,7 @@ public struct HBLogRequestsMiddleware<Context: HBRequestContext>: HBMiddleware {
         self.includeHeaders = includeHeaders
     }
 
-    public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+    public func handle(_ request: HBRequest, context: Context, next: (Input, Context) async throws -> Output) async throws -> HBResponse {
         if self.includeHeaders {
             context.logger.log(
                 level: self.logLevel,
@@ -38,6 +38,6 @@ public struct HBLogRequestsMiddleware<Context: HBRequestContext>: HBMiddleware {
                 metadata: ["hb_uri": .stringConvertible(request.uri), "hb_method": .string(request.method.rawValue)]
             )
         }
-        return try await next.respond(to: request, context: context)
+        return try await next(request, context)
     }
 }
