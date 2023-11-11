@@ -40,14 +40,8 @@ struct MyRequestContext: HBRequestContext {
 let hostname = HBEnvironment.shared.get("SERVER_HOSTNAME") ?? "127.0.0.1"
 let port = HBEnvironment.shared.get("SERVER_PORT", as: Int.self) ?? 8080
 
-let routerGroup = RouteGroup("test", context: MyRequestContext.self) {
-    Route(.GET) { _, _ in
-        return "test"
-    }
-}
-
 func JsonRouteGroup<Context: HBRequestContext>() -> some HBMiddlewareProtocol<Context> {
-    return RouteGroup("json", context: Context.self) {
+    return RouteGroup("json") {
         Get { _, _ in
             return ["message": "Hello, world"]
         }

@@ -29,11 +29,7 @@ public struct HBRouter<Context: HBRequestContext, Handler: MiddlewareProtocol>: 
         self.handler = handler
     }
 
-    public init(@MiddlewareBuilder<Input, Output, Context> builder: () -> Handler) {
-        self.handler = builder()
-    }
-
-    public init(context: Context.Type, @MiddlewareBuilder<Input, Output, Context> builder: () -> Handler) {
+    public init(context: Context.Type = Context.self, @MiddlewareBuilder<Input, Output, Context> builder: () -> Handler) {
         self.handler = builder()
     }
 
