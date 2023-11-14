@@ -36,12 +36,9 @@ extension URLEncodedFormDecoder: HBRequestDecoder {
     /// - Parameters:
     ///   - type: Type to decode
     ///   - request: Request to decode from
-    public func decode<T: Decodable>(_ type: T.Type, from request: HBRequest, context: HBRequestContext) throws -> T {
-        guard case .byteBuffer(var buffer) = request.body,
-              let string = buffer.readString(length: buffer.readableBytes)
-        else {
-            throw HBHTTPError(.badRequest)
-        }
+    public func decode<T: Decodable>(_ type: T.Type, from request: HBRequest, context: HBRequestContext) async throws -> T {
+        let buffer = try await request.body.collect(upTo: context.applicationContext.configuration.maxUploadSize)
+        let string = String(buffer: buffer)
         return try self.decode(T.self, from: string)
     }
 }

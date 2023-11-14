@@ -40,7 +40,11 @@ public enum HBRequestBody: Sendable, AsyncSequence {
         case .byteBuffer:
             return self
         case .stream(let streamer):
-            return try .byteBuffer(await streamer.collect(upTo: maxSize))
+            do {
+                return try .byteBuffer(await streamer.collect(upTo: maxSize))
+            } catch {
+                throw HBHTTPError(.payloadTooLarge)
+            }
         }
     }
 }

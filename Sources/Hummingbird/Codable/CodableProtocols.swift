@@ -28,7 +28,7 @@ public protocol HBRequestDecoder: Sendable {
     /// - Parameters:
     ///   - type: type to decode to
     ///   - request: request
-    func decode<T: Decodable>(_ type: T.Type, from request: HBRequest, context: HBRequestContext) throws -> T
+    func decode<T: Decodable>(_ type: T.Type, from request: HBRequest, context: HBRequestContext) async throws -> T
 }
 
 /// Default encoder. Outputs request with the swift string description of object
