@@ -57,8 +57,7 @@ var router = HBRouter(context: MyRequestContext.self) {
         return "Hello, world"
     }
     Post { request, _ in
-        let buffer = try await request.body.consumeBody(maxSize: .max)
-        return buffer
+        return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
     }
     JsonRouteGroup()
 }

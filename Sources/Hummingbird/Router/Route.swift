@@ -35,6 +35,15 @@ extension RouteProtocol {
         }
         return try await next(input, context)
     }
+
+    static func getFullPath(from path: RouterPath) -> String {
+        let parentGroupPath = ServiceContext.current?.routeGroupPath ?? ""
+        if path.count > 0 || parentGroupPath.count == 0 {
+            return "\(parentGroupPath)/\(path)"
+        } else {
+            return parentGroupPath
+        }
+    }
 }
 
 /// Generic route handler that
@@ -48,8 +57,7 @@ public struct Route<RouteOutput: HBResponseGenerator, Context: HBRequestContext>
         self.method = method
         self.routerPath = routerPath
         self.handler = handler
-        let parentGroupPath = ServiceContext.current?.routeGroupPath ?? ""
-        self.fullPath = "\(parentGroupPath)/\(self.routerPath)"
+        self.fullPath = Self.getFullPath(from: routerPath)
     }
 }
 
@@ -64,8 +72,7 @@ public struct Get<RouteOutput: HBResponseGenerator, Context: HBRequestContext>: 
         self.method = .GET
         self.routerPath = routerPath
         self.handler = handler
-        let parentGroupPath = ServiceContext.current?.routeGroupPath ?? ""
-        self.fullPath = "\(parentGroupPath)/\(self.routerPath)"
+        self.fullPath = Self.getFullPath(from: routerPath)
     }
 }
 
@@ -80,8 +87,7 @@ public struct Head<RouteOutput: HBResponseGenerator, Context: HBRequestContext>:
         self.method = .HEAD
         self.routerPath = routerPath
         self.handler = handler
-        let parentGroupPath = ServiceContext.current?.routeGroupPath ?? ""
-        self.fullPath = "\(parentGroupPath)/\(self.routerPath)"
+        self.fullPath = Self.getFullPath(from: routerPath)
     }
 }
 
@@ -96,8 +102,7 @@ public struct Put<RouteOutput: HBResponseGenerator, Context: HBRequestContext>: 
         self.method = .PUT
         self.routerPath = routerPath
         self.handler = handler
-        let parentGroupPath = ServiceContext.current?.routeGroupPath ?? ""
-        self.fullPath = "\(parentGroupPath)/\(self.routerPath)"
+        self.fullPath = Self.getFullPath(from: routerPath)
     }
 }
 
@@ -112,8 +117,7 @@ public struct Post<RouteOutput: HBResponseGenerator, Context: HBRequestContext>:
         self.method = .POST
         self.routerPath = routerPath
         self.handler = handler
-        let parentGroupPath = ServiceContext.current?.routeGroupPath ?? ""
-        self.fullPath = "\(parentGroupPath)/\(self.routerPath)"
+        self.fullPath = Self.getFullPath(from: routerPath)
     }
 }
 
@@ -128,8 +132,7 @@ public struct Patch<RouteOutput: HBResponseGenerator, Context: HBRequestContext>
         self.method = .PATCH
         self.routerPath = routerPath
         self.handler = handler
-        let parentGroupPath = ServiceContext.current?.routeGroupPath ?? ""
-        self.fullPath = "\(parentGroupPath)/\(self.routerPath)"
+        self.fullPath = Self.getFullPath(from: routerPath)
     }
 }
 
@@ -144,7 +147,6 @@ public struct Delete<RouteOutput: HBResponseGenerator, Context: HBRequestContext
         self.method = .DELETE
         self.routerPath = routerPath
         self.handler = handler
-        let parentGroupPath = ServiceContext.current?.routeGroupPath ?? ""
-        self.fullPath = "\(parentGroupPath)/\(self.routerPath)"
+        self.fullPath = Self.getFullPath(from: routerPath)
     }
 }
