@@ -42,13 +42,7 @@ public struct HBTracingMiddleware<Context: HBRequestContext>: HBMiddlewareProtoc
         var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
         InstrumentationSystem.instrument.extract(request.headers, into: &serviceContext, using: HTTPHeadersExtractor())
 
-        let operationName: String = {
-            guard let endpointPath = context.resolvedEndpointPath else {
-                return "HTTP \(request.method.rawValue) route not found"
-            }
-            return endpointPath
-        }()
-
+        let operationName = "HTTP \(request.method.rawValue) route not found"
         return try await InstrumentationSystem.tracer.withSpan(operationName, context: serviceContext, ofKind: .server) { span in
             span.updateAttributes { attributes in
                 attributes["http.method"] = request.method.rawValue
@@ -82,6 +76,9 @@ public struct HBTracingMiddleware<Context: HBRequestContext>: HBMiddlewareProtoc
 
             do {
                 let response = try await next(request, context)
+                if let path = context.resolvedEndpointPath {
+                    span.operationName = "\(request.method) \(path)"
+                }
                 span.updateAttributes { attributes in
                     attributes = self.recordHeaders(response.headers, toSpanAttributes: attributes, withPrefix: "http.response.header.")
 
@@ -90,6 +87,9 @@ public struct HBTracingMiddleware<Context: HBRequestContext>: HBMiddlewareProtoc
                 }
                 return response
             } catch let error as HBHTTPResponseError {
+                if let path = context.resolvedEndpointPath {
+                    span.operationName = "\(request.method) \(path)"
+                }
                 span.attributes["http.status_code"] = Int(error.status.code)
 
                 if 500..<600 ~= error.status.code {
