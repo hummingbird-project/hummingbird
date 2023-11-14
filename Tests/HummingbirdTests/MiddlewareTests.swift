@@ -24,19 +24,20 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testMiddleware() async throws {
-        struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
-            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
-                var response = try await next.respond(to: request, context: context)
+        struct TestMiddleware<Context: HBRequestContext>: HBMiddlewareProtocol {
+            func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+                var response = try await next(request, context)
                 response.headers.replaceOrAdd(name: "middleware", value: "TestMiddleware")
                 return response
             }
         }
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.middlewares.add(TestMiddleware())
-        router.get("/hello") { _, _ -> String in
-            return "Hello"
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            TestMiddleware()
+            Get("/hello") { _, _ -> String in
+                return "Hello"
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/hello", method: .GET) { response in
                 XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
@@ -45,21 +46,22 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareOrder() async throws {
-        struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
+        struct TestMiddleware<Context: HBRequestContext>: HBMiddlewareProtocol {
             let string: String
-            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
-                var response = try await next.respond(to: request, context: context)
+            func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+                var response = try await next(request, context)
                 response.headers.add(name: "middleware", value: self.string)
                 return response
             }
         }
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.middlewares.add(TestMiddleware(string: "first"))
-        router.middlewares.add(TestMiddleware(string: "second"))
-        router.get("/hello") { _, _ -> String in
-            return "Hello"
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            TestMiddleware(string: "first")
+            TestMiddleware(string: "second")
+            Get("/hello") { _, _ -> String in
+                return "Hello"
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/hello", method: .GET) { response in
                 // headers come back in opposite order as middleware is applied to responses in that order
@@ -70,20 +72,21 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareRunOnce() async throws {
-        struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
-            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
-                var response = try await next.respond(to: request, context: context)
+        struct TestMiddleware<Context: HBRequestContext>: HBMiddlewareProtocol {
+            func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+                var response = try await next(request, context)
                 XCTAssertNil(response.headers["alreadyRun"].first)
                 response.headers.add(name: "alreadyRun", value: "true")
                 return response
             }
         }
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.middlewares.add(TestMiddleware())
-        router.get("/hello") { _, _ -> String in
-            return "Hello"
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            TestMiddleware()
+            Get("/hello") { _, _ -> String in
+                return "Hello"
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/hello", method: .GET) { _ in
             }
@@ -91,18 +94,19 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareRunWhenNoRouteFound() async throws {
-        struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
-            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+        struct TestMiddleware<Context: HBRequestContext>: HBMiddlewareProtocol {
+            func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
                 do {
-                    return try await next.respond(to: request, context: context)
+                    return try await next(request, context)
                 } catch let error as HBHTTPError where error.status == .notFound {
                     throw HBHTTPError(.notFound, message: "Edited error")
                 }
             }
         }
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.middlewares.add(TestMiddleware())
-        let app = HBApplication(responder: router.buildResponder())
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            TestMiddleware()
+        }
+        let app = HBApplication(responder: router)
 
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/hello", method: .GET) { response in
@@ -110,26 +114,6 @@ final class MiddlewareTests: XCTestCase {
                 XCTAssertEqual(String(buffer: body), "Edited error")
                 XCTAssertEqual(response.status, .notFound)
             }
-        }
-    }
-
-    func testEndpointPathInGroup() async throws {
-        struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
-            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
-                XCTAssertNotNil(context.endpointPath)
-                return try await next.respond(to: request, context: context)
-            }
-        }
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.group()
-            .add(middleware: TestMiddleware())
-            .get("test") { _, _ in
-                return "test"
-            }
-        let app = HBApplication(responder: router.buildResponder())
-
-        try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/test", method: .GET) { _ in }
         }
     }
 
@@ -143,9 +127,9 @@ final class MiddlewareTests: XCTestCase {
                 try await self.parentWriter.write(output)
             }
         }
-        struct TransformMiddleware<Context: HBRequestContext>: HBMiddleware {
-            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
-                let response = try await next.respond(to: request, context: context)
+        struct TransformMiddleware<Context: HBRequestContext>: HBMiddlewareProtocol {
+            func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+                let response = try await next(request, context)
                 var editedResponse = response
                 editedResponse.body = .init { writer in
                     let transformWriter = TransformWriter(parentWriter: writer, allocator: context.allocator)
@@ -154,13 +138,15 @@ final class MiddlewareTests: XCTestCase {
                 return editedResponse
             }
         }
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.group()
-            .add(middleware: TransformMiddleware())
-            .get("test", options: .streamBody) { request, _ in
-                return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            RouteGroup {
+                TransformMiddleware()
+                Get("test") { request, _ in
+                    return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
+                }
             }
-        let app = HBApplication(responder: router.buildResponder())
+        }
+        let app = HBApplication(responder: router)
 
         try await app.test(.router) { client in
             let buffer = self.randomBuffer(size: 64000)
@@ -172,12 +158,13 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testCORSUseOrigin() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.middlewares.add(HBCORSMiddleware())
-        router.get("/hello") { _, _ -> String in
-            return "Hello"
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            HBCORSMiddleware()
+            Get("/hello") { _, _ -> String in
+                return "Hello"
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/hello", method: .GET, headers: ["origin": "foo.com"]) { response in
                 // headers come back in opposite order as middleware is applied to responses in that order
@@ -187,12 +174,13 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testCORSUseAll() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.middlewares.add(HBCORSMiddleware(allowOrigin: .all))
-        router.get("/hello") { _, _ -> String in
-            return "Hello"
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            HBCORSMiddleware(allowOrigin: .all)
+            Get("/hello") { _, _ -> String in
+                return "Hello"
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/hello", method: .GET, headers: ["origin": "foo.com"]) { response in
                 // headers come back in opposite order as middleware is applied to responses in that order
@@ -202,19 +190,20 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testCORSOptions() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.middlewares.add(HBCORSMiddleware(
-            allowOrigin: .all,
-            allowHeaders: ["content-type", "authorization"],
-            allowMethods: [.GET, .PUT, .DELETE, .OPTIONS],
-            allowCredentials: true,
-            exposedHeaders: ["content-length"],
-            maxAge: .seconds(3600)
-        ))
-        router.get("/hello") { _, _ -> String in
-            return "Hello"
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            HBCORSMiddleware(
+                allowOrigin: .all,
+                allowHeaders: ["content-type", "authorization"],
+                allowMethods: [.GET, .PUT, .DELETE, .OPTIONS],
+                allowCredentials: true,
+                exposedHeaders: ["content-length"],
+                maxAge: .seconds(3600)
+            )
+            Get("/hello") { _, _ -> String in
+                return "Hello"
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/hello", method: .OPTIONS, headers: ["origin": "foo.com"]) { response in
                 // headers come back in opposite order as middleware is applied to responses in that order
@@ -232,12 +221,13 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testRouteLoggingMiddleware() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.middlewares.add(HBLogRequestsMiddleware(.debug))
-        router.put("/hello") { _, _ -> String in
-            throw HBHTTPError(.badRequest)
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            HBLogRequestsMiddleware(.debug)
+            Put("/hello") { _, _ -> String in
+                throw HBHTTPError(.badRequest)
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/hello", method: .PUT) { _ in
             }

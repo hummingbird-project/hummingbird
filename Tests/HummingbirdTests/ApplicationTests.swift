@@ -27,11 +27,12 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testGetRoute() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.get("/hello") { _, context -> ByteBuffer in
-            return context.allocator.buffer(string: "GET: Hello")
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            Get("/hello") { _, context -> ByteBuffer in
+                return context.allocator.buffer(string: "GET: Hello")
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/hello", method: .GET) { response in
                 var body = try XCTUnwrap(response.body)
@@ -43,11 +44,12 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testHTTPStatusRoute() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.get("/accepted") { _, _ -> HTTPResponseStatus in
-            return .accepted
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            Get("/accepted") { _, _ -> HTTPResponseStatus in
+                return .accepted
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/accepted", method: .GET) { response in
                 XCTAssertEqual(response.status, .accepted)
@@ -56,11 +58,12 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testStandardHeaders() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.get("/hello") { _, _ in
-            return "Hello"
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            Get("/hello") { _, _ in
+                return "Hello"
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.live) { client in
             try await client.XCTExecute(uri: "/hello", method: .GET) { response in
                 XCTAssertEqual(response.headers["content-length"].first, "5")
@@ -70,11 +73,12 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testServerHeaders() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.get("/hello") { _, _ in
-            return "Hello"
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            Get("/hello") { _, _ in
+                return "Hello"
+            }
         }
-        let app = HBApplication(responder: router.buildResponder(), configuration: .init(serverName: "TestServer"))
+        let app = HBApplication(responder: router, configuration: .init(serverName: "TestServer"))
         try await app.test(.live) { client in
             try await client.XCTExecute(uri: "/hello", method: .GET) { response in
                 XCTAssertEqual(response.headers["server"].first, "TestServer")
@@ -83,11 +87,12 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testPostRoute() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.post("/hello") { _, _ -> String in
-            return "POST: Hello"
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            Post("/hello") { _, _ -> String in
+                return "POST: Hello"
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/hello", method: .POST) { response in
@@ -100,14 +105,15 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testMultipleMethods() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.post("/hello") { _, _ -> String in
-            return "POST"
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            Post("/hello") { _, _ -> String in
+                return "POST"
+            }
+            Get("/hello") { _, _ -> String in
+                return "GET"
+            }
         }
-        router.get("/hello") { _, _ -> String in
-            return "GET"
-        }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/hello", method: .GET) { response in
@@ -122,15 +128,17 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testMultipleGroupMethods() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.group("hello")
-            .post { _, _ -> String in
-                return "POST"
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            RouteGroup("hello") {
+                Post { _, _ -> String in
+                    return "POST"
+                }
+                Get { _, _ -> String in
+                    return "GET"
+                }
             }
-            .get { _, _ -> String in
-                return "GET"
-            }
-        let app = HBApplication(responder: router.buildResponder())
+        }
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/hello", method: .GET) { response in
@@ -145,11 +153,12 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testQueryRoute() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.post("/query") { request, context -> ByteBuffer in
-            return context.allocator.buffer(string: request.uri.queryParameters["test"].map { String($0) } ?? "")
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            Post("/query") { request, context -> ByteBuffer in
+                return context.allocator.buffer(string: request.uri.queryParameters["test"].map { String($0) } ?? "")
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/query?test=test%20data%C3%A9", method: .POST) { response in
@@ -162,11 +171,12 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testMultipleQueriesRoute() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.post("/add") { request, _ -> String in
-            return request.uri.queryParameters.getAll("value", as: Int.self).reduce(0,+).description
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            Post("/add") { request, _ -> String in
+                return request.uri.queryParameters.getAll("value", as: Int.self).reduce(0,+).description
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/add?value=3&value=45&value=7", method: .POST) { response in
@@ -179,11 +189,12 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testArray() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.get("array") { _, _ -> [String] in
-            return ["yes", "no"]
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            Get("array") { _, _ -> [String] in
+                return ["yes", "no"]
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/array", method: .GET) { response in
@@ -194,11 +205,12 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testEventLoopFutureArray() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.patch("array") { _, _ -> [String] in
-            return ["yes", "no"]
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            Patch("array") { _, _ -> [String] in
+                return ["yes", "no"]
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/array", method: .PATCH) { response in
                 let body = try XCTUnwrap(response.body)
@@ -208,38 +220,38 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testResponseBody() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router
-            .group("/echo-body")
-            .post { request, _ -> HBResponse in
-                guard case .byteBuffer(let buffer) = request.body else { return .init(status: .ok) }
-                return .init(status: .ok, headers: [:], body: .init(byteBuffer: buffer))
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            RouteGroup("/echo-body") {
+                Post { _, _ -> HBResponse in
+                    return .init(status: .ok, headers: [:], body: .init(byteBuffer: .init(string: "Hello")))
+                }
             }
-        let app = HBApplication(responder: router.buildResponder(), configuration: .init(maxUploadSize: 2 * 1024 * 1024))
+        }
+        let app = HBApplication(responder: router, configuration: .init(maxUploadSize: 2 * 1024 * 1024))
         try await app.test(.router) { client in
 
-            let buffer = self.randomBuffer(size: 1_140_000)
-            try await client.XCTExecute(uri: "/echo-body", method: .POST, body: buffer) { response in
+            try await client.XCTExecute(uri: "/echo-body", method: .POST) { response in
                 XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(response.body, buffer)
+                XCTAssertEqual(response.body, .init(string: "Hello"))
             }
         }
     }
 
     /// Test streaming of requests and streaming of responses by streaming the request body into a response streamer
     func testStreaming() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.post("streaming", options: .streamBody) { request, _ -> HBResponse in
-            return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
-        }
-        router.post("size", options: .streamBody) { request, _ -> String in
-            var size = 0
-            for try await buffer in request.body {
-                size += buffer.readableBytes
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            Post("streaming") { request, _ -> HBResponse in
+                return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
             }
-            return size.description
+            Post("size") { request, _ -> String in
+                var size = 0
+                for try await buffer in request.body {
+                    size += buffer.readableBytes
+                }
+                return size.description
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
 
         try await app.test(.router) { client in
 
@@ -261,11 +273,12 @@ final class ApplicationTests: XCTestCase {
 
     /// Test streaming of requests and streaming of responses by streaming the request body into a response streamer
     func testStreamingSmallBuffer() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.post("streaming", options: .streamBody) { request, _ -> HBResponse in
-            return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            Post("streaming") { request, _ -> HBResponse in
+                return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
             let buffer = self.randomBuffer(size: 64)
             try await client.XCTExecute(uri: "/streaming", method: .POST, body: buffer) { response in
@@ -280,20 +293,21 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testCollateBody() async throws {
-        struct CollateMiddleware<Context: HBRequestContext>: HBMiddleware {
-            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+        struct CollateMiddleware<Context: HBRequestContext>: HBMiddlewareProtocol {
+            func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
                 var request = request
                 request.body = try await request.body.collate(maxSize: context.applicationContext.configuration.maxUploadSize)
-                return try await next.respond(to: request, context: context)
+                return try await next(request, context)
             }
         }
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.middlewares.add(CollateMiddleware())
-        router.put("/hello") { request, _ -> String in
-            guard case .byteBuffer(let buffer) = request.body else { throw HBHTTPError(.internalServerError) }
-            return buffer.readableBytes.description
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            CollateMiddleware()
+            Put("/hello") { request, _ -> String in
+                guard case .byteBuffer(let buffer) = request.body else { throw HBHTTPError(.internalServerError) }
+                return buffer.readableBytes.description
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
 
             let buffer = self.randomBuffer(size: 512_000)
@@ -305,14 +319,16 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testOptional() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router
-            .group("/echo-body")
-            .post { request, _ -> ByteBuffer? in
-                guard case .byteBuffer(let buffer) = request.body, buffer.readableBytes > 0 else { return nil }
-                return buffer
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            RouteGroup("/echo-body") {
+                Post { request, _ -> ByteBuffer? in
+                    let buffer = try await request.body.collect(upTo: .max)
+                    guard buffer.readableBytes > 0 else { return nil }
+                    return buffer
+                }
             }
-        let app = HBApplication(responder: router.buildResponder())
+        }
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
 
             let buffer = self.randomBuffer(size: 64)
@@ -331,13 +347,14 @@ final class ApplicationTests: XCTestCase {
             let first: String
             let last: String
         }
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router
-            .group("/name")
-            .patch { _, _ -> Name? in
-                return Name(first: "john", last: "smith")
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            RouteGroup("/name") {
+                Patch { _, _ -> Name? in
+                    return Name(first: "john", last: "smith")
+                }
             }
-        let app = HBApplication(responder: router.buildResponder())
+        }
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/name", method: .PATCH) { response in
@@ -348,15 +365,16 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testTypedResponse() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.delete("/hello") { _, _ in
-            return HBEditedResponse(
-                status: .imATeapot,
-                headers: ["test": "value", "content-type": "application/json"],
-                response: "Hello"
-            )
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            Delete("/hello") { _, _ in
+                return HBEditedResponse(
+                    status: .imATeapot,
+                    headers: ["test": "value", "content-type": "application/json"],
+                    response: "Hello"
+                )
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/hello", method: .DELETE) { response in
@@ -375,15 +393,16 @@ final class ApplicationTests: XCTestCase {
         struct Result: HBResponseEncodable {
             let value: String
         }
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.patch("/hello") { _, _ in
-            return HBEditedResponse(
-                status: .imATeapot,
-                headers: ["test": "value", "content-type": "application/json"],
-                response: Result(value: "true")
-            )
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            Patch("/hello") { _, _ in
+                return HBEditedResponse(
+                    status: .imATeapot,
+                    headers: ["test": "value", "content-type": "application/json"],
+                    response: Result(value: "true")
+                )
+            }
         }
-        var app = HBApplication(responder: router.buildResponder())
+        var app = HBApplication(responder: router)
         app.encoder = JSONEncoder()
         try await app.test(.router) { client in
 
@@ -400,14 +419,16 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testMaxUploadSize() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.post("upload") { _, _ in
-            "ok"
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            Post("upload") { request, context in
+                _ = try await request.body.collate(maxSize: context.applicationContext.configuration.maxUploadSize)
+                return "ok"
+            }
+            Post("stream") { _, _ in
+                "ok"
+            }
         }
-        router.post("stream", options: .streamBody) { _, _ in
-            "ok"
-        }
-        let app = HBApplication(responder: router.buildResponder(), configuration: .init(maxUploadSize: 64 * 1024))
+        let app = HBApplication(responder: router, configuration: .init(maxUploadSize: 64 * 1024))
         try await app.test(.live) { client in
             let buffer = self.randomBuffer(size: 128 * 1024)
             // check non streamed route throws an error
@@ -422,9 +443,9 @@ final class ApplicationTests: XCTestCase {
     }
 
     /* func testRemoteAddress() async throws {
-         let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        let app = HBApplication(responder: router.buildResponder())
-         router.get("/") { _, context -> String in
+         let router = HBRouter(context: HBTestRouterContext.self)
+        let app = HBApplication(responder: router)
+         Get("/") { _, context -> String in
              switch context.remoteAddress {
              case .v4(let address):
                  return String(describing: address.host)

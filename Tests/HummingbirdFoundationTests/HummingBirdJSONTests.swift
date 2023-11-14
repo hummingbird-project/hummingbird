@@ -27,15 +27,16 @@ class HummingbirdJSONTests: XCTestCase {
     struct Error: Swift.Error {}
 
     func testDecode() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.put("/user") { request, context -> HTTPResponseStatus in
-            guard let user = try? request.decode(as: User.self, using: context) else { throw HBHTTPError(.badRequest) }
-            XCTAssertEqual(user.name, "John Smith")
-            XCTAssertEqual(user.email, "john.smith@email.com")
-            XCTAssertEqual(user.age, 25)
-            return .ok
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            Put("/user") { request, context -> HTTPResponseStatus in
+                guard let user = try? await request.decode(as: User.self, using: context) else { throw HBHTTPError(.badRequest) }
+                XCTAssertEqual(user.name, "John Smith")
+                XCTAssertEqual(user.email, "john.smith@email.com")
+                XCTAssertEqual(user.age, 25)
+                return .ok
+            }
         }
-        var app = HBApplication(responder: router.buildResponder())
+        var app = HBApplication(responder: router)
         app.decoder = JSONDecoder()
         try await app.test(.router) { client in
             let body = #"{"name": "John Smith", "email": "john.smith@email.com", "age": 25}"#
@@ -46,11 +47,12 @@ class HummingbirdJSONTests: XCTestCase {
     }
 
     func testEncode() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.get("/user") { _, _ -> User in
-            return User(name: "John Smith", email: "john.smith@email.com", age: 25)
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            Get("/user") { _, _ -> User in
+                return User(name: "John Smith", email: "john.smith@email.com", age: 25)
+            }
         }
-        var app = HBApplication(responder: router.buildResponder())
+        var app = HBApplication(responder: router)
         app.encoder = JSONEncoder()
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/user", method: .GET) { response in
@@ -64,11 +66,12 @@ class HummingbirdJSONTests: XCTestCase {
     }
 
     func testEncode2() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.get("/json") { _, _ in
-            return ["message": "Hello, world!"]
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            Get("/json") { _, _ in
+                return ["message": "Hello, world!"]
+            }
         }
-        var app = HBApplication(responder: router.buildResponder())
+        var app = HBApplication(responder: router)
         app.encoder = JSONEncoder()
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/json", method: .GET) { response in

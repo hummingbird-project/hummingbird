@@ -65,13 +65,14 @@ class CookieTests: XCTestCase {
     }
 
     func testSetCookie() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.post("/") { _, _ -> HBResponse in
-            var response = HBResponse(status: .ok, headers: [:], body: .init())
-            response.setCookie(.init(name: "test", value: "value"))
-            return response
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            Post { _, _ in
+                var response = HBResponse(status: .ok, headers: [:], body: .init())
+                response.setCookie(.init(name: "test", value: "value"))
+                return response
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/", method: .POST) { response in
                 XCTAssertEqual(response.headers["Set-Cookie"].first, "test=value; HttpOnly")
@@ -80,11 +81,12 @@ class CookieTests: XCTestCase {
     }
 
     func testSetCookieViaRequest() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.post("/") { _, _ in
-            return HBEditedResponse(headers: ["Set-Cookie": HBCookie(name: "test", value: "value").description], response: "Hello")
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            Post { _, _ in
+                return HBEditedResponse(headers: ["Set-Cookie": HBCookie(name: "test", value: "value").description], response: "Hello")
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/", method: .POST) { response in
                 XCTAssertEqual(response.headers["Set-Cookie"].first, "test=value; HttpOnly")
@@ -93,11 +95,12 @@ class CookieTests: XCTestCase {
     }
 
     func testReadCookieFromRequest() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.post("/") { request, _ -> String? in
-            return request.cookies["test"]?.value
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            Post { request, _ -> String? in
+                return request.cookies["test"]?.value
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/", method: .POST, headers: ["cookie": "test=value"]) { response in
                 let body = try XCTUnwrap(response.body)

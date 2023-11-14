@@ -42,9 +42,13 @@ final class EnvironmentTests: XCTestCase {
     }
 
     func testLogLevel() {
+        struct Responder: HBResponder {
+            func respond(to request: HBRequest, context: HBBasicRequestContext) async throws -> HBResponse {
+                return .init(status: .ok)
+            }
+        }
         setenv("LOG_LEVEL", "trace", 1)
-        let router = HBRouterBuilder()
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: Responder())
         XCTAssertEqual(app.logger.logLevel, .trace)
     }
 

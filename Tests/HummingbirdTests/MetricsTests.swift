@@ -184,12 +184,13 @@ final class MetricsTests: XCTestCase {
     }
 
     func testCounter() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.middlewares.add(HBMetricsMiddleware())
-        router.get("/hello") { _, _ -> String in
-            return "Hello"
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            HBMetricsMiddleware()
+            Get("/hello") { _, _ -> String in
+                return "Hello"
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/hello", method: .GET) { _ in }
         }
@@ -203,12 +204,13 @@ final class MetricsTests: XCTestCase {
     }
 
     func testError() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.middlewares.add(HBMetricsMiddleware())
-        router.get("/hello") { _, _ -> String in
-            throw HBHTTPError(.badRequest)
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            HBMetricsMiddleware()
+            Get("/hello") { _, _ -> String in
+                throw HBHTTPError(.badRequest)
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/hello", method: .GET) { _ in }
         }
@@ -223,12 +225,13 @@ final class MetricsTests: XCTestCase {
     }
 
     func testNotFoundError() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.middlewares.add(HBMetricsMiddleware())
-        router.get("/hello") { _, _ -> String in
-            return "hello"
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            HBMetricsMiddleware()
+            Get("/hello") { _, _ -> String in
+                return "hello"
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/hello2", method: .GET) { _ in }
         }
@@ -242,12 +245,13 @@ final class MetricsTests: XCTestCase {
     }
 
     func testParameterEndpoint() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.middlewares.add(HBMetricsMiddleware())
-        router.get("/user/:id") { _, _ -> String in
-            throw HBHTTPError(.badRequest)
+        let router = HBRouter(context: HBTestRouterContext.self) {
+            HBMetricsMiddleware()
+            Get("/user/:id") { _, _ -> String in
+                throw HBHTTPError(.badRequest)
+            }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = HBApplication(responder: router)
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/user/765", method: .GET) { _ in }
         }
@@ -257,7 +261,7 @@ final class MetricsTests: XCTestCase {
         XCTAssertEqual(counter.values[0].1, 1)
         XCTAssertEqual(counter.dimensions.count, 2)
         XCTAssertEqual(counter.dimensions[0].0, "hb_uri")
-        XCTAssertEqual(counter.dimensions[0].1, "/user/:id")
+        XCTAssertEqual(counter.dimensions[0].1, "/user/${id}")
         XCTAssertEqual(counter.dimensions[1].0, "hb_method")
         XCTAssertEqual(counter.dimensions[1].1, "GET")
     }
