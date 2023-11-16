@@ -25,7 +25,7 @@ import ServiceLifecycle
 
 /// HTTP server class
 public actor HBServer<ChannelSetup: HBChannelSetup>: Service {
-    public typealias AsyncChildChannel = NIOAsyncChannel<ChannelSetup.In, ChannelSetup.Out>
+    public typealias AsyncChildChannel = ChannelSetup.Value
     public typealias AsyncServerChannel = NIOAsyncChannel<AsyncChildChannel, Never>
     enum State: CustomStringConvertible {
         case initial(
@@ -117,19 +117,8 @@ public actor HBServer<ChannelSetup: HBChannelSetup>: Service {
                         await withDiscardingTaskGroup { group in
                             do {
                                 for try await childChannel in asyncChannel.inbound {
-                                    switch self.state {
-                                    case .initial, .starting:
-                                        fatalError("We should already transitioned to running")
-
-                                    case .running:
-                                        group.addTask {
-                                            await childChannelSetup.handle(asyncChannel: childChannel, logger: self.logger)
-                                        }
-
-                                    case .shuttingDown, .shutdown:
-                                        group.addTask {
-                                            try? await childChannel.channel.close()
-                                        }
+                                    group.addTask {
+                                        await childChannelSetup.handle(value: childChannel, logger: self.logger)
                                     }
                                 }
                             } catch {
@@ -226,22 +215,6 @@ public actor HBServer<ChannelSetup: HBChannelSetup>: Service {
         )
         #endif
 
-        @Sendable func setupChildChannel(_ channel: Channel) -> EventLoopFuture<AsyncChildChannel> {
-            childChannelSetup.initialize(
-                channel: channel,
-                configuration: configuration,
-                logger: self.logger
-            ).flatMapThrowing { _ in
-                try NIOAsyncChannel(
-                    synchronouslyWrapping: channel,
-                    configuration: .init(
-                        inboundType: ChannelSetup.In.self,
-                        outboundType: ChannelSetup.Out.self
-                    )
-                )
-            }
-        }
-
         do {
             let asyncChannel: AsyncServerChannel
             switch configuration.address {
@@ -251,7 +224,11 @@ public actor HBServer<ChannelSetup: HBChannelSetup>: Service {
                     port: port,
                     serverBackPressureStrategy: nil
                 ) { channel in
-                    setupChildChannel(channel)
+                    childChannelSetup.initialize(
+                        channel: channel,
+                        configuration: configuration,
+                        logger: self.logger
+                    )
                 }
                 self.logger.info("Server started and listening on \(host):\(port)")
             case .unixDomainSocket(let path):
@@ -260,7 +237,11 @@ public actor HBServer<ChannelSetup: HBChannelSetup>: Service {
                     cleanupExistingSocketFile: false,
                     serverBackPressureStrategy: nil
                 ) { channel in
-                    setupChildChannel(channel)
+                    childChannelSetup.initialize(
+                        channel: channel,
+                        configuration: configuration,
+                        logger: self.logger
+                    )
                 }
                 self.logger.info("Server started and listening on socket path \(path)")
             }
