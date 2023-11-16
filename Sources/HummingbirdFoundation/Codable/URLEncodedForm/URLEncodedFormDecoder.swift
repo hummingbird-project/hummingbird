@@ -590,8 +590,10 @@ extension _URLEncodedFormDecoder {
             return Date(timeIntervalSince1970: seconds)
         case .iso8601:
             if #available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *) {
+                let iso8601Formatter = ISO8601DateFormatter()
+                iso8601Formatter.formatOptions = .withInternetDateTime
                 let dateString = try unbox(node, as: String.self)
-                guard let date = URLEncodedForm.iso8601Formatter.date(from: dateString) else {
+                guard let date = iso8601Formatter.date(from: dateString) else {
                     throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Invalid date format"))
                 }
                 return date
