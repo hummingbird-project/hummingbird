@@ -117,11 +117,11 @@ public actor HBServer<ChannelSetup: HBChannelSetup>: Service {
                         await withDiscardingTaskGroup { group in
                             do {
                                 try await asyncChannel.executeThenClose { inbound in 
-                                        for try await childChannel in inbound {
-                                            group.addTask {
-                                                await childChannelSetup.handle(value: childChannel, logger: self.logger)
-                                            }
+                                    for try await childChannel in inbound {
+                                        group.addTask {
+                                            await childChannelSetup.handle(value: childChannel, logger: self.logger)
                                         }
+                                    }
                                 }
                             } catch {
                                 self.logger.error("Waiting on child channel: \(error)")
