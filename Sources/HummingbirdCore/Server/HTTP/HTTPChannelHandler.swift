@@ -32,51 +32,53 @@ extension HTTPChannelHandler {
     public func handleHTTP(asyncChannel: NIOAsyncChannel<HTTPServerRequestPart, SendableHTTPServerResponsePart>, logger: Logger) async {
         do {
             try await withThrowingTaskGroup(of: Void.self) { group in
-                let responseWriter = HBHTTPServerBodyWriter(outbound: asyncChannel.outbound)
-                var iterator = asyncChannel.inbound.makeAsyncIterator()
-                while let part = try await iterator.next() {
-                    guard case .head(let head) = part else {
-                        throw HTTPChannelError.unexpectedHTTPPart(part)
-                    }
-                    let bodyStream = HBStreamedRequestBody()
-                    let body = HBRequestBody.stream(bodyStream)
-                    let request = HBHTTPRequest(head: head, body: body)
-                    // add task processing request and writing response
-                    group.addTask {
-                        let response: HBHTTPResponse
+                try await asyncChannel.executeThenClose { inbound, outbound in 
+                    let responseWriter = HBHTTPServerBodyWriter(outbound: outbound)
+                    var iterator = inbound.makeAsyncIterator()
+                    while let part = try await iterator.next() {
+                        guard case .head(let head) = part else {
+                            throw HTTPChannelError.unexpectedHTTPPart(part)
+                        }
+                        let bodyStream = HBStreamedRequestBody()
+                        let body = HBRequestBody.stream(bodyStream)
+                        let request = HBHTTPRequest(head: head, body: body)
+                        // add task processing request and writing response
+                        group.addTask {
+                            let response: HBHTTPResponse
+                            do {
+                                response = try await self.responder(request, asyncChannel.channel)
+                            } catch {
+                                response = self.getErrorResponse(from: error, allocator: asyncChannel.channel.allocator)
+                            }
+                            let head = HTTPResponseHead(version: request.head.version, status: response.status, headers: response.headers)
+                            do {
+                                try await outbound.write(.head(head))
+                                try await response.body.write(responseWriter)
+                                try await outbound.write(.end(nil))
+                                // flush request body
+                                for try await _ in request.body {}
+                            } catch {
+                                // flush request body
+                                for try await _ in request.body {}
+                                throw error
+                            }
+                            if request.head.headers["connection"].first == "close" {
+                                throw HTTPChannelError.closeConnection
+                            }
+                        }
+                        // send body parts to request
                         do {
-                            response = try await self.responder(request, asyncChannel.channel)
+                            // pass body part to request
+                            while case .body(let buffer) = try await iterator.next() {
+                                await bodyStream.send(buffer)
+                            }
+                            bodyStream.finish()
                         } catch {
-                            response = self.getErrorResponse(from: error, allocator: asyncChannel.channel.allocator)
+                            // pass failed to read full http body to request
+                            bodyStream.fail(error)
                         }
-                        let head = HTTPResponseHead(version: request.head.version, status: response.status, headers: response.headers)
-                        do {
-                            try await asyncChannel.outbound.write(.head(head))
-                            try await response.body.write(responseWriter)
-                            try await asyncChannel.outbound.write(.end(nil))
-                            // flush request body
-                            for try await _ in request.body {}
-                        } catch {
-                            // flush request body
-                            for try await _ in request.body {}
-                            throw error
-                        }
-                        if request.head.headers["connection"].first == "close" {
-                            throw HTTPChannelError.closeConnection
-                        }
+                        try await group.next()
                     }
-                    // send body parts to request
-                    do {
-                        // pass body part to request
-                        while case .body(let buffer) = try await iterator.next() {
-                            await bodyStream.send(buffer)
-                        }
-                        bodyStream.finish()
-                    } catch {
-                        // pass failed to read full http body to request
-                        bodyStream.fail(error)
-                    }
-                    try await group.next()
                 }
             }
         } catch HTTPChannelError.closeConnection {
@@ -85,7 +87,6 @@ extension HTTPChannelHandler {
             // we got here because we failed to either read or write to the channel
             logger.trace("Failed to read/write to Channel. Error: \(error)")
         }
-        asyncChannel.outbound.finish()
     }
 
     func getErrorResponse(from error: Error, allocator: ByteBufferAllocator) -> HBHTTPResponse {
