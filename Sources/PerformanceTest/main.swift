@@ -46,14 +46,6 @@ router.get("json") { _, _ in
 
 var app = HBApplication(
     responder: router.buildResponder(),
-    channelSetup: try HTTP2Channel(
-        tlsConfiguration: .makeServerConfiguration(
-            certificateChain: [
-                .certificate(.init(file: "/Users/joannisorlandos/git/hummingbird/hummingbird/cert.pem", format: .pem))
-            ],
-            privateKey: .file("/Users/joannisorlandos/git/hummingbird/hummingbird/key.pem")
-        )
-    ),
     configuration: .init(
         address: .hostname(hostname, port: port),
         serverName: "Hummingbird"
