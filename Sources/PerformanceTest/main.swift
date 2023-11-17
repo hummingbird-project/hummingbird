@@ -42,8 +42,8 @@ let port = HBEnvironment.shared.get("SERVER_PORT", as: Int.self) ?? 8080
 
 func JsonRouteGroup<Context: HBRequestContext>() -> some HBMiddlewareProtocol<Context> {
     return RouteGroup("json") {
-        Get { _, _ in
-            return ["message": "Hello, world"]
+        Get { _,_ in
+            ["message": "Hello, world"]
         }
     }
 }

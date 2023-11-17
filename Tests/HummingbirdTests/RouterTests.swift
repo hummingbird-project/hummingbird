@@ -282,6 +282,49 @@ final class RouterTests: XCTestCase {
         }
     }
 
+    /// Test adding middleware to group doesn't affect middleware in parent groups
+    func testRouteBuilder() async throws {
+        struct TestGroupMiddleware: HBMiddlewareProtocol {
+            typealias Context = HBTestRouterContext2
+            let output: String
+
+            func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+                var context = context
+                context.string += self.output
+                return try await next(request, context)
+            }
+        }
+
+        @Sendable func handle(_ request: HBRequest, _ context: HBTestRouterContext2) async throws -> String {
+            context.string
+        }
+        let router = HBRouter(context: HBTestRouterContext2.self) {
+            RouteGroup("/test") {
+                Get { 
+                    TestGroupMiddleware(output: "route1")
+                    handle
+                }
+                Post { 
+                    TestGroupMiddleware(output: "route2")
+                    Handle { _, context in
+                        return context.string
+                    }
+                }
+            }
+        }
+        let app = HBApplication(responder: router)
+        try await app.test(.router) { client in
+            try await client.XCTExecute(uri: "/test", method: .GET) { response in
+                let body = try XCTUnwrap(response.body)
+                XCTAssertEqual(String(buffer: body), "route1")
+            }
+            try await client.XCTExecute(uri: "/test", method: .POST) { response in
+                let body = try XCTUnwrap(response.body)
+                XCTAssertEqual(String(buffer: body), "route2")
+            }
+        }
+    }
+
     func testParameters() async throws {
         let router = HBRouter(context: HBTestRouterContext.self) {
             Delete("/user/:id") { _, context -> String? in

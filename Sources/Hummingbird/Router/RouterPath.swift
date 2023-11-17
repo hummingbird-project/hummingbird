@@ -115,6 +115,7 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConv
         return self.match(context)
     }
 
+    @usableFromInline
     func matchPrefix<Context: HBRequestContext>(_ context: Context) -> Context? {
         if self.components.count > context.coreContext.remainingPathComponents.count {
             return nil

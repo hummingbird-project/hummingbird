@@ -14,6 +14,7 @@
 
 import Atomics
 import Hummingbird
+import HummingbirdFoundation
 import HummingbirdXCT
 import NIOCore
 import NIOHTTP1

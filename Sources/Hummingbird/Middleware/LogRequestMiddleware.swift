@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import MiddlewareModule
 import Logging
+import MiddlewareModule
 
 /// Middleware outputting to log for every call to server
 public struct HBLogRequestsMiddleware<Context: HBRequestContext>: HBMiddlewareProtocol {
@@ -25,7 +25,7 @@ public struct HBLogRequestsMiddleware<Context: HBRequestContext>: HBMiddlewarePr
         self.includeHeaders = includeHeaders
     }
 
-    public func handle(_ request: HBRequest, context: Context, next: (Input, Context) async throws -> Output) async throws -> HBResponse {
+    public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
         if self.includeHeaders {
             context.logger.log(
                 level: self.logLevel,

@@ -36,7 +36,9 @@ public struct RouteGroup<Context: HBRequestContext, Handler: MiddlewareProtocol>
     public typealias Input = HBRequest
     public typealias Output = HBResponse
 
+    @usableFromInline
     var routerPath: RouterPath
+    @usableFromInline
     var handler: Handler
 
     public init(
@@ -53,6 +55,7 @@ public struct RouteGroup<Context: HBRequestContext, Handler: MiddlewareProtocol>
         }
     }
 
+    @inlinable
     public func handle(_ input: Input, context: Context, next: (Input, Context) async throws -> Output) async throws -> Output {
         if let updatedContext = self.routerPath.matchPrefix(context) {
             return try await self.handler.handle(input, context: updatedContext) { input, _ in
