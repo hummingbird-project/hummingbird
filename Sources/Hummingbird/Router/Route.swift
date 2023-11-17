@@ -111,7 +111,7 @@ public func Get<RouteOutput: HBResponseGenerator, Context: HBRequestContext>(
 public func Get<M0: MiddlewareProtocol, Context: HBRequestContext>(
     _ routerPath: RouterPath = "", 
     @RouteBuilder<Context> builder: () -> M0
-) -> Route<RouteHandlerMiddleware<M0>, M0.Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
+) -> Route<RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
     .init(.GET, routerPath, builder: builder )
 }
 
@@ -133,7 +133,7 @@ public func Head<RouteOutput: HBResponseGenerator, Context: HBRequestContext>(
 public func Head<M0: MiddlewareProtocol, Context: HBRequestContext>(
     _ routerPath: RouterPath = "", 
     @RouteBuilder<Context> builder: () -> M0
-) -> Route<RouteHandlerMiddleware<M0>, M0.Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
+) -> Route<RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
     .init(.HEAD, routerPath, builder: builder )
 }
 
@@ -155,7 +155,7 @@ public func Put<RouteOutput: HBResponseGenerator, Context: HBRequestContext>(
 public func Put<M0: MiddlewareProtocol, Context: HBRequestContext>(
     _ routerPath: RouterPath = "", 
     @RouteBuilder<Context> builder: () -> M0
-) -> Route<RouteHandlerMiddleware<M0>, M0.Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
+) -> Route<RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
     .init(.PUT, routerPath, builder: builder )
 }
 
@@ -177,7 +177,7 @@ public func Post<RouteOutput: HBResponseGenerator, Context: HBRequestContext>(
 public func Post<M0: MiddlewareProtocol, Context: HBRequestContext>(
     _ routerPath: RouterPath = "", 
     @RouteBuilder<Context> builder: () -> M0
-) -> Route<RouteHandlerMiddleware<M0>, M0.Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
+) -> Route<RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
     .init(.POST, routerPath, builder: builder )
 }
 
@@ -199,7 +199,7 @@ public func Patch<RouteOutput: HBResponseGenerator, Context: HBRequestContext>(
 public func Patch<M0: MiddlewareProtocol, Context: HBRequestContext>(
     _ routerPath: RouterPath = "", 
     @RouteBuilder<Context> builder: () -> M0
-) -> Route<RouteHandlerMiddleware<M0>, M0.Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
+) -> Route<RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
     .init(.PATCH, routerPath, builder: builder )
 }
 
@@ -221,6 +221,6 @@ public func Delete<RouteOutput: HBResponseGenerator, Context: HBRequestContext>(
 public func Delete<M0: MiddlewareProtocol, Context: HBRequestContext>(
     _ routerPath: RouterPath = "", 
     @RouteBuilder<Context> builder: () -> M0
-) -> Route<RouteHandlerMiddleware<M0>, M0.Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
+) -> Route<RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
     .init(.DELETE, routerPath, builder: builder )
 }

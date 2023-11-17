@@ -59,6 +59,11 @@ var router = HBRouter(context: MyRequestContext.self) {
     Post { request, _ in
         return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
     }
+    Post("wait") { request, _ in
+        let body = try await request.body.collect(upTo: .max)
+        try await Task.sleep(for: .seconds(10))
+        return HBResponse(status: .ok, body: .init(byteBuffer: body))
+    }
     JsonRouteGroup()
 }
 
