@@ -21,27 +21,20 @@ import NIOCore
 import NIOPosix
 import Tracing
 
-public protocol HBTestRouterContextProtocol: HBRequestContext {
-    init(applicationContext: HBApplicationContext, eventLoop: EventLoop, logger: Logger)
-}
+public protocol HBTestRouterContextProtocol: HBRequestContext {}
 
 extension HBTestRouterContextProtocol {
     ///  Initialize an `HBRequestContext`
     /// - Parameters:
-    ///   - applicationContext: Context from Application that instigated the request
-    ///   - channelContext: Context providing source for EventLoop
-    public init(
-        applicationContext: HBApplicationContext,
-        channel: Channel,
-        logger: Logger
-    ) {
-        self.init(applicationContext: applicationContext, eventLoop: channel.eventLoop, logger: logger)
+    ///   - HBCoreRequestContext: Context from a specific request
+    public init(coreContext: HBCoreRequestContext) {
+        self.init(coreContext: coreContext)
     }
 }
 
 public struct HBTestRouterContext: HBTestRouterContextProtocol {
-    public init(applicationContext: HBApplicationContext, eventLoop: EventLoop, logger: Logger) {
-        self.coreContext = .init(applicationContext: applicationContext, eventLoop: eventLoop, logger: logger)
+    public init(coreContext: HBCoreRequestContext) {
+        self.coreContext = coreContext
     }
 
     /// router context
@@ -89,10 +82,13 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                     head: .init(version: .http1_1, method: method, uri: uri, headers: headers),
                     body: .stream(streamer)
                 )
-                let context = Responder.Context(
-                    applicationContext: self.applicationContext,
+                let coreContext = HBCoreRequestContext(
+                    applicationContext: applicationContext, 
                     eventLoop: eventLoop,
                     logger: HBApplication<Responder, HTTP1Channel>.loggerWithRequestId(self.applicationContext.logger)
+                )
+                let context = Responder.Context(
+                    coreContext: coreContext
                 )
 
                 group.addTask {

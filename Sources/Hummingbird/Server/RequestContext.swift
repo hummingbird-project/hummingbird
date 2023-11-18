@@ -69,15 +69,6 @@ public struct HBCoreRequestContext: Sendable {
         self.endpointPath = .init()
         self.parameters = .init()
     }
-
-    @inlinable
-    public init(
-        applicationContext: HBApplicationContext,
-        channel: Channel,
-        logger: Logger
-    ) {
-        self.init(applicationContext: applicationContext, eventLoop: channel.eventLoop, logger: logger, allocator: channel.allocator)
-    }
 }
 
 /// Protocol that all request contexts should conform to. Holds data associated with
@@ -87,10 +78,8 @@ public protocol HBRequestContext: Sendable {
     var coreContext: HBCoreRequestContext { get set }
     /// initialize an `HBRequestContext`
     /// - Parameters:
-    ///   - applicationContext: Context coming from Application
-    ///   - channel: Channel that created request and context
     ///   - logger: Logger to use with request
-    init(applicationContext: HBApplicationContext, channel: Channel, logger: Logger)
+    init(coreContext: HBCoreRequestContext)
 }
 
 extension HBRequestContext {
@@ -137,22 +126,15 @@ public protocol HBRemoteAddressRequestContext: HBRequestContext {
 public struct HBBasicRequestContext: HBRequestContext, HBRemoteAddressRequestContext {
     /// core context
     public var coreContext: HBCoreRequestContext
-    /// Channel context
-    let channel: Channel
     /// Connected host address
-    public var remoteAddress: SocketAddress? { self.channel.remoteAddress }
+    public var remoteAddress: SocketAddress?
 
     ///  Initialize an `HBRequestContext`
     /// - Parameters:
     ///   - applicationContext: Context from Application that instigated the request
     ///   - channel: Channel that generated this request
     ///   - logger: Logger
-    public init(
-        applicationContext: HBApplicationContext,
-        channel: Channel,
-        logger: Logger
-    ) {
-        self.coreContext = .init(applicationContext: applicationContext, channel: channel, logger: logger)
-        self.channel = channel
+    public init(coreContext: HBCoreRequestContext) {
+        self.coreContext = coreContext
     }
 }

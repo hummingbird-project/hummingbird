@@ -27,11 +27,9 @@ struct MyRequestContext: HBRequestContext {
     ///   - applicationContext: Context from Application that instigated the request
     ///   - channelContext: Context providing source for EventLoop
     public init(
-        applicationContext: HBApplicationContext,
-        channel: Channel,
-        logger: Logger
+        coreContext: HBCoreRequestContext
     ) {
-        self.coreContext = .init(applicationContext: applicationContext, channel: channel, logger: logger)
+        self.coreContext = coreContext
     }
 }
 

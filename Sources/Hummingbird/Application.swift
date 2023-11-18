@@ -173,10 +173,14 @@ extension HBApplication: Service {
                 head: request.head,
                 body: request.body
             )
-            let context = Responder.Context(
+            let logger = HBApplication.loggerWithRequestId(context.logger)
+            let requestContext = HBCoreRequestContext(
                 applicationContext: context,
-                channel: channel,
-                logger: HBApplication.loggerWithRequestId(context.logger)
+                eventLoop: channel.eventLoop, 
+                logger: logger
+            )
+            let context = Responder.Context(
+                coreContext: requestContext
             )
             // respond to request
             var response = try await self.responder.respond(to: request, context: context)
