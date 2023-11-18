@@ -192,8 +192,7 @@ public actor HBServer<ChannelSetup: HBChannelSetup>: Service {
         }
         #else
         bootstrap = self.createSocketsBootstrap(
-            configuration: configuration,
-            quiescingHelper: quiescingHelper
+            configuration: configuration
         )
         #endif
 
