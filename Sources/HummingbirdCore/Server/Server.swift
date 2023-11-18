@@ -133,15 +133,6 @@ public actor HBServer<ChannelSetup: HBChannelSetup>: Service {
                             }
                         }
                     }
-                    // We need to check the state here again since we just awaited above
-                    switch self.state {
-                    case .initial, .starting, .running, .shutdown:
-                        fatalError("Unexpected state")
-
-                    case .shuttingDown(let promise):
-                        self.state = .shutdown
-                        promise.succeed()
-                    }
 
                 case .shuttingDown, .shutdown:
                     try await asyncChannel.channel.close()
@@ -150,6 +141,7 @@ public actor HBServer<ChannelSetup: HBChannelSetup>: Service {
                 self.state = .shutdown
                 throw error
             }
+            self.state = .shutdown
         case .starting, .running:
             fatalError("Run should only be called once")
 
@@ -168,9 +160,8 @@ public actor HBServer<ChannelSetup: HBChannelSetup>: Service {
             self.state = .shutdown
 
         case .running(let channel):
-            channel.channel.close(promise: nil)
-
             let shutdownPromise = channel.channel.eventLoop.makePromise(of: Void.self)
+            channel.channel.close(promise: shutdownPromise)
             self.state = .shuttingDown(shutdownPromise: shutdownPromise)
 
         case .shuttingDown(let shutdownPromise):
