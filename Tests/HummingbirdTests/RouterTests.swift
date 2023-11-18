@@ -40,7 +40,7 @@ final class RouterTests: XCTestCase {
         struct TestEndpointMiddleware<Context: HBRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 guard let endpointPath = context.endpointPath else { return try await next.respond(to: request, context: context) }
-                return .init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath)))
+                return .init(status: .ok, body: .init(byteBuffer: ByteBuffer(string: endpointPath)))
             }
         }
 
@@ -62,7 +62,7 @@ final class RouterTests: XCTestCase {
         struct TestEndpointMiddleware<Context: HBRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 guard let endpointPath = context.endpointPath else { return try await next.respond(to: request, context: context) }
-                return .init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath)))
+                return .init(status: .ok, body: .init(byteBuffer: ByteBuffer(string: endpointPath)))
             }
         }
 
@@ -100,7 +100,7 @@ final class RouterTests: XCTestCase {
         struct TestEndpointMiddleware<Context: HBRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 guard let endpointPath = context.endpointPath else { return try await next.respond(to: request, context: context) }
-                return .init(status: .ok, body: .byteBuffer(ByteBuffer(string: endpointPath)))
+                return .init(status: .ok, body: .init(byteBuffer: ByteBuffer(string: endpointPath)))
             }
         }
 

@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Atomics
 import Dispatch
 import HummingbirdCore
 import Logging
@@ -84,7 +85,7 @@ public final class HBApplicationContext: Sendable {
 /// try await app.buildAndRun()
 /// ```
 /// Editing the application builder setup after calling `build` will produce undefined behaviour.
-public struct HBApplication<Responder: HBResponder> {
+public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup & HTTPChannelHandler> {
     // MARK: Member variables
 
     /// event loop group used by application
@@ -103,8 +104,8 @@ public struct HBApplication<Responder: HBResponder> {
     public var decoder: HBRequestDecoder
     /// on server running
     public var onServerRunning: @Sendable (Channel) async -> Void
-    /// additional channel handlers
-    var additionalChannelHandlers: [@Sendable () -> any RemovableChannelHandler]
+    /// Server channel setup
+    let channelSetup: ChannelSetup
     /// services attached to the application.
     var services: [any Service]
 
@@ -113,6 +114,7 @@ public struct HBApplication<Responder: HBResponder> {
     /// Initialize new Application
     public init(
         responder: Responder,
+        channelSetup: ChannelSetup = HTTP1Channel(),
         configuration: HBApplicationConfiguration = HBApplicationConfiguration(),
         threadPool: NIOThreadPool = .singleton,
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton
@@ -122,21 +124,11 @@ public struct HBApplication<Responder: HBResponder> {
         self.logger = logger
 
         self.responder = responder
+        self.channelSetup = channelSetup
         self.configuration = configuration
         self.encoder = NullEncoder()
         self.decoder = NullDecoder()
         self.onServerRunning = { _ in }
-        // add idle read, write handlers
-        if let idleTimeoutConfiguration = configuration.idleTimeoutConfiguration {
-            self.additionalChannelHandlers = [{
-                IdleStateHandler(
-                    readTimeout: idleTimeoutConfiguration.readTimeout,
-                    writeTimeout: idleTimeoutConfiguration.writeTimeout
-                )
-            }]
-        } else {
-            self.additionalChannelHandlers = []
-        }
 
         self.eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
         self.threadPool = threadPool
@@ -176,17 +168,34 @@ extension HBApplication: Service {
             decoder: self.decoder
         )
         let dateCache = HBDateCache()
-        let responder = HTTPResponder(
-            responder: self.responder,
-            applicationContext: context,
-            dateCache: dateCache
-        )
-        let server = HBHTTPServer(
-            group: self.eventLoopGroup,
+        @Sendable func respond(to request: HBHTTPRequest, channel: Channel) async throws -> HBHTTPResponse {
+            let request = HBRequest(
+                head: request.head,
+                body: request.body
+            )
+            let context = Responder.Context(
+                applicationContext: context,
+                channel: channel,
+                logger: HBApplication.loggerWithRequestId(context.logger)
+            )
+            // respond to request
+            var response = try await self.responder.respond(to: request, context: context)
+            response.headers.add(name: "date", value: dateCache.date)
+            // server name header
+            if let serverName = self.configuration.serverName {
+                response.headers.add(name: "server", value: serverName)
+            }
+            return HBHTTPResponse(status: response.status, headers: response.headers, body: response.body)
+        }
+        // update channel with responder
+        var channelSetup = self.channelSetup
+        channelSetup.responder = respond
+        // create server
+        let server = HBServer(
+            childChannelSetup: channelSetup,
             configuration: self.configuration.httpServer,
-            responder: responder,
-            additionalChannelHandlers: self.additionalChannelHandlers.map { $0() },
             onServerRunning: self.onServerRunning,
+            eventLoopGroup: self.eventLoopGroup,
             logger: self.logger
         )
         try await withGracefulShutdownHandler {
@@ -201,8 +210,29 @@ extension HBApplication: Service {
             }
         }
     }
+
+    public static func loggerWithRequestId(_ logger: Logger) -> Logger {
+        let requestId = globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
+        return logger.with(metadataKey: "hb_id", value: .stringConvertible(requestId))
+    }
 }
 
 extension HBApplication: CustomStringConvertible {
     public var description: String { "HBApplication" }
 }
+
+extension Logger {
+    /// Create new Logger with additional metadata value
+    /// - Parameters:
+    ///   - metadataKey: Metadata key
+    ///   - value: Metadata value
+    /// - Returns: Logger
+    func with(metadataKey: String, value: MetadataValue) -> Logger {
+        var logger = self
+        logger[metadataKey: metadataKey] = value
+        return logger
+    }
+}
+
+/// Current global request ID
+private let globalRequestID = ManagedAtomic(0)

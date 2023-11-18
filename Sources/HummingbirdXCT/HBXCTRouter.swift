@@ -13,8 +13,10 @@
 //===----------------------------------------------------------------------===//
 
 import Atomics
-import Hummingbird
+@_spi(HBXCT) import Hummingbird
+@_spi(HBXCT) import HummingbirdCore
 import Logging
+import NIOConcurrencyHelpers
 import NIOCore
 import NIOPosix
 import Tracing
@@ -52,7 +54,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
     let context: HBApplicationContext
     let responder: Responder
 
-    init(app: HBApplication<Responder>) {
+    init(app: HBApplication<Responder, HTTP1Channel>) {
         self.eventLoopGroup = app.eventLoopGroup
         self.context = HBApplicationContext(
             threadPool: app.threadPool,
@@ -79,49 +81,62 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
         let applicationContext: HBApplicationContext
 
         func execute(uri: String, method: HTTPMethod, headers: HTTPHeaders, body: ByteBuffer?) async throws -> HBXCTResponse {
-            let response: HBResponse
-            let eventLoop = self.eventLoopGroup.next()
+            let eventLoop = self.eventLoopGroup.any()
 
-            do {
+            return try await withThrowingTaskGroup(of: HBXCTResponse.self) { group in
+                let streamer = HBStreamedRequestBody()
                 let request = HBRequest(
                     head: .init(version: .http1_1, method: method, uri: uri, headers: headers),
-                    body: .byteBuffer(body)
+                    body: .stream(streamer)
                 )
                 let context = Responder.Context(
                     applicationContext: self.applicationContext,
                     eventLoop: eventLoop,
-                    logger: HBApplication<Responder>.loggerWithRequestId(self.applicationContext.logger)
+                    logger: HBApplication<Responder, HTTP1Channel>.loggerWithRequestId(self.applicationContext.logger)
                 )
 
-                response = try await self.responder.respond(to: request, context: context)
-            } catch let error as HBHTTPResponseError {
-                let httpResponse = error.response(version: .http1_1, allocator: ByteBufferAllocator())
-                response = HBResponse(status: httpResponse.head.status, headers: httpResponse.head.headers, body: httpResponse.body)
-            } catch {
-                response = HBResponse(status: .internalServerError)
-            }
-
-            let body: ByteBuffer?
-            switch response.body {
-            case .byteBuffer(let buffer):
-                body = buffer
-            case .empty:
-                body = nil
-            case .stream(let streamer):
-                var colllateBuffer = ByteBuffer()
-                streamerReadLoop:
-                    while true
-                {
-                    switch try await streamer.read(on: eventLoop).get() {
-                    case .byteBuffer(var part):
-                        colllateBuffer.writeBuffer(&part)
-                    case .end:
-                        break streamerReadLoop
+                group.addTask {
+                    let response: HBResponse
+                    do {
+                        response = try await self.responder.respond(to: request, context: context)
+                    } catch let error as HBHTTPResponseError {
+                        let httpResponse = error.response(allocator: ByteBufferAllocator())
+                        response = HBResponse(status: httpResponse.status, headers: httpResponse.headers, body: httpResponse.body)
+                    } catch {
+                        response = HBResponse(status: .internalServerError)
+                    }
+                    let responseWriter = RouterResponseWriter()
+                    try await response.body.write(responseWriter)
+                    for try await _ in request.body {}
+                    return responseWriter.collated.withLockedValue { collated in
+                        HBXCTResponse(status: response.status, headers: response.headers, body: collated)
                     }
                 }
-                body = colllateBuffer
+
+                if var body = body {
+                    while body.readableBytes > 0 {
+                        let chunkSize = min(32 * 1024, body.readableBytes)
+                        let buffer = body.readSlice(length: chunkSize)!
+                        await streamer.send(buffer)
+                    }
+                }
+                streamer.finish()
+                return try await group.next()!
             }
-            return HBXCTResponse(status: response.status, headers: response.headers, body: body)
+        }
+    }
+
+    final class RouterResponseWriter: HBResponseBodyWriter {
+        let collated: NIOLockedValueBox<ByteBuffer>
+
+        init() {
+            self.collated = .init(.init())
+        }
+
+        func write(_ buffer: ByteBuffer) async throws {
+            _ = self.collated.withLockedValue { collated in
+                collated.writeImmutableBuffer(buffer)
+            }
         }
     }
 }

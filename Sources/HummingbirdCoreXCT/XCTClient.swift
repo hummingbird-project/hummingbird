@@ -32,7 +32,7 @@ public struct HBXCTClient: Sendable {
     public struct Configuration: Sendable {
         public init(
             tlsConfiguration: TLSConfiguration? = nil,
-            timeout: TimeAmount = .seconds(15),
+            timeout: Duration = .seconds(15),
             serverName: String? = nil
         ) {
             self.tlsConfiguration = tlsConfiguration
@@ -43,7 +43,7 @@ public struct HBXCTClient: Sendable {
         /// TLS confguration
         public let tlsConfiguration: TLSConfiguration?
         /// read timeout. If connection has no read events for indicated time throw timeout error
-        public let timeout: TimeAmount
+        public let timeout: Duration
         /// server name
         public let serverName: String?
     }
@@ -143,7 +143,7 @@ public struct HBXCTClient: Sendable {
         let channel = try await getChannel()
         let response = try await withThrowingTaskGroup(of: HBXCTClient.Response.self) { group in
             group.addTask {
-                try await Task.sleep(nanoseconds: numericCast(self.configuration.timeout.nanoseconds))
+                try await Task.sleep(for: self.configuration.timeout)
                 throw Error.readTimeout
             }
             group.addTask {

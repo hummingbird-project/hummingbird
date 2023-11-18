@@ -108,10 +108,9 @@ public struct HBFileIO: Sendable {
         logger.debug("[FileIO] PUT", metadata: ["file": .string(path)])
         switch contents {
         case .byteBuffer(let buffer):
-            guard let buffer = buffer else { return }
             try await self.writeFile(buffer: buffer, handle: handle, on: context.eventLoop)
         case .stream(let streamer):
-            try await self.writeFile(stream: streamer, handle: handle, on: context.eventLoop)
+            try await self.writeFile(asyncSequence: streamer, handle: handle, on: context.eventLoop)
         }
     }
 
@@ -124,20 +123,33 @@ public struct HBFileIO: Sendable {
             allocator: context.allocator,
             eventLoop: context.eventLoop
         ).get()
-        return .byteBuffer(buffer)
+        return .init(byteBuffer: buffer)
     }
 
     /// Return streamer that will load file
     func streamFile(handle: NIOFileHandle, region: FileRegion, context: HBRequestContext) throws -> HBResponseBody {
-        let fileStreamer = try AsyncSequenceResponseBodyStreamer(FileAsyncSequence(
-            fileHandle: handle,
-            chunkSize: self.chunkSize,
-            fileRegion: region,
-            fileIO: self.fileIO,
-            allocator: context.allocator,
-            eventLoop: context.eventLoop
-        ))
-        return .stream(fileStreamer)
+        let fileOffset = region.readerIndex
+        let endOffset = region.endIndex
+        return HBResponseBody(contentLength: region.readableBytes) { writer in
+            let chunkSize = 8 * 1024
+            var fileOffset = fileOffset
+
+            while fileOffset < endOffset {
+                let bytesLeft = endOffset - fileOffset
+                let bytesToRead = Swift.min(chunkSize, bytesLeft)
+                let fileOffsetToRead = fileOffset
+                let buffer = try await self.fileIO.read(
+                    fileHandle: handle,
+                    fromOffset: Int64(fileOffsetToRead),
+                    byteCount: bytesToRead,
+                    allocator: context.allocator,
+                    eventLoop: context.eventLoop
+                ).get()
+                fileOffset += bytesToRead
+                try await writer.write(buffer)
+            }
+            try handle.close()
+        }
     }
 
     /// write byte buffer to file
@@ -146,85 +158,13 @@ public struct HBFileIO: Sendable {
     }
 
     /// write output of streamer to file
-    func writeFile(stream: HBByteBufferStreamer, handle: NIOFileHandle, on eventLoop: EventLoop) async throws {
-        for try await buffer in stream.sequence {
+    func writeFile<BufferSequence: AsyncSequence>(
+        asyncSequence: BufferSequence,
+        handle: NIOFileHandle,
+        on eventLoop: EventLoop
+    ) async throws where BufferSequence.Element == ByteBuffer {
+        for try await buffer in asyncSequence {
             try await self.fileIO.write(fileHandle: handle, buffer: buffer, eventLoop: eventLoop).get()
-        }
-    }
-
-    /// AsyncSequence of buffers read from file
-    ///
-    /// The sequence takes control of the file handle descriptor and will close the file descriptor when
-    /// it is deleted
-    final class FileAsyncSequence: AsyncSequence, Sendable {
-        init(
-            fileHandle: NIOFileHandle,
-            chunkSize: Int,
-            fileRegion: FileRegion,
-            fileIO: NonBlockingFileIO,
-            allocator: ByteBufferAllocator,
-            eventLoop: EventLoop
-        ) throws {
-            self.fileDescriptor = try fileHandle.takeDescriptorOwnership()
-            self.chunkSize = chunkSize
-            self.fileOffset = fileRegion.readerIndex
-            self.endOffset = fileRegion.endIndex
-            self.fileIO = fileIO
-            self.allocator = allocator
-            self.eventLoop = eventLoop
-        }
-
-        typealias Element = ByteBuffer
-        let fileDescriptor: CInt
-        let chunkSize: Int
-        let fileOffset: Int
-        let endOffset: Int
-        let fileIO: NonBlockingFileIO
-        let allocator: ByteBufferAllocator
-        let eventLoop: EventLoop
-
-        // closing the file in the deinit is not ideal. But we should be able to fix
-        // this later by using response body writers instead of AsyncSequences for writing
-        // the response body
-        deinit {
-            let fileHandle = NIOFileHandle(descriptor: self.fileDescriptor)
-            try? fileHandle.close()
-        }
-
-        struct AsyncIterator: AsyncIteratorProtocol {
-            init(sequence: FileAsyncSequence) {
-                self.sequence = sequence
-                self.fileOffset = sequence.fileOffset
-            }
-
-            let sequence: FileAsyncSequence
-            var fileOffset: Int
-
-            mutating func next() async throws -> Element? {
-                let bytesLeft = self.sequence.endOffset - self.fileOffset
-                let bytesToRead = Swift.min(self.sequence.chunkSize, bytesLeft)
-                if bytesToRead > 0 {
-                    let fileHandle = NIOFileHandle(descriptor: self.sequence.fileDescriptor)
-                    defer {
-                        _ = try? fileHandle.takeDescriptorOwnership()
-                    }
-                    let fileOffsetToRead = self.fileOffset
-                    self.fileOffset += bytesToRead
-                    return try await self.sequence.fileIO.read(
-                        fileHandle: fileHandle,
-                        fromOffset: Int64(fileOffsetToRead),
-                        byteCount: bytesToRead,
-                        allocator: self.sequence.allocator,
-                        eventLoop: self.sequence.eventLoop
-                    ).get()
-                } else {
-                    return nil
-                }
-            }
-        }
-
-        func makeAsyncIterator() -> AsyncIterator {
-            return .init(sequence: self)
         }
     }
 }

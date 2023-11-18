@@ -30,7 +30,7 @@ extension JSONEncoder: HBResponseEncoder {
         return HBResponse(
             status: .ok,
             headers: ["content-type": "application/json; charset=utf-8"],
-            body: .byteBuffer(buffer)
+            body: .init(byteBuffer: buffer)
         )
     }
 }
@@ -41,7 +41,7 @@ extension JSONDecoder: HBRequestDecoder {
     ///   - type: Type to decode
     ///   - request: Request to decode from
     public func decode<T: Decodable>(_ type: T.Type, from request: HBRequest, context: HBRequestContext) throws -> T {
-        guard var buffer = request.body.buffer,
+        guard case .byteBuffer(var buffer) = request.body,
               let data = buffer.readData(length: buffer.readableBytes)
         else {
             throw HBHTTPError(.badRequest)

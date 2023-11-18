@@ -16,17 +16,14 @@
 @_exported import struct HummingbirdCore.HBHTTPError
 @_exported import protocol HummingbirdCore.HBHTTPResponseError
 @_exported import enum HummingbirdCore.HBRequestBody
-@_exported import enum HummingbirdCore.HBResponseBody
-@_exported import protocol HummingbirdCore.HBResponseBodyStreamer
-@_exported import enum HummingbirdCore.HBStreamerOutput
-@_exported import protocol HummingbirdCore.HBStreamerProtocol
+@_exported import struct HummingbirdCore.HBResponseBody
+@_exported import protocol HummingbirdCore.HBResponseBodyWriter
 #if canImport(Network)
 @_exported import struct HummingbirdCore.TSTLSOptions
 #endif
 
 @_exported import struct NIOCore.ByteBuffer
 @_exported import struct NIOCore.ByteBufferAllocator
-@_exported import enum NIOCore.SocketAddress
 
 @_exported import struct NIOHTTP1.HTTPHeaders
 @_exported import enum NIOHTTP1.HTTPMethod

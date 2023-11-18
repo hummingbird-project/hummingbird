@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
+import HummingbirdCore
 import HummingbirdCoreXCT
 import NIOCore
 import NIOHTTP1
@@ -22,7 +23,7 @@ import ServiceLifecycle
 import XCTest
 
 /// Test using a live server
-final class HBXCTLive<Responder: HBResponder>: HBXCTApplication {
+final class HBXCTLive<Responder: HBResponder, ChannelSetup: HBChannelSetup & HTTPChannelHandler>: HBXCTApplication {
     struct Client: HBXCTClientProtocol {
         let client: HBXCTClient
 
@@ -42,7 +43,7 @@ final class HBXCTLive<Responder: HBResponder>: HBXCTApplication {
         }
     }
 
-    init(app: HBApplication<Responder>) {
+    init(app: HBApplication<Responder, ChannelSetup>) {
         var app = app
         app.configuration = app.configuration.with(address: .hostname("localhost", port: 0))
         let promise = Promise<Int>()
@@ -86,7 +87,7 @@ final class HBXCTLive<Responder: HBResponder>: HBXCTApplication {
         await self.promise.complete(channel.localAddress!.port!)
     }
 
-    let application: HBApplication<Responder>
+    let application: HBApplication<Responder, ChannelSetup>
     let promise: Promise<Int>
     let timeout: TimeAmount
 }

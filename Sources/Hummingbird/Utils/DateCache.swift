@@ -44,24 +44,11 @@ public final class HBDateCache: Service {
     }
 
     public func run() async throws {
-        let cancelled = ManagedAtomic(false)
-        if #available(macOS 13.0, *) {
-            let timerSequence = AsyncTimerSequence(interval: .seconds(1), clock: .suspending)
-                .cancelOnGracefulShutdown()
-            for try await _ in timerSequence {
-                let epochTime = time(nil)
-                self.dateContainer.store(.init(date: Self.formatRFC1123Date(epochTime)), ordering: .relaxed)
-            }
-        } else {
-            try await withGracefulShutdownHandler {
-                while !cancelled.load(ordering: .relaxed) {
-                    try await Task.sleep(nanoseconds: 1_000_000_000)
-                    let epochTime = time(nil)
-                    self.dateContainer.store(.init(date: Self.formatRFC1123Date(epochTime)), ordering: .relaxed)
-                }
-            } onGracefulShutdown: {
-                cancelled.store(true, ordering: .relaxed)
-            }
+        let timerSequence = AsyncTimerSequence(interval: .seconds(1), clock: .suspending)
+            .cancelOnGracefulShutdown()
+        for try await _ in timerSequence {
+            let epochTime = time(nil)
+            self.dateContainer.store(.init(date: Self.formatRFC1123Date(epochTime)), ordering: .relaxed)
         }
     }
 

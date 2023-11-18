@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -47,32 +47,40 @@ class HummingBirdCoreTests: XCTestCase {
     }
 
     func testConnect() async throws {
-        let server = HBHTTPServer(
-            group: Self.eventLoopGroup,
+        try await testServer(
+            childChannelSetup: HTTP1Channel(responder: helloResponder),
             configuration: .init(address: .hostname(port: 0)),
-            responder: HelloResponder(),
+            eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
-        )
-        try await testServer(server) { client in
+        ) { client in
             let response = try await client.get("/")
             var body = try XCTUnwrap(response.body)
             XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
         }
     }
 
-    func testError() async throws {
-        struct ErrorResponder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, channel: Channel) async throws -> HBHTTPResponse {
-                throw HBHTTPError(.unauthorized)
+    func testMultipleRequests() async throws {
+        try await testServer(
+            childChannelSetup: HTTP1Channel(responder: helloResponder),
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
+            logger: Logger(label: "HB")
+        ) { client in
+            for _ in 0..<10 {
+                let response = try await client.post("/", body: ByteBuffer(string: "Hello"))
+                var body = try XCTUnwrap(response.body)
+                XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
             }
         }
-        let server = HBHTTPServer(
-            group: Self.eventLoopGroup,
+    }
+
+    func testError() async throws {
+        try await testServer(
+            childChannelSetup: HTTP1Channel { _, _ in throw HBHTTPError(.unauthorized) },
             configuration: .init(address: .hostname(port: 0)),
-            responder: ErrorResponder(),
+            eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
-        )
-        try await testServer(server) { client in
+        ) { client in
             let response = try await client.get("/")
             XCTAssertEqual(response.status, .unauthorized)
             XCTAssertEqual(response.headers["content-length"].first, "0")
@@ -80,25 +88,15 @@ class HummingBirdCoreTests: XCTestCase {
     }
 
     func testConsumeBody() async throws {
-        struct Responder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, channel: Channel) async throws -> HBHTTPResponse {
-                let buffer = try await request.body.consumeBody(maxSize: .max)
-                guard let buffer = buffer else {
-                    throw HBHTTPError(.badRequest)
-                }
-                return HBHTTPResponse(
-                    head: .init(version: .init(major: 1, minor: 1), status: .ok),
-                    body: .byteBuffer(buffer)
-                )
-            }
-        }
-        let server = HBHTTPServer(
-            group: Self.eventLoopGroup,
-            configuration: .init(address: .hostname(port: 0), maxStreamingBufferSize: 256 * 1024),
-            responder: Responder(),
+        try await testServer(
+            childChannelSetup: HTTP1Channel { request, _ in
+                let buffer = try await request.body.collect(upTo: .max)
+                return HBHTTPResponse(status: .ok, body: .init(byteBuffer: buffer))
+            },
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
-        )
-        try await testServer(server) { client in
+        ) { client in
             let buffer = self.randomBuffer(size: 1_140_000)
             let response = try await client.post("/", body: buffer)
             let body = try XCTUnwrap(response.body)
@@ -106,91 +104,31 @@ class HummingBirdCoreTests: XCTestCase {
         }
     }
 
-    func testConsumeAllBody() async throws {
-        struct Responder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, channel: Channel) async throws -> HBHTTPResponse {
-                var size = 0
-                for try await buffer in request.body.stream!.sequence {
-                    size += buffer.readableBytes
-                }
-                return HBHTTPResponse(
-                    head: .init(version: .init(major: 1, minor: 1), status: .ok),
-                    body: .byteBuffer(channel.allocator.buffer(integer: size))
-                )
-            }
-        }
-        let server = HBHTTPServer(
-            group: Self.eventLoopGroup,
-            configuration: .init(address: .hostname(port: 0), maxStreamingBufferSize: 256 * 1024),
-            responder: Responder(),
+    func testWriteBody() async throws {
+        try await testServer(
+            childChannelSetup: HTTP1Channel { _, _ in
+                let buffer = self.randomBuffer(size: 1_140_000)
+                return HBHTTPResponse(status: .ok, body: .init(byteBuffer: buffer))
+            },
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
-        )
-        try await testServer(server) { client in
-            let buffer = self.randomBuffer(size: 450_000)
-            let response = try await client.post("/", body: buffer)
-            var body = try XCTUnwrap(response.body)
-            XCTAssertEqual(body.readInteger(), buffer.readableBytes)
-        }
-    }
-
-    func testConsumeBodyInTask() async throws {
-        struct Responder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, channel: Channel) async throws -> HBHTTPResponse {
-                do {
-                    let buffer = try await request.body.consumeBody(maxSize: .max)
-                    guard let buffer = buffer else {
-                        throw HBHTTPError(.badRequest)
-                    }
-                    let response = HBHTTPResponse(
-                        head: .init(version: .init(major: 1, minor: 1), status: .ok),
-                        body: .byteBuffer(buffer)
-                    )
-                    return response
-                }
-            }
-        }
-        let server = HBHTTPServer(
-            group: Self.eventLoopGroup,
-            configuration: .init(address: .hostname(port: 0), maxStreamingBufferSize: 256 * 1024),
-            responder: Responder(),
-            logger: Logger(label: "HB")
-        )
-        try await testServer(server) { client in
-            let buffer = self.randomBuffer(size: 1_140_000)
-            let response = try await client.post("/", body: buffer)
+        ) { client in
+            let response = try await client.get("/")
             let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(body, buffer)
+            XCTAssertEqual(body.readableBytes, 1_140_000)
         }
     }
 
     func testStreamBody() async throws {
-        struct Responder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, channel: Channel) async throws -> HBHTTPResponse {
-                let eventLoop = channel.eventLoop
-                let body: HBResponseBody = .streamCallback { _ in
-                    return request.body.stream!.consume(on: eventLoop).map { output in
-                        switch output {
-                        case .byteBuffer(let buffer):
-                            return .byteBuffer(buffer)
-                        case .end:
-                            return .end
-                        }
-                    }
-                }
-                let response = HBHTTPResponse(
-                    head: .init(version: .init(major: 1, minor: 1), status: .ok),
-                    body: body
-                )
-                return response
-            }
-        }
-        let server = HBHTTPServer(
-            group: Self.eventLoopGroup,
-            configuration: .init(address: .hostname(port: 0), maxStreamingBufferSize: 256 * 1024),
-            responder: Responder(),
+        try await testServer(
+            childChannelSetup: HTTP1Channel { request, _ in
+                return HBHTTPResponse(status: .ok, body: .init(asyncSequence: request.body))
+            },
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
-        )
-        try await testServer(server) { client in
+        ) { client in
             let buffer = self.randomBuffer(size: 1_140_000)
             let response = try await client.post("/", body: buffer)
             let body = try XCTUnwrap(response.body)
@@ -198,47 +136,15 @@ class HummingBirdCoreTests: XCTestCase {
         }
     }
 
-    func testStreamBody2() async throws {
-        struct Responder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, channel: Channel) async throws -> HBHTTPResponse {
-                let streamer = AsyncSequenceResponseBodyStreamer(request.body.stream!.sequence)
-                return HBHTTPResponse(
-                    head: .init(version: .init(major: 1, minor: 1), status: .ok),
-                    body: .stream(streamer)
-                )
-            }
-        }
-        let server = HBHTTPServer(
-            group: Self.eventLoopGroup,
-            configuration: .init(address: .hostname(port: 0), maxStreamingBufferSize: 256 * 1024),
-            responder: Responder(),
+    func testStreamBodyWriteSlow() async throws {
+        try await testServer(
+            childChannelSetup: HTTP1Channel { request, _ in
+                return HBHTTPResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
+            },
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
-        )
-        try await testServer(server) { client in
-            let buffer = self.randomBuffer(size: 1_140_000)
-            let response = try await client.post("/", body: buffer)
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(body, buffer)
-        }
-    }
-
-    func testStreamBodySlowProcess() async throws {
-        struct Responder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, channel: Channel) async throws -> HBHTTPResponse {
-                let streamer = AsyncSequenceResponseBodyStreamer(request.body.stream!.sequence.delayed())
-                return HBHTTPResponse(
-                    head: .init(version: .init(major: 1, minor: 1), status: .ok),
-                    body: .stream(streamer)
-                )
-            }
-        }
-        let server = HBHTTPServer(
-            group: Self.eventLoopGroup,
-            configuration: .init(address: .hostname(port: 0), maxStreamingBufferSize: 256 * 1024),
-            responder: Responder(),
-            logger: Logger(label: "HB")
-        )
-        try await testServer(server) { client in
+        ) { client in
             let buffer = self.randomBuffer(size: 1_140_000)
             let response = try await client.post("/", body: buffer)
             let body = try XCTUnwrap(response.body)
@@ -254,28 +160,19 @@ class HummingBirdCoreTests: XCTestCase {
 
             func read(context: ChannelHandlerContext) {
                 let loopBoundContext = NIOLoopBound(context, eventLoop: context.eventLoop)
-                context.eventLoop.scheduleTask(in: .milliseconds(Int64.random(in: 25..<200))) {
+                context.eventLoop.scheduleTask(in: .milliseconds(Int64.random(in: 5..<50))) {
                     loopBoundContext.value.read()
                 }
             }
         }
-        struct Responder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, channel: Channel) async throws -> HBHTTPResponse {
-                let streamer = AsyncSequenceResponseBodyStreamer(request.body.stream!.sequence)
-                return HBHTTPResponse(
-                    head: .init(version: .init(major: 1, minor: 1), status: .ok),
-                    body: .stream(streamer)
-                )
-            }
-        }
-        let server = HBHTTPServer(
-            group: Self.eventLoopGroup,
+        try await testServer(
+            childChannelSetup: HTTP1Channel(additionalChannelHandlers: [SlowInputChannelHandler()]) { request, _ in
+                return HBHTTPResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
+            },
             configuration: .init(address: .hostname(port: 0)),
-            responder: Responder(),
-            additionalChannelHandlers: [SlowInputChannelHandler()],
+            eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
-        )
-        try await testServer(server) { client in
+        ) { client in
             let buffer = self.randomBuffer(size: 1_140_000)
             let response = try await client.post("/", body: buffer)
             let body = try XCTUnwrap(response.body)
@@ -295,178 +192,53 @@ class HummingBirdCoreTests: XCTestCase {
                 context.fireChannelRead(data)
             }
         }
-        struct Responder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, channel: Channel) async throws -> HBHTTPResponse {
-                return HBHTTPResponse(
-                    head: .init(version: .init(major: 1, minor: 1), status: .accepted),
-                    body: .empty
-                )
-            }
-        }
-        let server = HBHTTPServer(
-            group: Self.eventLoopGroup,
+        try await testServer(
+            childChannelSetup: HTTP1Channel(additionalChannelHandlers: [CreateErrorHandler()]) { request, _ in
+                _ = try await request.body.collect(upTo: .max)
+                return HBHTTPResponse(status: .ok)
+            },
             configuration: .init(address: .hostname(port: 0)),
-            responder: Responder(),
-            additionalChannelHandlers: [CreateErrorHandler()],
+            eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
-        )
-        try await testServer(server) { client in
+        ) { client in
             let buffer = self.randomBuffer(size: 32)
             let response = try await client.post("/", body: buffer)
             XCTAssertEqual(response.status, .insufficientStorage)
         }
     }
 
-    func testStreamedRequestDrop() async throws {
-        /// Embedded channels pass all the data down immediately. This is not a real world situation so this handler
-        /// can be used to fake TCP/IP data packets coming in arbitrary sizes (well at least for the HTTP body)
-        class BreakupHTTPBodyChannelHandler: ChannelInboundHandler, RemovableChannelHandler {
-            typealias InboundIn = HTTPServerRequestPart
-            typealias InboundOut = HTTPServerRequestPart
-
-            func channelRead(context: ChannelHandlerContext, data: NIOAny) {
-                let part = unwrapInboundIn(data)
-
-                switch part {
-                case .head, .end:
-                    context.fireChannelRead(data)
-                case .body(var buffer):
-                    while buffer.readableBytes > 0 {
-                        let size = min(Int.random(in: 16...8192), buffer.readableBytes)
-                        let slice = buffer.readSlice(length: size)!
-                        context.fireChannelRead(self.wrapInboundOut(.body(slice)))
-                    }
-                }
-            }
-        }
-        struct Responder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, channel: Channel) async throws -> HBHTTPResponse {
-                XCTAssertNotNil(request.body.stream)
-                return HBHTTPResponse(
-                    head: .init(version: .init(major: 1, minor: 1), status: .accepted),
-                    body: .empty
-                )
-            }
-        }
-        let server = HBHTTPServer(
-            group: Self.eventLoopGroup,
+    func testDropRequestBody() async throws {
+        try await testServer(
+            childChannelSetup: HTTP1Channel { _, _ in
+                // ignore request body
+                return HBHTTPResponse(status: .accepted)
+            },
             configuration: .init(address: .hostname(port: 0)),
-            responder: Responder(),
-            additionalChannelHandlers: [BreakupHTTPBodyChannelHandler()],
+            eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
-        )
-        try await testServer(server) { client in
+        ) { client in
             let buffer = self.randomBuffer(size: 16384)
             let response = try await client.post("/", body: buffer)
             XCTAssertEqual(response.status, .accepted)
-        }
-    }
-
-    func testMaxStreamedUploadSize() async throws {
-        struct Responder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, channel: Channel) async throws -> HBHTTPResponse {
-                guard let buffer = try await request.body.consumeBody(maxSize: .max) else {
-                    throw HBHTTPError(.badRequest)
-                }
-                return HBHTTPResponse(
-                    head: .init(version: .init(major: 1, minor: 1), status: .ok),
-                    body: .byteBuffer(buffer)
-                )
-            }
-        }
-        let server = HBHTTPServer(
-            group: Self.eventLoopGroup,
-            configuration: .init(address: .hostname(port: 0), maxUploadSize: 64 * 1024),
-            responder: Responder(),
-            logger: Logger(label: "HB")
-        )
-        try await testServer(server) { client in
-            let buffer = self.randomBuffer(size: 320_000)
-            let response = try await client.post("/", body: buffer)
-            XCTAssertEqual(response.status, .payloadTooLarge)
-        }
-    }
-
-    func testMaxUploadSize() async throws {
-        struct Responder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, channel: Channel) async throws -> HBHTTPResponse {
-                guard let buffer = try await request.body.consumeBody(maxSize: 64 * 1024) else {
-                    throw HBHTTPError(.badRequest)
-                }
-                return HBHTTPResponse(
-                    head: .init(version: .init(major: 1, minor: 1), status: .ok),
-                    body: .byteBuffer(buffer)
-                )
-            }
-        }
-        let server = HBHTTPServer(
-            group: Self.eventLoopGroup,
-            configuration: .init(address: .hostname(port: 0), maxUploadSize: 64 * 1024),
-            responder: Responder(),
-            logger: Logger(label: "HB")
-        )
-        try await testServer(server) { client in
-            let buffer = self.randomBuffer(size: 320_000)
-            let response = try await client.post("/", body: buffer)
-            XCTAssertEqual(response.status, .payloadTooLarge)
-        }
-    }
-
-    /// test a request is finished with before the next one starts to be processed
-    func testHTTPPipelining() async throws {
-        struct WaitResponder: HBHTTPResponder {
-            func respond(to request: HBHTTPRequest, channel: Channel) async throws -> HBHTTPResponse {
-                guard let wait = request.head.headers["wait"].first.map({ Int64($0) }) ?? nil else {
-                    throw HBHTTPError(.badRequest)
-                }
-                try await Task.sleep(for: .milliseconds(wait))
-                let responseHead = HTTPResponseHead(version: .init(major: 1, minor: 1), status: .ok)
-                let responseBody = channel.allocator.buffer(string: "\(wait)")
-                return HBHTTPResponse(head: responseHead, body: .byteBuffer(responseBody))
-            }
-        }
-        let server = HBHTTPServer(
-            group: Self.eventLoopGroup,
-            configuration: .init(address: .hostname(port: 0), maxUploadSize: 64 * 1024),
-            responder: WaitResponder(),
-            logger: Logger(label: "HB")
-        )
-        try await testServer(server) { client in
-            try await withThrowingTaskGroup(of: Void.self) { group in
-                let waitTimes: [Int] = (0..<16).map { _ in Int.random(in: 0..<50) }
-                for time in waitTimes {
-                    group.addTask {
-                        let headers: HTTPHeaders = ["wait": String(describing: time), "connection": "keep-alive"]
-                        let response = try await client.get("/", headers: headers)
-                        XCTAssertEqual(response.body.map { String(buffer: $0) }, "\(time)")
-                    }
-                }
-                try await group.waitForAll()
-            }
+            let response2 = try await client.post("/", body: buffer)
+            XCTAssertEqual(response2.status, .accepted)
         }
     }
 
     /// test server closes connection if "connection" header is set to "close"
     func testConnectionClose() async throws {
-        let server = HBHTTPServer(
-            group: Self.eventLoopGroup,
+        try await testServer(
+            childChannelSetup: HTTP1Channel(responder: helloResponder),
             configuration: .init(address: .hostname(port: 0)),
-            responder: HelloResponder(),
+            eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
-        )
-        try await testServer(server) { client in
+        ) { client in
             try await withTimeout(.seconds(5)) {
                 _ = try await client.get("/", headers: ["connection": "close"])
                 let channel = try await client.channelPromise.futureResult.get()
                 try await channel.closeFuture.get()
             }
         }
-    }
-
-    func testBodyDescription() {
-        XCTAssertEqual(HBRequestBody.byteBuffer(nil).description, "empty")
-        XCTAssertEqual(HBRequestBody.byteBuffer(self.randomBuffer(size: 64)).description, "64 bytes")
-        XCTAssertEqual(HBRequestBody.byteBuffer(.init(string: "Test String")).description, "\"Test String\"")
     }
 
     func testReadIdleHandler() async throws {
@@ -485,14 +257,18 @@ class HummingBirdCoreTests: XCTestCase {
                 }
             }
         }
-        let server = HBHTTPServer(
-            group: Self.eventLoopGroup,
+        try await testServer(
+            childChannelSetup: HTTP1Channel(
+                additionalChannelHandlers: [HTTPServerIncompleteRequest(), IdleStateHandler(readTimeout: .seconds(1))],
+                responder: { request, _ in
+                    _ = try await request.body.collect(upTo: .max)
+                    return .init(status: .ok)
+                }
+            ),
             configuration: .init(address: .hostname(port: 0)),
-            responder: HelloResponder(),
-            additionalChannelHandlers: [HTTPServerIncompleteRequest(), IdleStateHandler(readTimeout: .seconds(1))],
+            eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
-        )
-        try await testServer(server) { client in
+        ) { client in
             try await withTimeout(.seconds(5)) {
                 do {
                     _ = try await client.get("/", headers: ["connection": "keep-alive"])
@@ -506,95 +282,23 @@ class HummingBirdCoreTests: XCTestCase {
     }
 
     func testWriteIdleTimeout() async throws {
-        let server = HBHTTPServer(
-            group: Self.eventLoopGroup,
+        try await testServer(
+            childChannelSetup: HTTP1Channel(
+                additionalChannelHandlers: [IdleStateHandler(writeTimeout: .seconds(1))],
+                responder: { request, _ in
+                    _ = try await request.body.collect(upTo: .max)
+                    return .init(status: .ok)
+                }
+            ),
             configuration: .init(address: .hostname(port: 0)),
-            responder: HelloResponder(),
-            additionalChannelHandlers: [IdleStateHandler(writeTimeout: .seconds(1))],
+            eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
-        )
-        try await testServer(server) { client in
+        ) { client in
             try await withTimeout(.seconds(5)) {
                 _ = try await client.get("/", headers: ["connection": "keep-alive"])
                 let channel = try await client.channelPromise.futureResult.get()
                 try await channel.closeFuture.get()
             }
-        }
-    }
-
-    func testServerAsService() async throws {
-        actor Promise<Value> {
-            enum State {
-                case blocked([CheckedContinuation<Value, Never>])
-                case unblocked(Value)
-            }
-
-            var state: State
-
-            init() {
-                self.state = .blocked([])
-            }
-
-            func wait() async -> Value {
-                switch self.state {
-                case .blocked(var continuations):
-                    return await withCheckedContinuation { cont in
-                        continuations.append(cont)
-                        self.state = .blocked(continuations)
-                    }
-                case .unblocked(let value):
-                    return value
-                }
-            }
-
-            func complete(_ value: Value) {
-                switch self.state {
-                case .blocked(let continuations):
-                    for cont in continuations {
-                        cont.resume(returning: value)
-                    }
-                    self.state = .unblocked(value)
-                case .unblocked:
-                    self.state = .unblocked(value)
-                }
-            }
-        }
-
-        let promise = Promise<Int>()
-        var logger = Logger(label: "HB")
-        logger.logLevel = .trace
-        let server = HBHTTPServer(
-            group: Self.eventLoopGroup,
-            configuration: .init(address: .hostname(port: 0)),
-            responder: HelloResponder(),
-            onServerRunning: { channel in await promise.complete(channel.localAddress!.port!) },
-            logger: logger
-        )
-        try await withThrowingTaskGroup(of: Void.self) { group in
-            let serviceGroup = await ServiceGroup(
-                configuration: .init(
-                    services: [server],
-                    gracefulShutdownSignals: [.sigterm, .sigint],
-                    logger: server.logger
-                )
-            )
-            group.addTask {
-                try await serviceGroup.run()
-            }
-            let port = await promise.wait()
-            let client = HBXCTClient(
-                host: "localhost",
-                port: port,
-                configuration: .init(timeout: .seconds(2)),
-                eventLoopGroupProvider: .createNew
-            )
-            client.connect()
-            group.addTask {
-                _ = try await client.get("/")
-            }
-            try await group.next()
-            await serviceGroup.triggerGracefulShutdown()
-            try await client.shutdown()
         }
     }
 }

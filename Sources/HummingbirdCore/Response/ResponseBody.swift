@@ -14,141 +14,42 @@
 
 import NIOCore
 
-/// Function returning streamed byte buffer output
-public typealias HBStreamCallback = @Sendable (EventLoop) -> EventLoopFuture<HBStreamerOutput>
-
-/// Response body. Can be a single ByteBuffer, a stream of ByteBuffers or empty
-public enum HBResponseBody: Sendable {
-    /// Body stored as a single ByteBuffer
-    case byteBuffer(ByteBuffer)
-    /// Streamer object supplying byte buffers
-    case stream(HBResponseBodyStreamer)
-    /// Empty body
-    case empty
-
-    /// Construct a `HBResponseBody` from a closure supplying `ByteBuffer`'s.
-    ///
-    /// This function should supply `.byteBuffer(ByteBuffer)` until there is no more data, at which
-    /// point is should return `'end`.
-    ///
-    /// - Parameter closure: Closure called whenever a new ByteBuffer is needed
-    public static func stream(_ streamer: HBStreamerProtocol) -> Self {
-        .stream(ResponseByteBufferStreamer(streamer: streamer))
-    }
-
-    /// Construct a `HBResponseBody` from a closure supplying `ByteBuffer`'s.
-    ///
-    /// This function should supply `.byteBuffer(ByteBuffer)` until there is no more data, at which
-    /// point is should return `'end`.
-    ///
-    /// - Parameter closure: Closure called whenever a new ByteBuffer is needed
-    public static func streamCallback(_ closure: @escaping HBStreamCallback) -> Self {
-        .stream(ResponseBodyStreamerCallback(closure: closure))
-    }
+public protocol HBResponseBodyWriter {
+    func write(_ buffer: ByteBuffer) async throws
 }
 
-extension HBResponseBody: CustomStringConvertible {
-    public var description: String {
-        let maxOutput = 256
-        switch self {
-        case .empty:
-            return "empty"
+/// Response body
+public struct HBResponseBody: Sendable {
+    public let write: @Sendable (any HBResponseBodyWriter) async throws -> Void
+    public let contentLength: Int?
 
-        case .byteBuffer(let buffer):
-            var buffer2 = buffer
-            if let string = buffer2.readString(length: min(maxOutput, buffer2.readableBytes)),
-               string.allSatisfy(\.isASCII)
-            {
-                if buffer2.readableBytes > 0 {
-                    return "\"\(string)...\""
-                } else {
-                    return "\"\(string)\""
-                }
-            } else {
-                return "\(buffer.readableBytes) bytes"
-            }
-
-        case .stream:
-            return "byte stream"
-        }
+    /// Initialise HBResponseBody with closure writing body contents
+    /// - Parameters:
+    ///   - contentLength: Optional length of body
+    ///   - write: closure provided with `writer` type that can be used to write to response body
+    public init(contentLength: Int? = nil, _ write: @Sendable @escaping (any HBResponseBodyWriter) async throws -> Void) {
+        self.write = write
+        self.contentLength = contentLength
     }
-}
 
-/// Object supplying ByteBuffers for a response body
-public protocol HBResponseBodyStreamer: Sendable {
-    func read(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput>
-}
+    /// Initialise empty HBResponseBody
+    public init() {
+        self.init(contentLength: 0) { _ in }
+    }
 
-extension HBResponseBodyStreamer {
-    /// Call closure for every ByteBuffer streamed
-    /// - Returns: When everything has been streamed
-    @preconcurrency
-    func write(on eventLoop: EventLoop, _ writeCallback: @escaping @Sendable (ByteBuffer) -> Void) -> EventLoopFuture<Void> {
-        let promise = eventLoop.makePromise(of: Void.self)
-        @Sendable func _stream() {
-            self.read(on: eventLoop).whenComplete { result in
-                switch result {
-                case .success(.byteBuffer(let buffer)):
-                    writeCallback(buffer)
-                    _stream()
-                case .success(.end):
-                    promise.succeed(())
-                case .failure(let error):
-                    promise.fail(error)
-                }
+    /// Initialise HBResponseBody that contains a single ByteBuffer
+    /// - Parameter byteBuffer: ByteBuffer to write
+    public init(byteBuffer: ByteBuffer) {
+        self.init(contentLength: byteBuffer.readableBytes) { writer in try await writer.write(byteBuffer) }
+    }
+
+    /// Initialise HBResponseBody with an AsyncSequence of ByteBuffers
+    /// - Parameter asyncSequence: ByteBuffer AsyncSequence
+    public init<BufferSequence: AsyncSequence & Sendable>(asyncSequence: BufferSequence) where BufferSequence.Element == ByteBuffer {
+        self.init { writer in
+            for try await buffer in asyncSequence {
+                try await writer.write(buffer)
             }
         }
-        _stream()
-        return promise.futureResult
-    }
-}
-
-/// Response body that you can feed ByteBuffers
-struct ResponseByteBufferStreamer: HBResponseBodyStreamer {
-    let streamer: HBStreamerProtocol
-
-    /// Read ByteBuffer from streamer.
-    ///
-    /// This is used internally when serializing the response body
-    /// - Parameter eventLoop: EventLoop everything runs on
-    /// - Returns: Streamer output (ByteBuffer or end of stream)
-    func read(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput> {
-        return self.streamer.consume(on: eventLoop)
-    }
-}
-
-struct ResponseBodyStreamerCallback: HBResponseBodyStreamer {
-    /// Closure called whenever a new ByteBuffer is needed
-    let closure: HBStreamCallback
-
-    /// Read ByteBuffer from streamer.
-    ///
-    /// This is used internally when serializing the response body
-    /// - Parameter eventLoop: EventLoop everything runs on
-    /// - Returns: Streamer output (ByteBuffer or end of stream)
-    func read(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput> {
-        return self.closure(eventLoop)
-    }
-}
-
-/// Response body streamer which uses an AsyncSequence as its input.
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-public final class AsyncSequenceResponseBodyStreamer<ByteBufferSequence: AsyncSequence>: HBResponseBodyStreamer where ByteBufferSequence.Element == ByteBuffer {
-    var iterator: ByteBufferSequence.AsyncIterator
-
-    public init(_ asyncSequence: ByteBufferSequence) {
-        self.iterator = asyncSequence.makeAsyncIterator()
-    }
-
-    public func read(on eventLoop: EventLoop) -> EventLoopFuture<HBStreamerOutput> {
-        let promise = eventLoop.makePromise(of: HBStreamerOutput.self)
-        promise.completeWithTask {
-            if let buffer = try await self.iterator.next() {
-                return .byteBuffer(buffer)
-            } else {
-                return .end
-            }
-        }
-        return promise.futureResult
     }
 }

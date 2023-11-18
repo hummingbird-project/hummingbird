@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
+import HummingbirdCore
 import NIOCore
 import NIOHTTP1
 
@@ -66,7 +67,7 @@ extension HBApplication {
     }
 }
 
-extension HBApplication where Responder.Context: HBTestRouterContextProtocol {
+extension HBApplication where Responder.Context: HBTestRouterContextProtocol, ChannelSetup == HTTP1Channel {
     // MARK: Initialization
 
     /// Creates a version of `HBApplication` that can be used for testing code

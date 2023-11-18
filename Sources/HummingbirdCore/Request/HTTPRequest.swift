@@ -19,6 +19,11 @@ import NIOHTTP1
 public struct HBHTTPRequest: Sendable {
     public var head: HTTPRequestHead
     public var body: HBRequestBody
+
+    public init(head: HTTPRequestHead, body: HBRequestBody) {
+        self.head = head
+        self.body = body
+    }
 }
 
 extension HBHTTPRequest: CustomStringConvertible {

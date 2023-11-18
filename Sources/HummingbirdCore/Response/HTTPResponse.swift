@@ -17,17 +17,22 @@ import NIOHTTP1
 
 /// HTTP response
 public struct HBHTTPResponse: Sendable {
-    public var head: HTTPResponseHead
+    public var status: HTTPResponseStatus
+    public var headers: HTTPHeaders
     public var body: HBResponseBody
 
-    public init(head: HTTPResponseHead, body: HBResponseBody) {
-        self.head = head
+    public init(status: HTTPResponseStatus, headers: HTTPHeaders = .init(), body: HBResponseBody = .init()) {
+        self.status = status
+        self.headers = headers
         self.body = body
+        if let contentLength = body.contentLength {
+            self.headers.replaceOrAdd(name: "content-length", value: String(describing: contentLength))
+        }
     }
 }
 
 extension HBHTTPResponse: CustomStringConvertible {
     public var description: String {
-        "Head: \(self.head), body: \(self.body)"
+        "Status: \(self.status), headers: \(self.headers), body: \(self.body)"
     }
 }

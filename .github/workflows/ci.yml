@@ -18,31 +18,29 @@ on:
   workflow_dispatch:
 
 jobs:
-  macOS:
-    runs-on: macOS-13
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-    - name: SPM tests
-      run: swift test --enable-code-coverage
-    - name: Convert coverage files
-      run: |
-        xcrun llvm-cov export -format "lcov" \
-          .build/debug/hummingbirdPackageTests.xctest/Contents/MacOs/hummingbirdPackageTests \
-          -ignore-filename-regex="\/Tests\/" \
-          -ignore-filename-regex="\/Benchmarks\/" \
-          -instr-profile=.build/debug/codecov/default.profdata > info.lcov
-    - name: Upload to codecov.io
-      uses: codecov/codecov-action@v3
-      with:
-        file: info.lcov
+#  macOS:
+#    runs-on: macOS-13
+#    steps:
+#    - name: Checkout
+#      uses: actions/checkout@v3
+#    - name: SPM tests
+#      run: swift test --enable-code-coverage
+#    - name: Convert coverage files
+#      run: |
+#        xcrun llvm-cov export -format "lcov" \
+#          .build/debug/hummingbirdPackageTests.xctest/Contents/MacOs/hummingbirdPackageTests \
+#          -ignore-filename-regex="\/Tests\/" \
+#          -ignore-filename-regex="\/Benchmarks\/" \
+#          -instr-profile=.build/debug/codecov/default.profdata > info.lcov
+#    - name: Upload to codecov.io
+#      uses: codecov/codecov-action@v3
+#      with:
+#        file: info.lcov
   linux:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         image:
-          - 'swift:5.7'
-          - 'swift:5.8'
           - 'swift:5.9'
 #          - 'swiftlang/swift:nightly-5.10-jammy'
     
