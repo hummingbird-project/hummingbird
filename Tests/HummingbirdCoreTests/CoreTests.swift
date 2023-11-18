@@ -301,6 +301,37 @@ class HummingBirdCoreTests: XCTestCase {
             }
         }
     }
+
+    func testChildChannelGracefulShutdown() async throws {
+        let promise = Promise<Void>()
+
+        try await testServer(
+            childChannelSetup: HTTP1Channel { request, _ in
+                await promise.complete(())
+                try await Task.sleep(for: .milliseconds(500))
+                return HBHTTPResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
+            },
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
+            logger: Logger(label: "HB")
+        ) { server, client in
+            try await withTimeout(.seconds(5)) {
+                try await withThrowingTaskGroup(of: Void.self) { group in
+                    group.addTask {
+                        do {
+                            let response = try await client.get("/")
+                            XCTAssertEqual(response.status, .ok)
+                        } catch {
+                            XCTFail("Error: \(error)")
+                        }
+                    }
+                    await promise.wait()
+                    try await server.shutdownGracefully()
+                    try await group.waitForAll()
+                }
+            }
+        }
+    }
 }
 
 struct DelayAsyncSequence<CoreSequence: AsyncSequence>: AsyncSequence {
