@@ -85,8 +85,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                 let coreContext = HBCoreRequestContext(
                     applicationContext: applicationContext, 
                     eventLoop: eventLoop,
-                    logger: HBApplication<Responder, HTTP1Channel>.loggerWithRequestId(self.applicationContext.logger)
-                )
+                    logger: HBApplication<Responder, HTTP1Channel>.loggerWithRequestId(self.applicationContext.logger))
                 let context = Responder.Context(
                     coreContext: coreContext
                 )

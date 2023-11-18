@@ -176,7 +176,7 @@ extension HBApplication: Service {
             let logger = HBApplication.loggerWithRequestId(context.logger)
             let requestContext = HBCoreRequestContext(
                 applicationContext: context,
-                eventLoop: channel.eventLoop, 
+                channel: channel,
                 logger: logger
             )
             let context = Responder.Context(

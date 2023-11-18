@@ -54,6 +54,8 @@ public struct HBCoreRequestContext: Sendable {
     /// Parameters extracted from URI
     @usableFromInline
     var parameters: HBParameters
+    @usableFromInline
+    var remoteAddress: SocketAddress?
 
     @inlinable
     public init(
@@ -65,6 +67,22 @@ public struct HBCoreRequestContext: Sendable {
         self.applicationContext = applicationContext
         self.eventLoop = eventLoop
         self.allocator = allocator
+        self.logger = logger
+        self.endpointPath = .init()
+        self.parameters = .init()
+        self.remoteAddress = nil
+    }
+
+    @inlinable
+    public init(
+        applicationContext: HBApplicationContext,
+        channel: Channel,
+        logger: Logger
+    ) {
+        self.applicationContext = applicationContext
+        self.eventLoop = channel.eventLoop
+        self.allocator = channel.allocator
+        self.remoteAddress = channel.remoteAddress
         self.logger = logger
         self.endpointPath = .init()
         self.parameters = .init()
@@ -98,6 +116,8 @@ extension HBRequestContext {
     /// ByteBuffer allocator used by request
     @inlinable
     public var allocator: ByteBufferAllocator { coreContext.allocator }
+    @inlinable
+    public var remoteAddress: SocketAddress? { coreContext.remoteAddress }
     /// Logger to use with Request
     @inlinable
     public var logger: Logger {
