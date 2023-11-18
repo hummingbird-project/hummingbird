@@ -51,6 +51,10 @@ public enum RouteBuilder<Context: HBRequestContext> {
         return .init(handler)
     }
 
+    public static func buildBlock<RouteOutput: HBResponseGenerator>(_ m0: Handle<RouteOutput, Context>) -> Handle<RouteOutput, Context> {
+        m0
+    }
+
     public static func buildPartialBlock<M0: MiddlewareProtocol>(first: M0) -> M0 {
         first
     }
