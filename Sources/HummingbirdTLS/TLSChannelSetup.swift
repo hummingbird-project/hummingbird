@@ -33,7 +33,7 @@ public struct HTTP1WithTLSChannel: HBChannelSetup, HTTPChannelHandler {
             )
             try channel.pipeline.syncOperations.addHandlers(childChannelHandlers)
             return try NIOAsyncChannel(
-                synchronouslyWrapping: channel,
+                wrappingChannelSynchronously: channel,
                 configuration: .init()
             )
         }
