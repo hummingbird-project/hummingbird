@@ -44,6 +44,13 @@ router.get("json") { _, _ in
     return ["message": "Hello, world"]
 }
 
+// return JSON
+// ./wrk -c 128 -d 15s -t 8 http://localhost:8080/json
+router.get("wait") { _, _ in
+    try await Task.sleep(for: .seconds(8))
+    return "I waited"
+}
+
 var app = HBApplication(
     responder: router.buildResponder(),
     configuration: .init(

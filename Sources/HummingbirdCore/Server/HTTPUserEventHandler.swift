@@ -61,18 +61,6 @@ public class HBHTTPUserEventHandler: ChannelDuplexHandler, RemovableChannelHandl
 
     public func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
         switch event {
-        case is ChannelShouldQuiesceEvent:
-            // we received a quiesce event. If we have any requests in progress we should
-            // wait for them to finish.
-            //
-            // If we are running with the HTTP pipeline assistance handler then we will never
-            // receive quiesce events but in the case where we aren't this is needed
-            if self.requestsInProgress > 0 {
-                self.closeAfterResponseWritten = true
-            } else {
-                context.close(promise: nil)
-            }
-
         case IdleStateHandler.IdleStateEvent.read:
             // if we get an idle read event and we haven't completed reading the request
             // close the connection
