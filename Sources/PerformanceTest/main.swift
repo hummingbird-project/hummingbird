@@ -14,8 +14,6 @@
 
 import Hummingbird
 import HummingbirdFoundation
-import HummingbirdHTTP2
-import NIOTLS
 import NIOPosix
 
 // get environment

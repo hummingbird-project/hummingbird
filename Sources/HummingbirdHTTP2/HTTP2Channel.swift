@@ -42,7 +42,6 @@ public struct HTTP2Channel: HTTPChannelHandler {
         self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
         self.additionalChannelHandlers = additionalChannelHandlers
         self.http1 = HTTP1Channel(additionalChannelHandlers: additionalChannelHandlers(), responder: responder)
-        self.responder = responder
     }
 
     public func initialize(channel: Channel, configuration: HBServerConfiguration, logger: Logger) -> EventLoopFuture<Value> {
