@@ -67,7 +67,7 @@ extension HBApplication {
     }
 }
 
-extension HBApplication where Responder.Context: HBTestRouterContextProtocol, ChannelSetup == HTTP1Channel {
+extension HBApplication where ChannelSetup == HTTP1Channel {
     // MARK: Initialization
 
     /// Creates a version of `HBApplication` that can be used for testing code

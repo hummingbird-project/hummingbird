@@ -19,7 +19,7 @@ import NIOCore
 import NIOPosix
 
 struct MyRequestContext: HBRequestContext {
-        /// core context
+    /// core context
     public var coreContext: HBCoreRequestContext
 
     ///  Initialize an `HBRequestContext`
@@ -28,10 +28,10 @@ struct MyRequestContext: HBRequestContext {
     ///   - channelContext: Context providing source for EventLoop
     public init(
         applicationContext: HBApplicationContext,
-        channel: Channel,
+        source: some RequestContextSource,
         logger: Logger
     ) {
-        self.coreContext = .init(applicationContext: applicationContext, channel: channel, logger: logger)
+        self.coreContext = .init(applicationContext: applicationContext, eventLoop: source.eventLoop, logger: logger, allocator: source.allocator)
     }
 }
 

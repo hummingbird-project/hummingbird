@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import NIOCore
 import Tracing
 
 /// Middleware creating Distributed Tracing spans for each request.
@@ -115,6 +116,15 @@ public struct HBTracingMiddleware<Context: HBRequestContext>: HBMiddleware {
         }
         return attributes
     }
+}
+
+/// Protocol for request context that stores the remote address of connected client.
+///
+/// If you want the HBTracingMiddleware to record the remote address of requests
+/// then your request context will need to conform to this protocol
+public protocol HBRemoteAddressRequestContext: HBRequestContext {
+    /// Connected host address
+    var remoteAddress: SocketAddress? { get }
 }
 
 struct RecordingHeader: Hashable {

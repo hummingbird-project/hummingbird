@@ -21,35 +21,23 @@ import NIOCore
 import NIOPosix
 import Tracing
 
-public protocol HBTestRouterContextProtocol: HBRequestContext {
-    init(applicationContext: HBApplicationContext, eventLoop: EventLoop, logger: Logger)
-}
-
-extension HBTestRouterContextProtocol {
-    ///  Initialize an `HBRequestContext`
-    /// - Parameters:
-    ///   - applicationContext: Context from Application that instigated the request
-    ///   - channelContext: Context providing source for EventLoop
-    public init(
-        applicationContext: HBApplicationContext,
-        channel: Channel,
-        logger: Logger
-    ) {
-        self.init(applicationContext: applicationContext, eventLoop: channel.eventLoop, logger: logger)
-    }
-}
-
-public struct HBTestRouterContext: HBTestRouterContextProtocol {
-    public init(applicationContext: HBApplicationContext, eventLoop: EventLoop, logger: Logger) {
-        self.coreContext = .init(applicationContext: applicationContext, eventLoop: eventLoop, logger: logger)
+public struct HBTestRouterContext: HBRequestContext {
+    public init(applicationContext: HBApplicationContext, source: some RequestContextSource, logger: Logger) {
+        self.coreContext = .init(applicationContext: applicationContext, source: source, logger: logger)
     }
 
     /// router context
     public var coreContext: HBCoreRequestContext
 }
 
+struct TestContextSource: RequestContextSource {
+    let eventLoop: EventLoop
+    var allocator: ByteBufferAllocator { ByteBufferAllocator() }
+    var remoteAddress: SocketAddress? { nil }
+}
+
 /// Test sending values to requests to router. This does not setup a live server
-struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Context: HBTestRouterContextProtocol {
+struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication {
     let eventLoopGroup: EventLoopGroup
     let context: HBApplicationContext
     let responder: Responder
@@ -89,9 +77,10 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                     head: .init(version: .http1_1, method: method, uri: uri, headers: headers),
                     body: .stream(streamer)
                 )
+                let contextSource = TestContextSource(eventLoop: eventLoop)
                 let context = Responder.Context(
                     applicationContext: self.applicationContext,
-                    eventLoop: eventLoop,
+                    source: contextSource,
                     logger: HBApplication<Responder, HTTP1Channel>.loggerWithRequestId(self.applicationContext.logger)
                 )
 
