@@ -94,11 +94,11 @@ public struct HTTP2Channel: HTTPChannelHandler {
                     }
                 }
 
-                // Close `http2` here, because we're not interested in observing inbound/outbound here
-                // Closing it means we retain the `http2.channel`, ensuring it doesn't get deallocated
-                // until the `multiplexer` is done.
+                // Close the `http2` NIOAsyncCannel here. Closing it here ensures we retain the `http2` instance, 
+                // preventing it from being `deinit`-ed.
                 // Not having this will cause HTTP2 connections to close shortly after the first request
-                // is handled.
+                // is handled. When NIOAsyncChannel `deinit`s, it closes the channel. So this ensures
+                // that closing the HTTP2 channel happens when we need it to.
                 try await http2.channel.close()
             }
         } catch {
