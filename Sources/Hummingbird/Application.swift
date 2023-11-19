@@ -71,20 +71,18 @@ public final class HBApplicationContext: Sendable {
     }
 }
 
-/// Application builder class. Brings together all the components of Hummingbird together
+/// Application class. Brings together all the components of Hummingbird together
 ///
-/// Setup an HBApplicationBuilder, setup your application middleware, encoders, routes etc and then either
-/// add call `build` to create an `HBApplication` which you add to your ServiceLifecycle `ServiceGroup` or
-/// run separately with `buildAndRun`.
 /// ```
-/// let app = HBApplicationBuilder()
-/// app.middleware.add(MyMiddleware())
-/// app.router.get("hello") { _ in
+/// let router = HBRouterBuilder()
+/// router.middleware.add(MyMiddleware())
+/// router.get("hello") { _ in
 ///     return "hello"
 /// }
-/// try await app.buildAndRun()
+/// let app = HBApplication(responder: router.buildResponder())
+/// try await app.runService()
 /// ```
-/// Editing the application builder setup after calling `build` will produce undefined behaviour.
+/// Editing the application setup after calling `runService` will produce undefined behaviour.
 public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup & HTTPChannelHandler> {
     // MARK: Member variables
 

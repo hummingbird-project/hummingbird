@@ -28,7 +28,7 @@ public enum XCTRouterTestingSetup {
     case router
 }
 
-/// Extends `HBApplicationBuilder` to support testing of applications
+/// Extends `HBApplicationB` to support testing of applications
 ///
 /// You use `buildAndTest` and `XCTExecute` to test applications. You can either create an
 /// `.router` application which send request directly to the router for testing your code or a
@@ -37,11 +37,12 @@ public enum XCTRouterTestingSetup {
 ///
 /// The example below is using the `.router` framework to test
 /// ```
-/// let app = HBApplicationBuilder()
-/// app.router.get("/hello") { _ in
+/// let router = HBRouterBuilder()
+/// router.get("/hello") { _ in
 ///     return "hello"
 /// }
-/// app.buildAndTest(.router) { client in
+/// let app = HBApplication(responder: router.buildResponder())
+/// app.test(.router) { client in
 ///     // does my app return "hello" in the body for this route
 ///     client.XCTExecute(uri: "/hello", method: .GET) { response in
 ///         let body = try XCTUnwrap(response.body)
