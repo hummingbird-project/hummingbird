@@ -15,6 +15,7 @@
 import Atomics
 import Hummingbird
 import HummingbirdXCT
+import Logging
 import NIOCore
 import NIOHTTP1
 import XCTest
@@ -400,7 +401,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testMaxUploadSize() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouterBuilder()
         router.post("upload") { _, _ in
             "ok"
         }
@@ -421,27 +422,43 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    /* func testRemoteAddress() async throws {
-         let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        let app = HBApplication(responder: router.buildResponder())
-         router.get("/") { _, context -> String in
-             switch context.remoteAddress {
-             case .v4(let address):
-                 return String(describing: address.host)
-             case .v6(let address):
-                 return String(describing: address.host)
-             default:
-                 throw HBHTTPError(.internalServerError)
-             }
-         }
-         try await app.test(.live) { client in
+    func testRemoteAddress() async throws {
+        /// Implementation of a basic request context that supports everything the Hummingbird library needs
+        struct HBSocketAddressRequestContext: HBRequestContext {
+            /// core context
+            var coreContext: HBCoreRequestContext
+            // socket address
+            let remoteAddress: SocketAddress?
 
-             try await client.XCTExecute(uri: "/", method: .GET) { response in
-                 XCTAssertEqual(response.status, .ok)
-                 let body = try XCTUnwrap(response.body)
-                 let address = String(buffer: body)
-                 XCTAssert(address == "127.0.0.1" || address == "::1")
-             }
-         }
-     } */
+            public init(
+                applicationContext: HBApplicationContext,
+                source: some RequestContextSource,
+                logger: Logger
+            ) {
+                self.coreContext = .init(applicationContext: applicationContext, source: source, logger: logger)
+                self.remoteAddress = source.remoteAddress
+            }
+        }
+        let router = HBRouterBuilder(context: HBSocketAddressRequestContext.self)
+        router.get("/") { _, context -> String in
+            switch context.remoteAddress {
+            case .v4(let address):
+                return String(describing: address.host)
+            case .v6(let address):
+                return String(describing: address.host)
+            default:
+                throw HBHTTPError(.internalServerError)
+            }
+        }
+        let app = HBApplication(responder: router.buildResponder())
+        try await app.test(.live) { client in
+
+            try await client.XCTExecute(uri: "/", method: .GET) { response in
+                XCTAssertEqual(response.status, .ok)
+                let body = try XCTUnwrap(response.body)
+                let address = String(buffer: body)
+                XCTAssert(address == "127.0.0.1" || address == "::1")
+            }
+        }
+    }
 }

@@ -356,7 +356,7 @@ final class RouterTests: XCTestCase {
 
     // Test redirect response
     func testRedirect() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouterBuilder()
         router.get("redirect") { _, _ in
             return HBResponse.redirect(to: "/other")
         }
@@ -370,16 +370,15 @@ final class RouterTests: XCTestCase {
     }
 }
 
-public struct HBTestRouterContext2: HBTestRouterContextProtocol {
-    public init(applicationContext: HBApplicationContext, eventLoop: EventLoop, logger: Logger) {
-        self.coreContext = .init(applicationContext: applicationContext, eventLoop: eventLoop, logger: logger)
+public struct HBTestRouterContext2: HBRequestContext {
+    public init(applicationContext: HBApplicationContext, source: some RequestContextSource, logger: Logger) {
+        self.coreContext = .init(applicationContext: applicationContext, source: source, logger: logger)
+
         self.string = ""
     }
 
     /// parameters
     public var coreContext: HBCoreRequestContext
-    /// Connected remote host
-    public var remoteAddress: SocketAddress? { nil }
 
     /// additional data
     public var string: String

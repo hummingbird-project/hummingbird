@@ -34,6 +34,15 @@ public struct EndpointPath: Sendable {
     private let _value: NIOLockedValueBox<String?>
 }
 
+/// Protocol for source of requests.
+///
+/// This could be the NIO Channel that created the HTTP request of a Lambda event
+public protocol RequestContextSource {
+    var eventLoop: EventLoop { get }
+    var allocator: ByteBufferAllocator { get }
+    var remoteAddress: SocketAddress? { get }
+}
+
 /// Request context values required by Hummingbird itself.
 public struct HBCoreRequestContext: Sendable {
     /// Application context
@@ -73,10 +82,10 @@ public struct HBCoreRequestContext: Sendable {
     @inlinable
     public init(
         applicationContext: HBApplicationContext,
-        channel: Channel,
+        source: some RequestContextSource,
         logger: Logger
     ) {
-        self.init(applicationContext: applicationContext, eventLoop: channel.eventLoop, logger: logger, allocator: channel.allocator)
+        self.init(applicationContext: applicationContext, eventLoop: source.eventLoop, logger: logger, allocator: source.allocator)
     }
 }
 
@@ -90,7 +99,7 @@ public protocol HBRequestContext: Sendable {
     ///   - applicationContext: Context coming from Application
     ///   - channel: Channel that created request and context
     ///   - logger: Logger to use with request
-    init(applicationContext: HBApplicationContext, channel: Channel, logger: Logger)
+    init(applicationContext: HBApplicationContext, source: some RequestContextSource, logger: Logger)
 }
 
 extension HBRequestContext {
@@ -127,32 +136,21 @@ extension HBRequestContext {
     public var id: String { self.logger[metadataKey: "hb_id"]!.description }
 }
 
-/// Protocol for request context that stores the remote address of connected client
-public protocol HBRemoteAddressRequestContext: HBRequestContext {
-    /// Connected host address
-    var remoteAddress: SocketAddress? { get }
-}
-
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
-public struct HBBasicRequestContext: HBRequestContext, HBRemoteAddressRequestContext {
+public struct HBBasicRequestContext: HBRequestContext {
     /// core context
     public var coreContext: HBCoreRequestContext
-    /// Channel context
-    let channel: Channel
-    /// Connected host address
-    public var remoteAddress: SocketAddress? { self.channel.remoteAddress }
 
     ///  Initialize an `HBRequestContext`
     /// - Parameters:
     ///   - applicationContext: Context from Application that instigated the request
-    ///   - channel: Channel that generated this request
+    ///   - source: Source of request context
     ///   - logger: Logger
     public init(
         applicationContext: HBApplicationContext,
-        channel: Channel,
+        source: some RequestContextSource,
         logger: Logger
     ) {
-        self.coreContext = .init(applicationContext: applicationContext, channel: channel, logger: logger)
-        self.channel = channel
+        self.coreContext = .init(applicationContext: applicationContext, source: source, logger: logger)
     }
 }

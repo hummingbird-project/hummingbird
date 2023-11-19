@@ -175,7 +175,7 @@ extension HBApplication: Service {
             )
             let context = Responder.Context(
                 applicationContext: context,
-                channel: channel,
+                source: ChannelContextSource(channel: channel),
                 logger: HBApplication.loggerWithRequestId(context.logger)
             )
             // respond to request
@@ -214,6 +214,15 @@ extension HBApplication: Service {
     public static func loggerWithRequestId(_ logger: Logger) -> Logger {
         let requestId = globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
         return logger.with(metadataKey: "hb_id", value: .stringConvertible(requestId))
+    }
+
+    /// Request Context Source from NIO Channel
+    public struct ChannelContextSource: RequestContextSource {
+        let channel: Channel
+
+        public var eventLoop: EventLoop { self.channel.eventLoop }
+        public var allocator: ByteBufferAllocator { self.channel.allocator }
+        public var remoteAddress: SocketAddress? { self.channel.remoteAddress }
     }
 }
 

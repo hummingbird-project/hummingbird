@@ -16,7 +16,7 @@ import NIOCore
 import NIOHTTP1
 
 /// Options available to routes
-public struct HBRouterMethodOptions: OptionSet {
+public struct HBRouterMethodOptions: OptionSet, Sendable {
     public let rawValue: Int
     public init(rawValue: Int) {
         self.rawValue = rawValue
