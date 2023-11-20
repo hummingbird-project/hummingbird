@@ -14,33 +14,32 @@
 </a>
 </p>
 
-Lightweight, flexible server framework written in Swift.
-
-Hummingbird consists of three main components, the core HTTP server, a minimal web application framework and the extension modules.
+Lightweight, flexible, modern server framework written in Swift.
 
 ## HummingbirdCore
 
-HummingbirdCore contains a Swift NIO based HTTP server. You will find the code for it in the [hummingbird-core](https://github.com/hummingbird-project/hummingbird-core) repository. The HTTP server is initialized with a object conforming to protocol `HBHTTPResponder` which defines how your server responds to an HTTP request. The HTTP server can be extended to support TLS and HTTP2 via the `HummingbirdTLS` and `HummingbirdHTTP2` libraries also available in the hummingbird-core repository.
+HummingbirdCore contains a Swift NIO based server framework. The server framework `HBServer` can be used to support many protocols but is primarily designed to support HTTP. By default it is setup to be an HTTP/1.1 server, but it can support TLS and HTTP2 via the `HummingbirdTLS` and `HummingbirdHTTP2` modules.
 
 HummingbirdCore can be used separately from Hummingbird if you want to write your own web application framework.
 
 ## Hummingbird
 
-Hummingbird is a lightweight and flexible web application framework that runs on top of HummingbirdCore. It is designed to require the minimum number of dependencies: `swift-backtrace`, `swift-log`, `swift-nio`, `swift-nio-extras`, `swift-service-lifecycle` and `swift-metrics` and makes no use of Foundation.
+Hummingbird is a lightweight and flexible web application framework that runs on top of HummingbirdCore. It is designed to require the minimum number of dependencies and makes no use of Foundation.
 
-It provides a router for directing different endpoints to their handlers, middleware for processing requests before they reach your handlers and processing the responses returned, support for adding channel handlers to extend the HTTP server, extending the core `HBApplication`, `HBRequest` and `HBResponse` classes and providing custom encoding/decoding of `Codable` objects.
-
-The interface is fairly standard. Anyone who has had experience of Vapor, Express.js etc will recognise most of the APIs. Simple setup is as follows
+It provides a router for directing different endpoints to their handlers, middleware for processing requests before they reach your handlers and processing the responses returned, support for adding channel handlers to extend the HTTP server and providing custom encoding/decoding of `Codable` objects.
 
 ```swift
 import Hummingbird
 
-let app = HBApplication(configuration: .init(address: .hostname("127.0.0.1", port: 8080)))
-app.router.get("hello") { request -> String in
+let router = HBRouterBuilder()
+router.get("hello") { request -> String in
     return "Hello"
 }
-try app.start()
-app.wait()
+let app = HBApplication(
+    responder: router.buildResponder(),
+    configuration: .init(address: .hostname("127.0.0.1", port: 8080))
+)
+try await app.runService()
 ```
 
 ## Hummingbird Extensions
