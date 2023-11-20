@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Hummingbird
-
 /// Associates cache control values with filename
 public struct HBCacheControl: Sendable {
     public enum Value: CustomStringConvertible, Sendable {
