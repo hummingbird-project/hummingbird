@@ -28,7 +28,7 @@ public enum XCTRouterTestingSetup {
     case router
 }
 
-/// Extends `HBApplicationB` to support testing of applications
+/// Extends `HBApplication` to support testing of applications
 ///
 /// You use `buildAndTest` and `XCTExecute` to test applications. You can either create an
 /// `.router` application which send request directly to the router for testing your code or a
