@@ -9,6 +9,7 @@ let package = Package(
     products: [
         .library(name: "Hummingbird", targets: ["Hummingbird"]),
         .library(name: "HummingbirdCore", targets: ["HummingbirdCore"]),
+        .library(name: "HummingbirdHTTP2", targets: ["HummingbirdHTTP2"]),
         .library(name: "HummingbirdFoundation", targets: ["HummingbirdFoundation"]),
         .library(name: "HummingbirdJobs", targets: ["HummingbirdJobs"]),
         .library(name: "HummingbirdXCT", targets: ["HummingbirdXCT"]),
@@ -74,12 +75,12 @@ let package = Package(
             .product(name: "NIOPosix", package: "swift-nio"),
             .product(name: "NIOSSL", package: "swift-nio-ssl"),
         ]),
-        /*        .target(name: "HummingbirdHTTP2", dependencies: [
-                .byName(name: "HummingbirdCore"),
-                .product(name: "NIOCore", package: "swift-nio"),
-                .product(name: "NIOHTTP2", package: "swift-nio-http2"),
-                .product(name: "NIOSSL", package: "swift-nio-ssl"),
-            ]),*/
+        .target(name: "HummingbirdHTTP2", dependencies: [
+            .byName(name: "HummingbirdCore"),
+            .product(name: "NIOCore", package: "swift-nio"),
+            .product(name: "NIOHTTP2", package: "swift-nio-http2"),
+            .product(name: "NIOSSL", package: "swift-nio-ssl"),
+        ]),
         .target(name: "HummingbirdTLS", dependencies: [
             .byName(name: "HummingbirdCore"),
             .product(name: "NIOCore", package: "swift-nio"),
