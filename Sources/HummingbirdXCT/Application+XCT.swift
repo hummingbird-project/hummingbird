@@ -18,14 +18,14 @@ import NIOCore
 import NIOHTTP1
 
 /// Type of test framework
-public enum XCTLiveTestingSetup {
+public struct XCTLiveTestingSetup {
     /// Sets up a live server and execute tests using a HTTP client.
-    case live
+    public static let live = XCTLiveTestingSetup()
 }
 
-public enum XCTRouterTestingSetup {
+public struct XCTRouterTestingSetup {
     /// Test writing requests directly to router.
-    case router
+    public static let router = XCTRouterTestingSetup()
 }
 
 /// Extends `HBApplicationBuilder` to support testing of applications
