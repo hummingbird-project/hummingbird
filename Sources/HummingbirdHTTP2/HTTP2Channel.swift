@@ -17,7 +17,6 @@ import NIOCore
 import NIOPosix
 import NIOHTTP1
 import NIOHTTP2
-import Hummingbird
 import HummingbirdCore
 import NIOSSL
 
