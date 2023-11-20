@@ -18,7 +18,7 @@ import NIOHTTP1
 import ServiceLifecycle
 
 /// Response structure returned by XCT testing framework
-public struct HBXCTResponse {
+public struct HBXCTResponse: Sendable {
     /// response status
     public let status: HTTPResponseStatus
     /// response headers

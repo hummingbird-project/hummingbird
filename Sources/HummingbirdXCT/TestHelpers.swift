@@ -22,7 +22,7 @@ public struct TimeoutError: Error {}
 ///   - timeout: Amount of time allowed for the task to run
 ///   - process: Task to run
 /// - Returns: Result of task
-public func withTimeout<T>(timeout: Duration, _ process: @escaping @Sendable () async throws -> T) async throws -> T {
+public func withTimeout<T: Sendable>(timeout: Duration, _ process: @escaping @Sendable () async throws -> T) async throws -> T {
     return try await withThrowingTaskGroup(of: T.self) { group in
         group.addTask {
             try await process()
