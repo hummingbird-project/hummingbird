@@ -4,46 +4,37 @@ import NIOCore
 import NIOHTTP1
 import NIOSSL
 
-/// Setup child channel for HTTP1 with TLS
-public struct HTTP1WithTLSChannel: HBChannelSetup, HTTPChannelHandler {
-    public typealias Value = NIOAsyncChannel<HTTPServerRequestPart, SendableHTTPServerResponsePart>
+/// Sets up child channel to use TLS before accessing base channel setup
+public struct TLSChannel<BaseChannel: HBChannelSetup>: HBChannelSetup {
+    public typealias Value = BaseChannel.Value
 
-    public init(
-        tlsConfiguration: TLSConfiguration,
-        additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = [],
-        responder: @escaping @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse = { _, _ in throw HBHTTPError(.notImplemented) }
-    ) throws {
-        var tlsConfiguration = tlsConfiguration
-        tlsConfiguration.applicationProtocols.append("http/1.1")
+    public init(_ baseChannel: BaseChannel, tlsConfiguration: TLSConfiguration) throws {
         self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
-        self.additionalChannelHandlers = additionalChannelHandlers
-        self.responder = responder
+        self.baseChannel = baseChannel
     }
 
+    @inlinable
     public func initialize(channel: Channel, configuration: HBServerConfiguration, logger: Logger) -> EventLoopFuture<Value> {
-        let childChannelHandlers: [RemovableChannelHandler] = self.additionalChannelHandlers() + [
-            HBHTTPUserEventHandler(logger: logger),
-            HBHTTPSendableResponseChannelHandler(),
-        ]
-        return channel.eventLoop.makeCompletedFuture {
-            try channel.pipeline.syncOperations.addHandler(NIOSSLServerHandler(context: self.sslContext))
-            try channel.pipeline.syncOperations.configureHTTPServerPipeline(
-                withPipeliningAssistance: false,
-                withErrorHandling: true
-            )
-            try channel.pipeline.syncOperations.addHandlers(childChannelHandlers)
-            return try NIOAsyncChannel(
-                wrappingChannelSynchronously: channel,
-                configuration: .init()
-            )
+        return channel.pipeline.addHandler(NIOSSLServerHandler(context: self.sslContext)).flatMap { 
+            self.baseChannel.initialize(channel: channel, configuration: configuration, logger: logger)
         }
+
     }
 
-    public func handle(value asyncChannel: NIOCore.NIOAsyncChannel<NIOHTTP1.HTTPServerRequestPart, SendableHTTPServerResponsePart>, logger: Logging.Logger) async {
-        await handleHTTP(asyncChannel: asyncChannel, logger: logger)
+    @inlinable
+    public func handle(value: BaseChannel.Value, logger: Logging.Logger) async {
+        await baseChannel.handle(value: value, logger: logger)
     }
 
-    public var responder: @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse
+    @usableFromInline
     let sslContext: NIOSSLContext
-    let additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
+    @usableFromInline
+    var baseChannel: BaseChannel
+}
+
+extension TLSChannel: HTTPChannelHandler where BaseChannel: HTTPChannelHandler {
+    public var responder: @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse { 
+        get { baseChannel.responder }
+        set  {baseChannel.responder = newValue }
+    }
 }
