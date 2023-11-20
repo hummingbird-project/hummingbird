@@ -18,7 +18,6 @@ public struct TLSChannel<BaseChannel: HBChannelSetup>: HBChannelSetup {
         return channel.pipeline.addHandler(NIOSSLServerHandler(context: self.sslContext)).flatMap { 
             self.baseChannel.initialize(channel: channel, configuration: configuration, logger: logger)
         }
-
     }
 
     @inlinable
