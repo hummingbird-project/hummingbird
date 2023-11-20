@@ -28,6 +28,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.14.0"),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.20.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.0.0"),
+        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.19.0"),
     ],
     targets: [
         .target(name: "Hummingbird", dependencies: [
@@ -119,8 +120,10 @@ let package = Package(
             dependencies:
             [
                 .byName(name: "HummingbirdCore"),
+                .byName(name: "HummingbirdHTTP2"),
                 .byName(name: "HummingbirdTLS"),
                 .byName(name: "HummingbirdCoreXCT"),
+                .product(name: "AsyncHTTPClient", package: "async-http-client"),
             ],
             resources: [.process("Certificates")]
         ),

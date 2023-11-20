@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2023 the Hummingbird authors
+// Copyright (c) 2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,30 +12,38 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AsyncHTTPClient
 import HummingbirdCore
 import HummingbirdCoreXCT
-import HummingbirdTLS
+import HummingbirdHTTP2
 import Logging
 import NIOCore
+import NIOHTTP1
 import NIOPosix
 import NIOSSL
 import NIOTransportServices
 import XCTest
 
-class HummingBirdTLSTests: XCTestCase {
+class HummingBirdHTTP2Tests: XCTestCase {
     func testConnect() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
         try await testServer(
-            childChannelSetup: TLSChannel(HTTP1Channel(responder: helloResponder), tlsConfiguration: self.getServerTLSConfiguration()),
+            childChannelSetup: HTTP2Channel(tlsConfiguration: self.getServerTLSConfiguration()) { _, _ in
+                .init(status: .ok)
+            },
             configuration: .init(address: .hostname(port: 0), serverName: testServerName),
             eventLoopGroup: eventLoopGroup,
-            logger: Logger(label: "HB"),
-            clientConfiguration: .init(tlsConfiguration: self.getClientTLSConfiguration(), serverName: testServerName)
-        ) { client in
-            let response = try await client.get("/")
-            var body = try XCTUnwrap(response.body)
-            XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
+            logger: Logger(label: "HB")
+        ) { _, port in
+            let httpClient = try HTTPClient(
+                eventLoopGroupProvider: .shared(eventLoopGroup),
+                configuration: .init(tlsConfiguration: self.getClientTLSConfiguration())
+            )
+            defer { try? httpClient.syncShutdown() }
+
+            let response = try await httpClient.get(url: "https://localhost:\(port)/").get()
+            XCTAssertEqual(response.status, .ok)
         }
     }
 
@@ -56,6 +64,7 @@ class HummingBirdTLSTests: XCTestCase {
         tlsConfig.trustRoots = .certificates([caCertificate])
         tlsConfig.certificateChain = [.certificate(certificate)]
         tlsConfig.privateKey = .privateKey(privateKey)
+        tlsConfig.certificateVerification = .noHostnameVerification
         return tlsConfig
     }
 }
