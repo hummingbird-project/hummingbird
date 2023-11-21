@@ -348,7 +348,7 @@ class HummingbirdFilesTests: XCTestCase {
 
     func testWriteLargeFile() async throws {
         let filename = "testWriteLargeFile.txt"
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouterBuilder(context: HBBasicRequestContext.self)
         router.put("store", options: .streamBody) { request, context -> HTTPResponseStatus in
             let fileIO = HBFileIO(threadPool: context.threadPool)
             try await fileIO.writeFile(contents: request.body, path: filename, context: context, logger: context.logger)

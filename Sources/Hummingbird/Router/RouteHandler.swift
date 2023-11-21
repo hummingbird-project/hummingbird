@@ -39,8 +39,8 @@
 /// ```
 public protocol HBRouteHandler {
     associatedtype _Output
-    init(from: HBRequest, context: HBRequestContext) throws
-    func handle(request: HBRequest, context: HBRequestContext) async throws -> _Output
+    init(from: HBRequest, context: some HBBaseRequestContext) throws
+    func handle(request: HBRequest, context: some HBBaseRequestContext) async throws -> _Output
 }
 
 extension HBRouterMethods {

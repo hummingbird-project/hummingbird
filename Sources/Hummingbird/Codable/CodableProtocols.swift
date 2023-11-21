@@ -19,7 +19,7 @@ public protocol HBResponseEncoder: Sendable {
     /// - Parameters:
     ///   - value: value to encode
     ///   - request: request that generated this value
-    func encode<T: Encodable>(_ value: T, from request: HBRequest, context: HBRequestContext) throws -> HBResponse
+    func encode(_ value: some Encodable, from request: HBRequest, context: some HBBaseRequestContext) throws -> HBResponse
 }
 
 /// protocol for decoder deserializing from a Request body
@@ -28,12 +28,12 @@ public protocol HBRequestDecoder: Sendable {
     /// - Parameters:
     ///   - type: type to decode to
     ///   - request: request
-    func decode<T: Decodable>(_ type: T.Type, from request: HBRequest, context: HBRequestContext) throws -> T
+    func decode<T: Decodable>(_ type: T.Type, from request: HBRequest, context: some HBBaseRequestContext) throws -> T
 }
 
 /// Default encoder. Outputs request with the swift string description of object
 struct NullEncoder: HBResponseEncoder {
-    func encode<T: Encodable>(_ value: T, from request: HBRequest, context: HBRequestContext) throws -> HBResponse {
+    func encode(_ value: some Encodable, from request: HBRequest, context: some HBBaseRequestContext) throws -> HBResponse {
         return HBResponse(
             status: .ok,
             headers: ["content-type": "text/plain; charset=utf-8"],
@@ -44,7 +44,7 @@ struct NullEncoder: HBResponseEncoder {
 
 /// Default decoder. there is no default decoder path so this generates an error
 struct NullDecoder: HBRequestDecoder {
-    func decode<T: Decodable>(_ type: T.Type, from request: HBRequest, context: HBRequestContext) throws -> T {
+    func decode<T: Decodable>(_ type: T.Type, from request: HBRequest, context: some HBBaseRequestContext) throws -> T {
         preconditionFailure("HBApplication.decoder has not been set")
     }
 }

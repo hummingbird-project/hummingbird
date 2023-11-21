@@ -21,7 +21,7 @@ import Tracing
 import XCTest
 
 final class RouterTests: XCTestCase {
-    struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
+    struct TestMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
         let output: String
 
         init(_ output: String = "TestMiddleware") {
@@ -37,7 +37,7 @@ final class RouterTests: XCTestCase {
 
     /// Test endpointPath is set
     func testEndpointPath() async throws {
-        struct TestEndpointMiddleware<Context: HBRequestContext>: HBMiddleware {
+        struct TestEndpointMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 guard let endpointPath = context.endpointPath else { return try await next.respond(to: request, context: context) }
                 return .init(status: .ok, body: .init(byteBuffer: ByteBuffer(string: endpointPath)))
@@ -59,7 +59,7 @@ final class RouterTests: XCTestCase {
 
     /// Test endpointPath is prefixed with a "/"
     func testEndpointPathPrefix() async throws {
-        struct TestEndpointMiddleware<Context: HBRequestContext>: HBMiddleware {
+        struct TestEndpointMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 guard let endpointPath = context.endpointPath else { return try await next.respond(to: request, context: context) }
                 return .init(status: .ok, body: .init(byteBuffer: ByteBuffer(string: endpointPath)))
@@ -97,7 +97,7 @@ final class RouterTests: XCTestCase {
 
     /// Test endpointPath doesn't have "/" at end
     func testEndpointPathSuffix() async throws {
-        struct TestEndpointMiddleware<Context: HBRequestContext>: HBMiddleware {
+        struct TestEndpointMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 guard let endpointPath = context.endpointPath else { return try await next.respond(to: request, context: context) }
                 return .init(status: .ok, body: .init(byteBuffer: ByteBuffer(string: endpointPath)))
@@ -356,7 +356,7 @@ final class RouterTests: XCTestCase {
 
     // Test redirect response
     func testRedirect() async throws {
-        let router = HBRouterBuilder()
+        let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.get("redirect") { _, _ in
             return HBResponse.redirect(to: "/other")
         }
@@ -370,10 +370,14 @@ final class RouterTests: XCTestCase {
     }
 }
 
-public struct HBTestRouterContext2: HBRequestContext {
-    public init(applicationContext: HBApplicationContext, source: some RequestContextSource, logger: Logger) {
-        self.coreContext = .init(applicationContext: applicationContext, source: source, logger: logger)
-
+public struct HBTestRouterContext2: HBTestRequestContextProtocol {
+    public init(
+        applicationContext: HBApplicationContext,
+        eventLoop: EventLoop,
+        allocator: ByteBufferAllocator,
+        logger: Logger
+    ) {
+        self.coreContext = .init(applicationContext: applicationContext, eventLoop: eventLoop, allocator: allocator, logger: logger)
         self.string = ""
     }
 

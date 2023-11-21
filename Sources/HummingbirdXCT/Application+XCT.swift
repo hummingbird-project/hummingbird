@@ -50,7 +50,7 @@ public struct XCTRouterTestingSetup {
 ///     }
 /// }
 /// ```
-extension HBApplication {
+extension HBApplication where Responder.Context: HBRequestContext {
     // MARK: Initialization
 
     /// Creates a version of `HBApplication` that can be used for testing code
@@ -68,7 +68,7 @@ extension HBApplication {
     }
 }
 
-extension HBApplication where ChannelSetup == HTTP1Channel {
+extension HBApplication where ChannelSetup == HTTP1Channel, Responder.Context: HBTestRequestContextProtocol {
     // MARK: Initialization
 
     /// Creates a version of `HBApplication` that can be used for testing code

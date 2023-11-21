@@ -40,11 +40,11 @@ import NIOCore
 /// }
 /// ```
 public protocol HBMiddleware<Context>: Sendable {
-    associatedtype Context: HBRequestContext
+    associatedtype Context
     func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse
 }
 
-struct MiddlewareResponder<Context: HBRequestContext>: HBResponder {
+struct MiddlewareResponder<Context>: HBResponder {
     let middleware: any HBMiddleware<Context>
     let next: any HBResponder<Context>
 

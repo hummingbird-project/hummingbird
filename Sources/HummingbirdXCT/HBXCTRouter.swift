@@ -21,23 +21,49 @@ import NIOCore
 import NIOPosix
 import Tracing
 
-public struct HBTestRouterContext: HBRequestContext {
-    public init(applicationContext: HBApplicationContext, source: some RequestContextSource, logger: Logger) {
-        self.coreContext = .init(applicationContext: applicationContext, source: source, logger: logger)
+public protocol HBTestRequestContextProtocol: HBBaseRequestContext {
+    init(
+        applicationContext: HBApplicationContext,
+        eventLoop: EventLoop,
+        allocator: ByteBufferAllocator,
+        logger: Logger
+    )
+}
+
+public struct HBTestRouterContext: HBTestRequestContextProtocol, HBRequestContext {
+    public init(
+        applicationContext: HBApplicationContext,
+        eventLoop: EventLoop,
+        allocator: ByteBufferAllocator,
+        logger: Logger
+    ) {
+        self.coreContext = .init(
+            applicationContext: applicationContext,
+            eventLoop: eventLoop,
+            allocator: allocator,
+            logger: logger
+        )
+    }
+
+    public init(
+        applicationContext: HBApplicationContext,
+        channel: Channel,
+        logger: Logger
+    ) {
+        self.coreContext = .init(
+            applicationContext: applicationContext,
+            eventLoop: channel.eventLoop,
+            allocator: channel.allocator,
+            logger: logger
+        )
     }
 
     /// router context
     public var coreContext: HBCoreRequestContext
 }
 
-struct TestContextSource: RequestContextSource {
-    let eventLoop: EventLoop
-    var allocator: ByteBufferAllocator { ByteBufferAllocator() }
-    var remoteAddress: SocketAddress? { nil }
-}
-
 /// Test sending values to requests to router. This does not setup a live server
-struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication {
+struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Context: HBTestRequestContextProtocol {
     let eventLoopGroup: EventLoopGroup
     let context: HBApplicationContext
     let responder: Responder
@@ -77,10 +103,10 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication {
                     head: .init(version: .http1_1, method: method, uri: uri, headers: headers),
                     body: .stream(streamer)
                 )
-                let contextSource = TestContextSource(eventLoop: eventLoop)
                 let context = Responder.Context(
                     applicationContext: self.applicationContext,
-                    source: contextSource,
+                    eventLoop: eventLoop,
+                    allocator: ByteBufferAllocator(),
                     logger: HBApplication<Responder, HTTP1Channel>.loggerWithRequestId(self.applicationContext.logger)
                 )
 

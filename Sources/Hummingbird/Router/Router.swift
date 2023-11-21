@@ -17,7 +17,7 @@
 /// Conforms to `HBResponder` so need to provide its own implementation of
 /// `func apply(to request: Request) -> EventLoopFuture<Response>`.
 ///
-struct HBRouter<Context: HBRequestContext>: HBResponder {
+struct HBRouter<Context: HBBaseRequestContext>: HBResponder {
     let trie: RouterPathTrie<HBEndpointResponders<Context>>
     let notFoundResponder: any HBResponder<Context>
 
