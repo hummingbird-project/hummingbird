@@ -17,7 +17,6 @@ import Dispatch
 import HummingbirdCore
 import Logging
 import NIOCore
-import NIOHTTP1
 import NIOPosix
 import NIOTransportServices
 import ServiceLifecycle

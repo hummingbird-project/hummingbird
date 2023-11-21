@@ -15,7 +15,6 @@
 import Hummingbird
 import HummingbirdFoundation
 import HummingbirdXCT
-import NIOHTTP1
 import XCTest
 
 final class HandlerTests: XCTestCase {

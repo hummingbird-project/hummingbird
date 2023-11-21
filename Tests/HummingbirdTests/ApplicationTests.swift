@@ -17,7 +17,6 @@ import Hummingbird
 import HummingbirdXCT
 import Logging
 import NIOCore
-import NIOHTTP1
 import XCTest
 
 final class ApplicationTests: XCTestCase {

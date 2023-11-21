@@ -14,7 +14,6 @@
 
 import AsyncAlgorithms
 import NIOCore
-import NIOHTTP1
 
 public enum HBRequestBody: Sendable, AsyncSequence {
     case byteBuffer(ByteBuffer)

@@ -40,7 +40,6 @@ let package = Package(
             .product(name: "Tracing", package: "swift-distributed-tracing"),
             .product(name: "NIOCore", package: "swift-nio"),
             .product(name: "NIOPosix", package: "swift-nio"),
-            .product(name: "NIOHTTP1", package: "swift-nio"),
         ]),
         .target(name: "HummingbirdCore", dependencies: [
             .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
@@ -71,7 +70,6 @@ let package = Package(
             .product(name: "HTTPTypes", package: "swift-http-types"),
             .product(name: "NIOCore", package: "swift-nio"),
             .product(name: "NIOPosix", package: "swift-nio"),
-            .product(name: "NIOHTTP1", package: "swift-nio"),
         ]),
         .target(name: "HummingbirdCoreXCT", dependencies: [
             .product(name: "HTTPTypes", package: "swift-http-types"),

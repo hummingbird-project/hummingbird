@@ -24,7 +24,3 @@
 
 @_exported import struct NIOCore.ByteBuffer
 @_exported import struct NIOCore.ByteBufferAllocator
-
-@_exported import struct NIOHTTP1.HTTPHeaders
-@_exported import enum NIOHTTP1.HTTPMethod
-@_exported import enum NIOHTTP1.HTTPResponseStatus

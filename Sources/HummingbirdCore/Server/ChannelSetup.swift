@@ -14,7 +14,6 @@
 
 import Logging
 import NIOCore
-import NIOHTTP1
 
 /// HTTPServer child channel setup protocol
 public protocol HBChannelSetup: Sendable {

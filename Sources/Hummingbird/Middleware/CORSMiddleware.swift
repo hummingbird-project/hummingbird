@@ -70,7 +70,7 @@ public struct HBCORSMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
     public init(
         allowOrigin: AllowOrigin = .originBased,
         allowHeaders: [String] = ["accept", "authorization", "content-type", "origin"],
-        allowMethods: [HTTPMethod] = [.GET, .POST, .HEAD, .OPTIONS],
+        allowMethods: [HTTPRequest.Method] = [.get, .post, .head, .options],
         allowCredentials: Bool = false,
         exposedHeaders: [String]? = nil,
         maxAge: TimeAmount? = nil

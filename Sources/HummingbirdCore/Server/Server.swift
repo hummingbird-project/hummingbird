@@ -15,7 +15,6 @@
 import Logging
 import NIOCore
 import NIOExtras
-import NIOHTTP1
 import NIOPosix
 #if canImport(Network)
 import Network
@@ -113,7 +112,7 @@ public actor HBServer<ChannelSetup: HBChannelSetup>: Service {
                         // We can now start to handle our work.
                         await withDiscardingTaskGroup { group in
                             do {
-                                try await asyncChannel.executeThenClose { inbound in 
+                                try await asyncChannel.executeThenClose { inbound in
                                     for try await childChannel in inbound {
                                         group.addTask {
                                             await childChannelSetup.handle(value: childChannel, logger: self.logger)

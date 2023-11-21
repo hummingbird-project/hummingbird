@@ -17,7 +17,6 @@ import Hummingbird
 import HummingbirdCore
 import HummingbirdCoreXCT
 import NIOCore
-import NIOHTTP1
 import NIOPosix
 import NIOTransportServices
 import ServiceLifecycle
