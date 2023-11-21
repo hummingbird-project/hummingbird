@@ -30,18 +30,18 @@ let package = Package(
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.0.0"),
     ],
     targets: [
-        /* .target(name: "Hummingbird", dependencies: [
-             .byName(name: "HummingbirdCore"),
-             .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
-             .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
-             .product(name: "HTTPTypes", package: "swift-http-types"),
-             .product(name: "Logging", package: "swift-log"),
-             .product(name: "Metrics", package: "swift-metrics"),
-             .product(name: "Tracing", package: "swift-distributed-tracing"),
-             .product(name: "NIOCore", package: "swift-nio"),
-             .product(name: "NIOPosix", package: "swift-nio"),
-             .product(name: "NIOHTTP1", package: "swift-nio"),
-         ]), */
+        .target(name: "Hummingbird", dependencies: [
+            .byName(name: "HummingbirdCore"),
+            .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
+            .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
+            .product(name: "HTTPTypes", package: "swift-http-types"),
+            .product(name: "Logging", package: "swift-log"),
+            .product(name: "Metrics", package: "swift-metrics"),
+            .product(name: "Tracing", package: "swift-distributed-tracing"),
+            .product(name: "NIOCore", package: "swift-nio"),
+            .product(name: "NIOPosix", package: "swift-nio"),
+            .product(name: "NIOHTTP1", package: "swift-nio"),
+        ]),
         .target(name: "HummingbirdCore", dependencies: [
             .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
             .product(name: "HTTPTypes", package: "swift-http-types"),

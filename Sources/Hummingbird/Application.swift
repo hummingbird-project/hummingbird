@@ -170,12 +170,12 @@ extension HBApplication: Service where Responder.Context: HBRequestContext {
             )
             // respond to request
             var response = try await self.responder.respond(to: request, context: context)
-            response.headers.add(name: "date", value: dateCache.date)
+            response.headers[.date] = dateCache.date
             // server name header
             if let serverName = self.configuration.serverName {
-                response.headers.add(name: "server", value: serverName)
+                response.headers[.server] = serverName
             }
-            return HBHTTPResponse(status: response.status, headers: response.headers, body: response.body)
+            return HBHTTPResponse(head: response.head, body: response.body)
         }
         // update channel with responder
         var channelSetup = self.channelSetup

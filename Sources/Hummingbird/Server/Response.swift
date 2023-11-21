@@ -12,28 +12,27 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import HummingbirdCore
-import NIOHTTP1
 
 /// Holds all the required to generate a HTTP Response
 public struct HBResponse: Sendable {
-    /// response status
-    public var status: HTTPResponseStatus
-    /// response headers
-    public var headers: HTTPHeaders
-    /// response body
+    public var head: HTTPResponse
     public var body: HBResponseBody
 
-    /// Create an `HBResponse`
-    ///
-    /// - Parameters:
-    ///   - status: response status
-    ///   - headers: response headers
-    ///   - body: response body
-    public init(status: HTTPResponseStatus, headers: HTTPHeaders = [:], body: HBResponseBody = .init()) {
-        self.status = status
-        self.headers = headers
+    public init(status: HTTPResponse.Status, headers: HTTPFields = .init(), body: HBResponseBody = .init()) {
+        self.head = .init(status: status, headerFields: headers)
         self.body = body
+    }
+
+    var status: HTTPResponse.Status {
+        get { self.head.status }
+        set { self.head.status = newValue }
+    }
+
+    var headers: HTTPFields {
+        get { self.head.headerFields }
+        set { self.head.headerFields = newValue }
     }
 }
 
@@ -58,7 +57,7 @@ extension HBResponse {
         case temporary
 
         /// Associated `HTTPResponseStatus` for this redirect type.
-        public var status: HTTPResponseStatus {
+        public var status: HTTPResponse.Status {
             switch self {
             case .permanent: return .movedPermanently
             case .found: return .found
@@ -74,7 +73,7 @@ extension HBResponse {
     ///   - type: Redirection type
     /// - Returns: HBResponse with redirection
     public static func redirect(to location: String, type: RedirectType = .normal) -> HBResponse {
-        return .init(status: type.status, headers: ["location": location])
+        return .init(status: type.status, headers: [.location: location])
     }
 }
 

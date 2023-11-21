@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import HummingbirdCore
 import NIOCore
-import NIOHTTP1
 
 /// Used to group together routes under a single path. Additional middleware can be added to the endpoint and each route can add a
 /// suffix to the endpoint path
@@ -60,7 +60,7 @@ public struct HBRouterGroup<Context: HBBaseRequestContext>: HBRouterMethods {
     /// Add path for closure returning type using async/await
     @discardableResult public func on<Output: HBResponseGenerator>(
         _ path: String = "",
-        method: HTTPMethod,
+        method: HTTPRequest.Method,
         options: HBRouterMethodOptions = [],
         use closure: @Sendable @escaping (HBRequest, Context) async throws -> Output
     ) -> Self {

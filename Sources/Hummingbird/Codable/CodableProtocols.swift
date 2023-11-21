@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
+
 /// protocol for encoders generating a Response
 public protocol HBResponseEncoder: Sendable {
     /// Encode value returned by handler to request
@@ -36,7 +38,7 @@ struct NullEncoder: HBResponseEncoder {
     func encode(_ value: some Encodable, from request: HBRequest, context: some HBBaseRequestContext) throws -> HBResponse {
         return HBResponse(
             status: .ok,
-            headers: ["content-type": "text/plain; charset=utf-8"],
+            headers: [.contentType: "text/plain; charset=utf-8"],
             body: .init(byteBuffer: context.allocator.buffer(string: "\(value)"))
         )
     }

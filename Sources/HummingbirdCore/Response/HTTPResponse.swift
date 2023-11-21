@@ -20,6 +20,14 @@ public struct HBHTTPResponse: Sendable {
     public var head: HTTPResponse
     public var body: HBResponseBody
 
+    public init(head: HTTPResponse, body: HBResponseBody = .init()) {
+        self.head = head
+        self.body = body
+        if let contentLength = body.contentLength {
+            self.head.headerFields[.contentLength] = String(describing: contentLength)
+        }
+    }
+
     public init(status: HTTPResponse.Status, headers: HTTPFields = .init(), body: HBResponseBody = .init()) {
         self.head = .init(status: status, headerFields: headers)
         self.body = body
