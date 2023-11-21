@@ -37,6 +37,11 @@ extension HBXCTClient {
             self.body = body
         }
 
+        public init(_ uri: String, method: HTTPRequest.Method, authority: String?, headers: HTTPFields = [:], body: ByteBuffer? = nil) {
+            self.head = .init(method: method, scheme: nil, authority: authority, path: uri, headerFields: headers)
+            self.body = body
+        }
+
         var headers: HTTPFields {
             get { self.head.headerFields }
             set { self.head.headerFields = newValue }

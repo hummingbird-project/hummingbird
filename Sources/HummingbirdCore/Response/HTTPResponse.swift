@@ -36,12 +36,12 @@ public struct HBHTTPResponse: Sendable {
         }
     }
 
-    var status: HTTPResponse.Status {
+    public var status: HTTPResponse.Status {
         get { self.head.status }
         set { self.head.status = newValue }
     }
 
-    var headers: HTTPFields {
+    public var headers: HTTPFields {
         get { self.head.headerFields }
         set { self.head.headerFields = newValue }
     }

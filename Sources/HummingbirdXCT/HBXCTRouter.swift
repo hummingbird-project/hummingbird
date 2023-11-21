@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Atomics
+import HTTPTypes
 @_spi(HBXCT) import Hummingbird
 @_spi(HBXCT) import HummingbirdCore
 import Logging
@@ -94,13 +95,13 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
         let responder: Responder
         let applicationContext: HBApplicationContext
 
-        func execute(uri: String, method: HTTPMethod, headers: HTTPHeaders, body: ByteBuffer?) async throws -> HBXCTResponse {
+        func execute(uri: String, method: HTTPRequest.Method, headers: HTTPFields, body: ByteBuffer?) async throws -> HBXCTResponse {
             let eventLoop = self.eventLoopGroup.any()
 
             return try await withThrowingTaskGroup(of: HBXCTResponse.self) { group in
                 let streamer = HBStreamedRequestBody()
                 let request = HBRequest(
-                    head: .init(version: .http1_1, method: method, uri: uri, headers: headers),
+                    head: .init(method: method, scheme: nil, authority: nil, path: uri, headerFields: headers),
                     body: .stream(streamer)
                 )
                 let context = Responder.Context(
@@ -124,7 +125,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                     try await response.body.write(responseWriter)
                     for try await _ in request.body {}
                     return responseWriter.collated.withLockedValue { collated in
-                        HBXCTResponse(status: response.status, headers: response.headers, body: collated)
+                        HBXCTResponse(head: response.head, body: collated)
                     }
                 }
 

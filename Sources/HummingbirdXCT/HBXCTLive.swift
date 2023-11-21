@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import Hummingbird
 import HummingbirdCore
 import HummingbirdCoreXCT
@@ -30,16 +31,15 @@ final class HBXCTLive<Responder: HBResponder, ChannelSetup: HBChannelSetup & HTT
         /// Send request and call test callback on the response returned
         func execute(
             uri: String,
-            method: HTTPMethod,
-            headers: HTTPHeaders = [:],
+            method: HTTPRequest.Method,
+            headers: HTTPFields = [:],
             body: ByteBuffer? = nil
         ) async throws -> HBXCTResponse {
             var headers = headers
-            headers.replaceOrAdd(name: "connection", value: "keep-alive")
-            headers.replaceOrAdd(name: "host", value: "localhost")
-            let request = HBXCTClient.Request(uri, method: method, headers: headers, body: body)
+            headers[.connection] = "keep-alive"
+            let request = HBXCTClient.Request(uri, method: method, authority: "localhost", headers: headers, body: body)
             let response = try await client.execute(request)
-            return .init(status: response.status, headers: response.headers, body: response.body)
+            return .init(head: response.head, body: response.body)
         }
     }
 

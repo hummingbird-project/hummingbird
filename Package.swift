@@ -60,19 +60,19 @@ let package = Package(
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOPosix", package: "swift-nio"),
                 .product(name: "NIOFoundationCompat", package: "swift-nio"),
-            ]),
-            .target(name: "HummingbirdJobs", dependencies: [
-                .byName(name: "Hummingbird"),
-                .product(name: "Logging", package: "swift-log"),
-            ]),
-            .target(name: "HummingbirdXCT", dependencies: [
-                .byName(name: "Hummingbird"),
-                .byName(name: "HummingbirdCoreXCT"),
-                .product(name: "NIOCore", package: "swift-nio"),
-                .product(name: "NIOEmbedded", package: "swift-nio"),
-                .product(name: "NIOPosix", package: "swift-nio"),
-                .product(name: "NIOHTTP1", package: "swift-nio"),
-            ]), */
+            ]),*/
+        .target(name: "HummingbirdJobs", dependencies: [
+            .byName(name: "Hummingbird"),
+            .product(name: "Logging", package: "swift-log"),
+        ]),
+        .target(name: "HummingbirdXCT", dependencies: [
+            .byName(name: "Hummingbird"),
+            .byName(name: "HummingbirdCoreXCT"),
+            .product(name: "HTTPTypes", package: "swift-http-types"),
+            .product(name: "NIOCore", package: "swift-nio"),
+            .product(name: "NIOPosix", package: "swift-nio"),
+            .product(name: "NIOHTTP1", package: "swift-nio"),
+        ]),
         .target(name: "HummingbirdCoreXCT", dependencies: [
             .product(name: "HTTPTypes", package: "swift-http-types"),
             .product(name: "NIOCore", package: "swift-nio"),
@@ -123,7 +123,6 @@ let package = Package(
                 .byName(name: "HummingbirdCore"),
                 .byName(name: "HummingbirdTLS"),
                 .byName(name: "HummingbirdCoreXCT"),
-                .product(name: "NIOEmbedded", package: "swift-nio"),
             ],
             resources: [.process("Certificates")]
         ),
