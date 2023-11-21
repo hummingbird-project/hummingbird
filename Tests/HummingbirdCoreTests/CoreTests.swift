@@ -14,12 +14,13 @@
 
 import AsyncAlgorithms
 import Atomics
+import HTTPTypes
 import HummingbirdCore
 @testable import HummingbirdCoreXCT
 import Logging
 import NIOCore
 import NIOEmbedded
-import NIOHTTP1
+import NIOHTTPTypes
 import NIOPosix
 import NIOTransportServices
 import ServiceLifecycle
@@ -156,7 +157,7 @@ class HummingBirdCoreTests: XCTestCase {
         /// channel handler that delays the sending of data
         class SlowInputChannelHandler: ChannelOutboundHandler, RemovableChannelHandler {
             public typealias OutboundIn = Never
-            public typealias OutboundOut = HTTPServerResponsePart
+            public typealias OutboundOut = HTTPResponsePart
 
             func read(context: ChannelHandlerContext) {
                 let loopBoundContext = NIOLoopBound(context, eventLoop: context.eventLoop)
@@ -182,12 +183,12 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testChannelHandlerErrorPropagation() async throws {
         class CreateErrorHandler: ChannelInboundHandler, RemovableChannelHandler {
-            typealias InboundIn = HTTPServerRequestPart
+            typealias InboundIn = HTTPRequestPart
 
             var seen: Bool = false
             func channelRead(context: ChannelHandlerContext, data: NIOAny) {
                 if case .body = self.unwrapInboundIn(data) {
-                    context.fireErrorCaught(HBHTTPError(.insufficientStorage))
+                    context.fireErrorCaught(HBHTTPError(.unavailableForLegalReasons))
                 }
                 context.fireChannelRead(data)
             }
@@ -203,7 +204,7 @@ class HummingBirdCoreTests: XCTestCase {
         ) { client in
             let buffer = self.randomBuffer(size: 32)
             let response = try await client.post("/", body: buffer)
-            XCTAssertEqual(response.status, .insufficientStorage)
+            XCTAssertEqual(response.status, .unavailableForLegalReasons)
         }
     }
 
@@ -244,8 +245,8 @@ class HummingBirdCoreTests: XCTestCase {
     func testReadIdleHandler() async throws {
         /// Channel Handler for serializing request header and data
         final class HTTPServerIncompleteRequest: ChannelInboundHandler, RemovableChannelHandler {
-            typealias InboundIn = HTTPServerRequestPart
-            typealias InboundOut = HTTPServerRequestPart
+            typealias InboundIn = HTTPRequestPart
+            typealias InboundOut = HTTPRequestPart
 
             func channelRead(context: ChannelHandlerContext, data: NIOAny) {
                 let part = self.unwrapInboundIn(data)

@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import NIOCore
-import NIOHTTP1
 
 /// An error that is capable of generating an HTTP response
 ///
@@ -21,9 +21,9 @@ import NIOHTTP1
 /// the client. Errors not conforming to this will be returned with status internalServerError.
 public protocol HBHTTPResponseError: Error {
     /// status code for the error
-    var status: HTTPResponseStatus { get }
+    var status: HTTPResponse.Status { get }
     /// any addiitional headers required
-    var headers: HTTPHeaders { get }
+    var headers: HTTPFields { get }
     /// return error payload.
     func body(allocator: ByteBufferAllocator) -> ByteBuffer?
 }

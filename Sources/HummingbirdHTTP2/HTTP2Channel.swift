@@ -12,12 +12,15 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
+import HummingbirdCore
 import Logging
 import NIOCore
-import NIOPosix
-import NIOHTTP1
 import NIOHTTP2
-import HummingbirdCore
+import NIOHTTPTypes
+import NIOHTTPTypesHTTP1
+import NIOHTTPTypesHTTP2
+import NIOPosix
 import NIOSSL
 
 public struct HTTP2Channel: HTTPChannelHandler {
@@ -45,18 +48,18 @@ public struct HTTP2Channel: HTTPChannelHandler {
 
     public func initialize(channel: Channel, configuration: HBServerConfiguration, logger: Logger) -> EventLoopFuture<Value> {
         do {
-            try channel.pipeline.syncOperations.addHandler(NIOSSLServerHandler(context: sslContext))
+            try channel.pipeline.syncOperations.addHandler(NIOSSLServerHandler(context: self.sslContext))
         } catch {
             return channel.eventLoop.makeFailedFuture(error)
         }
 
-        let childChannelHandlers: [RemovableChannelHandler] = self.additionalChannelHandlers() + [
-            HBHTTPUserEventHandler(logger: logger),
-            HBHTTPSendableResponseChannelHandler(),
-        ]
-        
         return channel.configureAsyncHTTPServerPipeline { http1Channel -> EventLoopFuture<HTTP1Channel.Value> in
-            http1Channel
+            let childChannelHandlers: [ChannelHandler] =
+                [HTTP1ToHTTPServerCodec(secure: false)] +
+                self.additionalChannelHandlers() +
+                [HBHTTPUserEventHandler(logger: logger)]
+
+            return http1Channel
                 .pipeline
                 .addHandlers(childChannelHandlers)
                 .flatMapThrowing {
@@ -67,9 +70,14 @@ public struct HTTP2Channel: HTTPChannelHandler {
                 try NIOAsyncChannel<HTTP2Frame, HTTP2Frame>(wrappingChannelSynchronously: http2Channel)
             }
         } http2StreamInitializer: { http2ChildChannel -> EventLoopFuture<HTTP1Channel.Value> in
-            http2ChildChannel
+            let childChannelHandlers: [ChannelHandler] =
+                self.additionalChannelHandlers() + [
+                    HBHTTPUserEventHandler(logger: logger),
+                ]
+
+            return http2ChildChannel
                 .pipeline
-                .addHandler(HTTP2FramePayloadToHTTP1ServerCodec())
+                .addHandler(HTTP2FramePayloadToHTTPClientCodec())
                 .flatMap {
                     http2ChildChannel.pipeline.addHandlers(childChannelHandlers)
                 }.flatMapThrowing {
@@ -93,7 +101,7 @@ public struct HTTP2Channel: HTTPChannelHandler {
                     }
                 }
 
-                // Close the `http2` NIOAsyncCannel here. Closing it here ensures we retain the `http2` instance, 
+                // Close the `http2` NIOAsyncCannel here. Closing it here ensures we retain the `http2` instance,
                 // preventing it from being `deinit`-ed.
                 // Not having this will cause HTTP2 connections to close shortly after the first request
                 // is handled. When NIOAsyncChannel `deinit`s, it closes the channel. So this ensures

@@ -12,12 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import Logging
 import NIOCore
-import NIOHTTP1
+import NIOHTTPTypes
+import NIOHTTPTypesHTTP1
 
 public struct HTTP1Channel: HBChannelSetup, HTTPChannelHandler {
-    public typealias Value = NIOAsyncChannel<HTTPServerRequestPart, SendableHTTPServerResponsePart>
+    public typealias Value = NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>
 
     public init(
         additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = [],
@@ -28,10 +30,10 @@ public struct HTTP1Channel: HBChannelSetup, HTTPChannelHandler {
     }
 
     public func initialize(channel: Channel, configuration: HBServerConfiguration, logger: Logger) -> EventLoopFuture<Value> {
-        let childChannelHandlers: [RemovableChannelHandler] = self.additionalChannelHandlers() + [
-            HBHTTPUserEventHandler(logger: logger),
-            HBHTTPSendableResponseChannelHandler(),
-        ]
+        let childChannelHandlers: [any ChannelHandler] =
+            [HTTP1ToHTTPServerCodec(secure: false)] +
+            self.additionalChannelHandlers() +
+            [HBHTTPUserEventHandler(logger: logger)]
         return channel.eventLoop.makeCompletedFuture {
             try channel.pipeline.syncOperations.configureHTTPServerPipeline(
                 withPipeliningAssistance: false,
@@ -45,7 +47,7 @@ public struct HTTP1Channel: HBChannelSetup, HTTPChannelHandler {
         }
     }
 
-    public func handle(value asyncChannel: NIOCore.NIOAsyncChannel<NIOHTTP1.HTTPServerRequestPart, SendableHTTPServerResponsePart>, logger: Logging.Logger) async {
+    public func handle(value asyncChannel: NIOCore.NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>, logger: Logging.Logger) async {
         await handleHTTP(asyncChannel: asyncChannel, logger: logger)
     }
 

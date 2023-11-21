@@ -12,22 +12,22 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import NIOCore
-import NIOHTTP1
 
 /// Default HTTP error. Provides an HTTP status and a message is so desired
 public struct HBHTTPError: Error, HBHTTPResponseError, Sendable {
     /// status code for the error
-    public let status: HTTPResponseStatus
+    public let status: HTTPResponse.Status
     /// any addiitional headers required
-    public let headers: HTTPHeaders
+    public let headers: HTTPFields
     /// error payload, assumed to be a string
     public let body: String?
 
     /// Initialize HTTPError
     /// - Parameters:
     ///   - status: HTTP status
-    public init(_ status: HTTPResponseStatus) {
+    public init(_ status: HTTPResponse.Status) {
         self.status = status
         self.headers = [:]
         self.body = nil
@@ -37,9 +37,9 @@ public struct HBHTTPError: Error, HBHTTPResponseError, Sendable {
     /// - Parameters:
     ///   - status: HTTP status
     ///   - message: Associated message
-    public init(_ status: HTTPResponseStatus, message: String) {
+    public init(_ status: HTTPResponse.Status, message: String) {
         self.status = status
-        self.headers = ["content-type": "text/plain; charset=utf-8"]
+        self.headers = [.contentType: "text/plain; charset=utf-8"]
         self.body = message
     }
 
