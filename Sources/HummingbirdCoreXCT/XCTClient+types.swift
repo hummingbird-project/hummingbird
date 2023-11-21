@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import HTTPTypes
 import NIOCore
-import NIOHTTP1
 
 /// HTTP client types
 extension HBXCTClient {
@@ -29,22 +29,37 @@ extension HBXCTClient {
     }
 
     public struct Request: Sendable {
-        public var uri: String
-        public var method: HTTPMethod
-        public var headers: HTTPHeaders
+        public var head: HTTPRequest
         public var body: ByteBuffer?
 
-        public init(_ uri: String, method: HTTPMethod, headers: HTTPHeaders = [:], body: ByteBuffer? = nil) {
-            self.uri = uri
-            self.method = method
-            self.headers = headers
+        public init(_ uri: String, method: HTTPRequest.Method, headers: HTTPFields = [:], body: ByteBuffer? = nil) {
+            self.head = .init(method: method, scheme: nil, authority: nil, path: uri, headerFields: headers)
             self.body = body
+        }
+
+        var headers: HTTPFields {
+            get { self.head.headerFields }
+            set { self.head.headerFields = newValue }
         }
     }
 
     public struct Response: Sendable {
-        public let headers: HTTPHeaders
-        public let status: HTTPResponseStatus
-        public let body: ByteBuffer?
+        public var head: HTTPResponse
+        public var body: ByteBuffer?
+
+        public init(head: HTTPResponse, body: ByteBuffer? = nil) {
+            self.head = head
+            self.body = body
+        }
+
+        var status: HTTPResponse.Status {
+            get { self.head.status }
+            set { self.head.status = newValue }
+        }
+
+        var headers: HTTPFields {
+            get { self.head.headerFields }
+            set { self.head.headerFields = newValue }
+        }
     }
 }

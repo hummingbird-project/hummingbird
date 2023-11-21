@@ -12,8 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import NIOCore
 import NIOHTTP1
+import NIOHTTPTypes
+import NIOHTTPTypesHTTP1
 import NIOPosix
 import NIOSSL
 
@@ -82,6 +85,7 @@ public struct HBXCTClient: Sendable {
                     return channel.pipeline.addHTTPClientHandlers()
                         .flatMap {
                             let handlers: [ChannelHandler] = [
+                                HTTP1ToHTTPClientCodec(),
                                 HTTPClientRequestSerializer(),
                                 HTTPClientResponseHandler(),
                                 HTTPTaskHandler(),
@@ -109,32 +113,32 @@ public struct HBXCTClient: Sendable {
     }
 
     /// GET request
-    public func get(_ uri: String, headers: HTTPHeaders = [:]) async throws -> HBXCTClient.Response {
-        let request = HBXCTClient.Request(uri, method: .GET, headers: headers)
+    public func get(_ uri: String, headers: HTTPFields = [:]) async throws -> HBXCTClient.Response {
+        let request = HBXCTClient.Request(uri, method: .get, headers: headers)
         return try await self.execute(request)
     }
 
     /// HEAD request
-    public func head(_ uri: String, headers: HTTPHeaders = [:]) async throws -> HBXCTClient.Response {
-        let request = HBXCTClient.Request(uri, method: .HEAD, headers: headers)
+    public func head(_ uri: String, headers: HTTPFields = [:]) async throws -> HBXCTClient.Response {
+        let request = HBXCTClient.Request(uri, method: .head, headers: headers)
         return try await self.execute(request)
     }
 
     /// PUT request
-    public func put(_ uri: String, headers: HTTPHeaders = [:], body: ByteBuffer) async throws -> HBXCTClient.Response {
-        let request = HBXCTClient.Request(uri, method: .PUT, headers: headers, body: body)
+    public func put(_ uri: String, headers: HTTPFields = [:], body: ByteBuffer) async throws -> HBXCTClient.Response {
+        let request = HBXCTClient.Request(uri, method: .put, headers: headers, body: body)
         return try await self.execute(request)
     }
 
     /// POST request
-    public func post(_ uri: String, headers: HTTPHeaders = [:], body: ByteBuffer) async throws -> HBXCTClient.Response {
-        let request = HBXCTClient.Request(uri, method: .POST, headers: headers, body: body)
+    public func post(_ uri: String, headers: HTTPFields = [:], body: ByteBuffer) async throws -> HBXCTClient.Response {
+        let request = HBXCTClient.Request(uri, method: .post, headers: headers, body: body)
         return try await self.execute(request)
     }
 
     /// DELETE request
-    public func delete(_ uri: String, headers: HTTPHeaders = [:], body: ByteBuffer) async throws -> HBXCTClient.Response {
-        let request = HBXCTClient.Request(uri, method: .DELETE, headers: headers, body: body)
+    public func delete(_ uri: String, headers: HTTPFields = [:], body: ByteBuffer) async throws -> HBXCTClient.Response {
+        let request = HBXCTClient.Request(uri, method: .delete, headers: headers, body: body)
         return try await self.execute(request)
     }
 
@@ -172,7 +176,7 @@ public struct HBXCTClient: Sendable {
     private func cleanupRequest(_ request: HBXCTClient.Request) -> HBXCTClient.Request {
         var request = request
         if let contentLength = request.body.map(\.readableBytes) {
-            request.headers.replaceOrAdd(name: "content-length", value: String(describing: contentLength))
+            request.headers[.contentLength] = String(describing: contentLength)
         }
         return request
     }
@@ -192,20 +196,14 @@ public struct HBXCTClient: Sendable {
     /// Channel Handler for serializing request header and data
     private class HTTPClientRequestSerializer: ChannelOutboundHandler {
         typealias OutboundIn = HBXCTClient.Request
-        typealias OutboundOut = HTTPClientRequestPart
+        typealias OutboundOut = HTTPRequestPart
 
         func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
             let request = unwrapOutboundIn(data)
-            let head = HTTPRequestHead(
-                version: .init(major: 1, minor: 1),
-                method: request.method,
-                uri: request.uri,
-                headers: request.headers
-            )
-            context.write(wrapOutboundOut(.head(head)), promise: nil)
+            context.write(wrapOutboundOut(.head(request.head)), promise: nil)
 
             if let body = request.body, body.readableBytes > 0 {
-                context.write(self.wrapOutboundOut(.body(.byteBuffer(body))), promise: nil)
+                context.write(self.wrapOutboundOut(.body(body)), promise: nil)
             }
             context.write(self.wrapOutboundOut(.end(nil)), promise: promise)
         }
@@ -213,16 +211,16 @@ public struct HBXCTClient: Sendable {
 
     /// Channel Handler for parsing response from server
     private class HTTPClientResponseHandler: ChannelInboundHandler {
-        typealias InboundIn = HTTPClientResponsePart
+        typealias InboundIn = HTTPResponsePart
         typealias InboundOut = HBXCTClient.Response
 
         private enum ResponseState {
             /// Waiting to parse the next response.
             case idle
             /// received the head
-            case head(HTTPResponseHead)
+            case head(HTTPResponse)
             /// Currently parsing the response's body.
-            case body(HTTPResponseHead, ByteBuffer)
+            case body(HTTPResponse, ByteBuffer)
         }
 
         private var state: ResponseState = .idle
@@ -240,8 +238,7 @@ public struct HBXCTClient: Sendable {
             case (.end(let tailHeaders), .body(let head, let body)):
                 assert(tailHeaders == nil, "Unexpected tail headers")
                 let response = HBXCTClient.Response(
-                    headers: head.headers,
-                    status: head.status,
+                    head: head,
                     body: body
                 )
                 if context.channel.isActive {
@@ -251,8 +248,7 @@ public struct HBXCTClient: Sendable {
             case (.end(let tailHeaders), .head(let head)):
                 assert(tailHeaders == nil, "Unexpected tail headers")
                 let response = HBXCTClient.Response(
-                    headers: head.headers,
-                    status: head.status,
+                    head: head,
                     body: nil
                 )
                 if context.channel.isActive {

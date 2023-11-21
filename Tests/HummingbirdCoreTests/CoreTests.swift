@@ -84,7 +84,7 @@ class HummingBirdCoreTests: XCTestCase {
         ) { client in
             let response = try await client.get("/")
             XCTAssertEqual(response.status, .unauthorized)
-            XCTAssertEqual(response.headers["content-length"].first, "0")
+            XCTAssertEqual(response.headers[.contentLength], "0")
         }
     }
 
@@ -235,7 +235,7 @@ class HummingBirdCoreTests: XCTestCase {
             logger: Logger(label: "HB")
         ) { client in
             try await withTimeout(.seconds(5)) {
-                _ = try await client.get("/", headers: ["connection": "close"])
+                _ = try await client.get("/", headers: [.connection: "close"])
                 let channel = try await client.channelPromise.futureResult.get()
                 try await channel.closeFuture.get()
             }
@@ -272,7 +272,7 @@ class HummingBirdCoreTests: XCTestCase {
         ) { client in
             try await withTimeout(.seconds(5)) {
                 do {
-                    _ = try await client.get("/", headers: ["connection": "keep-alive"])
+                    _ = try await client.get("/", headers: [.connection: "keep-alive"])
                     XCTFail("Should not get here")
                 } catch HBXCTClient.Error.connectionClosing {
                 } catch {
@@ -296,7 +296,7 @@ class HummingBirdCoreTests: XCTestCase {
             logger: Logger(label: "HB")
         ) { client in
             try await withTimeout(.seconds(5)) {
-                _ = try await client.get("/", headers: ["connection": "keep-alive"])
+                _ = try await client.get("/", headers: [.connection: "keep-alive"])
                 let channel = try await client.channelPromise.futureResult.get()
                 try await channel.closeFuture.get()
             }

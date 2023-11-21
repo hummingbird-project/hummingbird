@@ -74,9 +74,12 @@ let package = Package(
                 .product(name: "NIOHTTP1", package: "swift-nio"),
             ]), */
         .target(name: "HummingbirdCoreXCT", dependencies: [
+            .product(name: "HTTPTypes", package: "swift-http-types"),
             .product(name: "NIOCore", package: "swift-nio"),
             .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
+            .product(name: "NIOHTTPTypes", package: "swift-nio-extras"),
+            .product(name: "NIOHTTPTypesHTTP1", package: "swift-nio-extras"),
             .product(name: "NIOPosix", package: "swift-nio"),
             .product(name: "NIOSSL", package: "swift-nio-ssl"),
         ]),
