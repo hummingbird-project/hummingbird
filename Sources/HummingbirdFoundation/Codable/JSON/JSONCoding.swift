@@ -23,7 +23,7 @@ extension JSONEncoder: HBResponseEncoder {
     /// - Parameters:
     ///   - value: Value to encode
     ///   - request: Request used to generate response
-    public func encode<T: Encodable, Context: HBBaseRequestContext>(_ value: T, from request: HBRequest, context: Context) throws -> HBResponse {
+    public func encode(_ value: some Encodable, from request: HBRequest, context: some HBBaseRequestContext) throws -> HBResponse {
         var buffer = context.allocator.buffer(capacity: 0)
         let data = try self.encode(value)
         buffer.writeBytes(data)
@@ -40,7 +40,7 @@ extension JSONDecoder: HBRequestDecoder {
     /// - Parameters:
     ///   - type: Type to decode
     ///   - request: Request to decode from
-    public func decode<T: Decodable, Context: HBBaseRequestContext>(_ type: T.Type, from request: HBRequest, context: Context) throws -> T {
+    public func decode<T: Decodable>(_ type: T.Type, from request: HBRequest, context: some HBBaseRequestContext) throws -> T {
         guard case .byteBuffer(var buffer) = request.body,
               let data = buffer.readData(length: buffer.readableBytes)
         else {

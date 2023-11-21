@@ -56,7 +56,7 @@ public struct HBRequest: Sendable {
 
     /// Decode request using decoder stored at `HBApplication.decoder`.
     /// - Parameter type: Type you want to decode to
-    public func decode<Type: Decodable>(as type: Type.Type, using context: HBBaseRequestContext) throws -> Type {
+    public func decode<Type: Decodable>(as type: Type.Type, using context: some HBBaseRequestContext) throws -> Type {
         do {
             return try context.applicationContext.decoder.decode(type, from: self, context: context)
         } catch DecodingError.dataCorrupted(_) {

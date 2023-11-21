@@ -33,7 +33,7 @@ extension HBRequestDecodable {
     /// Create using `Codable` interfaces
     /// - Parameter request: request
     /// - Throws: HBHTTPError
-    public init<Context: HBBaseRequestContext>(from request: HBRequest, context: Context) throws {
+    public init(from request: HBRequest, context: some HBBaseRequestContext) throws {
         self = try request.decode(as: Self.self, using: context)
     }
 }
