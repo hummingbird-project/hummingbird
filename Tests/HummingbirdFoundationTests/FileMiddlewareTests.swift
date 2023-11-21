@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import HTTPTypes
 import Hummingbird
 import HummingbirdFoundation
 import HummingbirdXCT
@@ -45,10 +46,10 @@ class HummingbirdFilesTests: XCTestCase {
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/test.jpg", method: .GET) { response in
+            try await client.XCTExecute(uri: "/test.jpg", method: .get) { response in
                 var body = try XCTUnwrap(response.body)
                 XCTAssertEqual(body.readString(length: body.readableBytes), text)
-                XCTAssertEqual(response.headers["content-type"].first, "image/jpeg")
+                XCTAssertEqual(response.headers[.contentType], "image/jpeg")
             }
         }
     }
@@ -65,7 +66,7 @@ class HummingbirdFilesTests: XCTestCase {
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/test.txt", method: .GET) { response in
+            try await client.XCTExecute(uri: "/test.txt", method: .get) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(body, buffer)
             }
@@ -84,35 +85,35 @@ class HummingbirdFilesTests: XCTestCase {
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=100-3999"]) { response in
+            try await client.XCTExecute(uri: "/test.txt", method: .get, headers: [.range: "bytes=100-3999"]) { response in
                 let body = try XCTUnwrap(response.body)
                 let slice = buffer.getSlice(at: 100, length: 3900)
                 XCTAssertEqual(body, slice)
-                XCTAssertEqual(response.headers["content-range"].first, "bytes 100-3999/326000")
-                XCTAssertEqual(response.headers["content-type"].first, "text/plain")
+                XCTAssertEqual(response.headers[.contentRange], "bytes 100-3999/326000")
+                XCTAssertEqual(response.headers[.contentType], "text/plain")
             }
 
-            try await client.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=0-0"]) { response in
+            try await client.XCTExecute(uri: "/test.txt", method: .get, headers: [.range: "bytes=0-0"]) { response in
                 let body = try XCTUnwrap(response.body)
                 let slice = buffer.getSlice(at: 0, length: 1)
                 XCTAssertEqual(body, slice)
-                XCTAssertEqual(response.headers["content-range"].first, "bytes 0-0/326000")
-                XCTAssertEqual(response.headers["content-type"].first, "text/plain")
+                XCTAssertEqual(response.headers[.contentRange], "bytes 0-0/326000")
+                XCTAssertEqual(response.headers[.contentType], "text/plain")
             }
 
-            try await client.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=-3999"]) { response in
+            try await client.XCTExecute(uri: "/test.txt", method: .get, headers: [.range: "bytes=-3999"]) { response in
                 let body = try XCTUnwrap(response.body)
                 let slice = buffer.getSlice(at: 0, length: 4000)
                 XCTAssertEqual(body, slice)
-                XCTAssertEqual(response.headers["content-length"].first, "4000")
-                XCTAssertEqual(response.headers["content-range"].first, "bytes 0-3999/326000")
+                XCTAssertEqual(response.headers[.contentLength], "4000")
+                XCTAssertEqual(response.headers[.contentRange], "bytes 0-3999/326000")
             }
 
-            try await client.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=6000-"]) { response in
+            try await client.XCTExecute(uri: "/test.txt", method: .get, headers: [.range: "bytes=6000-"]) { response in
                 let body = try XCTUnwrap(response.body)
                 let slice = buffer.getSlice(at: 6000, length: 320_000)
                 XCTAssertEqual(body, slice)
-                XCTAssertEqual(response.headers["content-range"].first, "bytes 6000-325999/326000")
+                XCTAssertEqual(response.headers[.contentRange], "bytes 6000-325999/326000")
             }
         }
     }
@@ -129,26 +130,26 @@ class HummingbirdFilesTests: XCTestCase {
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
         try await app.test(.router) { client in
-            let (eTag, modificationDate) = try await client.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=-3999"]) { response -> (String, String) in
-                let eTag = try XCTUnwrap(response.headers["eTag"].first)
-                let modificationDate = try XCTUnwrap(response.headers["modified-date"].first)
+            let (eTag, modificationDate) = try await client.XCTExecute(uri: "/test.txt", method: .get, headers: [.range: "bytes=-3999"]) { response -> (String, String) in
+                let eTag = try XCTUnwrap(response.headers[.eTag])
+                let modificationDate = try XCTUnwrap(response.headers[.lastModified])
                 let body = try XCTUnwrap(response.body)
                 let slice = buffer.getSlice(at: 0, length: 4000)
                 XCTAssertEqual(body, slice)
-                XCTAssertEqual(response.headers["content-range"].first, "bytes 0-3999/10000")
+                XCTAssertEqual(response.headers[.contentRange], "bytes 0-3999/10000")
                 return (eTag, modificationDate)
             }
 
-            try await client.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=4000-", "if-range": eTag]) { response in
-                XCTAssertEqual(response.headers["content-range"].first, "bytes 4000-9999/10000")
+            try await client.XCTExecute(uri: "/test.txt", method: .get, headers: [.range: "bytes=4000-", .ifRange: eTag]) { response in
+                XCTAssertEqual(response.headers[.contentRange], "bytes 4000-9999/10000")
             }
 
-            try await client.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=4000-", "if-range": modificationDate]) { response in
-                XCTAssertEqual(response.headers["content-range"].first, "bytes 4000-9999/10000")
+            try await client.XCTExecute(uri: "/test.txt", method: .get, headers: [.range: "bytes=4000-", .ifRange: modificationDate]) { response in
+                XCTAssertEqual(response.headers[.contentRange], "bytes 4000-9999/10000")
             }
 
-            try await client.XCTExecute(uri: "/test.txt", method: .GET, headers: ["Range": "bytes=4000-", "if-range": "not valid"]) { response in
-                XCTAssertNil(response.headers["content-range"].first)
+            try await client.XCTExecute(uri: "/test.txt", method: .get, headers: [.range: "bytes=4000-", .ifRange: "not valid"]) { response in
+                XCTAssertNil(response.headers[.contentRange])
             }
         }
     }
@@ -166,11 +167,11 @@ class HummingbirdFilesTests: XCTestCase {
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/testHead.txt", method: .HEAD) { response in
+            try await client.XCTExecute(uri: "/testHead.txt", method: .head) { response in
                 XCTAssertEqual(response.body?.readableBytes ?? 0, 0)
-                XCTAssertEqual(response.headers["Content-Length"].first, text.utf8.count.description)
-                XCTAssertEqual(response.headers["content-type"].first, "text/plain")
-                let responseDateString = try XCTUnwrap(response.headers["modified-date"].first)
+                XCTAssertEqual(response.headers[.contentLength], text.utf8.count.description)
+                XCTAssertEqual(response.headers[.contentType], "text/plain")
+                let responseDateString = try XCTUnwrap(response.headers[.lastModified])
                 let responseDate = try XCTUnwrap(self.rfc1123Formatter.date(from: responseDateString))
                 XCTAssert(date < responseDate + 2 && date > responseDate - 2)
             }
@@ -190,11 +191,11 @@ class HummingbirdFilesTests: XCTestCase {
 
         try await app.test(.router) { client in
             var eTag: String?
-            try await client.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
-                eTag = try XCTUnwrap(response.headers["eTag"].first)
+            try await client.XCTExecute(uri: "/test.txt", method: .head) { response in
+                eTag = try XCTUnwrap(response.headers[.eTag])
             }
-            try await client.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
-                XCTAssertEqual(response.headers["eTag"].first, eTag)
+            try await client.XCTExecute(uri: "/test.txt", method: .head) { response in
+                XCTAssertEqual(response.headers[.eTag], eTag)
             }
         }
     }
@@ -211,18 +212,18 @@ class HummingbirdFilesTests: XCTestCase {
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
         try await app.test(.router) { client in
-            let eTag = try await client.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
-                return try XCTUnwrap(response.headers["eTag"].first)
+            let eTag = try await client.XCTExecute(uri: "/test.txt", method: .head) { response in
+                return try XCTUnwrap(response.headers[.eTag])
             }
-            try await client.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-none-match": eTag]) { response in
+            try await client.XCTExecute(uri: "/test.txt", method: .get, headers: [.ifNoneMatch: eTag]) { response in
                 XCTAssertEqual(response.status, .notModified)
             }
-            var headers: HTTPHeaders = ["if-none-match": "test"]
-            headers.add(name: "if-none-match", value: "\(eTag)")
-            try await client.XCTExecute(uri: "/test.txt", method: .GET, headers: headers) { response in
+            var headers: HTTPFields = .init()
+            headers[values: .ifNoneMatch] = ["test", "\(eTag)"]
+            try await client.XCTExecute(uri: "/test.txt", method: .get, headers: headers) { response in
                 XCTAssertEqual(response.status, .notModified)
             }
-            try await client.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-none-match": "dummyETag"]) { response in
+            try await client.XCTExecute(uri: "/test.txt", method: .get, headers: [.ifNoneMatch: "dummyETag"]) { response in
                 XCTAssertEqual(response.status, .ok)
             }
         }
@@ -240,15 +241,15 @@ class HummingbirdFilesTests: XCTestCase {
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
         try await app.test(.router) { client in
-            let modifiedDate = try await client.XCTExecute(uri: "/test.txt", method: .HEAD) { response in
-                return try XCTUnwrap(response.headers["modified-date"].first)
+            let modifiedDate = try await client.XCTExecute(uri: "/test.txt", method: .head) { response in
+                return try XCTUnwrap(response.headers[.lastModified])
             }
-            try await client.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-modified-since": modifiedDate]) { response in
+            try await client.XCTExecute(uri: "/test.txt", method: .get, headers: [.ifModifiedSince: modifiedDate]) { response in
                 XCTAssertEqual(response.status, .notModified)
             }
             // one minute before current date
             let date = try XCTUnwrap(self.rfc1123Formatter.string(from: Date(timeIntervalSinceNow: -60)))
-            try await client.XCTExecute(uri: "/test.txt", method: .GET, headers: ["if-modified-since": date]) { response in
+            try await client.XCTExecute(uri: "/test.txt", method: .get, headers: [.ifModifiedSince: date]) { response in
                 XCTAssertEqual(response.status, .ok)
             }
         }
@@ -273,11 +274,11 @@ class HummingbirdFilesTests: XCTestCase {
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL2)) }
 
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/test.txt", method: .GET) { response in
-                XCTAssertEqual(response.headers["cache-control"].first, "max-age=2592000")
+            try await client.XCTExecute(uri: "/test.txt", method: .get) { response in
+                XCTAssertEqual(response.headers[.cacheControl], "max-age=2592000")
             }
-            try await client.XCTExecute(uri: "/test.jpg", method: .GET) { response in
-                XCTAssertEqual(response.headers["cache-control"].first, "max-age=2592000, private")
+            try await client.XCTExecute(uri: "/test.jpg", method: .get) { response in
+                XCTAssertEqual(response.headers[.cacheControl], "max-age=2592000, private")
             }
         }
     }
@@ -294,7 +295,7 @@ class HummingbirdFilesTests: XCTestCase {
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .GET) { response in
+            try await client.XCTExecute(uri: "/", method: .get) { response in
                 var body = try XCTUnwrap(response.body)
                 XCTAssertEqual(body.readString(length: body.readableBytes), text)
             }
