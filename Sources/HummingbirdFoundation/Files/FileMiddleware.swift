@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import HTTPTypes
 import Hummingbird
 import Logging
 import NIOCore
@@ -114,40 +115,40 @@ public struct HBFileMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
                 ])
 
                 // construct headers
-                var headers = HTTPHeaders()
+                var headers = HTTPFields()
 
                 // content-length
                 if let contentSize = contentSize {
-                    headers.add(name: "content-length", value: String(describing: contentSize))
+                    headers[.contentLength] = String(describing: contentSize)
                 }
                 // modified-date
                 var modificationDateString: String?
                 if let modificationDate = modificationDate {
                     modificationDateString = HBDateCache.rfc1123Formatter.string(from: modificationDate)
-                    headers.add(name: "modified-date", value: modificationDateString!)
+                    headers[.lastModified] = modificationDateString!
                 }
                 // eTag (constructed from modification date and content size)
-                headers.add(name: "eTag", value: eTag)
+                headers[.eTag] = eTag
 
                 // content-type
                 if let extPointIndex = path.lastIndex(of: ".") {
                     let extIndex = path.index(after: extPointIndex)
                     let ext = String(path.suffix(from: extIndex))
                     if let contentType = HBMediaType.getMediaType(forExtension: ext) {
-                        headers.add(name: "content-type", value: contentType.description)
+                        headers[.contentType] = contentType.description
                     }
                 }
 
-                headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
+                headers[.acceptRanges] = "bytes"
 
                 // cache-control
                 if let cacheControlValue = self.cacheControl.getCacheControlHeader(for: path) {
-                    headers.add(name: "cache-control", value: cacheControlValue)
+                    headers[.cacheControl] = cacheControlValue
                 }
 
                 // verify if-none-match. No need to verify if-match as this is used for state changing
                 // operations. Also the eTag we generate is considered weak.
-                let ifNoneMatch = request.headers["if-none-match"]
+                let ifNoneMatch = request.headers[values: .ifNoneMatch]
                 if ifNoneMatch.count > 0 {
                     for match in ifNoneMatch {
                         if eTag == match {
@@ -156,7 +157,7 @@ public struct HBFileMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
                     }
                 }
                 // verify if-modified-since
-                else if let ifModifiedSince = request.headers["if-modified-since"].first,
+                else if let ifModifiedSince = request.headers[.ifModifiedSince],
                         let modificationDate = modificationDate
                 {
                     if let ifModifiedSinceDate = HBDateCache.rfc1123Formatter.date(from: ifModifiedSince) {
@@ -169,20 +170,20 @@ public struct HBFileMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
                     }
                 }
 
-                if let rangeHeader = request.headers["Range"].first {
+                if let rangeHeader = request.headers[.range] {
                     guard let range = getRangeFromHeaderValue(rangeHeader) else {
                         throw HBHTTPError(.rangeNotSatisfiable)
                     }
                     // range request conditional on etag or modified date being equal to value in if-range
-                    if let ifRange = request.headers["if-range"].first, ifRange != headers["eTag"].first, ifRange != headers["modified-date"].first {
+                    if let ifRange = request.headers[.ifRange], ifRange != headers[.eTag], ifRange != headers[.lastModified] {
                         // do nothing and drop down to returning full file
                     } else {
                         if let contentSize = contentSize {
                             let lowerBound = max(range.lowerBound, 0)
                             let upperBound = min(range.upperBound, contentSize - 1)
-                            headers.replaceOrAdd(name: "content-range", value: "bytes \(lowerBound)-\(upperBound)/\(contentSize)")
+                            headers[.contentRange] = "bytes \(lowerBound)-\(upperBound)/\(contentSize)"
                             // override content-length set above
-                            headers.replaceOrAdd(name: "content-length", value: String(describing: upperBound - lowerBound + 1))
+                            headers[.contentLength] = String(describing: upperBound - lowerBound + 1)
                         }
                         return .loadFile(fullPath.relativePath, headers, range)
                     }
@@ -195,7 +196,7 @@ public struct HBFileMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
                 return HBResponse(status: .notModified, headers: headers)
             case .loadFile(let fullPath, let headers, let range):
                 switch request.method {
-                case .GET:
+                case .get:
                     if let range = range {
                         let (body, _) = try await self.fileIO.loadFile(path: fullPath, range: range, context: context, logger: context.logger)
                         return HBResponse(status: .partialContent, headers: headers, body: body)
@@ -204,7 +205,7 @@ public struct HBFileMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
                     let body = try await self.fileIO.loadFile(path: fullPath, context: context, logger: context.logger)
                     return HBResponse(status: .ok, headers: headers, body: body)
 
-                case .HEAD:
+                case .head:
                     return HBResponse(status: .ok, headers: headers, body: .init())
 
                 default:
@@ -216,8 +217,8 @@ public struct HBFileMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
 
     /// Whether to return data from the file or a not modified response
     private enum FileResult {
-        case notModified(HTTPHeaders)
-        case loadFile(String, HTTPHeaders, ClosedRange<Int>?)
+        case notModified(HTTPFields)
+        case loadFile(String, HTTPFields, ClosedRange<Int>?)
     }
 }
 

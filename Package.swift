@@ -55,12 +55,12 @@ let package = Package(
             .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
             .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
         ]),
-        /* .target(name: "HummingbirdFoundation", dependencies: [
-                .byName(name: "Hummingbird"),
-                .product(name: "NIOCore", package: "swift-nio"),
-                .product(name: "NIOPosix", package: "swift-nio"),
-                .product(name: "NIOFoundationCompat", package: "swift-nio"),
-            ]),*/
+        .target(name: "HummingbirdFoundation", dependencies: [
+            .byName(name: "Hummingbird"),
+            .product(name: "NIOCore", package: "swift-nio"),
+            .product(name: "NIOPosix", package: "swift-nio"),
+            .product(name: "NIOFoundationCompat", package: "swift-nio"),
+        ]),
         .target(name: "HummingbirdJobs", dependencies: [
             .byName(name: "Hummingbird"),
             .product(name: "Logging", package: "swift-log"),

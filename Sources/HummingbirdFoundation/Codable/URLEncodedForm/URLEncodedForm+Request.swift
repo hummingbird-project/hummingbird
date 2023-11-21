@@ -25,7 +25,7 @@ extension URLEncodedFormEncoder: HBResponseEncoder {
         buffer.writeString(string)
         return HBResponse(
             status: .ok,
-            headers: ["content-type": "application/x-www-form-urlencoded"],
+            headers: [.contentType: "application/x-www-form-urlencoded"],
             body: .init(byteBuffer: buffer)
         )
     }
