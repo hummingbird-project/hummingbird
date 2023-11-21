@@ -38,14 +38,13 @@ class HummingbirdDateTests: XCTestCase {
         let app = HBApplication(responder: router.buildResponder())
 
         try await app.test(.live) { client in
-            let date = try await client.XCTExecute(uri: "/date", method: .GET) { response in
-                XCTAssertNotNil(response.headers["date"].first)
-                return response.headers["date"].first
+            let date = try await client.XCTExecute(uri: "/date", method: .get) { response in
+                XCTAssertNotNil(response.headers[.date])
+                return response.headers[.date]
             }
             try await Task.sleep(nanoseconds: 1_500_000_000)
-            try await client.XCTExecute(uri: "/date", method: .GET) { response in
-                XCTAssertNotNil(response.headers["date"].first)
-                XCTAssertNotEqual(response.headers["date"].first, date)
+            try await client.XCTExecute(uri: "/date", method: .get) { response in
+                XCTAssertNotEqual(response.headers[.date], date)
             }
         }
     }

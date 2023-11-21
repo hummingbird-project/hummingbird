@@ -69,14 +69,14 @@ public struct HBCORSMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
     ///   - maxAge: how long the results of a pre-flight request can be cached
     public init(
         allowOrigin: AllowOrigin = .originBased,
-        allowHeaders: [String] = ["accept", "authorization", "content-type", "origin"],
+        allowHeaders: [HTTPField.Name] = [.accept, .authorization, .contentType, .origin],
         allowMethods: [HTTPRequest.Method] = [.get, .post, .head, .options],
         allowCredentials: Bool = false,
         exposedHeaders: [String]? = nil,
         maxAge: TimeAmount? = nil
     ) {
         self.allowOrigin = allowOrigin
-        self.allowHeaders = allowHeaders.joined(separator: ", ")
+        self.allowHeaders = allowHeaders.map(\.canonicalName).joined(separator: ", ")
         self.allowMethods = allowMethods.map(\.rawValue).joined(separator: ", ")
         self.allowCredentials = allowCredentials
         self.exposedHeaders = exposedHeaders?.joined(separator: ", ")

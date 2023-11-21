@@ -191,7 +191,7 @@ final class MetricsTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/hello", method: .GET) { _ in }
+            try await client.XCTExecute(uri: "/hello", method: .get) { _ in }
         }
 
         let counter = try XCTUnwrap(Self.testMetrics.counters["hb_requests"] as? TestCounter)
@@ -210,7 +210,7 @@ final class MetricsTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/hello", method: .GET) { _ in }
+            try await client.XCTExecute(uri: "/hello", method: .get) { _ in }
         }
 
         let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
@@ -230,7 +230,7 @@ final class MetricsTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/hello2", method: .GET) { _ in }
+            try await client.XCTExecute(uri: "/hello2", method: .get) { _ in }
         }
 
         let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
@@ -249,7 +249,7 @@ final class MetricsTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/user/765", method: .GET) { _ in }
+            try await client.XCTExecute(uri: "/user/765", method: .get) { _ in }
         }
 
         let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
