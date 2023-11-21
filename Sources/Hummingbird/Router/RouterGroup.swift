@@ -30,7 +30,7 @@ import NIOHTTP1
 /// .put(":id", use: todoController.update)
 /// .delete(":id", use: todoController.delete)
 /// ```
-public struct HBRouterGroup<Context: HBRequestContext>: HBRouterMethods {
+public struct HBRouterGroup<Context: HBBaseRequestContext>: HBRouterMethods {
     let path: String
     let router: HBRouterBuilder<Context>
     let middlewares: HBMiddlewareGroup<Context>

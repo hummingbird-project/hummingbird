@@ -28,7 +28,7 @@ public struct HBRouterMethodOptions: OptionSet, Sendable {
 
 /// Conform to `HBRouterMethods` to add standard router verb (get, post ...) methods
 public protocol HBRouterMethods {
-    associatedtype Context: HBRequestContext
+    associatedtype Context: HBBaseRequestContext
 
     /// Add path for async closure
     @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)

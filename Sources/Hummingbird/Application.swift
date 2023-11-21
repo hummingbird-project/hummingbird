@@ -141,22 +141,14 @@ public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup
         self.services.append(service)
     }
 
-    /// Helper function that runs application inside a ServiceGroup which will gracefully
-    /// shutdown on signals SIGINT, SIGTERM
-    public func runService(gracefulShutdownSignals: [UnixSignal] = [.sigterm, .sigint]) async throws {
-        let serviceGroup = ServiceGroup(
-            configuration: .init(
-                services: [self],
-                gracefulShutdownSignals: gracefulShutdownSignals,
-                logger: self.logger
-            )
-        )
-        try await serviceGroup.run()
+    public static func loggerWithRequestId(_ logger: Logger) -> Logger {
+        let requestId = globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
+        return logger.with(metadataKey: "hb_id", value: .stringConvertible(requestId))
     }
 }
 
 /// Conform to `Service` from `ServiceLifecycle`.
-extension HBApplication: Service {
+extension HBApplication: Service where Responder.Context: HBRequestContext {
     public func run() async throws {
         let context = HBApplicationContext(
             threadPool: self.threadPool,
@@ -173,7 +165,7 @@ extension HBApplication: Service {
             )
             let context = Responder.Context(
                 applicationContext: context,
-                source: ChannelContextSource(channel: channel),
+                channel: channel,
                 logger: HBApplication.loggerWithRequestId(context.logger)
             )
             // respond to request
@@ -209,18 +201,17 @@ extension HBApplication: Service {
         }
     }
 
-    public static func loggerWithRequestId(_ logger: Logger) -> Logger {
-        let requestId = globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
-        return logger.with(metadataKey: "hb_id", value: .stringConvertible(requestId))
-    }
-
-    /// Request Context Source from NIO Channel
-    public struct ChannelContextSource: RequestContextSource {
-        let channel: Channel
-
-        public var eventLoop: EventLoop { self.channel.eventLoop }
-        public var allocator: ByteBufferAllocator { self.channel.allocator }
-        public var remoteAddress: SocketAddress? { self.channel.remoteAddress }
+    /// Helper function that runs application inside a ServiceGroup which will gracefully
+    /// shutdown on signals SIGINT, SIGTERM
+    public func runService(gracefulShutdownSignals: [UnixSignal] = [.sigterm, .sigint]) async throws {
+        let serviceGroup = ServiceGroup(
+            configuration: .init(
+                services: [self],
+                gracefulShutdownSignals: gracefulShutdownSignals,
+                logger: self.logger
+            )
+        )
+        try await serviceGroup.run()
     }
 }
 

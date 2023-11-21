@@ -28,7 +28,7 @@ import NIOPosix
 /// "if-modified-since", "if-none-match", "if-range" and 'range" headers. It will output "content-length",
 /// "modified-date", "eTag", "content-type", "cache-control" and "content-range" headers where
 /// they are relevant.
-public struct HBFileMiddleware<Context: HBRequestContext>: HBMiddleware {
+public struct HBFileMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
     struct IsDirectoryError: Error {}
 
     let rootFolder: URL

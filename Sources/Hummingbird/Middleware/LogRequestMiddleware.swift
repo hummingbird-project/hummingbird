@@ -15,7 +15,7 @@
 import Logging
 
 /// Middleware outputting to log for every call to server
-public struct HBLogRequestsMiddleware<Context: HBRequestContext>: HBMiddleware {
+public struct HBLogRequestsMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
     let logLevel: Logger.Level
     let includeHeaders: Bool
 

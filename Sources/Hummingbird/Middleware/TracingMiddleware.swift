@@ -22,7 +22,7 @@ import Tracing
 /// You may opt in to recording a specific subset of HTTP request/response header values by passing
 /// a set of header names to ``init(recordingHeaders:)``.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-public struct HBTracingMiddleware<Context: HBRequestContext>: HBMiddleware {
+public struct HBTracingMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
     private let headerNamesToRecord: Set<RecordingHeader>
 
     /// Intialize a new HBTracingMiddleware.
@@ -122,7 +122,7 @@ public struct HBTracingMiddleware<Context: HBRequestContext>: HBMiddleware {
 ///
 /// If you want the HBTracingMiddleware to record the remote address of requests
 /// then your request context will need to conform to this protocol
-public protocol HBRemoteAddressRequestContext: HBRequestContext {
+public protocol HBRemoteAddressRequestContext: HBBaseRequestContext {
     /// Connected host address
     var remoteAddress: SocketAddress? { get }
 }

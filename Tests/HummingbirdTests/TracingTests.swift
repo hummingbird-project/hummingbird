@@ -361,7 +361,7 @@ final class TracingTests: XCTestCase {
         let expectation = expectation(description: "Expected span to be ended.")
         expectation.expectedFulfillmentCount = 2
 
-        struct SpanMiddleware<Context: HBRequestContext>: HBMiddleware {
+        struct SpanMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
             public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
                 serviceContext.testID = "testMiddleware"

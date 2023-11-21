@@ -34,15 +34,6 @@ public struct EndpointPath: Sendable {
     private let _value: NIOLockedValueBox<String?>
 }
 
-/// Protocol for source of requests.
-///
-/// This could be the NIO Channel that created the HTTP request of a Lambda event
-public protocol RequestContextSource {
-    var eventLoop: EventLoop { get }
-    var allocator: ByteBufferAllocator { get }
-    var remoteAddress: SocketAddress? { get }
-}
-
 /// Request context values required by Hummingbird itself.
 public struct HBCoreRequestContext: Sendable {
     /// Application context
@@ -68,8 +59,8 @@ public struct HBCoreRequestContext: Sendable {
     public init(
         applicationContext: HBApplicationContext,
         eventLoop: EventLoop,
-        logger: Logger,
-        allocator: ByteBufferAllocator = .init()
+        allocator: ByteBufferAllocator,
+        logger: Logger
     ) {
         self.applicationContext = applicationContext
         self.eventLoop = eventLoop
@@ -78,31 +69,16 @@ public struct HBCoreRequestContext: Sendable {
         self.endpointPath = .init()
         self.parameters = .init()
     }
-
-    @inlinable
-    public init(
-        applicationContext: HBApplicationContext,
-        source: some RequestContextSource,
-        logger: Logger
-    ) {
-        self.init(applicationContext: applicationContext, eventLoop: source.eventLoop, logger: logger, allocator: source.allocator)
-    }
 }
 
 /// Protocol that all request contexts should conform to. Holds data associated with
 /// a request. Provides context for request processing
-public protocol HBRequestContext: Sendable {
+public protocol HBBaseRequestContext: Sendable {
     /// Core context
     var coreContext: HBCoreRequestContext { get set }
-    /// initialize an `HBRequestContext`
-    /// - Parameters:
-    ///   - applicationContext: Context coming from Application
-    ///   - channel: Channel that created request and context
-    ///   - logger: Logger to use with request
-    init(applicationContext: HBApplicationContext, source: some RequestContextSource, logger: Logger)
 }
 
-extension HBRequestContext {
+extension HBBaseRequestContext {
     /// Application context
     @inlinable
     public var applicationContext: HBApplicationContext { coreContext.applicationContext }
@@ -136,6 +112,16 @@ extension HBRequestContext {
     public var id: String { self.logger[metadataKey: "hb_id"]!.description }
 }
 
+/// Protocol for a request context that can be created from a NIO Channel
+public protocol HBRequestContext: HBBaseRequestContext {
+    /// initialize an `HBRequestContext`
+    /// - Parameters:
+    ///   - applicationContext: Context coming from Application
+    ///   - channel: Channel that created request and context
+    ///   - logger: Logger to use with request
+    init(applicationContext: HBApplicationContext, channel: Channel, logger: Logger)
+}
+
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
 public struct HBBasicRequestContext: HBRequestContext {
     /// core context
@@ -148,9 +134,9 @@ public struct HBBasicRequestContext: HBRequestContext {
     ///   - logger: Logger
     public init(
         applicationContext: HBApplicationContext,
-        source: some RequestContextSource,
+        channel: Channel,
         logger: Logger
     ) {
-        self.coreContext = .init(applicationContext: applicationContext, source: source, logger: logger)
+        self.coreContext = .init(applicationContext: applicationContext, eventLoop: channel.eventLoop, allocator: channel.allocator, logger: logger)
     }
 }

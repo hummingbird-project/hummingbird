@@ -281,7 +281,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testCollateBody() async throws {
-        struct CollateMiddleware<Context: HBRequestContext>: HBMiddleware {
+        struct CollateMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 var request = request
                 request.body = try await request.body.collate(maxSize: context.applicationContext.configuration.maxUploadSize)
@@ -432,11 +432,11 @@ final class ApplicationTests: XCTestCase {
 
             public init(
                 applicationContext: HBApplicationContext,
-                source: some RequestContextSource,
+                channel: Channel,
                 logger: Logger
             ) {
-                self.coreContext = .init(applicationContext: applicationContext, source: source, logger: logger)
-                self.remoteAddress = source.remoteAddress
+                self.coreContext = .init(applicationContext: applicationContext, eventLoop: channel.eventLoop, allocator: channel.allocator, logger: logger)
+                self.remoteAddress = channel.remoteAddress
             }
         }
         let router = HBRouterBuilder(context: HBSocketAddressRequestContext.self)

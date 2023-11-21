@@ -19,7 +19,7 @@ extension URLEncodedFormEncoder: HBResponseEncoder {
     /// - Parameters:
     ///   - value: Value to encode
     ///   - request: Request used to generate response
-    public func encode<T: Encodable>(_ value: T, from request: HBRequest, context: HBRequestContext) throws -> HBResponse {
+    public func encode<T: Encodable, Context: HBBaseRequestContext>(_ value: T, from request: HBRequest, context: Context) throws -> HBResponse {
         var buffer = context.allocator.buffer(capacity: 0)
         let string = try self.encode(value)
         buffer.writeString(string)
@@ -36,7 +36,7 @@ extension URLEncodedFormDecoder: HBRequestDecoder {
     /// - Parameters:
     ///   - type: Type to decode
     ///   - request: Request to decode from
-    public func decode<T: Decodable>(_ type: T.Type, from request: HBRequest, context: HBRequestContext) throws -> T {
+    public func decode<T: Decodable, Context: HBBaseRequestContext>(_ type: T.Type, from request: HBRequest, context: Context) throws -> T {
         guard case .byteBuffer(var buffer) = request.body,
               let string = buffer.readString(length: buffer.readableBytes)
         else {

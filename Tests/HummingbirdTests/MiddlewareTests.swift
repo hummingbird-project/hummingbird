@@ -24,7 +24,7 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testMiddleware() async throws {
-        struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
+        struct TestMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 var response = try await next.respond(to: request, context: context)
                 response.headers.replaceOrAdd(name: "middleware", value: "TestMiddleware")
@@ -45,7 +45,7 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareOrder() async throws {
-        struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
+        struct TestMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
             let string: String
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 var response = try await next.respond(to: request, context: context)
@@ -70,7 +70,7 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareRunOnce() async throws {
-        struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
+        struct TestMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 var response = try await next.respond(to: request, context: context)
                 XCTAssertNil(response.headers["alreadyRun"].first)
@@ -91,7 +91,7 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareRunWhenNoRouteFound() async throws {
-        struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
+        struct TestMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 do {
                     return try await next.respond(to: request, context: context)
@@ -114,7 +114,7 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testEndpointPathInGroup() async throws {
-        struct TestMiddleware<Context: HBRequestContext>: HBMiddleware {
+        struct TestMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 XCTAssertNotNil(context.endpointPath)
                 return try await next.respond(to: request, context: context)
@@ -143,7 +143,7 @@ final class MiddlewareTests: XCTestCase {
                 try await self.parentWriter.write(output)
             }
         }
-        struct TransformMiddleware<Context: HBRequestContext>: HBMiddleware {
+        struct TransformMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 let response = try await next.respond(to: request, context: context)
                 var editedResponse = response

@@ -16,7 +16,7 @@ import NIOCore
 import NIOHTTP1
 
 /// Stores endpoint responders for each HTTP method
-struct HBEndpointResponders<Context: HBRequestContext>: Sendable {
+struct HBEndpointResponders<Context: HBBaseRequestContext>: Sendable {
     init(path: String) {
         self.path = path
         self.methods = [:]

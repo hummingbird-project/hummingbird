@@ -23,7 +23,7 @@ final class HandlerTests: XCTestCase {
         struct DecodeTest: HBRequestDecodable {
             let name: String
 
-            func handle(request: HBRequest, context: HBRequestContext) -> String {
+            func handle<Context: HBBaseRequestContext>(request: HBRequest, context: Context) -> String {
                 return "Hello \(self.name)"
             }
         }
@@ -53,7 +53,7 @@ final class HandlerTests: XCTestCase {
         struct DecodeTest: HBRequestDecodable {
             let value: Int
 
-            func handle(request: HBRequest, context: HBRequestContext) -> String {
+            func handle<Context: HBBaseRequestContext>(request: HBRequest, context: Context) -> String {
                 return "Value: \(self.value)"
             }
         }
@@ -83,7 +83,7 @@ final class HandlerTests: XCTestCase {
         struct DecodeTest: HBRequestDecodable {
             let name: String
 
-            func handle(request: HBRequest, context: HBRequestContext) -> String {
+            func handle<Context: HBBaseRequestContext>(request: HBRequest, context: Context) -> String {
                 return "Hello \(self.name)"
             }
         }
@@ -118,7 +118,7 @@ final class HandlerTests: XCTestCase {
         struct DecodeTest: HBRequestDecodable {
             let name: String
 
-            func handle(request: HBRequest, context: HBRequestContext) -> String {
+            func handle<Context: HBBaseRequestContext>(request: HBRequest, context: Context) -> String {
                 return "Hello \(self.name)"
             }
         }
@@ -147,7 +147,7 @@ final class HandlerTests: XCTestCase {
     func testDecode() async throws {
         struct DecodeTest: HBRequestDecodable {
             let name: String
-            func handle(request: HBRequest, context: HBRequestContext) -> String {
+            func handle<Context: HBBaseRequestContext>(request: HBRequest, context: Context) -> String {
                 return "Hello \(self.name)"
             }
         }
@@ -168,7 +168,7 @@ final class HandlerTests: XCTestCase {
     func testDecodeFutureResponse() async throws {
         struct DecodeTest: HBRequestDecodable {
             let name: String
-            func handle(request: HBRequest, context: HBRequestContext) async throws -> String {
+            func handle<Context: HBBaseRequestContext>(request: HBRequest, context: Context) -> String {
                 "Hello \(self.name)"
             }
         }
@@ -190,7 +190,7 @@ final class HandlerTests: XCTestCase {
         struct DecodeTest: HBRequestDecodable {
             let name: String
 
-            func handle(request: HBRequest, context: HBRequestContext) -> HTTPResponseStatus {
+            func handle<Context: HBBaseRequestContext>(request: HBRequest, context: Context) -> HTTPResponseStatus {
                 return .ok
             }
         }
@@ -209,11 +209,11 @@ final class HandlerTests: XCTestCase {
     func testEmptyRequest() async throws {
         struct ParameterTest: HBRouteHandler {
             let parameter: Int
-            init(from request: HBRequest, context: HBRequestContext) throws {
+            init<Context: HBBaseRequestContext>(from request: HBRequest, context: Context) throws {
                 self.parameter = try context.parameters.require("test", as: Int.self)
             }
 
-            func handle(request: HBRequest, context: HBRequestContext) -> String {
+            func handle<Context: HBBaseRequestContext>(request: HBRequest, context: Context) -> String {
                 return "\(self.parameter)"
             }
         }

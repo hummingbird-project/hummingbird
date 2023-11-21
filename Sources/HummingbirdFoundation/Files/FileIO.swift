@@ -38,7 +38,7 @@ public struct HBFileIO: Sendable {
     ///   - path: System file path
     ///   - context: Context this request is being called in
     /// - Returns: Response body
-    public func loadFile(path: String, context: HBRequestContext, logger: Logger) async throws -> HBResponseBody {
+    public func loadFile<Context: HBBaseRequestContext>(path: String, context: Context, logger: Logger) async throws -> HBResponseBody {
         do {
             let (handle, region) = try await self.fileIO.openFile(path: path, eventLoop: context.eventLoop).get()
             logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
@@ -66,7 +66,7 @@ public struct HBFileIO: Sendable {
     ///   - range:Range defining how much of the file is to be loaded
     ///   - context: Context this request is being called in
     /// - Returns: Response body plus file size
-    public func loadFile(path: String, range: ClosedRange<Int>, context: HBRequestContext, logger: Logger) async throws -> (HBResponseBody, Int) {
+    public func loadFile<Context: HBBaseRequestContext>(path: String, range: ClosedRange<Int>, context: Context, logger: Logger) async throws -> (HBResponseBody, Int) {
         do {
             let (handle, region) = try await self.fileIO.openFile(path: path, eventLoop: context.eventLoop).get()
             logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
@@ -100,7 +100,7 @@ public struct HBFileIO: Sendable {
     ///   - contents: Request body to write.
     ///   - path: Path to write to
     ///   - logger: Logger
-    public func writeFile(contents: HBRequestBody, path: String, context: HBRequestContext, logger: Logger) async throws {
+    public func writeFile<Context: HBBaseRequestContext>(contents: HBRequestBody, path: String, context: Context, logger: Logger) async throws {
         let handle = try await self.fileIO.openFile(path: path, mode: .write, flags: .allowFileCreation(), eventLoop: context.eventLoop).get()
         defer {
             try? handle.close()
@@ -115,7 +115,7 @@ public struct HBFileIO: Sendable {
     }
 
     /// Load file as ByteBuffer
-    func loadFile(handle: NIOFileHandle, region: FileRegion, context: HBRequestContext) async throws -> HBResponseBody {
+    func loadFile<Context: HBBaseRequestContext>(handle: NIOFileHandle, region: FileRegion, context: Context) async throws -> HBResponseBody {
         let buffer = try await self.fileIO.read(
             fileHandle: handle,
             fromOffset: Int64(region.readerIndex),
@@ -127,7 +127,7 @@ public struct HBFileIO: Sendable {
     }
 
     /// Return streamer that will load file
-    func streamFile(handle: NIOFileHandle, region: FileRegion, context: HBRequestContext) throws -> HBResponseBody {
+    func streamFile<Context: HBBaseRequestContext>(handle: NIOFileHandle, region: FileRegion, context: Context) throws -> HBResponseBody {
         let fileOffset = region.readerIndex
         let endOffset = region.endIndex
         return HBResponseBody(contentLength: region.readableBytes) { writer in

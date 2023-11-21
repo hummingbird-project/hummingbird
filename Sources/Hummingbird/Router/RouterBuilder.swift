@@ -45,7 +45,7 @@ import NIOHTTP1
 /// Both of these match routes which start with "/user" and the next path segment being anything.
 /// The second version extracts the path segment out and adds it to `HBRequest.parameters` with the
 /// key "id".
-public final class HBRouterBuilder<Context: HBRequestContext>: HBRouterMethods {
+public final class HBRouterBuilder<Context: HBBaseRequestContext>: HBRouterMethods {
     var trie: RouterPathTrieBuilder<HBEndpointResponders<Context>>
     public let middlewares: HBMiddlewareGroup<Context>
 
@@ -83,7 +83,7 @@ public final class HBRouterBuilder<Context: HBRequestContext>: HBRouterMethods {
         self.add(path, method: method, responder: responder)
         return self
     }
-    
+
     /// return new `RouterGroup`
     /// - Parameter path: prefix to add to paths inside the group
     public func group(_ path: String = "") -> HBRouterGroup<Context> {
@@ -92,7 +92,7 @@ public final class HBRouterBuilder<Context: HBRequestContext>: HBRouterMethods {
 }
 
 /// Responder that return a not found error
-struct NotFoundResponder<Context: HBRequestContext>: HBResponder {
+struct NotFoundResponder<Context: HBBaseRequestContext>: HBResponder {
     func respond(to request: HBRequest, context: Context) throws -> HBResponse {
         throw HBHTTPError(.notFound)
     }
