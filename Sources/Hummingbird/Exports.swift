@@ -25,5 +25,6 @@
 @_exported import struct NIOCore.ByteBuffer
 @_exported import struct NIOCore.ByteBufferAllocator
 
+@_exported import struct HTTPTypes.HTTPFields
 @_exported import struct HTTPTypes.HTTPRequest
 @_exported import struct HTTPTypes.HTTPResponse
