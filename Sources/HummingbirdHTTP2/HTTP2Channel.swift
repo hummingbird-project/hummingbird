@@ -86,7 +86,7 @@ public struct HTTP2Channel: HTTPChannelHandler {
                 await handleHTTP(asyncChannel: http1, logger: logger)
             case .http2((let http2, let multiplexer)):
                 try await withThrowingDiscardingTaskGroup { group in
-                    for try await client in multiplexer.inbound {
+                    for try await client in multiplexer.inbound.cancelOnGracefulShutdown() {
                         group.addTask {
                             await handleHTTP(asyncChannel: client, logger: logger)
                         }
