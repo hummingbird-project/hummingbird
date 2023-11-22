@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Atomics
 import Logging
 import NIOCore
 import NIOHTTP1
@@ -29,8 +30,15 @@ enum HTTPChannelError: Error {
     case closeConnection
 }
 
+enum HTTPState: Int, AtomicValue {
+    case idle
+    case processing
+    case cancelled
+}
+
 extension HTTPChannelHandler {
     public func handleHTTP(asyncChannel: NIOAsyncChannel<HTTPServerRequestPart, SendableHTTPServerResponsePart>, logger: Logger) async {
+        let processingRequest = ManagedAtomic(HTTPState.idle)
         do {
             try await withGracefulShutdownHandler {
                 try await withThrowingTaskGroup(of: Void.self) { group in
@@ -38,6 +46,8 @@ extension HTTPChannelHandler {
                         let responseWriter = HBHTTPServerBodyWriter(outbound: outbound)
                         var iterator = inbound.makeAsyncIterator()
                         while let part = try await iterator.next() {
+                            // set to processing unless it is cancelled then exit
+                            guard processingRequest.exchange(.processing, ordering: .relaxed) == .idle else { break }
                             guard case .head(let head) = part else {
                                 throw HTTPChannelError.unexpectedHTTPPart(part)
                             }
@@ -80,11 +90,17 @@ extension HTTPChannelHandler {
                                 bodyStream.fail(error)
                             }
                             try await group.next()
+                            // set to idle unless it is cancelled then exit
+                            guard processingRequest.exchange(.idle, ordering: .relaxed) == .processing else { break }
                         }
                     }
                 }
             } onGracefulShutdown: {
-                asyncChannel.channel.close(mode: .input, promise: nil)
+                // set to cancelled
+                if processingRequest.exchange(.cancelled, ordering: .relaxed) == .idle {
+                // only close the channel input if it is idle 
+                    asyncChannel.channel.close(mode: .input, promise: nil)
+                }
             }
         } catch HTTPChannelError.closeConnection {
             // channel is being closed because we received a connection: close header

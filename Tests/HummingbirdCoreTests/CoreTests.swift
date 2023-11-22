@@ -332,6 +332,24 @@ class HummingBirdCoreTests: XCTestCase {
             }
         }
     }
+
+    func testIdleChildChannelGracefulShutdown() async throws {
+        try await testServer(
+            childChannelSetup: HTTP1Channel { request, _ in
+                try await Task.sleep(for: .milliseconds(500))
+                return HBHTTPResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
+            },
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
+            logger: Logger(label: "HB")
+        ) { server, client in
+            try await withTimeout(.seconds(5)) {
+                let response = try await client.get("/")
+                XCTAssertEqual(response.status, .ok)
+                try await server.shutdownGracefully()
+            }
+        }
+    }
 }
 
 struct DelayAsyncSequence<CoreSequence: AsyncSequence>: AsyncSequence {
