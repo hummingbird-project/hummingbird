@@ -25,26 +25,41 @@ let port = HBEnvironment.shared.get("SERVER_PORT", as: Int.self) ?? 8080
 // create app
 let elg = MultiThreadedEventLoopGroup(numberOfThreads: 4)
 defer { try? elg.syncShutdownGracefully() }
-var router = HBRouterBuilder()
-// number of raw requests
-// ./wrk -c 128 -d 15s -t 8 http://localhost:8080
-router.get { _, _ in
-    return "Hello, world"
-}
 
-// request with a body
-// ./wrk -c 128 -d 15s -t 8 -s scripts/post.lua http://localhost:8080
-router.post(options: .streamBody) { request, _ in
-    return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
-}
+struct MyApplication: HBApplication {
+    typealias Context = HBBasicRequestContext
 
-// return JSON
-// ./wrk -c 128 -d 15s -t 8 http://localhost:8080/json
-router.get("json") { _, _ in
-    return ["message": "Hello, world"]
-}
+    func buildResponder() -> some HBResponder<Context> {
+        let router = HBRouterBuilder()
+        // number of raw requests
+        // ./wrk -c 128 -d 15s -t 8 http://localhost:8080
+        router.get { _, _ in
+            return "Hello, world"
+        }
 
-var app = HBApplication(
+        // request with a body
+        // ./wrk -c 128 -d 15s -t 8 -s scripts/post.lua http://localhost:8080
+        router.post(options: .streamBody) { request, _ in
+            return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
+        }
+
+        // return JSON
+        // ./wrk -c 128 -d 15s -t 8 http://localhost:8080/json
+        router.get("json") { _, _ in
+            return ["message": "Hello, world"]
+        }
+        return router.buildResponder()
+    }
+    let eventLoopGroup: EventLoopGroup = elg
+    var encoder: HBRequestDecoder { JSONDecoder() }
+    var decoder: HBResponseEncoder { JSONEncoder() }
+    let logger: Logger = {
+        var logger = Logger(label: "Test")
+        logger.logLevel = .debug
+        return logger
+    }()
+}
+/*var app = HBApplication(
     responder: router.buildResponder(),
     configuration: .init(
         address: .hostname(hostname, port: port),
@@ -54,9 +69,9 @@ var app = HBApplication(
 )
 app.logger.logLevel = .debug
 app.encoder = JSONEncoder()
-app.decoder = JSONDecoder()
+app.decoder = JSONDecoder()*/
 
 // configure app
 
 // run app
-try await app.runService()
+try await MyApplication().runService()

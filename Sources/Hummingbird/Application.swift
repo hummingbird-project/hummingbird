@@ -71,84 +71,61 @@ public final class HBApplicationContext: Sendable {
     }
 }
 
-/// Application class. Brings together all the components of Hummingbird together
-///
-/// ```
-/// let router = HBRouterBuilder()
-/// router.middleware.add(MyMiddleware())
-/// router.get("hello") { _ in
-///     return "hello"
-/// }
-/// let app = HBApplication(responder: router.buildResponder())
-/// try await app.runService()
-/// ```
-/// Editing the application setup after calling `runService` will produce undefined behaviour.
-public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup & HTTPChannelHandler> {
-    // MARK: Member variables
+public protocol HBApplication: Service, CustomStringConvertible {
+    associatedtype Context: HBRequestContext = HBBasicRequestContext
+    associatedtype Responder: HBResponder<Context>
+    associatedtype ChannelSetup: HBChannelSetup & HTTPChannelHandler = HTTP1Channel
+
+    /// Responder
+    func buildResponder() async throws -> Responder
+    /// Server channel setup
+    func buildChannelSetup(httpResponder: @escaping @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse) -> ChannelSetup
 
     /// event loop group used by application
-    public let eventLoopGroup: EventLoopGroup
+    var eventLoopGroup: EventLoopGroup { get }
     /// thread pool used by application
-    public let threadPool: NIOThreadPool
-    /// routes requests to requestResponders based on URI
-    public let responder: Responder
+    var threadPool: NIOThreadPool { get }
     /// Configuration
-    public var configuration: HBApplicationConfiguration
+    var configuration: HBApplicationConfiguration { get }
     /// Logger
-    public var logger: Logger
+    var logger: Logger { get }
     /// Encoder used by router
-    public var encoder: HBResponseEncoder
+    var encoder: HBResponseEncoder  { get }
     /// decoder used by router
-    public var decoder: HBRequestDecoder
+    var decoder: HBRequestDecoder { get }
     /// on server running
-    public var onServerRunning: @Sendable (Channel) async -> Void
-    /// Server channel setup
-    let channelSetup: ChannelSetup
+    @Sendable func onServerRunning(_ channel: Channel) async 
     /// services attached to the application.
-    var services: [any Service]
+    var services: [any Service] { get }
+}
 
-    // MARK: Initialization
-
-    /// Initialize new Application
-    public init(
-        responder: Responder,
-        channelSetup: ChannelSetup = HTTP1Channel(),
-        configuration: HBApplicationConfiguration = HBApplicationConfiguration(),
-        threadPool: NIOThreadPool = .singleton,
-        eventLoopGroupProvider: EventLoopGroupProvider = .singleton
-    ) {
-        var logger = Logger(label: configuration.serverName ?? "HummingBird")
-        logger.logLevel = configuration.logLevel
-        self.logger = logger
-
-        self.responder = responder
-        self.channelSetup = channelSetup
-        self.configuration = configuration
-        self.encoder = NullEncoder()
-        self.decoder = NullDecoder()
-        self.onServerRunning = { _ in }
-
-        self.eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
-        self.threadPool = threadPool
-        self.services = []
-    }
-
-    // MARK: Methods
-
-    ///  Add service to be managed by application ServiceGroup
-    /// - Parameter service: service to be added
-    public mutating func addService(_ service: any Service) {
-        self.services.append(service)
-    }
-
-    public static func loggerWithRequestId(_ logger: Logger) -> Logger {
-        let requestId = globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
-        return logger.with(metadataKey: "hb_id", value: .stringConvertible(requestId))
+extension HBApplication where ChannelSetup == HTTP1Channel {
+    public func buildChannelSetup(httpResponder: @escaping @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse) -> ChannelSetup {
+        HTTP1Channel(responder: httpResponder)
     }
 }
 
+extension HBApplication {
+    /// event loop group used by application
+    public var eventLoopGroup: EventLoopGroup { MultiThreadedEventLoopGroup.singleton }
+    /// thread pool used by application
+    public var threadPool: NIOThreadPool { NIOThreadPool.singleton }
+    /// Configuration
+    public var configuration: HBApplicationConfiguration { .init() }
+    /// Logger
+    public var logger: Logger { Logger(label: configuration.serverName ?? "HummingBird") }
+    /// Encoder used by router
+    public var encoder: HBResponseEncoder  { NullEncoder() }
+    /// decoder used by router
+    public var decoder: HBRequestDecoder { NullDecoder() }
+    /// on server running
+    public func onServerRunning(_ channel: Channel) async {}
+    /// services attached to the application.
+    public var services: [any Service] { [] }
+}
+
 /// Conform to `Service` from `ServiceLifecycle`.
-extension HBApplication: Service where Responder.Context: HBRequestContext {
+extension HBApplication {
     public func run() async throws {
         let context = HBApplicationContext(
             threadPool: self.threadPool,
@@ -158,18 +135,19 @@ extension HBApplication: Service where Responder.Context: HBRequestContext {
             decoder: self.decoder
         )
         let dateCache = HBDateCache()
+        let responder = try await self.buildResponder()
         @Sendable func respond(to request: HBHTTPRequest, channel: Channel) async throws -> HBHTTPResponse {
             let request = HBRequest(
                 head: request.head,
                 body: request.body
             )
-            let context = Responder.Context(
+            let context = Self.Responder.Context(
                 applicationContext: context,
                 channel: channel,
-                logger: HBApplication.loggerWithRequestId(context.logger)
+                logger: loggerWithRequestId(context.logger)
             )
             // respond to request
-            var response = try await self.responder.respond(to: request, context: context)
+            var response = try await responder.respond(to: request, context: context)
             response.headers.add(name: "date", value: dateCache.date)
             // server name header
             if let serverName = self.configuration.serverName {
@@ -178,8 +156,7 @@ extension HBApplication: Service where Responder.Context: HBRequestContext {
             return HBHTTPResponse(status: response.status, headers: response.headers, body: response.body)
         }
         // update channel with responder
-        var channelSetup = self.channelSetup
-        channelSetup.responder = respond
+        let channelSetup = self.buildChannelSetup(httpResponder: respond)
         // create server
         let server = HBServer(
             childChannelSetup: channelSetup,
@@ -215,7 +192,7 @@ extension HBApplication: Service where Responder.Context: HBRequestContext {
     }
 }
 
-extension HBApplication: CustomStringConvertible {
+extension HBApplication {
     public var description: String { "HBApplication" }
 }
 
@@ -234,3 +211,8 @@ extension Logger {
 
 /// Current global request ID
 private let globalRequestID = ManagedAtomic(0)
+
+public func loggerWithRequestId(_ logger: Logger) -> Logger {
+    let requestId = globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
+    return logger.with(metadataKey: "hb_id", value: .stringConvertible(requestId))
+}
