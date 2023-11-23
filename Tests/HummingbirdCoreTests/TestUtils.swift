@@ -41,7 +41,7 @@ public func testServer<ChannelSetup: HBChannelSetup, Value: Sendable>(
     eventLoopGroup: EventLoopGroup,
     logger: Logger,
     clientConfiguration: HBXCTClient.Configuration = .init(),
-    _ test: @escaping @Sendable (HBXCTClient) async throws -> Value
+    _ test: @escaping @Sendable (HBServer<ChannelSetup>, HBXCTClient) async throws -> Value
 ) async throws -> Value {
     try await withThrowingTaskGroup(of: Void.self) { group in
         let promise = Promise<Int>()
@@ -69,10 +69,29 @@ public func testServer<ChannelSetup: HBChannelSetup, Value: Sendable>(
             eventLoopGroupProvider: .createNew
         )
         client.connect()
-        let value = try await test(client)
+        let value = try await test(server, client)
         await serviceGroup.triggerGracefulShutdown()
         try await client.shutdown()
         return value
+    }
+}
+
+public func testServer<ChannelSetup: HBChannelSetup, Value: Sendable>(
+    childChannelSetup: ChannelSetup,
+    configuration: HBServerConfiguration,
+    eventLoopGroup: EventLoopGroup,
+    logger: Logger,
+    clientConfiguration: HBXCTClient.Configuration = .init(),
+    _ test: @escaping @Sendable (HBXCTClient) async throws -> Value
+) async throws -> Value {
+    try await testServer(
+        childChannelSetup: childChannelSetup,
+        configuration: configuration,
+        eventLoopGroup: eventLoopGroup,
+        logger: logger,
+        clientConfiguration: clientConfiguration
+    ) { _, client in
+        try await test(client)
     }
 }
 
