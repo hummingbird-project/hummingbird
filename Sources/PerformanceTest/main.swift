@@ -26,11 +26,17 @@ let port = HBEnvironment.shared.get("SERVER_PORT", as: Int.self) ?? 8080
 let elg = MultiThreadedEventLoopGroup(numberOfThreads: 4)
 defer { try? elg.syncShutdownGracefully() }
 
-struct MyApplication: HBApplication {
-    typealias Context = HBBasicRequestContext
+struct MyContext: HBRequestContext {
+    init(applicationContext: HBApplicationContext, channel: Channel, logger: Logger) {
+        self.coreContext = .init(applicationContext: applicationContext, eventLoop: channel.eventLoop, allocator: channel.allocator, logger: logger)
+    }
 
-    func buildResponder() -> some HBResponder<Context> {
-        let router = HBRouterBuilder()
+    var coreContext: Hummingbird.HBCoreRequestContext
+}
+struct MyApplication: HBApplication {
+    typealias Context = MyContext
+    func buildResponder() -> some HBResponder<MyContext> {
+        let router = HBRouterBuilder(context: Context.self)
         // number of raw requests
         // ./wrk -c 128 -d 15s -t 8 http://localhost:8080
         router.get { _, _ in

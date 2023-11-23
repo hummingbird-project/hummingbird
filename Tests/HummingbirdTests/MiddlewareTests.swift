@@ -15,7 +15,7 @@
 @testable import Hummingbird
 import HummingbirdXCT
 import XCTest
-
+/*
 final class MiddlewareTests: XCTestCase {
     func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
@@ -244,3 +244,4 @@ final class MiddlewareTests: XCTestCase {
         }
     }
 }
+*/

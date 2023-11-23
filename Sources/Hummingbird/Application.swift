@@ -72,7 +72,7 @@ public final class HBApplicationContext: Sendable {
 }
 
 public protocol HBApplication: Service, CustomStringConvertible {
-    associatedtype Context: HBRequestContext = HBBasicRequestContext
+    associatedtype Context: HBRequestContext
     associatedtype Responder: HBResponder<Context>
     associatedtype ChannelSetup: HBChannelSetup & HTTPChannelHandler = HTTP1Channel
 

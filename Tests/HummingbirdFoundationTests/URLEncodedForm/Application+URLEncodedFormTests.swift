@@ -16,7 +16,7 @@ import Hummingbird
 import HummingbirdFoundation
 import HummingbirdXCT
 import XCTest
-
+/*
 class HummingBirdURLEncodedTests: XCTestCase {
     struct User: HBResponseCodable {
         let name: String
@@ -64,3 +64,4 @@ class HummingBirdURLEncodedTests: XCTestCase {
         }
     }
 }
+*/

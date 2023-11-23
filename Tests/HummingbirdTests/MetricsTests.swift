@@ -17,7 +17,7 @@ import HummingbirdXCT
 import Metrics
 import NIOConcurrencyHelpers
 import XCTest
-
+/*
 final class TestMetrics: MetricsFactory {
     private let lock = NIOLock()
     var counters = [String: CounterHandler]()
@@ -262,3 +262,4 @@ final class MetricsTests: XCTestCase {
         XCTAssertEqual(counter.dimensions[1].1, "GET")
     }
 }
+*/

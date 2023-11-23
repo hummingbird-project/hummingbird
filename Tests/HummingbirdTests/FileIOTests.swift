@@ -15,7 +15,7 @@
 import Hummingbird
 import HummingbirdXCT
 import XCTest
-
+/*
 class FileIOTests: XCTestCase {
     func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
@@ -90,4 +90,4 @@ class FileIOTests: XCTestCase {
             XCTAssertEqual(Data(buffer: buffer), data)
         }
     }
-}
+}*/

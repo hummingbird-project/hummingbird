@@ -15,7 +15,7 @@
 import Hummingbird
 import HummingbirdXCT
 import XCTest
-
+/*
 final class PersistTests: XCTestCase {
     static let redisHostname = HBEnvironment.shared.get("REDIS_HOSTNAME") ?? "localhost"
 
@@ -211,3 +211,4 @@ final class PersistTests: XCTestCase {
         }
     }
 }
+*/

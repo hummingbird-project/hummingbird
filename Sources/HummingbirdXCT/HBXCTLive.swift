@@ -23,11 +23,15 @@ import ServiceLifecycle
 import XCTest
 
 public protocol HBTestApplication: HBApplication {
-    var onServerRunning: (Channel) async -> Void { get set }
+    var onPortReported: @Sendable (Int) async -> Void { get set }
 }
 extension HBTestApplication {
     /// Configuration
     public var configuration: HBApplicationConfiguration { .init(address: .hostname("localhost", port: 0)) }
+    /// Default on server running
+    public func onServerRunning(_ channel: Channel) async {
+        await onPortReported(channel.localAddress!.port!)
+    }
 }
 
 /// Test using a live server
@@ -54,8 +58,8 @@ final class HBXCTLive<App: HBTestApplication>: HBXCTApplication where App.Respon
     init(app: App) {
         let promise = Promise<Int>()
         var app = app
-        app.onServerRunning = { channel in
-            await promise.complete(channel.localAddress!.port!)
+        app.onPortReported = { port in
+            await promise.complete(port)
         }
         self.timeout = .seconds(15)
         self.promise = promise
