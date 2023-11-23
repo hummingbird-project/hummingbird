@@ -50,7 +50,7 @@ public struct XCTRouterTestingSetup {
 ///     }
 /// }
 /// ```
-extension HBApplication where Responder.Context: HBRequestContext {
+extension HBTestApplication where Responder.Context: HBRequestContext {
     // MARK: Initialization
 
     /// Creates a version of `HBApplication` that can be used for testing code
@@ -81,7 +81,7 @@ extension HBApplication where ChannelSetup == HTTP1Channel, Responder.Context: H
         _ test: @escaping @Sendable (any HBXCTClientProtocol) async throws -> Value
     ) async throws -> Value {
         let app: any HBXCTApplication
-        app = HBXCTRouter(app: self)
+        app = try await HBXCTRouter(app: self)
         return try await app.run(test)
     }
 }

@@ -22,8 +22,16 @@ import NIOTransportServices
 import ServiceLifecycle
 import XCTest
 
+public protocol HBTestApplication: HBApplication {
+    var onServerRunning: (Channel) async -> Void { get set }
+}
+extension HBTestApplication {
+    /// Configuration
+    public var configuration: HBApplicationConfiguration { .init(address: .hostname("localhost", port: 0)) }
+}
+
 /// Test using a live server
-final class HBXCTLive<Responder: HBResponder, ChannelSetup: HBChannelSetup & HTTPChannelHandler>: HBXCTApplication where Responder.Context: HBRequestContext {
+final class HBXCTLive<App: HBTestApplication>: HBXCTApplication where App.Responder.Context: HBRequestContext {
     struct Client: HBXCTClientProtocol {
         let client: HBXCTClient
 
@@ -43,10 +51,9 @@ final class HBXCTLive<Responder: HBResponder, ChannelSetup: HBChannelSetup & HTT
         }
     }
 
-    init(app: HBApplication<Responder, ChannelSetup>) {
-        var app = app
-        app.configuration = app.configuration.with(address: .hostname("localhost", port: 0))
+    init(app: App) {
         let promise = Promise<Int>()
+        var app = app
         app.onServerRunning = { channel in
             await promise.complete(channel.localAddress!.port!)
         }
@@ -87,7 +94,7 @@ final class HBXCTLive<Responder: HBResponder, ChannelSetup: HBChannelSetup & HTT
         await self.promise.complete(channel.localAddress!.port!)
     }
 
-    let application: HBApplication<Responder, ChannelSetup>
+    let application: App
     let promise: Promise<Int>
     let timeout: TimeAmount
 }

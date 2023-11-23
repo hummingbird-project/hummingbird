@@ -68,7 +68,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
     let context: HBApplicationContext
     let responder: Responder
 
-    init(app: HBApplication<Responder, HTTP1Channel>) {
+    init<App: HBApplication>(app: App) async throws where App.Responder == Responder{
         self.eventLoopGroup = app.eventLoopGroup
         self.context = HBApplicationContext(
             threadPool: app.threadPool,
@@ -77,7 +77,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
             encoder: app.encoder,
             decoder: app.decoder
         )
-        self.responder = app.responder
+        self.responder = try await app.buildResponder()
     }
 
     /// Run test
@@ -107,7 +107,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                     applicationContext: self.applicationContext,
                     eventLoop: eventLoop,
                     allocator: ByteBufferAllocator(),
-                    logger: HBApplication<Responder, HTTP1Channel>.loggerWithRequestId(self.applicationContext.logger)
+                    logger: loggerWithRequestId(self.applicationContext.logger)
                 )
 
                 group.addTask {
