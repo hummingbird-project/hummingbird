@@ -73,7 +73,7 @@ public final class HBApplicationContext: Sendable {
 
 public protocol HBApplication: Service, CustomStringConvertible {
     /// Context passed with HBRequest to responder
-    associatedtype Context: HBRequestContext = HBBasicRequestContext
+    associatedtype Context: HBRequestContext
     /// Responder that generates a response from a requests and context
     associatedtype Responder: HBResponder<Context>
     /// Child Channel setup. This defaults to support HTTP1
@@ -132,13 +132,6 @@ extension HBApplication {
 extension HBApplication {
     /// Construct application and run it
     public func run() async throws {
-        let context = HBApplicationContext(
-            threadPool: self.threadPool,
-            configuration: self.configuration,
-            logger: self.logger,
-            encoder: self.encoder,
-            decoder: self.decoder
-        )
         let dateCache = HBDateCache()
         let responder = try await self.buildResponder()
 
@@ -148,10 +141,17 @@ extension HBApplication {
                 head: request.head,
                 body: request.body
             )
+            let applicationContext = HBApplicationContext(
+                threadPool: self.threadPool,
+                configuration: self.configuration,
+                logger: self.logger,
+                encoder: self.encoder,
+                decoder: self.decoder
+            )
             let context = Self.Responder.Context(
-                applicationContext: context,
+                applicationContext: applicationContext,
                 channel: channel,
-                logger: loggerWithRequestId(context.logger)
+                logger: loggerWithRequestId(applicationContext.logger)
             )
             // respond to request
             var response = try await responder.respond(to: request, context: context)
@@ -201,6 +201,25 @@ extension HBApplication {
 
 extension HBApplication {
     public var description: String { "HBApplication" }
+}
+
+/// Protocol that enables you to use the `@main` attribute.
+///
+/// Conform you application to this instead of ``HBApplication`` if you want to use the `@main`
+/// attribute
+public protocol HBMainApplication: HBApplication {
+    init()
+}
+
+extension HBMainApplication {
+    /// Initializes and runs the Hummingbird application.
+    ///
+    /// If you precede your ``HBMainApplication`` conformer's declaration with the
+    /// [@main](https://docs.swift.org/swift-book/ReferenceManual/Attributes.html#ID626)
+    /// attribute, the system calls the conformer's `main()` method to launch the application.
+    public static func main() async throws {
+        try await Self().runService()
+    }
 }
 
 extension Logger {

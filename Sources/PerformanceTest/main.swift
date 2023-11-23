@@ -24,18 +24,11 @@ let port = HBEnvironment.shared.get("SERVER_PORT", as: Int.self) ?? 8080
 
 // create app
 let elg = MultiThreadedEventLoopGroup(numberOfThreads: 4)
-defer { try? elg.syncShutdownGracefully() }
 
-struct MyContext: HBRequestContext {
-    init(applicationContext: HBApplicationContext, channel: Channel, logger: Logger) {
-        self.coreContext = .init(applicationContext: applicationContext, eventLoop: channel.eventLoop, allocator: channel.allocator, logger: logger)
-    }
-
-    var coreContext: Hummingbird.HBCoreRequestContext
-}
-struct MyApplication: HBApplication {
-    typealias Context = MyContext
-    func buildResponder() -> some HBResponder<MyContext> {
+@main
+struct MyApplication: HBMainApplication {
+    typealias Context = HBBasicRequestContext
+    func buildResponder() -> some HBResponder<Context> {
         let router = HBRouterBuilder(context: Context.self)
         // number of raw requests
         // ./wrk -c 128 -d 15s -t 8 http://localhost:8080
@@ -56,28 +49,14 @@ struct MyApplication: HBApplication {
         }
         return router.buildResponder()
     }
+
+    let configuration: HBApplicationConfiguration = .init(address: .hostname(hostname, port: port))
     let eventLoopGroup: EventLoopGroup = elg
-    var encoder: HBRequestDecoder { JSONDecoder() }
-    var decoder: HBResponseEncoder { JSONEncoder() }
+    var decoder: HBRequestDecoder { JSONDecoder() }
+    var encoder: HBResponseEncoder { JSONEncoder() }
     let logger: Logger = {
         var logger = Logger(label: "Test")
         logger.logLevel = .debug
         return logger
     }()
 }
-/*var app = HBApplication(
-    responder: router.buildResponder(),
-    configuration: .init(
-        address: .hostname(hostname, port: port),
-        serverName: "Hummingbird"
-    ),
-    eventLoopGroupProvider: .shared(elg)
-)
-app.logger.logLevel = .debug
-app.encoder = JSONEncoder()
-app.decoder = JSONDecoder()*/
-
-// configure app
-
-// run app
-try await MyApplication().runService()

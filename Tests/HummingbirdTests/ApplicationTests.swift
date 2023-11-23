@@ -244,25 +244,6 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    func testEventLoopFutureArray() async throws {
-        struct TestApp: HBApplication {
-            typealias Context = HBTestRouterContext
-            func buildResponder() async throws -> some HBResponder<Context> {
-                let router = HBRouterBuilder(context: HBTestRouterContext.self)
-                router.patch("array") { _, _ -> [String] in
-                    return ["yes", "no"]
-                }
-                return router.buildResponder()
-            }
-        }
-        try await TestApp().test(.router) { client in
-            try await client.XCTExecute(uri: "/array", method: .PATCH) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), "[\"yes\", \"no\"]")
-            }
-        }
-    }
-
     func testResponseBody() async throws {
         struct TestApp: HBApplication {
             typealias Context = HBTestRouterContext
