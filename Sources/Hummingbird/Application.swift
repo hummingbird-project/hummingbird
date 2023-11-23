@@ -82,7 +82,7 @@ public protocol HBApplication: Service, CustomStringConvertible {
     /// Build the responder
     func buildResponder() async throws -> Responder
     /// Server channel setup
-    func buildChannelSetup(httpResponder: @escaping @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse) throws -> ChannelSetup
+    func channelSetup(httpResponder: @escaping @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse) throws -> ChannelSetup
 
     /// event loop group used by application
     var eventLoopGroup: EventLoopGroup { get }
@@ -104,7 +104,7 @@ public protocol HBApplication: Service, CustomStringConvertible {
 
 extension HBApplication where ChannelSetup == HTTP1Channel {
     /// Defautl channel setup function for HTTP1 channels
-    public func buildChannelSetup(httpResponder: @escaping @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse) -> ChannelSetup {
+    public func channelSetup(httpResponder: @escaping @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse) -> ChannelSetup {
         HTTP1Channel(responder: httpResponder)
     }
 }
@@ -163,7 +163,7 @@ extension HBApplication {
             return HBHTTPResponse(status: response.status, headers: response.headers, body: response.body)
         }
         // get channel Setup
-        let channelSetup = try self.buildChannelSetup(httpResponder: respond)
+        let channelSetup = try self.channelSetup(httpResponder: respond)
         // create server
         let server = HBServer(
             childChannelSetup: channelSetup,

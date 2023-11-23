@@ -34,34 +34,36 @@ final class HBXCTLive<App: HBApplication>: HBXCTApplication where App.Responder.
         let base: BaseApp
 
         func buildResponder() async throws -> Responder {
-            try await base.buildResponder()
+            try await self.base.buildResponder()
         }
 
-        func buildChannelSetup(httpResponder: @escaping @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse) throws -> ChannelSetup {
-            try base.buildChannelSetup(httpResponder: httpResponder)
+        func channelSetup(httpResponder: @escaping @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse) throws -> ChannelSetup {
+            try self.base.channelSetup(httpResponder: httpResponder)
         }
 
         /// event loop group used by application
-        var eventLoopGroup: EventLoopGroup { base.eventLoopGroup }
+        var eventLoopGroup: EventLoopGroup { self.base.eventLoopGroup }
         /// thread pool used by application
-        var threadPool: NIOThreadPool { base.threadPool }
+        var threadPool: NIOThreadPool { self.base.threadPool }
         /// Configuration
-        var configuration: HBApplicationConfiguration { base.configuration.with(address: .hostname("localhost", port: 0)) }
+        var configuration: HBApplicationConfiguration { self.base.configuration.with(address: .hostname("localhost", port: 0)) }
         /// Logger
-        var logger: Logger { base.logger }
+        var logger: Logger { self.base.logger }
         /// Encoder used by router
-        var encoder: HBResponseEncoder  { base.encoder }
+        var encoder: HBResponseEncoder { self.base.encoder }
         /// decoder used by router
-        var decoder: HBRequestDecoder { base.decoder }
+        var decoder: HBRequestDecoder { self.base.decoder }
         /// on server running
         @Sendable func onServerRunning(_ channel: Channel) async {
-            await portPromise.complete(channel.localAddress!.port!)
+            await self.portPromise.complete(channel.localAddress!.port!)
         }
+
         /// services attached to the application.
-        var services: [any Service] { base.services }
+        var services: [any Service] { self.base.services }
 
         let portPromise: Promise<Int> = .init()
     }
+
     struct Client: HBXCTClientProtocol {
         let client: HBXCTClient
 
