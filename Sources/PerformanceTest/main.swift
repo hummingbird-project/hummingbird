@@ -34,7 +34,7 @@ router.get { _, _ in
 
 // request with a body
 // ./wrk -c 128 -d 15s -t 8 -s scripts/post.lua http://localhost:8080
-router.post(options: .streamBody) { request, _ in
+router.post { request, _ in
     return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
 }
 

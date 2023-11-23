@@ -21,9 +21,6 @@ public struct HBRouterMethodOptions: OptionSet, Sendable {
     public init(rawValue: Int) {
         self.rawValue = rawValue
     }
-
-    /// don't collate the request body, expect handler to stream it
-    public static let streamBody: HBRouterMethodOptions = .init(rawValue: 1 << 0)
 }
 
 /// Conform to `HBRouterMethods` to add standard router verb (get, post ...) methods
@@ -45,77 +42,66 @@ public protocol HBRouterMethods {
 
 extension HBRouterMethods {
     /// GET path for async closure returning type conforming to ResponseEncodable
-    @discardableResult public func get<Output: HBResponseGenerator>(
+    @discardableResult public func get(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @Sendable @escaping (HBRequest, Context) async throws -> Output
+        use handler: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
         return on(path, method: .GET, options: options, use: handler)
     }
 
     /// PUT path for async closure returning type conforming to ResponseEncodable
-    @discardableResult public func put<Output: HBResponseGenerator>(
+    @discardableResult public func put(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @Sendable @escaping (HBRequest, Context) async throws -> Output
+        use handler: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
         return on(path, method: .PUT, options: options, use: handler)
     }
 
     /// DELETE path for async closure returning type conforming to ResponseEncodable
-    @discardableResult public func delete<Output: HBResponseGenerator>(
+    @discardableResult public func delete(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @Sendable @escaping (HBRequest, Context) async throws -> Output
+        use handler: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
         return on(path, method: .DELETE, options: options, use: handler)
     }
 
     /// HEAD path for async closure returning type conforming to ResponseEncodable
-    @discardableResult public func head<Output: HBResponseGenerator>(
+    @discardableResult public func head(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @Sendable @escaping (HBRequest, Context) async throws -> Output
+        use handler: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
         return on(path, method: .HEAD, options: options, use: handler)
     }
 
     /// POST path for async closure returning type conforming to ResponseEncodable
-    @discardableResult public func post<Output: HBResponseGenerator>(
+    @discardableResult public func post(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @Sendable @escaping (HBRequest, Context) async throws -> Output
+        use handler: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
         return on(path, method: .POST, options: options, use: handler)
     }
 
     /// PATCH path for async closure returning type conforming to ResponseEncodable
-    @discardableResult public func patch<Output: HBResponseGenerator>(
+    @discardableResult public func patch(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
-        use handler: @Sendable @escaping (HBRequest, Context) async throws -> Output
+        use handler: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
         return on(path, method: .PATCH, options: options, use: handler)
     }
 
-    func constructResponder<Output: HBResponseGenerator>(
+    func constructResponder(
         options: HBRouterMethodOptions,
-        use closure: @Sendable @escaping (HBRequest, Context) async throws -> Output
+        use closure: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> HBCallbackResponder<Context> {
         return HBCallbackResponder { request, context in
-            if options.contains(.streamBody) {
-                let output = try await closure(request, context)
-                return try output.response(from: request, context: context)
-            } else {
-                var request = request
-                do {
-                    request.body = try await request.body.collate(maxSize: context.applicationContext.configuration.maxUploadSize)
-                } catch {
-                    throw HBHTTPError(.payloadTooLarge)
-                }
-                let output = try await closure(request, context)
-                return try output.response(from: request, context: context)
-            }
+            let output = try await closure(request, context)
+            return try output.response(from: request, context: context)
         }
     }
 }

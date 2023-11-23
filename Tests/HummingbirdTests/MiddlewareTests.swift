@@ -157,7 +157,7 @@ final class MiddlewareTests: XCTestCase {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.group()
             .add(middleware: TransformMiddleware())
-            .get("test", options: .streamBody) { request, _ in
+            .get("test") { request, _ in
                 return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
             }
         let app = HBApplication(responder: router.buildResponder())

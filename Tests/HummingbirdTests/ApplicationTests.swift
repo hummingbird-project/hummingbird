@@ -194,26 +194,12 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    func testEventLoopFutureArray() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.patch("array") { _, _ -> [String] in
-            return ["yes", "no"]
-        }
-        let app = HBApplication(responder: router.buildResponder())
-        try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/array", method: .PATCH) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), "[\"yes\", \"no\"]")
-            }
-        }
-    }
-
     func testResponseBody() async throws {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router
             .group("/echo-body")
             .post { request, _ -> HBResponse in
-                guard case .byteBuffer(let buffer) = request.body else { return .init(status: .ok) }
+                let buffer = try await request.body.collect(upTo: .max)
                 return .init(status: .ok, headers: [:], body: .init(byteBuffer: buffer))
             }
         let app = HBApplication(responder: router.buildResponder(), configuration: .init(maxUploadSize: 2 * 1024 * 1024))
@@ -230,10 +216,10 @@ final class ApplicationTests: XCTestCase {
     /// Test streaming of requests and streaming of responses by streaming the request body into a response streamer
     func testStreaming() async throws {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.post("streaming", options: .streamBody) { request, _ -> HBResponse in
+        router.post("streaming") { request, _ -> HBResponse in
             return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
         }
-        router.post("size", options: .streamBody) { request, _ -> String in
+        router.post("size") { request, _ -> String in
             var size = 0
             for try await buffer in request.body {
                 size += buffer.readableBytes
@@ -263,7 +249,7 @@ final class ApplicationTests: XCTestCase {
     /// Test streaming of requests and streaming of responses by streaming the request body into a response streamer
     func testStreamingSmallBuffer() async throws {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.post("streaming", options: .streamBody) { request, _ -> HBResponse in
+        router.post("streaming") { request, _ -> HBResponse in
             return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
         }
         let app = HBApplication(responder: router.buildResponder())
@@ -310,8 +296,8 @@ final class ApplicationTests: XCTestCase {
         router
             .group("/echo-body")
             .post { request, _ -> ByteBuffer? in
-                guard case .byteBuffer(let buffer) = request.body, buffer.readableBytes > 0 else { return nil }
-                return buffer
+                let buffer = try await request.body.collect(upTo: .max)
+                return buffer.readableBytes > 0 ? buffer : nil
             }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -402,10 +388,11 @@ final class ApplicationTests: XCTestCase {
 
     func testMaxUploadSize() async throws {
         let router = HBRouterBuilder()
-        router.post("upload") { _, _ in
-            "ok"
+        router.post("upload") { request, context in
+            _ = try await request.body.collate(maxSize: context.applicationContext.configuration.maxUploadSize)
+            return "ok"
         }
-        router.post("stream", options: .streamBody) { _, _ in
+        router.post("stream") { _, _ in
             "ok"
         }
         let app = HBApplication(responder: router.buildResponder(), configuration: .init(maxUploadSize: 64 * 1024))
