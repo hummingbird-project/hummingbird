@@ -72,60 +72,65 @@ public final class HBApplicationContext: Sendable {
 }
 
 public protocol HBApplication: Service, CustomStringConvertible {
-    associatedtype Context: HBRequestContext
+    /// Context passed with HBRequest to responder
+    associatedtype Context: HBRequestContext = HBBasicRequestContext
+    /// Responder that generates a response from a requests and context
     associatedtype Responder: HBResponder<Context>
+    /// Child Channel setup. This defaults to support HTTP1
     associatedtype ChannelSetup: HBChannelSetup & HTTPChannelHandler = HTTP1Channel
 
-    /// Responder
+    /// Build the responder
     func buildResponder() async throws -> Responder
     /// Server channel setup
-    func buildChannelSetup(httpResponder: @escaping @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse) -> ChannelSetup
+    func buildChannelSetup(httpResponder: @escaping @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse) throws -> ChannelSetup
 
     /// event loop group used by application
     var eventLoopGroup: EventLoopGroup { get }
     /// thread pool used by application
     var threadPool: NIOThreadPool { get }
-    /// Configuration
+    /// Application configuration
     var configuration: HBApplicationConfiguration { get }
     /// Logger
     var logger: Logger { get }
     /// Encoder used by router
-    var encoder: HBResponseEncoder  { get }
+    var encoder: HBResponseEncoder { get }
     /// decoder used by router
     var decoder: HBRequestDecoder { get }
-    /// on server running
-    @Sendable func onServerRunning(_ channel: Channel) async 
+    /// This is called once the server is running and we have an active Channel
+    @Sendable func onServerRunning(_ channel: Channel) async
     /// services attached to the application.
     var services: [any Service] { get }
 }
 
 extension HBApplication where ChannelSetup == HTTP1Channel {
+    /// Defautl channel setup function for HTTP1 channels
     public func buildChannelSetup(httpResponder: @escaping @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse) -> ChannelSetup {
         HTTP1Channel(responder: httpResponder)
     }
 }
 
 extension HBApplication {
-    /// event loop group used by application
+    /// Default event loop group used by application
     public var eventLoopGroup: EventLoopGroup { MultiThreadedEventLoopGroup.singleton }
-    /// thread pool used by application
+    /// Default thread pool used by application
     public var threadPool: NIOThreadPool { NIOThreadPool.singleton }
-    /// Configuration
+    /// Default Configuration
     public var configuration: HBApplicationConfiguration { .init() }
-    /// Logger
-    public var logger: Logger { Logger(label: configuration.serverName ?? "HummingBird") }
-    /// Encoder used by router
-    public var encoder: HBResponseEncoder  { NullEncoder() }
-    /// decoder used by router
+    /// Default Logger
+    public var logger: Logger { Logger(label: self.configuration.serverName ?? "HummingBird") }
+    /// Default encoder used by router
+    public var encoder: HBResponseEncoder { NullEncoder() }
+    /// Default decoder used by router
     public var decoder: HBRequestDecoder { NullDecoder() }
-    /// on server running
-    public func onServerRunning(_ channel: Channel) async {}
-    /// services attached to the application.
+    /// Default onServerRunning that does nothing
+    public func onServerRunning(_: Channel) async {}
+    /// Default to no extra services attached to the application.
     public var services: [any Service] { [] }
 }
 
 /// Conform to `Service` from `ServiceLifecycle`.
 extension HBApplication {
+    /// Construct application and run it
     public func run() async throws {
         let context = HBApplicationContext(
             threadPool: self.threadPool,
@@ -136,6 +141,8 @@ extension HBApplication {
         )
         let dateCache = HBDateCache()
         let responder = try await self.buildResponder()
+
+        // Function responding to HTTP request
         @Sendable func respond(to request: HBHTTPRequest, channel: Channel) async throws -> HBHTTPResponse {
             let request = HBRequest(
                 head: request.head,
@@ -155,8 +162,8 @@ extension HBApplication {
             }
             return HBHTTPResponse(status: response.status, headers: response.headers, body: response.body)
         }
-        // update channel with responder
-        let channelSetup = self.buildChannelSetup(httpResponder: respond)
+        // get channel Setup
+        let channelSetup = try self.buildChannelSetup(httpResponder: respond)
         // create server
         let server = HBServer(
             childChannelSetup: channelSetup,
