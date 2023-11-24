@@ -42,7 +42,7 @@ extension HTTPChannelHandler {
         do {
             try await withGracefulShutdownHandler {
                 try await withThrowingTaskGroup(of: Void.self) { group in
-                    try await asyncChannel.executeThenClose { inbound, outbound in 
+                    try await asyncChannel.executeThenClose { inbound, outbound in
                         let responseWriter = HBHTTPServerBodyWriter(outbound: outbound)
                         var iterator = inbound.makeAsyncIterator()
                         while let part = try await iterator.next() {
@@ -98,7 +98,7 @@ extension HTTPChannelHandler {
             } onGracefulShutdown: {
                 // set to cancelled
                 if processingRequest.exchange(.cancelled, ordering: .relaxed) == .idle {
-                // only close the channel input if it is idle 
+                    // only close the channel input if it is idle
                     asyncChannel.channel.close(mode: .input, promise: nil)
                 }
             }
@@ -136,4 +136,11 @@ struct HBHTTPServerBodyWriter: Sendable, HBResponseBodyWriter {
     func write(_ buffer: ByteBuffer) async throws {
         try await self.outbound.write(.body(buffer))
     }
+}
+
+// If we catch a too many bytes error report that as payload too large
+extension NIOTooManyBytesError: HBHTTPResponseError {
+    public var status: NIOHTTP1.HTTPResponseStatus { .payloadTooLarge }
+    public var headers: NIOHTTP1.HTTPHeaders { [:] }
+    public func body(allocator: NIOCore.ByteBufferAllocator) -> NIOCore.ByteBuffer? { nil }
 }

@@ -39,7 +39,7 @@
 /// ```
 public protocol HBRouteHandler {
     associatedtype _Output
-    init(from: HBRequest, context: some HBBaseRequestContext) throws
+    init(from: HBRequest, context: some HBBaseRequestContext) async throws
     func handle(request: HBRequest, context: some HBBaseRequestContext) async throws -> _Output
 }
 
@@ -52,7 +52,7 @@ extension HBRouterMethods {
         use handlerType: Handler.Type
     ) -> Self where Handler._Output == _Output {
         return self.on(path, method: method, options: options) { request, context -> _Output in
-            let handler = try Handler(from: request, context: context)
+            let handler = try await Handler(from: request, context: context)
             return try await handler.handle(request: request, context: context)
         }
     }
