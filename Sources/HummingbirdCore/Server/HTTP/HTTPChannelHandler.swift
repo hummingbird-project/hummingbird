@@ -17,6 +17,7 @@ import HTTPTypes
 import Logging
 import NIOCore
 import NIOHTTPTypes
+import ServiceLifecycle
 
 /// Protocol for HTTP channels
 public protocol HTTPChannelHandler: HBChannelSetup {
@@ -38,54 +39,67 @@ enum HTTPState: Int, AtomicValue {
 
 extension HTTPChannelHandler {
     public func handleHTTP(asyncChannel: NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>, logger: Logger) async {
+        let processingRequest = ManagedAtomic(HTTPState.idle)
         do {
-            try await withThrowingTaskGroup(of: Void.self) { group in
-                try await asyncChannel.executeThenClose { inbound, outbound in 
-                    let responseWriter = HBHTTPServerBodyWriter(outbound: outbound)
-                    var iterator = inbound.makeAsyncIterator()
-                    while let part = try await iterator.next() {
-                        guard case .head(let head) = part else {
-                            throw HTTPChannelError.unexpectedHTTPPart(part)
-                        }
-                        let bodyStream = HBStreamedRequestBody()
-                        let body = HBRequestBody.stream(bodyStream)
-                        let request = HBHTTPRequest(head: head, body: body)
-                        // add task processing request and writing response
-                        group.addTask {
-                            let response: HBHTTPResponse
+            try await withGracefulShutdownHandler {
+                try await withThrowingTaskGroup(of: Void.self) { group in
+                    try await asyncChannel.executeThenClose { inbound, outbound in
+                        let responseWriter = HBHTTPServerBodyWriter(outbound: outbound)
+                        var iterator = inbound.makeAsyncIterator()
+                        while let part = try await iterator.next() {
+                            // set to processing unless it is cancelled then exit
+                            guard processingRequest.exchange(.processing, ordering: .relaxed) == .idle else { break }
+                            guard case .head(let head) = part else {
+                                throw HTTPChannelError.unexpectedHTTPPart(part)
+                            }
+                            let bodyStream = HBStreamedRequestBody()
+                            let body = HBRequestBody.stream(bodyStream)
+                            let request = HBHTTPRequest(head: head, body: body)
+                            // add task processing request and writing response
+                            group.addTask {
+                                let response: HBHTTPResponse
+                                do {
+                                    response = try await self.responder(request, asyncChannel.channel)
+                                } catch {
+                                    response = self.getErrorResponse(from: error, allocator: asyncChannel.channel.allocator)
+                                }
+                                do {
+                                    try await outbound.write(.head(response.head))
+                                    try await response.body.write(responseWriter)
+                                    try await outbound.write(.end(nil))
+                                    // flush request body
+                                    for try await _ in request.body {}
+                                } catch {
+                                    // flush request body
+                                    for try await _ in request.body {}
+                                    throw error
+                                }
+                                if request.headers[.connection] == "close" {
+                                    throw HTTPChannelError.closeConnection
+                                }
+                            }
+                            // send body parts to request
                             do {
-                                response = try await self.responder(request, asyncChannel.channel)
+                                // pass body part to request
+                                while case .body(let buffer) = try await iterator.next() {
+                                    await bodyStream.send(buffer)
+                                }
+                                bodyStream.finish()
                             } catch {
-                                response = self.getErrorResponse(from: error, allocator: asyncChannel.channel.allocator)
+                                // pass failed to read full http body to request
+                                bodyStream.fail(error)
                             }
-                            do {
-                                try await outbound.write(.head(response.head))
-                                try await response.body.write(responseWriter)
-                                try await outbound.write(.end(nil))
-                                // flush request body
-                                for try await _ in request.body {}
-                            } catch {
-                                // flush request body
-                                for try await _ in request.body {}
-                                throw error
-                            }
-                            if request.headers[.connection] == "close" {
-                                throw HTTPChannelError.closeConnection
-                            }
+                            try await group.next()
+                            // set to idle unless it is cancelled then exit
+                            guard processingRequest.exchange(.idle, ordering: .relaxed) == .processing else { break }
                         }
-                        // send body parts to request
-                        do {
-                            // pass body part to request
-                            while case .body(let buffer) = try await iterator.next() {
-                                await bodyStream.send(buffer)
-                            }
-                            bodyStream.finish()
-                        } catch {
-                            // pass failed to read full http body to request
-                            bodyStream.fail(error)
-                        }
-                        try await group.next()
                     }
+                }
+            } onGracefulShutdown: {
+                // set to cancelled
+                if processingRequest.exchange(.cancelled, ordering: .relaxed) == .idle {
+                    // only close the channel input if it is idle
+                    asyncChannel.channel.close(mode: .input, promise: nil)
                 }
             }
         } catch HTTPChannelError.closeConnection {
