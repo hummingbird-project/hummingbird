@@ -12,9 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Atomics
+import HTTPTypes
 import Logging
 import NIOCore
-import NIOHTTP1
+import NIOHTTPTypes
 
 /// Protocol for HTTP channels
 public protocol HTTPChannelHandler: HBChannelSetup {
@@ -35,7 +37,7 @@ enum HTTPState: Int, AtomicValue {
 }
 
 extension HTTPChannelHandler {
-    public func handleHTTP(asyncChannel: NIOAsyncChannel<HTTPServerRequestPart, SendableHTTPServerResponsePart>, logger: Logger) async {
+    public func handleHTTP(asyncChannel: NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>, logger: Logger) async {
         do {
             try await withThrowingTaskGroup(of: Void.self) { group in
                 try await asyncChannel.executeThenClose { inbound, outbound in 
@@ -124,7 +126,7 @@ struct HBHTTPServerBodyWriter: Sendable, HBResponseBodyWriter {
 
 // If we catch a too many bytes error report that as payload too large
 extension NIOTooManyBytesError: HBHTTPResponseError {
-    public var status: NIOHTTP1.HTTPResponseStatus { .payloadTooLarge }
-    public var headers: NIOHTTP1.HTTPHeaders { [:] }
-    public func body(allocator: NIOCore.ByteBufferAllocator) -> NIOCore.ByteBuffer? { nil }
+    public var status: HTTPResponse.Status { .contentTooLarge }
+    public var headers: HTTPFields { [:] }
+    public func body(allocator: ByteBufferAllocator) -> ByteBuffer? { nil }
 }
