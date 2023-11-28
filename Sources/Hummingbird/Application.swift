@@ -183,8 +183,14 @@ extension HBApplication: Service where Responder.Context: HBRequestContext {
             eventLoopGroup: self.eventLoopGroup,
             logger: self.logger
         )
+        let services: [any Service]
+        if self.configuration.noHTTPServer {
+            services = self.services
+        } else {
+            services = [server, dateCache] + self.services
+        }
         try await withGracefulShutdownHandler {
-            let services: [any Service] = [server, dateCache] + self.services
+            let services: [any Service] = services
             let serviceGroup = ServiceGroup(
                 configuration: .init(services: services, logger: self.logger)
             )
