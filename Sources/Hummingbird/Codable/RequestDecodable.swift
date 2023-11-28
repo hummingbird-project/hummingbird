@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HummingbirdCore
+
 /// `HBRouteHandler` which uses `Codable` to initialize it
 ///
 /// An example

@@ -75,28 +75,21 @@ public struct FlatDictionary<Key: Hashable, Value>: Collection, ExpressibleByDic
         set {
             let hashKey = Self.hashKey(key)
             if let index = hashKeys.firstIndex(of: hashKey) {
-                if let newValue = newValue {
+                if let newValue {
                     self.elements[index].value = newValue
                 } else {
                     self.elements.remove(at: index)
                     self.hashKeys.remove(at: index)
                 }
-            } else if let newValue = newValue {
+            } else if let newValue {
                 self.elements.append((key: key, value: newValue))
                 self.hashKeys.append(hashKey)
             }
         }
     }
 
-    ///  Return if dictionary has this value
-    /// - Parameter key:
-    public func has(_ key: Key) -> Bool {
-        let hashKey = Self.hashKey(key)
-        return self.hashKeys.firstIndex(of: hashKey) != nil
-    }
-
     /// Return all the values, associated with a given key
-    public func getAll(for key: Key) -> [Value] {
+    public subscript(values key: Key) -> [Value] {
         var values: [Value] = []
         let hashKey = Self.hashKey(key)
 
@@ -106,6 +99,13 @@ public struct FlatDictionary<Key: Hashable, Value>: Collection, ExpressibleByDic
             }
         }
         return values
+    }
+
+    ///  Return if dictionary has this value
+    /// - Parameter key:
+    public func has(_ key: Key) -> Bool {
+        let hashKey = Self.hashKey(key)
+        return self.hashKeys.firstIndex(of: hashKey) != nil
     }
 
     /// Append a new key value pair to the list of key value pairs

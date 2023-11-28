@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
+import HummingbirdCore
 import XCTest
 
 class HTTPTests: XCTestCase {

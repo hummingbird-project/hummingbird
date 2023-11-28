@@ -15,6 +15,7 @@
 import Atomics
 import HTTPTypes
 import Hummingbird
+import HummingbirdCore
 import HummingbirdXCT
 import Logging
 import NIOCore

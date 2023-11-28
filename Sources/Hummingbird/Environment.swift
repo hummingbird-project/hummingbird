@@ -17,7 +17,8 @@ import Glibc
 #else
 import Darwin.C
 #endif
-import NIO
+import HummingbirdCore
+import NIOCore
 
 /// Access environment variables
 public struct HBEnvironment: Sendable, Decodable, ExpressibleByDictionaryLiteral {

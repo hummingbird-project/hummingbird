@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HummingbirdCore
+
 /// URI Path Trie Builder
 struct RouterPathTrieBuilder<Value: Sendable> {
     var root: Node
@@ -148,11 +150,11 @@ struct RouterPathTrie<Value: Sendable>: Sendable {
     }
 }
 
-extension Optional where Wrapped == HBParameters {
+extension HBParameters? {
     fileprivate mutating func set(_ s: Substring, value: Substring) {
         switch self {
         case .some(var parameters):
-            parameters.set(s, value: value)
+            parameters[s] = value
             self = .some(parameters)
         case .none:
             self = .some(.init(.init([(s, value)])))

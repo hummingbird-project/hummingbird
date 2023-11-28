@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import Hummingbird
+@testable import HummingbirdCore
 import XCTest
 
 final class ParserTests: XCTestCase {

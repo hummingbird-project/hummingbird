@@ -1,0 +1,42 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Hummingbird server framework project
+//
+// Copyright (c) 2021-2021 the Hummingbird authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE.txt for license information
+// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
+
+import HTTPTypes
+
+/// Holds all the required to generate a HTTP Response
+public struct HBResponse: Sendable {
+    public var head: HTTPResponse
+    public var body: HBResponseBody
+
+    public init(status: HTTPResponse.Status, headers: HTTPFields = .init(), body: HBResponseBody = .init()) {
+        self.head = .init(status: status, headerFields: headers)
+        self.body = body
+    }
+
+    public var status: HTTPResponse.Status {
+        get { self.head.status }
+        set { self.head.status = newValue }
+    }
+
+    public var headers: HTTPFields {
+        get { self.head.headerFields }
+        set { self.head.headerFields = newValue }
+    }
+}
+
+extension HBResponse: CustomStringConvertible {
+    public var description: String {
+        "status: \(self.status), headers: \(self.headers), body: \(self.body)"
+    }
+}
