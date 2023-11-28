@@ -73,7 +73,7 @@ public final class HBApplicationContext: Sendable {
 /// Application class. Brings together all the components of Hummingbird together
 ///
 /// ```
-/// let router = HBRouterBuilder()
+/// let router = HBRouter()
 /// router.middleware.add(MyMiddleware())
 /// router.get("hello") { _ in
 ///     return "hello"

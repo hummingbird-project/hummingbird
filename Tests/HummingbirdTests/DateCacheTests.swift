@@ -31,7 +31,7 @@ class HummingbirdDateTests: XCTestCase {
     }
 
     func testDateHeader() async throws {
-        let router = HBRouterBuilder()
+        let router = HBRouter()
         router.get("date") { _, _ in
             return "hello"
         }

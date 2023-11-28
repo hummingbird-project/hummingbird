@@ -29,7 +29,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testGetRoute() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.get("/hello") { _, context -> ByteBuffer in
             return context.allocator.buffer(string: "GET: Hello")
         }
@@ -45,7 +45,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testHTTPStatusRoute() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.get("/accepted") { _, _ -> HTTPResponse.Status in
             return .accepted
         }
@@ -58,7 +58,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testStandardHeaders() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.get("/hello") { _, _ in
             return "Hello"
         }
@@ -72,7 +72,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testServerHeaders() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.get("/hello") { _, _ in
             return "Hello"
         }
@@ -85,7 +85,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testPostRoute() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.post("/hello") { _, _ -> String in
             return "POST: Hello"
         }
@@ -102,7 +102,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testMultipleMethods() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.post("/hello") { _, _ -> String in
             return "POST"
         }
@@ -124,7 +124,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testMultipleGroupMethods() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.group("hello")
             .post { _, _ -> String in
                 return "POST"
@@ -147,7 +147,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testQueryRoute() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.post("/query") { request, context -> ByteBuffer in
             return context.allocator.buffer(string: request.uri.queryParameters["test"].map { String($0) } ?? "")
         }
@@ -164,7 +164,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testMultipleQueriesRoute() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.post("/add") { request, _ -> String in
             return request.uri.queryParameters.getAll("value", as: Int.self).reduce(0,+).description
         }
@@ -181,7 +181,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testArray() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.get("array") { _, _ -> [String] in
             return ["yes", "no"]
         }
@@ -196,7 +196,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testResponseBody() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router
             .group("/echo-body")
             .post { request, _ -> HBResponse in
@@ -216,7 +216,7 @@ final class ApplicationTests: XCTestCase {
 
     /// Test streaming of requests and streaming of responses by streaming the request body into a response streamer
     func testStreaming() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.post("streaming") { request, _ -> HBResponse in
             return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
         }
@@ -249,7 +249,7 @@ final class ApplicationTests: XCTestCase {
 
     /// Test streaming of requests and streaming of responses by streaming the request body into a response streamer
     func testStreamingSmallBuffer() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.post("streaming") { request, _ -> HBResponse in
             return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
         }
@@ -275,7 +275,7 @@ final class ApplicationTests: XCTestCase {
                 return try await next.respond(to: request, context: context)
             }
         }
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(CollateMiddleware())
         router.put("/hello") { request, _ -> String in
             guard case .byteBuffer(let buffer) = request.body else { throw HBHTTPError(.internalServerError) }
@@ -293,7 +293,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testOptional() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router
             .group("/echo-body")
             .post { request, _ -> ByteBuffer? in
@@ -319,7 +319,7 @@ final class ApplicationTests: XCTestCase {
             let first: String
             let last: String
         }
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router
             .group("/name")
             .patch { _, _ -> Name? in
@@ -336,7 +336,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testTypedResponse() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.delete("/hello") { _, _ in
             return HBEditedResponse(
                 status: .preconditionRequired,
@@ -362,7 +362,7 @@ final class ApplicationTests: XCTestCase {
         struct Result: HBResponseEncodable {
             let value: String
         }
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.patch("/hello") { _, _ in
             return HBEditedResponse(
                 status: .multipleChoices,
@@ -386,7 +386,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testMaxUploadSize() async throws {
-        let router = HBRouterBuilder()
+        let router = HBRouter()
         router.post("upload") { request, context in
             _ = try await request.body.collate(maxSize: context.applicationContext.configuration.maxUploadSize)
             return "ok"
@@ -425,7 +425,7 @@ final class ApplicationTests: XCTestCase {
                 self.remoteAddress = channel.remoteAddress
             }
         }
-        let router = HBRouterBuilder(context: HBSocketAddressRequestContext.self)
+        let router = HBRouter(context: HBSocketAddressRequestContext.self)
         router.get("/") { _, context -> String in
             switch context.remoteAddress {
             case .v4(let address):

@@ -184,7 +184,7 @@ final class MetricsTests: XCTestCase {
     }
 
     func testCounter() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBMetricsMiddleware())
         router.get("/hello") { _, _ -> String in
             return "Hello"
@@ -203,7 +203,7 @@ final class MetricsTests: XCTestCase {
     }
 
     func testError() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBMetricsMiddleware())
         router.get("/hello") { _, _ -> String in
             throw HBHTTPError(.badRequest)
@@ -223,7 +223,7 @@ final class MetricsTests: XCTestCase {
     }
 
     func testNotFoundError() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBMetricsMiddleware())
         router.get("/hello") { _, _ -> String in
             return "hello"
@@ -242,7 +242,7 @@ final class MetricsTests: XCTestCase {
     }
 
     func testParameterEndpoint() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBMetricsMiddleware())
         router.get("/user/:id") { _, _ -> String in
             throw HBHTTPError(.badRequest)

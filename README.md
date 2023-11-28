@@ -31,7 +31,7 @@ It provides a router for directing different endpoints to their handlers, middle
 ```swift
 import Hummingbird
 
-let router = HBRouterBuilder()
+let router = HBRouter()
 router.get("hello") { request -> String in
     return "Hello"
 }
