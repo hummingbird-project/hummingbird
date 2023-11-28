@@ -157,11 +157,7 @@ extension HBApplication: Service where Responder.Context: HBRequestContext {
             decoder: self.decoder
         )
         let dateCache = HBDateCache()
-        @Sendable func respond(to request: HBHTTPRequest, channel: Channel) async throws -> HBHTTPResponse {
-            let request = HBRequest(
-                head: request.head,
-                body: request.body
-            )
+        @Sendable func respond(to request: HBRequest, channel: Channel) async throws -> HBResponse {
             let context = Responder.Context(
                 applicationContext: context,
                 channel: channel,
@@ -174,7 +170,7 @@ extension HBApplication: Service where Responder.Context: HBRequestContext {
             if let serverName = self.configuration.serverName {
                 response.headers[.server] = serverName
             }
-            return HBHTTPResponse(head: response.head, body: response.body)
+            return response
         }
         // update channel with responder
         var channelSetup = self.channelSetup

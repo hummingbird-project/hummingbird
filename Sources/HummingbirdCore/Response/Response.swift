@@ -22,6 +22,9 @@ public struct HBResponse: Sendable {
     public init(status: HTTPResponse.Status, headers: HTTPFields = .init(), body: HBResponseBody = .init()) {
         self.head = .init(status: status, headerFields: headers)
         self.body = body
+        if let contentLength = body.contentLength, headers[.contentLength] == nil {
+            self.head.headerFields[.contentLength] = String(describing: contentLength)
+        }
     }
 
     public var status: HTTPResponse.Status {

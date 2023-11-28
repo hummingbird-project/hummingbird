@@ -29,7 +29,7 @@ public struct HTTP2Channel: HTTPChannelHandler {
     private let sslContext: NIOSSLContext
     private var http1: HTTP1Channel
     private let additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
-    public var responder: @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse {
+    public var responder: @Sendable (HBRequest, Channel) async throws -> HBResponse {
         get { http1.responder }
         set { http1.responder = newValue }
     }
@@ -37,7 +37,7 @@ public struct HTTP2Channel: HTTPChannelHandler {
     public init(
         tlsConfiguration: TLSConfiguration,
         additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = [],
-        responder: @escaping @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse = { _, _ in throw HBHTTPError(.notImplemented) }
+        responder: @escaping @Sendable (HBRequest, Channel) async throws -> HBResponse = { _, _ in throw HBHTTPError(.notImplemented) }
     ) throws {
         var tlsConfiguration = tlsConfiguration
         tlsConfiguration.applicationProtocols = NIOHTTP2SupportedALPNProtocols
