@@ -447,6 +447,27 @@ final class ApplicationTests: XCTestCase {
             }
         }
     }
+
+    /// test we can create an application and pass it around as a `some HBApplicationProtocol`. This
+    /// is more a compilation test than a runtime test
+    func testApplicationProtocol() async throws {
+        func createApplication() -> some HBApplicationProtocol {
+            let router = HBRouterBuilder(context: HBTestRouterContext.self)
+            router.get("/hello") { _, context -> ByteBuffer in
+                return context.allocator.buffer(string: "GET: Hello")
+            }
+            return HBApplication(responder: router.buildResponder())
+        }
+        let app = createApplication()
+        try await app.test(.live) { client in
+            try await client.XCTExecute(uri: "/hello", method: .get) { response in
+                var body = try XCTUnwrap(response.body)
+                let string = body.readString(length: body.readableBytes)
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(string, "GET: Hello")
+            }
+        }
+    }
 }
 
 extension HTTPField.Name {

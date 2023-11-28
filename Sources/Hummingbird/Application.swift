@@ -250,7 +250,7 @@ public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup
         return self.responder
     }
 
-    public func channelSetup(httpResponder: @escaping @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse) throws -> ChannelSetup {
+    public func channelSetup(httpResponder: @escaping @Sendable (HBRequest, Channel) async throws -> HBResponse) throws -> ChannelSetup {
         var channelSetup = self.channelSetup
         channelSetup.responder = httpResponder
         return channelSetup
