@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import NIOCore
 
 /// Middleware implementing Cross-Origin Resource Sharing (CORS) headers.
@@ -35,7 +36,7 @@ public struct HBCORSMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
             case .all:
                 return "*"
             case .originBased:
-                let origin = request.headers["origin"].first
+                let origin = request.headers[.origin]
                 if origin == "null" { return nil }
                 return origin
             case .custom(let value):
@@ -68,14 +69,14 @@ public struct HBCORSMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
     ///   - maxAge: how long the results of a pre-flight request can be cached
     public init(
         allowOrigin: AllowOrigin = .originBased,
-        allowHeaders: [String] = ["accept", "authorization", "content-type", "origin"],
-        allowMethods: [HTTPMethod] = [.GET, .POST, .HEAD, .OPTIONS],
+        allowHeaders: [HTTPField.Name] = [.accept, .authorization, .contentType, .origin],
+        allowMethods: [HTTPRequest.Method] = [.get, .post, .head, .options],
         allowCredentials: Bool = false,
         exposedHeaders: [String]? = nil,
         maxAge: TimeAmount? = nil
     ) {
         self.allowOrigin = allowOrigin
-        self.allowHeaders = allowHeaders.joined(separator: ", ")
+        self.allowHeaders = allowHeaders.map(\.canonicalName).joined(separator: ", ")
         self.allowMethods = allowMethods.map(\.rawValue).joined(separator: ", ")
         self.allowCredentials = allowCredentials
         self.exposedHeaders = exposedHeaders?.joined(separator: ", ")
@@ -85,40 +86,40 @@ public struct HBCORSMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
     /// apply CORS middleware
     public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
         // if no origin header then don't apply CORS
-        guard request.headers.contains(name: "origin") else {
+        guard request.headers[.origin] != nil else {
             return try await next.respond(to: request, context: context)
         }
 
-        if request.method == .OPTIONS {
+        if request.method == .options {
             // if request is OPTIONS then return CORS headers and skip the rest of the middleware chain
-            var headers: HTTPHeaders = [
-                "access-control-allow-origin": allowOrigin.value(for: request) ?? "",
+            var headers: HTTPFields = [
+                .accessControlAllowOrigin: allowOrigin.value(for: request) ?? "",
             ]
-            headers.add(name: "access-control-allow-headers", value: self.allowHeaders)
-            headers.add(name: "access-control-allow-methods", value: self.allowMethods)
+            headers[.accessControlAllowHeaders] = self.allowHeaders
+            headers[.accessControlAllowMethods] = self.allowMethods
             if self.allowCredentials {
-                headers.add(name: "access-control-allow-credentials", value: "true")
+                headers[.accessControlAllowCredentials] = "true"
             }
             if let maxAge = self.maxAge {
-                headers.add(name: "access-control-max-age", value: maxAge)
+                headers[.accessControlMaxAge] = maxAge
             }
             if let exposedHeaders = self.exposedHeaders {
-                headers.add(name: "access-control-expose-headers", value: exposedHeaders)
+                headers[.accessControlExposeHeaders] = exposedHeaders
             }
             if case .originBased = self.allowOrigin {
-                headers.add(name: "vary", value: "Origin")
+                headers[.vary] = "Origin"
             }
 
             return HBResponse(status: .noContent, headers: headers, body: .init())
         } else {
             // if not OPTIONS then run rest of middleware chain and add origin value at the end
             var response = try await next.respond(to: request, context: context)
-            response.headers.add(name: "access-control-allow-origin", value: self.allowOrigin.value(for: request) ?? "")
+            response.headers[.accessControlAllowOrigin] = self.allowOrigin.value(for: request) ?? ""
             if self.allowCredentials {
-                response.headers.add(name: "access-control-allow-credentials", value: "true")
+                response.headers[.accessControlAllowCredentials] = "true"
             }
             if case .originBased = self.allowOrigin {
-                response.headers.add(name: "vary", value: "Origin")
+                response.headers[.vary] = "Origin"
             }
             return response
         }

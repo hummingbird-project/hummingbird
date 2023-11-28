@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import NIOCore
-import NIOHTTP1
 
 /// Options available to routes
 public struct HBRouterMethodOptions: OptionSet, Sendable {
@@ -31,7 +31,7 @@ public protocol HBRouterMethods {
     @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     @discardableResult func on<Output: HBResponseGenerator>(
         _ path: String,
-        method: HTTPMethod,
+        method: HTTPRequest.Method,
         options: HBRouterMethodOptions,
         use: @Sendable @escaping (HBRequest, Context) async throws -> Output
     ) -> Self
@@ -47,7 +47,7 @@ extension HBRouterMethods {
         options: HBRouterMethodOptions = [],
         use handler: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
-        return on(path, method: .GET, options: options, use: handler)
+        return on(path, method: .get, options: options, use: handler)
     }
 
     /// PUT path for async closure returning type conforming to ResponseEncodable
@@ -56,7 +56,7 @@ extension HBRouterMethods {
         options: HBRouterMethodOptions = [],
         use handler: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
-        return on(path, method: .PUT, options: options, use: handler)
+        return on(path, method: .put, options: options, use: handler)
     }
 
     /// DELETE path for async closure returning type conforming to ResponseEncodable
@@ -65,7 +65,7 @@ extension HBRouterMethods {
         options: HBRouterMethodOptions = [],
         use handler: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
-        return on(path, method: .DELETE, options: options, use: handler)
+        return on(path, method: .delete, options: options, use: handler)
     }
 
     /// HEAD path for async closure returning type conforming to ResponseEncodable
@@ -74,7 +74,7 @@ extension HBRouterMethods {
         options: HBRouterMethodOptions = [],
         use handler: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
-        return on(path, method: .HEAD, options: options, use: handler)
+        return on(path, method: .head, options: options, use: handler)
     }
 
     /// POST path for async closure returning type conforming to ResponseEncodable
@@ -83,7 +83,7 @@ extension HBRouterMethods {
         options: HBRouterMethodOptions = [],
         use handler: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
-        return on(path, method: .POST, options: options, use: handler)
+        return on(path, method: .post, options: options, use: handler)
     }
 
     /// PATCH path for async closure returning type conforming to ResponseEncodable
@@ -92,7 +92,7 @@ extension HBRouterMethods {
         options: HBRouterMethodOptions = [],
         use handler: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
-        return on(path, method: .PATCH, options: options, use: handler)
+        return on(path, method: .patch, options: options, use: handler)
     }
 
     func constructResponder(

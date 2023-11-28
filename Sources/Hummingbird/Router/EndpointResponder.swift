@@ -12,8 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIOCore
-import NIOHTTP1
+import HTTPTypes
 
 /// Stores endpoint responders for each HTTP method
 struct HBEndpointResponders<Context: HBBaseRequestContext>: Sendable {
@@ -22,11 +21,11 @@ struct HBEndpointResponders<Context: HBBaseRequestContext>: Sendable {
         self.methods = [:]
     }
 
-    public func getResponder(for method: HTTPMethod) -> (any HBResponder<Context>)? {
+    public func getResponder(for method: HTTPRequest.Method) -> (any HBResponder<Context>)? {
         return self.methods[method.rawValue]
     }
 
-    mutating func addResponder(for method: HTTPMethod, responder: any HBResponder<Context>) {
+    mutating func addResponder(for method: HTTPRequest.Method, responder: any HBResponder<Context>) {
         guard self.methods[method.rawValue] == nil else {
             preconditionFailure("\(method.rawValue) already has a handler")
         }

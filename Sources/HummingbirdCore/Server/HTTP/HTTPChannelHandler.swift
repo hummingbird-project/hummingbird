@@ -13,9 +13,10 @@
 //===----------------------------------------------------------------------===//
 
 import Atomics
+import HTTPTypes
 import Logging
 import NIOCore
-import NIOHTTP1
+import NIOHTTPTypes
 import ServiceLifecycle
 
 /// Protocol for HTTP channels
@@ -26,7 +27,7 @@ public protocol HTTPChannelHandler: HBChannelSetup {
 /// Internal error thrown when an unexpected HTTP part is received eg we didn't receive
 /// a head part when we expected one
 enum HTTPChannelError: Error {
-    case unexpectedHTTPPart(HTTPServerRequestPart)
+    case unexpectedHTTPPart(HTTPRequestPart)
     case closeConnection
 }
 
@@ -37,7 +38,7 @@ enum HTTPState: Int, AtomicValue {
 }
 
 extension HTTPChannelHandler {
-    public func handleHTTP(asyncChannel: NIOAsyncChannel<HTTPServerRequestPart, SendableHTTPServerResponsePart>, logger: Logger) async {
+    public func handleHTTP(asyncChannel: NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>, logger: Logger) async {
         let processingRequest = ManagedAtomic(HTTPState.idle)
         do {
             try await withGracefulShutdownHandler {
@@ -62,9 +63,8 @@ extension HTTPChannelHandler {
                                 } catch {
                                     response = self.getErrorResponse(from: error, allocator: asyncChannel.channel.allocator)
                                 }
-                                let head = HTTPResponseHead(version: request.head.version, status: response.status, headers: response.headers)
                                 do {
-                                    try await outbound.write(.head(head))
+                                    try await outbound.write(.head(response.head))
                                     try await response.body.write(responseWriter)
                                     try await outbound.write(.end(nil))
                                     // flush request body
@@ -74,7 +74,7 @@ extension HTTPChannelHandler {
                                     for try await _ in request.body {}
                                     throw error
                                 }
-                                if request.head.headers["connection"].first == "close" {
+                                if request.headers[.connection] == "close" {
                                     throw HTTPChannelError.closeConnection
                                 }
                             }
@@ -127,7 +127,7 @@ extension HTTPChannelHandler {
 
 /// Writes ByteBuffers to AsyncChannel outbound writer
 struct HBHTTPServerBodyWriter: Sendable, HBResponseBodyWriter {
-    typealias Out = SendableHTTPServerResponsePart
+    typealias Out = HTTPResponsePart
     /// The components of a HTTP response from the view of a HTTP server.
     public typealias OutboundWriter = NIOAsyncChannelOutboundWriter<Out>
 
@@ -140,7 +140,7 @@ struct HBHTTPServerBodyWriter: Sendable, HBResponseBodyWriter {
 
 // If we catch a too many bytes error report that as payload too large
 extension NIOTooManyBytesError: HBHTTPResponseError {
-    public var status: NIOHTTP1.HTTPResponseStatus { .payloadTooLarge }
-    public var headers: NIOHTTP1.HTTPHeaders { [:] }
-    public func body(allocator: NIOCore.ByteBufferAllocator) -> NIOCore.ByteBuffer? { nil }
+    public var status: HTTPResponse.Status { .contentTooLarge }
+    public var headers: HTTPFields { [:] }
+    public func body(allocator: ByteBufferAllocator) -> ByteBuffer? { nil }
 }

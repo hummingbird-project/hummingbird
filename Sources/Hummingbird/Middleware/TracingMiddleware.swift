@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import NIOCore
 import Tracing
 
@@ -29,7 +30,7 @@ public struct HBTracingMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
     ///
     /// - Parameter recordingHeaders: A list of HTTP header names to be recorded as span attributes. By default, no headers
     /// are being recorded.
-    public init<C: Collection>(recordingHeaders headerNamesToRecord: C) where C.Element == String {
+    public init(recordingHeaders headerNamesToRecord: some Collection<HTTPField.Name>) {
         self.headerNamesToRecord = Set(headerNamesToRecord.map(RecordingHeader.init))
     }
 
@@ -53,10 +54,11 @@ public struct HBTracingMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
             span.updateAttributes { attributes in
                 attributes["http.method"] = request.method.rawValue
                 attributes["http.target"] = request.uri.path
-                attributes["http.flavor"] = "\(request.version.major).\(request.version.minor)"
-                attributes["http.scheme"] = request.uri.scheme?.rawValue
-                attributes["http.user_agent"] = request.headers.first(name: "user-agent")
-                attributes["http.request_content_length"] = request.headers["content-length"].first.map { Int($0) } ?? nil
+                // TODO: Get HTTP version and scheme
+                // attributes["http.flavor"] = "\(request.version.major).\(request.version.minor)"
+                // attributes["http.scheme"] = request.uri.scheme?.rawValue
+                attributes["http.user_agent"] = request.headers[.userAgent]
+                attributes["http.request_content_length"] = request.headers[.contentLength].map { Int($0) } ?? nil
 
                 attributes["net.host.name"] = context.applicationContext.configuration.address.host
                 attributes["net.host.port"] = context.applicationContext.configuration.address.port
@@ -101,10 +103,10 @@ public struct HBTracingMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
         }
     }
 
-    func recordHeaders(_ headers: HTTPHeaders, toSpanAttributes attributes: SpanAttributes, withPrefix prefix: String) -> SpanAttributes {
+    func recordHeaders(_ headers: HTTPFields, toSpanAttributes attributes: SpanAttributes, withPrefix prefix: String) -> SpanAttributes {
         var attributes = attributes
         for header in self.headerNamesToRecord {
-            let values = headers[header.name]
+            let values = headers[values: header.name]
             guard !values.isEmpty else { continue }
             let attribute = "\(prefix)\(header.attributeName)"
 
@@ -128,18 +130,19 @@ public protocol HBRemoteAddressRequestContext: HBBaseRequestContext {
 }
 
 struct RecordingHeader: Hashable {
-    let name: String
+    let name: HTTPField.Name
     let attributeName: String
 
-    init(name: String) {
+    init(name: HTTPField.Name) {
         self.name = name
-        self.attributeName = name.lowercased().replacingOccurrences(of: "-", with: "_")
+        self.attributeName = name.canonicalName.replacingOccurrences(of: "-", with: "_")
     }
 }
 
 private struct HTTPHeadersExtractor: Extractor {
-    func extract(key name: String, from headers: HTTPHeaders) -> String? {
-        headers.first(name: name)
+    func extract(key name: String, from headers: HTTPFields) -> String? {
+        guard let headerName = HTTPField.Name(name) else { return nil }
+        return headers[headerName]
     }
 }
 

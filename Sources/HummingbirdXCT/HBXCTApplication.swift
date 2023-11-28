@@ -12,17 +12,18 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import Hummingbird
 import NIOCore
-import NIOHTTP1
 import ServiceLifecycle
 
 /// Response structure returned by XCT testing framework
 public struct HBXCTResponse: Sendable {
+    public let head: HTTPResponse
     /// response status
-    public let status: HTTPResponseStatus
+    public var status: HTTPResponse.Status { self.head.status }
     /// response headers
-    public let headers: HTTPHeaders
+    public var headers: HTTPFields { self.head.headerFields }
     /// response body
     public let body: ByteBuffer?
 }
@@ -58,8 +59,8 @@ public protocol HBXCTClientProtocol {
     /// Execute URL request and provide response
     func execute(
         uri: String,
-        method: HTTPMethod,
-        headers: HTTPHeaders,
+        method: HTTPRequest.Method,
+        headers: HTTPFields,
         body: ByteBuffer?
     ) async throws -> HBXCTResponse
 }
@@ -68,8 +69,8 @@ extension HBXCTClientProtocol {
     /// Send request and call test callback on the response returned
     @discardableResult public func XCTExecute<Return>(
         uri: String,
-        method: HTTPMethod,
-        headers: HTTPHeaders = [:],
+        method: HTTPRequest.Method,
+        headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
         testCallback: @escaping (HBXCTResponse) async throws -> Return = { $0 }
     ) async throws -> Return {

@@ -15,7 +15,6 @@
 import Hummingbird
 import HummingbirdCore
 import NIOCore
-import NIOHTTP1
 
 /// Type of test framework
 public struct XCTLiveTestingSetup {

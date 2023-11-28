@@ -39,7 +39,7 @@ class FileIOTests: XCTestCase {
         let app = HBApplication(responder: router.buildResponder())
 
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/test.jpg", method: .GET) { response in
+            try await client.XCTExecute(uri: "/test.jpg", method: .get) { response in
                 XCTAssertEqual(response.body, buffer)
             }
         }
@@ -48,7 +48,7 @@ class FileIOTests: XCTestCase {
     func testWrite() async throws {
         let filename = "testWrite.txt"
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.put("store") { request, context -> HTTPResponseStatus in
+        router.put("store") { request, context -> HTTPResponse.Status in
             let fileIO = HBFileIO(threadPool: context.threadPool)
             try await fileIO.writeFile(contents: request.body, path: filename, context: context, logger: context.logger)
             return .ok
@@ -57,7 +57,7 @@ class FileIOTests: XCTestCase {
 
         try await app.test(.router) { client in
             let buffer = ByteBufferAllocator().buffer(string: "This is a test")
-            try await client.XCTExecute(uri: "/store", method: .PUT, body: buffer) { response in
+            try await client.XCTExecute(uri: "/store", method: .put, body: buffer) { response in
                 XCTAssertEqual(response.status, .ok)
             }
         }
@@ -71,7 +71,7 @@ class FileIOTests: XCTestCase {
     func testWriteLargeFile() async throws {
         let filename = "testWriteLargeFile.txt"
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
-        router.put("store") { request, context -> HTTPResponseStatus in
+        router.put("store") { request, context -> HTTPResponse.Status in
             let fileIO = HBFileIO(threadPool: context.threadPool)
             try await fileIO.writeFile(contents: request.body, path: filename, context: context, logger: context.logger)
             return .ok
@@ -80,7 +80,7 @@ class FileIOTests: XCTestCase {
 
         try await app.test(.live) { client in
             let buffer = self.randomBuffer(size: 400_000)
-            try await client.XCTExecute(uri: "/store", method: .PUT, body: buffer) { response in
+            try await client.XCTExecute(uri: "/store", method: .put, body: buffer) { response in
                 XCTAssertEqual(response.status, .ok)
             }
 

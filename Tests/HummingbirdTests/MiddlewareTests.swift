@@ -27,7 +27,7 @@ final class MiddlewareTests: XCTestCase {
         struct TestMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 var response = try await next.respond(to: request, context: context)
-                response.headers.replaceOrAdd(name: "middleware", value: "TestMiddleware")
+                response.headers[.test] = "TestMiddleware"
                 return response
             }
         }
@@ -38,8 +38,8 @@ final class MiddlewareTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/hello", method: .GET) { response in
-                XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
+            try await client.XCTExecute(uri: "/hello", method: .get) { response in
+                XCTAssertEqual(response.headers[.test], "TestMiddleware")
             }
         }
     }
@@ -49,7 +49,7 @@ final class MiddlewareTests: XCTestCase {
             let string: String
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 var response = try await next.respond(to: request, context: context)
-                response.headers.add(name: "middleware", value: self.string)
+                response.headers[values: .test].append(self.string)
                 return response
             }
         }
@@ -61,10 +61,10 @@ final class MiddlewareTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/hello", method: .GET) { response in
+            try await client.XCTExecute(uri: "/hello", method: .get) { response in
                 // headers come back in opposite order as middleware is applied to responses in that order
-                XCTAssertEqual(response.headers["middleware"].first, "second")
-                XCTAssertEqual(response.headers["middleware"].last, "first")
+                XCTAssertEqual(response.headers[values: .test].first, "second")
+                XCTAssertEqual(response.headers[values: .test].last, "first")
             }
         }
     }
@@ -73,8 +73,8 @@ final class MiddlewareTests: XCTestCase {
         struct TestMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 var response = try await next.respond(to: request, context: context)
-                XCTAssertNil(response.headers["alreadyRun"].first)
-                response.headers.add(name: "alreadyRun", value: "true")
+                XCTAssertNil(response.headers[.test])
+                response.headers[.test] = "alreadyRun"
                 return response
             }
         }
@@ -85,7 +85,7 @@ final class MiddlewareTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/hello", method: .GET) { _ in
+            try await client.XCTExecute(uri: "/hello", method: .get) { _ in
             }
         }
     }
@@ -105,7 +105,7 @@ final class MiddlewareTests: XCTestCase {
         let app = HBApplication(responder: router.buildResponder())
 
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/hello", method: .GET) { response in
+            try await client.XCTExecute(uri: "/hello", method: .get) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "Edited error")
                 XCTAssertEqual(response.status, .notFound)
@@ -129,7 +129,7 @@ final class MiddlewareTests: XCTestCase {
         let app = HBApplication(responder: router.buildResponder())
 
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/test", method: .GET) { _ in }
+            try await client.XCTExecute(uri: "/test", method: .get) { _ in }
         }
     }
 
@@ -164,7 +164,7 @@ final class MiddlewareTests: XCTestCase {
 
         try await app.test(.router) { client in
             let buffer = self.randomBuffer(size: 64000)
-            try await client.XCTExecute(uri: "/test", method: .GET, body: buffer) { response in
+            try await client.XCTExecute(uri: "/test", method: .get, body: buffer) { response in
                 let expectedOutput = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
                 XCTAssertEqual(expectedOutput, response.body)
             }
@@ -179,9 +179,9 @@ final class MiddlewareTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/hello", method: .GET, headers: ["origin": "foo.com"]) { response in
+            try await client.XCTExecute(uri: "/hello", method: .get, headers: [.origin: "foo.com"]) { response in
                 // headers come back in opposite order as middleware is applied to responses in that order
-                XCTAssertEqual(response.headers["Access-Control-Allow-Origin"].first, "foo.com")
+                XCTAssertEqual(response.headers[.accessControlAllowOrigin], "foo.com")
             }
         }
     }
@@ -194,9 +194,9 @@ final class MiddlewareTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/hello", method: .GET, headers: ["origin": "foo.com"]) { response in
+            try await client.XCTExecute(uri: "/hello", method: .get, headers: [.origin: "foo.com"]) { response in
                 // headers come back in opposite order as middleware is applied to responses in that order
-                XCTAssertEqual(response.headers["Access-Control-Allow-Origin"].first, "*")
+                XCTAssertEqual(response.headers[.accessControlAllowOrigin], "*")
             }
         }
     }
@@ -205,8 +205,8 @@ final class MiddlewareTests: XCTestCase {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.middlewares.add(HBCORSMiddleware(
             allowOrigin: .all,
-            allowHeaders: ["content-type", "authorization"],
-            allowMethods: [.GET, .PUT, .DELETE, .OPTIONS],
+            allowHeaders: [.contentType, .authorization],
+            allowMethods: [.get, .put, .delete, .options],
             allowCredentials: true,
             exposedHeaders: ["content-length"],
             maxAge: .seconds(3600)
@@ -216,16 +216,16 @@ final class MiddlewareTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/hello", method: .OPTIONS, headers: ["origin": "foo.com"]) { response in
+            try await client.XCTExecute(uri: "/hello", method: .options, headers: [.origin: "foo.com"]) { response in
                 // headers come back in opposite order as middleware is applied to responses in that order
-                XCTAssertEqual(response.headers["Access-Control-Allow-Origin"].first, "*")
-                let headers = response.headers[canonicalForm: "Access-Control-Allow-Headers"].joined(separator: ", ")
+                XCTAssertEqual(response.headers[.accessControlAllowOrigin], "*")
+                let headers = response.headers[.accessControlAllowHeaders] // .joined(separator: ", ")
                 XCTAssertEqual(headers, "content-type, authorization")
-                let methods = response.headers[canonicalForm: "Access-Control-Allow-Methods"].joined(separator: ", ")
+                let methods = response.headers[.accessControlAllowMethods] // .joined(separator: ", ")
                 XCTAssertEqual(methods, "GET, PUT, DELETE, OPTIONS")
-                XCTAssertEqual(response.headers["Access-Control-Allow-Credentials"].first, "true")
-                XCTAssertEqual(response.headers["Access-Control-Max-Age"].first, "3600")
-                let exposedHeaders = response.headers[canonicalForm: "Access-Control-Expose-Headers"].joined(separator: ", ")
+                XCTAssertEqual(response.headers[.accessControlAllowCredentials], "true")
+                XCTAssertEqual(response.headers[.accessControlMaxAge], "3600")
+                let exposedHeaders = response.headers[.accessControlExposeHeaders] // .joined(separator: ", ")
                 XCTAssertEqual(exposedHeaders, "content-length")
             }
         }
@@ -239,7 +239,7 @@ final class MiddlewareTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/hello", method: .PUT) { _ in
+            try await client.XCTExecute(uri: "/hello", method: .put) { _ in
             }
         }
     }

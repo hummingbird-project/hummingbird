@@ -1,7 +1,6 @@
 import HummingbirdCore
 import Logging
 import NIOCore
-import NIOHTTP1
 import NIOSSL
 
 /// Sets up child channel to use TLS before accessing base channel setup
@@ -15,14 +14,14 @@ public struct TLSChannel<BaseChannel: HBChannelSetup>: HBChannelSetup {
 
     @inlinable
     public func initialize(channel: Channel, configuration: HBServerConfiguration, logger: Logger) -> EventLoopFuture<Value> {
-        return channel.pipeline.addHandler(NIOSSLServerHandler(context: self.sslContext)).flatMap { 
+        return channel.pipeline.addHandler(NIOSSLServerHandler(context: self.sslContext)).flatMap {
             self.baseChannel.initialize(channel: channel, configuration: configuration, logger: logger)
         }
     }
 
     @inlinable
     public func handle(value: BaseChannel.Value, logger: Logging.Logger) async {
-        await baseChannel.handle(value: value, logger: logger)
+        await self.baseChannel.handle(value: value, logger: logger)
     }
 
     @usableFromInline
@@ -32,8 +31,8 @@ public struct TLSChannel<BaseChannel: HBChannelSetup>: HBChannelSetup {
 }
 
 extension TLSChannel: HTTPChannelHandler where BaseChannel: HTTPChannelHandler {
-    public var responder: @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse { 
+    public var responder: @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse {
         get { baseChannel.responder }
-        set  {baseChannel.responder = newValue }
+        set { baseChannel.responder = newValue }
     }
 }

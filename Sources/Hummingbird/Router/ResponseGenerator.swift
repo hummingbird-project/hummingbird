@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIOHTTP1
+import HTTPTypes
 
 /// Object that can generate a `Response`.
 ///
@@ -33,7 +33,7 @@ extension String: HBResponseGenerator {
     /// Generate response holding string
     public func response(from request: HBRequest, context: some HBBaseRequestContext) -> HBResponse {
         let buffer = context.allocator.buffer(string: self)
-        return HBResponse(status: .ok, headers: ["content-type": "text/plain; charset=utf-8"], body: .init(byteBuffer: buffer))
+        return HBResponse(status: .ok, headers: [.contentType: "text/plain; charset=utf-8"], body: .init(byteBuffer: buffer))
     }
 }
 
@@ -42,7 +42,7 @@ extension Substring: HBResponseGenerator {
     /// Generate response holding string
     public func response(from request: HBRequest, context: some HBBaseRequestContext) -> HBResponse {
         let buffer = context.allocator.buffer(substring: self)
-        return HBResponse(status: .ok, headers: ["content-type": "text/plain; charset=utf-8"], body: .init(byteBuffer: buffer))
+        return HBResponse(status: .ok, headers: [.contentType: "text/plain; charset=utf-8"], body: .init(byteBuffer: buffer))
     }
 }
 
@@ -50,12 +50,12 @@ extension Substring: HBResponseGenerator {
 extension ByteBuffer: HBResponseGenerator {
     /// Generate response holding bytebuffer
     public func response(from request: HBRequest, context: some HBBaseRequestContext) -> HBResponse {
-        HBResponse(status: .ok, headers: ["content-type": "application/octet-stream"], body: .init(byteBuffer: self))
+        HBResponse(status: .ok, headers: [.contentType: "application/octet-stream"], body: .init(byteBuffer: self))
     }
 }
 
 /// Extend HTTPResponseStatus to conform to ResponseGenerator
-extension HTTPResponseStatus: HBResponseGenerator {
+extension HTTPResponse.Status: HBResponseGenerator {
     /// Generate response with this response status code
     public func response(from request: HBRequest, context: some HBBaseRequestContext) -> HBResponse {
         HBResponse(status: self, headers: [:], body: .init())
@@ -75,13 +75,13 @@ extension Optional: HBResponseGenerator where Wrapped: HBResponseGenerator {
 }
 
 public struct HBEditedResponse<Generator: HBResponseGenerator>: HBResponseGenerator {
-    public var status: HTTPResponseStatus?
-    public var headers: HTTPHeaders
+    public var status: HTTPResponse.Status?
+    public var headers: HTTPFields
     public var responseGenerator: Generator
 
     public init(
-        status: HTTPResponseStatus? = nil,
-        headers: HTTPHeaders = .init(),
+        status: HTTPResponse.Status? = nil,
+        headers: HTTPFields = .init(),
         response: Generator
     ) {
         self.status = status
@@ -97,9 +97,9 @@ public struct HBEditedResponse<Generator: HBResponseGenerator>: HBResponseGenera
         if self.headers.count > 0 {
             // only add headers from generated response if they don't exist in override headers
             var headers = self.headers
-            for (name, value) in response.headers {
-                if headers[name].first == nil {
-                    headers.add(name: name, value: value)
+            for header in response.headers {
+                if headers[header.name] == nil {
+                    headers.append(header)
                 }
             }
             response.headers = headers

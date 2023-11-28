@@ -15,7 +15,6 @@
 import Hummingbird
 import HummingbirdFoundation
 import HummingbirdXCT
-import NIOHTTP1
 import XCTest
 
 final class HandlerTests: XCTestCase {
@@ -38,7 +37,7 @@ final class HandlerTests: XCTestCase {
 
             try await client.XCTExecute(
                 uri: "/hello",
-                method: .POST,
+                method: .post,
                 body: body
             ) { response in
                 XCTAssertEqual(response.status, .badRequest)
@@ -68,7 +67,7 @@ final class HandlerTests: XCTestCase {
 
             try await client.XCTExecute(
                 uri: "/hello",
-                method: .POST,
+                method: .post,
                 body: body
             ) { response in
                 XCTAssertEqual(response.status, .badRequest)
@@ -98,7 +97,7 @@ final class HandlerTests: XCTestCase {
 
             try await client.XCTExecute(
                 uri: "/hello",
-                method: .POST,
+                method: .post,
                 body: body
             ) { response in
                 XCTAssertEqual(response.status, .badRequest)
@@ -133,7 +132,7 @@ final class HandlerTests: XCTestCase {
 
             try await client.XCTExecute(
                 uri: "/hello",
-                method: .POST,
+                method: .post,
                 body: body
             ) { response in
                 XCTAssertEqual(response.status, .badRequest)
@@ -158,7 +157,7 @@ final class HandlerTests: XCTestCase {
 
         try await app.test(.router) { client in
 
-            try await client.XCTExecute(uri: "/hello", method: .POST, body: ByteBufferAllocator().buffer(string: #"{"name": "Adam"}"#)) { response in
+            try await client.XCTExecute(uri: "/hello", method: .post, body: ByteBufferAllocator().buffer(string: #"{"name": "Adam"}"#)) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "Hello Adam")
             }
@@ -179,7 +178,7 @@ final class HandlerTests: XCTestCase {
 
         try await app.test(.router) { client in
 
-            try await client.XCTExecute(uri: "/hello", method: .PUT, body: ByteBufferAllocator().buffer(string: #"{"name": "Adam"}"#)) { response in
+            try await client.XCTExecute(uri: "/hello", method: .put, body: ByteBufferAllocator().buffer(string: #"{"name": "Adam"}"#)) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "Hello Adam")
             }
@@ -190,7 +189,7 @@ final class HandlerTests: XCTestCase {
         struct DecodeTest: HBRequestDecodable {
             let name: String
 
-            func handle(request: HBRequest, context: some HBBaseRequestContext) -> HTTPResponseStatus {
+            func handle(request: HBRequest, context: some HBBaseRequestContext) -> HTTPResponse.Status {
                 return .ok
             }
         }
@@ -200,7 +199,7 @@ final class HandlerTests: XCTestCase {
         app.decoder = JSONDecoder()
 
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/hello", method: .GET, body: ByteBufferAllocator().buffer(string: #"{"name2": "Adam"}"#)) { response in
+            try await client.XCTExecute(uri: "/hello", method: .get, body: ByteBufferAllocator().buffer(string: #"{"name2": "Adam"}"#)) { response in
                 XCTAssertEqual(response.status, .badRequest)
             }
         }
@@ -224,7 +223,7 @@ final class HandlerTests: XCTestCase {
 
         try await app.test(.router) { client in
 
-            try await client.XCTExecute(uri: "/23", method: .PUT) { response in
+            try await client.XCTExecute(uri: "/23", method: .put) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "23")
             }

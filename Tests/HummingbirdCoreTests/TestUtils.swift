@@ -16,7 +16,6 @@ import HummingbirdCore
 import HummingbirdCoreXCT
 import Logging
 import NIOCore
-import NIOHTTP1
 import NIOSSL
 import ServiceLifecycle
 import XCTest

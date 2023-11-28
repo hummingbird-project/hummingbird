@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import Hummingbird
 import HummingbirdXCT
 @testable import Instrumentation
@@ -41,7 +42,7 @@ final class TracingTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/users/42", method: .GET) { response in
+            try await client.XCTExecute(uri: "/users/42", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
                 var responseBody = try XCTUnwrap(response.body)
                 XCTAssertEqual(responseBody.readString(length: responseBody.readableBytes), "42")
@@ -64,7 +65,6 @@ final class TracingTests: XCTestCase {
             "http.response_content_length": 2,
             "net.host.name": "127.0.0.1",
             "net.host.port": 8080,
-            "http.flavor": "1.1",
         ])
     }
 
@@ -82,7 +82,7 @@ final class TracingTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/users", method: .POST, headers: ["content-length": "2"], body: ByteBuffer(string: "42")) { response in
+            try await client.XCTExecute(uri: "/users", method: .post, headers: [.contentLength: "2"], body: ByteBuffer(string: "42")) { response in
                 XCTAssertEqual(response.status, .internalServerError)
             }
         }
@@ -106,7 +106,6 @@ final class TracingTests: XCTestCase {
             "http.request_content_length": 2,
             "net.host.name": "127.0.0.1",
             "net.host.port": 8080,
-            "http.flavor": "1.1",
         ])
     }
 
@@ -119,13 +118,12 @@ final class TracingTests: XCTestCase {
 
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.middlewares.add(HBTracingMiddleware(recordingHeaders: [
-            "accept", "content-type", "cache-control", "does-not-exist",
+            .accept, .contentType, .cacheControl, .test,
         ]))
         router.get("users/:id") { _, _ -> HBResponse in
-            var headers = HTTPHeaders()
-            headers.add(name: "cache-control", value: "86400")
-            headers.add(name: "cache-control", value: "public")
-            headers.add(name: "content-type", value: "text/plain")
+            var headers = HTTPFields()
+            headers[values: .cacheControl] = ["86400", "public"]
+            headers[.contentType] = "text/plain"
             return HBResponse(
                 status: .ok,
                 headers: headers,
@@ -134,11 +132,10 @@ final class TracingTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            var requestHeaders = HTTPHeaders()
-            requestHeaders.add(name: "Accept", value: "text/plain")
-            requestHeaders.add(name: "Accept", value: "application/json")
-            requestHeaders.add(name: "Cache-Control", value: "no-cache")
-            try await client.XCTExecute(uri: "/users/42", method: .GET, headers: requestHeaders) { response in
+            var requestHeaders = HTTPFields()
+            requestHeaders[values: .accept] = ["text/plain", "application/json"]
+            requestHeaders[.cacheControl] = "no-cache"
+            try await client.XCTExecute(uri: "/users/42", method: .get, headers: requestHeaders) { response in
                 XCTAssertEqual(response.status, .ok)
                 var responseBody = try XCTUnwrap(response.body)
                 XCTAssertEqual(responseBody.readString(length: responseBody.readableBytes), "42")
@@ -161,7 +158,6 @@ final class TracingTests: XCTestCase {
             "http.response_content_length": 2,
             "net.host.name": "127.0.0.1",
             "net.host.port": 8080,
-            "http.flavor": "1.1",
             "http.request.header.accept": .stringArray(["text/plain", "application/json"]),
             "http.request.header.cache_control": "no-cache",
             "http.response.header.content_type": "text/plain",
@@ -178,12 +174,12 @@ final class TracingTests: XCTestCase {
 
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.middlewares.add(HBTracingMiddleware())
-        router.post("/users") { _, _ -> HTTPResponseStatus in
+        router.post("/users") { _, _ -> HTTPResponse.Status in
             return .noContent
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/users", method: .POST) { response in
+            try await client.XCTExecute(uri: "/users", method: .post) { response in
                 XCTAssertEqual(response.status, .noContent)
             }
         }
@@ -204,7 +200,6 @@ final class TracingTests: XCTestCase {
             "http.response_content_length": 0,
             "net.host.name": "127.0.0.1",
             "net.host.port": 8080,
-            "http.flavor": "1.1",
         ])
     }
 
@@ -217,12 +212,12 @@ final class TracingTests: XCTestCase {
 
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.middlewares.add(HBTracingMiddleware())
-        router.get("/") { _, _ -> HTTPResponseStatus in
+        router.get("/") { _, _ -> HTTPResponse.Status in
             return .ok
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .GET) { response in
+            try await client.XCTExecute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
             }
         }
@@ -243,7 +238,6 @@ final class TracingTests: XCTestCase {
             "http.response_content_length": 0,
             "net.host.name": "127.0.0.1",
             "net.host.port": 8080,
-            "http.flavor": "1.1",
         ])
     }
 
@@ -258,7 +252,7 @@ final class TracingTests: XCTestCase {
         router.middlewares.add(HBTracingMiddleware())
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .GET) { response in
+            try await client.XCTExecute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .notFound)
             }
         }
@@ -280,7 +274,6 @@ final class TracingTests: XCTestCase {
             "http.status_code": 404,
             "net.host.name": "127.0.0.1",
             "net.host.port": 8080,
-            "http.flavor": "1.1",
         ])
     }
 
@@ -295,7 +288,7 @@ final class TracingTests: XCTestCase {
 
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.middlewares.add(HBTracingMiddleware())
-        router.get("/") { _, _ -> HTTPResponseStatus in
+        router.get("/") { _, _ -> HTTPResponse.Status in
             var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
             serviceContext.testID = "test"
             let span = InstrumentationSystem.tracer.startSpan("testing", context: serviceContext, ofKind: .server)
@@ -304,7 +297,7 @@ final class TracingTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .GET) { response in
+            try await client.XCTExecute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
             }
         }
@@ -329,7 +322,7 @@ final class TracingTests: XCTestCase {
 
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.middlewares.add(HBTracingMiddleware())
-        router.get("/") { _, _ -> HTTPResponseStatus in
+        router.get("/") { _, _ -> HTTPResponse.Status in
             var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
             serviceContext.testID = "test"
             return InstrumentationSystem.tracer.withSpan("TestSpan", context: serviceContext, ofKind: .client) { span in
@@ -339,7 +332,7 @@ final class TracingTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .GET) { response in
+            try await client.XCTExecute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
             }
         }
@@ -381,13 +374,13 @@ final class TracingTests: XCTestCase {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.middlewares.add(SpanMiddleware())
         router.middlewares.add(HBTracingMiddleware())
-        router.get("/") { _, _ -> HTTPResponseStatus in
+        router.get("/") { _, _ -> HTTPResponse.Status in
             try await Task.sleep(for: .milliseconds(2))
             return .ok
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .GET) { response in
+            try await client.XCTExecute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
             }
         }
@@ -416,7 +409,7 @@ extension TracingTests {
 
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.middlewares.add(HBTracingMiddleware())
-        router.get("/") { _, _ -> HTTPResponseStatus in
+        router.get("/") { _, _ -> HTTPResponse.Status in
             try await Task.sleep(nanoseconds: 1000)
             return InstrumentationSystem.tracer.withAnySpan("testing", ofKind: .server) { _ in
                 return .ok
@@ -424,7 +417,7 @@ extension TracingTests {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .GET) { response in
+            try await client.XCTExecute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
             }
         }

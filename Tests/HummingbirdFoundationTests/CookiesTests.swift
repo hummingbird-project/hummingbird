@@ -73,8 +73,8 @@ class CookieTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .POST) { response in
-                XCTAssertEqual(response.headers["Set-Cookie"].first, "test=value; HttpOnly")
+            try await client.XCTExecute(uri: "/", method: .post) { response in
+                XCTAssertEqual(response.headers[.setCookie], "test=value; HttpOnly")
             }
         }
     }
@@ -82,12 +82,12 @@ class CookieTests: XCTestCase {
     func testSetCookieViaRequest() async throws {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router.post("/") { _, _ in
-            return HBEditedResponse(headers: ["Set-Cookie": HBCookie(name: "test", value: "value").description], response: "Hello")
+            return HBEditedResponse(headers: [.setCookie: HBCookie(name: "test", value: "value").description], response: "Hello")
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .POST) { response in
-                XCTAssertEqual(response.headers["Set-Cookie"].first, "test=value; HttpOnly")
+            try await client.XCTExecute(uri: "/", method: .post) { response in
+                XCTAssertEqual(response.headers[.setCookie], "test=value; HttpOnly")
             }
         }
     }
@@ -99,7 +99,7 @@ class CookieTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .POST, headers: ["cookie": "test=value"]) { response in
+            try await client.XCTExecute(uri: "/", method: .post, headers: [.cookie: "test=value"]) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "value")
             }

@@ -12,22 +12,38 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import NIOCore
-import NIOHTTP1
 
 /// HTTP response
 public struct HBHTTPResponse: Sendable {
-    public var status: HTTPResponseStatus
-    public var headers: HTTPHeaders
+    public var head: HTTPResponse
     public var body: HBResponseBody
 
-    public init(status: HTTPResponseStatus, headers: HTTPHeaders = .init(), body: HBResponseBody = .init()) {
-        self.status = status
-        self.headers = headers
+    public init(head: HTTPResponse, body: HBResponseBody = .init()) {
+        self.head = head
         self.body = body
         if let contentLength = body.contentLength {
-            self.headers.replaceOrAdd(name: "content-length", value: String(describing: contentLength))
+            self.head.headerFields[.contentLength] = String(describing: contentLength)
         }
+    }
+
+    public init(status: HTTPResponse.Status, headers: HTTPFields = .init(), body: HBResponseBody = .init()) {
+        self.head = .init(status: status, headerFields: headers)
+        self.body = body
+        if let contentLength = body.contentLength {
+            self.head.headerFields[.contentLength] = String(describing: contentLength)
+        }
+    }
+
+    public var status: HTTPResponse.Status {
+        get { self.head.status }
+        set { self.head.status = newValue }
+    }
+
+    public var headers: HTTPFields {
+        get { self.head.headerFields }
+        set { self.head.headerFields = newValue }
     }
 }
 

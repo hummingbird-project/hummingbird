@@ -30,7 +30,7 @@ final class RouterTests: XCTestCase {
 
         func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
             var response = try await next.respond(to: request, context: context)
-            response.headers.replaceOrAdd(name: "middleware", value: self.output)
+            response.headers[.test] = self.output
             return response
         }
     }
@@ -50,7 +50,7 @@ final class RouterTests: XCTestCase {
         let app = HBApplication(responder: router.buildResponder())
 
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/test/1", method: .GET) { response in
+            try await client.XCTExecute(uri: "/test/1", method: .get) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "/test/:number")
             }
@@ -80,15 +80,15 @@ final class RouterTests: XCTestCase {
         let app = HBApplication(responder: router.buildResponder())
 
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .GET) { response in
+            try await client.XCTExecute(uri: "/", method: .get) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "/")
             }
-            try await client.XCTExecute(uri: "/test/", method: .GET) { response in
+            try await client.XCTExecute(uri: "/test/", method: .get) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "/test")
             }
-            try await client.XCTExecute(uri: "/test2/", method: .POST) { response in
+            try await client.XCTExecute(uri: "/test2/", method: .post) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "/test2")
             }
@@ -124,22 +124,22 @@ final class RouterTests: XCTestCase {
             }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/test/", method: .GET) { response in
+            try await client.XCTExecute(uri: "/test/", method: .get) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "/test")
             }
 
-            try await client.XCTExecute(uri: "/test2/", method: .POST) { response in
+            try await client.XCTExecute(uri: "/test2/", method: .post) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "/test2")
             }
 
-            try await client.XCTExecute(uri: "/testGroup/", method: .GET) { response in
+            try await client.XCTExecute(uri: "/testGroup/", method: .get) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "/testGroup")
             }
 
-            try await client.XCTExecute(uri: "/testGroup2", method: .GET) { response in
+            try await client.XCTExecute(uri: "/testGroup2", method: .get) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "/testGroup2")
             }
@@ -159,12 +159,12 @@ final class RouterTests: XCTestCase {
             }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/endpoint", method: .GET) { response in
+            try await client.XCTExecute(uri: "/endpoint", method: .get) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "GET")
             }
 
-            try await client.XCTExecute(uri: "/endpoint", method: .PUT) { response in
+            try await client.XCTExecute(uri: "/endpoint", method: .put) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "PUT")
             }
@@ -186,12 +186,12 @@ final class RouterTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/group", method: .GET) { response in
-                XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
+            try await client.XCTExecute(uri: "/group", method: .get) { response in
+                XCTAssertEqual(response.headers[.test], "TestMiddleware")
             }
 
-            try await client.XCTExecute(uri: "/not-group", method: .GET) { response in
-                XCTAssertEqual(response.headers["middleware"].first, nil)
+            try await client.XCTExecute(uri: "/not-group", method: .get) { response in
+                XCTAssertEqual(response.headers[.test], nil)
             }
         }
     }
@@ -206,8 +206,8 @@ final class RouterTests: XCTestCase {
             }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/group", method: .HEAD) { response in
-                XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
+            try await client.XCTExecute(uri: "/group", method: .head) { response in
+                XCTAssertEqual(response.headers[.test], "TestMiddleware")
             }
         }
     }
@@ -224,8 +224,8 @@ final class RouterTests: XCTestCase {
             }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/test/group", method: .GET) { response in
-                XCTAssertEqual(response.headers["middleware"].first, "TestMiddleware")
+            try await client.XCTExecute(uri: "/test/group", method: .get) { response in
+                XCTAssertEqual(response.headers[.test], "TestMiddleware")
             }
         }
     }
@@ -256,11 +256,11 @@ final class RouterTests: XCTestCase {
             }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/test/group", method: .GET) { response in
+            try await client.XCTExecute(uri: "/test/group", method: .get) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "route2")
             }
-            try await client.XCTExecute(uri: "/test", method: .GET) { response in
+            try await client.XCTExecute(uri: "/test", method: .get) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "route1")
             }
@@ -275,7 +275,7 @@ final class RouterTests: XCTestCase {
             }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/user/1234", method: .DELETE) { response in
+            try await client.XCTExecute(uri: "/user/1234", method: .delete) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "1234")
             }
@@ -291,7 +291,7 @@ final class RouterTests: XCTestCase {
             }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/user/john/1234", method: .DELETE) { response in
+            try await client.XCTExecute(uri: "/user/john/1234", method: .delete) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "1234")
             }
@@ -309,7 +309,7 @@ final class RouterTests: XCTestCase {
             }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/files/file.doc/test.jpg", method: .GET) { response in
+            try await client.XCTExecute(uri: "/files/file.doc/test.jpg", method: .get) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(String(buffer: body), "test.doc")
             }
@@ -319,15 +319,15 @@ final class RouterTests: XCTestCase {
     func testPartialWildcard() async throws {
         let router = HBRouterBuilder(context: HBTestRouterContext.self)
         router
-            .get("/files/file.*/*.jpg") { _, _ -> HTTPResponseStatus in
+            .get("/files/file.*/*.jpg") { _, _ -> HTTPResponse.Status in
                 return .ok
             }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/files/file.doc/test.jpg", method: .GET) { response in
+            try await client.XCTExecute(uri: "/files/file.doc/test.jpg", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
             }
-            try await client.XCTExecute(uri: "/files/file.doc/test.png", method: .GET) { response in
+            try await client.XCTExecute(uri: "/files/file.doc/test.png", method: .get) { response in
                 XCTAssertEqual(response.status, .notFound)
             }
         }
@@ -341,12 +341,12 @@ final class RouterTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            let idString = try await client.XCTExecute(uri: "/id", method: .GET) { response -> String in
+            let idString = try await client.XCTExecute(uri: "/id", method: .get) { response -> String in
                 let body = try XCTUnwrap(response.body)
                 return String(buffer: body)
             }
             let id = try XCTUnwrap(Int(idString))
-            try await client.XCTExecute(uri: "/id", method: .GET) { response in
+            try await client.XCTExecute(uri: "/id", method: .get) { response in
                 let body = try XCTUnwrap(response.body)
                 let id2 = Int(String(buffer: body))
                 XCTAssertEqual(id2, id + 1)
@@ -362,8 +362,8 @@ final class RouterTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/redirect", method: .GET) { response in
-                XCTAssertEqual(response.headers["location"].first, "/other")
+            try await client.XCTExecute(uri: "/redirect", method: .get) { response in
+                XCTAssertEqual(response.headers[.location], "/other")
                 XCTAssertEqual(response.status, .seeOther)
             }
         }

@@ -29,7 +29,7 @@ extension JSONEncoder: HBResponseEncoder {
         buffer.writeBytes(data)
         return HBResponse(
             status: .ok,
-            headers: ["content-type": "application/json; charset=utf-8"],
+            headers: [.contentType: "application/json; charset=utf-8"],
             body: .init(byteBuffer: buffer)
         )
     }

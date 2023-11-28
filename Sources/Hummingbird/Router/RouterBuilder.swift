@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import HummingbirdCore
 import NIOCore
-import NIOHTTP1
 
 /// Create rules for routing requests and then create `HBResponder` that will follow these rules.
 ///
@@ -59,7 +59,7 @@ public final class HBRouterBuilder<Context: HBBaseRequestContext>: HBRouterMetho
     ///   - path: URI path
     ///   - method: http method
     ///   - responder: handler to call
-    public func add(_ path: String, method: HTTPMethod, responder: any HBResponder<Context>) {
+    public func add(_ path: String, method: HTTPRequest.Method, responder: any HBResponder<Context>) {
         // ensure path starts with a "/" and doesn't end with a "/"
         let path = "/\(path.dropSuffix("/").dropPrefix("/"))"
         self.trie.addEntry(.init(path), value: HBEndpointResponders(path: path)) { node in
@@ -75,7 +75,7 @@ public final class HBRouterBuilder<Context: HBBaseRequestContext>: HBRouterMetho
     /// Add path for closure returning type conforming to ResponseFutureEncodable
     @discardableResult public func on<Output: HBResponseGenerator>(
         _ path: String,
-        method: HTTPMethod,
+        method: HTTPRequest.Method,
         options: HBRouterMethodOptions = [],
         use closure: @escaping @Sendable (HBRequest, Context) async throws -> Output
     ) -> Self {

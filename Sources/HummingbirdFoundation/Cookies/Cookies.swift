@@ -21,7 +21,7 @@ public struct HBCookies: Sendable {
     /// Construct cookies accessor from `HBRequest`
     /// - Parameter request: request to get cookies from
     init(from request: HBRequest) {
-        self.cookieStrings = request.headers["cookie"].flatMap {
+        self.cookieStrings = request.headers[values: .cookie].flatMap {
             return $0.split(separator: ";").map { $0.drop { $0.isWhitespace } }
         }
     }

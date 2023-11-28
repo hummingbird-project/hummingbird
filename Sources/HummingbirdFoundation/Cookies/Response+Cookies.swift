@@ -17,7 +17,7 @@ import Hummingbird
 extension HBResponse {
     /// Set cookie on response
     public mutating func setCookie(_ cookie: HBCookie) {
-        self.headers.add(name: "Set-Cookie", value: cookie.description)
+        self.headers[values: .setCookie].append(cookie.description)
     }
 }
 
@@ -26,6 +26,6 @@ extension HBEditedResponse {
     ///
     /// Can be accessed via `request.response.setCookie(myCookie)`
     public mutating func setCookie(_ cookie: HBCookie) {
-        self.headers.add(name: "Set-Cookie", value: cookie.description)
+        self.headers[values: .setCookie].append(cookie.description)
     }
 }

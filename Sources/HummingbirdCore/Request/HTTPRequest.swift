@@ -12,18 +12,20 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import NIOCore
-import NIOHTTP1
 
 /// HTTP request
 public struct HBHTTPRequest: Sendable {
-    public var head: HTTPRequestHead
+    public var head: HTTPRequest
     public var body: HBRequestBody
 
-    public init(head: HTTPRequestHead, body: HBRequestBody) {
+    public init(head: HTTPRequest, body: HBRequestBody) {
         self.head = head
         self.body = body
     }
+
+    public var headers: HTTPFields { self.head.headerFields }
 }
 
 extension HBHTTPRequest: CustomStringConvertible {

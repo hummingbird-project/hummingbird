@@ -13,11 +13,11 @@
 //===----------------------------------------------------------------------===//
 
 import Atomics
+import HTTPTypes
 import HummingbirdCore
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
-import NIOHTTP1
 
 /// Holds all the values required to process a request
 public struct HBRequest: Sendable {
@@ -26,15 +26,13 @@ public struct HBRequest: Sendable {
     /// URI path
     public let uri: HBURL
     /// HTTP head
-    public let head: HTTPRequestHead
+    public let head: HTTPRequest
     /// Body of HTTP request
     public var body: HBRequestBody
-    /// HTTP version
-    public var version: HTTPVersion { self.head.version }
     /// Request HTTP method
-    public var method: HTTPMethod { self.head.method }
+    public var method: HTTPRequest.Method { self.head.method }
     /// Request HTTP headers
-    public var headers: HTTPHeaders { self.head.headers }
+    public var headers: HTTPFields { self.head.headerFields }
 
     // MARK: Initialization
 
@@ -44,10 +42,10 @@ public struct HBRequest: Sendable {
     ///   - body: HTTP body
     ///   - id: Unique RequestID
     public init(
-        head: HTTPRequestHead,
+        head: HTTPRequest,
         body: HBRequestBody
     ) {
-        self.uri = .init(head.uri)
+        self.uri = .init(head.path ?? "")
         self.head = head
         self.body = body
     }
@@ -83,7 +81,7 @@ public struct HBRequest: Sendable {
 
 extension HBRequest: CustomStringConvertible {
     public var description: String {
-        "uri: \(self.uri), version: \(self.version), method: \(self.method), headers: \(self.headers), body: \(self.body)"
+        "uri: \(self.uri), method: \(self.method), headers: \(self.headers), body: \(self.body)"
     }
 }
 

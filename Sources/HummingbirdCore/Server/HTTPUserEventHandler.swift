@@ -14,13 +14,13 @@
 
 import Logging
 import NIOCore
-import NIOHTTP1
+import NIOHTTPTypes
 
 public class HBHTTPUserEventHandler: ChannelDuplexHandler, RemovableChannelHandler {
-    public typealias InboundIn = HTTPServerRequestPart
-    public typealias InboundOut = HTTPServerRequestPart
-    public typealias OutboundIn = HTTPServerResponsePart
-    public typealias OutboundOut = HTTPServerResponsePart
+    public typealias InboundIn = HTTPRequestPart
+    public typealias InboundOut = HTTPRequestPart
+    public typealias OutboundIn = HTTPResponsePart
+    public typealias OutboundOut = HTTPResponsePart
 
     var closeAfterResponseWritten: Bool = false
     var requestsBeingRead: Int = 0
