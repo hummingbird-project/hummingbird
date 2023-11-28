@@ -16,6 +16,7 @@ import HTTPTypes
 import Hummingbird
 import HummingbirdCore
 import HummingbirdCoreXCT
+import Logging
 import NIOCore
 import NIOPosix
 import NIOTransportServices
@@ -23,7 +24,46 @@ import ServiceLifecycle
 import XCTest
 
 /// Test using a live server
-final class HBXCTLive<Responder: HBResponder, ChannelSetup: HBChannelSetup & HTTPChannelHandler>: HBXCTApplication where Responder.Context: HBRequestContext {
+final class HBXCTLive<App: HBApplicationProtocol>: HBXCTApplication where App.Responder.Context: HBRequestContext {
+    /// TestApplication used to wrap HBApplication being tested
+    struct TestApplication<BaseApp: HBApplicationProtocol>: HBApplicationProtocol {
+        typealias Context = BaseApp.Context
+        typealias Responder = BaseApp.Responder
+        typealias ChannelSetup = BaseApp.ChannelSetup
+
+        let base: BaseApp
+
+        func buildResponder() async throws -> Responder {
+            try await self.base.buildResponder()
+        }
+
+        func channelSetup(httpResponder: @escaping @Sendable (HBRequest, Channel) async throws -> HBResponse) throws -> ChannelSetup {
+            try self.base.channelSetup(httpResponder: httpResponder)
+        }
+
+        /// event loop group used by application
+        var eventLoopGroup: EventLoopGroup { self.base.eventLoopGroup }
+        /// thread pool used by application
+        var threadPool: NIOThreadPool { self.base.threadPool }
+        /// Configuration
+        var configuration: HBApplicationConfiguration { self.base.configuration.with(address: .hostname("localhost", port: 0)) }
+        /// Logger
+        var logger: Logger { self.base.logger }
+        /// Encoder used by router
+        var encoder: HBResponseEncoder { self.base.encoder }
+        /// decoder used by router
+        var decoder: HBRequestDecoder { self.base.decoder }
+        /// on server running
+        @Sendable func onServerRunning(_ channel: Channel) async {
+            await self.portPromise.complete(channel.localAddress!.port!)
+        }
+
+        /// services attached to the application.
+        var services: [any Service] { self.base.services }
+
+        let portPromise: Promise<Int> = .init()
+    }
+
     struct Client: HBXCTClientProtocol {
         let client: HBXCTClient
 
@@ -42,16 +82,9 @@ final class HBXCTLive<Responder: HBResponder, ChannelSetup: HBChannelSetup & HTT
         }
     }
 
-    init(app: HBApplication<Responder, ChannelSetup>) {
-        var app = app
-        app.configuration = app.configuration.with(address: .hostname("localhost", port: 0))
-        let promise = Promise<Int>()
-        app.onServerRunning = { channel in
-            await promise.complete(channel.localAddress!.port!)
-        }
+    init(app: App) {
         self.timeout = .seconds(15)
-        self.promise = promise
-        self.application = app
+        self.application = TestApplication(base: app)
     }
 
     /// Start tests
@@ -67,7 +100,7 @@ final class HBXCTLive<Responder: HBResponder, ChannelSetup: HBChannelSetup & HTT
             group.addTask {
                 try await serviceGroup.run()
             }
-            let port = await self.promise.wait()
+            let port = await self.application.portPromise.wait()
             let client = HBXCTClient(
                 host: "localhost",
                 port: port,
@@ -82,12 +115,7 @@ final class HBXCTLive<Responder: HBResponder, ChannelSetup: HBChannelSetup & HTT
         }
     }
 
-    func onServerRunning(_ channel: Channel) async {
-        await self.promise.complete(channel.localAddress!.port!)
-    }
-
-    let application: HBApplication<Responder, ChannelSetup>
-    let promise: Promise<Int>
+    let application: TestApplication<App>
     let timeout: TimeAmount
 }
 

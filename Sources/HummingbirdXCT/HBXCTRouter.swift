@@ -22,7 +22,7 @@ import NIOCore
 import NIOPosix
 import Tracing
 
-public protocol HBTestRequestContextProtocol: HBBaseRequestContext {
+public protocol HBTestRequestContextProtocol: HBRequestContext {
     init(
         applicationContext: HBApplicationContext,
         eventLoop: EventLoop,
@@ -31,7 +31,22 @@ public protocol HBTestRequestContextProtocol: HBBaseRequestContext {
     )
 }
 
-public struct HBTestRouterContext: HBTestRequestContextProtocol, HBRequestContext {
+extension HBTestRequestContextProtocol {
+    public init(
+        applicationContext: HBApplicationContext,
+        channel: Channel,
+        logger: Logger
+    ) {
+        self.init(
+            applicationContext: applicationContext,
+            eventLoop: channel.eventLoop,
+            allocator: channel.allocator,
+            logger: logger
+        )
+    }
+}
+
+public struct HBTestRouterContext: HBTestRequestContextProtocol {
     public init(
         applicationContext: HBApplicationContext,
         eventLoop: EventLoop,
@@ -70,12 +85,12 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
     let responder: Responder
     let logger: Logger
 
-    init(app: HBApplication<Responder, HTTP1Channel>) {
+    init<App: HBApplicationProtocol>(app: App) async throws where App.Responder == Responder {
         self.eventLoopGroup = app.eventLoopGroup
         self.context = HBApplicationContext(
             configuration: app.configuration
         )
-        self.responder = app.responder
+        self.responder = try await app.buildResponder()
         self.logger = app.logger
     }
 
@@ -107,7 +122,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                     applicationContext: self.applicationContext,
                     eventLoop: eventLoop,
                     allocator: ByteBufferAllocator(),
-                    logger: HBApplication<Responder, HTTP1Channel>.loggerWithRequestId(self.logger)
+                    logger: loggerWithRequestId(self.logger)
                 )
 
                 group.addTask {
