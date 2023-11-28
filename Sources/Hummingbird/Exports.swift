@@ -15,7 +15,9 @@
 @_exported import enum HummingbirdCore.HBBindAddress
 @_exported import struct HummingbirdCore.HBHTTPError
 @_exported import protocol HummingbirdCore.HBHTTPResponseError
+@_exported import struct HummingbirdCore.HBRequest
 @_exported import enum HummingbirdCore.HBRequestBody
+@_exported import struct HummingbirdCore.HBResponse
 @_exported import struct HummingbirdCore.HBResponseBody
 @_exported import protocol HummingbirdCore.HBResponseBodyWriter
 #if canImport(Network)

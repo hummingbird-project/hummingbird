@@ -43,7 +43,28 @@ public struct HBURL: Sendable, CustomStringConvertible, ExpressibleByStringLiter
     /// URL query
     public var query: String? { return self._query.map { String($0.string) }}
     /// URL query parameter map
-    public var queryParameters: HBParameters { return .init(fromQuery: self._query) }
+    public var queryParameters: FlatDictionary<Substring, Substring> {
+        guard var query = _query else {
+            return .init()
+        }
+        let queries: [HBParser] = query.split(separator: "&")
+        let queryKeyValues = queries.map { query -> (key: Substring, value: Substring) in
+            do {
+                var query = query
+                let key = try query.read(until: "=")
+                query.unsafeAdvance()
+                if query.reachedEnd() {
+                    return (key: key.string[...], value: "")
+                } else {
+                    let value = query.readUntilTheEnd()
+                    return (key: key.string[...], value: value.percentDecode().map { $0[...] } ?? value.string[...])
+                }
+            } catch {
+                return (key: query.string[...], value: "")
+            }
+        }
+        return .init(queryKeyValues)
+    }
 
     private let _scheme: HBParser?
     private let _host: HBParser?
@@ -133,32 +154,4 @@ public struct HBURL: Sendable, CustomStringConvertible, ExpressibleByStringLiter
 
     private static let hostEndSet: Set<Unicode.Scalar> = Set(":/?")
     private static let portEndSet: Set<Unicode.Scalar> = Set("/?")
-}
-
-extension HBParameters {
-    /// Initialize parameters from parser struct
-    /// - Parameter query: parser holding query strings
-    init(fromQuery query: HBParser?) {
-        guard var query = query else {
-            self.parameters = .init()
-            return
-        }
-        let queries: [HBParser] = query.split(separator: "&")
-        let queryKeyValues = queries.map { query -> (key: Substring, value: Substring) in
-            do {
-                var query = query
-                let key = try query.read(until: "=")
-                query.unsafeAdvance()
-                if query.reachedEnd() {
-                    return (key: key.string[...], value: "")
-                } else {
-                    let value = query.readUntilTheEnd()
-                    return (key: key.string[...], value: value.percentDecode().map { $0[...] } ?? value.string[...])
-                }
-            } catch {
-                return (key: query.string[...], value: "")
-            }
-        }
-        self.parameters = .init(queryKeyValues)
-    }
 }

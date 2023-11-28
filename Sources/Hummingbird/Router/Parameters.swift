@@ -12,50 +12,32 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// Store for parameters key, value pairs extracted from URI
-public struct HBParameters: Sendable {
-    public typealias Collection = FlatDictionary<Substring, Substring>
-    internal var parameters: Collection
+import HummingbirdCore
 
-    static let recursiveCaptureKey: Substring = ":**:"
+/// HBParameters is a special case of FlatDictionary where both the key
+/// and value types are Substrings. It is used for parameters extracted
+/// from URIs
+public typealias HBParameters = FlatDictionary<Substring, Substring>
 
-    public init() {
-        self.parameters = .init()
-    }
-
-    public init(_ values: Collection) {
-        self.parameters = values
-    }
-
-    /// Return if parameter exists
-    /// - Parameter s: parameter id
-    public func has(_ s: Substring) -> Bool {
-        return self.parameters.has(s)
-    }
-
+public extension HBParameters {
     /// Return parameter with specified id
     /// - Parameter s: parameter id
-    public func get(_ s: String) -> String? {
-        return self.parameters[s[...]].map { String($0) }
+    func get(_ s: String) -> String? {
+        return self[s[...]].map { String($0) }
     }
 
     /// Return parameter with specified id as a certain type
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
-    public func get<T: LosslessStringConvertible>(_ s: String, as: T.Type) -> T? {
-        return self.parameters[s[...]].map { T(String($0)) } ?? nil
-    }
-
-    ///  Return path elements caught by recursive capture
-    public func getCatchAll() -> [Substring] {
-        return self.parameters[Self.recursiveCaptureKey].map { $0.split(separator: "/", omittingEmptySubsequences: true) } ?? []
+    func get<T: LosslessStringConvertible>(_ s: String, as: T.Type) -> T? {
+        return self[s[...]].map { T(String($0)) } ?? nil
     }
 
     /// Return parameter with specified id
     /// - Parameter s: parameter id
-    public func require(_ s: String) throws -> String {
-        guard let param = self.parameters[s[...]].map({ String($0) }) else {
+    func require(_ s: String) throws -> String {
+        guard let param = self[s[...]].map({ String($0) }) else {
             throw HBHTTPError(.badRequest)
         }
         return param
@@ -65,8 +47,8 @@ public struct HBParameters: Sendable {
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
-    public func require<T: LosslessStringConvertible>(_ s: String, as: T.Type) throws -> T {
-        guard let param = self.parameters[s[...]],
+    func require<T: LosslessStringConvertible>(_ s: String, as: T.Type) throws -> T {
+        guard let param = self[s[...]],
               let result = T(String(param))
         else {
             throw HBHTTPError(.badRequest)
@@ -74,68 +56,42 @@ public struct HBParameters: Sendable {
         return result
     }
 
-    /// Return parameter with specified id
-    /// - Parameter s: parameter id
-    public func getAll(_ s: String) -> [String] {
-        return self.parameters.getAll(for: s[...]).map { String($0) }
+    /// Return parameter with specified id as a certain type
+    /// - Parameters:
+    ///   - s: parameter id
+    ///   - as: type we want returned
+    func getAll<T: LosslessStringConvertible>(_ s: String, as: T.Type) -> [T] {
+        return self[values: s[...]].compactMap { T(String($0)) }
     }
 
     /// Return parameter with specified id as a certain type
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
-    public func getAll<T: LosslessStringConvertible>(_ s: String, as: T.Type) -> [T] {
-        return self.parameters.getAll(for: s[...]).compactMap { T(String($0)) }
-    }
-
-    /// Return parameter with specified id as a certain type
-    /// - Parameters:
-    ///   - s: parameter id
-    ///   - as: type we want returned
-    public func requireAll<T: LosslessStringConvertible>(_ s: String, as: T.Type) throws -> [T] {
-        return try self.parameters.getAll(for: s[...]).compactMap {
+    func requireAll<T: LosslessStringConvertible>(_ s: String, as: T.Type) throws -> [T] {
+        return try self[values: s[...]].compactMap {
             guard let result = T(String($0)) else {
                 throw HBHTTPError(.badRequest)
             }
             return result
         }
     }
+}
 
-    /// Set parameter
-    /// - Parameters:
-    ///   - s: parameter id
-    ///   - value: parameter value
-    mutating func set(_ s: Substring, value: Substring) {
-        self.parameters[s] = value
+/// Catch all support
+public extension HBParameters {
+    static let recursiveCaptureKey: Substring = ":**:"
+
+    ///  Return path elements caught by recursive capture
+    func getCatchAll() -> [Substring] {
+        return self[Self.recursiveCaptureKey].map { $0.split(separator: "/", omittingEmptySubsequences: true) } ?? []
     }
 
     /// Set path components caught by recursive capture
     /// - Parameters:
     ///   - value: parameter value
     mutating func setCatchAll(_ value: Substring) {
-        guard !self.parameters.has(Self.recursiveCaptureKey) else { return }
-        self.parameters[Self.recursiveCaptureKey] = value
-    }
-
-    public subscript(_ s: String) -> String? {
-        return self.parameters[s[...]].map { String($0) }
-    }
-
-    public subscript(_ s: Substring) -> String? {
-        return self.parameters[s].map { String($0) }
-    }
-}
-
-extension HBParameters: Collection {
-    public typealias Index = Collection.Index
-    public var startIndex: Index { self.parameters.startIndex }
-    public var endIndex: Index { self.parameters.endIndex }
-    public subscript(_ index: Index) -> Collection.Element { return self.parameters[index] }
-    public func index(after index: Index) -> Index { self.parameters.index(after: index) }
-}
-
-extension HBParameters: CustomStringConvertible {
-    public var description: String {
-        String(describing: self.parameters)
+        guard !self.has(Self.recursiveCaptureKey) else { return }
+        self[Self.recursiveCaptureKey] = value
     }
 }

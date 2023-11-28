@@ -21,7 +21,7 @@ import ServiceLifecycle
 
 /// Protocol for HTTP channels
 public protocol HTTPChannelHandler: HBChannelSetup {
-    var responder: @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse { get set }
+    var responder: @Sendable (HBRequest, Channel) async throws -> HBResponse { get set }
 }
 
 /// Internal error thrown when an unexpected HTTP part is received eg we didn't receive
@@ -54,10 +54,10 @@ extension HTTPChannelHandler {
                             }
                             let bodyStream = HBStreamedRequestBody()
                             let body = HBRequestBody.stream(bodyStream)
-                            let request = HBHTTPRequest(head: head, body: body)
+                            let request = HBRequest(head: head, body: body)
                             // add task processing request and writing response
                             group.addTask {
-                                let response: HBHTTPResponse
+                                let response: HBResponse
                                 do {
                                     response = try await self.responder(request, asyncChannel.channel)
                                 } catch {
@@ -110,14 +110,14 @@ extension HTTPChannelHandler {
         }
     }
 
-    func getErrorResponse(from error: Error, allocator: ByteBufferAllocator) -> HBHTTPResponse {
+    func getErrorResponse(from error: Error, allocator: ByteBufferAllocator) -> HBResponse {
         switch error {
         case let httpError as HBHTTPResponseError:
             // this is a processed error so don't log as Error
             return httpError.response(allocator: allocator)
         default:
             // this error has not been recognised
-            return HBHTTPResponse(
+            return HBResponse(
                 status: .internalServerError,
                 body: .init()
             )

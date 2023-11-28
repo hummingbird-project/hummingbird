@@ -92,7 +92,7 @@ class HummingBirdCoreTests: XCTestCase {
         try await testServer(
             childChannelSetup: HTTP1Channel { request, _ in
                 let buffer = try await request.body.collect(upTo: .max)
-                return HBHTTPResponse(status: .ok, body: .init(byteBuffer: buffer))
+                return HBResponse(status: .ok, body: .init(byteBuffer: buffer))
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
@@ -109,7 +109,7 @@ class HummingBirdCoreTests: XCTestCase {
         try await testServer(
             childChannelSetup: HTTP1Channel { _, _ in
                 let buffer = self.randomBuffer(size: 1_140_000)
-                return HBHTTPResponse(status: .ok, body: .init(byteBuffer: buffer))
+                return HBResponse(status: .ok, body: .init(byteBuffer: buffer))
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
@@ -124,7 +124,7 @@ class HummingBirdCoreTests: XCTestCase {
     func testStreamBody() async throws {
         try await testServer(
             childChannelSetup: HTTP1Channel { request, _ in
-                return HBHTTPResponse(status: .ok, body: .init(asyncSequence: request.body))
+                return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
@@ -140,7 +140,7 @@ class HummingBirdCoreTests: XCTestCase {
     func testStreamBodyWriteSlow() async throws {
         try await testServer(
             childChannelSetup: HTTP1Channel { request, _ in
-                return HBHTTPResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
+                return HBResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
@@ -168,7 +168,7 @@ class HummingBirdCoreTests: XCTestCase {
         }
         try await testServer(
             childChannelSetup: HTTP1Channel(additionalChannelHandlers: [SlowInputChannelHandler()]) { request, _ in
-                return HBHTTPResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
+                return HBResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
@@ -196,7 +196,7 @@ class HummingBirdCoreTests: XCTestCase {
         try await testServer(
             childChannelSetup: HTTP1Channel(additionalChannelHandlers: [CreateErrorHandler()]) { request, _ in
                 _ = try await request.body.collect(upTo: .max)
-                return HBHTTPResponse(status: .ok)
+                return HBResponse(status: .ok)
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
@@ -212,7 +212,7 @@ class HummingBirdCoreTests: XCTestCase {
         try await testServer(
             childChannelSetup: HTTP1Channel { _, _ in
                 // ignore request body
-                return HBHTTPResponse(status: .accepted)
+                return HBResponse(status: .accepted)
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
@@ -310,7 +310,7 @@ class HummingBirdCoreTests: XCTestCase {
             childChannelSetup: HTTP1Channel { request, _ in
                 await promise.complete(())
                 try await Task.sleep(for: .milliseconds(500))
-                return HBHTTPResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
+                return HBResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
@@ -338,7 +338,7 @@ class HummingBirdCoreTests: XCTestCase {
         try await testServer(
             childChannelSetup: HTTP1Channel { request, _ in
                 try await Task.sleep(for: .milliseconds(500))
-                return HBHTTPResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
+                return HBResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,

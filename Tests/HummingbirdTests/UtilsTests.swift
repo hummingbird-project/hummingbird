@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Hummingbird
+import HummingbirdCore
 import XCTest
 
 class FlatDictionaryTests: XCTestCase {

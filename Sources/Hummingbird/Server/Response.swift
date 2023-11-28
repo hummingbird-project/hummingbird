@@ -12,29 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
 import HummingbirdCore
-
-/// Holds all the required to generate a HTTP Response
-public struct HBResponse: Sendable {
-    public var head: HTTPResponse
-    public var body: HBResponseBody
-
-    public init(status: HTTPResponse.Status, headers: HTTPFields = .init(), body: HBResponseBody = .init()) {
-        self.head = .init(status: status, headerFields: headers)
-        self.body = body
-    }
-
-    public var status: HTTPResponse.Status {
-        get { self.head.status }
-        set { self.head.status = newValue }
-    }
-
-    public var headers: HTTPFields {
-        get { self.head.headerFields }
-        set { self.head.headerFields = newValue }
-    }
-}
 
 extension HBResponse {
     /// Specifies the type of redirect that the client should receive.
@@ -74,11 +52,5 @@ extension HBResponse {
     /// - Returns: HBResponse with redirection
     public static func redirect(to location: String, type: RedirectType = .normal) -> HBResponse {
         return .init(status: type.status, headers: [.location: location])
-    }
-}
-
-extension HBResponse: CustomStringConvertible {
-    public var description: String {
-        "status: \(self.status), headers: \(self.headers), body: \(self.body)"
     }
 }

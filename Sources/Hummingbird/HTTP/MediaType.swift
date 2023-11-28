@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HummingbirdCore
+
 /// Define media type of file
 public struct HBMediaType: Sendable, CustomStringConvertible {
     /// general category

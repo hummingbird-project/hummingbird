@@ -32,7 +32,7 @@ extension HBHTTPResponseError {
     /// Generate response from error
     /// - Parameter allocator: Byte buffer allocator used to allocate message body
     /// - Returns: Response
-    public func response(allocator: ByteBufferAllocator) -> HBHTTPResponse {
+    public func response(allocator: ByteBufferAllocator) -> HBResponse {
         let body: HBResponseBody
         if let buffer = self.body(allocator: allocator) {
             body = .init(byteBuffer: buffer)

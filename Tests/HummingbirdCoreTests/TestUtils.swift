@@ -25,9 +25,9 @@ public enum TestErrors: Error {
 }
 
 /// Basic responder that just returns "Hello" in body
-@Sendable public func helloResponder(to request: HBHTTPRequest, channel: Channel) async -> HBHTTPResponse {
+@Sendable public func helloResponder(to request: HBRequest, channel: Channel) async -> HBResponse {
     let responseBody = channel.allocator.buffer(string: "Hello")
-    return HBHTTPResponse(status: .ok, body: .init(byteBuffer: responseBody))
+    return HBResponse(status: .ok, body: .init(byteBuffer: responseBody))
 }
 
 /// Helper function for test a server
@@ -75,8 +75,8 @@ public func testServer<ChannelSetup: HBChannelSetup, Value: Sendable>(
     }
 }
 
-public func testServer<ChannelSetup: HBChannelSetup, Value: Sendable>(
-    childChannelSetup: ChannelSetup,
+public func testServer<Value: Sendable>(
+    childChannelSetup: some HBChannelSetup,
     configuration: HBServerConfiguration,
     eventLoopGroup: EventLoopGroup,
     logger: Logger,
