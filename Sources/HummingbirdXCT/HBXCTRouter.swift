@@ -61,19 +61,6 @@ public struct HBTestRouterContext: HBTestRequestContextProtocol {
         )
     }
 
-    public init(
-        applicationContext: HBApplicationContext,
-        channel: Channel,
-        logger: Logger
-    ) {
-        self.coreContext = .init(
-            applicationContext: applicationContext,
-            eventLoop: channel.eventLoop,
-            allocator: channel.allocator,
-            logger: logger
-        )
-    }
-
     /// router context
     public var coreContext: HBCoreRequestContext
 }

@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Atomics
-import Dispatch
 import HummingbirdCore
 import Logging
 import NIOCore
@@ -187,6 +186,8 @@ public func loggerWithRequestId(_ logger: Logger) -> Logger {
 /// Editing the application setup after calling `runService` will produce undefined behaviour.
 public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup & HTTPChannelHandler>: HBApplicationProtocol where Responder.Context: HBRequestContext {
     public typealias Context = Responder.Context
+    public typealias ChannelSetup = ChannelSetup
+    public typealias Responder = Responder
 
     // MARK: Member variables
 
@@ -247,6 +248,12 @@ public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup
 
     public func buildResponder() async throws -> Responder {
         return self.responder
+    }
+
+    public func channelSetup(httpResponder: @escaping @Sendable (HBHTTPRequest, Channel) async throws -> HBHTTPResponse) throws -> ChannelSetup {
+        var channelSetup = self.channelSetup
+        channelSetup.responder = httpResponder
+        return channelSetup
     }
 
     public func onServerRunning(_ channel: Channel) async {
