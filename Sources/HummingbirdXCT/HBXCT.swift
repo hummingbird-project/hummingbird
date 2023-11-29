@@ -24,10 +24,16 @@ public struct HBXCTResponse {
     public let headers: HTTPHeaders
     /// response body
     public let body: ByteBuffer?
+
+    public init(status: HTTPResponseStatus, headers: HTTPHeaders, body: ByteBuffer? = nil) {
+        self.status = status
+        self.headers = headers
+        self.body = body
+    }
 }
 
 /// Errors thrown by XCT framework.
-struct HBXCTError: Error, Equatable {
+public struct HBXCTError: Error, Equatable {
     private enum _Internal {
         case notStarted
         case noHead
@@ -41,11 +47,11 @@ struct HBXCTError: Error, Equatable {
         self.value = value
     }
 
-    static var notStarted: Self { .init(.notStarted) }
-    static var noHead: Self { .init(.noHead) }
-    static var illegalBody: Self { .init(.illegalBody) }
-    static var noEnd: Self { .init(.noEnd) }
-    static var timeout: Self { .init(.timeout) }
+    public static var notStarted: Self { .init(.notStarted) }
+    public static var noHead: Self { .init(.noHead) }
+    public static var illegalBody: Self { .init(.illegalBody) }
+    public static var noEnd: Self { .init(.noEnd) }
+    public static var timeout: Self { .init(.timeout) }
 }
 
 /// Protocol for XCT framework.
