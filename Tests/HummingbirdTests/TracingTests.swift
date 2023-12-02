@@ -35,7 +35,7 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBTracingMiddleware())
         router.get("users/:id") { _, _ -> String in
             return "42"
@@ -75,7 +75,7 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBTracingMiddleware())
         router.post("users") { _, _ -> String in
             throw HBHTTPError(.internalServerError)
@@ -116,7 +116,7 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBTracingMiddleware(recordingHeaders: [
             .accept, .contentType, .cacheControl, .test,
         ]))
@@ -172,7 +172,7 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBTracingMiddleware())
         router.post("/users") { _, _ -> HTTPResponse.Status in
             return .noContent
@@ -210,7 +210,7 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBTracingMiddleware())
         router.get("/") { _, _ -> HTTPResponse.Status in
             return .ok
@@ -248,7 +248,7 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBTracingMiddleware())
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -286,7 +286,7 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBTracingMiddleware())
         router.get("/") { _, _ -> HTTPResponse.Status in
             var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
@@ -320,7 +320,7 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBTracingMiddleware())
         router.get("/") { _, _ -> HTTPResponse.Status in
             var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
@@ -371,7 +371,7 @@ final class TracingTests: XCTestCase {
         }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(SpanMiddleware())
         router.middlewares.add(HBTracingMiddleware())
         router.get("/") { _, _ -> HTTPResponse.Status in
@@ -407,7 +407,7 @@ extension TracingTests {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBTracingMiddleware())
         router.get("/") { _, _ -> HTTPResponse.Status in
             try await Task.sleep(nanoseconds: 1000)

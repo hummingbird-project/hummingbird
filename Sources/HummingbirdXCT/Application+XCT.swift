@@ -36,7 +36,7 @@ public struct XCTRouterTestingSetup {
 ///
 /// The example below is using the `.router` framework to test
 /// ```
-/// let router = HBRouterBuilder()
+/// let router = HBRouter()
 /// router.get("/hello") { _ in
 ///     return "hello"
 /// }

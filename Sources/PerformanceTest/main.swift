@@ -25,7 +25,7 @@ let port = HBEnvironment.shared.get("SERVER_PORT", as: Int.self) ?? 8080
 // create app
 let elg = MultiThreadedEventLoopGroup(numberOfThreads: 4)
 defer { try? elg.syncShutdownGracefully() }
-var router = HBRouterBuilder()
+var router = HBRouter()
 // number of raw requests
 // ./wrk -c 128 -d 15s -t 8 http://localhost:8080
 router.get { _, _ in

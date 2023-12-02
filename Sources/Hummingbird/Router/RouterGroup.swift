@@ -32,10 +32,10 @@ import NIOCore
 /// ```
 public struct HBRouterGroup<Context: HBBaseRequestContext>: HBRouterMethods {
     let path: String
-    let router: HBRouterBuilder<Context>
+    let router: HBRouter<Context>
     let middlewares: HBMiddlewareGroup<Context>
 
-    init(path: String = "", middlewares: HBMiddlewareGroup<Context> = .init(), router: HBRouterBuilder<Context>) {
+    init(path: String = "", middlewares: HBMiddlewareGroup<Context> = .init(), router: HBRouter<Context>) {
         self.path = path
         self.router = router
         self.middlewares = middlewares

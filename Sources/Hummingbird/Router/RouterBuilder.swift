@@ -18,7 +18,7 @@ import NIOCore
 
 /// Create rules for routing requests and then create `HBResponder` that will follow these rules.
 ///
-/// `HBRouterBuilder` requires an implementation of  the `on(path:method:use)` functions but because it
+/// `HBRouter` requires an implementation of  the `on(path:method:use)` functions but because it
 /// also conforms to `HBRouterMethods` it is also possible to call the method specific functions `get`, `put`,
 /// `head`, `post` and `patch`.  The route handler closures all return objects conforming to
 /// `HBResponseGenerator`.  This allows us to support routes which return a multitude of types eg
@@ -45,7 +45,7 @@ import NIOCore
 /// Both of these match routes which start with "/user" and the next path segment being anything.
 /// The second version extracts the path segment out and adds it to `HBRequest.parameters` with the
 /// key "id".
-public final class HBRouterBuilder<Context: HBBaseRequestContext>: HBRouterMethods {
+public final class HBRouter<Context: HBBaseRequestContext>: HBRouterMethods {
     var trie: RouterPathTrieBuilder<HBEndpointResponders<Context>>
     public let middlewares: HBMiddlewareGroup<Context>
 
@@ -69,15 +69,15 @@ public final class HBRouterBuilder<Context: HBBaseRequestContext>: HBRouterMetho
 
     /// build router
     public func buildResponder() -> some HBResponder<Context> {
-        HBRouter(context: Context.self, trie: self.trie.build(), notFoundResponder: self.middlewares.constructResponder(finalResponder: NotFoundResponder<Context>()))
+        HBRouterResponder(context: Context.self, trie: self.trie.build(), notFoundResponder: self.middlewares.constructResponder(finalResponder: NotFoundResponder<Context>()))
     }
 
     /// Add path for closure returning type conforming to ResponseFutureEncodable
-    @discardableResult public func on<Output: HBResponseGenerator>(
+    @discardableResult public func on(
         _ path: String,
         method: HTTPRequest.Method,
         options: HBRouterMethodOptions = [],
-        use closure: @escaping @Sendable (HBRequest, Context) async throws -> Output
+        use closure: @escaping @Sendable (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
         let responder = constructResponder(options: options, use: closure)
         self.add(path, method: method, responder: responder)

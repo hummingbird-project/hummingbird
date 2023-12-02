@@ -19,8 +19,8 @@ import XCTest
 final class PersistTests: XCTestCase {
     static let redisHostname = HBEnvironment.shared.get("REDIS_HOSTNAME") ?? "localhost"
 
-    func createRouter() throws -> (HBRouterBuilder<HBTestRouterContext>, HBPersistDriver) {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+    func createRouter() throws -> (HBRouter<HBTestRouterContext>, HBPersistDriver) {
+        let router = HBRouter(context: HBTestRouterContext.self)
         let persist = HBMemoryPersistDriver()
 
         router.put("/persist/:tag") { request, context -> HTTPResponse.Status in

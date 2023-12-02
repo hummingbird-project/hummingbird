@@ -35,7 +35,7 @@ class HummingbirdFilesTests: XCTestCase {
     }
 
     func testRead() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBFileMiddleware("."))
         let app = HBApplication(responder: router.buildResponder())
 
@@ -55,7 +55,7 @@ class HummingbirdFilesTests: XCTestCase {
     }
 
     func testReadLargeFile() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBFileMiddleware("."))
         let app = HBApplication(responder: router.buildResponder())
 
@@ -74,7 +74,7 @@ class HummingbirdFilesTests: XCTestCase {
     }
 
     func testReadRange() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBFileMiddleware("."))
         let app = HBApplication(responder: router.buildResponder())
 
@@ -119,7 +119,7 @@ class HummingbirdFilesTests: XCTestCase {
     }
 
     func testIfRangeRead() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBFileMiddleware("."))
         let app = HBApplication(responder: router.buildResponder())
 
@@ -155,7 +155,7 @@ class HummingbirdFilesTests: XCTestCase {
     }
 
     func testHead() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBFileMiddleware("."))
         let app = HBApplication(responder: router.buildResponder())
 
@@ -179,7 +179,7 @@ class HummingbirdFilesTests: XCTestCase {
     }
 
     func testETag() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBFileMiddleware("."))
         let app = HBApplication(responder: router.buildResponder())
 
@@ -201,7 +201,7 @@ class HummingbirdFilesTests: XCTestCase {
     }
 
     func testIfNoneMatch() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBFileMiddleware("."))
         let app = HBApplication(responder: router.buildResponder())
 
@@ -230,7 +230,7 @@ class HummingbirdFilesTests: XCTestCase {
     }
 
     func testIfModifiedSince() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBFileMiddleware("."))
         let app = HBApplication(responder: router.buildResponder())
 
@@ -256,7 +256,7 @@ class HummingbirdFilesTests: XCTestCase {
     }
 
     func testCacheControl() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         let cacheControl: HBCacheControl = .init([
             (.text, [.maxAge(60 * 60 * 24 * 30)]),
             (.imageJpeg, [.maxAge(60 * 60 * 24 * 30), .private]),
@@ -284,7 +284,7 @@ class HummingbirdFilesTests: XCTestCase {
     }
 
     func testIndexHtml() async throws {
-        let router = HBRouterBuilder(context: HBTestRouterContext.self)
+        let router = HBRouter(context: HBTestRouterContext.self)
         router.middlewares.add(HBFileMiddleware(".", searchForIndexHtml: true))
         let app = HBApplication(responder: router.buildResponder())
 
