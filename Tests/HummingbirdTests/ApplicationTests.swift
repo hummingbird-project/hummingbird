@@ -363,6 +363,7 @@ final class ApplicationTests: XCTestCase {
             let value: String
         }
         let router = HBRouter(context: HBTestRouterContext.self)
+        router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
         router.patch("/hello") { _, _ in
             return HBEditedResponse(
                 status: .multipleChoices,
@@ -370,8 +371,7 @@ final class ApplicationTests: XCTestCase {
                 response: Result(value: "true")
             )
         }
-        var app = HBApplication(responder: router.buildResponder())
-        app.encoder = JSONEncoder()
+        let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/hello", method: .patch) { response in

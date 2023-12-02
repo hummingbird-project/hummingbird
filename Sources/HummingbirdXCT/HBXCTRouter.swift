@@ -73,10 +73,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
     init(app: HBApplication<Responder, HTTP1Channel>) {
         self.eventLoopGroup = app.eventLoopGroup
         self.context = HBApplicationContext(
-            threadPool: app.threadPool,
-            configuration: app.configuration,
-            encoder: app.encoder,
-            decoder: app.decoder
+            configuration: app.configuration
         )
         self.responder = app.responder
         self.logger = app.logger

@@ -19,7 +19,7 @@ extension HBRequest {
     /// - Parameter type: Type you want to decode to
     public func decode<Type: Decodable>(as type: Type.Type, using context: some HBBaseRequestContext) async throws -> Type {
         do {
-            return try await context.applicationContext.decoder.decode(type, from: self, context: context)
+            return try await context.requestDecoder.decode(type, from: self, context: context)
         } catch DecodingError.dataCorrupted(_) {
             let message = "The given data was not valid input."
             throw HBHTTPError(.badRequest, message: message)
