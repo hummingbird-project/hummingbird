@@ -295,9 +295,16 @@ class HummingbirdFilesTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
+        try app.XCTExecute(uri: "/index.html", method: .GET) { response in
+            var body = try XCTUnwrap(response.body)
+            XCTAssertEqual(body.readString(length: body.readableBytes), text)
+            XCTAssertEqual(response.headers.first(name: "content-type"), "text/html")
+        }
+
         try app.XCTExecute(uri: "/", method: .GET) { response in
             var body = try XCTUnwrap(response.body)
             XCTAssertEqual(body.readString(length: body.readableBytes), text)
+            XCTAssertEqual(response.headers.first(name: "content-type"), "text/html")
         }
     }
 
