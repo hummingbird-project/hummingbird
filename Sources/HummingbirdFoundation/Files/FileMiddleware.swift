@@ -127,12 +127,8 @@ public struct HBFileMiddleware: HBMiddleware {
                 headers.add(name: "eTag", value: eTag)
 
                 // content-type
-                if let extPointIndex = path.lastIndex(of: ".") {
-                    let extIndex = path.index(after: extPointIndex)
-                    let ext = String(path.suffix(from: extIndex))
-                    if let contentType = HBMediaType.getMediaType(forExtension: ext) {
-                        headers.add(name: "content-type", value: contentType.description)
-                    }
+                if let contentType = HBMediaType.getMediaType(forExtension: fullPath.pathExtension) {
+                    headers.add(name: "content-type", value: contentType.description)
                 }
 
                 headers.replaceOrAdd(name: "accept-ranges", value: "bytes")
