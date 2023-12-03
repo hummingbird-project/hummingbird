@@ -11,12 +11,19 @@ needs to be listed here.
 ### Contributors
 
 - Adam Fowler <adamfowler71@gmail.com>
+- Brian Michel <brian.michel@gmail.com>
 - Chris <4376956+SoftwareEngineerChris@users.noreply.github.com>
 - Derek Clarkson <d4rkf1br3@gmail.com>
+- Fejziu Bajram <31960279+beldis@users.noreply.github.com>
 - Florion <florion@lilo.org>
+- Iceman <side.junktown@gmail.com>
+- Jason Morley <hello@jbmorley.co.uk>
 - Moritz Lang <hi@slashmo.codes>
+- Moritz Sternemann <3034168+moritzsternemann@users.noreply.github.com>
 - Simon Leeb <52261246+sliemeobn@users.noreply.github.com>
+- Tibor Bödecs <mail.tib@gmail.com>
 - PO Bengtsson <po@niffic.se>
+- Rayman Rosevear <ray@mushroomcloud.co.za>
 - Michael Critz <github@michaelcritz.com>
 - Patrick Heneise <patrick@zentered.co>
 
