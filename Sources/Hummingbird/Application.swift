@@ -88,16 +88,10 @@ extension HBApplicationProtocol where ChannelSetup == HTTP1Channel {
 extension HBApplicationProtocol {
     /// Default event loop group used by application
     public var eventLoopGroup: EventLoopGroup { MultiThreadedEventLoopGroup.singleton }
-    /// Default thread pool used by application
-    public var threadPool: NIOThreadPool { NIOThreadPool.singleton }
     /// Default Configuration
     public var configuration: HBApplicationConfiguration { .init() }
     /// Default Logger
     public var logger: Logger { Logger(label: self.configuration.serverName ?? "HummingBird") }
-    /// Default encoder used by router
-    public var encoder: HBResponseEncoder { NullEncoder() }
-    /// Default decoder used by router
-    public var decoder: HBRequestDecoder { NullDecoder() }
     /// Default onServerRunning that does nothing
     public func onServerRunning(_: Channel) async {}
     /// Default to no extra services attached to the application.
