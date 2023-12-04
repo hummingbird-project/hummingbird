@@ -452,7 +452,7 @@ final class ApplicationTests: XCTestCase {
     /// is more a compilation test than a runtime test
     func testApplicationProtocolReturnValue() async throws {
         func createApplication() -> some HBApplicationProtocol {
-            let router = HBRouterBuilder(context: HBTestRouterContext.self)
+            let router = HBRouter(context: HBTestRouterContext.self)
             router.get("/hello") { _, context -> ByteBuffer in
                 return context.allocator.buffer(string: "GET: Hello")
             }
@@ -476,7 +476,7 @@ final class ApplicationTests: XCTestCase {
             typealias ChannelSetup = HTTP1Channel
 
             func buildResponder() async throws -> some HBResponder<Context> {
-                let router = HBRouterBuilder(context: Context.self)
+                let router = HBRouter(context: Context.self)
                 router.get("/hello") { _, context -> ByteBuffer in
                     return context.allocator.buffer(string: "GET: Hello")
                 }

@@ -193,18 +193,12 @@ public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup
 
     /// event loop group used by application
     public let eventLoopGroup: EventLoopGroup
-    /// thread pool used by application
-    public let threadPool: NIOThreadPool
     /// routes requests to requestResponders based on URI
     public let responder: Responder
     /// Configuration
     public var configuration: HBApplicationConfiguration
     /// Logger
     public var logger: Logger
-    /// Encoder used by router
-    public var encoder: HBResponseEncoder
-    /// decoder used by router
-    public var decoder: HBRequestDecoder
     /// on server running
     private var _onServerRunning: @Sendable (Channel) async -> Void
     /// Server channel setup
@@ -219,7 +213,6 @@ public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup
         responder: Responder,
         channelSetup: ChannelSetup = HTTP1Channel(),
         configuration: HBApplicationConfiguration = HBApplicationConfiguration(),
-        threadPool: NIOThreadPool = .singleton,
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton
     ) {
         var logger = Logger(label: configuration.serverName ?? "HummingBird")
@@ -229,12 +222,9 @@ public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup
         self.responder = responder
         self.channelSetup = channelSetup
         self.configuration = configuration
-        self.encoder = NullEncoder()
-        self.decoder = NullDecoder()
         self._onServerRunning = { _ in }
 
         self.eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
-        self.threadPool = threadPool
         self.services = []
     }
 
