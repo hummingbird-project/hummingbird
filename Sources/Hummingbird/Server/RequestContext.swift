@@ -76,18 +76,19 @@ public struct HBCoreRequestContext: Sendable {
 public protocol HBBaseRequestContext: Sendable {
     /// Core context
     var coreContext: HBCoreRequestContext { get set }
+    /// Thread Pool
+    var threadPool: NIOThreadPool { get }
 }
 
 extension HBBaseRequestContext {
     /// Application context
     @inlinable
     public var applicationContext: HBApplicationContext { coreContext.applicationContext }
-    /// ThreadPool attached to application
+    /// ThreadPool
     @inlinable
-    public var threadPool: NIOThreadPool { self.coreContext.applicationContext.threadPool }
+    public var threadPool: NIOThreadPool { NIOThreadPool.singleton }
     /// EventLoop request is running on. This is unavailable in concurrency contexts as you
     /// have already hopped off the EventLoop into a Task
-    /// ThreadPool attached to application
     @inlinable
     @available(*, noasync)
     public var eventLoop: EventLoop { coreContext.eventLoop }

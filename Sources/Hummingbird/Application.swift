@@ -44,27 +44,19 @@ public enum EventLoopGroupProvider {
 }
 
 public final class HBApplicationContext: Sendable {
-    /// thread pool used by application
-    public let threadPool: NIOThreadPool
     /// Configuration
     public let configuration: HBApplicationConfiguration
-    /// Logger
-    public let logger: Logger
     /// Encoder used by router
     public let encoder: HBResponseEncoder
     /// decoder used by router
     public let decoder: HBRequestDecoder
 
     public init(
-        threadPool: NIOThreadPool,
         configuration: HBApplicationConfiguration,
-        logger: Logger,
         encoder: HBResponseEncoder,
         decoder: HBRequestDecoder
     ) {
-        self.threadPool = threadPool
         self.configuration = configuration
-        self.logger = logger
         self.encoder = encoder
         self.decoder = decoder
     }
@@ -87,8 +79,6 @@ public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup
 
     /// event loop group used by application
     public let eventLoopGroup: EventLoopGroup
-    /// thread pool used by application
-    public let threadPool: NIOThreadPool
     /// routes requests to requestResponders based on URI
     public let responder: Responder
     /// Configuration
@@ -113,7 +103,6 @@ public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup
         responder: Responder,
         channelSetup: ChannelSetup = HTTP1Channel(),
         configuration: HBApplicationConfiguration = HBApplicationConfiguration(),
-        threadPool: NIOThreadPool = .singleton,
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton
     ) {
         var logger = Logger(label: configuration.serverName ?? "HummingBird")
@@ -128,7 +117,6 @@ public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup
         self.onServerRunning = { _ in }
 
         self.eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
-        self.threadPool = threadPool
         self.services = []
     }
 
@@ -150,9 +138,7 @@ public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup
 extension HBApplication: Service where Responder.Context: HBRequestContext {
     public func run() async throws {
         let context = HBApplicationContext(
-            threadPool: self.threadPool,
             configuration: self.configuration,
-            logger: self.logger,
             encoder: self.encoder,
             decoder: self.decoder
         )
@@ -161,7 +147,7 @@ extension HBApplication: Service where Responder.Context: HBRequestContext {
             let context = Responder.Context(
                 applicationContext: context,
                 channel: channel,
-                logger: HBApplication.loggerWithRequestId(context.logger)
+                logger: HBApplication.loggerWithRequestId(self.logger)
             )
             // respond to request
             var response = try await self.responder.respond(to: request, context: context)

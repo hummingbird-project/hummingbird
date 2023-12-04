@@ -68,22 +68,23 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
     let eventLoopGroup: EventLoopGroup
     let context: HBApplicationContext
     let responder: Responder
+    let logger: Logger
 
     init(app: HBApplication<Responder, HTTP1Channel>) {
         self.eventLoopGroup = app.eventLoopGroup
         self.context = HBApplicationContext(
             threadPool: app.threadPool,
             configuration: app.configuration,
-            logger: app.logger,
             encoder: app.encoder,
             decoder: app.decoder
         )
         self.responder = app.responder
+        self.logger = app.logger
     }
 
     /// Run test
     func run<Value>(_ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Value) async throws -> Value {
-        let client = Client(eventLoopGroup: self.eventLoopGroup, responder: self.responder, applicationContext: self.context)
+        let client = Client(eventLoopGroup: self.eventLoopGroup, responder: self.responder, applicationContext: self.context, logger: self.logger)
         let value = try await test(client)
         return value
     }
@@ -94,6 +95,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
         let eventLoopGroup: EventLoopGroup
         let responder: Responder
         let applicationContext: HBApplicationContext
+        let logger: Logger
 
         func execute(uri: String, method: HTTPRequest.Method, headers: HTTPFields, body: ByteBuffer?) async throws -> HBXCTResponse {
             let eventLoop = self.eventLoopGroup.any()
@@ -108,7 +110,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                     applicationContext: self.applicationContext,
                     eventLoop: eventLoop,
                     allocator: ByteBufferAllocator(),
-                    logger: HBApplication<Responder, HTTP1Channel>.loggerWithRequestId(self.applicationContext.logger)
+                    logger: HBApplication<Responder, HTTP1Channel>.loggerWithRequestId(self.logger)
                 )
 
                 group.addTask {
@@ -129,7 +131,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                     }
                 }
 
-                if var body = body {
+                if var body {
                     while body.readableBytes > 0 {
                         let chunkSize = min(32 * 1024, body.readableBytes)
                         let buffer = body.readSlice(length: chunkSize)!
