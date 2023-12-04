@@ -77,7 +77,7 @@ public struct HTTP2Channel: HTTPChannelHandler {
 
             return http2ChildChannel
                 .pipeline
-                .addHandler(HTTP2FramePayloadToHTTPClientCodec())
+                .addHandler(HTTP2FramePayloadToHTTPServerCodec())
                 .flatMap {
                     http2ChildChannel.pipeline.addHandlers(childChannelHandlers)
                 }.flatMapThrowing {

@@ -30,6 +30,39 @@ public enum TestErrors: Error {
     return HBResponse(status: .ok, body: .init(byteBuffer: responseBody))
 }
 
+/// Helper function for testing a server
+public func testServer<ChannelSetup: HBChannelSetup, Value: Sendable>(
+    childChannelSetup: ChannelSetup,
+    configuration: HBServerConfiguration,
+    eventLoopGroup: EventLoopGroup,
+    logger: Logger,
+    _ test: @escaping @Sendable (HBServer<ChannelSetup>, Int) async throws -> Value
+) async throws -> Value {
+    try await withThrowingTaskGroup(of: Void.self) { group in
+        let promise = Promise<Int>()
+        let server = HBServer(
+            childChannelSetup: childChannelSetup,
+            configuration: configuration,
+            onServerRunning: { await promise.complete($0.localAddress!.port!) },
+            eventLoopGroup: eventLoopGroup,
+            logger: logger
+        )
+        let serviceGroup = ServiceGroup(
+            configuration: .init(
+                services: [server],
+                gracefulShutdownSignals: [.sigterm, .sigint],
+                logger: logger
+            )
+        )
+        group.addTask {
+            try await serviceGroup.run()
+        }
+        let value = try await test(server, promise.wait())
+        await serviceGroup.triggerGracefulShutdown()
+        return value
+    }
+}
+
 /// Helper function for test a server
 ///
 /// Creates test client, runs test function abd ensures everything is
