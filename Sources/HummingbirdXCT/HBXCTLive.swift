@@ -43,16 +43,10 @@ final class HBXCTLive<App: HBApplicationProtocol>: HBXCTApplication where App.Co
 
         /// event loop group used by application
         var eventLoopGroup: EventLoopGroup { self.base.eventLoopGroup }
-        /// thread pool used by application
-        var threadPool: NIOThreadPool { self.base.threadPool }
         /// Configuration
         var configuration: HBApplicationConfiguration { self.base.configuration.with(address: .hostname("localhost", port: 0)) }
         /// Logger
         var logger: Logger { self.base.logger }
-        /// Encoder used by router
-        var encoder: HBResponseEncoder { self.base.encoder }
-        /// decoder used by router
-        var decoder: HBRequestDecoder { self.base.decoder }
         /// on server running
         @Sendable func onServerRunning(_ channel: Channel) async {
             await self.portPromise.complete(channel.localAddress!.port!)
