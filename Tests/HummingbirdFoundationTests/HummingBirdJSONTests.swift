@@ -28,6 +28,7 @@ class HummingbirdJSONTests: XCTestCase {
 
     func testDecode() async throws {
         let router = HBRouter(context: HBTestRouterContext.self)
+        router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
         router.put("/user") { request, context -> HTTPResponse.Status in
             guard let user = try? await request.decode(as: User.self, using: context) else { throw HBHTTPError(.badRequest) }
             XCTAssertEqual(user.name, "John Smith")
@@ -35,8 +36,7 @@ class HummingbirdJSONTests: XCTestCase {
             XCTAssertEqual(user.age, 25)
             return .ok
         }
-        var app = HBApplication(responder: router.buildResponder())
-        app.decoder = JSONDecoder()
+        let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
             let body = #"{"name": "John Smith", "email": "john.smith@email.com", "age": 25}"#
             try await client.XCTExecute(uri: "/user", method: .put, body: ByteBufferAllocator().buffer(string: body)) {
@@ -47,11 +47,11 @@ class HummingbirdJSONTests: XCTestCase {
 
     func testEncode() async throws {
         let router = HBRouter(context: HBTestRouterContext.self)
+        router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
         router.get("/user") { _, _ -> User in
             return User(name: "John Smith", email: "john.smith@email.com", age: 25)
         }
-        var app = HBApplication(responder: router.buildResponder())
-        app.encoder = JSONEncoder()
+        let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/user", method: .get) { response in
                 let body = try XCTUnwrap(response.body)
@@ -65,11 +65,11 @@ class HummingbirdJSONTests: XCTestCase {
 
     func testEncode2() async throws {
         let router = HBRouter(context: HBTestRouterContext.self)
+        router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
         router.get("/json") { _, _ in
             return ["message": "Hello, world!"]
         }
-        var app = HBApplication(responder: router.buildResponder())
-        app.encoder = JSONEncoder()
+        let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/json", method: .get) { response in
                 let body = try XCTUnwrap(response.body)

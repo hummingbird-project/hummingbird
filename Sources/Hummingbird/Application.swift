@@ -46,19 +46,11 @@ public enum EventLoopGroupProvider {
 public final class HBApplicationContext: Sendable {
     /// Configuration
     public let configuration: HBApplicationConfiguration
-    /// Encoder used by router
-    public let encoder: HBResponseEncoder
-    /// decoder used by router
-    public let decoder: HBRequestDecoder
 
     public init(
-        configuration: HBApplicationConfiguration,
-        encoder: HBResponseEncoder,
-        decoder: HBRequestDecoder
+        configuration: HBApplicationConfiguration
     ) {
         self.configuration = configuration
-        self.encoder = encoder
-        self.decoder = decoder
     }
 }
 
@@ -85,10 +77,6 @@ public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup
     public var configuration: HBApplicationConfiguration
     /// Logger
     public var logger: Logger
-    /// Encoder used by router
-    public var encoder: HBResponseEncoder
-    /// decoder used by router
-    public var decoder: HBRequestDecoder
     /// on server running
     public var onServerRunning: @Sendable (Channel) async -> Void
     /// Server channel setup
@@ -112,8 +100,6 @@ public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup
         self.responder = responder
         self.channelSetup = channelSetup
         self.configuration = configuration
-        self.encoder = NullEncoder()
-        self.decoder = NullDecoder()
         self.onServerRunning = { _ in }
 
         self.eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
@@ -138,9 +124,7 @@ public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup
 extension HBApplication: Service where Responder.Context: HBRequestContext {
     public func run() async throws {
         let context = HBApplicationContext(
-            configuration: self.configuration,
-            encoder: self.encoder,
-            decoder: self.decoder
+            configuration: self.configuration
         )
         let dateCache = HBDateCache()
         @Sendable func respond(to request: HBRequest, channel: Channel) async throws -> HBResponse {

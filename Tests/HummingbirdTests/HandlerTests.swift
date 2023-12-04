@@ -28,9 +28,9 @@ final class HandlerTests: XCTestCase {
         }
 
         let router = HBRouter(context: HBTestRouterContext.self)
+        router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
         router.post("/hello", use: DecodeTest.self)
-        var app = HBApplication(responder: router.buildResponder())
-        app.decoder = JSONDecoder()
+        let app = HBApplication(responder: router.buildResponder())
 
         try await app.test(.router) { client in
             let body = ByteBufferAllocator().buffer(string: #"{"foo": "bar"}"#)
@@ -58,9 +58,9 @@ final class HandlerTests: XCTestCase {
         }
 
         let router = HBRouter(context: HBTestRouterContext.self)
+        router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
         router.post("/hello", use: DecodeTest.self)
-        var app = HBApplication(responder: router.buildResponder())
-        app.decoder = JSONDecoder()
+        let app = HBApplication(responder: router.buildResponder())
 
         try await app.test(.router) { client in
             let body = ByteBufferAllocator().buffer(string: #"{"value": "bar"}"#)
@@ -88,9 +88,9 @@ final class HandlerTests: XCTestCase {
         }
 
         let router = HBRouter(context: HBTestRouterContext.self)
+        router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
         router.post("/hello", use: DecodeTest.self)
-        var app = HBApplication(responder: router.buildResponder())
-        app.decoder = JSONDecoder()
+        let app = HBApplication(responder: router.buildResponder())
 
         try await app.test(.router) { client in
             let body = ByteBufferAllocator().buffer(string: #"{"name": null}"#)
@@ -123,9 +123,9 @@ final class HandlerTests: XCTestCase {
         }
 
         let router = HBRouter(context: HBTestRouterContext.self)
+        router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
         router.post("/hello", use: DecodeTest.self)
-        var app = HBApplication(responder: router.buildResponder())
-        app.decoder = JSONDecoder()
+        let app = HBApplication(responder: router.buildResponder())
 
         try await app.test(.router) { client in
             let body = ByteBufferAllocator().buffer(string: #"{invalid}"#)
@@ -151,9 +151,9 @@ final class HandlerTests: XCTestCase {
             }
         }
         let router = HBRouter(context: HBTestRouterContext.self)
+        router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
         router.post("/hello", use: DecodeTest.self)
-        var app = HBApplication(responder: router.buildResponder())
-        app.decoder = JSONDecoder()
+        let app = HBApplication(responder: router.buildResponder())
 
         try await app.test(.router) { client in
 
@@ -172,9 +172,9 @@ final class HandlerTests: XCTestCase {
             }
         }
         let router = HBRouter(context: HBTestRouterContext.self)
+        router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
         router.put("/hello", use: DecodeTest.self)
-        var app = HBApplication(responder: router.buildResponder())
-        app.decoder = JSONDecoder()
+        let app = HBApplication(responder: router.buildResponder())
 
         try await app.test(.router) { client in
 
@@ -194,9 +194,9 @@ final class HandlerTests: XCTestCase {
             }
         }
         let router = HBRouter(context: HBTestRouterContext.self)
+        router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
         router.get("/hello", use: DecodeTest.self)
-        var app = HBApplication(responder: router.buildResponder())
-        app.decoder = JSONDecoder()
+        let app = HBApplication(responder: router.buildResponder())
 
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/hello", method: .get, body: ByteBufferAllocator().buffer(string: #"{"name2": "Adam"}"#)) { response in

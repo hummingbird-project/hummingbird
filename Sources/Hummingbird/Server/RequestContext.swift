@@ -39,6 +39,12 @@ public struct HBCoreRequestContext: Sendable {
     /// Application context
     @usableFromInline
     let applicationContext: HBApplicationContext
+    /// Request decoder
+    @usableFromInline
+    var requestDecoder: HBRequestDecoder
+    /// Response encoder
+    @usableFromInline
+    var responseEncoder: HBResponseEncoder
     /// EventLoop request is running on
     @usableFromInline
     let eventLoop: EventLoop
@@ -58,11 +64,15 @@ public struct HBCoreRequestContext: Sendable {
     @inlinable
     public init(
         applicationContext: HBApplicationContext,
+        requestDecoder: HBRequestDecoder = NullDecoder(),
+        responseEncoder: HBResponseEncoder = NullEncoder(),
         eventLoop: EventLoop,
         allocator: ByteBufferAllocator,
         logger: Logger
     ) {
         self.applicationContext = applicationContext
+        self.requestDecoder = requestDecoder
+        self.responseEncoder = responseEncoder
         self.eventLoop = eventLoop
         self.allocator = allocator
         self.logger = logger
@@ -84,7 +94,13 @@ extension HBBaseRequestContext {
     /// Application context
     @inlinable
     public var applicationContext: HBApplicationContext { coreContext.applicationContext }
-    /// ThreadPool
+    /// Request decoder
+    @inlinable
+    public var requestDecoder: HBRequestDecoder { coreContext.requestDecoder }
+    /// Response encoder
+    @inlinable
+    public var responseEncoder: HBResponseEncoder { coreContext.responseEncoder }
+    /// ThreadPool attached to application
     @inlinable
     public var threadPool: NIOThreadPool { NIOThreadPool.singleton }
     /// EventLoop request is running on. This is unavailable in concurrency contexts as you
