@@ -37,38 +37,3 @@ public func withTimeout<T: Sendable>(timeout: Duration, _ process: @escaping @Se
         return try await group.next()!
     }
 }
-
-/// Async version of expectation.
-///
-/// A counter that you can wait upon it hitting zero. Similar to XCTExpectation but works in
-/// async environment on both macOS and Linux
-public actor AsyncExpectation: Sendable {
-    var value: Int
-    var continuation: CheckedContinuation<Void, Error>?
-
-    public init(_ value: Int) {
-        self.value = value
-        self.continuation = nil
-    }
-
-    public func fulfill() {
-        precondition(self.value > 0, "Cannot call decrement on Counter that has already hit zero")
-        self.value -= 1
-        if self.value == 0, let continuation = continuation {
-            continuation.resume()
-            self.continuation = nil
-        }
-    }
-
-    public func wait() async throws {
-        try await withTaskCancellationHandler {
-            try await withCheckedThrowingContinuation { continuation in
-                self.continuation = continuation
-            }
-        } onCancel: {
-            Task {
-                await self.continuation?.resume(throwing: CancellationError())
-            }
-        }
-    }
-}
