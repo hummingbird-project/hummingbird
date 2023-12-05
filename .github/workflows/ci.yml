@@ -42,7 +42,7 @@ jobs:
       matrix:
         image:
           - 'swift:5.9'
-#          - 'swiftlang/swift:nightly-5.10-jammy'
+          - 'swiftlang/swift:nightly-5.10-jammy'
     
     container:
       image: ${{ matrix.image }}
