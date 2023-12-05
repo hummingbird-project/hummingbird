@@ -18,13 +18,28 @@ import HummingbirdXCT
 import ServiceLifecycle
 import XCTest
 
+extension XCTestExpectation {
+    convenience init(description: String, expectedFulfillmentCount: Int) {
+        self.init(description: description)
+        self.expectedFulfillmentCount = expectedFulfillmentCount
+    }
+}
+
 final class HummingbirdJobsTests: XCTestCase {
+    func wait(for expectations: [XCTestExpectation], timeout: TimeInterval) async {
+        #if (os(Linux) && swift(<5.10)) || swift(<5.8)
+        super.wait(for: expectations, timeout: timeout)
+        #else
+        await fulfillment(of: expectations, timeout: timeout)
+        #endif
+    }
+
     /// Helper function for test a server
     ///
     /// Creates test client, runs test function abd ensures everything is
     /// shutdown correctly
-    public func testJobQueue<JobQueue: HBJobQueue>(
-        _ jobQueueHandler: HBJobQueueHandler<JobQueue>,
+    public func testJobQueue(
+        _ jobQueueHandler: HBJobQueueHandler<some HBJobQueue>,
         _ test: () async throws -> Void
     ) async throws {
         try await withThrowingTaskGroup(of: Void.self) { group in
@@ -46,13 +61,13 @@ final class HummingbirdJobsTests: XCTestCase {
     func testBasic() async throws {
         struct TestJob: HBJob {
             static let name = "testBasic"
-            static let expectation = AsyncExpectation(10)
+            static let expectation = XCTestExpectation(description: "TestJob.execute was called", expectedFulfillmentCount: 10)
 
             let value: Int
             func execute(logger: Logger) async throws {
                 print(self.value)
                 try await Task.sleep(for: .milliseconds(Int.random(in: 10..<50)))
-                await Self.expectation.fulfill()
+                Self.expectation.fulfill()
             }
         }
         TestJob.register()
@@ -74,7 +89,7 @@ final class HummingbirdJobsTests: XCTestCase {
             try await jobQueue.push(TestJob(value: 9))
             try await jobQueue.push(TestJob(value: 10))
 
-            try await withTimeout(timeout: .seconds(5)) { try await TestJob.expectation.wait() }
+            await self.wait(for: [TestJob.expectation], timeout: 5)
         }
     }
 
@@ -83,7 +98,7 @@ final class HummingbirdJobsTests: XCTestCase {
             static let name = "testBasic"
             static let runningJobCounter = ManagedAtomic(0)
             static let maxRunningJobCounter = ManagedAtomic(0)
-            static let expectation = AsyncExpectation(10)
+            static let expectation = XCTestExpectation(description: "TestJob.execute was called", expectedFulfillmentCount: 10)
 
             let value: Int
             func execute(logger: Logger) async throws {
@@ -93,7 +108,7 @@ final class HummingbirdJobsTests: XCTestCase {
                 }
                 try await Task.sleep(for: .milliseconds(Int.random(in: 10..<50)))
                 print(self.value)
-                await Self.expectation.fulfill()
+                Self.expectation.fulfill()
                 Self.runningJobCounter.wrappingDecrement(by: 1, ordering: .relaxed)
             }
         }
@@ -117,7 +132,7 @@ final class HummingbirdJobsTests: XCTestCase {
             try await jobQueue.push(TestJob(value: 9))
             try await jobQueue.push(TestJob(value: 10))
 
-            try await withTimeout(timeout: .seconds(5)) { try await TestJob.expectation.wait() }
+            await self.wait(for: [TestJob.expectation], timeout: 5)
 
             XCTAssertGreaterThan(TestJob.maxRunningJobCounter.load(ordering: .relaxed), 1)
             XCTAssertLessThanOrEqual(TestJob.maxRunningJobCounter.load(ordering: .relaxed), 4)
@@ -131,9 +146,9 @@ final class HummingbirdJobsTests: XCTestCase {
         struct TestJob: HBJob {
             static let name = "testErrorRetryCount"
             static let maxRetryCount = 3
-            static let expectation = AsyncExpectation(4)
+            static let expectation = XCTestExpectation(description: "TestJob.execute was called", expectedFulfillmentCount: 4)
             func execute(logger: Logger) async throws {
-                await Self.expectation.fulfill()
+                Self.expectation.fulfill()
                 throw FailedError()
             }
         }
@@ -149,7 +164,7 @@ final class HummingbirdJobsTests: XCTestCase {
         try await testJobQueue(jobQueueHandler) {
             try await jobQueue.push(TestJob())
 
-            try await withTimeout(timeout: .seconds(5)) { try await TestJob.expectation.wait() }
+            await self.wait(for: [TestJob.expectation], timeout: 5)
         }
         XCTAssertEqual(failedJobCount.load(ordering: .relaxed), 1)
     }
@@ -172,9 +187,9 @@ final class HummingbirdJobsTests: XCTestCase {
     func testShutdownJob() async throws {
         struct TestJob: HBJob {
             static let name = "testShutdownJob"
-            static let expectation = AsyncExpectation(1)
+            static let expectation = XCTestExpectation(description: "TestJob.execute was called", expectedFulfillmentCount: 1)
             func execute(logger: Logger) async throws {
-                await Self.expectation.fulfill()
+                Self.expectation.fulfill()
                 try await Task.sleep(for: .milliseconds(1000))
             }
         }
@@ -195,7 +210,7 @@ final class HummingbirdJobsTests: XCTestCase {
         )
         try await testJobQueue(jobQueueHandler) {
             try await jobQueue.push(TestJob())
-            try await TestJob.expectation.wait()
+            await self.wait(for: [TestJob.expectation], timeout: 5)
         }
 
         XCTAssertEqual(cancelledJobCount.load(ordering: .relaxed), 1)
