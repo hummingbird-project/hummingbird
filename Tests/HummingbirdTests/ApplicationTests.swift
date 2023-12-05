@@ -558,6 +558,7 @@ final class ApplicationTests: XCTestCase {
     }
 }
 
+/// HTTPField used during tests
 extension HTTPField.Name {
     static let test = Self("Test")!
 }

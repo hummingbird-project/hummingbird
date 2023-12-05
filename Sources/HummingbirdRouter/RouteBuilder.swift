@@ -25,7 +25,7 @@ public struct Handle<HandlerOutput: HBResponseGenerator, Context: HBRouterReques
 
     let handler: Handler
 
-    init(_ handler: @escaping Handler) {
+    public init(_ handler: @escaping Handler) {
         self.handler = handler
     }
 

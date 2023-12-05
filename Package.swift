@@ -116,6 +116,10 @@ let package = Package(
             .byName(name: "HummingbirdJobs"),
             .byName(name: "HummingbirdXCT"),
         ]),
+        .testTarget(name: "HummingbirdRouterTests", dependencies: [
+            .byName(name: "HummingbirdRouter"),
+            .byName(name: "HummingbirdXCT"),
+        ]),
         .testTarget(
             name: "HummingbirdCoreTests",
             dependencies:

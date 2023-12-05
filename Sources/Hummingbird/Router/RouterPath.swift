@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 /// Split router path into components
-public struct RouterPath: Sendable, ExpressibleByStringLiteral {
-    public enum Element: Equatable, Sendable {
+public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConvertible {
+    public enum Element: Equatable, Sendable, CustomStringConvertible {
         case path(Substring)
         case capture(Substring)
         case prefixCapture(suffix: Substring, parameter: Substring) // *.jpg
@@ -24,6 +24,29 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral {
         case suffixWildcard(Substring) // file.*
         case recursiveWildcard
         case null
+
+        public var description: String {
+            switch self {
+            case .path(let path):
+                return String(path)
+            case .capture(let parameter):
+                return "${\(parameter)}"
+            case .prefixCapture(let suffix, let parameter):
+                return "${\(parameter)}\(suffix)"
+            case .suffixCapture(let prefix, let parameter):
+                return "\(prefix)${\(parameter)}"
+            case .wildcard:
+                return "*"
+            case .prefixWildcard(let suffix):
+                return "*\(suffix)"
+            case .suffixWildcard(let prefix):
+                return "\(prefix)*"
+            case .recursiveWildcard:
+                return "**"
+            case .null:
+                return "!"
+            }
+        }
 
         static func ~= (lhs: Element, rhs: some StringProtocol) -> Bool {
             switch lhs {
@@ -99,6 +122,10 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral {
 
     public init(stringLiteral value: String) {
         self.init(value)
+    }
+
+    public var description: String {
+        self.components.map(\.description).joined(separator: "/")
     }
 }
 

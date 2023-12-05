@@ -14,12 +14,13 @@
 
 import Hummingbird
 
-public struct HBRouterContext {
+/// Context data required by `HBRouterBuilder`
+public struct HBRouterContext: Sendable {
     /// remaining path components to match
     @usableFromInline
     var remainingPathComponents: ArraySlice<Substring>
 
-    init() {
+    public init() {
         self.remainingPathComponents = []
     }
 }
@@ -30,7 +31,7 @@ public protocol HBRouterRequestContext: HBBaseRequestContext {
 }
 
 /// Router
-public struct HBRouter<Context: HBRouterRequestContext, Handler: MiddlewareProtocol>: MiddlewareProtocol where Handler.Input == HBRequest, Handler.Output == HBResponse, Handler.Context == Context
+public struct HBRouterBuilder<Context: HBRouterRequestContext, Handler: MiddlewareProtocol>: MiddlewareProtocol where Handler.Input == HBRequest, Handler.Output == HBResponse, Handler.Context == Context
 {
     public typealias Input = HBRequest
     public typealias Output = HBResponse
@@ -53,7 +54,7 @@ public struct HBRouter<Context: HBRouterRequestContext, Handler: MiddlewareProto
 }
 
 /// extend Router to conform to HBResponder so we can use it to process `HBRequest``
-extension HBRouter: HBResponder {
+extension HBRouterBuilder: HBResponder {
     public func respond(to request: Input, context: Context) async throws -> Output {
         try await self.handle(request, context: context) { _, _ in
             throw HBHTTPError(.notFound)

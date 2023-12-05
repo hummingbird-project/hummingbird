@@ -98,7 +98,7 @@ public struct Route<Handler: RouteHandlerProtocol, Context: HBRouterRequestConte
 /// - Parameters:
 ///   - routerPath: Route path, relative to Group route is defined in
 ///   - handler: Router handler closure
-public func Get<RouteOutput: HBResponseGenerator, Context: HBRequestContext>(
+public func Get<RouteOutput: HBResponseGenerator, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     handler: @escaping @Sendable (HBRequest, Context) async throws -> RouteOutput
 ) -> Route<RouteHandlerClosure<RouteOutput, Context>, Context> {
@@ -109,7 +109,7 @@ public func Get<RouteOutput: HBResponseGenerator, Context: HBRequestContext>(
 /// - Parameters:
 ///   - routerPath: Route path, relative to Group route is defined in
 ///   - builder: Result builder used to build Route middleware
-public func Get<M0: MiddlewareProtocol, Context: HBRequestContext>(
+public func Get<M0: MiddlewareProtocol, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     @RouteBuilder<Context> builder: () -> M0
 ) -> Route<RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
@@ -120,7 +120,7 @@ public func Get<M0: MiddlewareProtocol, Context: HBRequestContext>(
 /// - Parameters:
 ///   - routerPath: Route path, relative to Group route is defined in
 ///   - handler: Router handler closure
-public func Head<RouteOutput: HBResponseGenerator, Context: HBRequestContext>(
+public func Head<RouteOutput: HBResponseGenerator, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     handler: @escaping @Sendable (HBRequest, Context) async throws -> RouteOutput
 ) -> Route<RouteHandlerClosure<RouteOutput, Context>, Context> {
@@ -131,7 +131,7 @@ public func Head<RouteOutput: HBResponseGenerator, Context: HBRequestContext>(
 /// - Parameters:
 ///   - routerPath: Route path, relative to Group route is defined in
 ///   - builder: Result builder used to build Route middleware
-public func Head<M0: MiddlewareProtocol, Context: HBRequestContext>(
+public func Head<M0: MiddlewareProtocol, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     @RouteBuilder<Context> builder: () -> M0
 ) -> Route<RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
@@ -142,7 +142,7 @@ public func Head<M0: MiddlewareProtocol, Context: HBRequestContext>(
 /// - Parameters:
 ///   - routerPath: Route path, relative to Group route is defined in
 ///   - handler: Router handler closure
-public func Put<RouteOutput: HBResponseGenerator, Context: HBRequestContext>(
+public func Put<RouteOutput: HBResponseGenerator, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     handler: @escaping @Sendable (HBRequest, Context) async throws -> RouteOutput
 ) -> Route<RouteHandlerClosure<RouteOutput, Context>, Context> {
@@ -153,7 +153,7 @@ public func Put<RouteOutput: HBResponseGenerator, Context: HBRequestContext>(
 /// - Parameters:
 ///   - routerPath: Route path, relative to Group route is defined in
 ///   - builder: Result builder used to build Route middleware
-public func Put<M0: MiddlewareProtocol, Context: HBRequestContext>(
+public func Put<M0: MiddlewareProtocol, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     @RouteBuilder<Context> builder: () -> M0
 ) -> Route<RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
@@ -164,7 +164,7 @@ public func Put<M0: MiddlewareProtocol, Context: HBRequestContext>(
 /// - Parameters:
 ///   - routerPath: Route path, relative to Group route is defined in
 ///   - handler: Router handler closure
-public func Post<RouteOutput: HBResponseGenerator, Context: HBRequestContext>(
+public func Post<RouteOutput: HBResponseGenerator, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     handler: @escaping @Sendable (HBRequest, Context) async throws -> RouteOutput
 ) -> Route<RouteHandlerClosure<RouteOutput, Context>, Context> {
@@ -175,7 +175,7 @@ public func Post<RouteOutput: HBResponseGenerator, Context: HBRequestContext>(
 /// - Parameters:
 ///   - routerPath: Route path, relative to Group route is defined in
 ///   - builder: Result builder used to build Route middleware
-public func Post<M0: MiddlewareProtocol, Context: HBRequestContext>(
+public func Post<M0: MiddlewareProtocol, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     @RouteBuilder<Context> builder: () -> M0
 ) -> Route<RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
@@ -186,7 +186,7 @@ public func Post<M0: MiddlewareProtocol, Context: HBRequestContext>(
 /// - Parameters:
 ///   - routerPath: Route path, relative to Group route is defined in
 ///   - handler: Router handler closure
-public func Patch<RouteOutput: HBResponseGenerator, Context: HBRequestContext>(
+public func Patch<RouteOutput: HBResponseGenerator, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     handler: @escaping @Sendable (HBRequest, Context) async throws -> RouteOutput
 ) -> Route<RouteHandlerClosure<RouteOutput, Context>, Context> {
@@ -197,7 +197,7 @@ public func Patch<RouteOutput: HBResponseGenerator, Context: HBRequestContext>(
 /// - Parameters:
 ///   - routerPath: Route path, relative to Group route is defined in
 ///   - builder: Result builder used to build Route middleware
-public func Patch<M0: MiddlewareProtocol, Context: HBRequestContext>(
+public func Patch<M0: MiddlewareProtocol, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     @RouteBuilder<Context> builder: () -> M0
 ) -> Route<RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
@@ -208,7 +208,7 @@ public func Patch<M0: MiddlewareProtocol, Context: HBRequestContext>(
 /// - Parameters:
 ///   - routerPath: Route path, relative to Group route is defined in
 ///   - handler: Router handler closure
-public func Delete<RouteOutput: HBResponseGenerator, Context: HBRequestContext>(
+public func Delete<RouteOutput: HBResponseGenerator, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     handler: @escaping @Sendable (HBRequest, Context) async throws -> RouteOutput
 ) -> Route<RouteHandlerClosure<RouteOutput, Context>, Context> {
@@ -219,7 +219,7 @@ public func Delete<RouteOutput: HBResponseGenerator, Context: HBRequestContext>(
 /// - Parameters:
 ///   - routerPath: Route path, relative to Group route is defined in
 ///   - builder: Result builder used to build Route middleware
-public func Delete<M0: MiddlewareProtocol, Context: HBRequestContext>(
+public func Delete<M0: MiddlewareProtocol, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     @RouteBuilder<Context> builder: () -> M0
 ) -> Route<RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
