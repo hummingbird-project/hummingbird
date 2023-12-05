@@ -23,7 +23,7 @@ import Tracing
 /// You may opt in to recording a specific subset of HTTP request/response header values by passing
 /// a set of header names to ``init(recordingHeaders:)``.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-public struct HBTracingMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
+public struct HBTracingMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
     private let headerNamesToRecord: Set<RecordingHeader>
 
     /// Intialize a new HBTracingMiddleware.
@@ -39,7 +39,7 @@ public struct HBTracingMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
         self.init(recordingHeaders: [])
     }
 
-    public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+    public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
         var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
         InstrumentationSystem.instrument.extract(request.headers, into: &serviceContext, using: HTTPHeadersExtractor())
 
@@ -83,7 +83,7 @@ public struct HBTracingMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
             }
 
             do {
-                let response = try await next.respond(to: request, context: context)
+                let response = try await next(request, context)
                 span.updateAttributes { attributes in
                     attributes = self.recordHeaders(response.headers, toSpanAttributes: attributes, withPrefix: "http.response.header.")
 

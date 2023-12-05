@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -19,14 +19,14 @@ import Metrics
 ///
 /// Records the number of requests, the request duration and how many errors were thrown. Each metric has additional
 /// dimensions URI and method.
-public struct HBMetricsMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
+public struct HBMetricsMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
     public init() {}
 
-    public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+    public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
         let startTime = DispatchTime.now().uptimeNanoseconds
 
         do {
-            let response = try await next.respond(to: request, context: context)
+            let response = try await next(request, context)
             // need to create dimensions once request has been responded to ensure
             // we have the correct endpoint path
             let dimensions: [(String, String)] = [

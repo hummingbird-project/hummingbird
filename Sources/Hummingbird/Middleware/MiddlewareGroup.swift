@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -14,7 +14,7 @@
 
 /// Group of middleware that can be used to create a responder chain. Each middleware calls the next one
 public final class HBMiddlewareGroup<Context> {
-    var middlewares: [any HBMiddleware<Context>]
+    var middlewares: [any HBMiddlewareProtocol<Context>]
 
     /// Initialize `HBMiddlewareGroup`
     ///
@@ -24,12 +24,12 @@ public final class HBMiddlewareGroup<Context> {
         self.middlewares = []
     }
 
-    init(middlewares: [any HBMiddleware<Context>]) {
+    init(middlewares: [any HBMiddlewareProtocol<Context>]) {
         self.middlewares = middlewares
     }
 
     /// Add middleware to group
-    public func add(_ middleware: any HBMiddleware<Context>) {
+    public func add(_ middleware: any HBMiddlewareProtocol<Context>) {
         self.middlewares.append(middleware)
     }
 
@@ -39,7 +39,7 @@ public final class HBMiddlewareGroup<Context> {
     public func constructResponder(finalResponder: any HBResponder<Context>) -> any HBResponder<Context> {
         var currentResponser = finalResponder
         for i in (0..<self.middlewares.count).reversed() {
-            let responder = MiddlewareResponder(middleware: middlewares[i], next: currentResponser)
+            let responder = MiddlewareResponder(middleware: middlewares[i], next: currentResponser.respond(to:context:))
             currentResponser = responder
         }
         return currentResponser

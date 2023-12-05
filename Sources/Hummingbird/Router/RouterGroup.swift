@@ -42,7 +42,7 @@ public struct HBRouterGroup<Context: HBBaseRequestContext>: HBRouterMethods {
     }
 
     /// Add middleware to RouterEndpoint
-    @discardableResult public func add(middleware: any HBMiddleware<Context>) -> HBRouterGroup<Context> {
+    @discardableResult public func add(middleware: any HBMiddlewareProtocol<Context>) -> HBRouterGroup<Context> {
         self.middlewares.add(middleware)
         return self
     }
@@ -58,11 +58,11 @@ public struct HBRouterGroup<Context: HBBaseRequestContext>: HBRouterMethods {
     }
 
     /// Add path for closure returning type using async/await
-    @discardableResult public func on<Output: HBResponseGenerator>(
+    @discardableResult public func on(
         _ path: String = "",
         method: HTTPRequest.Method,
         options: HBRouterMethodOptions = [],
-        use closure: @Sendable @escaping (HBRequest, Context) async throws -> Output
+        use closure: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
         let responder = constructResponder(options: options, use: closure)
         let path = self.combinePaths(self.path, path)
