@@ -13,6 +13,7 @@ let package = Package(
         .library(name: "HummingbirdTLS", targets: ["HummingbirdTLS"]),
         .library(name: "HummingbirdFoundation", targets: ["HummingbirdFoundation"]),
         .library(name: "HummingbirdJobs", targets: ["HummingbirdJobs"]),
+        .library(name: "HummingbirdRouter", targets: ["HummingbirdRouter"]),
         .library(name: "HummingbirdXCT", targets: ["HummingbirdXCT"]),
         .executable(name: "PerformanceTest", targets: ["PerformanceTest"]),
     ],
@@ -64,6 +65,10 @@ let package = Package(
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
         ]),
         .target(name: "HummingbirdJobs", dependencies: [
+            .byName(name: "Hummingbird"),
+            .product(name: "Logging", package: "swift-log"),
+        ]),
+        .target(name: "HummingbirdRouter", dependencies: [
             .byName(name: "Hummingbird"),
             .product(name: "Logging", package: "swift-log"),
         ]),

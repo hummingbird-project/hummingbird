@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 /// Split router path into components
-struct RouterPath: ExpressibleByStringLiteral {
-    enum Element: Equatable {
+public struct RouterPath: Sendable, ExpressibleByStringLiteral {
+    public enum Element: Equatable, Sendable {
         case path(Substring)
         case capture(Substring)
         case prefixCapture(suffix: Substring, parameter: Substring) // *.jpg
@@ -25,7 +25,7 @@ struct RouterPath: ExpressibleByStringLiteral {
         case recursiveWildcard
         case null
 
-        static func ~= <S: StringProtocol>(lhs: Element, rhs: S) -> Bool {
+        static func ~= (lhs: Element, rhs: some StringProtocol) -> Bool {
             switch lhs {
             case .path(let lhs):
                 return lhs == rhs
@@ -48,7 +48,7 @@ struct RouterPath: ExpressibleByStringLiteral {
             }
         }
 
-        static func == <S: StringProtocol>(lhs: Element, rhs: S) -> Bool {
+        static func == (lhs: Element, rhs: some StringProtocol) -> Bool {
             switch lhs {
             case .path(let lhs):
                 return lhs == rhs
@@ -58,9 +58,9 @@ struct RouterPath: ExpressibleByStringLiteral {
         }
     }
 
-    let components: [Element]
+    public let components: [Element]
 
-    init(_ value: String) {
+    public init(_ value: String) {
         let split = value.split(separator: "/", omittingEmptySubsequences: true)
         self.components = split.map { component in
             if component.first == ":" {
@@ -97,20 +97,20 @@ struct RouterPath: ExpressibleByStringLiteral {
         }
     }
 
-    init(stringLiteral value: String) {
+    public init(stringLiteral value: String) {
         self.init(value)
     }
 }
 
 extension RouterPath: Collection {
-    func index(after i: Int) -> Int {
+    public func index(after i: Int) -> Int {
         return self.components.index(after: i)
     }
 
-    subscript(_ index: Int) -> RouterPath.Element {
+    public subscript(_ index: Int) -> RouterPath.Element {
         return self.components[index]
     }
 
-    var startIndex: Int { self.components.startIndex }
-    var endIndex: Int { self.components.endIndex }
+    public var startIndex: Int { self.components.startIndex }
+    public var endIndex: Int { self.components.endIndex }
 }
