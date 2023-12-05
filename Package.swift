@@ -17,7 +17,7 @@ let package = Package(
         .executable(name: "PerformanceTest", targets: ["PerformanceTest"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "0.1.0"),
+        .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.4.0"),
         .package(url: "https://github.com/apple/swift-http-types.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
