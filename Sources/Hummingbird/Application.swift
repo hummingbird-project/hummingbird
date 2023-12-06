@@ -53,11 +53,13 @@ public final class HBApplicationContext: Sendable {
     }
 }
 
-public protocol HBApplicationProtocol: Service where Responder.Context: HBRequestContext {
+public protocol HBApplicationProtocol: Service where Context: HBRequestContext {
     /// Responder that generates a response from a requests and context
-    associatedtype Responder: HBResponder<Responder.Context>
+    associatedtype Responder: HBResponder
     /// Child Channel setup. This defaults to support HTTP1
     associatedtype ChannelSetup: HBChannelSetup & HTTPChannelHandler = HTTP1Channel
+    /// Context passed with HBRequest to responder
+    typealias Context = Responder.Context
 
     /// Build the responder
     func buildResponder() async throws -> Responder
