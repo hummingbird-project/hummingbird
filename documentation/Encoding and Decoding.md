@@ -79,7 +79,7 @@ Because the full request is supplied to the `HBRequestDecoder`. You can make dec
 struct MyRequestDecoder: HBRequestDecoder {
     func decode<T>(_ type: T.Type, from request: HBRequest) throws -> T where T : Decodable {
         switch request.headers["content-type"].first {
-        case "json/application", "application/json; charset=utf-8":
+        case "application/json", "application/json; charset=utf-8":
             return try JSONDecoder().decode(type, from: request)
         case "application/x-www-form-urlencoded":
             return try URLEncodedFormDecoder().decode(type, from: request)
