@@ -24,10 +24,9 @@ import ServiceLifecycle
 import XCTest
 
 /// Test using a live server
-final class HBXCTLive<App: HBApplicationProtocol>: HBXCTApplication where App.Context: HBRequestContext {
+final class HBXCTLive<App: HBApplicationProtocol>: HBXCTApplication {
     /// TestApplication used to wrap HBApplication being tested
-    struct TestApplication<BaseApp: HBApplicationProtocol>: HBApplicationProtocol, Service where BaseApp.Context: HBRequestContext {
-        typealias Context = BaseApp.Context
+    struct TestApplication<BaseApp: HBApplicationProtocol>: HBApplicationProtocol, Service where BaseApp.Responder.Context: HBRequestContext {
         typealias Responder = BaseApp.Responder
         typealias ChannelSetup = BaseApp.ChannelSetup
 

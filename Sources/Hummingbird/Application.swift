@@ -53,11 +53,9 @@ public final class HBApplicationContext: Sendable {
     }
 }
 
-public protocol HBApplicationProtocol: Service {
-    /// Context passed with HBRequest to responder
-    associatedtype Context: HBRequestContext
+public protocol HBApplicationProtocol: Service where Responder.Context: HBRequestContext {
     /// Responder that generates a response from a requests and context
-    associatedtype Responder: HBResponder<Context>
+    associatedtype Responder: HBResponder<Responder.Context>
     /// Child Channel setup. This defaults to support HTTP1
     associatedtype ChannelSetup: HBChannelSetup & HTTPChannelHandler = HTTP1Channel
 
