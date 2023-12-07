@@ -23,18 +23,16 @@ import NIOCore
 /// `head`, `post` and `patch`.  The route handler closures all return objects conforming to
 /// `HBResponseGenerator`.  This allows us to support routes which return a multitude of types eg
 /// ```
-/// router.get("string") { _ -> String in
+/// router.get("string") { _, _ -> String in
 ///     return "string"
 /// }
-/// router.post("status") { _ -> HTTPResponseStatus in
+/// router.post("status") { _, _ -> HTTPResponseStatus in
 ///     return .ok
 /// }
-/// router.data("data") { request -> ByteBuffer in
+/// router.data("data") { request, context -> ByteBuffer in
 ///     return context.allocator.buffer(string: "buffer")
 /// }
 /// ```
-/// Routes can also return `EventLoopFuture`'s. So you can support returning values from
-/// asynchronous processes.
 ///
 /// The default `Router` setup in `HBApplication` is the `TrieRouter` . This uses a
 /// trie to partition all the routes for faster access. It also supports wildcards and parameter extraction
