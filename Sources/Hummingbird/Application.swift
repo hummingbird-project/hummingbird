@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Atomics
-import Dispatch
 import HummingbirdCore
 import Logging
 import NIOCore
@@ -54,87 +53,70 @@ public final class HBApplicationContext: Sendable {
     }
 }
 
-/// Application class. Brings together all the components of Hummingbird together
-///
-/// ```
-/// let router = HBRouter()
-/// router.middleware.add(MyMiddleware())
-/// router.get("hello") { _ in
-///     return "hello"
-/// }
-/// let app = HBApplication(responder: router.buildResponder())
-/// try await app.runService()
-/// ```
-/// Editing the application setup after calling `runService` will produce undefined behaviour.
-public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup & HTTPChannelHandler> {
-    // MARK: Member variables
+public protocol HBApplicationProtocol: Service where Context: HBRequestContext {
+    /// Responder that generates a response from a requests and context
+    associatedtype Responder: HBResponder
+    /// Child Channel setup. This defaults to support HTTP1
+    associatedtype ChannelSetup: HBChannelSetup & HTTPChannelHandler = HTTP1Channel
+    /// Context passed with HBRequest to responder
+    typealias Context = Responder.Context
+
+    /// Build the responder
+    func buildResponder() async throws -> Responder
+    /// Server channel setup
+    func channelSetup(httpResponder: @escaping @Sendable (HBRequest, Channel) async throws -> HBResponse) throws -> ChannelSetup
 
     /// event loop group used by application
-    public let eventLoopGroup: EventLoopGroup
-    /// routes requests to requestResponders based on URI
-    public let responder: Responder
-    /// Configuration
-    public var configuration: HBApplicationConfiguration
+    var eventLoopGroup: EventLoopGroup { get }
+    /// Application configuration
+    var configuration: HBApplicationConfiguration { get }
     /// Logger
-    public var logger: Logger
-    /// on server running
-    public var onServerRunning: @Sendable (Channel) async -> Void
-    /// Server channel setup
-    let channelSetup: ChannelSetup
+    var logger: Logger { get }
+    /// This is called once the server is running and we have an active Channel
+    @Sendable func onServerRunning(_ channel: Channel) async
     /// services attached to the application.
-    var services: [any Service]
+    var services: [any Service] { get }
+}
 
-    // MARK: Initialization
-
-    /// Initialize new Application
-    public init(
-        responder: Responder,
-        channelSetup: ChannelSetup = HTTP1Channel(),
-        configuration: HBApplicationConfiguration = HBApplicationConfiguration(),
-        eventLoopGroupProvider: EventLoopGroupProvider = .singleton
-    ) {
-        var logger = Logger(label: configuration.serverName ?? "HummingBird")
-        logger.logLevel = configuration.logLevel
-        self.logger = logger
-
-        self.responder = responder
-        self.channelSetup = channelSetup
-        self.configuration = configuration
-        self.onServerRunning = { _ in }
-
-        self.eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
-        self.services = []
-    }
-
-    // MARK: Methods
-
-    ///  Add service to be managed by application ServiceGroup
-    /// - Parameter service: service to be added
-    public mutating func addService(_ service: any Service) {
-        self.services.append(service)
-    }
-
-    public static func loggerWithRequestId(_ logger: Logger) -> Logger {
-        let requestId = globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
-        return logger.with(metadataKey: "hb_id", value: .stringConvertible(requestId))
+extension HBApplicationProtocol where ChannelSetup == HTTP1Channel {
+    /// Defautl channel setup function for HTTP1 channels
+    public func channelSetup(httpResponder: @escaping @Sendable (HBRequest, Channel) async throws -> HBResponse) -> ChannelSetup {
+        HTTP1Channel(responder: httpResponder)
     }
 }
 
+extension HBApplicationProtocol {
+    /// Default event loop group used by application
+    public var eventLoopGroup: EventLoopGroup { MultiThreadedEventLoopGroup.singleton }
+    /// Default Configuration
+    public var configuration: HBApplicationConfiguration { .init() }
+    /// Default Logger
+    public var logger: Logger { Logger(label: self.configuration.serverName ?? "HummingBird") }
+    /// Default onServerRunning that does nothing
+    public func onServerRunning(_: Channel) async {}
+    /// Default to no extra services attached to the application.
+    public var services: [any Service] { [] }
+}
+
 /// Conform to `Service` from `ServiceLifecycle`.
-extension HBApplication: Service where Responder.Context: HBRequestContext {
+extension HBApplicationProtocol {
+    /// Construct application and run it
     public func run() async throws {
-        let context = HBApplicationContext(
-            configuration: self.configuration
-        )
         let dateCache = HBDateCache()
+        let responder = try await self.buildResponder()
+
+        // Function responding to HTTP request
         @Sendable func respond(to request: HBRequest, channel: Channel) async throws -> HBResponse {
-            let context = Responder.Context(
-                applicationContext: context,
+            let applicationContext = HBApplicationContext(
+                configuration: self.configuration
+            )
+            let context = Self.Responder.Context(
+                applicationContext: applicationContext,
                 channel: channel,
-                logger: HBApplication.loggerWithRequestId(self.logger)
+                logger: loggerWithRequestId(self.logger)
             )
             // respond to request
-            var response = try await self.responder.respond(to: request, context: context)
+            var response = try await responder.respond(to: request, context: context)
             response.headers[.date] = dateCache.date
             // server name header
             if let serverName = self.configuration.serverName {
@@ -142,9 +124,8 @@ extension HBApplication: Service where Responder.Context: HBRequestContext {
             }
             return response
         }
-        // update channel with responder
-        var channelSetup = self.channelSetup
-        channelSetup.responder = respond
+        // get channel Setup
+        let channelSetup = try self.channelSetup(httpResponder: respond)
         // create server
         let server = HBServer(
             childChannelSetup: channelSetup,
@@ -153,14 +134,8 @@ extension HBApplication: Service where Responder.Context: HBRequestContext {
             eventLoopGroup: self.eventLoopGroup,
             logger: self.logger
         )
-        let services: [any Service]
-        if self.configuration.noHTTPServer {
-            services = self.services
-        } else {
-            services = [server, dateCache] + self.services
-        }
         try await withGracefulShutdownHandler {
-            let services: [any Service] = services
+            let services: [any Service] = [server, dateCache] + self.services
             let serviceGroup = ServiceGroup(
                 configuration: .init(services: services, logger: self.logger)
             )
@@ -183,6 +158,90 @@ extension HBApplication: Service where Responder.Context: HBRequestContext {
             )
         )
         try await serviceGroup.run()
+    }
+}
+
+public func loggerWithRequestId(_ logger: Logger) -> Logger {
+    let requestId = globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
+    return logger.with(metadataKey: "hb_id", value: .stringConvertible(requestId))
+}
+
+/// Application class. Brings together all the components of Hummingbird together
+///
+/// ```
+/// let router = HBRouter()
+/// router.middleware.add(MyMiddleware())
+/// router.get("hello") { _ in
+///     return "hello"
+/// }
+/// let app = HBApplication(responder: router.buildResponder())
+/// try await app.runService()
+/// ```
+/// Editing the application setup after calling `runService` will produce undefined behaviour.
+public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup & HTTPChannelHandler>: HBApplicationProtocol where Responder.Context: HBRequestContext {
+    public typealias Context = Responder.Context
+    public typealias ChannelSetup = ChannelSetup
+    public typealias Responder = Responder
+
+    // MARK: Member variables
+
+    /// event loop group used by application
+    public let eventLoopGroup: EventLoopGroup
+    /// routes requests to requestResponders based on URI
+    public let responder: Responder
+    /// Configuration
+    public var configuration: HBApplicationConfiguration
+    /// Logger
+    public var logger: Logger
+    /// on server running
+    private var _onServerRunning: @Sendable (Channel) async -> Void
+    /// Server channel setup
+    let channelSetup: ChannelSetup
+    /// services attached to the application.
+    public var services: [any Service]
+
+    // MARK: Initialization
+
+    /// Initialize new Application
+    public init(
+        responder: Responder,
+        channelSetup: ChannelSetup = HTTP1Channel(),
+        configuration: HBApplicationConfiguration = HBApplicationConfiguration(),
+        eventLoopGroupProvider: EventLoopGroupProvider = .singleton
+    ) {
+        var logger = Logger(label: configuration.serverName ?? "HummingBird")
+        logger.logLevel = configuration.logLevel
+        self.logger = logger
+
+        self.responder = responder
+        self.channelSetup = channelSetup
+        self.configuration = configuration
+        self._onServerRunning = { _ in }
+
+        self.eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
+        self.services = []
+    }
+
+    // MARK: Methods
+
+    ///  Add service to be managed by application ServiceGroup
+    /// - Parameter service: service to be added
+    public mutating func addService(_ service: any Service) {
+        self.services.append(service)
+    }
+
+    public func buildResponder() async throws -> Responder {
+        return self.responder
+    }
+
+    public func channelSetup(httpResponder: @escaping @Sendable (HBRequest, Channel) async throws -> HBResponse) throws -> ChannelSetup {
+        var channelSetup = self.channelSetup
+        channelSetup.responder = httpResponder
+        return channelSetup
+    }
+
+    public func onServerRunning(_ channel: Channel) async {
+        await self._onServerRunning(channel)
     }
 }
 

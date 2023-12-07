@@ -447,6 +447,52 @@ final class ApplicationTests: XCTestCase {
             }
         }
     }
+
+    /// test we can create an application and pass it around as a `some HBApplicationProtocol`. This
+    /// is more a compilation test than a runtime test
+    func testApplicationProtocolReturnValue() async throws {
+        func createApplication() -> some HBApplicationProtocol {
+            let router = HBRouter(context: HBTestRouterContext.self)
+            router.get("/hello") { _, context -> ByteBuffer in
+                return context.allocator.buffer(string: "GET: Hello")
+            }
+            return HBApplication(responder: router.buildResponder())
+        }
+        let app = createApplication()
+        try await app.test(.live) { client in
+            try await client.XCTExecute(uri: "/hello", method: .get) { response in
+                var body = try XCTUnwrap(response.body)
+                let string = body.readString(length: body.readableBytes)
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(string, "GET: Hello")
+            }
+        }
+    }
+
+    /// test we can create out own application type conforming to HBApplicationProtocol
+    func testApplicationProtocol() async throws {
+        struct MyApp: HBApplicationProtocol {
+            typealias Context = HBTestRouterContext
+            typealias ChannelSetup = HTTP1Channel
+
+            func buildResponder() async throws -> some HBResponder<Context> {
+                let router = HBRouter(context: Context.self)
+                router.get("/hello") { _, context -> ByteBuffer in
+                    return context.allocator.buffer(string: "GET: Hello")
+                }
+                return router.buildResponder()
+            }
+        }
+        let app = MyApp()
+        try await app.test(.live) { client in
+            try await client.XCTExecute(uri: "/hello", method: .get) { response in
+                var body = try XCTUnwrap(response.body)
+                let string = body.readString(length: body.readableBytes)
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(string, "GET: Hello")
+            }
+        }
+    }
 }
 
 extension HTTPField.Name {
