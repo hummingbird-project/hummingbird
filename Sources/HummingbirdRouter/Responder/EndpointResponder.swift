@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import HTTPTypes
+import HummingbirdCore
 
 /// Stores endpoint responders for each HTTP method
 struct HBEndpointResponders<Context: HBBaseRequestContext>: Sendable {

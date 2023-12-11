@@ -14,6 +14,8 @@
 
 import Dispatch
 import Metrics
+import HummingbirdRouter
+import HummingbirdCore
 
 /// Middleware recording metrics for each request
 ///

@@ -45,11 +45,11 @@ import NIOCore
 /// Both of these match routes which start with "/user" and the next path segment being anything.
 /// The second version extracts the path segment out and adds it to `HBRequest.parameters` with the
 /// key "id".
-public final class HBRouter<Context: HBBaseRequestContext>: HBRouterMethods {
+public final class HBRouter<Context: HBRouterRequestContext>: HBRouterMethods {
     var trie: RouterPathTrieBuilder<HBEndpointResponders<Context>>
     public let middlewares: HBMiddlewareGroup<Context>
 
-    public init(context: Context.Type = HBBasicRequestContext.self) {
+    public init(context: Context.Type) {
         self.trie = RouterPathTrieBuilder()
         self.middlewares = .init()
     }

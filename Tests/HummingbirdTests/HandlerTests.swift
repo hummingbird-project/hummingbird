@@ -208,11 +208,11 @@ final class HandlerTests: XCTestCase {
     func testEmptyRequest() async throws {
         struct ParameterTest: HBRouteHandler {
             let parameter: Int
-            init(from request: HBRequest, context: some HBBaseRequestContext) throws {
+            init(from request: HBRequest, context: some HBRouterRequestContext) throws {
                 self.parameter = try context.parameters.require("test", as: Int.self)
             }
 
-            func handle(request: HBRequest, context: some HBBaseRequestContext) -> String {
+            func handle(request: HBRequest, context: some HBRouterRequestContext) -> String {
                 return "\(self.parameter)"
             }
         }

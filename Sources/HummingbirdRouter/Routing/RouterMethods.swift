@@ -14,6 +14,7 @@
 
 import HTTPTypes
 import NIOCore
+import HummingbirdCore
 
 /// Options available to routes
 public struct HBRouterMethodOptions: OptionSet, Sendable {
@@ -25,7 +26,7 @@ public struct HBRouterMethodOptions: OptionSet, Sendable {
 
 /// Conform to `HBRouterMethods` to add standard router verb (get, post ...) methods
 public protocol HBRouterMethods {
-    associatedtype Context: HBBaseRequestContext
+    associatedtype Context: HBRouterRequestContext
 
     /// Add path for async closure
     @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)

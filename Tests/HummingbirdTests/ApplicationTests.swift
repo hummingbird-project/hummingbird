@@ -271,7 +271,7 @@ final class ApplicationTests: XCTestCase {
         struct CollateMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
             func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
                 var request = request
-                request.body = try await request.body.collate(maxSize: context.applicationContext.configuration.maxUploadSize)
+                request.body = try await request.body.collate(maxSize: context.maxUploadSize)
                 return try await next.respond(to: request, context: context)
             }
         }
@@ -411,6 +411,8 @@ final class ApplicationTests: XCTestCase {
     func testRemoteAddress() async throws {
         /// Implementation of a basic request context that supports everything the Hummingbird library needs
         struct HBSocketAddressRequestContext: HBRequestContext {
+            let applicationContext: HBApplicationContext
+            var parameters: HBParameters = .init()
             /// core context
             var coreContext: HBCoreRequestContext
             // socket address
@@ -418,10 +420,12 @@ final class ApplicationTests: XCTestCase {
 
             public init(
                 applicationContext: HBApplicationContext,
+                configuration: HBRequestContextConfiguration,
                 channel: Channel,
                 logger: Logger
             ) {
-                self.coreContext = .init(applicationContext: applicationContext, eventLoop: channel.eventLoop, allocator: channel.allocator, logger: logger)
+                self.applicationContext = applicationContext
+                self.coreContext = .init(configuration: configuration, eventLoop: channel.eventLoop, allocator: channel.allocator, logger: logger)
                 self.remoteAddress = channel.remoteAddress
             }
         }

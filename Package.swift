@@ -33,6 +33,7 @@ let package = Package(
     targets: [
         .target(name: "Hummingbird", dependencies: [
             .byName(name: "HummingbirdCore"),
+            .byName(name: "HummingbirdRouter"),
             .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
             .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
             .product(name: "HTTPTypes", package: "swift-http-types"),
@@ -41,6 +42,11 @@ let package = Package(
             .product(name: "Tracing", package: "swift-distributed-tracing"),
             .product(name: "NIOCore", package: "swift-nio"),
             .product(name: "NIOPosix", package: "swift-nio"),
+        ]),
+        .target(name: "HummingbirdRouter", dependencies: [
+            .byName(name: "HummingbirdCore"),
+            .product(name: "HTTPTypes", package: "swift-http-types"),
+            .product(name: "NIOCore", package: "swift-nio"),
         ]),
         .target(name: "HummingbirdCore", dependencies: [
             .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),

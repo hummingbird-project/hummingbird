@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HummingbirdCore
+
 public struct HBSetCodableMiddleware<Decoder: HBRequestDecoder, Encoder: HBResponseEncoder, Context: HBBaseRequestContext>: HBMiddleware {
     let decoder: @Sendable () -> Decoder
     let encoder: @Sendable () -> Encoder
@@ -23,8 +25,8 @@ public struct HBSetCodableMiddleware<Decoder: HBRequestDecoder, Encoder: HBRespo
 
     public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
         var context = context
-        context.coreContext.requestDecoder = self.decoder()
-        context.coreContext.responseEncoder = self.encoder()
+        context.requestDecoder = self.decoder()
+        context.responseEncoder = self.encoder()
         return try await next.respond(to: request, context: context)
     }
 }

@@ -12,12 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HummingbirdCore
+
 /// Directs requests to handlers based on the request uri and method.
 ///
 /// Conforms to `HBResponder` so need to provide its own implementation of
 /// `func apply(to request: Request) -> EventLoopFuture<Response>`.
 ///
-struct HBRouterResponder<Context: HBBaseRequestContext>: HBResponder {
+struct HBRouterResponder<Context: HBRouterRequestContext>: HBResponder {
     let trie: RouterPathTrie<HBEndpointResponders<Context>>
     let notFoundResponder: any HBResponder<Context>
 
@@ -38,7 +40,7 @@ struct HBRouterResponder<Context: HBBaseRequestContext>: HBResponder {
         }
         var context = context
         if let parameters = result.parameters {
-            context.coreContext.parameters = parameters
+            context.parameters = parameters
         }
         // store endpoint path in request (mainly for metrics)
         context.coreContext.endpointPath.value = result.value.path

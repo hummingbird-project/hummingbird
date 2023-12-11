@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
 import HummingbirdCore
 import NIOCore
+import HTTPTypes
 
 /// Used to group together routes under a single path. Additional middleware can be added to the endpoint and each route can add a
 /// suffix to the endpoint path
@@ -30,7 +30,7 @@ import NIOCore
 /// .put(":id", use: todoController.update)
 /// .delete(":id", use: todoController.delete)
 /// ```
-public struct HBRouterGroup<Context: HBBaseRequestContext>: HBRouterMethods {
+public struct HBRouterGroup<Context: HBRouterRequestContext>: HBRouterMethods {
     let path: String
     let router: HBRouter<Context>
     let middlewares: HBMiddlewareGroup<Context>

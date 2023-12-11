@@ -19,11 +19,14 @@ import NIOCore
 import NIOPosix
 
 struct PerformanceTestRequestContext: HBRequestContext {
+    let applicationContext: HBApplicationContext
+    var parameters: HBParameters = .init()
     var coreContext: HBCoreRequestContext
 
-    init(applicationContext: HBApplicationContext, channel: Channel, logger: Logger) {
+    init(applicationContext: HBApplicationContext, configuration: HBRequestContextConfiguration, channel: Channel, logger: Logger) {
+        self.applicationContext = applicationContext
         self.coreContext = .init(
-            applicationContext: applicationContext,
+            configuration: configuration,
             requestDecoder: JSONDecoder(),
             responseEncoder: JSONEncoder(),
             eventLoop: channel.eventLoop,

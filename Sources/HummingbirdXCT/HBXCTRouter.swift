@@ -25,6 +25,7 @@ import Tracing
 public protocol HBTestRequestContextProtocol: HBRequestContext {
     init(
         applicationContext: HBApplicationContext,
+        configuration: HBRequestContextConfiguration,
         eventLoop: EventLoop,
         allocator: ByteBufferAllocator,
         logger: Logger
@@ -34,11 +35,13 @@ public protocol HBTestRequestContextProtocol: HBRequestContext {
 extension HBTestRequestContextProtocol {
     public init(
         applicationContext: HBApplicationContext,
+        configuration: HBRequestContextConfiguration,
         channel: Channel,
         logger: Logger
     ) {
         self.init(
             applicationContext: applicationContext,
+            configuration: configuration,
             eventLoop: channel.eventLoop,
             allocator: channel.allocator,
             logger: logger
@@ -49,17 +52,22 @@ extension HBTestRequestContextProtocol {
 public struct HBTestRouterContext: HBTestRequestContextProtocol {
     public init(
         applicationContext: HBApplicationContext,
+        configuration: HBRequestContextConfiguration,
         eventLoop: EventLoop,
         allocator: ByteBufferAllocator,
         logger: Logger
     ) {
+        self.applicationContext = applicationContext
         self.coreContext = .init(
-            applicationContext: applicationContext,
+            configuration: configuration,
             eventLoop: eventLoop,
             allocator: allocator,
             logger: logger
         )
     }
+
+    public let applicationContext: HBApplicationContext
+    public var parameters: HBParameters = .init()
 
     /// router context
     public var coreContext: HBCoreRequestContext
@@ -107,6 +115,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                 )
                 let context = Responder.Context(
                     applicationContext: self.applicationContext,
+                    configuration: .init(maxUploadSize: self.applicationContext.configuration.maxUploadSize),
                     eventLoop: eventLoop,
                     allocator: ByteBufferAllocator(),
                     logger: loggerWithRequestId(self.logger)

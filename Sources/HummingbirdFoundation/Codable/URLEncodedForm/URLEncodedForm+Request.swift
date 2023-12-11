@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
+import HummingbirdCore
 
 extension URLEncodedFormEncoder: HBResponseEncoder {
     /// Extend URLEncodedFormEncoder to support encoding `HBResponse`'s. Sets body and header values
@@ -37,7 +38,7 @@ extension URLEncodedFormDecoder: HBRequestDecoder {
     ///   - type: Type to decode
     ///   - request: Request to decode from
     public func decode<T: Decodable>(_ type: T.Type, from request: HBRequest, context: some HBBaseRequestContext) async throws -> T {
-        let buffer = try await request.body.collect(upTo: context.applicationContext.configuration.maxUploadSize)
+        let buffer = try await request.body.collect(upTo: context.maxUploadSize)
         let string = String(buffer: buffer)
         return try self.decode(T.self, from: string)
     }

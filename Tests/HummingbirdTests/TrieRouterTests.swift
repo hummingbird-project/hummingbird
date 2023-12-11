@@ -12,7 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import Hummingbird
+import Hummingbird
+@testable import HummingbirdRouter
 import XCTest
 
 class TrieRouterTests: XCTestCase {

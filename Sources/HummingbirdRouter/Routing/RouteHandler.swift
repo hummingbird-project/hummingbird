@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HummingbirdCore
 import HTTPTypes
 
 /// Object for handling requests.
@@ -41,8 +42,8 @@ import HTTPTypes
 /// ```
 public protocol HBRouteHandler {
     associatedtype _Output
-    init(from: HBRequest, context: some HBBaseRequestContext) async throws
-    func handle(request: HBRequest, context: some HBBaseRequestContext) async throws -> _Output
+    init(from: HBRequest, context: some HBRouterRequestContext) async throws
+    func handle(request: HBRequest, context: some HBRouterRequestContext) async throws -> _Output
 }
 
 extension HBRouterMethods {

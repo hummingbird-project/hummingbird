@@ -373,13 +373,18 @@ final class RouterTests: XCTestCase {
 public struct HBTestRouterContext2: HBTestRequestContextProtocol {
     public init(
         applicationContext: HBApplicationContext,
+        configuration: HBRequestContextConfiguration,
         eventLoop: EventLoop,
         allocator: ByteBufferAllocator,
         logger: Logger
     ) {
-        self.coreContext = .init(applicationContext: applicationContext, eventLoop: eventLoop, allocator: allocator, logger: logger)
+        self.coreContext = .init(configuration: configuration, eventLoop: eventLoop, allocator: allocator, logger: logger)
+        self.applicationContext = applicationContext
         self.string = ""
     }
+
+    public let applicationContext: HBApplicationContext
+    public var parameters: HBParameters = .init()
 
     /// parameters
     public var coreContext: HBCoreRequestContext

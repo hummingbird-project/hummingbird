@@ -14,6 +14,7 @@
 
 import Atomics
 import HummingbirdCore
+import HummingbirdRouter
 import Logging
 import NIOCore
 import NIOPosix
@@ -112,6 +113,7 @@ extension HBApplicationProtocol {
             )
             let context = Self.Responder.Context(
                 applicationContext: applicationContext,
+                configuration: .init(maxUploadSize: applicationContext.configuration.maxUploadSize),
                 channel: channel,
                 logger: loggerWithRequestId(self.logger)
             )

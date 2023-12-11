@@ -14,6 +14,7 @@
 
 import NIOCore
 import ServiceContextModule
+import HummingbirdCore
 
 /// Protocol for object that produces a response given a request
 ///
