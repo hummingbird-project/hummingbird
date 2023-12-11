@@ -15,7 +15,7 @@
 /// Directs requests to handlers based on the request uri and method.
 ///
 /// Conforms to `HBResponder` so need to provide its own implementation of
-/// `func apply(to request: Request) -> EventLoopFuture<Response>`.
+/// `func respond(to request: HBRequest, context: Context) async throws -> HBResponse`.
 ///
 struct HBRouterResponder<Context: HBBaseRequestContext>: HBResponder {
     let trie: RouterPathTrie<HBEndpointResponders<Context>>
