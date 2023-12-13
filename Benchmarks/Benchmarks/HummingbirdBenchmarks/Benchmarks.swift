@@ -12,23 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-public protocol BenchmarkWrapper: AnyObject {
-    func setUp() throws
-    func tearDown()
-    func run() throws
-}
+@testable import Hummingbird
+import Benchmark
 
-extension BenchmarkWrapper {
-    public func tearDown() {}
-}
-
-@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-public protocol AsyncBenchmarkWrapper: AnyObject, Sendable {
-    func setUp() async throws
-    func tearDown()
-    func run() async throws
-}
-
-extension AsyncBenchmarkWrapper {
-    public func tearDown() {}
+let benchmarks = {
+    trieRouterBenchmarks()
+    routerBenchmarks()
+    // The HTTP benchmarks are so variable I'm not sure they are worthwhile running
+    //http1Benchmarks()
 }
