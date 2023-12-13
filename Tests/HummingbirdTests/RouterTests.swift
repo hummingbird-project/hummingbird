@@ -372,12 +372,11 @@ final class RouterTests: XCTestCase {
 
 public struct HBTestRouterContext2: HBTestRequestContextProtocol {
     public init(
-        applicationContext: HBApplicationContext,
         eventLoop: EventLoop,
         allocator: ByteBufferAllocator,
         logger: Logger
     ) {
-        self.coreContext = .init(applicationContext: applicationContext, eventLoop: eventLoop, allocator: allocator, logger: logger)
+        self.coreContext = .init(eventLoop: eventLoop, allocator: allocator, logger: logger)
         self.string = ""
     }
 

@@ -21,9 +21,8 @@ import NIOPosix
 struct PerformanceTestRequestContext: HBRequestContext {
     var coreContext: HBCoreRequestContext
 
-    init(applicationContext: HBApplicationContext, channel: Channel, logger: Logger) {
+    init(channel: Channel, logger: Logger) {
         self.coreContext = .init(
-            applicationContext: applicationContext,
             requestDecoder: JSONDecoder(),
             responseEncoder: JSONEncoder(),
             eventLoop: channel.eventLoop,

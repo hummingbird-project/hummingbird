@@ -203,7 +203,7 @@ final class ApplicationTests: XCTestCase {
                 let buffer = try await request.body.collect(upTo: .max)
                 return .init(status: .ok, headers: [:], body: .init(byteBuffer: buffer))
             }
-        let app = HBApplication(responder: router.buildResponder(), configuration: .init(maxUploadSize: 2 * 1024 * 1024))
+        let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
 
             let buffer = self.randomBuffer(size: 1_140_000)
@@ -269,10 +269,10 @@ final class ApplicationTests: XCTestCase {
 
     func testCollateBody() async throws {
         struct CollateMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
-    public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+            public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
                 var request = request
-                request.body = try await request.body.collate(maxSize: context.applicationContext.configuration.maxUploadSize)
-                return try await next(request, context)
+                request.body = try await request.body.collate(maxSize: context.maxUploadSize)
+                return try await next.respond(to: request, context: context)
             }
         }
         let router = HBRouter(context: HBTestRouterContext.self)
@@ -386,15 +386,23 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testMaxUploadSize() async throws {
-        let router = HBRouter()
+        struct MaxUploadRequestContext: HBRequestContext {
+            init(channel: Channel, logger: Logger) {
+                self.coreContext = .init(eventLoop: channel.eventLoop, allocator: channel.allocator, logger: logger)
+            }
+
+            var coreContext: HBCoreRequestContext
+            var maxUploadSize: Int { 64 * 1024 }
+        }
+        let router = HBRouter(context: MaxUploadRequestContext.self)
         router.post("upload") { request, context in
-            _ = try await request.body.collate(maxSize: context.applicationContext.configuration.maxUploadSize)
+            _ = try await request.body.collate(maxSize: context.maxUploadSize)
             return "ok"
         }
         router.post("stream") { _, _ in
             "ok"
         }
-        let app = HBApplication(responder: router.buildResponder(), configuration: .init(maxUploadSize: 64 * 1024))
+        let app = HBApplication(responder: router.buildResponder())
         try await app.test(.live) { client in
             let buffer = self.randomBuffer(size: 128 * 1024)
             // check non streamed route throws an error
@@ -417,11 +425,10 @@ final class ApplicationTests: XCTestCase {
             let remoteAddress: SocketAddress?
 
             public init(
-                applicationContext: HBApplicationContext,
                 channel: Channel,
                 logger: Logger
             ) {
-                self.coreContext = .init(applicationContext: applicationContext, eventLoop: channel.eventLoop, allocator: channel.allocator, logger: logger)
+                self.coreContext = .init(eventLoop: channel.eventLoop, allocator: channel.allocator, logger: logger)
                 self.remoteAddress = channel.remoteAddress
             }
         }

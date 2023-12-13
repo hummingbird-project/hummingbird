@@ -42,17 +42,6 @@ public enum EventLoopGroupProvider {
     }
 }
 
-public final class HBApplicationContext: Sendable {
-    /// Configuration
-    public let configuration: HBApplicationConfiguration
-
-    public init(
-        configuration: HBApplicationConfiguration
-    ) {
-        self.configuration = configuration
-    }
-}
-
 public protocol HBApplicationProtocol: Service where Context: HBRequestContext {
     /// Responder that generates a response from a requests and context
     associatedtype Responder: HBResponder
@@ -107,11 +96,7 @@ extension HBApplicationProtocol {
 
         // Function responding to HTTP request
         @Sendable func respond(to request: HBRequest, channel: Channel) async throws -> HBResponse {
-            let applicationContext = HBApplicationContext(
-                configuration: self.configuration
-            )
             let context = Self.Responder.Context(
-                applicationContext: applicationContext,
                 channel: channel,
                 logger: loggerWithRequestId(self.logger)
             )
