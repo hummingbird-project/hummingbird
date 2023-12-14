@@ -12,12 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Benchmark
 import HTTPTypes
-import NIOHTTPTypes
 import Hummingbird
+import NIOHTTPTypes
 @_spi(HBXCT) import HummingbirdCore
 import Logging
-import Benchmark
 import NIOCore
 import NIOPosix
 
@@ -51,7 +51,7 @@ struct BasicBenchmarkContext: BenchmarkContext {
 
 /// Writes ByteBuffers to AsyncChannel outbound writer
 struct BenchmarkBodyWriter: Sendable, HBResponseBodyWriter {
-    func write(_ buffer: ByteBuffer) async throws {}
+    func write(_: ByteBuffer) async throws {}
 }
 
 extension Benchmark {
@@ -59,11 +59,11 @@ extension Benchmark {
     convenience init?<Context: BenchmarkContext>(
         name: String,
         context: Context.Type = BasicBenchmarkContext.self,
-        configuration: Benchmark.Configuration = Benchmark.defaultConfiguration, 
+        configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
         request: HTTPRequest,
         writeBody: @escaping @Sendable (HBStreamedRequestBody) async throws -> Void = { _ in },
         setupRouter: @escaping @Sendable (HBRouter<Context>) async throws -> Void
-     ) {
+    ) {
         let router = HBRouter(context: Context.self)
         self.init(name, configuration: configuration) { benchmark in
             let responder = router.buildResponder()
@@ -72,7 +72,7 @@ extension Benchmark {
 
             try await withThrowingTaskGroup(of: Void.self) { group in
                 for _ in benchmark.scaledIterations {
-                    let context = Context.init(applicationContext: applicationContext, eventLoop: MultiThreadedEventLoopGroup.singleton.any(), allocator: ByteBufferAllocator(), logger: Logger(label: "Benchmark"))
+                    let context = Context(applicationContext: applicationContext, eventLoop: MultiThreadedEventLoopGroup.singleton.any(), allocator: ByteBufferAllocator(), logger: Logger(label: "Benchmark"))
                     let requestBodyStream = HBStreamedRequestBody()
                     let requestBody = HBRequestBody.stream(requestBodyStream)
                     let hbRequest = HBRequest(head: request, body: requestBody)
@@ -93,19 +93,19 @@ extension Benchmark {
 
 func routerBenchmarks() {
     Benchmark(
-        name: "GET NoResponse", 
+        name: "GET NoResponse",
         request: .init(method: .get, scheme: "http", authority: "localhost", path: "/")
     ) { router in
-        router.get { request, _ in
+        router.get { _, _ in
             HTTPResponse.Status.ok
         }
     }
 
     Benchmark(
-        name: "Get Response", 
+        name: "Get Response",
         request: .init(method: .get, scheme: "http", authority: "localhost", path: "/")
     ) { router in
-        router.get { request, _ in
+        router.get { _, _ in
             HBResponse(status: .ok, headers: [:], body: .init { writer in
                 try await writer.write(ByteBufferAllocator().buffer(repeating: 0, count: 16000))
                 try await writer.write(ByteBufferAllocator().buffer(repeating: 0, count: 16000))
@@ -116,7 +116,7 @@ func routerBenchmarks() {
     }
 
     Benchmark(
-        name: "PUT", 
+        name: "PUT",
         request: .init(method: .put, scheme: "http", authority: "localhost", path: "/")
     ) { bodyStream in
         await bodyStream.send(ByteBufferAllocator().buffer(repeating: 0, count: 16000))
@@ -131,7 +131,7 @@ func routerBenchmarks() {
     }
 
     Benchmark(
-        name: "Echo", 
+        name: "Echo",
         request: .init(method: .post, scheme: "http", authority: "localhost", path: "/")
     ) { bodyStream in
         await bodyStream.send(ByteBufferAllocator().buffer(repeating: 0, count: 16000))
@@ -146,4 +146,5 @@ func routerBenchmarks() {
                 }
             })
         }
-    }}
+    }
+}
