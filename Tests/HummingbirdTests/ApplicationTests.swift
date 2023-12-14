@@ -268,11 +268,11 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testCollateBody() async throws {
-        struct CollateMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
-            func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+        struct CollateMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
+    public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
                 var request = request
                 request.body = try await request.body.collate(maxSize: context.applicationContext.configuration.maxUploadSize)
-                return try await next.respond(to: request, context: context)
+                return try await next(request, context)
             }
         }
         let router = HBRouter(context: HBTestRouterContext.self)

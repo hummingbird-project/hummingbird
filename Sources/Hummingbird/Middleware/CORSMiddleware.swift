@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -21,7 +21,7 @@ import NIOCore
 /// then return an empty body with all the standard CORS headers otherwise send
 /// request onto the next handler and when you receive the response add a
 /// "access-control-allow-origin" header
-public struct HBCORSMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
+public struct HBCORSMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
     /// Defines what origins are allowed
     public enum AllowOrigin: Sendable {
         case none
@@ -84,10 +84,10 @@ public struct HBCORSMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
     }
 
     /// apply CORS middleware
-    public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+    public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
         // if no origin header then don't apply CORS
         guard request.headers[.origin] != nil else {
-            return try await next.respond(to: request, context: context)
+            return try await next(request, context)
         }
 
         if request.method == .options {
@@ -113,7 +113,7 @@ public struct HBCORSMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
             return HBResponse(status: .noContent, headers: headers, body: .init())
         } else {
             // if not OPTIONS then run rest of middleware chain and add origin value at the end
-            var response = try await next.respond(to: request, context: context)
+            var response = try await next(request, context)
             response.headers[.accessControlAllowOrigin] = self.allowOrigin.value(for: request) ?? ""
             if self.allowCredentials {
                 response.headers[.accessControlAllowCredentials] = "true"

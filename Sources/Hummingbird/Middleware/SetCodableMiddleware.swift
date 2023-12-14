@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-public struct HBSetCodableMiddleware<Decoder: HBRequestDecoder, Encoder: HBResponseEncoder, Context: HBBaseRequestContext>: HBMiddleware {
+public struct HBSetCodableMiddleware<Decoder: HBRequestDecoder, Encoder: HBResponseEncoder, Context: HBBaseRequestContext>: HBMiddlewareProtocol {
     let decoder: @Sendable () -> Decoder
     let encoder: @Sendable () -> Encoder
 
@@ -21,10 +21,10 @@ public struct HBSetCodableMiddleware<Decoder: HBRequestDecoder, Encoder: HBRespo
         self.encoder = encoder
     }
 
-    public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+    public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
         var context = context
         context.coreContext.requestDecoder = self.decoder()
         context.coreContext.responseEncoder = self.encoder()
-        return try await next.respond(to: request, context: context)
+        return try await next(request, context)
     }
 }

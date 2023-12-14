@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -15,7 +15,7 @@
 import Logging
 
 /// Middleware outputting to log for every call to server
-public struct HBLogRequestsMiddleware<Context: HBBaseRequestContext>: HBMiddleware {
+public struct HBLogRequestsMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
     let logLevel: Logger.Level
     let includeHeaders: Bool
 
@@ -24,7 +24,7 @@ public struct HBLogRequestsMiddleware<Context: HBBaseRequestContext>: HBMiddlewa
         self.includeHeaders = includeHeaders
     }
 
-    public func apply(to request: HBRequest, context: Context, next: any HBResponder<Context>) async throws -> HBResponse {
+    public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
         if self.includeHeaders {
             context.logger.log(
                 level: self.logLevel,
@@ -38,6 +38,6 @@ public struct HBLogRequestsMiddleware<Context: HBBaseRequestContext>: HBMiddlewa
                 metadata: ["hb_uri": .stringConvertible(request.uri), "hb_method": .string(request.method.rawValue)]
             )
         }
-        return try await next.respond(to: request, context: context)
+        return try await next(request, context)
     }
 }
