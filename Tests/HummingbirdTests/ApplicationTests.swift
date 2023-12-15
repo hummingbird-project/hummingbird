@@ -272,7 +272,7 @@ final class ApplicationTests: XCTestCase {
             public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
                 var request = request
                 request.body = try await request.body.collate(maxSize: context.maxUploadSize)
-                return try await next.respond(to: request, context: context)
+                return try await next(request, context)
             }
         }
         let router = HBRouter(context: HBTestRouterContext.self)
