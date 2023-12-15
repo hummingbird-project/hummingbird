@@ -67,9 +67,9 @@ public protocol HBApplicationProtocol: Service where Context: HBRequestContext {
     var services: [any Service] { get }
 }
 
-extension HBApplicationProtocol where ChannelSetup == HTTP1Channel {
+extension HBApplicationProtocol {
     /// Server channel setup
-    public var channelSetup: HBHTTPChannelSetupBuilder<ChannelSetup> { .http1() }
+    public var channelSetup: HBHTTPChannelSetupBuilder<HTTP1Channel> { .http1() }
 }
 
 extension HBApplicationProtocol {

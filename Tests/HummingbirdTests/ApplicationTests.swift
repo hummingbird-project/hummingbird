@@ -480,7 +480,6 @@ final class ApplicationTests: XCTestCase {
     func testApplicationProtocol() async throws {
         struct MyApp: HBApplicationProtocol {
             typealias Context = HBTestRouterContext
-            typealias ChannelSetup = HTTP1Channel
 
             var responder: some HBResponder<Context> {
                 let router = HBRouter(context: Context.self)
