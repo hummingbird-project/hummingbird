@@ -91,11 +91,33 @@ extension Benchmark {
     }
 }
 
+extension HTTPField.Name {
+    static let test = Self("Test")!
+}
+
 func routerBenchmarks() {
     Benchmark(
         name: "GET NoResponse",
         request: .init(method: .get, scheme: "http", authority: "localhost", path: "/")
     ) { router in
+        router.get { _, _ in
+            HTTPResponse.Status.ok
+        }
+    }
+
+    Benchmark(
+        name: "Middleware Chain",
+        request: .init(method: .get, scheme: "http", authority: "localhost", path: "/")
+    ) { router in
+        struct EmptyMiddleware<Context>: HBMiddlewareProtocol {
+            func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+                return try await next(request, context)
+            }
+        }
+        router.middlewares.add(EmptyMiddleware())
+        router.middlewares.add(EmptyMiddleware())
+        router.middlewares.add(EmptyMiddleware())
+        router.middlewares.add(EmptyMiddleware())
         router.get { _, _ in
             HTTPResponse.Status.ok
         }
