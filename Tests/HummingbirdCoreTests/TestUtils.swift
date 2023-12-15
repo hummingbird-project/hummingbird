@@ -32,7 +32,8 @@ public enum TestErrors: Error {
 
 /// Helper function for testing a server
 public func testServer<ChannelSetup: HBChannelSetup, Value: Sendable>(
-    childChannelSetup: ChannelSetup,
+    responder: @escaping HTTPChannelHandler.Responder,
+    httpChannelSetup: HBHTTPChannelSetupBuilder<ChannelSetup>,
     configuration: HBServerConfiguration,
     eventLoopGroup: EventLoopGroup,
     logger: Logger,
@@ -40,8 +41,8 @@ public func testServer<ChannelSetup: HBChannelSetup, Value: Sendable>(
 ) async throws -> Value {
     try await withThrowingTaskGroup(of: Void.self) { group in
         let promise = Promise<Int>()
-        let server = HBServer(
-            childChannelSetup: childChannelSetup,
+        let server = try HBServer(
+            childChannelSetup: httpChannelSetup.build(responder),
             configuration: configuration,
             onServerRunning: { await promise.complete($0.localAddress!.port!) },
             eventLoopGroup: eventLoopGroup,
@@ -68,7 +69,8 @@ public func testServer<ChannelSetup: HBChannelSetup, Value: Sendable>(
 /// Creates test client, runs test function abd ensures everything is
 /// shutdown correctly
 public func testServer<ChannelSetup: HBChannelSetup, Value: Sendable>(
-    childChannelSetup: ChannelSetup,
+    responder: @escaping HTTPChannelHandler.Responder,
+    httpChannelSetup: HBHTTPChannelSetupBuilder<ChannelSetup>,
     configuration: HBServerConfiguration,
     eventLoopGroup: EventLoopGroup,
     logger: Logger,
@@ -77,8 +79,8 @@ public func testServer<ChannelSetup: HBChannelSetup, Value: Sendable>(
 ) async throws -> Value {
     try await withThrowingTaskGroup(of: Void.self) { group in
         let promise = Promise<Int>()
-        let server = HBServer(
-            childChannelSetup: childChannelSetup,
+        let server = try HBServer(
+            childChannelSetup: httpChannelSetup.build(responder),
             configuration: configuration,
             onServerRunning: { await promise.complete($0.localAddress!.port!) },
             eventLoopGroup: eventLoopGroup,
@@ -109,7 +111,8 @@ public func testServer<ChannelSetup: HBChannelSetup, Value: Sendable>(
 }
 
 public func testServer<Value: Sendable>(
-    childChannelSetup: some HBChannelSetup,
+    responder: @escaping HTTPChannelHandler.Responder,
+    httpChannelSetup: HBHTTPChannelSetupBuilder<some HBChannelSetup> = .http1(),
     configuration: HBServerConfiguration,
     eventLoopGroup: EventLoopGroup,
     logger: Logger,
@@ -117,7 +120,8 @@ public func testServer<Value: Sendable>(
     _ test: @escaping @Sendable (HBXCTClient) async throws -> Value
 ) async throws -> Value {
     try await testServer(
-        childChannelSetup: childChannelSetup,
+        responder: responder,
+        httpChannelSetup: httpChannelSetup,
         configuration: configuration,
         eventLoopGroup: eventLoopGroup,
         logger: logger,

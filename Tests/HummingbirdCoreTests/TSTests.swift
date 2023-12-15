@@ -34,7 +34,7 @@ class TransportServicesTests: XCTestCase {
         let eventLoopGroup = NIOTSEventLoopGroup()
         defer { try? eventLoopGroup.syncShutdownGracefully() }
         try await testServer(
-            childChannelSetup: HTTP1Channel(responder: helloResponder),
+            responder: helloResponder,
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: eventLoopGroup,
             logger: Logger(label: "HB")
@@ -52,7 +52,7 @@ class TransportServicesTests: XCTestCase {
             serverIdentity: .p12(filename: p12Path, password: "MyPassword")
         ))
         try await testServer(
-            childChannelSetup: HTTP1Channel(responder: helloResponder),
+            responder: helloResponder,
             configuration: .init(address: .hostname(port: 0), serverName: testServerName, tlsOptions: tlsOptions),
             eventLoopGroup: eventLoopGroup,
             logger: Logger(label: "HB"),

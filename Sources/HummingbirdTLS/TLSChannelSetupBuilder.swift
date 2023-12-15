@@ -17,7 +17,7 @@ import NIOSSL
 
 extension HBHTTPChannelSetupBuilder {
     public static func tls<BaseChannel: HBChannelSetup>(
-        _ base: HBHTTPChannelSetupBuilder<BaseChannel>,
+        _ base: HBHTTPChannelSetupBuilder<BaseChannel> = .http1(),
         tlsConfiguration: TLSConfiguration
     ) throws -> HBHTTPChannelSetupBuilder<TLSChannel<BaseChannel>> {
         return .init { responder in
