@@ -29,9 +29,10 @@ class HummingBirdHTTP2Tests: XCTestCase {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
         try await testServer(
-            childChannelSetup: HTTP2Channel(tlsConfiguration: self.getServerTLSConfiguration()) { _, _ in
+            responder: { _, _ in
                 .init(status: .ok)
             },
+            httpChannelSetup: .http2(tlsConfiguration: self.getServerTLSConfiguration()),
             configuration: .init(address: .hostname(port: 0), serverName: testServerName),
             eventLoopGroup: eventLoopGroup,
             logger: Logger(label: "HB")

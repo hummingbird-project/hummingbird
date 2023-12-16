@@ -32,12 +32,12 @@ final class HBXCTLive<App: HBApplicationProtocol>: HBXCTApplication {
 
         let base: BaseApp
 
-        func buildResponder() async throws -> Responder {
-            try await self.base.buildResponder()
+        var responder: Responder {
+            get async throws { try await self.base.responder }
         }
 
-        func channelSetup(httpResponder: @escaping @Sendable (HBRequest, Channel) async throws -> HBResponse) throws -> ChannelSetup {
-            try self.base.channelSetup(httpResponder: httpResponder)
+        var channelSetup: HBHTTPChannelSetupBuilder<ChannelSetup> {
+            self.base.channelSetup
         }
 
         /// event loop group used by application

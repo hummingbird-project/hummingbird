@@ -49,7 +49,8 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testConnect() async throws {
         try await testServer(
-            childChannelSetup: HTTP1Channel(responder: helloResponder),
+            responder: helloResponder,
+            httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
@@ -62,7 +63,7 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testMultipleRequests() async throws {
         try await testServer(
-            childChannelSetup: HTTP1Channel(responder: helloResponder),
+            responder: helloResponder,
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
@@ -77,7 +78,8 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testError() async throws {
         try await testServer(
-            childChannelSetup: HTTP1Channel { _, _ in throw HBHTTPError(.unauthorized) },
+            responder: { _, _ in throw HBHTTPError(.unauthorized) },
+            httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
@@ -90,7 +92,7 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testConsumeBody() async throws {
         try await testServer(
-            childChannelSetup: HTTP1Channel { request, _ in
+            responder: { request, _ in
                 let buffer = try await request.body.collect(upTo: .max)
                 return HBResponse(status: .ok, body: .init(byteBuffer: buffer))
             },
@@ -107,7 +109,7 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testWriteBody() async throws {
         try await testServer(
-            childChannelSetup: HTTP1Channel { _, _ in
+            responder: { _, _ in
                 let buffer = self.randomBuffer(size: 1_140_000)
                 return HBResponse(status: .ok, body: .init(byteBuffer: buffer))
             },
@@ -123,7 +125,7 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testStreamBody() async throws {
         try await testServer(
-            childChannelSetup: HTTP1Channel { request, _ in
+            responder: { request, _ in
                 return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
             },
             configuration: .init(address: .hostname(port: 0)),
@@ -139,7 +141,7 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testStreamBodyWriteSlow() async throws {
         try await testServer(
-            childChannelSetup: HTTP1Channel { request, _ in
+            responder: { request, _ in
                 return HBResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
             },
             configuration: .init(address: .hostname(port: 0)),
@@ -167,9 +169,10 @@ class HummingBirdCoreTests: XCTestCase {
             }
         }
         try await testServer(
-            childChannelSetup: HTTP1Channel(additionalChannelHandlers: [SlowInputChannelHandler()]) { request, _ in
+            responder: { request, _ in
                 return HBResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
             },
+            httpChannelSetup: .http1(additionalChannelHandlers: [SlowInputChannelHandler()]),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
@@ -194,10 +197,11 @@ class HummingBirdCoreTests: XCTestCase {
             }
         }
         try await testServer(
-            childChannelSetup: HTTP1Channel(additionalChannelHandlers: [CreateErrorHandler()]) { request, _ in
+            responder: { request, _ in
                 _ = try await request.body.collect(upTo: .max)
                 return HBResponse(status: .ok)
             },
+            httpChannelSetup: .http1(additionalChannelHandlers: [CreateErrorHandler()]),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
@@ -210,7 +214,7 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testDropRequestBody() async throws {
         try await testServer(
-            childChannelSetup: HTTP1Channel { _, _ in
+            responder: { _, _ in
                 // ignore request body
                 return HBResponse(status: .accepted)
             },
@@ -229,7 +233,7 @@ class HummingBirdCoreTests: XCTestCase {
     /// test server closes connection if "connection" header is set to "close"
     func testConnectionClose() async throws {
         try await testServer(
-            childChannelSetup: HTTP1Channel(responder: helloResponder),
+            responder: helloResponder,
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
@@ -259,13 +263,11 @@ class HummingBirdCoreTests: XCTestCase {
             }
         }
         try await testServer(
-            childChannelSetup: HTTP1Channel(
-                additionalChannelHandlers: [HTTPServerIncompleteRequest(), IdleStateHandler(readTimeout: .seconds(1))],
-                responder: { request, _ in
-                    _ = try await request.body.collect(upTo: .max)
-                    return .init(status: .ok)
-                }
-            ),
+            responder: { request, _ in
+                _ = try await request.body.collect(upTo: .max)
+                return .init(status: .ok)
+            },
+            httpChannelSetup: .http1(additionalChannelHandlers: [HTTPServerIncompleteRequest(), IdleStateHandler(readTimeout: .seconds(1))]),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
@@ -284,13 +286,11 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testWriteIdleTimeout() async throws {
         try await testServer(
-            childChannelSetup: HTTP1Channel(
-                additionalChannelHandlers: [IdleStateHandler(writeTimeout: .seconds(1))],
-                responder: { request, _ in
-                    _ = try await request.body.collect(upTo: .max)
-                    return .init(status: .ok)
-                }
-            ),
+            responder: { request, _ in
+                _ = try await request.body.collect(upTo: .max)
+                return .init(status: .ok)
+            },
+            httpChannelSetup: .http1(additionalChannelHandlers: [IdleStateHandler(writeTimeout: .seconds(1))]),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
@@ -307,11 +307,12 @@ class HummingBirdCoreTests: XCTestCase {
         let promise = Promise<Void>()
 
         try await testServer(
-            childChannelSetup: HTTP1Channel { request, _ in
+            responder: { request, _ in
                 await promise.complete(())
                 try await Task.sleep(for: .milliseconds(500))
                 return HBResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
             },
+            httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
@@ -336,10 +337,11 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testIdleChildChannelGracefulShutdown() async throws {
         try await testServer(
-            childChannelSetup: HTTP1Channel { request, _ in
+            responder: { request, _ in
                 try await Task.sleep(for: .milliseconds(500))
                 return HBResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
             },
+            httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
