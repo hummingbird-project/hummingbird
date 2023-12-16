@@ -53,7 +53,7 @@ public protocol HBApplicationProtocol: Service where Context: HBRequestContext {
     /// Build the responder
     var responder: Responder { get async throws }
     /// Server channel setup
-    var channelSetup: HBHTTPChannelBuilder<ChildChannel> { get }
+    var server: HBHTTPChannelBuilder<ChildChannel> { get }
 
     /// event loop group used by application
     var eventLoopGroup: EventLoopGroup { get }
@@ -69,7 +69,7 @@ public protocol HBApplicationProtocol: Service where Context: HBRequestContext {
 
 extension HBApplicationProtocol {
     /// Server channel setup
-    public var channelSetup: HBHTTPChannelBuilder<HTTP1Channel> { .http1() }
+    public var server: HBHTTPChannelBuilder<HTTP1Channel> { .http1() }
 }
 
 extension HBApplicationProtocol {
@@ -108,7 +108,7 @@ extension HBApplicationProtocol {
             return response
         }
         // get channel Setup
-        let channelSetup = try self.channelSetup.build(respond)
+        let channelSetup = try self.server.build(respond)
         // create server
         let server = HBServer(
             childChannelSetup: channelSetup,
@@ -179,7 +179,7 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
     /// on server running
     private var _onServerRunning: @Sendable (Channel) async -> Void
     /// Server channel setup
-    public let channelSetup: HBHTTPChannelBuilder<ChildChannel>
+    public let server: HBHTTPChannelBuilder<ChildChannel>
     /// services attached to the application.
     public var services: [any Service]
 
@@ -197,7 +197,7 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
         self.logger = logger
 
         self.responder = responder
-        self.channelSetup = channelSetup
+        self.server = server
         self.configuration = configuration
         self._onServerRunning = { _ in }
 
