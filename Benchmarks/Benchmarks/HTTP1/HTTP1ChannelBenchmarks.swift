@@ -34,13 +34,15 @@ extension Benchmark {
         var task: Task<Void, Never>!
         self.init(name, configuration: configuration) { benchmark in
             for _ in benchmark.scaledIterations {
-                try await write(benchmark, channel)
-                await channel.testingEventLoop.run()
-                // receive response
-                while true {
-                    let part = try await channel.waitForOutboundWrite(as: HTTPResponsePart.self)
-                    if case .end(nil) = part {
-                        break
+                for _ in 0..<100 {
+                    try await write(benchmark, channel)
+                    await channel.testingEventLoop.run()
+                    // receive response
+                    while true {
+                        let part = try await channel.waitForOutboundWrite(as: HTTPResponsePart.self)
+                        if case .end(nil) = part {
+                            break
+                        }
                     }
                 }
             }
@@ -58,12 +60,43 @@ extension Benchmark {
     }
 }
 
-func http1Benchmarks() {
-    Benchmark(name: "GET NoResponse") { benchmark, channel in
+let benchmarks = {
+    let buffer = ByteBufferAllocator().buffer(repeating: 0xff, count: 10000)
+    Benchmark(
+        name: "GET",
+        configuration: .init(warmupIterations: 10)
+    ) { benchmark, channel in
         let head = HTTPRequest(method: .get, scheme: "http", authority: "localhost", path: "/")
         try await channel.writeInbound(HTTPRequestPart.head(head))
         try await channel.writeInbound(HTTPRequestPart.end(nil))
     } responder: { request, channel in
-        .init(status: .ok)
+        return .init(status: .ok, body: .init(byteBuffer: buffer))
+    }
+
+    Benchmark(
+        name: "PUT",
+        configuration: .init(warmupIterations: 10)
+    ) { benchmark, channel in
+        let head = HTTPRequest(method: .put, scheme: "http", authority: "localhost", path: "/")
+        try await channel.writeInbound(HTTPRequestPart.head(head))
+        try await channel.writeInbound(HTTPRequestPart.body(buffer))
+        try await channel.writeInbound(HTTPRequestPart.body(buffer))
+        try await channel.writeInbound(HTTPRequestPart.end(nil))
+    } responder: { request, channel in
+        return .init(status: .ok, body: .init(byteBuffer: buffer))
+    }
+
+    Benchmark(
+        name: "Echo",
+        configuration: .init(warmupIterations: 10)
+    ) { benchmark, channel in
+        let head = HTTPRequest(method: .post, scheme: "http", authority: "localhost", path: "/")
+        try await channel.writeInbound(HTTPRequestPart.head(head))
+        try await channel.writeInbound(HTTPRequestPart.body(buffer))
+        try await channel.writeInbound(HTTPRequestPart.body(buffer))
+        try await channel.writeInbound(HTTPRequestPart.end(nil))
+    } responder: { request, channel in
+        let buffer = try await request.body.collect(upTo: .max)
+        return .init(status: .ok, body: .init(byteBuffer: buffer))
     }
 }

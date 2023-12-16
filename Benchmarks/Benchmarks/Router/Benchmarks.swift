@@ -18,6 +18,4 @@ import Benchmark
 let benchmarks = {
     trieRouterBenchmarks()
     routerBenchmarks()
-    // The HTTP benchmarks are so variable I'm not sure they are worthwhile running
-    //http1Benchmarks()
 }

@@ -67,8 +67,8 @@ extension Benchmark {
             let responder = router.buildResponder()
             benchmark.startMeasurement()
 
-            try await withThrowingTaskGroup(of: Void.self) { group in
-                for _ in benchmark.scaledIterations {
+            for _ in benchmark.scaledIterations {
+                try await withThrowingTaskGroup(of: Void.self) { group in
                     let context = Context(
                         eventLoop: MultiThreadedEventLoopGroup.singleton.any(), 
                         allocator: ByteBufferAllocator(), 
@@ -97,17 +97,55 @@ extension HTTPField.Name {
 }
 
 func routerBenchmarks() {
+    let buffer = ByteBufferAllocator().buffer(repeating: 0xff, count: 10000)
     Benchmark(
-        name: "GET NoResponse",
+        name: "GET",
+        configuration: .init(warmupIterations: 10, scalingFactor: .kilo),
         request: .init(method: .get, scheme: "http", authority: "localhost", path: "/")
     ) { router in
         router.get { _, _ in
-            HTTPResponse.Status.ok
+            buffer
+        }
+    }
+
+    Benchmark(
+        name: "PUT",
+        configuration: .init(warmupIterations: 10, scalingFactor: .kilo),
+        request: .init(method: .put, scheme: "http", authority: "localhost", path: "/")
+    ) { bodyStream in
+        await bodyStream.send(buffer)
+        await bodyStream.send(buffer)
+        await bodyStream.send(buffer)
+        await bodyStream.send(buffer)
+    } setupRouter: { router in
+        router.put { request, _ in
+            let body = try await request.body.collect(upTo: .max)
+            return body.readableBytes.description
+        }
+    }
+
+    Benchmark(
+        name: "Echo",
+        configuration: .init(warmupIterations: 10, scalingFactor: .kilo),
+        request: .init(method: .post, scheme: "http", authority: "localhost", path: "/")
+    ) { bodyStream in
+        await bodyStream.send(buffer)
+        await bodyStream.send(buffer)
+        await bodyStream.send(buffer)
+        await bodyStream.send(buffer)
+    } setupRouter: { router in
+        router.post { request, _ in
+            HBResponse(status: .ok, headers: [:], body: .init { writer in
+                for try await buffer in request.body {
+                    try await writer.write(buffer)
+                }
+            })
         }
     }
 
     Benchmark(
         name: "Middleware Chain",
+        configuration: .init(warmupIterations: 10, scalingFactor: .kilo),
         request: .init(method: .get, scheme: "http", authority: "localhost", path: "/")
     ) { router in
         struct EmptyMiddleware<Context>: HBMiddlewareProtocol {
@@ -121,53 +159,6 @@ func routerBenchmarks() {
         router.middlewares.add(EmptyMiddleware())
         router.get { _, _ in
             HTTPResponse.Status.ok
-        }
-    }
-
-    Benchmark(
-        name: "Get Response",
-        request: .init(method: .get, scheme: "http", authority: "localhost", path: "/")
-    ) { router in
-        router.get { _, _ in
-            HBResponse(status: .ok, headers: [:], body: .init { writer in
-                try await writer.write(ByteBufferAllocator().buffer(repeating: 0, count: 16000))
-                try await writer.write(ByteBufferAllocator().buffer(repeating: 0, count: 16000))
-                try await writer.write(ByteBufferAllocator().buffer(repeating: 0, count: 16000))
-                try await writer.write(ByteBufferAllocator().buffer(repeating: 0, count: 16000))
-            })
-        }
-    }
-
-    Benchmark(
-        name: "PUT",
-        request: .init(method: .put, scheme: "http", authority: "localhost", path: "/")
-    ) { bodyStream in
-        await bodyStream.send(ByteBufferAllocator().buffer(repeating: 0, count: 16000))
-        await bodyStream.send(ByteBufferAllocator().buffer(repeating: 0, count: 16000))
-        await bodyStream.send(ByteBufferAllocator().buffer(repeating: 0, count: 16000))
-        await bodyStream.send(ByteBufferAllocator().buffer(repeating: 0, count: 16000))
-    } setupRouter: { router in
-        router.put { request, _ in
-            let body = try await request.body.collect(upTo: .max)
-            return body.readableBytes.description
-        }
-    }
-
-    Benchmark(
-        name: "Echo",
-        request: .init(method: .post, scheme: "http", authority: "localhost", path: "/")
-    ) { bodyStream in
-        await bodyStream.send(ByteBufferAllocator().buffer(repeating: 0, count: 16000))
-        await bodyStream.send(ByteBufferAllocator().buffer(repeating: 0, count: 16000))
-        await bodyStream.send(ByteBufferAllocator().buffer(repeating: 0, count: 16000))
-        await bodyStream.send(ByteBufferAllocator().buffer(repeating: 0, count: 16000))
-    } setupRouter: { router in
-        router.post { request, _ in
-            HBResponse(status: .ok, headers: [:], body: .init { writer in
-                for try await buffer in request.body {
-                    try await writer.write(buffer)
-                }
-            })
         }
     }
 }
