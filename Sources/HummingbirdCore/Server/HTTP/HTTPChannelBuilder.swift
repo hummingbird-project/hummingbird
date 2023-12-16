@@ -15,17 +15,17 @@
 import NIOCore
 
 /// Build Channel Setup that takes an HTTP responder
-public struct HBHTTPChannelSetupBuilder<ChannelSetup: HBChannelSetup>: Sendable {
-    public let build: @Sendable (@escaping HTTPChannelHandler.Responder) throws -> ChannelSetup
-    public init(_ build: @escaping @Sendable (@escaping HTTPChannelHandler.Responder) throws -> ChannelSetup) {
+public struct HBHTTPChannelBuilder<ChildChannel: HBChildChannel>: Sendable {
+    public let build: @Sendable (@escaping HTTPChannelHandler.Responder) throws -> ChildChannel
+    public init(_ build: @escaping @Sendable (@escaping HTTPChannelHandler.Responder) throws -> ChildChannel) {
         self.build = build
     }
 }
 
-extension HBHTTPChannelSetupBuilder {
+extension HBHTTPChannelBuilder {
     public static func http1(
         additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = []
-    ) -> HBHTTPChannelSetupBuilder<HTTP1Channel> {
+    ) -> HBHTTPChannelBuilder<HTTP1Channel> {
         return .init { responder in
             return HTTP1Channel(responder: responder, additionalChannelHandlers: additionalChannelHandlers)
         }

@@ -43,7 +43,7 @@ public struct HTTP2Channel: HTTPChannelHandler {
         self.http1 = HTTP1Channel(responder: responder, additionalChannelHandlers: additionalChannelHandlers)
     }
 
-    public func initialize(channel: Channel, configuration: HBServerConfiguration, logger: Logger) -> EventLoopFuture<Value> {
+    public func setup(channel: Channel, configuration: HBServerConfiguration, logger: Logger) -> EventLoopFuture<Value> {
         do {
             try channel.pipeline.syncOperations.addHandler(NIOSSLServerHandler(context: self.sslContext))
         } catch {

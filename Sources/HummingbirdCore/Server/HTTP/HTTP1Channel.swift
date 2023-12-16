@@ -18,7 +18,7 @@ import NIOCore
 import NIOHTTPTypes
 import NIOHTTPTypesHTTP1
 
-public struct HTTP1Channel: HBChannelSetup, HTTPChannelHandler {
+public struct HTTP1Channel: HBChildChannel, HTTPChannelHandler {
     public typealias Value = NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>
 
     public init(
@@ -29,7 +29,7 @@ public struct HTTP1Channel: HBChannelSetup, HTTPChannelHandler {
         self.responder = responder
     }
 
-    public func initialize(channel: Channel, configuration: HBServerConfiguration, logger: Logger) -> EventLoopFuture<Value> {
+    public func setup(channel: Channel, configuration: HBServerConfiguration, logger: Logger) -> EventLoopFuture<Value> {
         let childChannelHandlers: [any ChannelHandler] =
             [HTTP1ToHTTPServerCodec(secure: false)] +
             self.additionalChannelHandlers() +

@@ -31,13 +31,13 @@ public enum TestErrors: Error {
 }
 
 /// Helper function for testing a server
-public func testServer<ChannelSetup: HBChannelSetup, Value: Sendable>(
+public func testServer<ChildChannel: HBChildChannel, Value: Sendable>(
     responder: @escaping HTTPChannelHandler.Responder,
-    httpChannelSetup: HBHTTPChannelSetupBuilder<ChannelSetup>,
+    httpChannelSetup: HBHTTPChannelBuilder<ChildChannel>,
     configuration: HBServerConfiguration,
     eventLoopGroup: EventLoopGroup,
     logger: Logger,
-    _ test: @escaping @Sendable (HBServer<ChannelSetup>, Int) async throws -> Value
+    _ test: @escaping @Sendable (HBServer<ChildChannel>, Int) async throws -> Value
 ) async throws -> Value {
     try await withThrowingTaskGroup(of: Void.self) { group in
         let promise = Promise<Int>()
@@ -68,14 +68,14 @@ public func testServer<ChannelSetup: HBChannelSetup, Value: Sendable>(
 ///
 /// Creates test client, runs test function abd ensures everything is
 /// shutdown correctly
-public func testServer<ChannelSetup: HBChannelSetup, Value: Sendable>(
+public func testServer<ChildChannel: HBChildChannel, Value: Sendable>(
     responder: @escaping HTTPChannelHandler.Responder,
-    httpChannelSetup: HBHTTPChannelSetupBuilder<ChannelSetup>,
+    httpChannelSetup: HBHTTPChannelBuilder<ChildChannel>,
     configuration: HBServerConfiguration,
     eventLoopGroup: EventLoopGroup,
     logger: Logger,
     clientConfiguration: HBXCTClient.Configuration = .init(),
-    _ test: @escaping @Sendable (HBServer<ChannelSetup>, HBXCTClient) async throws -> Value
+    _ test: @escaping @Sendable (HBServer<ChildChannel>, HBXCTClient) async throws -> Value
 ) async throws -> Value {
     try await withThrowingTaskGroup(of: Void.self) { group in
         let promise = Promise<Int>()
@@ -112,7 +112,7 @@ public func testServer<ChannelSetup: HBChannelSetup, Value: Sendable>(
 
 public func testServer<Value: Sendable>(
     responder: @escaping HTTPChannelHandler.Responder,
-    httpChannelSetup: HBHTTPChannelSetupBuilder<some HBChannelSetup> = .http1(),
+    httpChannelSetup: HBHTTPChannelBuilder<some HBChildChannel> = .http1(),
     configuration: HBServerConfiguration,
     eventLoopGroup: EventLoopGroup,
     logger: Logger,

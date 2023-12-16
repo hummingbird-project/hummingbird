@@ -46,14 +46,14 @@ public protocol HBApplicationProtocol: Service where Context: HBRequestContext {
     /// Responder that generates a response from a requests and context
     associatedtype Responder: HBResponder
     /// Child Channel setup. This defaults to support HTTP1
-    associatedtype ChannelSetup: HBChannelSetup & HTTPChannelHandler = HTTP1Channel
+    associatedtype ChildChannel: HBChildChannel & HTTPChannelHandler = HTTP1Channel
     /// Context passed with HBRequest to responder
     typealias Context = Responder.Context
 
     /// Build the responder
     var responder: Responder { get async throws }
     /// Server channel setup
-    var channelSetup: HBHTTPChannelSetupBuilder<ChannelSetup> { get }
+    var channelSetup: HBHTTPChannelBuilder<ChildChannel> { get }
 
     /// event loop group used by application
     var eventLoopGroup: EventLoopGroup { get }
@@ -69,7 +69,7 @@ public protocol HBApplicationProtocol: Service where Context: HBRequestContext {
 
 extension HBApplicationProtocol {
     /// Server channel setup
-    public var channelSetup: HBHTTPChannelSetupBuilder<HTTP1Channel> { .http1() }
+    public var channelSetup: HBHTTPChannelBuilder<HTTP1Channel> { .http1() }
 }
 
 extension HBApplicationProtocol {
@@ -161,9 +161,9 @@ public func loggerWithRequestId(_ logger: Logger) -> Logger {
 /// try await app.runService()
 /// ```
 /// Editing the application setup after calling `runService` will produce undefined behaviour.
-public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup & HTTPChannelHandler>: HBApplicationProtocol where Responder.Context: HBRequestContext {
+public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel & HTTPChannelHandler>: HBApplicationProtocol where Responder.Context: HBRequestContext {
     public typealias Context = Responder.Context
-    public typealias ChannelSetup = ChannelSetup
+    public typealias ChildChannel = ChildChannel
     public typealias Responder = Responder
 
     // MARK: Member variables
@@ -179,7 +179,7 @@ public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup
     /// on server running
     private var _onServerRunning: @Sendable (Channel) async -> Void
     /// Server channel setup
-    public let channelSetup: HBHTTPChannelSetupBuilder<ChannelSetup>
+    public let channelSetup: HBHTTPChannelBuilder<ChildChannel>
     /// services attached to the application.
     public var services: [any Service]
 
@@ -188,7 +188,7 @@ public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup
     /// Initialize new Application
     public init(
         responder: Responder,
-        channelSetup: HBHTTPChannelSetupBuilder<ChannelSetup> = .http1(),
+        channelSetup: HBHTTPChannelBuilder<ChildChannel> = .http1(),
         configuration: HBApplicationConfiguration = HBApplicationConfiguration(),
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton
     ) {
