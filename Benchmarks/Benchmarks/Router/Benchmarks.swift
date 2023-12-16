@@ -16,6 +16,15 @@
 import Benchmark
 
 let benchmarks = {
+    Benchmark.defaultConfiguration = .init(
+        metrics: [
+            .cpuTotal,
+            .throughput,
+            .mallocCountTotal,
+            .peakMemoryResident,
+        ],
+        warmupIterations: 10
+    )
     trieRouterBenchmarks()
     routerBenchmarks()
 }

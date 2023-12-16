@@ -61,6 +61,15 @@ extension Benchmark {
 }
 
 let benchmarks = {
+    Benchmark.defaultConfiguration = .init(
+        metrics: [
+            .cpuTotal,
+            .throughput,
+            .mallocCountTotal,
+            .peakMemoryResident,
+        ],
+        warmupIterations: 10
+    )
     let buffer = ByteBufferAllocator().buffer(repeating: 0xff, count: 10000)
     Benchmark(
         name: "HTTP1:GET",
