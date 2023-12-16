@@ -34,7 +34,7 @@ extension Benchmark {
         var task: Task<Void, Never>!
         self.init(name, configuration: configuration) { benchmark in
             for _ in benchmark.scaledIterations {
-                for _ in 0..<100 {
+                for _ in 0..<25 {
                     try await write(benchmark, channel)
                     await channel.testingEventLoop.run()
                     // receive response
@@ -63,7 +63,7 @@ extension Benchmark {
 let benchmarks = {
     let buffer = ByteBufferAllocator().buffer(repeating: 0xff, count: 10000)
     Benchmark(
-        name: "GET",
+        name: "HTTP1:GET",
         configuration: .init(warmupIterations: 10)
     ) { benchmark, channel in
         let head = HTTPRequest(method: .get, scheme: "http", authority: "localhost", path: "/")
@@ -74,7 +74,7 @@ let benchmarks = {
     }
 
     Benchmark(
-        name: "PUT",
+        name: "HTTP1:PUT",
         configuration: .init(warmupIterations: 10)
     ) { benchmark, channel in
         let head = HTTPRequest(method: .put, scheme: "http", authority: "localhost", path: "/")
@@ -87,7 +87,7 @@ let benchmarks = {
     }
 
     Benchmark(
-        name: "Echo",
+        name: "HTTP1:Echo",
         configuration: .init(warmupIterations: 10)
     ) { benchmark, channel in
         let head = HTTPRequest(method: .post, scheme: "http", authority: "localhost", path: "/")

@@ -68,21 +68,23 @@ extension Benchmark {
             benchmark.startMeasurement()
 
             for _ in benchmark.scaledIterations {
-                try await withThrowingTaskGroup(of: Void.self) { group in
-                    let context = Context(
-                        eventLoop: MultiThreadedEventLoopGroup.singleton.any(), 
-                        allocator: ByteBufferAllocator(), 
-                        logger: Logger(label: "Benchmark")
-                    )
-                    let requestBodyStream = HBStreamedRequestBody()
-                    let requestBody = HBRequestBody.stream(requestBodyStream)
-                    let hbRequest = HBRequest(head: request, body: requestBody)
-                    group.addTask {
-                        let response = try await responder.respond(to: hbRequest, context: context)
-                        try await response.body.write(BenchmarkBodyWriter())
+                for _ in 0..<50 {
+                    try await withThrowingTaskGroup(of: Void.self) { group in
+                        let context = Context(
+                            eventLoop: MultiThreadedEventLoopGroup.singleton.any(), 
+                            allocator: ByteBufferAllocator(), 
+                            logger: Logger(label: "Benchmark")
+                        )
+                        let requestBodyStream = HBStreamedRequestBody()
+                        let requestBody = HBRequestBody.stream(requestBodyStream)
+                        let hbRequest = HBRequest(head: request, body: requestBody)
+                        group.addTask {
+                            let response = try await responder.respond(to: hbRequest, context: context)
+                            try await response.body.write(BenchmarkBodyWriter())
+                        }
+                        try await writeBody(requestBodyStream)
+                        requestBodyStream.finish()
                     }
-                    try await writeBody(requestBodyStream)
-                    requestBodyStream.finish()
                 }
             }
         } setup: {
@@ -99,8 +101,8 @@ extension HTTPField.Name {
 func routerBenchmarks() {
     let buffer = ByteBufferAllocator().buffer(repeating: 0xff, count: 10000)
     Benchmark(
-        name: "GET",
-        configuration: .init(warmupIterations: 10, scalingFactor: .kilo),
+        name: "Router:GET",
+        configuration: .init(warmupIterations: 10),
         request: .init(method: .get, scheme: "http", authority: "localhost", path: "/")
     ) { router in
         router.get { _, _ in
@@ -109,8 +111,8 @@ func routerBenchmarks() {
     }
 
     Benchmark(
-        name: "PUT",
-        configuration: .init(warmupIterations: 10, scalingFactor: .kilo),
+        name: "Router:PUT",
+        configuration: .init(warmupIterations: 10),
         request: .init(method: .put, scheme: "http", authority: "localhost", path: "/")
     ) { bodyStream in
         await bodyStream.send(buffer)
@@ -125,8 +127,8 @@ func routerBenchmarks() {
     }
 
     Benchmark(
-        name: "Echo",
-        configuration: .init(warmupIterations: 10, scalingFactor: .kilo),
+        name: "Router:Echo",
+        configuration: .init(warmupIterations: 10),
         request: .init(method: .post, scheme: "http", authority: "localhost", path: "/")
     ) { bodyStream in
         await bodyStream.send(buffer)
@@ -145,7 +147,7 @@ func routerBenchmarks() {
 
     Benchmark(
         name: "Middleware Chain",
-        configuration: .init(warmupIterations: 10, scalingFactor: .kilo),
+        configuration: .init(warmupIterations: 10),
         request: .init(method: .get, scheme: "http", authority: "localhost", path: "/")
     ) { router in
         struct EmptyMiddleware<Context>: HBMiddlewareProtocol {
