@@ -22,8 +22,8 @@ public struct HTTP1Channel: HBChannelSetup, HTTPChannelHandler {
     public typealias Value = NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>
 
     public init(
-        additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = [],
-        responder: @escaping @Sendable (HBRequest, Channel) async throws -> HBResponse = { _, _ in throw HBHTTPError(.notImplemented) }
+        responder: @escaping @Sendable (HBRequest, Channel) async throws -> HBResponse = { _, _ in throw HBHTTPError(.notImplemented) },
+        additionalChannelHandlers: @escaping @Sendable () -> [any RemovableChannelHandler] = { [] }
     ) {
         self.additionalChannelHandlers = additionalChannelHandlers
         self.responder = responder

@@ -51,9 +51,9 @@ public protocol HBApplicationProtocol: Service where Context: HBRequestContext {
     typealias Context = Responder.Context
 
     /// Build the responder
-    func buildResponder() async throws -> Responder
+    var responder: Responder { get async throws }
     /// Server channel setup
-    func channelSetup(httpResponder: @escaping @Sendable (HBRequest, Channel) async throws -> HBResponse) throws -> ChannelSetup
+    var channelSetup: HBHTTPChannelSetupBuilder<ChannelSetup> { get }
 
     /// event loop group used by application
     var eventLoopGroup: EventLoopGroup { get }
@@ -68,10 +68,8 @@ public protocol HBApplicationProtocol: Service where Context: HBRequestContext {
 }
 
 extension HBApplicationProtocol where ChannelSetup == HTTP1Channel {
-    /// Defautl channel setup function for HTTP1 channels
-    public func channelSetup(httpResponder: @escaping @Sendable (HBRequest, Channel) async throws -> HBResponse) -> ChannelSetup {
-        HTTP1Channel(responder: httpResponder)
-    }
+    /// Server channel setup
+    public var channelSetup: HBHTTPChannelSetupBuilder<ChannelSetup> { .http1() }
 }
 
 extension HBApplicationProtocol {
@@ -92,7 +90,7 @@ extension HBApplicationProtocol {
     /// Construct application and run it
     public func run() async throws {
         let dateCache = HBDateCache()
-        let responder = try await self.buildResponder()
+        let responder = try await self.responder
 
         // Function responding to HTTP request
         @Sendable func respond(to request: HBRequest, channel: Channel) async throws -> HBResponse {
@@ -110,7 +108,7 @@ extension HBApplicationProtocol {
             return response
         }
         // get channel Setup
-        let channelSetup = try self.channelSetup(httpResponder: respond)
+        let channelSetup = try self.channelSetup.build(respond)
         // create server
         let server = HBServer(
             childChannelSetup: channelSetup,
@@ -181,7 +179,7 @@ public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup
     /// on server running
     private var _onServerRunning: @Sendable (Channel) async -> Void
     /// Server channel setup
-    let channelSetup: ChannelSetup
+    public let channelSetup: HBHTTPChannelSetupBuilder<ChannelSetup>
     /// services attached to the application.
     public var services: [any Service]
 
@@ -190,7 +188,7 @@ public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup
     /// Initialize new Application
     public init(
         responder: Responder,
-        channelSetup: ChannelSetup = HTTP1Channel(),
+        channelSetup: HBHTTPChannelSetupBuilder<ChannelSetup> = .http1(),
         configuration: HBApplicationConfiguration = HBApplicationConfiguration(),
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton
     ) {
@@ -217,12 +215,6 @@ public struct HBApplication<Responder: HBResponder, ChannelSetup: HBChannelSetup
 
     public func buildResponder() async throws -> Responder {
         return self.responder
-    }
-
-    public func channelSetup(httpResponder: @escaping @Sendable (HBRequest, Channel) async throws -> HBResponse) throws -> ChannelSetup {
-        var channelSetup = self.channelSetup
-        channelSetup.responder = httpResponder
-        return channelSetup
     }
 
     public func onServerRunning(_ channel: Channel) async {

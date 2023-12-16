@@ -482,7 +482,7 @@ final class ApplicationTests: XCTestCase {
             typealias Context = HBTestRouterContext
             typealias ChannelSetup = HTTP1Channel
 
-            func buildResponder() async throws -> some HBResponder<Context> {
+            var responder: some HBResponder<Context> {
                 let router = HBRouter(context: Context.self)
                 router.get("/hello") { _, context -> ByteBuffer in
                     return context.allocator.buffer(string: "GET: Hello")

@@ -167,8 +167,10 @@ class HummingBirdCoreTests: XCTestCase {
             }
         }
         try await testServer(
-            childChannelSetup: HTTP1Channel(additionalChannelHandlers: [SlowInputChannelHandler()]) { request, _ in
+            childChannelSetup: HTTP1Channel { request, _ in
                 return HBResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
+            } additionalChannelHandlers: {
+                [SlowInputChannelHandler()]
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
@@ -194,9 +196,11 @@ class HummingBirdCoreTests: XCTestCase {
             }
         }
         try await testServer(
-            childChannelSetup: HTTP1Channel(additionalChannelHandlers: [CreateErrorHandler()]) { request, _ in
+            childChannelSetup: HTTP1Channel { request, _ in
                 _ = try await request.body.collect(upTo: .max)
                 return HBResponse(status: .ok)
+            } additionalChannelHandlers: {
+                [CreateErrorHandler()]
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
@@ -259,13 +263,12 @@ class HummingBirdCoreTests: XCTestCase {
             }
         }
         try await testServer(
-            childChannelSetup: HTTP1Channel(
-                additionalChannelHandlers: [HTTPServerIncompleteRequest(), IdleStateHandler(readTimeout: .seconds(1))],
-                responder: { request, _ in
-                    _ = try await request.body.collect(upTo: .max)
-                    return .init(status: .ok)
-                }
-            ),
+            childChannelSetup: HTTP1Channel { request, _ in
+                _ = try await request.body.collect(upTo: .max)
+                return .init(status: .ok)
+            } additionalChannelHandlers: {
+                [HTTPServerIncompleteRequest(), IdleStateHandler(readTimeout: .seconds(1))]
+            },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")
@@ -284,13 +287,12 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testWriteIdleTimeout() async throws {
         try await testServer(
-            childChannelSetup: HTTP1Channel(
-                additionalChannelHandlers: [IdleStateHandler(writeTimeout: .seconds(1))],
-                responder: { request, _ in
-                    _ = try await request.body.collect(upTo: .max)
-                    return .init(status: .ok)
-                }
-            ),
+            childChannelSetup: HTTP1Channel { request, _ in
+                _ = try await request.body.collect(upTo: .max)
+                return .init(status: .ok)
+            } additionalChannelHandlers: {
+                [IdleStateHandler(writeTimeout: .seconds(1))]
+            },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "HB")

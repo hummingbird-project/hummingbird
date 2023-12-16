@@ -36,14 +36,14 @@ public struct HTTP2Channel: HTTPChannelHandler {
 
     public init(
         tlsConfiguration: TLSConfiguration,
-        additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = [],
+        additionalChannelHandlers: @escaping @Sendable () -> [any RemovableChannelHandler] = { [] },
         responder: @escaping @Sendable (HBRequest, Channel) async throws -> HBResponse = { _, _ in throw HBHTTPError(.notImplemented) }
     ) throws {
         var tlsConfiguration = tlsConfiguration
         tlsConfiguration.applicationProtocols = NIOHTTP2SupportedALPNProtocols
         self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
         self.additionalChannelHandlers = additionalChannelHandlers
-        self.http1 = HTTP1Channel(additionalChannelHandlers: additionalChannelHandlers(), responder: responder)
+        self.http1 = HTTP1Channel(responder: responder, additionalChannelHandlers: additionalChannelHandlers)
     }
 
     public func initialize(channel: Channel, configuration: HBServerConfiguration, logger: Logger) -> EventLoopFuture<Value> {
