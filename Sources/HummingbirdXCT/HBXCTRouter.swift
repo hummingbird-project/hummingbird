@@ -68,7 +68,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
 
     init<App: HBApplicationProtocol>(app: App) async throws where App.Responder == Responder {
         self.eventLoopGroup = app.eventLoopGroup
-        self.responder = try await app.buildResponder()
+        self.responder = try await app.responder
         self.logger = app.logger
     }
 
