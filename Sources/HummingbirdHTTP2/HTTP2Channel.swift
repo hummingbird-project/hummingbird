@@ -27,12 +27,9 @@ public struct HTTP2Channel: HTTPChannelHandler {
     public typealias Value = EventLoopFuture<NIONegotiatedHTTPVersion<HTTP1Channel.Value, (NIOAsyncChannel<HTTP2Frame, HTTP2Frame>, NIOHTTP2Handler.AsyncStreamMultiplexer<HTTP1Channel.Value>)>>
 
     private let sslContext: NIOSSLContext
-    private var http1: HTTP1Channel
+    private let http1: HTTP1Channel
     private let additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
-    public var responder: @Sendable (HBRequest, Channel) async throws -> HBResponse {
-        get { http1.responder }
-        set { http1.responder = newValue }
-    }
+    public var responder: @Sendable (HBRequest, Channel) async throws -> HBResponse { http1.responder }
 
     public init(
         tlsConfiguration: TLSConfiguration,

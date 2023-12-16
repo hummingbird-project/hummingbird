@@ -22,7 +22,7 @@ import ServiceLifecycle
 /// Protocol for HTTP channels
 public protocol HTTPChannelHandler: HBChannelSetup {
     typealias Responder = @Sendable (HBRequest, Channel) async throws -> HBResponse
-    var responder: Responder { get set }
+    var responder: Responder { get }
 }
 
 /// Internal error thrown when an unexpected HTTP part is received eg we didn't receive
