@@ -188,7 +188,7 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
     /// Initialize new Application
     public init(
         responder: Responder,
-        channelSetup: HBHTTPChannelBuilder<ChildChannel> = .http1(),
+        server: HBHTTPChannelBuilder<ChildChannel> = .http1(),
         configuration: HBApplicationConfiguration = HBApplicationConfiguration(),
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton
     ) {
