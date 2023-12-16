@@ -66,7 +66,6 @@ let benchmarks = {
             .cpuTotal,
             .throughput,
             .mallocCountTotal,
-            .peakMemoryResident,
         ],
         warmupIterations: 10
     )
