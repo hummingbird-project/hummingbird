@@ -29,7 +29,6 @@ protocol BenchmarkContext: HBBaseRequestContext {
     ///   - source: Source of request context
     ///   - logger: Logger
     init(
-        applicationContext: HBApplicationContext,
         eventLoop: EventLoop,
         allocator: ByteBufferAllocator,
         logger: Logger
@@ -40,12 +39,11 @@ struct BasicBenchmarkContext: BenchmarkContext {
     var coreContext: HBCoreRequestContext
 
     init(
-        applicationContext: HBApplicationContext,
         eventLoop: EventLoop,
         allocator: ByteBufferAllocator,
         logger: Logger
     ) {
-        self.coreContext = .init(applicationContext: applicationContext, eventLoop: eventLoop, allocator: allocator, logger: logger)
+        self.coreContext = .init(eventLoop: eventLoop, allocator: allocator, logger: logger)
     }
 }
 
@@ -67,12 +65,15 @@ extension Benchmark {
         let router = HBRouter(context: Context.self)
         self.init(name, configuration: configuration) { benchmark in
             let responder = router.buildResponder()
-            let applicationContext = HBApplicationContext(configuration: .init())
             benchmark.startMeasurement()
 
             try await withThrowingTaskGroup(of: Void.self) { group in
                 for _ in benchmark.scaledIterations {
-                    let context = Context(applicationContext: applicationContext, eventLoop: MultiThreadedEventLoopGroup.singleton.any(), allocator: ByteBufferAllocator(), logger: Logger(label: "Benchmark"))
+                    let context = Context(
+                        eventLoop: MultiThreadedEventLoopGroup.singleton.any(), 
+                        allocator: ByteBufferAllocator(), 
+                        logger: Logger(label: "Benchmark")
+                    )
                     let requestBodyStream = HBStreamedRequestBody()
                     let requestBody = HBRequestBody.stream(requestBodyStream)
                     let hbRequest = HBRequest(head: request, body: requestBody)

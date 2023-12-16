@@ -24,7 +24,6 @@ import Tracing
 
 public protocol HBTestRequestContextProtocol: HBRequestContext {
     init(
-        applicationContext: HBApplicationContext,
         eventLoop: EventLoop,
         allocator: ByteBufferAllocator,
         logger: Logger
@@ -33,12 +32,10 @@ public protocol HBTestRequestContextProtocol: HBRequestContext {
 
 extension HBTestRequestContextProtocol {
     public init(
-        applicationContext: HBApplicationContext,
         channel: Channel,
         logger: Logger
     ) {
         self.init(
-            applicationContext: applicationContext,
             eventLoop: channel.eventLoop,
             allocator: channel.allocator,
             logger: logger
@@ -48,13 +45,11 @@ extension HBTestRequestContextProtocol {
 
 public struct HBTestRouterContext: HBTestRequestContextProtocol {
     public init(
-        applicationContext: HBApplicationContext,
         eventLoop: EventLoop,
         allocator: ByteBufferAllocator,
         logger: Logger
     ) {
         self.coreContext = .init(
-            applicationContext: applicationContext,
             eventLoop: eventLoop,
             allocator: allocator,
             logger: logger
@@ -68,22 +63,18 @@ public struct HBTestRouterContext: HBTestRequestContextProtocol {
 /// Test sending values to requests to router. This does not setup a live server
 struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Context: HBTestRequestContextProtocol {
     let eventLoopGroup: EventLoopGroup
-    let context: HBApplicationContext
     let responder: Responder
     let logger: Logger
 
     init<App: HBApplicationProtocol>(app: App) async throws where App.Responder == Responder {
         self.eventLoopGroup = app.eventLoopGroup
-        self.context = HBApplicationContext(
-            configuration: app.configuration
-        )
         self.responder = try await app.buildResponder()
         self.logger = app.logger
     }
 
     /// Run test
     func run<Value>(_ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Value) async throws -> Value {
-        let client = Client(eventLoopGroup: self.eventLoopGroup, responder: self.responder, applicationContext: self.context, logger: self.logger)
+        let client = Client(eventLoopGroup: self.eventLoopGroup, responder: self.responder, logger: self.logger)
         let value = try await test(client)
         return value
     }
@@ -93,7 +84,6 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
     struct Client: HBXCTClientProtocol {
         let eventLoopGroup: EventLoopGroup
         let responder: Responder
-        let applicationContext: HBApplicationContext
         let logger: Logger
 
         func execute(uri: String, method: HTTPRequest.Method, headers: HTTPFields, body: ByteBuffer?) async throws -> HBXCTResponse {
@@ -106,7 +96,6 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                     body: .stream(streamer)
                 )
                 let context = Responder.Context(
-                    applicationContext: self.applicationContext,
                     eventLoop: eventLoop,
                     allocator: ByteBufferAllocator(),
                     logger: loggerWithRequestId(self.logger)

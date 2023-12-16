@@ -36,7 +36,7 @@ final class TracingTests: XCTestCase {
         InstrumentationSystem.bootstrapInternal(tracer)
 
         let router = HBRouter(context: HBTestRouterContext.self)
-        router.middlewares.add(HBTracingMiddleware())
+        router.middlewares.add(HBTracingMiddleware(attributes: ["net.host.name": "127.0.0.1", "net.host.port": 8080]))
         router.get("users/:id") { _, _ -> String in
             return "42"
         }
@@ -104,8 +104,6 @@ final class TracingTests: XCTestCase {
             "http.target": "/users",
             "http.status_code": 500,
             "http.request_content_length": 2,
-            "net.host.name": "127.0.0.1",
-            "net.host.port": 8080,
         ])
     }
 
@@ -156,8 +154,6 @@ final class TracingTests: XCTestCase {
             "http.target": "/users/42",
             "http.status_code": 200,
             "http.response_content_length": 2,
-            "net.host.name": "127.0.0.1",
-            "net.host.port": 8080,
             "http.request.header.accept": .stringArray(["text/plain", "application/json"]),
             "http.request.header.cache_control": "no-cache",
             "http.response.header.content_type": "text/plain",
@@ -198,8 +194,6 @@ final class TracingTests: XCTestCase {
             "http.target": "/users",
             "http.status_code": 204,
             "http.response_content_length": 0,
-            "net.host.name": "127.0.0.1",
-            "net.host.port": 8080,
         ])
     }
 
@@ -236,8 +230,6 @@ final class TracingTests: XCTestCase {
             "http.target": "/",
             "http.status_code": 200,
             "http.response_content_length": 0,
-            "net.host.name": "127.0.0.1",
-            "net.host.port": 8080,
         ])
     }
 
@@ -272,8 +264,6 @@ final class TracingTests: XCTestCase {
             "http.method": "GET",
             "http.target": "/",
             "http.status_code": 404,
-            "net.host.name": "127.0.0.1",
-            "net.host.port": 8080,
         ])
     }
 

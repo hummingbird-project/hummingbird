@@ -41,7 +41,7 @@ extension JSONDecoder: HBRequestDecoder {
     ///   - type: Type to decode
     ///   - request: Request to decode from
     public func decode<T: Decodable>(_ type: T.Type, from request: HBRequest, context: some HBBaseRequestContext) async throws -> T {
-        let buffer = try await request.body.collect(upTo: context.applicationContext.configuration.maxUploadSize)
+        let buffer = try await request.body.collect(upTo: context.maxUploadSize)
         return try self.decode(T.self, from: buffer)
     }
 }

@@ -36,9 +36,6 @@ public struct EndpointPath: Sendable {
 
 /// Request context values required by Hummingbird itself.
 public struct HBCoreRequestContext: Sendable {
-    /// Application context
-    @usableFromInline
-    let applicationContext: HBApplicationContext
     /// Request decoder
     @usableFromInline
     var requestDecoder: HBRequestDecoder
@@ -63,14 +60,12 @@ public struct HBCoreRequestContext: Sendable {
 
     @inlinable
     public init(
-        applicationContext: HBApplicationContext,
         requestDecoder: HBRequestDecoder = NullDecoder(),
         responseEncoder: HBResponseEncoder = NullEncoder(),
         eventLoop: EventLoop,
         allocator: ByteBufferAllocator,
         logger: Logger
     ) {
-        self.applicationContext = applicationContext
         self.requestDecoder = requestDecoder
         self.responseEncoder = responseEncoder
         self.eventLoop = eventLoop
@@ -88,12 +83,12 @@ public protocol HBBaseRequestContext: Sendable {
     var coreContext: HBCoreRequestContext { get set }
     /// Thread Pool
     var threadPool: NIOThreadPool { get }
+    /// Maximum upload size allowed for routes that don't stream the request payload. This
+    /// limits how much memory would be used for one request
+    var maxUploadSize: Int { get }
 }
 
 extension HBBaseRequestContext {
-    /// Application context
-    @inlinable
-    public var applicationContext: HBApplicationContext { coreContext.applicationContext }
     /// Request decoder
     @inlinable
     public var requestDecoder: HBRequestDecoder { coreContext.requestDecoder }
@@ -118,6 +113,9 @@ extension HBBaseRequestContext {
         set { coreContext.logger = newValue }
     }
 
+    /// maxUploadSize
+    @inlinable
+    public var maxUploadSize: Int { 2 * 1024 * 1024 }
     /// Endpoint path
     @inlinable
     public var endpointPath: String? { coreContext.endpointPath.value }
@@ -136,7 +134,7 @@ public protocol HBRequestContext: HBBaseRequestContext {
     ///   - applicationContext: Context coming from Application
     ///   - channel: Channel that created request and context
     ///   - logger: Logger to use with request
-    init(applicationContext: HBApplicationContext, channel: Channel, logger: Logger)
+    init(channel: Channel, logger: Logger)
 }
 
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
@@ -150,10 +148,9 @@ public struct HBBasicRequestContext: HBRequestContext {
     ///   - source: Source of request context
     ///   - logger: Logger
     public init(
-        applicationContext: HBApplicationContext,
         channel: Channel,
         logger: Logger
     ) {
-        self.coreContext = .init(applicationContext: applicationContext, eventLoop: channel.eventLoop, allocator: channel.allocator, logger: logger)
+        self.coreContext = .init(eventLoop: channel.eventLoop, allocator: channel.allocator, logger: logger)
     }
 }

@@ -25,18 +25,18 @@ import Tracing
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 public struct HBTracingMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
     private let headerNamesToRecord: Set<RecordingHeader>
+    private let attributes: SpanAttributes?
 
     /// Intialize a new HBTracingMiddleware.
     ///
-    /// - Parameter recordingHeaders: A list of HTTP header names to be recorded as span attributes. By default, no headers
-    /// are being recorded.
-    public init(recordingHeaders headerNamesToRecord: some Collection<HTTPField.Name>) {
+    /// - Parameters
+    ///     - recordingHeaders: A list of HTTP header names to be recorded as span attributes. By default, no headers
+    ///         are being recorded.
+    ///     - parameters: A list of static parameters added to every span. These could be the "net.host.name", 
+    ///         "net.host.port" or "http.scheme"
+    public init(recordingHeaders headerNamesToRecord: some Collection<HTTPField.Name> = [], attributes: SpanAttributes? = nil) {
         self.headerNamesToRecord = Set(headerNamesToRecord.map(RecordingHeader.init))
-    }
-
-    /// Intialize a new HBTracingMiddleware.
-    public init() {
-        self.init(recordingHeaders: [])
+        self.attributes = attributes
     }
 
     public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
@@ -52,6 +52,9 @@ public struct HBTracingMiddleware<Context: HBBaseRequestContext>: HBMiddlewarePr
 
         return try await InstrumentationSystem.tracer.withSpan(operationName, context: serviceContext, ofKind: .server) { span in
             span.updateAttributes { attributes in
+                if let staticAttributes = self.attributes {
+                    attributes.merge(staticAttributes)
+                }
                 attributes["http.method"] = request.method.rawValue
                 attributes["http.target"] = request.uri.path
                 // TODO: Get HTTP version and scheme
@@ -59,9 +62,6 @@ public struct HBTracingMiddleware<Context: HBBaseRequestContext>: HBMiddlewarePr
                 // attributes["http.scheme"] = request.uri.scheme?.rawValue
                 attributes["http.user_agent"] = request.headers[.userAgent]
                 attributes["http.request_content_length"] = request.headers[.contentLength].map { Int($0) } ?? nil
-
-                attributes["net.host.name"] = context.applicationContext.configuration.address.host
-                attributes["net.host.port"] = context.applicationContext.configuration.address.port
 
                 if let remoteAddress = (context as? HBRemoteAddressRequestContext)?.remoteAddress {
                     attributes["net.sock.peer.port"] = remoteAddress.port
