@@ -27,7 +27,7 @@ final class HandlerTests: XCTestCase {
             }
         }
 
-        let router = HBRouter(context: HBTestRouterContext.self)
+        let router = HBRouter()
         router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
         router.post("/hello", use: DecodeTest.self)
         let app = HBApplication(responder: router.buildResponder())
@@ -57,7 +57,7 @@ final class HandlerTests: XCTestCase {
             }
         }
 
-        let router = HBRouter(context: HBTestRouterContext.self)
+        let router = HBRouter()
         router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
         router.post("/hello", use: DecodeTest.self)
         let app = HBApplication(responder: router.buildResponder())
@@ -87,7 +87,7 @@ final class HandlerTests: XCTestCase {
             }
         }
 
-        let router = HBRouter(context: HBTestRouterContext.self)
+        let router = HBRouter()
         router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
         router.post("/hello", use: DecodeTest.self)
         let app = HBApplication(responder: router.buildResponder())
@@ -122,7 +122,7 @@ final class HandlerTests: XCTestCase {
             }
         }
 
-        let router = HBRouter(context: HBTestRouterContext.self)
+        let router = HBRouter()
         router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
         router.post("/hello", use: DecodeTest.self)
         let app = HBApplication(responder: router.buildResponder())
@@ -150,7 +150,7 @@ final class HandlerTests: XCTestCase {
                 return "Hello \(self.name)"
             }
         }
-        let router = HBRouter(context: HBTestRouterContext.self)
+        let router = HBRouter()
         router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
         router.post("/hello", use: DecodeTest.self)
         let app = HBApplication(responder: router.buildResponder())
@@ -171,7 +171,7 @@ final class HandlerTests: XCTestCase {
                 "Hello \(self.name)"
             }
         }
-        let router = HBRouter(context: HBTestRouterContext.self)
+        let router = HBRouter()
         router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
         router.put("/hello", use: DecodeTest.self)
         let app = HBApplication(responder: router.buildResponder())
@@ -193,7 +193,7 @@ final class HandlerTests: XCTestCase {
                 return .ok
             }
         }
-        let router = HBRouter(context: HBTestRouterContext.self)
+        let router = HBRouter()
         router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
         router.get("/hello", use: DecodeTest.self)
         let app = HBApplication(responder: router.buildResponder())
@@ -217,7 +217,7 @@ final class HandlerTests: XCTestCase {
             }
         }
 
-        let router = HBRouter(context: HBTestRouterContext.self)
+        let router = HBRouter()
         router.put("/:test", use: ParameterTest.self)
         let app = HBApplication(responder: router.buildResponder())
 

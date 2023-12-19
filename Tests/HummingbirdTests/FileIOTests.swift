@@ -24,7 +24,7 @@ class FileIOTests: XCTestCase {
     }
 
     func testReadFileIO() async throws {
-        let router = HBRouter(context: HBTestRouterContext.self)
+        let router = HBRouter()
         router.get("test.jpg") { _, context -> HBResponse in
             let fileIO = HBFileIO(threadPool: context.threadPool)
             let body = try await fileIO.loadFile(path: "test.jpg", context: context, logger: context.logger)
@@ -47,7 +47,7 @@ class FileIOTests: XCTestCase {
 
     func testWrite() async throws {
         let filename = "testWrite.txt"
-        let router = HBRouter(context: HBTestRouterContext.self)
+        let router = HBRouter()
         router.put("store") { request, context -> HTTPResponse.Status in
             let fileIO = HBFileIO(threadPool: context.threadPool)
             try await fileIO.writeFile(contents: request.body, path: filename, context: context, logger: context.logger)
@@ -70,7 +70,7 @@ class FileIOTests: XCTestCase {
 
     func testWriteLargeFile() async throws {
         let filename = "testWriteLargeFile.txt"
-        let router = HBRouter(context: HBTestRouterContext.self)
+        let router = HBRouter()
         router.put("store") { request, context -> HTTPResponse.Status in
             let fileIO = HBFileIO(threadPool: context.threadPool)
             try await fileIO.writeFile(contents: request.body, path: filename, context: context, logger: context.logger)
