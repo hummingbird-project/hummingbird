@@ -170,7 +170,7 @@ extension HBRouterMethods {
 }
 
 extension HBRouterMethods {
-    func constructResponder<Output: HBResponseGenerator>(
+    public static func constructResponder<Output: HBResponseGenerator>(
         options: HBRouterMethodOptions,
         use closure: @escaping (HBRequest) throws -> Output
     ) -> HBResponder {
@@ -219,7 +219,7 @@ extension HBRouterMethods {
         }
     }
 
-    func constructResponder<Output: HBResponseGenerator>(
+    public static func constructResponder<Output: HBResponseGenerator>(
         options: HBRouterMethodOptions,
         use closure: @escaping (HBRequest) -> EventLoopFuture<Output>
     ) -> HBResponder {

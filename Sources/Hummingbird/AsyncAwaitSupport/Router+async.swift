@@ -70,7 +70,7 @@ extension HBRouterMethods {
         return on(path, method: .PATCH, options: options, use: handler)
     }
 
-    func constructResponder<Output: HBResponseGenerator>(
+    public static func constructResponder<Output: HBResponseGenerator>(
         options: HBRouterMethodOptions = [],
         use closure: @escaping (HBRequest) async throws -> Output
     ) -> HBResponder {
@@ -101,7 +101,7 @@ extension HBRouterBuilder {
         options: HBRouterMethodOptions = [],
         use closure: @escaping (HBRequest) async throws -> Output
     ) -> Self {
-        let responder = constructResponder(options: options, use: closure)
+        let responder = Self.constructResponder(options: options, use: closure)
         add(path, method: method, responder: responder)
         return self
     }
@@ -116,7 +116,7 @@ extension HBRouterGroup {
         options: HBRouterMethodOptions = [],
         use closure: @escaping (HBRequest) async throws -> Output
     ) -> Self {
-        let responder = constructResponder(options: options, use: closure)
+        let responder = Self.constructResponder(options: options, use: closure)
         let path = self.combinePaths(self.path, path)
         self.router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         return self
