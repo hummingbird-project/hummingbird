@@ -37,15 +37,6 @@ public struct XCTTestingSetup {
     public static var live: XCTTestingSetup { .init(value: .live) }
     /// Sets up a live server and execute tests using a HTTP client.
     public static func ahc(_ scheme: XCTScheme) -> XCTTestingSetup { .init(value: .ahc(scheme)) }
-
-    static func ~= (lhs: XCTTestingSetup, rhs: XCTTestingSetup) -> Bool {
-        switch (lhs.value, rhs.value) {
-        case (.router, .router): true
-        case (.live, .live): true
-        case (.ahc(let scheme1), .ahc(let scheme2)): scheme1 == scheme2
-        default: false
-        }
-    }
 }
 
 /// Extends `HBApplication` to support testing of applications
@@ -82,12 +73,10 @@ extension HBApplicationProtocol where Responder.Context: HBRequestContext {
         _ testingSetup: XCTTestingSetup,
         _ test: @escaping @Sendable (any HBXCTClientProtocol) async throws -> Value
     ) async throws -> Value {
-        let app: any HBXCTApplication = switch testingSetup {
+        let app: any HBXCTApplication = switch testingSetup.value {
         case .router: try await HBXCTRouter(app: self)
         case .live: HBXCTLive(app: self)
-        case .ahc(.http): HBXCTAsyncHTTPClient(app: self, scheme: .http)
-        case .ahc(.https): HBXCTAsyncHTTPClient(app: self, scheme: .https)
-        default: preconditionFailure("XCTTestingSetup not supported")
+        case .ahc(let scheme): HBXCTAsyncHTTPClient(app: self, scheme: scheme)
         }
         return try await app.run(test)
     }
