@@ -236,64 +236,6 @@ extension HTTPFields {
     }
 }
 
-extension HTTPRequestHead {
-    init(_ newRequest: HTTPRequest) throws {
-        guard let path = newRequest.method == .connect ? newRequest.authority : newRequest.path else {
-            throw HTTP1TypeConversionError.missingPath
-        }
-        var headers = HTTPHeaders()
-        headers.reserveCapacity(newRequest.headerFields.count + 1)
-        if let authority = newRequest.authority {
-            headers.add(name: "Host", value: authority)
-        }
-        var firstCookie = true
-        for field in newRequest.headerFields {
-            if field.name == .cookie {
-                if firstCookie {
-                    firstCookie = false
-                    headers.add(name: field.name.rawName, value: newRequest.headerFields[.cookie]!)
-                }
-            } else {
-                headers.add(name: field.name.rawName, value: field.value)
-            }
-        }
-        self.init(
-            version: .http1_1,
-            method: HTTPMethod(newRequest.method),
-            uri: path,
-            headers: headers
-        )
-    }
-}
-
-extension HTTPRequest {
-    init(_ oldRequest: HTTPRequestHead, secure: Bool, splitCookie: Bool) throws {
-        let method = try Method(oldRequest.method)
-        let scheme = secure ? "https" : "http"
-        let authority = oldRequest.headers["Host"].first
-        self.init(
-            method: method,
-            scheme: scheme,
-            authority: authority,
-            path: oldRequest.uri,
-            headerFields: HTTPFields(oldRequest.headers, splitCookie: splitCookie)
-        )
-    }
-}
-
-extension HTTPResponseHead {
-    init(_ newResponse: HTTPResponse) {
-        self.init(
-            version: .http1_1,
-            status: HTTPResponseStatus(
-                statusCode: newResponse.status.code,
-                reasonPhrase: newResponse.status.reasonPhrase
-            ),
-            headers: HTTPHeaders(newResponse.headerFields)
-        )
-    }
-}
-
 extension HTTPResponse {
     init(_ oldResponse: HTTPResponseHead) throws {
         guard oldResponse.status.code <= 999 else {
