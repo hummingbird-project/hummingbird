@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import HummingbirdCore
-import HummingbirdCoreXCT
+import HummingbirdXCT
 import Logging
 import NIOCore
 import NIOSSL

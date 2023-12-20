@@ -16,9 +16,12 @@ import Atomics
 import HTTPTypes
 import Hummingbird
 import HummingbirdCore
+import HummingbirdHTTP2
+import HummingbirdTLS
 import HummingbirdXCT
 import Logging
 import NIOCore
+import NIOSSL
 import XCTest
 
 final class ApplicationTests: XCTestCase {
@@ -503,6 +506,55 @@ final class ApplicationTests: XCTestCase {
                 XCTAssertEqual(string, "GET: Hello")
             }
         }
+    }
+
+    /// test we can create out own application type conforming to HBApplicationProtocol
+    func testTLS() async throws {
+        let router = HBRouter()
+        router.get("/") { _, _ -> String in
+            "Hello"
+        }
+        let app = try HBApplication(
+            responder: router.buildResponder(),
+            channelSetup: .tls(tlsConfiguration: self.getServerTLSConfiguration())
+        )
+        try await app.test(.ahc(.https)) { client in
+            try await client.XCTExecute(uri: "/", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+                let body = try XCTUnwrap(response.body)
+                let string = String(buffer: body)
+                XCTAssertEqual(string, "Hello")
+            }
+        }
+    }
+
+    /// test we can create out own application type conforming to HBApplicationProtocol
+    func testHTTP2() async throws {
+        let router = HBRouter()
+        router.get("/") { _, _ -> String in
+            "Hello"
+        }
+        let app = try HBApplication(
+            responder: router.buildResponder(),
+            channelSetup: .http2(tlsConfiguration: self.getServerTLSConfiguration())
+        )
+        try await app.test(.ahc(.https)) { client in
+            try await client.XCTExecute(uri: "/", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+                let body = try XCTUnwrap(response.body)
+                let string = String(buffer: body)
+                XCTAssertEqual(string, "Hello")
+            }
+        }
+    }
+
+    func getServerTLSConfiguration() throws -> TLSConfiguration {
+        let caCertificate = try NIOSSLCertificate(bytes: [UInt8](caCertificateData.utf8), format: .pem)
+        let certificate = try NIOSSLCertificate(bytes: [UInt8](serverCertificateData.utf8), format: .pem)
+        let privateKey = try NIOSSLPrivateKey(bytes: [UInt8](serverPrivateKeyData.utf8), format: .pem)
+        var tlsConfig = TLSConfiguration.makeServerConfiguration(certificateChain: [.certificate(certificate)], privateKey: .privateKey(privateKey))
+        tlsConfig.trustRoots = .certificates([caCertificate])
+        return tlsConfig
     }
 }
 

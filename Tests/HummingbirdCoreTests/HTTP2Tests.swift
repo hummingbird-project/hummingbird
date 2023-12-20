@@ -14,7 +14,7 @@
 
 import AsyncHTTPClient
 import HummingbirdCore
-import HummingbirdCoreXCT
+import HummingbirdXCT
 import HummingbirdHTTP2
 import Logging
 import NIOCore

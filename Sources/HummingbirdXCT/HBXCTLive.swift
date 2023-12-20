@@ -15,7 +15,6 @@
 import HTTPTypes
 import Hummingbird
 import HummingbirdCore
-import HummingbirdCoreXCT
 import Logging
 import NIOCore
 import NIOPosix
@@ -25,38 +24,6 @@ import XCTest
 
 /// Test using a live server
 final class HBXCTLive<App: HBApplicationProtocol>: HBXCTApplication {
-    /// TestApplication used to wrap HBApplication being tested
-    struct TestApplication<BaseApp: HBApplicationProtocol>: HBApplicationProtocol, Service {
-        typealias Responder = BaseApp.Responder
-        typealias ChannelSetup = BaseApp.ChannelSetup
-
-        let base: BaseApp
-
-        var responder: Responder {
-            get async throws { try await self.base.responder }
-        }
-
-        var channelSetup: HBHTTPChannelSetupBuilder<ChannelSetup> {
-            self.base.channelSetup
-        }
-
-        /// event loop group used by application
-        var eventLoopGroup: EventLoopGroup { self.base.eventLoopGroup }
-        /// Configuration
-        var configuration: HBApplicationConfiguration { self.base.configuration.with(address: .hostname("localhost", port: 0)) }
-        /// Logger
-        var logger: Logger { self.base.logger }
-        /// on server running
-        @Sendable func onServerRunning(_ channel: Channel) async {
-            await self.portPromise.complete(channel.localAddress!.port!)
-        }
-
-        /// services attached to the application.
-        var services: [any Service] { self.base.services }
-
-        let portPromise: Promise<Int> = .init()
-    }
-
     struct Client: HBXCTClientProtocol {
         let client: HBXCTClient
 
@@ -110,44 +77,4 @@ final class HBXCTLive<App: HBApplicationProtocol>: HBXCTApplication {
 
     let application: TestApplication<App>
     let timeout: TimeAmount
-}
-
-/// Promise type.
-actor Promise<Value> {
-    enum State {
-        case blocked([CheckedContinuation<Value, Never>])
-        case unblocked(Value)
-    }
-
-    var state: State
-
-    init() {
-        self.state = .blocked([])
-    }
-
-    /// wait from promise to be completed
-    func wait() async -> Value {
-        switch self.state {
-        case .blocked(var continuations):
-            return await withCheckedContinuation { cont in
-                continuations.append(cont)
-                self.state = .blocked(continuations)
-            }
-        case .unblocked(let value):
-            return value
-        }
-    }
-
-    /// complete promise with value
-    func complete(_ value: Value) {
-        switch self.state {
-        case .blocked(let continuations):
-            for cont in continuations {
-                cont.resume(returning: value)
-            }
-            self.state = .unblocked(value)
-        case .unblocked:
-            break
-        }
-    }
 }

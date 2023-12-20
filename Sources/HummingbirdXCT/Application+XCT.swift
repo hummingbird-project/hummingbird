@@ -16,15 +16,36 @@ import Hummingbird
 import HummingbirdCore
 import NIOCore
 
-/// Type of test framework
-public struct XCTLiveTestingSetup {
-    /// Sets up a live server and execute tests using a HTTP client.
-    public static let live = XCTLiveTestingSetup()
+public enum XCTScheme: String {
+    case http
+    case https
 }
 
-public struct XCTRouterTestingSetup {
+/// Type of test framework
+public struct XCTTestingSetup {
+    enum Internal {
+        case router
+        case live
+        case ahc(XCTScheme)
+    }
+
+    let value: Internal
+
     /// Test writing requests directly to router.
-    public static let router = XCTRouterTestingSetup()
+    public static var router: XCTTestingSetup { .init(value: .router) }
+    /// Sets up a live server and execute tests using a HTTP client.
+    public static var live: XCTTestingSetup { .init(value: .live) }
+    /// Sets up a live server and execute tests using a HTTP client.
+    public static func ahc(_ scheme: XCTScheme) -> XCTTestingSetup { .init(value: .ahc(scheme)) }
+
+    static func ~= (lhs: XCTTestingSetup, rhs: XCTTestingSetup) -> Bool {
+        switch (lhs.value, rhs.value) {
+        case (.router, .router): true
+        case (.live, .live): true
+        case (.ahc(let scheme1), .ahc(let scheme2)): scheme1 == scheme2
+        default: false
+        }
+    }
 }
 
 /// Extends `HBApplication` to support testing of applications
@@ -58,29 +79,16 @@ extension HBApplicationProtocol where Responder.Context: HBRequestContext {
     ///   - testing: indicates which type of testing framework we want
     ///   - configuration: configuration of application
     public func test<Value>(
-        _: XCTLiveTestingSetup,
+        _ testingSetup: XCTTestingSetup,
         _ test: @escaping @Sendable (any HBXCTClientProtocol) async throws -> Value
     ) async throws -> Value {
-        let app: any HBXCTApplication
-        app = HBXCTLive(app: self)
-        return try await app.run(test)
-    }
-}
-
-extension HBApplicationProtocol where Responder.Context: HBBaseRequestContext {
-    // MARK: Initialization
-
-    /// Creates a version of `HBApplication` that can be used for testing code
-    ///
-    /// - Parameters:
-    ///   - testing: indicates which type of testing framework we want
-    ///   - configuration: configuration of application
-    public func test<Value>(
-        _: XCTRouterTestingSetup,
-        _ test: @escaping @Sendable (any HBXCTClientProtocol) async throws -> Value
-    ) async throws -> Value {
-        let app: any HBXCTApplication
-        app = try await HBXCTRouter(app: self)
+        let app: any HBXCTApplication = switch testingSetup {
+        case .router: try await HBXCTRouter(app: self)
+        case .live: HBXCTLive(app: self)
+        case .ahc(.http): HBXCTAsyncHTTPClient(app: self, scheme: .http)
+        case .ahc(.https): HBXCTAsyncHTTPClient(app: self, scheme: .https)
+        default: preconditionFailure("XCTTestingSetup not supported")
+        }
         return try await app.run(test)
     }
 }
