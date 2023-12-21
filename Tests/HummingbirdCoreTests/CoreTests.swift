@@ -16,7 +16,7 @@ import AsyncAlgorithms
 import Atomics
 import HTTPTypes
 import HummingbirdCore
-@testable import HummingbirdCoreXCT
+import HummingbirdXCT
 import Logging
 import NIOCore
 import NIOEmbedded

@@ -69,16 +69,10 @@ let package = Package(
         ]),
         .target(name: "HummingbirdXCT", dependencies: [
             .byName(name: "Hummingbird"),
-            .byName(name: "HummingbirdCoreXCT"),
-            .product(name: "HTTPTypes", package: "swift-http-types"),
-            .product(name: "NIOCore", package: "swift-nio"),
-            .product(name: "NIOPosix", package: "swift-nio"),
-        ]),
-        .target(name: "HummingbirdCoreXCT", dependencies: [
+            .product(name: "AsyncHTTPClient", package: "async-http-client"),
             .product(name: "HTTPTypes", package: "swift-http-types"),
             .product(name: "NIOCore", package: "swift-nio"),
             .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
-            .product(name: "NIOHTTP1", package: "swift-nio"),
             .product(name: "NIOHTTPTypes", package: "swift-nio-extras"),
             .product(name: "NIOHTTPTypesHTTP1", package: "swift-nio-extras"),
             .product(name: "NIOPosix", package: "swift-nio"),
@@ -124,7 +118,7 @@ let package = Package(
                 .byName(name: "HummingbirdCore"),
                 .byName(name: "HummingbirdHTTP2"),
                 .byName(name: "HummingbirdTLS"),
-                .byName(name: "HummingbirdCoreXCT"),
+                .byName(name: "HummingbirdXCT"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
             ],
             resources: [.process("Certificates")]
