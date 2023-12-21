@@ -49,6 +49,6 @@ public struct NullEncoder: HBResponseEncoder {
 public struct NullDecoder: HBRequestDecoder {
     public init() {}
     public func decode<T: Decodable>(_ type: T.Type, from request: HBRequest, context: some HBBaseRequestContext) throws -> T {
-        preconditionFailure("HBApplication.decoder has not been set")
+        preconditionFailure("Request context decoder has not been set")
     }
 }

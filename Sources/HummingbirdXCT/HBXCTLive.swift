@@ -43,7 +43,7 @@ final class HBXCTLive<App: HBApplicationProtocol>: HBXCTApplication {
     }
 
     init(app: App) {
-        self.timeout = .seconds(15)
+        self.timeout = .seconds(20)
         self.application = TestApplication(base: app)
     }
 
@@ -64,17 +64,23 @@ final class HBXCTLive<App: HBApplicationProtocol>: HBXCTApplication {
             let client = HBXCTClient(
                 host: "localhost",
                 port: port,
-                configuration: .init(timeout: .seconds(2)),
+                configuration: .init(timeout: self.timeout),
                 eventLoopGroupProvider: .createNew
             )
             client.connect()
-            let value = try await test(Client(client: client))
-            await serviceGroup.triggerGracefulShutdown()
-            try await client.shutdown()
-            return value
+            do {
+                let value = try await test(Client(client: client))
+                await serviceGroup.triggerGracefulShutdown()
+                try await client.shutdown()
+                return value
+            } catch {
+                await serviceGroup.triggerGracefulShutdown()
+                try await client.shutdown()
+                throw error
+            }
         }
     }
 
     let application: TestApplication<App>
-    let timeout: TimeAmount
+    let timeout: Duration
 }
