@@ -86,6 +86,12 @@ public protocol HBBaseRequestContext: Sendable {
     /// Maximum upload size allowed for routes that don't stream the request payload. This
     /// limits how much memory would be used for one request
     var maxUploadSize: Int { get }
+    /// initialize a request context
+    /// - Parameters
+    ///   - eventLoop: EventLoop that created the context
+    ///   - allocator: ByteBuffer allocator
+    ///   - logger: Logger used by context
+    init(eventLoop: EventLoop, allocator: ByteBufferAllocator, logger: Logger)
 }
 
 extension HBBaseRequestContext {
@@ -137,6 +143,16 @@ public protocol HBRequestContext: HBBaseRequestContext {
     init(channel: Channel, logger: Logger)
 }
 
+extension HBRequestContext {
+    ///  Initialize an `HBRequestContext`
+    /// - Parameters:
+    ///   - channel: Source of request context
+    ///   - logger: Logger
+    public init(channel: Channel, logger: Logger) {
+        self.init(eventLoop: channel.eventLoop, allocator: channel.allocator, logger: logger)
+    }
+}
+
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
 public struct HBBasicRequestContext: HBRequestContext {
     /// core context
@@ -144,13 +160,18 @@ public struct HBBasicRequestContext: HBRequestContext {
 
     ///  Initialize an `HBRequestContext`
     /// - Parameters:
-    ///   - applicationContext: Context from Application that instigated the request
-    ///   - source: Source of request context
+    ///   - eventLoop: EventLoop context was created on
+    ///   - allocator: Allocator
     ///   - logger: Logger
     public init(
-        channel: Channel,
+        eventLoop: EventLoop,
+        allocator: ByteBufferAllocator,
         logger: Logger
     ) {
-        self.coreContext = .init(eventLoop: channel.eventLoop, allocator: channel.allocator, logger: logger)
+        self.coreContext = .init(
+            eventLoop: eventLoop,
+            allocator: allocator,
+            logger: logger
+        )
     }
 }

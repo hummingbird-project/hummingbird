@@ -22,46 +22,8 @@ import NIOCore
 import NIOPosix
 import Tracing
 
-public protocol HBTestRequestContextProtocol: HBRequestContext {
-    init(
-        eventLoop: EventLoop,
-        allocator: ByteBufferAllocator,
-        logger: Logger
-    )
-}
-
-extension HBTestRequestContextProtocol {
-    public init(
-        channel: Channel,
-        logger: Logger
-    ) {
-        self.init(
-            eventLoop: channel.eventLoop,
-            allocator: channel.allocator,
-            logger: logger
-        )
-    }
-}
-
-public struct HBTestRouterContext: HBTestRequestContextProtocol {
-    public init(
-        eventLoop: EventLoop,
-        allocator: ByteBufferAllocator,
-        logger: Logger
-    ) {
-        self.coreContext = .init(
-            eventLoop: eventLoop,
-            allocator: allocator,
-            logger: logger
-        )
-    }
-
-    /// router context
-    public var coreContext: HBCoreRequestContext
-}
-
 /// Test sending values to requests to router. This does not setup a live server
-struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Context: HBTestRequestContextProtocol {
+struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Context: HBBaseRequestContext {
     let eventLoopGroup: EventLoopGroup
     let responder: Responder
     let logger: Logger
