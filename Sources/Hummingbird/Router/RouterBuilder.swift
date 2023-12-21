@@ -83,7 +83,7 @@ public final class HBRouterBuilder: HBRouterMethods {
         options: HBRouterMethodOptions = [],
         use closure: @escaping (HBRequest) throws -> Output
     ) -> Self {
-        let responder = constructResponder(options: options, use: closure)
+        let responder = Self.constructResponder(options: options, use: closure)
         self.add(path, method: method, responder: responder)
         return self
     }
@@ -95,7 +95,7 @@ public final class HBRouterBuilder: HBRouterMethods {
         options: HBRouterMethodOptions = [],
         use closure: @escaping (HBRequest) -> EventLoopFuture<Output>
     ) -> Self {
-        let responder = constructResponder(options: options, use: closure)
+        let responder = Self.constructResponder(options: options, use: closure)
         self.add(path, method: method, responder: responder)
         return self
     }
