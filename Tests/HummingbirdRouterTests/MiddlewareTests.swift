@@ -35,7 +35,7 @@ final class MiddlewareTests: XCTestCase {
                 return response
             }
         }
-        let router = HBRouterBuilder(context: RouterTestContext.self) {
+        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
             TestMiddleware()
             Get("/hello") { _, _ -> String in
                 return "Hello"
@@ -58,7 +58,7 @@ final class MiddlewareTests: XCTestCase {
                 return response
             }
         }
-        let router = HBRouterBuilder(context: RouterTestContext.self) {
+        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
             TestMiddleware(string: "first")
             TestMiddleware(string: "second")
             Get("/hello") { _, _ -> String in
@@ -84,7 +84,7 @@ final class MiddlewareTests: XCTestCase {
                 return response
             }
         }
-        let router = HBRouterBuilder(context: RouterTestContext.self) {
+        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
             TestMiddleware()
             Get("/hello") { _, _ -> String in
                 return "Hello"
@@ -107,7 +107,7 @@ final class MiddlewareTests: XCTestCase {
                 }
             }
         }
-        let router = HBRouterBuilder(context: RouterTestContext.self) {
+        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
             TestMiddleware()
         }
         let app = HBApplication(responder: router)
@@ -142,7 +142,7 @@ final class MiddlewareTests: XCTestCase {
                 return editedResponse
             }
         }
-        let router = HBRouterBuilder(context: RouterTestContext.self) {
+        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
             RouteGroup {
                 TransformMiddleware()
                 Get("test") { request, _ in

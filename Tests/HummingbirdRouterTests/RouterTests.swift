@@ -19,16 +19,6 @@ import Logging
 import NIOCore
 import XCTest
 
-struct RouterTestContext: HBRouterRequestContext, HBTestRequestContextProtocol {
-    var routerContext: HBRouterContext
-    var coreContext: HBCoreRequestContext
-
-    init(applicationContext: HBApplicationContext, eventLoop: EventLoop, allocator: ByteBufferAllocator, logger: Logger) {
-        self.routerContext = .init()
-        self.coreContext = .init(applicationContext: applicationContext, eventLoop: eventLoop, allocator: allocator, logger: logger)
-    }
-}
-
 final class RouterTests: XCTestCase {
     struct TestMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
         let output: String
@@ -54,7 +44,7 @@ final class RouterTests: XCTestCase {
             }
         }
 
-        let router = HBRouterBuilder(context: RouterTestContext.self) {
+        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
             TestEndpointMiddleware()
             Get("/test/:number") { _, _ in
                 return "xxx"
@@ -80,7 +70,7 @@ final class RouterTests: XCTestCase {
             }
         }
 
-        let router = HBRouterBuilder(context: RouterTestContext.self) {
+        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
             TestEndpointMiddleware()
             Get("test") { _, context in
                 return context.endpointPath
@@ -119,7 +109,7 @@ final class RouterTests: XCTestCase {
             }
         }
 
-        let router = HBRouterBuilder(context: RouterTestContext.self) {
+        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
             TestEndpointMiddleware()
             Get("test/") { _, context in
                 return context.endpointPath
@@ -164,7 +154,7 @@ final class RouterTests: XCTestCase {
 
     /// Test correct endpoints are called from group
     func testMethodEndpoint() async throws {
-        let router = HBRouterBuilder(context: RouterTestContext.self) {
+        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
             RouteGroup("/endpoint") {
                 Get { _, _ in
                     return "GET"
@@ -191,7 +181,7 @@ final class RouterTests: XCTestCase {
     /// Test middle in group is applied to group but not to routes outside
     /// group
     func testGroupMiddleware() async throws {
-        let router = HBRouterBuilder(context: RouterTestContext.self) {
+        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
             RouteGroup("/group") {
                 TestMiddleware()
                 Get { _, _ in
@@ -215,7 +205,7 @@ final class RouterTests: XCTestCase {
     }
 
     func testEndpointMiddleware() async throws {
-        let router = HBRouterBuilder(context: RouterTestContext.self) {
+        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
             RouteGroup("/group") {
                 TestMiddleware()
                 Head { _, _ in
@@ -233,7 +223,7 @@ final class RouterTests: XCTestCase {
 
     /// Test middleware in parent group is applied to routes in child group
     func testGroupGroupMiddleware() async throws {
-        let router = HBRouterBuilder(context: RouterTestContext.self) {
+        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
             RouteGroup("/test") {
                 TestMiddleware()
                 RouteGroup("/group") {
@@ -335,7 +325,7 @@ final class RouterTests: XCTestCase {
     }
 
     func testParameters() async throws {
-        let router = HBRouterBuilder(context: RouterTestContext.self) {
+        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
             Delete("/user/:id") { _, context -> String? in
                 return context.parameters.get("id", as: String.self)
             }
@@ -350,7 +340,7 @@ final class RouterTests: XCTestCase {
     }
 
     func testParameterCollection() async throws {
-        let router = HBRouterBuilder(context: RouterTestContext.self) {
+        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
             Delete("/user/:username/:id") { _, context -> String? in
                 XCTAssertEqual(context.parameters.count, 2)
                 return context.parameters.get("id", as: String.self)
@@ -366,7 +356,7 @@ final class RouterTests: XCTestCase {
     }
 
     func testPartialCapture() async throws {
-        let router = HBRouterBuilder(context: RouterTestContext.self) {
+        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
             Get("/files/file.${ext}/${name}.jpg") { _, context -> String in
                 XCTAssertEqual(context.parameters.count, 2)
                 let ext = try context.parameters.require("ext")
@@ -384,7 +374,7 @@ final class RouterTests: XCTestCase {
     }
 
     func testPartialWildcard() async throws {
-        let router = HBRouterBuilder(context: RouterTestContext.self) {
+        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
             Get("/files/file.*/*.jpg") { _, _ -> HTTPResponse.Status in
                 return .ok
             }
@@ -402,7 +392,7 @@ final class RouterTests: XCTestCase {
 
     /// Test we have a request id and that it increments with each request
     func testRequestId() async throws {
-        let router = HBRouterBuilder(context: RouterTestContext.self) {
+        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
             Get("id") { _, context in
                 return context.id.description
             }
@@ -424,7 +414,7 @@ final class RouterTests: XCTestCase {
 
     // Test redirect response
     func testRedirect() async throws {
-        let router = HBRouterBuilder(context: RouterTestContext.self) {
+        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
             Get("redirect") { _, _ in
                 return HBResponse.redirect(to: "/other")
             }
@@ -439,9 +429,9 @@ final class RouterTests: XCTestCase {
     }
 }
 
-public struct HBTestRouterContext2: HBTestRequestContextProtocol, HBRouterRequestContext {
+public struct HBTestRouterContext2: HBRouterRequestContext, HBRequestContext {
     /// router context
-    public var routerContext: HBRouterContext
+    public var routerContext: HBRouterBuilderContext
     /// core context
     public var coreContext: HBCoreRequestContext
     /// Connected remote host
@@ -450,9 +440,9 @@ public struct HBTestRouterContext2: HBTestRequestContextProtocol, HBRouterReques
     /// additional data
     public var string: String
 
-    public init(applicationContext: HBApplicationContext, eventLoop: EventLoop, allocator: ByteBufferAllocator, logger: Logger) {
+    public init(eventLoop: EventLoop, allocator: ByteBufferAllocator, logger: Logger) {
         self.routerContext = .init()
-        self.coreContext = .init(applicationContext: applicationContext, eventLoop: eventLoop, allocator: allocator, logger: logger)
+        self.coreContext = .init(eventLoop: eventLoop, allocator: allocator, logger: logger)
         self.string = ""
     }
 }

@@ -13,9 +13,11 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
+import Logging
+import NIOCore
 
 /// Context data required by `HBRouterBuilder`
-public struct HBRouterContext: Sendable {
+public struct HBRouterBuilderContext: Sendable {
     /// remaining path components to match
     @usableFromInline
     var remainingPathComponents: ArraySlice<Substring>
@@ -27,7 +29,18 @@ public struct HBRouterContext: Sendable {
 
 /// Protocol that all request contexts used with HBRouterBuilder should conform to.
 public protocol HBRouterRequestContext: HBBaseRequestContext {
-    var routerContext: HBRouterContext { get set }
+    var routerContext: HBRouterBuilderContext { get set }
+}
+
+/// Basic implementation of a context that can be used with `HBRouterBuilder``
+public struct HBBasicRouterRequestContext: HBRequestContext, HBRouterRequestContext {
+    public var routerContext: HBRouterBuilderContext
+    public var coreContext: HBCoreRequestContext
+
+    public init(eventLoop: EventLoop, allocator: ByteBufferAllocator, logger: Logger) {
+        self.coreContext = .init(eventLoop: eventLoop, allocator: allocator, logger: logger)
+        self.routerContext = .init()
+    }
 }
 
 /// Router
