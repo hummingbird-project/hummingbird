@@ -42,7 +42,7 @@ extension HBRequest {
         return try operation(request)
     }
 
-    /// Execute the given operation within a newly created ``Span``
+    /// Execute the given operation within a newly created `Span`
     ///
     /// Calls operation with edited request that includes the serviceContext from span, and the span Be sure to use the
     /// `HBRequest` passed to the closure as that includes the serviceContext
@@ -55,7 +55,7 @@ extension HBRequest {
     ///
     /// - Parameters:
     ///   - operationName: The name of the operation being traced. This may be a handler function, database call, ...
-    ///   - kind: The ``SpanKind`` of the ``Span`` to be created. Defaults to ``SpanKind/internal``.
+    ///   - kind: The `SpanKind` of the `Span` to be created. Defaults to `SpanKind/internal`.
     ///   - operation: operation to wrap in a span start/end and execute immediately
     /// - Returns: the value returned by `operation`
     /// - Throws: the error the `operation` has thrown (if any)
@@ -67,7 +67,7 @@ extension HBRequest {
         return try self.withSpan(operationName, context: self.serviceContext, ofKind: kind, operation)
     }
 
-    /// Execute a specific task within a newly created ``Span``.
+    /// Execute a specific task within a newly created `Span`.
     ///
     /// Calls operation with edited request that includes the serviceContext, and the span Be sure to use the
     /// `HBRequest` passed to the closure as that includes the serviceContext
@@ -80,8 +80,8 @@ extension HBRequest {
     ///
     /// - Parameters:
     ///   - operationName: The name of the operation being traced. This may be a handler function, database call, ...
-    ///   - serviceContext: ServiceContext potentially containing trace identifiers of a parent ``Span``.
-    ///   - kind: The ``SpanKind`` of the ``Span`` to be created. Defaults to ``SpanKind/internal``.
+    ///   - serviceContext: ServiceContext potentially containing trace identifiers of a parent `Span`.
+    ///   - kind: The `SpanKind` of the `Span` to be created. Defaults to `SpanKind/internal`.
     ///   - operation: operation to wrap in a span start/end and execute immediately
     /// - Returns: the value returned by `operation`
     /// - Throws: the error the `operation` has thrown (if any)
@@ -103,7 +103,7 @@ extension HBRequest {
         }
     }
 
-    /// Execute the given operation within a newly created ``Span``
+    /// Execute the given operation within a newly created `Span`
     ///
     /// Calls operation with edited request that includes the serviceContext from span, and the span. Be sure to use the
     /// `HBRequest` passed to the closure as that includes the serviceContext
@@ -112,7 +112,7 @@ extension HBRequest {
     ///
     /// - Parameters:
     ///   - operationName: The name of the operation being traced. This may be a handler function, database call, ...
-    ///   - kind: The ``SpanKind`` of the ``Span`` to be created. Defaults to ``SpanKind/internal``.
+    ///   - kind: The `SpanKind` of the `Span` to be created. Defaults to `SpanKind/internal`.
     ///   - operation: operation to wrap in a span start/end and execute immediately
     /// - Returns: the value returned by `operation`
     /// - Throws: the error the `operation` has thrown (if any)
@@ -124,7 +124,7 @@ extension HBRequest {
         return self.withSpan(operationName, context: self.serviceContext, ofKind: kind, operation)
     }
 
-    /// Execute the given operation within a newly created ``Span``,
+    /// Execute the given operation within a newly created `Span`,
     ///
     /// Calls operation with edited request that includes the serviceContext, and the span. Be sure to use the
     /// `HBRequest` passed to the closure as that includes the serviceContext
@@ -133,7 +133,7 @@ extension HBRequest {
     ///
     /// - Parameters:
     ///   - operationName: The name of the operation being traced. This may be a handler function, database call, ...
-    ///   - kind: The ``SpanKind`` of the ``Span`` to be created. Defaults to ``SpanKind/internal``.
+    ///   - kind: The `SpanKind` of the `Span` to be created. Defaults to `SpanKind/internal`.
     ///   - operation: operation to wrap in a span start/end and execute immediately
     /// - Returns: the value returned by `operation`
     /// - Throws: the error the `operation` has thrown (if any)
