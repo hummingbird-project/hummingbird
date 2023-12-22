@@ -12,4 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if swift(>=5.8)
 @_exported @_documentation(visibility: internal) import struct Logging.Logger
+#else
+@_exported import struct Logging.Logger
+#endif
