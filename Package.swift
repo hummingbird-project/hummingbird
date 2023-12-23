@@ -13,6 +13,7 @@ let package = Package(
         .library(name: "HummingbirdTLS", targets: ["HummingbirdTLS"]),
         .library(name: "HummingbirdFoundation", targets: ["HummingbirdFoundation"]),
         .library(name: "HummingbirdJobs", targets: ["HummingbirdJobs"]),
+        .library(name: "HummingbirdRouter", targets: ["HummingbirdRouter"]),
         .library(name: "HummingbirdXCT", targets: ["HummingbirdXCT"]),
         .executable(name: "PerformanceTest", targets: ["PerformanceTest"]),
     ],
@@ -67,6 +68,10 @@ let package = Package(
             .byName(name: "Hummingbird"),
             .product(name: "Logging", package: "swift-log"),
         ]),
+        .target(name: "HummingbirdRouter", dependencies: [
+            .byName(name: "Hummingbird"),
+            .product(name: "Logging", package: "swift-log"),
+        ]),
         .target(name: "HummingbirdXCT", dependencies: [
             .byName(name: "Hummingbird"),
             .product(name: "AsyncHTTPClient", package: "async-http-client"),
@@ -109,6 +114,10 @@ let package = Package(
         ]),
         .testTarget(name: "HummingbirdJobsTests", dependencies: [
             .byName(name: "HummingbirdJobs"),
+            .byName(name: "HummingbirdXCT"),
+        ]),
+        .testTarget(name: "HummingbirdRouterTests", dependencies: [
+            .byName(name: "HummingbirdRouter"),
             .byName(name: "HummingbirdXCT"),
         ]),
         .testTarget(

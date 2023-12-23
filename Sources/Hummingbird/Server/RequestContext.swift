@@ -26,7 +26,7 @@ public struct EndpointPath: Sendable {
     }
 
     /// Endpoint path
-    public internal(set) var value: String? {
+    public var value: String? {
         get { self._value.withLockedValue { $0 } }
         nonmutating set { self._value.withLockedValue { $0 = newValue } }
     }
@@ -52,11 +52,9 @@ public struct HBCoreRequestContext: Sendable {
     @usableFromInline
     var logger: Logger
     /// Endpoint path
-    @usableFromInline
-    var endpointPath: EndpointPath
+    public var endpointPath: EndpointPath
     /// Parameters extracted from URI
-    @usableFromInline
-    var parameters: HBParameters
+    public var parameters: HBParameters
 
     @inlinable
     public init(
