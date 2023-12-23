@@ -16,8 +16,14 @@
 import Benchmark
 
 let benchmarks = {
+    Benchmark.defaultConfiguration = .init(
+        metrics: [
+            .cpuTotal,
+            .throughput,
+            .mallocCountTotal,
+        ],
+        warmupIterations: 10
+    )
     trieRouterBenchmarks()
     routerBenchmarks()
-    // The HTTP benchmarks are so variable I'm not sure they are worthwhile running
-    //http1Benchmarks()
 }
