@@ -13,15 +13,20 @@
 //===----------------------------------------------------------------------===//
 
 import HummingbirdCore
+import NIOCore
 import NIOSSL
 
-extension HBHTTPChannelSetupBuilder {
-    public static func tls<BaseChannel: HBChannelSetup>(
-        _ base: HBHTTPChannelSetupBuilder<BaseChannel> = .http1(),
-        tlsConfiguration: TLSConfiguration
-    ) throws -> HBHTTPChannelSetupBuilder<TLSChannel<BaseChannel>> {
+extension HBHTTPChannelBuilder {
+    public static func http2(
+        tlsConfiguration: TLSConfiguration,
+        additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = []
+    ) throws -> HBHTTPChannelBuilder<HTTP2Channel> {
         return .init { responder in
-            return try TLSChannel(base.build(responder), tlsConfiguration: tlsConfiguration)
+            return try HTTP2Channel(
+                tlsConfiguration: tlsConfiguration,
+                additionalChannelHandlers: additionalChannelHandlers,
+                responder: responder
+            )
         }
     }
 }

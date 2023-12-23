@@ -23,7 +23,7 @@ import ServiceLifecycle
 /// This is needed to override the `onServerRunning` function
 struct TestApplication<BaseApp: HBApplicationProtocol>: HBApplicationProtocol, Service {
     typealias Responder = BaseApp.Responder
-    typealias ChannelSetup = BaseApp.ChannelSetup
+    typealias ChildChannel = BaseApp.ChildChannel
 
     let base: BaseApp
 
@@ -31,8 +31,8 @@ struct TestApplication<BaseApp: HBApplicationProtocol>: HBApplicationProtocol, S
         get async throws { try await self.base.responder }
     }
 
-    var channelSetup: HBHTTPChannelSetupBuilder<ChannelSetup> {
-        self.base.channelSetup
+    var server: HBHTTPChannelBuilder<ChildChannel> {
+        self.base.server
     }
 
     /// event loop group used by application

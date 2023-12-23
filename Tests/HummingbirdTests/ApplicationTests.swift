@@ -516,7 +516,7 @@ final class ApplicationTests: XCTestCase {
         }
         let app = try HBApplication(
             responder: router.buildResponder(),
-            channelSetup: .tls(tlsConfiguration: self.getServerTLSConfiguration())
+            server: .tls(tlsConfiguration: self.getServerTLSConfiguration())
         )
         try await app.test(.ahc(.https)) { client in
             try await client.XCTExecute(uri: "/", method: .get) { response in
@@ -536,7 +536,7 @@ final class ApplicationTests: XCTestCase {
         }
         let app = try HBApplication(
             responder: router.buildResponder(),
-            channelSetup: .http2(tlsConfiguration: self.getServerTLSConfiguration())
+            server: .http2(tlsConfiguration: self.getServerTLSConfiguration())
         )
         try await app.test(.ahc(.https)) { client in
             try await client.XCTExecute(uri: "/", method: .get) { response in

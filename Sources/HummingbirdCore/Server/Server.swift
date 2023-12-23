@@ -23,12 +23,12 @@ import NIOTransportServices
 import ServiceLifecycle
 
 /// HTTP server class
-public actor HBServer<ChannelSetup: HBChannelSetup>: Service {
-    public typealias AsyncChildChannel = ChannelSetup.Value
+public actor HBServer<ChildChannel: HBChildChannel>: Service {
+    public typealias AsyncChildChannel = ChildChannel.Value
     public typealias AsyncServerChannel = NIOAsyncChannel<AsyncChildChannel, Never>
     enum State: CustomStringConvertible {
         case initial(
-            childChannelSetup: ChannelSetup,
+            childChannelSetup: ChildChannel,
             configuration: HBServerConfiguration,
             onServerRunning: (@Sendable (Channel) async -> Void)?
         )
@@ -72,7 +72,7 @@ public actor HBServer<ChannelSetup: HBChannelSetup>: Service {
     ///   - group: EventLoopGroup server uses
     ///   - configuration: Configuration for server
     public init(
-        childChannelSetup: ChannelSetup,
+        childChannelSetup: ChildChannel,
         configuration: HBServerConfiguration,
         onServerRunning: (@Sendable (Channel) async -> Void)? = { _ in },
         eventLoopGroup: EventLoopGroup,
@@ -175,7 +175,7 @@ public actor HBServer<ChannelSetup: HBChannelSetup>: Service {
     /// Start server
     /// - Parameter responder: Object that provides responses to requests sent to the server
     /// - Returns: EventLoopFuture that is fulfilled when server has started
-    public func makeServer(childChannelSetup: ChannelSetup, configuration: HBServerConfiguration) async throws -> AsyncServerChannel {
+    public func makeServer(childChannelSetup: ChildChannel, configuration: HBServerConfiguration) async throws -> AsyncServerChannel {
         let bootstrap: ServerBootstrapProtocol
         #if canImport(Network)
         if let tsBootstrap = self.createTSBootstrap(configuration: configuration) {
@@ -204,7 +204,7 @@ public actor HBServer<ChannelSetup: HBChannelSetup>: Service {
                     port: port,
                     serverBackPressureStrategy: nil
                 ) { channel in
-                    childChannelSetup.initialize(
+                    childChannelSetup.setup(
                         channel: channel,
                         configuration: configuration,
                         logger: self.logger
@@ -217,7 +217,7 @@ public actor HBServer<ChannelSetup: HBChannelSetup>: Service {
                     cleanupExistingSocketFile: false,
                     serverBackPressureStrategy: nil
                 ) { channel in
-                    childChannelSetup.initialize(
+                    childChannelSetup.setup(
                         channel: channel,
                         configuration: configuration,
                         logger: self.logger
