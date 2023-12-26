@@ -440,9 +440,9 @@ public struct HBTestRouterContext2: HBRouterRequestContext, HBRequestContext {
     /// additional data
     public var string: String
 
-    public init(eventLoop: EventLoop, allocator: ByteBufferAllocator, logger: Logger) {
+    public init(allocator: ByteBufferAllocator, logger: Logger) {
         self.routerContext = .init()
-        self.coreContext = .init(eventLoop: eventLoop, allocator: allocator, logger: logger)
+        self.coreContext = .init(allocator: allocator, logger: logger)
         self.string = ""
     }
 }

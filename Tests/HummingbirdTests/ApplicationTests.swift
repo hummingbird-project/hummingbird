@@ -390,8 +390,8 @@ final class ApplicationTests: XCTestCase {
 
     func testMaxUploadSize() async throws {
         struct MaxUploadRequestContext: HBRequestContext {
-            init(eventLoop: EventLoop, allocator: ByteBufferAllocator, logger: Logger) {
-                self.coreContext = .init(eventLoop: eventLoop, allocator: allocator, logger: logger)
+            init(allocator: ByteBufferAllocator, logger: Logger) {
+                self.coreContext = .init(allocator: allocator, logger: logger)
             }
 
             var coreContext: HBCoreRequestContext
@@ -431,12 +431,12 @@ final class ApplicationTests: XCTestCase {
                 channel: Channel,
                 logger: Logger
             ) {
-                self.coreContext = .init(eventLoop: channel.eventLoop, allocator: channel.allocator, logger: logger)
+                self.coreContext = .init(allocator: channel.allocator, logger: logger)
                 self.remoteAddress = channel.remoteAddress
             }
 
-            init(eventLoop: EventLoop, allocator: ByteBufferAllocator, logger: Logger) {
-                self.coreContext = .init(eventLoop: eventLoop, allocator: allocator, logger: logger)
+            init(allocator: ByteBufferAllocator, logger: Logger) {
+                self.coreContext = .init(allocator: allocator, logger: logger)
                 self.remoteAddress = nil
             }
         }
