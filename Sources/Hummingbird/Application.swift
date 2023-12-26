@@ -208,9 +208,9 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
     // MARK: Methods
 
     ///  Add service to be managed by application ServiceGroup
-    /// - Parameter service: service to be added
-    public mutating func addService(_ service: any Service) {
-        self.services.append(service)
+    /// - Parameter services: list of services to be added
+    public mutating func addServices(_ services: any Service...) {
+        self.services.append(contentsOf: services)
     }
 
     public func buildResponder() async throws -> Responder {
