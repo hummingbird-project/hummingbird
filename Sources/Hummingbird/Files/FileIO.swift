@@ -19,13 +19,15 @@ import NIOPosix
 
 /// Manages File reading and writing.
 public struct HBFileIO: Sendable {
+    let eventLoopGroup: EventLoopGroup
     let fileIO: NonBlockingFileIO
     let chunkSize: Int
 
     /// Initialize FileIO
     /// - Parameter application: application using FileIO
-    public init(threadPool: NIOThreadPool) {
+    public init(eventLoopGroupProvider: EventLoopGroupProvider = .singleton, threadPool: NIOThreadPool = .singleton) {
         self.fileIO = .init(threadPool: threadPool)
+        self.eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
         self.chunkSize = NonBlockingFileIO.defaultChunkSize
     }
 
@@ -39,7 +41,7 @@ public struct HBFileIO: Sendable {
     /// - Returns: Response body
     public func loadFile(path: String, context: some HBBaseRequestContext, logger: Logger) async throws -> HBResponseBody {
         do {
-            let (handle, region) = try await self.fileIO.openFile(path: path, eventLoop: context.eventLoop).get()
+            let (handle, region) = try await self.fileIO.openFile(path: path, eventLoop: self.eventLoopGroup.any()).get()
             logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
 
             if region.readableBytes > self.chunkSize {
@@ -67,7 +69,7 @@ public struct HBFileIO: Sendable {
     /// - Returns: Response body plus file size
     public func loadFile(path: String, range: ClosedRange<Int>, context: some HBBaseRequestContext, logger: Logger) async throws -> (HBResponseBody, Int) {
         do {
-            let (handle, region) = try await self.fileIO.openFile(path: path, eventLoop: context.eventLoop).get()
+            let (handle, region) = try await self.fileIO.openFile(path: path, eventLoop: self.eventLoopGroup.any()).get()
             logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
 
             // work out region to load
@@ -100,16 +102,17 @@ public struct HBFileIO: Sendable {
     ///   - path: Path to write to
     ///   - logger: Logger
     public func writeFile(contents: HBRequestBody, path: String, context: some HBBaseRequestContext, logger: Logger) async throws {
-        let handle = try await self.fileIO.openFile(path: path, mode: .write, flags: .allowFileCreation(), eventLoop: context.eventLoop).get()
+        let eventLoop = self.eventLoopGroup.any()
+        let handle = try await self.fileIO.openFile(path: path, mode: .write, flags: .allowFileCreation(), eventLoop: eventLoop).get()
         defer {
             try? handle.close()
         }
         logger.debug("[FileIO] PUT", metadata: ["file": .string(path)])
         switch contents {
         case .byteBuffer(let buffer):
-            try await self.writeFile(buffer: buffer, handle: handle, on: context.eventLoop)
+            try await self.writeFile(buffer: buffer, handle: handle, on: eventLoop)
         case .stream(let streamer):
-            try await self.writeFile(asyncSequence: streamer, handle: handle, on: context.eventLoop)
+            try await self.writeFile(asyncSequence: streamer, handle: handle, on: eventLoop)
         }
     }
 
@@ -120,7 +123,7 @@ public struct HBFileIO: Sendable {
             fromOffset: Int64(region.readerIndex),
             byteCount: region.readableBytes,
             allocator: context.allocator,
-            eventLoop: context.eventLoop
+            eventLoop: self.eventLoopGroup.any()
         ).get()
         return .init(byteBuffer: buffer)
     }
@@ -142,7 +145,7 @@ public struct HBFileIO: Sendable {
                     fromOffset: Int64(fileOffsetToRead),
                     byteCount: bytesToRead,
                     allocator: context.allocator,
-                    eventLoop: context.eventLoop
+                    eventLoop: self.eventLoopGroup.any()
                 ).get()
                 fileOffset += bytesToRead
                 try await writer.write(buffer)

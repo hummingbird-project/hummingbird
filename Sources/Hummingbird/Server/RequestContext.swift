@@ -42,9 +42,6 @@ public struct HBCoreRequestContext: Sendable {
     /// Response encoder
     @usableFromInline
     var responseEncoder: HBResponseEncoder
-    /// EventLoop request is running on
-    @usableFromInline
-    let eventLoop: EventLoop
     /// ByteBuffer allocator used by request
     @usableFromInline
     let allocator: ByteBufferAllocator
@@ -60,13 +57,11 @@ public struct HBCoreRequestContext: Sendable {
     public init(
         requestDecoder: HBRequestDecoder = NullDecoder(),
         responseEncoder: HBResponseEncoder = NullEncoder(),
-        eventLoop: EventLoop,
         allocator: ByteBufferAllocator,
         logger: Logger
     ) {
         self.requestDecoder = requestDecoder
         self.responseEncoder = responseEncoder
-        self.eventLoop = eventLoop
         self.allocator = allocator
         self.logger = logger
         self.endpointPath = .init()
@@ -86,10 +81,9 @@ public protocol HBBaseRequestContext: Sendable {
     var maxUploadSize: Int { get }
     /// initialize a request context
     /// - Parameters
-    ///   - eventLoop: EventLoop that created the context
     ///   - allocator: ByteBuffer allocator
     ///   - logger: Logger used by context
-    init(eventLoop: EventLoop, allocator: ByteBufferAllocator, logger: Logger)
+    init(allocator: ByteBufferAllocator, logger: Logger)
 }
 
 extension HBBaseRequestContext {
@@ -102,11 +96,6 @@ extension HBBaseRequestContext {
     /// ThreadPool attached to application
     @inlinable
     public var threadPool: NIOThreadPool { NIOThreadPool.singleton }
-    /// EventLoop request is running on. This is unavailable in concurrency contexts as you
-    /// have already hopped off the EventLoop into a Task
-    @inlinable
-    @available(*, noasync)
-    public var eventLoop: EventLoop { coreContext.eventLoop }
     /// ByteBuffer allocator used by request
     @inlinable
     public var allocator: ByteBufferAllocator { coreContext.allocator }
@@ -147,7 +136,7 @@ extension HBRequestContext {
     ///   - channel: Source of request context
     ///   - logger: Logger
     public init(channel: Channel, logger: Logger) {
-        self.init(eventLoop: channel.eventLoop, allocator: channel.allocator, logger: logger)
+        self.init(allocator: channel.allocator, logger: logger)
     }
 }
 
@@ -158,16 +147,13 @@ public struct HBBasicRequestContext: HBRequestContext {
 
     ///  Initialize an `HBRequestContext`
     /// - Parameters:
-    ///   - eventLoop: EventLoop context was created on
     ///   - allocator: Allocator
     ///   - logger: Logger
     public init(
-        eventLoop: EventLoop,
         allocator: ByteBufferAllocator,
         logger: Logger
     ) {
         self.coreContext = .init(
-            eventLoop: eventLoop,
             allocator: allocator,
             logger: logger
         )

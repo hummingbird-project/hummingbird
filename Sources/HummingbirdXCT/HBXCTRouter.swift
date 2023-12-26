@@ -24,19 +24,17 @@ import Tracing
 
 /// Test sending values to requests to router. This does not setup a live server
 struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Context: HBBaseRequestContext {
-    let eventLoopGroup: EventLoopGroup
     let responder: Responder
     let logger: Logger
 
     init<App: HBApplicationProtocol>(app: App) async throws where App.Responder == Responder {
-        self.eventLoopGroup = app.eventLoopGroup
         self.responder = try await app.responder
         self.logger = app.logger
     }
 
     /// Run test
     func run<Value>(_ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Value) async throws -> Value {
-        let client = Client(eventLoopGroup: self.eventLoopGroup, responder: self.responder, logger: self.logger)
+        let client = Client(responder: self.responder, logger: self.logger)
         let value = try await test(client)
         return value
     }
@@ -44,13 +42,10 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
     /// HBXCTRouter client. Constructs an `HBRequest` sends it to the router and then converts
     /// resulting response back to XCT response type
     struct Client: HBXCTClientProtocol {
-        let eventLoopGroup: EventLoopGroup
         let responder: Responder
         let logger: Logger
 
         func execute(uri: String, method: HTTPRequest.Method, headers: HTTPFields, body: ByteBuffer?) async throws -> HBXCTResponse {
-            let eventLoop = self.eventLoopGroup.any()
-
             return try await withThrowingTaskGroup(of: HBXCTResponse.self) { group in
                 let streamer = HBStreamedRequestBody()
                 let request = HBRequest(
@@ -58,7 +53,6 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                     body: .stream(streamer)
                 )
                 let context = Responder.Context(
-                    eventLoop: eventLoop,
                     allocator: ByteBufferAllocator(),
                     logger: loggerWithRequestId(self.logger)
                 )

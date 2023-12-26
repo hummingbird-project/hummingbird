@@ -22,28 +22,14 @@ import NIOCore
 import NIOPosix
 
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
-protocol BenchmarkContext: HBBaseRequestContext {
-    ///  Initialize an `HBRequestContext`
-    /// - Parameters:
-    ///   - applicationContext: Context from Application that instigated the request
-    ///   - source: Source of request context
-    ///   - logger: Logger
-    init(
-        eventLoop: EventLoop,
-        allocator: ByteBufferAllocator,
-        logger: Logger
-    )
-}
-
-struct BasicBenchmarkContext: BenchmarkContext {
+struct BasicBenchmarkContext: HBBaseRequestContext {
     var coreContext: HBCoreRequestContext
 
     init(
-        eventLoop: EventLoop,
         allocator: ByteBufferAllocator,
         logger: Logger
     ) {
-        self.coreContext = .init(eventLoop: eventLoop, allocator: allocator, logger: logger)
+        self.coreContext = .init(allocator: allocator, logger: logger)
     }
 }
 
@@ -54,7 +40,7 @@ struct BenchmarkBodyWriter: Sendable, HBResponseBodyWriter {
 
 extension Benchmark {
     @discardableResult
-    convenience init?<Context: BenchmarkContext>(
+    convenience init?<Context: HBBaseRequestContext>(
         name: String,
         context: Context.Type = BasicBenchmarkContext.self,
         configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
@@ -71,7 +57,6 @@ extension Benchmark {
                 for _ in 0..<50 {
                     try await withThrowingTaskGroup(of: Void.self) { group in
                         let context = Context(
-                            eventLoop: MultiThreadedEventLoopGroup.singleton.any(), 
                             allocator: ByteBufferAllocator(), 
                             logger: Logger(label: "Benchmark")
                         )

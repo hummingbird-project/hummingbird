@@ -37,8 +37,8 @@ public struct HBBasicRouterRequestContext: HBRequestContext, HBRouterRequestCont
     public var routerContext: HBRouterBuilderContext
     public var coreContext: HBCoreRequestContext
 
-    public init(eventLoop: EventLoop, allocator: ByteBufferAllocator, logger: Logger) {
-        self.coreContext = .init(eventLoop: eventLoop, allocator: allocator, logger: logger)
+    public init(allocator: ByteBufferAllocator, logger: Logger) {
+        self.coreContext = .init(allocator: allocator, logger: logger)
         self.routerContext = .init()
     }
 }
