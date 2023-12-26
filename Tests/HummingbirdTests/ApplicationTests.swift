@@ -22,6 +22,7 @@ import HummingbirdXCT
 import Logging
 import NIOCore
 import NIOSSL
+import ServiceLifecycle
 import XCTest
 
 final class ApplicationTests: XCTestCase {
@@ -506,6 +507,27 @@ final class ApplicationTests: XCTestCase {
                 XCTAssertEqual(string, "GET: Hello")
             }
         }
+    }
+
+    func testHummingbirdServices() async throws {
+        struct MyService: Service {
+            static let started = ManagedAtomic(false)
+            static let shutdown = ManagedAtomic(false)
+            func run() async throws {
+                Self.started.store(true, ordering: .relaxed)
+                await GracefulShutdownWaiter().wait()
+                Self.shutdown.store(true, ordering: .relaxed)
+            }
+        }
+        let router = HBRouter()
+        var app = HBApplication(responder: router.buildResponder())
+        app.addServices(MyService())
+        try await app.test(.live) { _ in
+            XCTAssertEqual(MyService.started.load(ordering: .relaxed), true)
+            // shutting down immediately outputs an error
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        XCTAssertEqual(MyService.shutdown.load(ordering: .relaxed), true)
     }
 
     /// test we can create out own application type conforming to HBApplicationProtocol
