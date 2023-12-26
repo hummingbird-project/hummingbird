@@ -524,6 +524,7 @@ final class ApplicationTests: XCTestCase {
         app.addServices(MyService())
         try await app.test(.live) { _ in
             XCTAssertEqual(MyService.started.load(ordering: .relaxed), true)
+            XCTAssertEqual(MyService.shutdown.load(ordering: .relaxed), false)
             // shutting down immediately outputs an error
             try await Task.sleep(for: .milliseconds(10))
         }
