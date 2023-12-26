@@ -24,9 +24,9 @@
 @_exported import struct HummingbirdCore.TSTLSOptions
 #endif
 
-@_exported import struct NIOCore.ByteBuffer
-@_exported import struct NIOCore.ByteBufferAllocator
+@_exported @_documentation(visibility: internal) import struct NIOCore.ByteBuffer
+@_exported @_documentation(visibility: internal) import struct NIOCore.ByteBufferAllocator
 
-@_exported import struct HTTPTypes.HTTPFields
-@_exported import struct HTTPTypes.HTTPRequest
-@_exported import struct HTTPTypes.HTTPResponse
+@_exported @_documentation(visibility: internal) import struct HTTPTypes.HTTPFields
+@_exported @_documentation(visibility: internal) import struct HTTPTypes.HTTPRequest
+@_exported @_documentation(visibility: internal) import struct HTTPTypes.HTTPResponse

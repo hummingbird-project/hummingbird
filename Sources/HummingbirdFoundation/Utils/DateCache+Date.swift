@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import Hummingbird
 
 extension HBDateCache {
     /// Date formatter as per section 5.2.14 of RFC 1123

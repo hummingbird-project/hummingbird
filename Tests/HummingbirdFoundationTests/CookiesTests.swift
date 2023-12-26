@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Hummingbird
 @testable import HummingbirdFoundation
 import HummingbirdXCT
 import XCTest
