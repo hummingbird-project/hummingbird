@@ -12,4 +12,4 @@
 //
 //===----------------------------------------------------------------------===//
 
-@_exported import struct Logging.Logger
+@_exported @_documentation(visibility: internal) import struct Logging.Logger
