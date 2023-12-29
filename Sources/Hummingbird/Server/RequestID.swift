@@ -17,15 +17,13 @@ import Atomics
 /// Generate Unique ID for each request
 struct RequestID: CustomStringConvertible {
     let low: UInt64
-    let high: UInt64
 
     init() {
         self.low = Self.globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
-        self.high = Self.instanceIdentifier
     }
 
     var description: String {
-        String(self.high, radix: 16) + self.formatAsHexWithLeadingZeros(self.low)
+        String(Self.high, radix: 16) + self.formatAsHexWithLeadingZeros(self.low)
     }
 
     func formatAsHexWithLeadingZeros(_ value: UInt64) -> String {
@@ -37,6 +35,6 @@ struct RequestID: CustomStringConvertible {
         }
     }
 
-    private static let instanceIdentifier = UInt64.random(in: .min ... .max)
+    private static let high = UInt64.random(in: .min ... .max)
     private static let globalRequestID = ManagedAtomic<UInt64>(UInt64.random(in: .min ... .max))
 }
