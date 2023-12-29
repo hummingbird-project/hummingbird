@@ -331,23 +331,52 @@ final class RouterTests: XCTestCase {
         }
     }
 
-    /// Test we have a request id and that it increments with each request
+    /// Test we have a request id and that it is unique for each request
     func testRequestId() throws {
         let app = HBApplication(testing: .embedded)
         app.router.get("id") { $0.id }
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        let idString = try app.XCTExecute(uri: "/id", method: .GET) { response -> String in
+        let id = try app.XCTExecute(uri: "/id", method: .GET) { response -> String in
             let body = try XCTUnwrap(response.body)
             return String(buffer: body)
         }
-        let id = try XCTUnwrap(Int(idString))
         try app.XCTExecute(uri: "/id", method: .GET) { response in
             let body = try XCTUnwrap(response.body)
-            let id2 = Int(String(buffer: body))
-            XCTAssertEqual(id2, id + 1)
+            let id2 = String(buffer: body)
+            XCTAssertNotEqual(id2, id)
         }
+    }
+
+    /// Test we have a request id and that it is unique for each request even across instances
+    /// of running applications
+    func testRequestIdAcrossInstances() throws {
+        let id: String?
+        do {
+            let app = HBApplication(testing: .embedded)
+            app.router.get("id") { $0.id }
+            try app.XCTStart()
+            defer { app.XCTStop() }
+
+            id = try app.XCTExecute(uri: "/id", method: .GET) { response -> String in
+                let body = try XCTUnwrap(response.body)
+                return String(buffer: body)
+            }
+        }
+        let id2: String?
+        do {
+            let app = HBApplication(testing: .embedded)
+            app.router.get("id") { $0.id }
+            try app.XCTStart()
+            defer { app.XCTStop() }
+
+            id2 = try app.XCTExecute(uri: "/id", method: .GET) { response -> String in
+                let body = try XCTUnwrap(response.body)
+                return String(buffer: body)
+            }
+        }
+        XCTAssertNotEqual(id, id2)
     }
 
     // Test redirect response

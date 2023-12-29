@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2022 the Hummingbird authors
+// Copyright (c) 2021-2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Atomics
 import HummingbirdCore
 import Logging
 import NIOConcurrencyHelpers
@@ -106,7 +105,7 @@ public struct HBRequest: Sendable, HBSendableExtensible {
             context: context
         )
         self.body = body
-        self.logger = application.logger.with(metadataKey: "hb_id", value: .stringConvertible(Self.globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)))
+        self.logger = application.logger.with(metadataKey: "hb_id", value: .stringConvertible(RequestID()))
         self.extensions = .init()
     }
 
@@ -215,8 +214,6 @@ public struct HBRequest: Sendable, HBSendableExtensible {
     }
 
     private var _internal: _Internal
-
-    private static let globalRequestID = ManagedAtomic(0)
 }
 
 extension Logger {
