@@ -20,23 +20,46 @@ import Logging
 import NIOConcurrencyHelpers
 import NIOCore
 import NIOPosix
-import Tracing
+import ServiceLifecycle
 
 /// Test sending values to requests to router. This does not setup a live server
 struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Context: HBBaseRequestContext {
     let responder: Responder
+    let services: [any Service]
     let logger: Logger
 
     init<App: HBApplicationProtocol>(app: App) async throws where App.Responder == Responder {
         self.responder = try await app.responder
+        self.services = app.services
         self.logger = app.logger
     }
 
     /// Run test
     func run<Value>(_ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Value) async throws -> Value {
         let client = Client(responder: self.responder, logger: self.logger)
-        let value = try await test(client)
-        return value
+        if self.services.count == 0 {
+            return try await test(client)
+        }
+        return try await withThrowingTaskGroup(of: Void.self) { group in
+            let serviceGroup = ServiceGroup(
+                configuration: .init(
+                    services: self.services,
+                    gracefulShutdownSignals: [.sigterm, .sigint],
+                    logger: self.logger
+                )
+            )
+            group.addTask {
+                try await serviceGroup.run()
+            }
+            do {
+                let value = try await test(client)
+                await serviceGroup.triggerGracefulShutdown()
+                return value
+            } catch {
+                await serviceGroup.triggerGracefulShutdown()
+                throw error
+            }
+        }
     }
 
     /// HBXCTRouter client. Constructs an `HBRequest` sends it to the router and then converts
@@ -49,7 +72,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
             return try await withThrowingTaskGroup(of: HBXCTResponse.self) { group in
                 let streamer = HBStreamedRequestBody()
                 let request = HBRequest(
-                    head: .init(method: method, scheme: nil, authority: nil, path: uri, headerFields: headers),
+                    head: .init(method: method, scheme: "http", authority: "localhost", path: uri, headerFields: headers),
                     body: .stream(streamer)
                 )
                 let context = Responder.Context(
