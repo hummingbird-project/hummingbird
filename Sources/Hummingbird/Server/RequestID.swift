@@ -25,7 +25,7 @@ struct RequestID: CustomStringConvertible {
     }
 
     var description: String {
-        self.formatAsHexWithLeadingZeros(self.high) + self.formatAsHexWithLeadingZeros(self.low)
+        String(self.high, radix: 16) + self.formatAsHexWithLeadingZeros(self.low)
     }
 
     func formatAsHexWithLeadingZeros(_ value: UInt64) -> String {
