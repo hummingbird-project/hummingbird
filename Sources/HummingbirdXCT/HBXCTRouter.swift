@@ -37,29 +37,28 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
     /// Run test
     func run<Value>(_ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Value) async throws -> Value {
         let client = Client(responder: self.responder, logger: self.logger)
-        if self.services.count > 0 {
-            return try await withThrowingTaskGroup(of: Void.self) { group in
-                let serviceGroup = ServiceGroup(
-                    configuration: .init(
-                        services: self.services,
-                        gracefulShutdownSignals: [.sigterm, .sigint],
-                        logger: self.logger
-                    )
-                )
-                group.addTask {
-                    try await serviceGroup.run()
-                }
-                do {
-                    let value = try await test(client)
-                    await serviceGroup.triggerGracefulShutdown()
-                    return value
-                } catch {
-                    await serviceGroup.triggerGracefulShutdown()
-                    throw error
-                }
-            }
-        } else {
+        if self.services.count == 0 {
             return try await test(client)
+        }
+        return try await withThrowingTaskGroup(of: Void.self) { group in
+            let serviceGroup = ServiceGroup(
+                configuration: .init(
+                    services: self.services,
+                    gracefulShutdownSignals: [.sigterm, .sigint],
+                    logger: self.logger
+                )
+            )
+            group.addTask {
+                try await serviceGroup.run()
+            }
+            do {
+                let value = try await test(client)
+                await serviceGroup.triggerGracefulShutdown()
+                return value
+            } catch {
+                await serviceGroup.triggerGracefulShutdown()
+                throw error
+            }
         }
     }
 
