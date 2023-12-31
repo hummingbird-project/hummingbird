@@ -289,7 +289,7 @@ final class TracingTests: XCTestCase {
         app.router.get("/") { request -> HTTPResponseStatus in
             var serviceContext = request.serviceContext
             serviceContext.testID = "test"
-            let span = InstrumentationSystem.legacyTracer.startAnySpan("testing", context: serviceContext, ofKind: .server)
+            let span = InstrumentationSystem.tracer.startAnySpan("testing", context: serviceContext, ofKind: .server)
             span.end()
             return .ok
         }
@@ -406,7 +406,7 @@ extension TracingTests {
         app.middleware.add(HBTracingMiddleware())
         app.router.get("/") { _ -> HTTPResponseStatus in
             try await Task.sleep(nanoseconds: 1000)
-            return InstrumentationSystem.legacyTracer.withAnySpan("testing", ofKind: .server) { _ in
+            return InstrumentationSystem.tracer.withSpan("testing", ofKind: .server) { _ in
                 return .ok
             }
         }
@@ -433,7 +433,7 @@ extension TracingTests {
             public func apply(to request: HBRequest, next: HBResponder) async throws -> HBResponse {
                 var serviceContext = request.serviceContext
                 serviceContext.testID = "testAsyncMiddleware"
-                return try await InstrumentationSystem.legacyTracer.withAnySpan("TestSpan", context: serviceContext, ofKind: .server) { _ in
+                return try await InstrumentationSystem.tracer.withSpan("TestSpan", context: serviceContext, ofKind: .server) { _ in
                     try await next.respond(to: request)
                 }
             }
