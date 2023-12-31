@@ -23,7 +23,7 @@ struct RequestID: CustomStringConvertible {
     }
 
     var description: String {
-        String(Self.high, radix: 16) + self.formatAsHexWithLeadingZeros(self.low)
+        Self.high + self.formatAsHexWithLeadingZeros(self.low)
     }
 
     func formatAsHexWithLeadingZeros(_ value: UInt64) -> String {
@@ -35,6 +35,6 @@ struct RequestID: CustomStringConvertible {
         }
     }
 
-    private static let high = UInt64.random(in: .min ... .max)
+    private static let high = String(UInt64.random(in: .min ... .max), radix: 16)
     private static let globalRequestID = ManagedAtomic<UInt64>(UInt64.random(in: .min ... .max))
 }
