@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Atomics
 import HummingbirdCore
 import Logging
 import NIOCore
@@ -145,8 +144,7 @@ extension HBApplicationProtocol {
 }
 
 public func loggerWithRequestId(_ logger: Logger) -> Logger {
-    let requestId = globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
-    return logger.with(metadataKey: "hb_id", value: .stringConvertible(requestId))
+    return logger.with(metadataKey: "hb_id", value: .stringConvertible(RequestID()))
 }
 
 /// Application class. Brings together all the components of Hummingbird together
@@ -238,6 +236,3 @@ extension Logger {
         return logger
     }
 }
-
-/// Current global request ID
-private let globalRequestID = ManagedAtomic(0)
