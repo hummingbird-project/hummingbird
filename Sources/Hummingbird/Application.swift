@@ -203,6 +203,26 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
         self.services = []
     }
 
+    /// Initialize new Application
+    public init<Context>(
+        router: HBRouter<Context>,
+        server: HBHTTPChannelBuilder<ChildChannel> = .http1(),
+        configuration: HBApplicationConfiguration = HBApplicationConfiguration(),
+        eventLoopGroupProvider: EventLoopGroupProvider = .singleton
+    ) where Responder == HBRouterResponder<Context> {
+        var logger = Logger(label: configuration.serverName ?? "HummingBird")
+        logger.logLevel = configuration.logLevel
+        self.logger = logger
+
+        self.responder = router.buildResponder()
+        self.server = server
+        self.configuration = configuration
+        self._onServerRunning = { _ in }
+
+        self.eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
+        self.services = []
+    }
+
     // MARK: Methods
 
     ///  Add service to be managed by application ServiceGroup

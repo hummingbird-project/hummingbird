@@ -17,7 +17,7 @@
 /// Conforms to `HBResponder` so need to provide its own implementation of
 /// `func respond(to request: HBRequest, context: Context) async throws -> HBResponse`.
 ///
-struct HBRouterResponder<Context: HBBaseRequestContext>: HBResponder {
+public struct HBRouterResponder<Context: HBBaseRequestContext>: HBResponder {
     let trie: RouterPathTrie<HBEndpointResponders<Context>>
     let notFoundResponder: any HBResponder<Context>
 
