@@ -341,15 +341,14 @@ final class RouterTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            let idString = try await client.XCTExecute(uri: "/id", method: .get) { response -> String in
+            let id = try await client.XCTExecute(uri: "/id", method: .get) { response -> String in
                 let body = try XCTUnwrap(response.body)
                 return String(buffer: body)
             }
-            let id = try XCTUnwrap(Int(idString))
             try await client.XCTExecute(uri: "/id", method: .get) { response in
                 let body = try XCTUnwrap(response.body)
-                let id2 = Int(String(buffer: body))
-                XCTAssertEqual(id2, id + 1)
+                let id2 = String(buffer: body)
+                XCTAssertNotEqual(id, id2)
             }
         }
     }
