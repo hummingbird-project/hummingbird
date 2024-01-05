@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import NIOCore
 
 public protocol HBResponseBodyWriter {
@@ -20,27 +21,30 @@ public protocol HBResponseBodyWriter {
 
 /// Response body
 public struct HBResponseBody: Sendable {
-    public let write: @Sendable (any HBResponseBodyWriter) async throws -> Void
+    public let write: @Sendable (any HBResponseBodyWriter) async throws -> HTTPFields?
     public let contentLength: Int?
 
     /// Initialise HBResponseBody with closure writing body contents
     /// - Parameters:
     ///   - contentLength: Optional length of body
     ///   - write: closure provided with `writer` type that can be used to write to response body
-    public init(contentLength: Int? = nil, _ write: @Sendable @escaping (any HBResponseBodyWriter) async throws -> Void) {
+    public init(contentLength: Int? = nil, _ write: @Sendable @escaping (any HBResponseBodyWriter) async throws -> HTTPFields?) {
         self.write = write
         self.contentLength = contentLength
     }
 
     /// Initialise empty HBResponseBody
     public init() {
-        self.init(contentLength: 0) { _ in }
+        self.init(contentLength: 0) { _ in return nil }
     }
 
     /// Initialise HBResponseBody that contains a single ByteBuffer
     /// - Parameter byteBuffer: ByteBuffer to write
     public init(byteBuffer: ByteBuffer) {
-        self.init(contentLength: byteBuffer.readableBytes) { writer in try await writer.write(byteBuffer) }
+        self.init(contentLength: byteBuffer.readableBytes) { writer in
+            try await writer.write(byteBuffer)
+            return nil
+        }
     }
 
     /// Initialise HBResponseBody with an AsyncSequence of ByteBuffers
@@ -50,6 +54,7 @@ public struct HBResponseBody: Sendable {
             for try await buffer in asyncSequence {
                 try await writer.write(buffer)
             }
+            return nil
         }
     }
 }

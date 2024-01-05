@@ -137,7 +137,8 @@ final class MiddlewareTests: XCTestCase {
                 var editedResponse = response
                 editedResponse.body = .init { writer in
                     let transformWriter = TransformWriter(parentWriter: writer, allocator: context.allocator)
-                    try await response.body.write(transformWriter)
+                    let tailHeaders = try await response.body.write(transformWriter)
+                    return tailHeaders
                 }
                 return editedResponse
             }
