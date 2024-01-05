@@ -65,7 +65,7 @@ extension Benchmark {
                         let hbRequest = HBRequest(head: request, body: requestBody)
                         group.addTask {
                             let response = try await responder.respond(to: hbRequest, context: context)
-                            try await response.body.write(BenchmarkBodyWriter())
+                            _ = try await response.body.write(BenchmarkBodyWriter())
                         }
                         try await writeBody(requestBodyStream)
                         requestBodyStream.finish()
@@ -125,6 +125,7 @@ func routerBenchmarks() {
             HBResponse(status: .ok, headers: [:], body: .init { writer in
                 for try await buffer in request.body {
                     try await writer.write(buffer)
+                    return nil
                 }
             })
         }
