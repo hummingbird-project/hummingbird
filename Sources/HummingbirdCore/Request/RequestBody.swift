@@ -33,13 +33,14 @@ public enum HBRequestBody: Sendable, AsyncSequence {
         }
     }
 
-    /// Return new HBRequestBody as a single ByteBuffer
-    public func collate(maxSize: Int) async throws -> HBRequestBody {
+    /// Return as a single ByteBuffer. This function is required as `ByteBuffer.collect(upTo:)`
+    /// assumes the request body can be iterated.
+    public func collate(maxSize: Int) async throws -> ByteBuffer {
         switch self {
-        case .byteBuffer:
-            return self
-        case .stream(let streamer):
-            return try await .byteBuffer(streamer.collect(upTo: maxSize))
+        case .byteBuffer(let buffer):
+            return buffer
+        case .stream:
+            return try await collect(upTo: maxSize)
         }
     }
 }
