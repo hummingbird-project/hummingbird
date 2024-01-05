@@ -22,7 +22,7 @@ final class HandlerTests: XCTestCase {
         let value: Value
 
         init(from request: HBRequest, context: some HBBaseRequestContext) async throws {
-            self = try await request.decode(as: Self.self, using: context)
+            self = try await request.decode(as: Self.self, context: context)
         }
 
         func handle(context: some HBBaseRequestContext) -> String {
