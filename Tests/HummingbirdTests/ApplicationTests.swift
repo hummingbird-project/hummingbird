@@ -571,6 +571,25 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    /// test we can create out own application type conforming to HBApplicationProtocol
+    func testApplicationRouterInit() async throws {
+        let router = HBRouter()
+        router.get("/") { _, _ -> String in
+            "Hello"
+        }
+        let app = HBApplication(router: router)
+        try await app.test(.live) { client in
+            try await client.XCTExecute(uri: "/", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+                let body = try XCTUnwrap(response.body)
+                let string = String(buffer: body)
+                XCTAssertEqual(string, "Hello")
+            }
+        }
+    }
+
+    // MARK: Helper functions
+
     func getServerTLSConfiguration() throws -> TLSConfiguration {
         let caCertificate = try NIOSSLCertificate(bytes: [UInt8](caCertificateData.utf8), format: .pem)
         let certificate = try NIOSSLCertificate(bytes: [UInt8](serverCertificateData.utf8), format: .pem)

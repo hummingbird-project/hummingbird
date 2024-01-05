@@ -66,7 +66,7 @@ public final class HBRouter<Context: HBBaseRequestContext>: HBRouterMethods {
     }
 
     /// build router
-    public func buildResponder() -> some HBResponder<Context> {
+    public func buildResponder() -> HBRouterResponder<Context> {
         HBRouterResponder(context: Context.self, trie: self.trie.build(), notFoundResponder: self.middlewares.constructResponder(finalResponder: NotFoundResponder<Context>()))
     }
 
