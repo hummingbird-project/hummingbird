@@ -125,8 +125,8 @@ func routerBenchmarks() {
             HBResponse(status: .ok, headers: [:], body: .init { writer in
                 for try await buffer in request.body {
                     try await writer.write(buffer)
-                    return nil
                 }
+                return nil
             })
         }
     }
