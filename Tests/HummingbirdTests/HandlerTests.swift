@@ -18,18 +18,22 @@ import HummingbirdXCT
 import XCTest
 
 final class HandlerTests: XCTestCase {
-    func testDecodeKeyError() async throws {
-        struct DecodeTest: HBRequestDecodable {
-            let name: String
+    struct DecodeTest<Value: Decodable>: HBRouteHandler, Decodable {
+        let value: Value
 
-            func handle(request: HBRequest, context: some HBBaseRequestContext) -> String {
-                return "Hello \(self.name)"
-            }
+        init(from request: HBRequest, context: some HBBaseRequestContext) async throws {
+            self = try await request.decode(as: Self.self, using: context)
         }
 
+        func handle(context: some HBBaseRequestContext) -> String {
+            return "\(Value.self): \(self.value)"
+        }
+    }
+
+    func testDecodeKeyError() async throws {
         let router = HBRouter()
         router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
-        router.post("/hello", use: DecodeTest.self)
+        router.post("/hello", use: DecodeTest<String>.self)
         let app = HBApplication(responder: router.buildResponder())
 
         try await app.test(.router) { client in
@@ -42,24 +46,16 @@ final class HandlerTests: XCTestCase {
             ) { response in
                 XCTAssertEqual(response.status, .badRequest)
                 let body = try XCTUnwrap(response.body)
-                let expectation = "Coding key `name` not found."
+                let expectation = "Coding key `value` not found."
                 XCTAssertEqual(String(buffer: body), expectation)
             }
         }
     }
 
     func testDecodeTypeError() async throws {
-        struct DecodeTest: HBRequestDecodable {
-            let value: Int
-
-            func handle(request: HBRequest, context: some HBBaseRequestContext) -> String {
-                return "Value: \(self.value)"
-            }
-        }
-
         let router = HBRouter()
         router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
-        router.post("/hello", use: DecodeTest.self)
+        router.post("/hello", use: DecodeTest<Int>.self)
         let app = HBApplication(responder: router.buildResponder())
 
         try await app.test(.router) { client in
@@ -79,21 +75,13 @@ final class HandlerTests: XCTestCase {
     }
 
     func testDecodeValueError() async throws {
-        struct DecodeTest: HBRequestDecodable {
-            let name: String
-
-            func handle(request: HBRequest, context: some HBBaseRequestContext) -> String {
-                return "Hello \(self.name)"
-            }
-        }
-
         let router = HBRouter()
         router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
-        router.post("/hello", use: DecodeTest.self)
+        router.post("/hello", use: DecodeTest<String>.self)
         let app = HBApplication(responder: router.buildResponder())
 
         try await app.test(.router) { client in
-            let body = ByteBufferAllocator().buffer(string: #"{"name": null}"#)
+            let body = ByteBufferAllocator().buffer(string: #"{"value": null}"#)
 
             try await client.XCTExecute(
                 uri: "/hello",
@@ -104,9 +92,9 @@ final class HandlerTests: XCTestCase {
                 let body = try XCTUnwrap(response.body)
                 #if os(Linux)
                 // NOTE: a type mismatch error occures under Linux for null values
-                let expectation = "Type mismatch for `name` key, expected `String` type."
+                let expectation = "Type mismatch for `value` key, expected `String` type."
                 #else
-                let expectation = "Value not found for `name` key."
+                let expectation = "Value not found for `value` key."
                 #endif
                 XCTAssertEqual(String(buffer: body), expectation)
             }
@@ -114,17 +102,9 @@ final class HandlerTests: XCTestCase {
     }
 
     func testDecodeInputError() async throws {
-        struct DecodeTest: HBRequestDecodable {
-            let name: String
-
-            func handle(request: HBRequest, context: some HBBaseRequestContext) -> String {
-                return "Hello \(self.name)"
-            }
-        }
-
         let router = HBRouter()
         router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
-        router.post("/hello", use: DecodeTest.self)
+        router.post("/hello", use: DecodeTest<String>.self)
         let app = HBApplication(responder: router.buildResponder())
 
         try await app.test(.router) { client in
@@ -144,58 +124,24 @@ final class HandlerTests: XCTestCase {
     }
 
     func testDecode() async throws {
-        struct DecodeTest: HBRequestDecodable {
-            let name: String
-            func handle(request: HBRequest, context: some HBBaseRequestContext) -> String {
-                return "Hello \(self.name)"
-            }
-        }
         let router = HBRouter()
         router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
-        router.post("/hello", use: DecodeTest.self)
+        router.post("/hello", use: DecodeTest<String>.self)
         let app = HBApplication(responder: router.buildResponder())
 
         try await app.test(.router) { client in
 
-            try await client.XCTExecute(uri: "/hello", method: .post, body: ByteBufferAllocator().buffer(string: #"{"name": "Adam"}"#)) { response in
+            try await client.XCTExecute(uri: "/hello", method: .post, body: ByteBufferAllocator().buffer(string: #"{"value": "Adam"}"#)) { response in
                 let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), "Hello Adam")
-            }
-        }
-    }
-
-    func testDecodeFutureResponse() async throws {
-        struct DecodeTest: HBRequestDecodable {
-            let name: String
-            func handle(request: HBRequest, context: some HBBaseRequestContext) -> String {
-                "Hello \(self.name)"
-            }
-        }
-        let router = HBRouter()
-        router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
-        router.put("/hello", use: DecodeTest.self)
-        let app = HBApplication(responder: router.buildResponder())
-
-        try await app.test(.router) { client in
-
-            try await client.XCTExecute(uri: "/hello", method: .put, body: ByteBufferAllocator().buffer(string: #"{"name": "Adam"}"#)) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), "Hello Adam")
+                XCTAssertEqual(String(buffer: body), "String: Adam")
             }
         }
     }
 
     func testDecodeFail() async throws {
-        struct DecodeTest: HBRequestDecodable {
-            let name: String
-
-            func handle(request: HBRequest, context: some HBBaseRequestContext) -> HTTPResponse.Status {
-                return .ok
-            }
-        }
         let router = HBRouter()
         router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
-        router.get("/hello", use: DecodeTest.self)
+        router.get("/hello", use: DecodeTest<String>.self)
         let app = HBApplication(responder: router.buildResponder())
 
         try await app.test(.router) { client in
@@ -212,7 +158,7 @@ final class HandlerTests: XCTestCase {
                 self.parameter = try context.parameters.require("test", as: Int.self)
             }
 
-            func handle(request: HBRequest, context: some HBBaseRequestContext) -> String {
+            func handle(context: some HBBaseRequestContext) -> String {
                 return "\(self.parameter)"
             }
         }
