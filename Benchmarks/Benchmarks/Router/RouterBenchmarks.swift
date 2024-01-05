@@ -106,7 +106,7 @@ func routerBenchmarks() {
         await bodyStream.send(buffer)
     } setupRouter: { router in
         router.put { request, _ in
-            let body = try await request.body.collect(upTo: .max)
+            let body = try await request.body.collate(maxSize: .max)
             return body.readableBytes.description
         }
     }

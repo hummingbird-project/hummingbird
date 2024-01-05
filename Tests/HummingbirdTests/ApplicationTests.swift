@@ -204,7 +204,7 @@ final class ApplicationTests: XCTestCase {
         router
             .group("/echo-body")
             .post { request, _ -> HBResponse in
-                let buffer = try await request.body.collect(upTo: .max)
+                let buffer = try await request.body.collate(maxSize: .max)
                 return .init(status: .ok, headers: [:], body: .init(byteBuffer: buffer))
             }
         let app = HBApplication(responder: router.buildResponder())
@@ -301,7 +301,7 @@ final class ApplicationTests: XCTestCase {
         router
             .group("/echo-body")
             .post { request, _ -> ByteBuffer? in
-                let buffer = try await request.body.collect(upTo: .max)
+                let buffer = try await request.body.collate(maxSize: .max)
                 return buffer.readableBytes > 0 ? buffer : nil
             }
         let app = HBApplication(responder: router.buildResponder())
