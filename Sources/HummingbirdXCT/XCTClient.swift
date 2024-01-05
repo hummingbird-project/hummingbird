@@ -234,21 +234,21 @@ public struct HBXCTClient: Sendable {
             case (.body(var part), .body(let head, var body)):
                 body.writeBuffer(&part)
                 self.state = .body(head, body)
-            case (.end(let tailHeaders), .body(let head, let body)):
-                assert(tailHeaders == nil, "Unexpected tail headers")
+            case (.end(let trailerHeaders), .body(let head, let body)):
                 let response = HBXCTClient.Response(
                     head: head,
-                    body: body
+                    body: body,
+                    trailerHeaders: trailerHeaders
                 )
                 if context.channel.isActive {
                     context.fireChannelRead(wrapInboundOut(response))
                 }
                 self.state = .idle
-            case (.end(let tailHeaders), .head(let head)):
-                assert(tailHeaders == nil, "Unexpected tail headers")
+            case (.end(let trailerHeaders), .head(let head)):
                 let response = HBXCTClient.Response(
                     head: head,
-                    body: nil
+                    body: nil,
+                    trailerHeaders: trailerHeaders
                 )
                 if context.channel.isActive {
                     context.fireChannelRead(wrapInboundOut(response))

@@ -26,6 +26,8 @@ public struct HBXCTResponse: Sendable {
     public var headers: HTTPFields { self.head.headerFields }
     /// response body
     public let body: ByteBuffer?
+    /// trailer headers
+    public let trailerHeaders: HTTPFields?
 }
 
 /// Errors thrown by XCT framework.

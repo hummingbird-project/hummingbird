@@ -184,6 +184,19 @@ class HummingBirdCoreTests: XCTestCase {
         }
     }
 
+    func testTrailerHeaders() async throws {
+        try await testServer(
+            responder: { _, _ in .init(status: .ok, body: .init { _ in return [.contentType: "text"] }) },
+            httpChannelSetup: .http1(),
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
+            logger: Logger(label: "HB")
+        ) { client in
+            let response = try await client.get("/")
+            XCTAssertEqual(response.trailerHeaders?[.contentType], "text")
+        }
+    }
+
     func testChannelHandlerErrorPropagation() async throws {
         class CreateErrorHandler: ChannelInboundHandler, RemovableChannelHandler {
             typealias InboundIn = HTTPRequestPart

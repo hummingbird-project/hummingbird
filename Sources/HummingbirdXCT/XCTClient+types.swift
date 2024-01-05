@@ -51,10 +51,12 @@ extension HBXCTClient {
     public struct Response: Sendable {
         public var head: HTTPResponse
         public var body: ByteBuffer?
+        public var trailerHeaders: HTTPFields?
 
-        public init(head: HTTPResponse, body: ByteBuffer? = nil) {
+        public init(head: HTTPResponse, body: ByteBuffer? = nil, trailerHeaders: HTTPFields? = nil) {
             self.head = head
             self.body = body
+            self.trailerHeaders = trailerHeaders
         }
 
         public var status: HTTPResponse.Status {
