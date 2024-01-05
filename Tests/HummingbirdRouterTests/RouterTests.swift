@@ -46,7 +46,7 @@ final class RouterTests: XCTestCase {
 
         let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
             TestEndpointMiddleware()
-            Get("/test/:number") { _, _ in
+            Get("/test/{number}") { _, _ in
                 return "xxx"
             }
         }
@@ -55,7 +55,7 @@ final class RouterTests: XCTestCase {
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/test/1", method: .get) { response in
                 let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), "/test/${number}")
+                XCTAssertEqual(String(buffer: body), "/test/{number}")
             }
         }
     }
@@ -357,7 +357,7 @@ final class RouterTests: XCTestCase {
 
     func testPartialCapture() async throws {
         let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
-            Get("/files/file.${ext}/${name}.jpg") { _, context -> String in
+            Get("/files/file.{ext}/{name}.jpg") { _, context -> String in
                 XCTAssertEqual(context.parameters.count, 2)
                 let ext = try context.parameters.require("ext")
                 let name = try context.parameters.require("name")

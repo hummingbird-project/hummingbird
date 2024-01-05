@@ -30,11 +30,11 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConv
             case .path(let path):
                 return String(path)
             case .capture(let parameter):
-                return "${\(parameter)}"
+                return "{\(parameter)}"
             case .prefixCapture(let suffix, let parameter):
-                return "${\(parameter)}\(suffix)"
+                return "{\(parameter)}\(suffix)"
             case .suffixCapture(let prefix, let parameter):
-                return "\(prefix)${\(parameter)}"
+                return "\(prefix){\(parameter)}"
             case .wildcard:
                 return "*"
             case .prefixWildcard(let suffix):
@@ -88,8 +88,8 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConv
         self.components = split.map { component in
             if component.first == ":" {
                 return .capture(component.dropFirst())
-            } else if component.first == "$", component.count > 1, component[component.index(after: component.startIndex)] == "{" {
-                let parameter = component.dropFirst(2)
+            } else if component.first == "{" {
+                let parameter = component.dropFirst(1)
                 if let closingParethesis = parameter.firstIndex(of: "}") {
                     let charAfterClosingParethesis = parameter.index(after: closingParethesis)
                     return .prefixCapture(suffix: parameter[charAfterClosingParethesis...], parameter: parameter[..<closingParethesis])
@@ -99,11 +99,8 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConv
             } else if component.last == "}" {
                 let parameter = component.dropLast()
                 if let openingParenthesis = parameter.lastIndex(of: "{"), openingParenthesis != parameter.startIndex {
-                    let dollar = component.index(before: openingParenthesis)
-                    if component[dollar] == "$" {
-                        let charAfterOpeningParenthesis = parameter.index(after: openingParenthesis)
-                        return .suffixCapture(prefix: parameter[..<dollar], parameter: parameter[charAfterOpeningParenthesis...])
-                    }
+                    let charAfterOpeningParenthesis = parameter.index(after: openingParenthesis)
+                    return .suffixCapture(prefix: parameter[..<openingParenthesis], parameter: parameter[charAfterOpeningParenthesis...])
                 }
                 return .path(component)
             } else if component == "*" {

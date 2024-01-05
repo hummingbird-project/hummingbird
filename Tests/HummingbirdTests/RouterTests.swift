@@ -301,7 +301,7 @@ final class RouterTests: XCTestCase {
     func testPartialCapture() async throws {
         let router = HBRouter()
         router
-            .get("/files/file.${ext}/${name}.jpg") { _, context -> String in
+            .get("/files/file.{ext}/{name}.jpg") { _, context -> String in
                 XCTAssertEqual(context.parameters.count, 2)
                 let ext = try context.parameters.require("ext")
                 let name = try context.parameters.require("name")
