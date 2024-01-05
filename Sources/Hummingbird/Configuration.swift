@@ -40,8 +40,6 @@ public struct HBApplicationConfiguration: Sendable {
 
     /// don't run the HTTP server
     public let noHTTPServer: Bool
-    /// logging level
-    public let logLevel: Logger.Level
 
     // MARK: Initialization
 
@@ -53,7 +51,6 @@ public struct HBApplicationConfiguration: Sendable {
     ///   - backlog: the maximum length for the queue of pending connections.  If a connection request arrives with the queue full,
     ///         the client may receive an error with an indication of ECONNREFUSE
     ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
-    ///   - logLevel: Logging level
     ///   - noHTTPServer: Don't start up the HTTP server.
     public init(
         address: HBBindAddress = .hostname(),
@@ -61,11 +58,8 @@ public struct HBApplicationConfiguration: Sendable {
         backlog: Int = 256,
         reuseAddress: Bool = true,
         threadPoolSize: Int = 2,
-        logLevel: Logger.Level? = nil,
         noHTTPServer: Bool = false
     ) {
-        let env = HBEnvironment()
-
         self.address = address
         self.serverName = serverName
         self.backlog = backlog
@@ -75,14 +69,6 @@ public struct HBApplicationConfiguration: Sendable {
         #endif
 
         self.noHTTPServer = noHTTPServer
-
-        if let logLevel {
-            self.logLevel = logLevel
-        } else if let logLevel = env.get("LOG_LEVEL") {
-            self.logLevel = Logger.Level(rawValue: logLevel) ?? .info
-        } else {
-            self.logLevel = .info
-        }
     }
 
     #if canImport(Network)
@@ -92,19 +78,15 @@ public struct HBApplicationConfiguration: Sendable {
     ///   - address: Bind address for server
     ///   - serverName: Server name to return in "server" header
     ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
-    ///   - logLevel: Logging level
     ///   - noHTTPServer: Don't start up the HTTP server.
     ///   - tlsOptions: TLS options for when you are using NIOTransportServices
     public init(
         address: HBBindAddress = .hostname(),
         serverName: String? = nil,
         reuseAddress: Bool = true,
-        logLevel: Logger.Level? = nil,
         noHTTPServer: Bool = false,
         tlsOptions: TSTLSOptions
     ) {
-        let env = HBEnvironment()
-
         self.address = address
         self.serverName = serverName
         self.backlog = 256 // not used by Network framework
@@ -112,14 +94,6 @@ public struct HBApplicationConfiguration: Sendable {
         self.tlsOptions = tlsOptions
 
         self.noHTTPServer = noHTTPServer
-
-        if let logLevel {
-            self.logLevel = logLevel
-        } else if let logLevel = env.get("LOG_LEVEL") {
-            self.logLevel = Logger.Level(rawValue: logLevel) ?? .info
-        } else {
-            self.logLevel = .info
-        }
     }
 
     #endif
@@ -129,15 +103,13 @@ public struct HBApplicationConfiguration: Sendable {
         address: HBBindAddress? = nil,
         serverName: String? = nil,
         backlog: Int? = nil,
-        reuseAddress: Bool? = nil,
-        logLevel: Logger.Level? = nil
+        reuseAddress: Bool? = nil
     ) -> Self {
         return .init(
             address: address ?? self.address,
             serverName: serverName ?? self.serverName,
             backlog: backlog ?? self.backlog,
-            reuseAddress: reuseAddress ?? self.reuseAddress,
-            logLevel: logLevel ?? self.logLevel
+            reuseAddress: reuseAddress ?? self.reuseAddress
         )
     }
 

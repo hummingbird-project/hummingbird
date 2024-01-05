@@ -149,7 +149,7 @@ final class EnvironmentTests: XCTestCase {
         }
         XCTAssertEqual(setenv("TEST_VAR", "testSetFromEnvironment", 1), 0)
         XCTAssertEqual(setenv("TEST_VAR2", "testSetFromEnvironment2", 1), 0)
-        let env = try HBEnvironment.shared.merging(with: .dotEnv())
+        let env = try HBEnvironment().merging(with: .dotEnv())
         XCTAssertEqual(env.get("TEST_VAR"), "testDotEnvOverridingEnvironment")
         XCTAssertEqual(env.get("TEST_VAR2"), "testSetFromEnvironment2")
     }
