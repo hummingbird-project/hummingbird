@@ -12,23 +12,23 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Benchmark
 import HTTPTypes
-import NIOHTTPTypes
 import Hummingbird
 import HummingbirdCore
 import Logging
 import NIOCore
 import NIOEmbedded
-import Benchmark
+import NIOHTTPTypes
 
 extension Benchmark {
     @discardableResult
     convenience init?(
         name: String,
-        configuration: Benchmark.Configuration = Benchmark.defaultConfiguration, 
+        configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
         write: @escaping @Sendable (Benchmark, NIOAsyncTestingChannel) async throws -> Void,
         responder: @escaping @Sendable (HBRequest, Channel) async throws -> HBResponse
-     ) {
+    ) {
         let http1 = HTTP1Channel(responder: responder)
         let channel = NIOAsyncTestingChannel()
         var task: Task<Void, Never>!
@@ -69,42 +69,42 @@ let benchmarks = {
         ],
         warmupIterations: 10
     )
-    let buffer = ByteBufferAllocator().buffer(repeating: 0xff, count: 10000)
+    let buffer = ByteBufferAllocator().buffer(repeating: 0xFF, count: 10000)
     Benchmark(
         name: "HTTP1:GET",
         configuration: .init(warmupIterations: 10)
-    ) { benchmark, channel in
+    ) { _, channel in
         let head = HTTPRequest(method: .get, scheme: "http", authority: "localhost", path: "/")
         try await channel.writeInbound(HTTPRequestPart.head(head))
         try await channel.writeInbound(HTTPRequestPart.end(nil))
-    } responder: { request, channel in
+    } responder: { _, _ in
         return .init(status: .ok, body: .init(byteBuffer: buffer))
     }
 
     Benchmark(
         name: "HTTP1:PUT",
         configuration: .init(warmupIterations: 10)
-    ) { benchmark, channel in
+    ) { _, channel in
         let head = HTTPRequest(method: .put, scheme: "http", authority: "localhost", path: "/")
         try await channel.writeInbound(HTTPRequestPart.head(head))
         try await channel.writeInbound(HTTPRequestPart.body(buffer))
         try await channel.writeInbound(HTTPRequestPart.body(buffer))
         try await channel.writeInbound(HTTPRequestPart.end(nil))
-    } responder: { request, channel in
+    } responder: { _, _ in
         return .init(status: .ok, body: .init(byteBuffer: buffer))
     }
 
     Benchmark(
         name: "HTTP1:Echo",
         configuration: .init(warmupIterations: 10)
-    ) { benchmark, channel in
+    ) { _, channel in
         let head = HTTPRequest(method: .post, scheme: "http", authority: "localhost", path: "/")
         try await channel.writeInbound(HTTPRequestPart.head(head))
         try await channel.writeInbound(HTTPRequestPart.body(buffer))
         try await channel.writeInbound(HTTPRequestPart.body(buffer))
         try await channel.writeInbound(HTTPRequestPart.end(nil))
-    } responder: { request, channel in
-        let buffer = try await request.body.collect(upTo: .max)
+    } responder: { request, _ in
+        let buffer = try await request.body.collate(maxSize: .max)
         return .init(status: .ok, body: .init(byteBuffer: buffer))
     }
 }

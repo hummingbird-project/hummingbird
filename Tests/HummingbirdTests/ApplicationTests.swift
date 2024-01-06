@@ -204,7 +204,7 @@ final class ApplicationTests: XCTestCase {
         router
             .group("/echo-body")
             .post { request, _ -> HBResponse in
-                let buffer = try await request.body.collect(upTo: .max)
+                let buffer = try await request.body.collate(maxSize: .max)
                 return .init(status: .ok, headers: [:], body: .init(byteBuffer: buffer))
             }
         let app = HBApplication(responder: router.buildResponder())
@@ -275,7 +275,7 @@ final class ApplicationTests: XCTestCase {
         struct CollateMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
             public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
                 var request = request
-                request.body = try await request.body.collate(maxSize: context.maxUploadSize)
+                _ = try await request.collateBody(context: context)
                 return try await next(request, context)
             }
         }
@@ -301,7 +301,7 @@ final class ApplicationTests: XCTestCase {
         router
             .group("/echo-body")
             .post { request, _ -> ByteBuffer? in
-                let buffer = try await request.body.collect(upTo: .max)
+                let buffer = try await request.body.collate(maxSize: .max)
                 return buffer.readableBytes > 0 ? buffer : nil
             }
         let app = HBApplication(responder: router.buildResponder())

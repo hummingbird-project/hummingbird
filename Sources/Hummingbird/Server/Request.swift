@@ -15,6 +15,20 @@
 import HummingbirdCore
 
 extension HBRequest {
+    /// Collapse body into one ByteBuffer.
+    ///
+    /// This will store the collated ByteBuffer back into the request so is a mutating method. If
+    /// you don't need to store the collated ByteBuffer on the request then use
+    /// `request.body.collate(maxSize:)`.
+    ///
+    /// - Parameter context: request context
+    /// - Returns: Collated body
+    public mutating func collateBody(context: some HBBaseRequestContext) async throws -> ByteBuffer {
+        let byteBuffer = try await self.body.collate(maxSize: context.maxUploadSize)
+        self.body = .byteBuffer(byteBuffer)
+        return byteBuffer
+    }
+
     /// Decode request using decoder stored at `HBApplication.decoder`.
     /// - Parameter type: Type you want to decode to
     public func decode<Type: Decodable>(as type: Type.Type, using context: some HBBaseRequestContext) async throws -> Type {
