@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2022 the Hummingbird authors
+// Copyright (c) 2021-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -69,7 +69,7 @@ public extension HBParameters {
     ///   - s: parameter id
     ///   - as: type we want returned
     func requireAll<T: LosslessStringConvertible>(_ s: String, as: T.Type) throws -> [T] {
-        return try self[values: s[...]].compactMap {
+        return try self[values: s[...]].map {
             guard let result = T(String($0)) else {
                 throw HBHTTPError(.badRequest)
             }
