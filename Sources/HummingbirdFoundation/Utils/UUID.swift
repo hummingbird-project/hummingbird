@@ -17,12 +17,12 @@ import Hummingbird
 
 /// It is common for UUID's to be passed in as parameters. So lets add helper
 /// functions to extract them from HBParameters
-public extension HBParameters {
+extension HBParameters {
     /// Return parameter with specified id as a certain type
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
-    func get(_ s: String, as: UUID.Type) -> UUID? {
+    public func get(_ s: String, as: UUID.Type) -> UUID? {
         return self[s[...]].map { UUID(uuidString: String($0)) } ?? nil
     }
 
@@ -30,7 +30,7 @@ public extension HBParameters {
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
-    func require(_ s: String, as: UUID.Type) throws -> UUID {
+    public func require(_ s: String, as: UUID.Type) throws -> UUID {
         guard let param = self[s[...]],
               let result = UUID(uuidString: String(param))
         else {
@@ -43,7 +43,7 @@ public extension HBParameters {
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
-    func getAll(_ s: String, as: UUID.Type) -> [UUID] {
+    public func getAll(_ s: String, as: UUID.Type) -> [UUID] {
         return self[values: s[...]].compactMap { UUID(uuidString: String($0)) }
     }
 
@@ -51,7 +51,7 @@ public extension HBParameters {
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
-    func requireAll(_ s: String, as: UUID.Type) throws -> [UUID] {
+    public func requireAll(_ s: String, as: UUID.Type) throws -> [UUID] {
         return try self[values: s[...]].map {
             guard let result = UUID(uuidString: String($0)) else {
                 throw HBHTTPError(.badRequest)
@@ -60,3 +60,5 @@ public extension HBParameters {
         }
     }
 }
+
+extension UUID: HBResponseEncodable {}
