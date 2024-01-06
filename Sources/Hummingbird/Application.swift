@@ -219,12 +219,16 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
         router: HBRouter<Context>,
         server: HBHTTPChannelBuilder<ChildChannel> = .http1(),
         configuration: HBApplicationConfiguration = HBApplicationConfiguration(),
-        eventLoopGroupProvider: EventLoopGroupProvider = .singleton
+        eventLoopGroupProvider: EventLoopGroupProvider = .singleton,
+        logger: Logger? = nil
     ) where Responder == HBRouterResponder<Context> {
-        var logger = Logger(label: configuration.serverName ?? "HummingBird")
-        logger.logLevel = configuration.logLevel
-        self.logger = logger
-
+        if let logger {
+            self.logger = logger
+        } else {
+            var logger = Logger(label: configuration.serverName ?? "Hummingbird")
+            logger.logLevel = HBEnvironment().get("LOG_LEVEL").map { Logger.Level(rawValue: $0) ?? .info } ?? .info
+            self.logger = logger
+        }
         self.responder = router.buildResponder()
         self.server = server
         self.configuration = configuration
