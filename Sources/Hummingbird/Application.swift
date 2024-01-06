@@ -201,7 +201,7 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
         if let logger {
             self.logger = logger
         } else {
-            var logger = Logger(label: configuration.serverName ?? "HummingBird")
+            var logger = Logger(label: configuration.serverName ?? "Hummingbird")
             logger.logLevel = HBEnvironment().get("LOG_LEVEL").map { Logger.Level(rawValue: $0) ?? .info } ?? .info
             self.logger = logger
         }
