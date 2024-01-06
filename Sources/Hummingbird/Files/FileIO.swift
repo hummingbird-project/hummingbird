@@ -151,7 +151,6 @@ public struct HBFileIO: Sendable {
                 try await writer.write(buffer)
             }
             try handle.close()
-            return nil
         }
     }
 

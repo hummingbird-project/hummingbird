@@ -28,14 +28,14 @@ public struct HBResponseBody: Sendable {
     /// - Parameters:
     ///   - contentLength: Optional length of body
     ///   - write: closure provided with `writer` type that can be used to write to response body
-    public init(contentLength: Int? = nil, _ write: @Sendable @escaping (any HBResponseBodyWriter) async throws -> HTTPFields?) {
-        self.write = write
+    public init(contentLength: Int? = nil, _ write: @Sendable @escaping (any HBResponseBodyWriter) async throws -> Void) {
+        self.write = { try await write($0); return nil }
         self.contentLength = contentLength
     }
 
     /// Initialise empty HBResponseBody
     public init() {
-        self.init(contentLength: 0) { _ in return nil }
+        self.init(contentLength: 0) { _ in }
     }
 
     /// Initialise HBResponseBody that contains a single ByteBuffer
@@ -43,7 +43,6 @@ public struct HBResponseBody: Sendable {
     public init(byteBuffer: ByteBuffer) {
         self.init(contentLength: byteBuffer.readableBytes) { writer in
             try await writer.write(byteBuffer)
-            return nil
         }
     }
 
@@ -54,7 +53,28 @@ public struct HBResponseBody: Sendable {
             for try await buffer in asyncSequence {
                 try await writer.write(buffer)
             }
-            return nil
+            return
         }
+    }
+
+    ///  Return HBResponseBody that returns trailing headers from its closure once all the 
+    /// body parts have been written 
+    /// - Parameters:
+    ///   - contentLength: Optional length of body
+    ///   - write: closure provided with `writer` type that can be used to write to response body
+    public static func withTrailingHeaders(
+        contentLength: Int? = nil, 
+        _ write: @Sendable @escaping (any HBResponseBodyWriter) async throws -> HTTPFields?
+    ) -> Self {
+        self.init(contentLength: contentLength, write: write)
+    }
+
+    /// Initialise HBResponseBody with closure writing body contents
+    /// 
+    /// This version of init is private and only available via ``withTrailingHeaders`` because
+    /// if it is public the compiler gets confused when a complex closure is provided.
+    private init(contentLength: Int? = nil, write: @Sendable @escaping (any HBResponseBodyWriter) async throws -> HTTPFields?) {
+        self.write = { return try await write($0) }
+        self.contentLength = contentLength
     }
 }

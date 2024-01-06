@@ -135,7 +135,7 @@ final class MiddlewareTests: XCTestCase {
             func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
                 let response = try await next(request, context)
                 var editedResponse = response
-                editedResponse.body = .init { writer in
+                editedResponse.body = .withTrailingHeaders { writer in
                     let transformWriter = TransformWriter(parentWriter: writer, allocator: context.allocator)
                     let tailHeaders = try await response.body.write(transformWriter)
                     return tailHeaders

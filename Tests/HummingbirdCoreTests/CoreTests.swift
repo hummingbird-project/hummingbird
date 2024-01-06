@@ -186,7 +186,7 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testTrailerHeaders() async throws {
         try await testServer(
-            responder: { _, _ in .init(status: .ok, body: .init { _ in return [.contentType: "text"] }) },
+            responder: { _, _ in .init(status: .ok, body: .withTrailingHeaders { _ in return [.contentType: "text"] }) },
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
