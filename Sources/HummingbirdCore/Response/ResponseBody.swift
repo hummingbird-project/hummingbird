@@ -57,11 +57,13 @@ public struct HBResponseBody: Sendable {
         }
     }
 
-    ///  Return HBResponseBody that returns trailing headers from its closure once all the 
+    /// Create HBResponseBody that returns trailing headers from its closure once all the 
     /// body parts have been written 
     /// - Parameters:
     ///   - contentLength: Optional length of body
     ///   - write: closure provided with `writer` type that can be used to write to response body
+    ///         trailing headers are returned from the closure after all the body parts have been
+    ///         written
     public static func withTrailingHeaders(
         contentLength: Int? = nil, 
         _ write: @Sendable @escaping (any HBResponseBodyWriter) async throws -> HTTPFields?
