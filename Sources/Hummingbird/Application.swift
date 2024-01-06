@@ -184,16 +184,27 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
     // MARK: Initialization
 
     /// Initialize new Application
+    ///
+    /// - Parameters:
+    ///   - responder: HTTP responder. Returns a response based off a request and context
+    ///   - server: Server child channel setup (http1, http2, http1WithWebSocketUpgrade etc)
+    ///   - configuration: Application configuration
+    ///   - eventLoopGroupProvider: Where to get our EventLoopGroup
+    ///   - logger: Logger application uses
     public init(
         responder: Responder,
         server: HBHTTPChannelBuilder<ChildChannel> = .http1(),
         configuration: HBApplicationConfiguration = HBApplicationConfiguration(),
-        eventLoopGroupProvider: EventLoopGroupProvider = .singleton
+        eventLoopGroupProvider: EventLoopGroupProvider = .singleton,
+        logger: Logger? = nil
     ) {
-        var logger = Logger(label: configuration.serverName ?? "HummingBird")
-        logger.logLevel = configuration.logLevel
-        self.logger = logger
-
+        if let logger {
+            self.logger = logger
+        } else {
+            var logger = Logger(label: configuration.serverName ?? "Hummingbird")
+            logger.logLevel = HBEnvironment().get("LOG_LEVEL").map { Logger.Level(rawValue: $0) ?? .info } ?? .info
+            self.logger = logger
+        }
         self.responder = responder
         self.server = server
         self.configuration = configuration
