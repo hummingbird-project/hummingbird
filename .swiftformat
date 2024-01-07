@@ -8,7 +8,7 @@
 --exclude .build
 
 # rules
---disable redundantReturn, extensionAccessControl
+--disable redundantReturn, extensionAccessControl, conditionalAssignment
 
 # format options
 --ifdef no-indent
