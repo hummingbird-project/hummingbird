@@ -30,7 +30,7 @@ class HummingBirdURLEncodedTests: XCTestCase {
         let router = HBRouter()
         router.middlewares.add(HBSetCodableMiddleware(decoder: URLEncodedFormDecoder(), encoder: URLEncodedFormEncoder()))
         router.put("/user") { request, context -> HTTPResponse.Status in
-            guard let user = try? await request.decode(as: User.self, using: context) else { throw HBHTTPError(.badRequest) }
+            guard let user = try? await request.decode(as: User.self, context: context) else { throw HBHTTPError(.badRequest) }
             XCTAssertEqual(user.name, "John Smith")
             XCTAssertEqual(user.email, "john.smith@email.com")
             XCTAssertEqual(user.age, 25)
