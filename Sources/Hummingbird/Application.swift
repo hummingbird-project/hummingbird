@@ -189,12 +189,14 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
     ///   - responder: HTTP responder. Returns a response based off a request and context
     ///   - server: Server child channel setup (http1, http2, http1WithWebSocketUpgrade etc)
     ///   - configuration: Application configuration
+    ///   - onServerRunning: Function called once the server is running
     ///   - eventLoopGroupProvider: Where to get our EventLoopGroup
     ///   - logger: Logger application uses
     public init(
         responder: Responder,
         server: HBHTTPChannelBuilder<ChildChannel> = .http1(),
         configuration: HBApplicationConfiguration = HBApplicationConfiguration(),
+        onServerRunning: @escaping @Sendable (Channel) async -> Void = { _ in },
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton,
         logger: Logger? = nil
     ) {
@@ -208,17 +210,26 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
         self.responder = responder
         self.server = server
         self.configuration = configuration
-        self._onServerRunning = { _ in }
+        self._onServerRunning = onServerRunning
 
         self.eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
         self.services = []
     }
 
     /// Initialize new Application
+    ///
+    /// - Parameters:
+    ///   - router: Router used to generate responses from requests
+    ///   - server: Server child channel setup (http1, http2, http1WithWebSocketUpgrade etc)
+    ///   - configuration: Application configuration
+    ///   - onServerRunning: Function called once the server is running
+    ///   - eventLoopGroupProvider: Where to get our EventLoopGroup
+    ///   - logger: Logger application uses
     public init<Context>(
         router: HBRouter<Context>,
         server: HBHTTPChannelBuilder<ChildChannel> = .http1(),
         configuration: HBApplicationConfiguration = HBApplicationConfiguration(),
+        onServerRunning: @escaping @Sendable (Channel) async -> Void = { _ in },
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton,
         logger: Logger? = nil
     ) where Responder == HBRouterResponder<Context> {
@@ -232,7 +243,7 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
         self.responder = router.buildResponder()
         self.server = server
         self.configuration = configuration
-        self._onServerRunning = { _ in }
+        self._onServerRunning = onServerRunning
 
         self.eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
         self.services = []
