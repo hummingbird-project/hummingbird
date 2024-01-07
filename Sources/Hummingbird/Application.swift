@@ -122,11 +122,7 @@ extension HBApplicationProtocol {
                 configuration: .init(services: services, logger: self.logger)
             )
             try await serviceGroup.run()
-        } onGracefulShutdown: {
-            Task {
-                try await server.shutdownGracefully()
-            }
-        }
+        } onGracefulShutdown: {}
     }
 
     /// Helper function that runs application inside a ServiceGroup which will gracefully
