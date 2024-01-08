@@ -116,7 +116,7 @@ extension HBApplicationProtocol {
             eventLoopGroup: self.eventLoopGroup,
             logger: self.logger
         )
-        let services: [any Service] = [server, dateCache] + self.services
+        let services: [any Service] = self.services + [dateCache, server]
         let serviceGroup = ServiceGroup(
             configuration: .init(services: services, logger: self.logger)
         )
