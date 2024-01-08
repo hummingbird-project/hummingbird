@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2023 the Hummingbird authors
+// Copyright (c) 2021-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -529,6 +529,22 @@ final class ApplicationTests: XCTestCase {
             try await Task.sleep(for: .milliseconds(10))
         }
         XCTAssertEqual(MyService.shutdown.load(ordering: .relaxed), true)
+    }
+
+    func testRunBeforeServer() async throws {
+        let runBeforeServer = ManagedAtomic(false)
+        let router = HBRouter()
+        var app = HBApplication(
+            responder: router.buildResponder()
+        )
+        app.runBeforeServerStart {
+            runBeforeServer.store(true, ordering: .relaxed)
+        }
+        try await app.test(.live) { _ in
+            // shutting down immediately outputs an error
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        XCTAssertEqual(runBeforeServer.load(ordering: .relaxed), true)
     }
 
     /// test we can create out own application type conforming to HBApplicationProtocol

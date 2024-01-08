@@ -14,18 +14,18 @@
 
 import ServiceLifecycle
 
-/// Wrap another service to run after a preprocess closure has completed
-struct PreprocessService<S: Service>: Service {
-    let preprocess: @Sendable () async throws -> Void
+/// Wrap another service to run after a precursor closure has completed
+struct PrecursorService<S: Service>: Service {
+    let precursor: @Sendable () async throws -> Void
     let service: S
 
-    init(service: S, preprocess: @escaping @Sendable () async throws -> Void) {
+    init(service: S, process: @escaping @Sendable () async throws -> Void) {
         self.service = service
-        self.preprocess = preprocess
+        self.precursor = process
     }
 
     func run() async throws {
-        try await self.preprocess()
+        try await self.precursor()
         try await self.service.run()
     }
 }
