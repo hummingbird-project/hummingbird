@@ -44,8 +44,7 @@ final class TracingTests: XCTestCase {
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/users/42", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
-                var responseBody = try XCTUnwrap(response.body)
-                XCTAssertEqual(responseBody.readString(length: responseBody.readableBytes), "42")
+                XCTAssertEqual(String(buffer: response.body), "42")
             }
         }
 
@@ -135,8 +134,7 @@ final class TracingTests: XCTestCase {
             requestHeaders[.cacheControl] = "no-cache"
             try await client.XCTExecute(uri: "/users/42", method: .get, headers: requestHeaders) { response in
                 XCTAssertEqual(response.status, .ok)
-                var responseBody = try XCTUnwrap(response.body)
-                XCTAssertEqual(responseBody.readString(length: responseBody.readableBytes), "42")
+                XCTAssertEqual(String(buffer: response.body), "42")
             }
         }
 

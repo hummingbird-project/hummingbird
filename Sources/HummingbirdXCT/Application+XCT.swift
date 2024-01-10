@@ -56,8 +56,7 @@ public struct XCTTestingSetup {
 /// app.test(.router) { client in
 ///     // does my app return "hello" in the body for this route
 ///     client.XCTExecute(uri: "/hello", method: .GET) { response in
-///         let body = try XCTUnwrap(response.body)
-///         XCTAssertEqual(String(buffer: body, "hello")
+///         XCTAssertEqual(String(buffer: response.body), "hello")
 ///     }
 /// }
 /// ```

@@ -47,8 +47,7 @@ class HummingbirdFilesTests: XCTestCase {
 
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/test.jpg", method: .get) { response in
-                var body = try XCTUnwrap(response.body)
-                XCTAssertEqual(body.readString(length: body.readableBytes), text)
+                XCTAssertEqual(String(buffer: response.body), text)
                 XCTAssertEqual(response.headers[.contentType], "image/jpeg")
             }
         }
@@ -67,8 +66,7 @@ class HummingbirdFilesTests: XCTestCase {
 
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/test.txt", method: .get) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(body, buffer)
+                XCTAssertEqual(response.body, buffer)
             }
         }
     }
@@ -86,33 +84,29 @@ class HummingbirdFilesTests: XCTestCase {
 
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/test.txt", method: .get, headers: [.range: "bytes=100-3999"]) { response in
-                let body = try XCTUnwrap(response.body)
                 let slice = buffer.getSlice(at: 100, length: 3900)
-                XCTAssertEqual(body, slice)
+                XCTAssertEqual(response.body, slice)
                 XCTAssertEqual(response.headers[.contentRange], "bytes 100-3999/326000")
                 XCTAssertEqual(response.headers[.contentType], "text/plain")
             }
 
             try await client.XCTExecute(uri: "/test.txt", method: .get, headers: [.range: "bytes=0-0"]) { response in
-                let body = try XCTUnwrap(response.body)
                 let slice = buffer.getSlice(at: 0, length: 1)
-                XCTAssertEqual(body, slice)
+                XCTAssertEqual(response.body, slice)
                 XCTAssertEqual(response.headers[.contentRange], "bytes 0-0/326000")
                 XCTAssertEqual(response.headers[.contentType], "text/plain")
             }
 
             try await client.XCTExecute(uri: "/test.txt", method: .get, headers: [.range: "bytes=-3999"]) { response in
-                let body = try XCTUnwrap(response.body)
                 let slice = buffer.getSlice(at: 0, length: 4000)
-                XCTAssertEqual(body, slice)
+                XCTAssertEqual(response.body, slice)
                 XCTAssertEqual(response.headers[.contentLength], "4000")
                 XCTAssertEqual(response.headers[.contentRange], "bytes 0-3999/326000")
             }
 
             try await client.XCTExecute(uri: "/test.txt", method: .get, headers: [.range: "bytes=6000-"]) { response in
-                let body = try XCTUnwrap(response.body)
                 let slice = buffer.getSlice(at: 6000, length: 320_000)
-                XCTAssertEqual(body, slice)
+                XCTAssertEqual(response.body, slice)
                 XCTAssertEqual(response.headers[.contentRange], "bytes 6000-325999/326000")
             }
         }
@@ -133,9 +127,8 @@ class HummingbirdFilesTests: XCTestCase {
             let (eTag, modificationDate) = try await client.XCTExecute(uri: "/test.txt", method: .get, headers: [.range: "bytes=-3999"]) { response -> (String, String) in
                 let eTag = try XCTUnwrap(response.headers[.eTag])
                 let modificationDate = try XCTUnwrap(response.headers[.lastModified])
-                let body = try XCTUnwrap(response.body)
                 let slice = buffer.getSlice(at: 0, length: 4000)
-                XCTAssertEqual(body, slice)
+                XCTAssertEqual(response.body, slice)
                 XCTAssertEqual(response.headers[.contentRange], "bytes 0-3999/10000")
                 return (eTag, modificationDate)
             }
@@ -168,7 +161,7 @@ class HummingbirdFilesTests: XCTestCase {
 
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/testHead.txt", method: .head) { response in
-                XCTAssertEqual(response.body?.readableBytes ?? 0, 0)
+                XCTAssertEqual(response.body.readableBytes, 0)
                 XCTAssertEqual(response.headers[.contentLength], text.utf8.count.description)
                 XCTAssertEqual(response.headers[.contentType], "text/plain")
                 let responseDateString = try XCTUnwrap(response.headers[.lastModified])
@@ -296,8 +289,7 @@ class HummingbirdFilesTests: XCTestCase {
 
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/", method: .get) { response in
-                var body = try XCTUnwrap(response.body)
-                XCTAssertEqual(body.readString(length: body.readableBytes), text)
+                XCTAssertEqual(String(buffer: response.body), text)
             }
         }
     }

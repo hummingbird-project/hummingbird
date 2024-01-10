@@ -38,7 +38,7 @@ final class HBXCTLive<App: HBApplicationProtocol>: HBXCTApplication {
             headers[.connection] = "keep-alive"
             let request = HBXCTClient.Request(uri, method: method, authority: "localhost", headers: headers, body: body)
             let response = try await client.execute(request)
-            return .init(head: response.head, body: response.body, trailerHeaders: response.trailerHeaders)
+            return .init(head: response.head, body: response.body ?? ByteBuffer(), trailerHeaders: response.trailerHeaders)
         }
     }
 

@@ -54,9 +54,7 @@ class HummingBirdURLEncodedTests: XCTestCase {
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/user", method: .get) { response in
-                var body = try XCTUnwrap(response.body)
-                let bodyString = try XCTUnwrap(body.readString(length: body.readableBytes))
-                let user = try URLEncodedFormDecoder().decode(User.self, from: bodyString)
+                let user = try URLEncodedFormDecoder().decode(User.self, from: String(buffer: response.body))
                 XCTAssertEqual(user.name, "John Smith")
                 XCTAssertEqual(user.email, "john.smith@email.com")
                 XCTAssertEqual(user.age, 25)
