@@ -24,7 +24,7 @@ import NIOSSL
 import ServiceLifecycle
 import XCTest
 
-/// Test using a live server
+/// Test using a live server and AsyncHTTPClient as a client
 final class HBXCTAsyncHTTPClient<App: HBApplicationProtocol>: HBXCTApplication {
     struct Client: HBXCTClientProtocol {
         let client: HTTPClient
