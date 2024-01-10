@@ -64,7 +64,15 @@ public protocol HBXCTClientProtocol: Sendable {
 }
 
 extension HBXCTClientProtocol {
-    /// Send request and call test callback on the response returned
+    /// Send request to associated test framework and call test callback on the response returned
+    ///
+    /// - Parameters:
+    ///   - uri: Path of request
+    ///   - method: Request method
+    ///   - headers: Request headers
+    ///   - body: Request body
+    ///   - testCallback: closure to call on response returned by test framework
+    /// - Returns: Return value of test closure
     @discardableResult public func XCTExecute<Return>(
         uri: String,
         method: HTTPRequest.Method,

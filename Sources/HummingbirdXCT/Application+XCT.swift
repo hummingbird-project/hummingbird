@@ -41,32 +41,32 @@ public struct XCTTestingSetup {
 }
 
 /// Extends `HBApplicationProtocol` to support testing of applications
-///
-/// You use `test` and `XCTExecute` to test applications. You can either test using
-/// the `.router` test framework which sends requests directly to the router for testing your code or
-/// the `.live` or `.ahc` frameworks which both run live servers to pass requests to, but provide
-/// a single connection HTTP client or AsyncHTTPClient as a client respectively . The `.router` test
-/// framework is quicker and doesn't require setting up a full server but will only test code run
-/// from request generation onwards.
-///
-/// The example below is using the `.router` framework to test
-/// ```
-/// let router = HBRouter()
-/// router.get("/hello") { _ in
-///     return "hello"
-/// }
-/// let app = HBApplication(router: router)
-/// app.test(.router) { client in
-///     // does my app return "hello" in the body for this route
-///     client.XCTExecute(uri: "/hello", method: .GET) { response in
-///         XCTAssertEqual(String(buffer: response.body), "hello")
-///     }
-/// }
-/// ```
 extension HBApplicationProtocol where Responder.Context: HBRequestContext {
     // MARK: Initialization
 
     /// Test `HBApplication`
+    ///
+    /// You use `test` and `XCTExecute` to test applications. You can either test using
+    /// the `.router` test framework which sends requests directly to the router for testing your code or
+    /// the `.live` or `.ahc` frameworks which both run live servers to pass requests to, but provide
+    /// a single connection HTTP client or AsyncHTTPClient as a client respectively . The `.router` test
+    /// framework is quicker and doesn't require setting up a full server but will only test code run
+    /// from request generation onwards.
+    ///
+    /// The example below is using the `.router` framework to test
+    /// ```swift
+    /// let router = HBRouter()
+    /// router.get("/hello") { _ in
+    ///     return "hello"
+    /// }
+    /// let app = HBApplication(router: router)
+    /// app.test(.router) { client in
+    ///     // does my app return "hello" in the body for this route
+    ///     client.XCTExecute(uri: "/hello", method: .GET) { response in
+    ///         XCTAssertEqual(String(buffer: response.body), "hello")
+    ///     }
+    /// }
+    /// ```
     ///
     /// - Parameters:
     ///   - testing: indicates which type of testing framework we want
