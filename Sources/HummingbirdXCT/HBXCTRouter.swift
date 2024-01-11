@@ -91,10 +91,10 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                         response = HBResponse(status: .internalServerError)
                     }
                     let responseWriter = RouterResponseWriter()
-                    try await response.body.write(responseWriter)
+                    let trailerHeaders = try await response.body.write(responseWriter)
                     for try await _ in request.body {}
                     return responseWriter.collated.withLockedValue { collated in
-                        HBXCTResponse(head: response.head, body: collated)
+                        HBXCTResponse(head: response.head, body: collated, trailerHeaders: trailerHeaders)
                     }
                 }
 

@@ -45,7 +45,7 @@ final class HBXCTAsyncHTTPClient<App: HBApplicationProtocol>: HBXCTApplication {
             request.body = body.map { .bytes($0) }
             let response = try await client.execute(request, deadline: .now() + self.timeout)
             let responseHead = HTTPResponseHead(version: response.version, status: response.status, headers: response.headers)
-            return try await .init(head: .init(responseHead), body: response.body.collect(upTo: .max))
+            return try await .init(head: .init(responseHead), body: response.body.collect(upTo: .max), trailerHeaders: nil)
         }
     }
 

@@ -66,8 +66,8 @@ extension HTTPChannelHandler {
                                 }
                                 do {
                                     try await outbound.write(.head(response.head))
-                                    try await response.body.write(responseWriter)
-                                    try await outbound.write(.end(nil))
+                                    let tailHeaders = try await response.body.write(responseWriter)
+                                    try await outbound.write(.end(tailHeaders))
                                     // flush request body
                                     for try await _ in request.body {}
                                 } catch {

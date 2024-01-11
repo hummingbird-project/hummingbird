@@ -33,9 +33,9 @@ public struct XCTTestingSetup {
 
     /// Test writing requests directly to router.
     public static var router: XCTTestingSetup { .init(value: .router) }
-    /// Sets up a live server and execute tests using a HTTP client.
+    /// Sets up a live server and execute tests using a HTTP client. Only supports HTTP1
     public static var live: XCTTestingSetup { .init(value: .live) }
-    /// Sets up a live server and execute tests using a HTTP client.
+    /// Sets up a live server and execute tests using a HTTP client. Does not support trailer headers
     public static func ahc(_ scheme: XCTScheme) -> XCTTestingSetup { .init(value: .ahc(scheme)) }
 }
 
