@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2023 the Hummingbird authors
+// Copyright (c) 2021-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -64,6 +64,9 @@ public protocol HBApplicationProtocol: Service where Context: HBRequestContext {
     @Sendable func onServerRunning(_ channel: Channel) async
     /// services attached to the application.
     var services: [any Service] { get }
+    /// Array of processes run before we kick off the server. These tend to be processes that need
+    /// other services running but need to be run before the server is setup
+    var processesRunBeforeServerStart: [@Sendable () async throws -> Void] { get }
 }
 
 extension HBApplicationProtocol {
@@ -82,6 +85,8 @@ extension HBApplicationProtocol {
     public func onServerRunning(_: Channel) async {}
     /// Default to no extra services attached to the application.
     public var services: [any Service] { [] }
+    /// Default to no processes being run before the server is setup
+    public var processesRunBeforeServerStart: [@Sendable () async throws -> Void] { [] }
 }
 
 /// Conform to `Service` from `ServiceLifecycle`.
@@ -116,7 +121,12 @@ extension HBApplicationProtocol {
             eventLoopGroup: self.eventLoopGroup,
             logger: self.logger
         )
-        let services: [any Service] = self.services + [dateCache, server]
+        let serverService = PrecursorService(service: server) {
+            for process in self.processesRunBeforeServerStart {
+                try await process()
+            }
+        }
+        let services: [any Service] = self.services + [dateCache, serverService]
         let serviceGroup = ServiceGroup(
             configuration: .init(services: services, logger: self.logger)
         )
@@ -174,6 +184,8 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
     public let server: HBHTTPChannelBuilder<ChildChannel>
     /// services attached to the application.
     public var services: [any Service]
+    /// Processes to be run before server is started
+    public private(set) var processesRunBeforeServerStart: [@Sendable () async throws -> Void]
 
     // MARK: Initialization
 
@@ -208,6 +220,7 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
 
         self.eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
         self.services = []
+        self.processesRunBeforeServerStart = []
     }
 
     /// Initialize new Application
@@ -241,6 +254,7 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
 
         self.eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
         self.services = []
+        self.processesRunBeforeServerStart = []
     }
 
     // MARK: Methods
@@ -249,6 +263,20 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
     /// - Parameter services: list of services to be added
     public mutating func addServices(_ services: any Service...) {
         self.services.append(contentsOf: services)
+    }
+
+    /// Add a process to run before we kick off the server service
+    ///
+    /// This is for processes that might need another Service running but need
+    /// to run before the server has started. For example a database migration
+    /// process might need the database connection pool running but should be
+    /// finished before any request to the server can be made. Also they may be
+    /// situations where you want another Service to have fully initialized
+    /// before starting the server service.
+    ///
+    /// - Parameter process: Process to run before server is started
+    public mutating func runBeforeServerStart(_ process: @escaping @Sendable () async throws -> Void) {
+        self.processesRunBeforeServerStart.append(process)
     }
 
     public func buildResponder() async throws -> Responder {

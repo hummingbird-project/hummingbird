@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2023 the Hummingbird authors
+// Copyright (c) 2023-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -35,19 +35,23 @@ struct TestApplication<BaseApp: HBApplicationProtocol>: HBApplicationProtocol, S
         self.base.server
     }
 
-    /// event loop group used by application
+    /// Event loop group used by application
     var eventLoopGroup: EventLoopGroup { self.base.eventLoopGroup }
     /// Configuration
     var configuration: HBApplicationConfiguration { self.base.configuration.with(address: .hostname("localhost", port: 0)) }
     /// Logger
     var logger: Logger { self.base.logger }
-    /// on server running
+    /// On server running
     @Sendable func onServerRunning(_ channel: Channel) async {
+        await self.base.onServerRunning(channel)
         await self.portPromise.complete(channel.localAddress!.port!)
     }
 
-    /// services attached to the application.
+    /// Services attached to the application.
     var services: [any Service] { self.base.services }
+
+    /// Processes run before server start
+    public var processesRunBeforeServerStart: [@Sendable () async throws -> Void] { self.base.processesRunBeforeServerStart }
 
     let portPromise: Promise<Int> = .init()
 }
