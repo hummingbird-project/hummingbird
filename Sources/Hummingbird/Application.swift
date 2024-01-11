@@ -184,7 +184,7 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
     public let server: HBHTTPChannelBuilder<ChildChannel>
     /// services attached to the application.
     public var services: [any Service]
-    /// processed to be run before server is started
+    /// Processes to be run before server is started
     public private(set) var processesRunBeforeServerStart: [@Sendable () async throws -> Void]
 
     // MARK: Initialization
