@@ -112,9 +112,9 @@ class TrieRouterTests: XCTestCase {
 
     func testPrefixCapture() {
         let trieBuilder = RouterPathTrieBuilder<String>()
-        trieBuilder.addEntry("${file}.jpg", value: "jpg")
-        trieBuilder.addEntry("test/${file}.jpg", value: "testjpg")
-        trieBuilder.addEntry("${app}.app/config.json", value: "app")
+        trieBuilder.addEntry("{file}.jpg", value: "jpg")
+        trieBuilder.addEntry("test/{file}.jpg", value: "testjpg")
+        trieBuilder.addEntry("{app}.app/config.json", value: "app")
         let trie = trieBuilder.build()
         XCTAssertNil(trie.getValueAndParameters("/hello.png"))
         XCTAssertEqual(trie.getValueAndParameters("/hello.jpg")?.parameters?.get("file"), "hello")
@@ -124,9 +124,9 @@ class TrieRouterTests: XCTestCase {
 
     func testSuffixCapture() {
         let trieBuilder = RouterPathTrieBuilder<String>()
-        trieBuilder.addEntry("file.${ext}", value: "file")
-        trieBuilder.addEntry("test/file.${ext}", value: "testfile")
-        trieBuilder.addEntry("file.${ext}/test", value: "filetest")
+        trieBuilder.addEntry("file.{ext}", value: "file")
+        trieBuilder.addEntry("test/file.{ext}", value: "testfile")
+        trieBuilder.addEntry("file.{ext}/test", value: "filetest")
         let trie = trieBuilder.build()
         XCTAssertNil(trie.getValueAndParameters("/file2.png"))
         XCTAssertEqual(trie.getValueAndParameters("/file.jpg")?.parameters?.get("ext"), "jpg")
@@ -136,7 +136,7 @@ class TrieRouterTests: XCTestCase {
 
     func testPrefixFullComponentCapture() {
         let trieBuilder = RouterPathTrieBuilder<String>()
-        trieBuilder.addEntry("${text}", value: "test")
+        trieBuilder.addEntry("{text}", value: "test")
         let trie = trieBuilder.build()
         XCTAssertEqual(trie.getValueAndParameters("/file.jpg")?.parameters?.get("text"), "file.jpg")
     }
