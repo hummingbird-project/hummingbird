@@ -116,17 +116,11 @@ extension HBApplicationProtocol {
             eventLoopGroup: self.eventLoopGroup,
             logger: self.logger
         )
-        try await withGracefulShutdownHandler {
-            let services: [any Service] = [server, dateCache] + self.services
-            let serviceGroup = ServiceGroup(
-                configuration: .init(services: services, logger: self.logger)
-            )
-            try await serviceGroup.run()
-        } onGracefulShutdown: {
-            Task {
-                try await server.shutdownGracefully()
-            }
-        }
+        let services: [any Service] = self.services + [dateCache, server]
+        let serviceGroup = ServiceGroup(
+            configuration: .init(services: services, logger: self.logger)
+        )
+        try await serviceGroup.run()
     }
 
     /// Helper function that runs application inside a ServiceGroup which will gracefully
