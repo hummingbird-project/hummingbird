@@ -407,6 +407,20 @@ final class RouterTests: XCTestCase {
             }
         }
     }
+
+    func testResponderBuilder() async throws {
+        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
+            Get("hello") { _, _ in
+                return "hello"
+            }
+        }
+        let app = HBApplication(router: router)
+        try await app.test(.router) { client in
+            try await client.XCTExecute(uri: "/hello", method: .get) { response in
+                XCTAssertEqual(String(buffer: response.body), "hello")
+            }
+        }
+    }
 }
 
 public struct HBTestRouterContext2: HBRouterRequestContext, HBRequestContext {
