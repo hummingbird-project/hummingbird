@@ -43,6 +43,7 @@ struct TestApplication<BaseApp: HBApplicationProtocol>: HBApplicationProtocol, S
     var logger: Logger { self.base.logger }
     /// On server running
     @Sendable func onServerRunning(_ channel: Channel) async {
+        await self.base.onServerRunning(channel)
         await self.portPromise.complete(channel.localAddress!.port!)
     }
 
