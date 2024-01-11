@@ -19,9 +19,10 @@ import NIOHTTPTypesHTTP1
 import NIOPosix
 import NIOSSL
 
-/// Bare bones HTTP client that connects to one Server.
+/// Bare bones single connection HTTP client.
 ///
-/// This is here for testing purposes
+/// This HTTP client is used for internal testing of Hummingbird and is also
+/// the client used by `.live` testing framework.
 public struct HBXCTClient: Sendable {
     public let channelPromise: EventLoopPromise<Channel>
     let eventLoopGroup: EventLoopGroup

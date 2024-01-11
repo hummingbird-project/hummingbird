@@ -101,8 +101,7 @@ class CookieTests: XCTestCase {
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/", method: .post, headers: [.cookie: "test=value"]) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), "value")
+                XCTAssertEqual(String(buffer: response.body), "value")
             }
         }
     }

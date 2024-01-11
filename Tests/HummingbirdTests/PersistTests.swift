@@ -55,8 +55,7 @@ final class PersistTests: XCTestCase {
             let tag = UUID().uuidString
             try await client.XCTExecute(uri: "/persist/\(tag)", method: .put, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
             try await client.XCTExecute(uri: "/persist/\(tag)", method: .get) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), "Persist")
+                XCTAssertEqual(String(buffer: response.body), "Persist")
             }
         }
     }
@@ -75,8 +74,7 @@ final class PersistTests: XCTestCase {
             let tag = UUID().uuidString
             try await client.XCTExecute(uri: "/create/\(tag)", method: .put, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
             try await client.XCTExecute(uri: "/persist/\(tag)", method: .get) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), "Persist")
+                XCTAssertEqual(String(buffer: response.body), "Persist")
             }
         }
     }
@@ -116,8 +114,7 @@ final class PersistTests: XCTestCase {
                 XCTAssertEqual(response.status, .ok)
             }
             try await client.XCTExecute(uri: "/persist/\(tag)", method: .get) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), "test2")
+                XCTAssertEqual(String(buffer: response.body), "test2")
             }
         }
     }
@@ -137,8 +134,7 @@ final class PersistTests: XCTestCase {
                 XCTAssertEqual(response.status, .noContent)
             }
             try await client.XCTExecute(uri: "/persist/\(tag2)", method: .get) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), "ThisIsTest2")
+                XCTAssertEqual(String(buffer: response.body), "ThisIsTest2")
             }
         }
     }
@@ -170,8 +166,7 @@ final class PersistTests: XCTestCase {
             let tag = UUID().uuidString
             try await client.XCTExecute(uri: "/codable/\(tag)", method: .put, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
             try await client.XCTExecute(uri: "/codable/\(tag)", method: .get) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), "Persist")
+                XCTAssertEqual(String(buffer: response.body), "Persist")
             }
         }
     }
@@ -205,8 +200,7 @@ final class PersistTests: XCTestCase {
             }
             try await client.XCTExecute(uri: "/persist/\(tag)", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), "ThisIsTest1")
+                XCTAssertEqual(String(buffer: response.body), "ThisIsTest1")
             }
         }
     }

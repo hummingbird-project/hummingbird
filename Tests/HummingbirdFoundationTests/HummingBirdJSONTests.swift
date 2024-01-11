@@ -54,8 +54,7 @@ class HummingbirdJSONTests: XCTestCase {
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/user", method: .get) { response in
-                let body = try XCTUnwrap(response.body)
-                let user = try JSONDecoder().decode(User.self, from: body)
+                let user = try JSONDecoder().decode(User.self, from: response.body)
                 XCTAssertEqual(user.name, "John Smith")
                 XCTAssertEqual(user.email, "john.smith@email.com")
                 XCTAssertEqual(user.age, 25)
@@ -72,8 +71,7 @@ class HummingbirdJSONTests: XCTestCase {
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/json", method: .get) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), #"{"message":"Hello, world!"}"#)
+                XCTAssertEqual(String(buffer: response.body), #"{"message":"Hello, world!"}"#)
             }
         }
     }

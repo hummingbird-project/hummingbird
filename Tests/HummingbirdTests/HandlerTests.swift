@@ -45,9 +45,8 @@ final class HandlerTests: XCTestCase {
                 body: body
             ) { response in
                 XCTAssertEqual(response.status, .badRequest)
-                let body = try XCTUnwrap(response.body)
                 let expectation = "Coding key `value` not found."
-                XCTAssertEqual(String(buffer: body), expectation)
+                XCTAssertEqual(String(buffer: response.body), expectation)
             }
         }
     }
@@ -67,9 +66,8 @@ final class HandlerTests: XCTestCase {
                 body: body
             ) { response in
                 XCTAssertEqual(response.status, .badRequest)
-                let body = try XCTUnwrap(response.body)
                 let expectation = "Type mismatch for `value` key, expected `Int` type."
-                XCTAssertEqual(String(buffer: body), expectation)
+                XCTAssertEqual(String(buffer: response.body), expectation)
             }
         }
     }
@@ -89,14 +87,13 @@ final class HandlerTests: XCTestCase {
                 body: body
             ) { response in
                 XCTAssertEqual(response.status, .badRequest)
-                let body = try XCTUnwrap(response.body)
                 #if os(Linux)
                 // NOTE: a type mismatch error occures under Linux for null values
                 let expectation = "Type mismatch for `value` key, expected `String` type."
                 #else
                 let expectation = "Value not found for `value` key."
                 #endif
-                XCTAssertEqual(String(buffer: body), expectation)
+                XCTAssertEqual(String(buffer: response.body), expectation)
             }
         }
     }
@@ -116,9 +113,8 @@ final class HandlerTests: XCTestCase {
                 body: body
             ) { response in
                 XCTAssertEqual(response.status, .badRequest)
-                let body = try XCTUnwrap(response.body)
                 let expectation = "The given data was not valid input."
-                XCTAssertEqual(String(buffer: body), expectation)
+                XCTAssertEqual(String(buffer: response.body), expectation)
             }
         }
     }
@@ -132,8 +128,7 @@ final class HandlerTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/hello", method: .post, body: ByteBufferAllocator().buffer(string: #"{"value": "Adam"}"#)) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), "String: Adam")
+                XCTAssertEqual(String(buffer: response.body), "String: Adam")
             }
         }
     }
@@ -170,8 +165,7 @@ final class HandlerTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/23", method: .put) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), "23")
+                XCTAssertEqual(String(buffer: response.body), "23")
             }
         }
     }

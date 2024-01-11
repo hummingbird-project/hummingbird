@@ -40,10 +40,8 @@ final class ApplicationTests: XCTestCase {
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/hello", method: .get) { response in
-                var body = try XCTUnwrap(response.body)
-                let string = body.readString(length: body.readableBytes)
                 XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(string, "GET: Hello")
+                XCTAssertEqual(String(buffer: response.body), "GET: Hello")
             }
         }
     }
@@ -97,10 +95,8 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/hello", method: .post) { response in
-                var body = try XCTUnwrap(response.body)
-                let string = body.readString(length: body.readableBytes)
                 XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(string, "POST: Hello")
+                XCTAssertEqual(String(buffer: response.body), "POST: Hello")
             }
         }
     }
@@ -117,12 +113,10 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/hello", method: .get) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), "GET")
+                XCTAssertEqual(String(buffer: response.body), "GET")
             }
             try await client.XCTExecute(uri: "/hello", method: .post) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), "POST")
+                XCTAssertEqual(String(buffer: response.body), "POST")
             }
         }
     }
@@ -140,12 +134,10 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/hello", method: .get) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), "GET")
+                XCTAssertEqual(String(buffer: response.body), "GET")
             }
             try await client.XCTExecute(uri: "/hello", method: .post) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), "POST")
+                XCTAssertEqual(String(buffer: response.body), "POST")
             }
         }
     }
@@ -159,10 +151,8 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/query?test=test%20data%C3%A9", method: .post) { response in
-                var body = try XCTUnwrap(response.body)
-                let string = body.readString(length: body.readableBytes)
                 XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(string, "test dataé")
+                XCTAssertEqual(String(buffer: response.body), "test dataé")
             }
         }
     }
@@ -176,10 +166,8 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/add?value=3&value=45&value=7", method: .post) { response in
-                var body = try XCTUnwrap(response.body)
-                let string = body.readString(length: body.readableBytes)
                 XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(string, "55")
+                XCTAssertEqual(String(buffer: response.body), "55")
             }
         }
     }
@@ -193,8 +181,7 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/array", method: .get) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), "[\"yes\", \"no\"]")
+                XCTAssertEqual(String(buffer: response.body), "[\"yes\", \"no\"]")
             }
         }
     }
@@ -245,8 +232,7 @@ final class ApplicationTests: XCTestCase {
                 XCTAssertEqual(response.body, ByteBuffer())
             }
             try await client.XCTExecute(uri: "/size", method: .post, body: buffer) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), "640001")
+                XCTAssertEqual(String(buffer: response.body), "640001")
             }
         }
     }
@@ -290,7 +276,7 @@ final class ApplicationTests: XCTestCase {
 
             let buffer = self.randomBuffer(size: 512_000)
             try await client.XCTExecute(uri: "/hello", method: .put, body: buffer) { response in
-                XCTAssertEqual(response.body.map { String(buffer: $0) }, "512000")
+                XCTAssertEqual(String(buffer: response.body), "512000")
                 XCTAssertEqual(response.status, .ok)
             }
         }
@@ -333,8 +319,7 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/name", method: .patch) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(String(buffer: body), #"Name(first: "john", last: "smith")"#)
+                XCTAssertEqual(String(buffer: response.body), #"Name(first: "john", last: "smith")"#)
             }
         }
     }
@@ -352,12 +337,10 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/hello", method: .delete) { response in
-                var body = try XCTUnwrap(response.body)
-                let string = body.readString(length: body.readableBytes)
                 XCTAssertEqual(response.status, .preconditionRequired)
                 XCTAssertEqual(response.headers[.test], "value")
                 XCTAssertEqual(response.headers[.contentType], "application/json")
-                XCTAssertEqual(string, "Hello")
+                XCTAssertEqual(String(buffer: response.body), "Hello")
             }
         }
     }
@@ -379,12 +362,10 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/hello", method: .patch) { response in
-                var body = try XCTUnwrap(response.body)
-                let string = body.readString(length: body.readableBytes)
                 XCTAssertEqual(response.status, .multipleChoices)
                 XCTAssertEqual(response.headers[.test], "value")
                 XCTAssertEqual(response.headers[.contentType], "application/json")
-                XCTAssertEqual(string, #"{"value":"true"}"#)
+                XCTAssertEqual(String(buffer: response.body), #"{"value":"true"}"#)
             }
         }
     }
@@ -457,8 +438,7 @@ final class ApplicationTests: XCTestCase {
 
             try await client.XCTExecute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
-                let body = try XCTUnwrap(response.body)
-                let address = String(buffer: body)
+                let address = String(buffer: response.body)
                 XCTAssert(address == "127.0.0.1" || address == "::1")
             }
         }
@@ -477,10 +457,8 @@ final class ApplicationTests: XCTestCase {
         let app = createApplication()
         try await app.test(.live) { client in
             try await client.XCTExecute(uri: "/hello", method: .get) { response in
-                var body = try XCTUnwrap(response.body)
-                let string = body.readString(length: body.readableBytes)
                 XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(string, "GET: Hello")
+                XCTAssertEqual(String(buffer: response.body), "GET: Hello")
             }
         }
     }
@@ -501,10 +479,8 @@ final class ApplicationTests: XCTestCase {
         let app = MyApp()
         try await app.test(.live) { client in
             try await client.XCTExecute(uri: "/hello", method: .get) { response in
-                var body = try XCTUnwrap(response.body)
-                let string = body.readString(length: body.readableBytes)
                 XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(string, "GET: Hello")
+                XCTAssertEqual(String(buffer: response.body), "GET: Hello")
             }
         }
     }
@@ -578,8 +554,7 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.ahc(.https)) { client in
             try await client.XCTExecute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
-                let body = try XCTUnwrap(response.body)
-                let string = String(buffer: body)
+                let string = String(buffer: response.body)
                 XCTAssertEqual(string, "Hello")
             }
         }
@@ -598,8 +573,7 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.ahc(.https)) { client in
             try await client.XCTExecute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
-                let body = try XCTUnwrap(response.body)
-                let string = String(buffer: body)
+                let string = String(buffer: response.body)
                 XCTAssertEqual(string, "Hello")
             }
         }
@@ -615,8 +589,7 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.live) { client in
             try await client.XCTExecute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
-                let body = try XCTUnwrap(response.body)
-                let string = String(buffer: body)
+                let string = String(buffer: response.body)
                 XCTAssertEqual(string, "Hello")
             }
         }

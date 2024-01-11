@@ -25,7 +25,7 @@ public struct HBXCTResponse: Sendable {
     /// response headers
     public var headers: HTTPFields { self.head.headerFields }
     /// response body
-    public let body: ByteBuffer?
+    public let body: ByteBuffer
     /// trailer headers
     public let trailerHeaders: HTTPFields?
 }
@@ -52,12 +52,8 @@ struct HBXCTError: Error, Equatable {
     static var timeout: Self { .init(.timeout) }
 }
 
-/// Protocol for client used by HBXCT
-///
-/// TODO: Could this be made Sendable? Currently HBXCTRouter.Client is not Sendable
-/// Because `HBResponder` is not Sendable, Maybe in the future it could be and we
-/// can revisit this
-public protocol HBXCTClientProtocol {
+/// Protocol for client used by HummingbirdXCT
+public protocol HBXCTClientProtocol: Sendable {
     /// Execute URL request and provide response
     func execute(
         uri: String,
@@ -68,7 +64,15 @@ public protocol HBXCTClientProtocol {
 }
 
 extension HBXCTClientProtocol {
-    /// Send request and call test callback on the response returned
+    /// Send request to associated test framework and call test callback on the response returned
+    ///
+    /// - Parameters:
+    ///   - uri: Path of request
+    ///   - method: Request method
+    ///   - headers: Request headers
+    ///   - body: Request body
+    ///   - testCallback: closure to call on response returned by test framework
+    /// - Returns: Return value of test closure
     @discardableResult public func XCTExecute<Return>(
         uri: String,
         method: HTTPRequest.Method,
@@ -82,7 +86,7 @@ extension HBXCTClientProtocol {
 }
 
 /// Protocol for Test application.
-public protocol HBXCTApplication {
+protocol HBXCTApplication {
     /// Associated client with XCT server type
     associatedtype Client: HBXCTClientProtocol
 
