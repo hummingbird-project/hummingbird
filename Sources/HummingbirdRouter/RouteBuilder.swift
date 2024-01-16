@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2023 the Hummingbird authors
+// Copyright (c) 2023-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -25,10 +25,18 @@ public struct Handle<HandlerOutput: HBResponseGenerator, Context: HBRouterReques
 
     let handler: Handler
 
+    ///  Initialize a Handle route middleware
+    /// - Parameter handler: Handler function used to process HTTP request
     public init(_ handler: @escaping Handler) {
         self.handler = handler
     }
 
+    /// Process HTTP request and return an HTTP response
+    /// - Parameters:
+    ///   - input: Request
+    ///   - context: Request context
+    ///   - next: Next middleware to run, if no route handler is found
+    /// - Returns: Response
     public func handle(_ input: Input, context: Context, next: (Input, Context) async throws -> Output) async throws -> Output {
         return try await self.handler(input, context).response(from: input, context: context)
     }

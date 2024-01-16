@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2023 the Hummingbird authors
+// Copyright (c) 2023-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -32,18 +32,24 @@ extension ServiceContext {
     }
 }
 
+/// Router middleware that applies a middleware chain to URIs with a specified prefix
 public struct RouteGroup<Context: HBRouterRequestContext, Handler: MiddlewareProtocol>: HBMiddlewareProtocol where Handler.Input == HBRequest, Handler.Output == HBResponse, Handler.Context == Context {
     public typealias Input = HBRequest
     public typealias Output = HBResponse
 
+    /// Path local to group route this group is defined in.
     @usableFromInline
     var routerPath: RouterPath
+    /// Group handler
     @usableFromInline
     var handler: Handler
 
+    /// Create RouteGroup from result builder
+    /// - Parameters:
+    ///   - routerPath: Path local to group route this group is defined in
+    ///   - builder: RouteGroup builder
     public init(
-        _ routerPath: RouterPath = "",
-        context: Context.Type = Context.self,
+        _ routerPath: RouterPath,
         @MiddlewareFixedTypeBuilder<HBRequest, HBResponse, Context> builder: () -> Handler
     ) {
         self.routerPath = routerPath
@@ -55,6 +61,12 @@ public struct RouteGroup<Context: HBRouterRequestContext, Handler: MiddlewarePro
         }
     }
 
+    /// Process HTTP request and return an HTTP response
+    /// - Parameters:
+    ///   - input: Request
+    ///   - context: Request context
+    ///   - next: Next middleware to run, if no route handler is found
+    /// - Returns: Response
     @inlinable
     public func handle(_ input: Input, context: Context, next: (Input, Context) async throws -> Output) async throws -> Output {
         if let updatedContext = self.routerPath.matchPrefix(context) {
