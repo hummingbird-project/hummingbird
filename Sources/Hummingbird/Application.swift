@@ -232,14 +232,14 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
     ///   - onServerRunning: Function called once the server is running
     ///   - eventLoopGroupProvider: Where to get our EventLoopGroup
     ///   - logger: Logger application uses
-    public init<Context>(
-        router: HBRouter<Context>,
+    public init<ResponderBuilder: HBResponderBuilder>(
+        router: ResponderBuilder,
         server: HBHTTPChannelBuilder<ChildChannel> = .http1(),
         configuration: HBApplicationConfiguration = HBApplicationConfiguration(),
         onServerRunning: @escaping @Sendable (Channel) async -> Void = { _ in },
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton,
         logger: Logger? = nil
-    ) where Responder == HBRouterResponder<Context> {
+    ) where Responder == ResponderBuilder.Responder {
         if let logger {
             self.logger = logger
         } else {
