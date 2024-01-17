@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2023 the Hummingbird authors
+// Copyright (c) 2023-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -17,16 +17,20 @@ import Hummingbird
 import ServiceContextModule
 
 /// Route definition
-public struct Route<Handler: RouteHandlerProtocol, Context: HBRouterRequestContext>: HBMiddlewareProtocol where Handler.Context == Context {
+public struct Route<Handler: _RouteHandlerProtocol, Context: HBRouterRequestContext>: HBMiddlewareProtocol where Handler.Context == Context {
+    /// Full URI path to route
     public let fullPath: String
+    /// Route path local to group route is defined in.
     public let routerPath: RouterPath
+    /// Route method
     public let method: HTTPRequest.Method
+    /// Route handler
     public let handler: Handler
 
     /// Initialize Route
     /// - Parameters:
     ///   - method: Route method
-    ///   - routerPath: Route path, relative to Group route is defined in
+    ///   - routerPath: Route path, relative to group route is defined in
     ///   - handler: Route handler
     init(_ method: HTTPRequest.Method, _ routerPath: RouterPath = "", handler: Handler) {
         self.method = method
@@ -38,38 +42,38 @@ public struct Route<Handler: RouteHandlerProtocol, Context: HBRouterRequestConte
     /// Initialize Route with a closure
     /// - Parameters:
     ///   - method: Route method
-    ///   - routerPath: Route path, relative to Group route is defined in
+    ///   - routerPath: Route path, relative to group route is defined in
     ///   - handler: Router handler closure
     public init<RouteOutput: HBResponseGenerator>(
         _ method: HTTPRequest.Method,
         _ routerPath: RouterPath = "",
         handler: @escaping @Sendable (Input, Context) async throws -> RouteOutput
-    ) where Handler == RouteHandlerClosure<RouteOutput, Context> {
+    ) where Handler == _RouteHandlerClosure<RouteOutput, Context> {
         self.init(
             method,
             routerPath,
-            handler: RouteHandlerClosure(closure: handler)
+            handler: _RouteHandlerClosure(closure: handler)
         )
     }
 
-    /// Initialize Route with a MiddlewareProtocol
+    /// Initialize Route using the ``RouteBuilder`` result builder
     /// - Parameters:
     ///   - method: Route method
-    ///   - routerPath: Route path, relative to Group route is defined in
+    ///   - routerPath: Route path, relative to group route is defined in
     ///   - builder: Result builder used to build Route middleware
     public init<M0: MiddlewareProtocol>(
         _ method: HTTPRequest.Method,
         _ routerPath: RouterPath = "",
         @RouteBuilder<Context> builder: () -> M0
-    ) where Handler == RouteHandlerMiddleware<M0>, M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
+    ) where Handler == _RouteHandlerMiddleware<M0>, M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
         self.init(
             method,
             routerPath,
-            handler: RouteHandlerMiddleware(middleware: builder())
+            handler: _RouteHandlerMiddleware(middleware: builder())
         )
     }
 
-    /// Handle route middleware
+    /// Process HTTP request and return an HTTP response
     /// - Parameters:
     ///   - input: Request
     ///   - context: Context for handler
@@ -96,132 +100,132 @@ public struct Route<Handler: RouteHandlerProtocol, Context: HBRouterRequestConte
 
 /// Create a GET Route with a closure
 /// - Parameters:
-///   - routerPath: Route path, relative to Group route is defined in
+///   - routerPath: Route path, relative to group route is defined in
 ///   - handler: Router handler closure
 public func Get<RouteOutput: HBResponseGenerator, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     handler: @escaping @Sendable (HBRequest, Context) async throws -> RouteOutput
-) -> Route<RouteHandlerClosure<RouteOutput, Context>, Context> {
+) -> Route<_RouteHandlerClosure<RouteOutput, Context>, Context> {
     .init(.get, routerPath, handler: handler)
 }
 
-/// Create a GET Route with a MiddlewareProtocol
+/// Create a GET Route using the ``RouteBuilder`` result builder
 /// - Parameters:
-///   - routerPath: Route path, relative to Group route is defined in
+///   - routerPath: Route path, relative to group route is defined in
 ///   - builder: Result builder used to build Route middleware
 public func Get<M0: MiddlewareProtocol, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     @RouteBuilder<Context> builder: () -> M0
-) -> Route<RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
+) -> Route<_RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
     .init(.get, routerPath, builder: builder)
 }
 
 /// Create a HEAD Route with a closure
 /// - Parameters:
-///   - routerPath: Route path, relative to Group route is defined in
+///   - routerPath: Route path, relative to group route is defined in
 ///   - handler: Router handler closure
 public func Head<RouteOutput: HBResponseGenerator, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     handler: @escaping @Sendable (HBRequest, Context) async throws -> RouteOutput
-) -> Route<RouteHandlerClosure<RouteOutput, Context>, Context> {
+) -> Route<_RouteHandlerClosure<RouteOutput, Context>, Context> {
     .init(.head, routerPath, handler: handler)
 }
 
-/// Create a HEAD Route with a MiddlewareProtocol
+/// Create a HEAD Route using the ``RouteBuilder`` result builder
 /// - Parameters:
-///   - routerPath: Route path, relative to Group route is defined in
+///   - routerPath: Route path, relative to group route is defined in
 ///   - builder: Result builder used to build Route middleware
 public func Head<M0: MiddlewareProtocol, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     @RouteBuilder<Context> builder: () -> M0
-) -> Route<RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
+) -> Route<_RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
     .init(.head, routerPath, builder: builder)
 }
 
 /// Create a PUT Route with a closure
 /// - Parameters:
-///   - routerPath: Route path, relative to Group route is defined in
+///   - routerPath: Route path, relative to group route is defined in
 ///   - handler: Router handler closure
 public func Put<RouteOutput: HBResponseGenerator, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     handler: @escaping @Sendable (HBRequest, Context) async throws -> RouteOutput
-) -> Route<RouteHandlerClosure<RouteOutput, Context>, Context> {
+) -> Route<_RouteHandlerClosure<RouteOutput, Context>, Context> {
     .init(.put, routerPath, handler: handler)
 }
 
-/// Create a PUT Route with a MiddlewareProtocol
+/// Create a PUT Route using the ``RouteBuilder`` result builder
 /// - Parameters:
-///   - routerPath: Route path, relative to Group route is defined in
+///   - routerPath: Route path, relative to group route is defined in
 ///   - builder: Result builder used to build Route middleware
 public func Put<M0: MiddlewareProtocol, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     @RouteBuilder<Context> builder: () -> M0
-) -> Route<RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
+) -> Route<_RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
     .init(.put, routerPath, builder: builder)
 }
 
 /// Create a POST Route with a closure
 /// - Parameters:
-///   - routerPath: Route path, relative to Group route is defined in
+///   - routerPath: Route path, relative to group route is defined in
 ///   - handler: Router handler closure
 public func Post<RouteOutput: HBResponseGenerator, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     handler: @escaping @Sendable (HBRequest, Context) async throws -> RouteOutput
-) -> Route<RouteHandlerClosure<RouteOutput, Context>, Context> {
+) -> Route<_RouteHandlerClosure<RouteOutput, Context>, Context> {
     .init(.post, routerPath, handler: handler)
 }
 
-/// Create a POST Route with a MiddlewareProtocol
+/// Create a POST Route using the ``RouteBuilder`` result builder
 /// - Parameters:
-///   - routerPath: Route path, relative to Group route is defined in
+///   - routerPath: Route path, relative to group route is defined in
 ///   - builder: Result builder used to build Route middleware
 public func Post<M0: MiddlewareProtocol, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     @RouteBuilder<Context> builder: () -> M0
-) -> Route<RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
+) -> Route<_RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
     .init(.post, routerPath, builder: builder)
 }
 
 /// Create a PATCH Route with a closure
 /// - Parameters:
-///   - routerPath: Route path, relative to Group route is defined in
+///   - routerPath: Route path, relative to group route is defined in
 ///   - handler: Router handler closure
 public func Patch<RouteOutput: HBResponseGenerator, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     handler: @escaping @Sendable (HBRequest, Context) async throws -> RouteOutput
-) -> Route<RouteHandlerClosure<RouteOutput, Context>, Context> {
+) -> Route<_RouteHandlerClosure<RouteOutput, Context>, Context> {
     .init(.patch, routerPath, handler: handler)
 }
 
-/// Create a PATCH Route with a MiddlewareProtocol
+/// Create a PATCH Route using the ``RouteBuilder`` result builder
 /// - Parameters:
-///   - routerPath: Route path, relative to Group route is defined in
+///   - routerPath: Route path, relative to group route is defined in
 ///   - builder: Result builder used to build Route middleware
 public func Patch<M0: MiddlewareProtocol, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     @RouteBuilder<Context> builder: () -> M0
-) -> Route<RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
+) -> Route<_RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
     .init(.patch, routerPath, builder: builder)
 }
 
 /// Create a DELETE Route with a closure
 /// - Parameters:
-///   - routerPath: Route path, relative to Group route is defined in
+///   - routerPath: Route path, relative to group route is defined in
 ///   - handler: Router handler closure
 public func Delete<RouteOutput: HBResponseGenerator, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     handler: @escaping @Sendable (HBRequest, Context) async throws -> RouteOutput
-) -> Route<RouteHandlerClosure<RouteOutput, Context>, Context> {
+) -> Route<_RouteHandlerClosure<RouteOutput, Context>, Context> {
     .init(.delete, routerPath, handler: handler)
 }
 
-/// Create a DELETE Route with a MiddlewareProtocol
+/// Create a DELETE Route using the ``RouteBuilder`` result builder
 /// - Parameters:
-///   - routerPath: Route path, relative to Group route is defined in
+///   - routerPath: Route path, relative to group route is defined in
 ///   - builder: Result builder used to build Route middleware
 public func Delete<M0: MiddlewareProtocol, Context: HBRouterRequestContext>(
     _ routerPath: RouterPath = "",
     @RouteBuilder<Context> builder: () -> M0
-) -> Route<RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
+) -> Route<_RouteHandlerMiddleware<M0>, Context> where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
     .init(.delete, routerPath, builder: builder)
 }

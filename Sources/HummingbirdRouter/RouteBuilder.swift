@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2023 the Hummingbird authors
+// Copyright (c) 2023-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -16,8 +16,8 @@ import Hummingbird
 
 /// Route Handler Middleware.
 ///
-/// Requires that the return value of handler conforms to ``HBResponseGenerator`` so
-/// that the `handle` function can return an `HBResponse`
+/// Requires that the return value of handler conforms to ``Hummingbird/HBResponseGenerator`` so
+/// that the `handle` function can return an ``HummingbirdCore/HBResponse``
 public struct Handle<HandlerOutput: HBResponseGenerator, Context: HBRouterRequestContext>: Sendable, MiddlewareProtocol {
     public typealias Input = HBRequest
     public typealias Output = HBResponse
@@ -25,10 +25,18 @@ public struct Handle<HandlerOutput: HBResponseGenerator, Context: HBRouterReques
 
     let handler: Handler
 
+    ///  Initialize a Handle route middleware
+    /// - Parameter handler: Handler function used to process HTTP request
     public init(_ handler: @escaping Handler) {
         self.handler = handler
     }
 
+    /// Process HTTP request and return an HTTP response
+    /// - Parameters:
+    ///   - input: Request
+    ///   - context: Request context
+    ///   - next: Next middleware to run, if no route handler is found
+    /// - Returns: Response
     public func handle(_ input: Input, context: Context, next: (Input, Context) async throws -> Output) async throws -> Output {
         return try await self.handler(input, context).response(from: input, context: context)
     }
@@ -36,8 +44,8 @@ public struct Handle<HandlerOutput: HBResponseGenerator, Context: HBRouterReques
 
 /// Result builder for a Route.
 ///
-/// This is very similar to the ``MiddlewareStack`` reult builder except it requires the
-/// last entry of the builder to be a ``Handle`` so we are guaranteed a Response. It also
+/// This is very similar to the ``MiddlewareFixedTypeBuilder`` result builder except it requires
+/// the last entry of the builder to be a ``Handle`` so we are guaranteed a Response. It also
 /// adds the ability to pass in a closure instead of ``Handle`` type.
 @resultBuilder
 public enum RouteBuilder<Context: HBRouterRequestContext> {

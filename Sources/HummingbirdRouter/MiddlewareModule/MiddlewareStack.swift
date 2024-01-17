@@ -13,21 +13,6 @@
 //===----------------------------------------------------------------------===//
 import Hummingbird
 
-public struct MiddlewareClosure<Input, Output, Context>: MiddlewareProtocol {
-    @usableFromInline
-    var closure: Middleware<Input, Output, Context>
-
-    @inlinable
-    public init(_ middleware: @escaping Middleware<Input, Output, Context>) {
-        self.closure = middleware
-    }
-
-    @inlinable
-    public func handle(_ input: Input, context: Context, next: (Input, Context) async throws -> Output) async throws -> Output {
-        try await self.closure(input, context, next)
-    }
-}
-
 public struct _Middleware2<M0: MiddlewareProtocol, M1: MiddlewareProtocol>: MiddlewareProtocol where M0.Input == M1.Input, M0.Context == M1.Context, M0.Output == M1.Output {
     public typealias Input = M0.Input
     public typealias Output = M0.Output
@@ -50,6 +35,10 @@ public struct _Middleware2<M0: MiddlewareProtocol, M1: MiddlewareProtocol>: Midd
     }
 }
 
+/// Result builder used by ``HBRouterBuilder``
+///
+/// Generates a middleware stack from the elements inside the result builder. The input,
+/// context and output types passed through the middleware stack are fixed and cannot be changed.
 @resultBuilder
 public enum MiddlewareFixedTypeBuilder<Input, Output, Context> {
     public static func buildExpression<M0: MiddlewareProtocol>(_ m0: M0) -> M0 where M0.Input == Input, M0.Output == Output, M0.Context == Context {

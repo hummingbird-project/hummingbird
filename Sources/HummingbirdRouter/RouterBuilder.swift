@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2023 the Hummingbird authors
+// Copyright (c) 2023-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -13,37 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
-import Logging
-import NIOCore
 
-/// Context data required by `HBRouterBuilder`
-public struct HBRouterBuilderContext: Sendable {
-    /// remaining path components to match
-    @usableFromInline
-    var remainingPathComponents: ArraySlice<Substring>
-
-    public init() {
-        self.remainingPathComponents = []
-    }
-}
-
-/// Protocol that all request contexts used with HBRouterBuilder should conform to.
-public protocol HBRouterRequestContext: HBBaseRequestContext {
-    var routerContext: HBRouterBuilderContext { get set }
-}
-
-/// Basic implementation of a context that can be used with `HBRouterBuilder``
-public struct HBBasicRouterRequestContext: HBRequestContext, HBRouterRequestContext {
-    public var routerContext: HBRouterBuilderContext
-    public var coreContext: HBCoreRequestContext
-
-    public init(allocator: ByteBufferAllocator, logger: Logger) {
-        self.coreContext = .init(allocator: allocator, logger: logger)
-        self.routerContext = .init()
-    }
-}
-
-/// Router
+/// Router built using a result builder
 public struct HBRouterBuilder<Context: HBRouterRequestContext, Handler: MiddlewareProtocol>: MiddlewareProtocol where Handler.Input == HBRequest, Handler.Output == HBResponse, Handler.Context == Context
 {
     public typealias Input = HBRequest
@@ -51,14 +22,20 @@ public struct HBRouterBuilder<Context: HBRouterRequestContext, Handler: Middlewa
 
     let handler: Handler
 
-    public init(handler: Handler) {
-        self.handler = handler
-    }
-
+    ///  Initialize HBRouterBuilder with contents of result builder
+    /// - Parameters:
+    ///   - context: Request context used by router
+    ///   - builder: Result builder for router
     public init(context: Context.Type = Context.self, @MiddlewareFixedTypeBuilder<Input, Output, Context> builder: () -> Handler) {
         self.handler = builder()
     }
 
+    /// Process HTTP request and return an HTTP response
+    /// - Parameters:
+    ///   - input: HTTP Request
+    ///   - context: Request context
+    ///   - next: Next middleware to call if router doesn't hit a route
+    /// - Returns: HTTP Response
     public func handle(_ input: Input, context: Context, next: (Input, Context) async throws -> Output) async throws -> Output {
         var context = context
         context.routerContext.remainingPathComponents = input.uri.path.split(separator: "/")[...]

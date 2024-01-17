@@ -143,7 +143,7 @@ final class MiddlewareTests: XCTestCase {
             }
         }
         let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
-            RouteGroup {
+            RouteGroup("") {
                 TransformMiddleware()
                 Get("test") { request, _ in
                     return HBResponse(status: .ok, body: .init(asyncSequence: request.body))

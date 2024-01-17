@@ -19,13 +19,17 @@ import NIOCore
 public protocol HBChildChannel: Sendable {
     associatedtype Value: Sendable
 
-    /// Initialize channel
+    /// Setup child channel
     /// - Parameters:
-    ///   - channel: channel
-    ///   - childHandlers: Channel handlers to add
-    ///   - configuration: server configuration
+    ///   - channel: Child channel
+    ///   - configuration: Server configuration
+    ///   - logger: Logger used during setup
+    /// - Returns: Object to process input/output on child channel
     func setup(channel: Channel, configuration: HBServerConfiguration, logger: Logger) -> EventLoopFuture<Value>
 
-    /// handle async channel
+    /// handle messages being passed down the channel pipeline
+    /// - Parameters:
+    ///   - value: Object to process input/output on child channel
+    ///   - logger: Logger to use while processing messages
     func handle(value: Value, logger: Logger) async
 }
