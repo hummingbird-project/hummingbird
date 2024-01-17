@@ -7,11 +7,21 @@ import NIOSSL
 public struct TLSChannel<BaseChannel: HBChildChannel>: HBChildChannel {
     public typealias Value = BaseChannel.Value
 
+    ///  Initialize TLSChannel
+    /// - Parameters:
+    ///   - baseChannel: Base child channel wrap
+    ///   - tlsConfiguration: TLS configuration
     public init(_ baseChannel: BaseChannel, tlsConfiguration: TLSConfiguration) throws {
         self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
         self.baseChannel = baseChannel
     }
 
+    /// Setup child channel with TLS and the base channel setup
+    /// - Parameters:
+    ///   - channel: Child channel
+    ///   - configuration: Server configuration
+    ///   - logger: Logger used during setup
+    /// - Returns: Object to process input/output on child channel
     @inlinable
     public func setup(channel: Channel, configuration: HBServerConfiguration, logger: Logger) -> EventLoopFuture<Value> {
         return channel.pipeline.addHandler(NIOSSLServerHandler(context: self.sslContext)).flatMap {
@@ -20,6 +30,10 @@ public struct TLSChannel<BaseChannel: HBChildChannel>: HBChildChannel {
     }
 
     @inlinable
+    /// handle messages being passed down the channel pipeline
+    /// - Parameters:
+    ///   - value: Object to process input/output on child channel
+    ///   - logger: Logger to use while processing messages
     public func handle(value: BaseChannel.Value, logger: Logging.Logger) async {
         await self.baseChannel.handle(value: value, logger: logger)
     }

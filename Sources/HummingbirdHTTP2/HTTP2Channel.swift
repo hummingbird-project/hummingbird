@@ -23,6 +23,7 @@ import NIOHTTPTypesHTTP2
 import NIOPosix
 import NIOSSL
 
+/// Child channel for processing HTTP1 with the option of upgrading to HTTP2
 public struct HTTP2Channel: HTTPChannelHandler {
     public typealias Value = EventLoopFuture<NIONegotiatedHTTPVersion<HTTP1Channel.Value, (NIOAsyncChannel<HTTP2Frame, HTTP2Frame>, NIOHTTP2Handler.AsyncStreamMultiplexer<HTTP1Channel.Value>)>>
 
@@ -31,6 +32,11 @@ public struct HTTP2Channel: HTTPChannelHandler {
     private let additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
     public var responder: @Sendable (HBRequest, Channel) async throws -> HBResponse { http1.responder }
 
+    ///  Initialize HTTP1Channel
+    /// - Parameters:
+    ///   - tlsConfiguration: TLS configuration
+    ///   - additionalChannelHandlers: Additional channel handlers to add to channel pipeline
+    ///   - responder: Function returning a HTTP response for a HTTP request
     public init(
         tlsConfiguration: TLSConfiguration,
         additionalChannelHandlers: @escaping @Sendable () -> [any RemovableChannelHandler] = { [] },
@@ -43,6 +49,12 @@ public struct HTTP2Channel: HTTPChannelHandler {
         self.http1 = HTTP1Channel(responder: responder, additionalChannelHandlers: additionalChannelHandlers)
     }
 
+    /// Setup child channel for HTTP1 with HTTP2 upgrade
+    /// - Parameters:
+    ///   - channel: Child channel
+    ///   - configuration: Server configuration
+    ///   - logger: Logger used during setup
+    /// - Returns: Object to process input/output on child channel
     public func setup(channel: Channel, configuration: HBServerConfiguration, logger: Logger) -> EventLoopFuture<Value> {
         do {
             try channel.pipeline.syncOperations.addHandler(NIOSSLServerHandler(context: self.sslContext))
@@ -83,6 +95,10 @@ public struct HTTP2Channel: HTTPChannelHandler {
         }
     }
 
+    /// handle messages being passed down the channel pipeline
+    /// - Parameters:
+    ///   - value: Object to process input/output on child channel
+    ///   - logger: Logger to use while processing messages
     public func handle(value: Value, logger: Logger) async {
         do {
             let channel = try await value.get()

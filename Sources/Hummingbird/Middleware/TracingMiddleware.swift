@@ -21,7 +21,7 @@ import Tracing
 /// Creates a span for each request, including attributes such as the HTTP method.
 ///
 /// You may opt in to recording a specific subset of HTTP request/response header values by passing
-/// a set of header names to ``init(recordingHeaders:)``.
+/// a set of header names.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 public struct HBTracingMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
     private let headerNamesToRecord: Set<RecordingHeader>

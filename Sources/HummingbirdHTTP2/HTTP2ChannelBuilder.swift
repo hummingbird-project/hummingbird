@@ -17,6 +17,19 @@ import NIOCore
 import NIOSSL
 
 extension HBHTTPChannelBuilder {
+    ///  Build HTTP channel with HTTP2 upgrade
+    ///
+    /// Use in ``Hummingbird/HBApplication`` initialization.
+    /// ```
+    /// let app = HBApplication(
+    ///     router: router,
+    ///     server: .http2(tlsConfiguration: tlsConfiguration)
+    /// )
+    /// ```
+    /// - Parameters:
+    ///   - tlsConfiguration: TLS configuration
+    ///   - additionalChannelHandlers: Additional channel handlers to call before handling HTTP
+    /// - Returns: HTTPChannelHandler builder
     public static func http2(
         tlsConfiguration: TLSConfiguration,
         additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = []

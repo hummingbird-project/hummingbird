@@ -18,9 +18,14 @@ import NIOCore
 import NIOHTTPTypes
 import NIOHTTPTypesHTTP1
 
+/// Child channel for processing HTTP1
 public struct HTTP1Channel: HBChildChannel, HTTPChannelHandler {
     public typealias Value = NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>
 
+    ///  Initialize HTTP1Channel
+    /// - Parameters:
+    ///   - responder: Function returning a HTTP response for a HTTP request
+    ///   - additionalChannelHandlers: Additional channel handlers to add to channel pipeline
     public init(
         responder: @escaping @Sendable (HBRequest, Channel) async throws -> HBResponse,
         additionalChannelHandlers: @escaping @Sendable () -> [any RemovableChannelHandler] = { [] }
@@ -29,6 +34,12 @@ public struct HTTP1Channel: HBChildChannel, HTTPChannelHandler {
         self.responder = responder
     }
 
+    /// Setup child channel for HTTP1
+    /// - Parameters:
+    ///   - channel: Child channel
+    ///   - configuration: Server configuration
+    ///   - logger: Logger used during setup
+    /// - Returns: Object to process input/output on child channel
     public func setup(channel: Channel, configuration: HBServerConfiguration, logger: Logger) -> EventLoopFuture<Value> {
         let childChannelHandlers: [any ChannelHandler] =
             [HTTP1ToHTTPServerCodec(secure: false)] +
@@ -47,6 +58,10 @@ public struct HTTP1Channel: HBChildChannel, HTTPChannelHandler {
         }
     }
 
+    /// handle HTTP messages being passed down the channel pipeline
+    /// - Parameters:
+    ///   - value: Object to process input/output on child channel
+    ///   - logger: Logger to use while processing messages
     public func handle(value asyncChannel: NIOCore.NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>, logger: Logging.Logger) async {
         await handleHTTP(asyncChannel: asyncChannel, logger: logger)
     }
