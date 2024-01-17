@@ -39,10 +39,10 @@ public struct HBFileIO: Sendable {
     ///   - path: System file path
     ///   - context: Context this request is being called in
     /// - Returns: Response body
-    public func loadFile(path: String, context: some HBBaseRequestContext, logger: Logger) async throws -> HBResponseBody {
+    public func loadFile(path: String, context: some HBBaseRequestContext) async throws -> HBResponseBody {
         do {
             let (handle, region) = try await self.fileIO.openFile(path: path, eventLoop: self.eventLoopGroup.any()).get()
-            logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
+            context.logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
 
             if region.readableBytes > self.chunkSize {
                 return try self.streamFile(handle: handle, region: region, context: context)
@@ -67,10 +67,10 @@ public struct HBFileIO: Sendable {
     ///   - range:Range defining how much of the file is to be loaded
     ///   - context: Context this request is being called in
     /// - Returns: Response body plus file size
-    public func loadFile(path: String, range: ClosedRange<Int>, context: some HBBaseRequestContext, logger: Logger) async throws -> (HBResponseBody, Int) {
+    public func loadFile(path: String, range: ClosedRange<Int>, context: some HBBaseRequestContext) async throws -> (HBResponseBody, Int) {
         do {
             let (handle, region) = try await self.fileIO.openFile(path: path, eventLoop: self.eventLoopGroup.any()).get()
-            logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
+            context.logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
 
             // work out region to load
             let regionRange = region.readerIndex...region.endIndex
@@ -101,13 +101,13 @@ public struct HBFileIO: Sendable {
     ///   - contents: Request body to write.
     ///   - path: Path to write to
     ///   - logger: Logger
-    public func writeFile(contents: HBRequestBody, path: String, context: some HBBaseRequestContext, logger: Logger) async throws {
+    public func writeFile(contents: HBRequestBody, path: String, context: some HBBaseRequestContext) async throws {
         let eventLoop = self.eventLoopGroup.any()
         let handle = try await self.fileIO.openFile(path: path, mode: .write, flags: .allowFileCreation(), eventLoop: eventLoop).get()
         defer {
             try? handle.close()
         }
-        logger.debug("[FileIO] PUT", metadata: ["file": .string(path)])
+        context.logger.debug("[FileIO] PUT", metadata: ["file": .string(path)])
         switch contents {
         case .byteBuffer(let buffer):
             try await self.writeFile(buffer: buffer, handle: handle, on: eventLoop)

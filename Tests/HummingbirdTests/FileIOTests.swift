@@ -27,7 +27,7 @@ class FileIOTests: XCTestCase {
         let router = HBRouter()
         router.get("test.jpg") { _, context -> HBResponse in
             let fileIO = HBFileIO(threadPool: context.threadPool)
-            let body = try await fileIO.loadFile(path: "test.jpg", context: context, logger: context.logger)
+            let body = try await fileIO.loadFile(path: "test.jpg", context: context)
             return .init(status: .ok, headers: [:], body: body)
         }
         let buffer = self.randomBuffer(size: 320_003)
@@ -50,7 +50,7 @@ class FileIOTests: XCTestCase {
         let router = HBRouter()
         router.put("store") { request, context -> HTTPResponse.Status in
             let fileIO = HBFileIO(threadPool: context.threadPool)
-            try await fileIO.writeFile(contents: request.body, path: filename, context: context, logger: context.logger)
+            try await fileIO.writeFile(contents: request.body, path: filename, context: context)
             return .ok
         }
         let app = HBApplication(responder: router.buildResponder())
@@ -73,7 +73,7 @@ class FileIOTests: XCTestCase {
         let router = HBRouter()
         router.put("store") { request, context -> HTTPResponse.Status in
             let fileIO = HBFileIO(threadPool: context.threadPool)
-            try await fileIO.writeFile(contents: request.body, path: filename, context: context, logger: context.logger)
+            try await fileIO.writeFile(contents: request.body, path: filename, context: context)
             return .ok
         }
         let app = HBApplication(responder: router.buildResponder())

@@ -198,11 +198,11 @@ public struct HBFileMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProto
                 switch request.method {
                 case .get:
                     if let range {
-                        let (body, _) = try await self.fileIO.loadFile(path: fullPath, range: range, context: context, logger: context.logger)
+                        let (body, _) = try await self.fileIO.loadFile(path: fullPath, range: range, context: context)
                         return HBResponse(status: .partialContent, headers: headers, body: body)
                     }
 
-                    let body = try await self.fileIO.loadFile(path: fullPath, context: context, logger: context.logger)
+                    let body = try await self.fileIO.loadFile(path: fullPath, context: context)
                     return HBResponse(status: .ok, headers: headers, body: body)
 
                 case .head:
