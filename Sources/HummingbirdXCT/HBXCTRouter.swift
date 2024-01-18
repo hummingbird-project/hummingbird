@@ -25,18 +25,30 @@ import ServiceLifecycle
 /// Test sending requests directly to router. This does not setup a live server
 struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Context: HBBaseRequestContext {
     let responder: Responder
+    let makeContext: @Sendable (Logger) -> Responder.Context
     let services: [any Service]
     let logger: Logger
 
-    init<App: HBApplicationProtocol>(app: App) async throws where App.Responder == Responder {
+    init<App: HBApplicationProtocol>(app: App) async throws where App.Responder == Responder, Responder.Context: HBRequestContext {
         self.responder = try await app.responder
         self.services = app.services
         self.logger = app.logger
+        self.makeContext = { logger in
+            Responder.Context(
+                allocator: ByteBufferAllocator(),
+                logger: logger
+            )
+        }
     }
 
     /// Run test
     func run<Value>(_ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Value) async throws -> Value {
-        let client = Client(responder: self.responder, logger: self.logger)
+        let client = Client(
+            responder: self.responder, 
+            logger: self.logger, 
+            makeContext: makeContext
+        )
+        
         if self.services.count == 0 {
             return try await test(client)
         }
@@ -67,6 +79,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
     struct Client: HBXCTClientProtocol {
         let responder: Responder
         let logger: Logger
+        let makeContext: @Sendable (Logger) -> Responder.Context
 
         func execute(uri: String, method: HTTPRequest.Method, headers: HTTPFields, body: ByteBuffer?) async throws -> HBXCTResponse {
             return try await withThrowingTaskGroup(of: HBXCTResponse.self) { group in
@@ -75,10 +88,8 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                     head: .init(method: method, scheme: "http", authority: "localhost", path: uri, headerFields: headers),
                     body: .stream(streamer)
                 )
-                let context = Responder.Context(
-                    allocator: ByteBufferAllocator(),
-                    logger: loggerWithRequestId(self.logger)
-                )
+                let logger = loggerWithRequestId(self.logger)
+                let context = self.makeContext(logger)
 
                 group.addTask {
                     let response: HBResponse
