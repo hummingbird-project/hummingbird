@@ -63,7 +63,7 @@ public struct HBTracingMiddleware<Context: HBBaseRequestContext>: HBMiddlewarePr
                 attributes["http.user_agent"] = request.headers[.userAgent]
                 attributes["http.request_content_length"] = request.headers[.contentLength].map { Int($0) } ?? nil
 
-                if let remoteAddress = (context as? HBRemoteAddressRequestContext)?.remoteAddress {
+                if let remoteAddress = (context as? any HBRemoteAddressRequestContext)?.remoteAddress {
                     attributes["net.sock.peer.port"] = remoteAddress.port
 
                     switch remoteAddress.protocol {
