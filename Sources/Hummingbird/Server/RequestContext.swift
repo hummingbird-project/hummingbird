@@ -16,7 +16,6 @@ import Atomics
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
-import NIOPosix
 import Tracing
 
 /// Endpoint path storage
@@ -74,8 +73,6 @@ public struct HBCoreRequestContext: Sendable {
 public protocol HBBaseRequestContext: Sendable {
     /// Core context
     var coreContext: HBCoreRequestContext { get set }
-    /// Thread Pool
-    var threadPool: NIOThreadPool { get }
     /// Maximum upload size allowed for routes that don't stream the request payload. This
     /// limits how much memory would be used for one request
     var maxUploadSize: Int { get }
@@ -88,9 +85,6 @@ extension HBBaseRequestContext {
     /// Response encoder
     @inlinable
     public var responseEncoder: HBResponseEncoder { coreContext.responseEncoder }
-    /// ThreadPool attached to application
-    @inlinable
-    public var threadPool: NIOThreadPool { NIOThreadPool.singleton }
     /// ByteBuffer allocator used by request
     @inlinable
     public var allocator: ByteBufferAllocator { coreContext.allocator }
