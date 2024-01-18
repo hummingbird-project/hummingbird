@@ -23,32 +23,24 @@ import NIOPosix
 import ServiceLifecycle
 
 /// Test sending requests directly to router. This does not setup a live server
-struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Context: HBBaseRequestContext {
+struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Context: HBRequestContext {
     let responder: Responder
-    let makeContext: @Sendable (Logger) -> Responder.Context
     let services: [any Service]
     let logger: Logger
     let processesRunBeforeServerStart: [@Sendable () async throws -> Void]
 
-    init<App: HBApplicationProtocol>(app: App) async throws where App.Responder == Responder, Responder.Context: HBRequestContext {
+    init<App: HBApplicationProtocol>(app: App) async throws where App.Responder == Responder {
         self.responder = try await app.responder
         self.processesRunBeforeServerStart = app.processesRunBeforeServerStart
         self.services = app.services
         self.logger = app.logger
-        self.makeContext = { logger in
-            Responder.Context(
-                allocator: ByteBufferAllocator(),
-                logger: logger
-            )
-        }
     }
 
     /// Run test
     func run<Value>(_ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Value) async throws -> Value {
         let client = Client(
             responder: self.responder,
-            logger: self.logger,
-            makeContext: self.makeContext
+            logger: self.logger
         )
         // run the runBeforeServer processes before we start testing
         for process in self.processesRunBeforeServerStart {
@@ -86,7 +78,6 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
     struct Client: HBXCTClientProtocol {
         let responder: Responder
         let logger: Logger
-        let makeContext: @Sendable (Logger) -> Responder.Context
 
         func execute(uri: String, method: HTTPRequest.Method, headers: HTTPFields, body: ByteBuffer?) async throws -> HBXCTResponse {
             return try await withThrowingTaskGroup(of: HBXCTResponse.self) { group in
@@ -96,7 +87,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                     body: .stream(streamer)
                 )
                 let logger = loggerWithRequestId(self.logger)
-                let context = self.makeContext(logger)
+                let context = Responder.Context(allocator: ByteBufferAllocator(), logger: logger)
 
                 group.addTask {
                     let response: HBResponse
