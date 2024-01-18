@@ -79,11 +79,6 @@ public protocol HBBaseRequestContext: Sendable {
     /// Maximum upload size allowed for routes that don't stream the request payload. This
     /// limits how much memory would be used for one request
     var maxUploadSize: Int { get }
-    /// initialize a request context
-    /// - Parameters
-    ///   - allocator: ByteBuffer allocator
-    ///   - logger: Logger used by context
-    init(allocator: ByteBufferAllocator, logger: Logger)
 }
 
 extension HBBaseRequestContext {
@@ -124,17 +119,21 @@ extension HBBaseRequestContext {
 public protocol HBRequestContext: HBBaseRequestContext {
     /// initialize an `HBRequestContext`
     /// - Parameters:
-    ///   - applicationContext: Context coming from Application
-    ///   - channel: Channel that created request and context
-    ///   - logger: Logger to use with request
+    ///   - channel: Channel that initiated this request
+    ///   - logger: Logger used for this request
     init(channel: Channel, logger: Logger)
+    /// initialize an `HBRequestContext`
+    /// - Parameters
+    ///   - allocator: ByteBuffer allocator
+    ///   - logger: Logger used for this request
+    init(allocator: ByteBufferAllocator, logger: Logger)
 }
 
 extension HBRequestContext {
     ///  Initialize an `HBRequestContext`
     /// - Parameters:
-    ///   - channel: Source of request context
-    ///   - logger: Logger
+    ///   - channel: Channel that initiated this request
+    ///   - logger: Logger used for this request
     public init(channel: Channel, logger: Logger) {
         self.init(allocator: channel.allocator, logger: logger)
     }
