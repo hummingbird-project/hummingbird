@@ -28,9 +28,11 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
     let makeContext: @Sendable (Logger) -> Responder.Context
     let services: [any Service]
     let logger: Logger
+    let processesRunBeforeServerStart: [@Sendable () async throws -> Void]
 
     init<App: HBApplicationProtocol>(app: App) async throws where App.Responder == Responder, Responder.Context: HBRequestContext {
         self.responder = try await app.responder
+        self.processesRunBeforeServerStart = app.processesRunBeforeServerStart
         self.services = app.services
         self.logger = app.logger
         self.makeContext = { logger in
@@ -44,14 +46,19 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
     /// Run test
     func run<Value>(_ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Value) async throws -> Value {
         let client = Client(
-            responder: self.responder, 
-            logger: self.logger, 
-            makeContext: makeContext
+            responder: self.responder,
+            logger: self.logger,
+            makeContext: self.makeContext
         )
-        
+        // run the runBeforeServer processes before we start testing
+        for process in self.processesRunBeforeServerStart {
+            try await process()
+        }
+        // if we have no services then just run test
         if self.services.count == 0 {
             return try await test(client)
         }
+        // if we have services then setup task group with service group running in separate task from test
         return try await withThrowingTaskGroup(of: Void.self) { group in
             let serviceGroup = ServiceGroup(
                 configuration: .init(
