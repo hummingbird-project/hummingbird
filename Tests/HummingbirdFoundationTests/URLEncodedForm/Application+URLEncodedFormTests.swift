@@ -15,6 +15,7 @@
 import Hummingbird
 import HummingbirdFoundation
 import HummingbirdXCT
+import Logging
 import XCTest
 
 class HummingBirdURLEncodedTests: XCTestCase {
@@ -24,11 +25,24 @@ class HummingBirdURLEncodedTests: XCTestCase {
         let age: Int
     }
 
+    struct URLEncodedCodingRequestContext: HBRequestContext {
+        var coreContext: HBCoreRequestContext
+
+        init(allocator: ByteBufferAllocator, logger: Logger) {
+            self.coreContext = .init(
+                allocator: allocator,
+                logger: logger
+            )
+        }
+
+        var requestDecoder: URLEncodedFormDecoder { .init() }
+        var responseEncoder: URLEncodedFormEncoder { .init() }
+    }
+
     struct Error: Swift.Error {}
 
     func testDecode() async throws {
-        let router = HBRouter()
-        router.middlewares.add(HBSetCodableMiddleware(decoder: URLEncodedFormDecoder(), encoder: URLEncodedFormEncoder()))
+        let router = HBRouter(context: URLEncodedCodingRequestContext.self)
         router.put("/user") { request, context -> HTTPResponse.Status in
             guard let user = try? await request.decode(as: User.self, context: context) else { throw HBHTTPError(.badRequest) }
             XCTAssertEqual(user.name, "John Smith")
@@ -46,8 +60,7 @@ class HummingBirdURLEncodedTests: XCTestCase {
     }
 
     func testEncode() async throws {
-        let router = HBRouter()
-        router.middlewares.add(HBSetCodableMiddleware(decoder: URLEncodedFormDecoder(), encoder: URLEncodedFormEncoder()))
+        let router = HBRouter(context: URLEncodedCodingRequestContext.self)
         router.get("/user") { _, _ -> User in
             return User(name: "John Smith", email: "john.smith@email.com", age: 25)
         }

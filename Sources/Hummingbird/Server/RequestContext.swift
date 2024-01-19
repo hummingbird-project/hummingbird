@@ -35,12 +35,6 @@ public struct EndpointPath: Sendable {
 
 /// Request context values required by Hummingbird itself.
 public struct HBCoreRequestContext: Sendable {
-    /// Request decoder
-    @usableFromInline
-    var requestDecoder: HBRequestDecoder
-    /// Response encoder
-    @usableFromInline
-    var responseEncoder: HBResponseEncoder
     /// ByteBuffer allocator used by request
     @usableFromInline
     let allocator: ByteBufferAllocator
@@ -54,13 +48,9 @@ public struct HBCoreRequestContext: Sendable {
 
     @inlinable
     public init(
-        requestDecoder: HBRequestDecoder = NullDecoder(),
-        responseEncoder: HBResponseEncoder = NullEncoder(),
         allocator: ByteBufferAllocator,
         logger: Logger
     ) {
-        self.requestDecoder = requestDecoder
-        self.responseEncoder = responseEncoder
         self.allocator = allocator
         self.logger = logger
         self.endpointPath = .init()
@@ -71,21 +61,21 @@ public struct HBCoreRequestContext: Sendable {
 /// Protocol that all request contexts should conform to. Holds data associated with
 /// a request. Provides context for request processing
 public protocol HBBaseRequestContext: Sendable {
+    associatedtype Decoder: HBRequestDecoder = NullDecoder
+    associatedtype Encoder: HBResponseEncoder = NullEncoder
+
     /// Core context
     var coreContext: HBCoreRequestContext { get set }
     /// Maximum upload size allowed for routes that don't stream the request payload. This
     /// limits how much memory would be used for one request
     var maxUploadSize: Int { get }
+    /// Request decoder
+    var requestDecoder: Decoder { get }
+    /// Response encoder
+    var responseEncoder: Encoder { get }
 }
 
 extension HBBaseRequestContext {
-    /// Request decoder
-    @inlinable
-    public var requestDecoder: HBRequestDecoder { coreContext.requestDecoder }
-    /// Response encoder
-    @inlinable
-    public var responseEncoder: HBResponseEncoder { coreContext.responseEncoder }
-    /// ByteBuffer allocator used by request
     @inlinable
     public var allocator: ByteBufferAllocator { coreContext.allocator }
     /// Logger to use with Request
@@ -107,6 +97,14 @@ extension HBBaseRequestContext {
     /// Request ID, extracted from Logger
     @inlinable
     public var id: String { self.logger[metadataKey: "hb_id"]!.description }
+}
+
+extension HBBaseRequestContext where Decoder == NullDecoder {
+    public var requestDecoder: Decoder { NullDecoder() }
+}
+
+extension HBBaseRequestContext where Encoder == NullEncoder {
+    public var responseEncoder: Encoder { NullEncoder() }
 }
 
 /// Protocol for a request context that can be created from a NIO Channel

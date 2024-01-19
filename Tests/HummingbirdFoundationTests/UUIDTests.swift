@@ -25,12 +25,13 @@ final class UUIDTests: XCTestCase {
 
         init(allocator: ByteBufferAllocator, logger: Logger) {
             self.coreContext = .init(
-                requestDecoder: JSONDecoder(),
-                responseEncoder: JSONEncoder(),
                 allocator: allocator,
                 logger: logger
             )
         }
+
+        var requestDecoder: JSONDecoder { .init() }
+        var responseEncoder: JSONEncoder { .init() }
     }
 
     func testGetUUID() async throws {

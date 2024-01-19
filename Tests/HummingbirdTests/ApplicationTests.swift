@@ -26,6 +26,19 @@ import ServiceLifecycle
 import XCTest
 
 final class ApplicationTests: XCTestCase {
+    struct JSONCodingRequestContext: HBRequestContext {
+        var coreContext: HBCoreRequestContext
+
+        init(allocator: ByteBufferAllocator, logger: Logger) {
+            self.coreContext = .init(
+                allocator: allocator,
+                logger: logger
+            )
+        }
+
+        var requestDecoder: JSONDecoder { .init() }
+        var responseEncoder: JSONEncoder { .init() }
+    }
     func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
         data = data.map { _ in UInt8.random(in: 0...255) }
@@ -325,7 +338,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testTypedResponse() async throws {
-        let router = HBRouter()
+        let router = HBRouter(context: JSONCodingRequestContext.self)
         router.delete("/hello") { _, _ in
             return HBEditedResponse(
                 status: .preconditionRequired,
@@ -349,8 +362,7 @@ final class ApplicationTests: XCTestCase {
         struct Result: HBResponseEncodable {
             let value: String
         }
-        let router = HBRouter()
-        router.middlewares.add(HBSetCodableMiddleware(decoder: JSONDecoder(), encoder: JSONEncoder()))
+        let router = HBRouter(context: JSONCodingRequestContext.self)
         router.patch("/hello") { _, _ in
             return HBEditedResponse(
                 status: .multipleChoices,
