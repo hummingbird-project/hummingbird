@@ -22,7 +22,7 @@ import NIOCore
 import NIOPosix
 
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
-struct BasicBenchmarkContext: HBBaseRequestContext {
+struct BasicBenchmarkContext: HBRequestContext {
     var coreContext: HBCoreRequestContext
 
     init(
@@ -40,7 +40,7 @@ struct BenchmarkBodyWriter: Sendable, HBResponseBodyWriter {
 
 extension Benchmark {
     @discardableResult
-    convenience init?<Context: HBBaseRequestContext>(
+    convenience init?<Context: HBRequestContext>(
         name: String,
         context: Context.Type = BasicBenchmarkContext.self,
         configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
