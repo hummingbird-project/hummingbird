@@ -12,33 +12,41 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Hummingbird
+import struct Foundation.Date
+@_exported import class Foundation.JSONDecoder
+@_exported import class Foundation.JSONEncoder
+import NIOFoundationCompat
 
-extension URLEncodedFormEncoder: HBResponseEncoder {
-    /// Extend URLEncodedFormEncoder to support encoding `HBResponse`'s. Sets body and header values
+extension JSONEncoder: HBResponseEncoder {
+    /// Extend JSONEncoder to support encoding `HBResponse`'s. Sets body and header values
     /// - Parameters:
     ///   - value: Value to encode
     ///   - request: Request used to generate response
     public func encode(_ value: some Encodable, from request: HBRequest, context: some HBBaseRequestContext) throws -> HBResponse {
         var buffer = context.allocator.buffer(capacity: 0)
-        let string = try self.encode(value)
-        buffer.writeString(string)
+        let data = try self.encode(value)
+        buffer.writeBytes(data)
         return HBResponse(
             status: .ok,
-            headers: [.contentType: "application/x-www-form-urlencoded"],
+            headers: [.contentType: "application/json; charset=utf-8"],
             body: .init(byteBuffer: buffer)
         )
     }
 }
 
-extension URLEncodedFormDecoder: HBRequestDecoder {
-    /// Extend URLEncodedFormDecoder to decode from `HBRequest`.
+extension JSONDecoder: HBRequestDecoder {
+    /// Extend JSONDecoder to decode from `HBRequest`.
     /// - Parameters:
     ///   - type: Type to decode
     ///   - request: Request to decode from
     public func decode<T: Decodable>(_ type: T.Type, from request: HBRequest, context: some HBBaseRequestContext) async throws -> T {
         let buffer = try await request.body.collate(maxSize: context.maxUploadSize)
-        let string = String(buffer: buffer)
-        return try self.decode(T.self, from: string)
+        return try self.decode(T.self, from: buffer)
     }
 }
+
+/// `HBRequestDecoder` and `HBResponseEncoder` both require conformance to `Sendable`. Given
+/// `JSONEncoder`` and `JSONDecoder`` conform to Sendable in macOS 13+ I think I can just
+/// back date the conformance to all versions of Swift, macOS we support
+extension JSONDecoder: @unchecked Sendable {}
+extension JSONEncoder: @unchecked Sendable {}

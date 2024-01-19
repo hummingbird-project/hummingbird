@@ -12,11 +12,16 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Hummingbird
+import Foundation
 
-extension HBRequest {
-    /// access cookies from request. When accessing this for the first time the HBCookies struct will be created
-    public var cookies: HBCookies {
-        HBCookies(from: self)
-    }
+extension HBDateCache {
+    /// Date formatter as per section 5.2.14 of RFC 1123
+    /// https://www.rfc-editor.org/rfc/rfc1123#page-55
+    static let rfc1123Formatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "EEE, d MMM yyy HH:mm:ss z"
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return formatter
+    }()
 }

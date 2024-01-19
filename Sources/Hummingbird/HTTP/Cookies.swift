@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Hummingbird
-
 /// Structure holding an array of cookies
 ///
 /// Cookies can be accessed from request via `HBRequest.cookies`.

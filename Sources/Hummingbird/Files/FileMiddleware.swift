@@ -14,7 +14,6 @@
 
 import Foundation
 import HTTPTypes
-import Hummingbird
 import Logging
 import NIOCore
 import NIOPosix

@@ -11,7 +11,6 @@ let package = Package(
         .library(name: "HummingbirdCore", targets: ["HummingbirdCore"]),
         .library(name: "HummingbirdHTTP2", targets: ["HummingbirdHTTP2"]),
         .library(name: "HummingbirdTLS", targets: ["HummingbirdTLS"]),
-        .library(name: "HummingbirdFoundation", targets: ["HummingbirdFoundation"]),
         .library(name: "HummingbirdJobs", targets: ["HummingbirdJobs"]),
         .library(name: "HummingbirdRouter", targets: ["HummingbirdRouter"]),
         .library(name: "HummingbirdXCT", targets: ["HummingbirdXCT"]),
@@ -58,12 +57,6 @@ let package = Package(
             .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
             .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
         ]),
-        .target(name: "HummingbirdFoundation", dependencies: [
-            .byName(name: "Hummingbird"),
-            .product(name: "NIOCore", package: "swift-nio"),
-            .product(name: "NIOPosix", package: "swift-nio"),
-            .product(name: "NIOFoundationCompat", package: "swift-nio"),
-        ]),
         .target(name: "HummingbirdJobs", dependencies: [
             .byName(name: "Hummingbird"),
             .product(name: "Logging", package: "swift-log"),
@@ -99,17 +92,11 @@ let package = Package(
         ]),
         .executableTarget(name: "PerformanceTest", dependencies: [
             .byName(name: "Hummingbird"),
-            .byName(name: "HummingbirdFoundation"),
             .product(name: "NIOPosix", package: "swift-nio"),
         ]),
         // test targets
         .testTarget(name: "HummingbirdTests", dependencies: [
             .byName(name: "Hummingbird"),
-            .byName(name: "HummingbirdFoundation"),
-            .byName(name: "HummingbirdXCT"),
-        ]),
-        .testTarget(name: "HummingbirdFoundationTests", dependencies: [
-            .byName(name: "HummingbirdFoundation"),
             .byName(name: "HummingbirdXCT"),
         ]),
         .testTarget(name: "HummingbirdJobsTests", dependencies: [

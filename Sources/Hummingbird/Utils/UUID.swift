@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import Hummingbird
 
 /// It is common for UUID's to be passed in as parameters. So lets add helper
 /// functions to extract them from HBParameters

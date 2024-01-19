@@ -12,20 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Hummingbird
+import HummingbirdCore
 
-extension HBResponse {
-    /// Set cookie on response
-    public mutating func setCookie(_ cookie: HBCookie) {
-        self.headers[values: .setCookie].append(cookie.description)
-    }
-}
-
-extension HBEditedResponse {
-    /// Set cookie on reponse patch
-    ///
-    /// Can be accessed via `request.response.setCookie(myCookie)`
-    public mutating func setCookie(_ cookie: HBCookie) {
-        self.headers[values: .setCookie].append(cookie.description)
+extension HBRequest {
+    /// access cookies from request. When accessing this for the first time the HBCookies struct will be created
+    public var cookies: HBCookies {
+        HBCookies(from: self)
     }
 }
