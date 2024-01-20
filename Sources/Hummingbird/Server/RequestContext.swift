@@ -100,11 +100,19 @@ extension HBBaseRequestContext {
 }
 
 extension HBBaseRequestContext where Decoder == JSONDecoder {
-    public var requestDecoder: Decoder { JSONDecoder() }
+    public var requestDecoder: Decoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return decoder
+    }
 }
 
 extension HBBaseRequestContext where Encoder == JSONEncoder {
-    public var responseEncoder: Encoder { JSONEncoder() }
+    public var responseEncoder: Encoder {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        return encoder
+    }
 }
 
 /// Protocol for a request context that can be created from a NIO Channel

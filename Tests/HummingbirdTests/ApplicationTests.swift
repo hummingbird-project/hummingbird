@@ -181,7 +181,7 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/array", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "[\"yes\", \"no\"]")
+                XCTAssertEqual(String(buffer: response.body), "[\"yes\",\"no\"]")
             }
         }
     }
@@ -305,11 +305,23 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testOptionalCodable() async throws {
+        struct SortedJSONRequestContext: HBRequestContext {
+            var coreContext: HBCoreRequestContext
+            var responseEncoder: JSONEncoder {
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = .sortedKeys
+                return encoder
+            }
+
+            init(allocator: ByteBufferAllocator, logger: Logger) {
+                self.coreContext = .init(allocator: allocator, logger: logger)
+            }
+        }
         struct Name: HBResponseCodable {
             let first: String
             let last: String
         }
-        let router = HBRouter()
+        let router = HBRouter(context: SortedJSONRequestContext.self)
         router
             .group("/name")
             .patch { _, _ -> Name? in
@@ -319,7 +331,7 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/name", method: .patch) { response in
-                XCTAssertEqual(String(buffer: response.body), #"Name(first: "john", last: "smith")"#)
+                XCTAssertEqual(String(buffer: response.body), #"{"first":"john","last":"smith"}"#)
             }
         }
     }
