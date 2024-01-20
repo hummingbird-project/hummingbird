@@ -32,23 +32,3 @@ public protocol HBRequestDecoder: Sendable {
     ///   - request: request
     func decode<T: Decodable>(_ type: T.Type, from request: HBRequest, context: some HBBaseRequestContext) async throws -> T
 }
-
-/// Default encoder. Outputs request with the swift string description of object
-public struct NullEncoder: HBResponseEncoder {
-    public init() {}
-    public func encode(_ value: some Encodable, from request: HBRequest, context: some HBBaseRequestContext) throws -> HBResponse {
-        return HBResponse(
-            status: .ok,
-            headers: [.contentType: "text/plain; charset=utf-8"],
-            body: .init(byteBuffer: context.allocator.buffer(string: "\(value)"))
-        )
-    }
-}
-
-/// Default decoder. there is no default decoder path so this generates an error
-public struct NullDecoder: HBRequestDecoder {
-    public init() {}
-    public func decode<T: Decodable>(_ type: T.Type, from request: HBRequest, context: some HBBaseRequestContext) throws -> T {
-        preconditionFailure("Request context decoder has not been set")
-    }
-}
