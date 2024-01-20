@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import HummingbirdFoundation
+@testable import Hummingbird
 import XCTest
 
 class URLEncodedFormNodeTests: XCTestCase {

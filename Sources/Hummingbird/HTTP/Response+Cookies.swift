@@ -12,17 +12,20 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
-import Hummingbird
+import HummingbirdCore
 
-extension HBDateCache {
-    /// Date formatter as per section 5.2.14 of RFC 1123
-    /// https://www.rfc-editor.org/rfc/rfc1123#page-55
-    static let rfc1123Formatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "EEE, d MMM yyy HH:mm:ss z"
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        return formatter
-    }()
+extension HBResponse {
+    /// Set cookie on response
+    public mutating func setCookie(_ cookie: HBCookie) {
+        self.headers[values: .setCookie].append(cookie.description)
+    }
+}
+
+extension HBEditedResponse {
+    /// Set cookie on reponse patch
+    ///
+    /// Can be accessed via `request.response.setCookie(myCookie)`
+    public mutating func setCookie(_ cookie: HBCookie) {
+        self.headers[values: .setCookie].append(cookie.description)
+    }
 }

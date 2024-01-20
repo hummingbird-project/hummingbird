@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
-import HummingbirdFoundation
 import Logging
 import NIOCore
 import NIOPosix

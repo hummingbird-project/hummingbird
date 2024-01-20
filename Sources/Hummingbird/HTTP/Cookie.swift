@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import Hummingbird
 
 /// Structure holding a single cookie
 public struct HBCookie: Sendable, CustomStringConvertible {
