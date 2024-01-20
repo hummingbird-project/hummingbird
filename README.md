@@ -24,9 +24,7 @@ HummingbirdCore can be used separately from Hummingbird if you want to write you
 
 ## Hummingbird
 
-Hummingbird is a lightweight and flexible web application framework that runs on top of HummingbirdCore. It is designed to require the minimum number of dependencies and makes no use of Foundation.
-
-It provides a router for directing different endpoints to their handlers, middleware for processing requests before they reach your handlers and processing the responses returned, support for adding channel handlers to extend the HTTP server and providing custom encoding/decoding of `Codable` objects.
+Hummingbird is a lightweight and flexible web application framework that runs on top of HummingbirdCore. It is designed to require the minimum number of dependencies. It provides a router for directing different endpoints to their handlers, middleware for processing requests before they reach your handlers and processing the responses returned and providing custom encoding/decoding of `Codable` objects.
 
 ```swift
 import Hummingbird
@@ -44,7 +42,7 @@ try await app.runService()
 
 ## Hummingbird Extensions
 
-Hummingbird is designed to require the least number of dependencies possible, but this means many features are unavailable to the core libraries. Additional features are provided through extensions. The Hummingbird repository comes with a `HummingbirdFoundation` library that contains a number of features that can only really be implemented with the help of Foundation. This include JSON encoding/decoding, URLEncodedForms, static file serving, and cookies.
+Hummingbird is designed in a modular manner and many features that are unavailable in the core libraries are provided through extension modules. 
 
 Extensions provided in other repositories include
 
