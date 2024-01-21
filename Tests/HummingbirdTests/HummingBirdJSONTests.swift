@@ -26,22 +26,8 @@ class HummingbirdJSONTests: XCTestCase {
 
     struct Error: Swift.Error {}
 
-    struct JSONCodingRequestContext: HBRequestContext {
-        var coreContext: HBCoreRequestContext
-
-        init(allocator: ByteBufferAllocator, logger: Logger) {
-            self.coreContext = .init(
-                allocator: allocator,
-                logger: logger
-            )
-        }
-
-        var requestDecoder: JSONDecoder { .init() }
-        var responseEncoder: JSONEncoder { .init() }
-    }
-
     func testDecode() async throws {
-        let router = HBRouter(context: JSONCodingRequestContext.self)
+        let router = HBRouter()
         router.put("/user") { request, context -> HTTPResponse.Status in
             guard let user = try? await request.decode(as: User.self, context: context) else { throw HBHTTPError(.badRequest) }
             XCTAssertEqual(user.name, "John Smith")
@@ -59,7 +45,7 @@ class HummingbirdJSONTests: XCTestCase {
     }
 
     func testEncode() async throws {
-        let router = HBRouter(context: JSONCodingRequestContext.self)
+        let router = HBRouter()
         router.get("/user") { _, _ -> User in
             return User(name: "John Smith", email: "john.smith@email.com", age: 25)
         }
@@ -75,7 +61,7 @@ class HummingbirdJSONTests: XCTestCase {
     }
 
     func testEncode2() async throws {
-        let router = HBRouter(context: JSONCodingRequestContext.self)
+        let router = HBRouter()
         router.get("/json") { _, _ in
             return ["message": "Hello, world!"]
         }

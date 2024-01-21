@@ -18,20 +18,6 @@ import Logging
 import XCTest
 
 final class HandlerTests: XCTestCase {
-    struct JSONCodingRequestContext: HBRequestContext {
-        var coreContext: HBCoreRequestContext
-
-        init(allocator: ByteBufferAllocator, logger: Logger) {
-            self.coreContext = .init(
-                allocator: allocator,
-                logger: logger
-            )
-        }
-
-        var requestDecoder: JSONDecoder { .init() }
-        var responseEncoder: JSONEncoder { .init() }
-    }
-
     struct DecodeTest<Value: Decodable>: HBRouteHandler, Decodable {
         let value: Value
 
@@ -45,7 +31,7 @@ final class HandlerTests: XCTestCase {
     }
 
     func testDecodeKeyError() async throws {
-        let router = HBRouter(context: JSONCodingRequestContext.self)
+        let router = HBRouter()
         router.post("/hello", use: DecodeTest<String>.self)
         let app = HBApplication(responder: router.buildResponder())
 
@@ -65,7 +51,7 @@ final class HandlerTests: XCTestCase {
     }
 
     func testDecodeTypeError() async throws {
-        let router = HBRouter(context: JSONCodingRequestContext.self)
+        let router = HBRouter()
         router.post("/hello", use: DecodeTest<Int>.self)
         let app = HBApplication(responder: router.buildResponder())
 
@@ -85,7 +71,7 @@ final class HandlerTests: XCTestCase {
     }
 
     func testDecodeValueError() async throws {
-        let router = HBRouter(context: JSONCodingRequestContext.self)
+        let router = HBRouter()
         router.post("/hello", use: DecodeTest<String>.self)
         let app = HBApplication(responder: router.buildResponder())
 
@@ -110,7 +96,7 @@ final class HandlerTests: XCTestCase {
     }
 
     func testDecodeInputError() async throws {
-        let router = HBRouter(context: JSONCodingRequestContext.self)
+        let router = HBRouter()
         router.post("/hello", use: DecodeTest<String>.self)
         let app = HBApplication(responder: router.buildResponder())
 
@@ -130,7 +116,7 @@ final class HandlerTests: XCTestCase {
     }
 
     func testDecode() async throws {
-        let router = HBRouter(context: JSONCodingRequestContext.self)
+        let router = HBRouter()
         router.post("/hello", use: DecodeTest<String>.self)
         let app = HBApplication(responder: router.buildResponder())
 
@@ -143,7 +129,7 @@ final class HandlerTests: XCTestCase {
     }
 
     func testDecodeFail() async throws {
-        let router = HBRouter(context: JSONCodingRequestContext.self)
+        let router = HBRouter()
         router.get("/hello", use: DecodeTest<String>.self)
         let app = HBApplication(responder: router.buildResponder())
 

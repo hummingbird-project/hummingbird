@@ -17,20 +17,6 @@ import Logging
 import NIOCore
 import NIOPosix
 
-struct PerformanceTestRequestContext: HBRequestContext {
-    var coreContext: HBCoreRequestContext
-
-    init(allocator: ByteBufferAllocator, logger: Logger) {
-        self.coreContext = .init(
-            allocator: allocator,
-            logger: logger
-        )
-    }
-
-    var requestDecoder: JSONDecoder { .init() }
-    var responseEncoder: JSONEncoder { .init() }
-}
-
 // get environment
 let hostname = HBEnvironment.shared.get("SERVER_HOSTNAME") ?? "127.0.0.1"
 let port = HBEnvironment.shared.get("SERVER_PORT", as: Int.self) ?? 8080
@@ -38,7 +24,7 @@ let port = HBEnvironment.shared.get("SERVER_PORT", as: Int.self) ?? 8080
 // create app
 let elg = MultiThreadedEventLoopGroup(numberOfThreads: 4)
 defer { try? elg.syncShutdownGracefully() }
-var router = HBRouter(context: PerformanceTestRequestContext.self)
+var router = HBRouter()
 // number of raw requests
 // ./wrk -c 128 -d 15s -t 8 http://localhost:8080
 router.get { _, _ in

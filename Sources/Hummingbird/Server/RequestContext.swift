@@ -61,8 +61,8 @@ public struct HBCoreRequestContext: Sendable {
 /// Protocol that all request contexts should conform to. Holds data associated with
 /// a request. Provides context for request processing
 public protocol HBBaseRequestContext: Sendable {
-    associatedtype Decoder: HBRequestDecoder = NullDecoder
-    associatedtype Encoder: HBResponseEncoder = NullEncoder
+    associatedtype Decoder: HBRequestDecoder = JSONDecoder
+    associatedtype Encoder: HBResponseEncoder = JSONEncoder
 
     /// Core context
     var coreContext: HBCoreRequestContext { get set }
@@ -99,12 +99,20 @@ extension HBBaseRequestContext {
     public var id: String { self.logger[metadataKey: "hb_id"]!.description }
 }
 
-extension HBBaseRequestContext where Decoder == NullDecoder {
-    public var requestDecoder: Decoder { NullDecoder() }
+extension HBBaseRequestContext where Decoder == JSONDecoder {
+    public var requestDecoder: Decoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return decoder
+    }
 }
 
-extension HBBaseRequestContext where Encoder == NullEncoder {
-    public var responseEncoder: Encoder { NullEncoder() }
+extension HBBaseRequestContext where Encoder == JSONEncoder {
+    public var responseEncoder: Encoder {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        return encoder
+    }
 }
 
 /// Protocol for a request context that can be created from a NIO Channel

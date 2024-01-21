@@ -26,19 +26,6 @@ import ServiceLifecycle
 import XCTest
 
 final class ApplicationTests: XCTestCase {
-    struct JSONCodingRequestContext: HBRequestContext {
-        var coreContext: HBCoreRequestContext
-
-        init(allocator: ByteBufferAllocator, logger: Logger) {
-            self.coreContext = .init(
-                allocator: allocator,
-                logger: logger
-            )
-        }
-
-        var requestDecoder: JSONDecoder { .init() }
-        var responseEncoder: JSONEncoder { .init() }
-    }
     func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
         data = data.map { _ in UInt8.random(in: 0...255) }
@@ -194,7 +181,7 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/array", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "[\"yes\", \"no\"]")
+                XCTAssertEqual(String(buffer: response.body), "[\"yes\",\"no\"]")
             }
         }
     }
@@ -318,11 +305,23 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testOptionalCodable() async throws {
+        struct SortedJSONRequestContext: HBRequestContext {
+            var coreContext: HBCoreRequestContext
+            var responseEncoder: JSONEncoder {
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = .sortedKeys
+                return encoder
+            }
+
+            init(allocator: ByteBufferAllocator, logger: Logger) {
+                self.coreContext = .init(allocator: allocator, logger: logger)
+            }
+        }
         struct Name: HBResponseCodable {
             let first: String
             let last: String
         }
-        let router = HBRouter()
+        let router = HBRouter(context: SortedJSONRequestContext.self)
         router
             .group("/name")
             .patch { _, _ -> Name? in
@@ -332,13 +331,13 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.XCTExecute(uri: "/name", method: .patch) { response in
-                XCTAssertEqual(String(buffer: response.body), #"Name(first: "john", last: "smith")"#)
+                XCTAssertEqual(String(buffer: response.body), #"{"first":"john","last":"smith"}"#)
             }
         }
     }
 
     func testTypedResponse() async throws {
-        let router = HBRouter(context: JSONCodingRequestContext.self)
+        let router = HBRouter()
         router.delete("/hello") { _, _ in
             return HBEditedResponse(
                 status: .preconditionRequired,
@@ -362,7 +361,7 @@ final class ApplicationTests: XCTestCase {
         struct Result: HBResponseEncodable {
             let value: String
         }
-        let router = HBRouter(context: JSONCodingRequestContext.self)
+        let router = HBRouter()
         router.patch("/hello") { _, _ in
             return HBEditedResponse(
                 status: .multipleChoices,

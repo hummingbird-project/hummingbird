@@ -17,24 +17,8 @@ import Logging
 import XCTest
 
 final class UUIDTests: XCTestCase {
-    /// Custom request context setting up JSON decoding and encoding
-    struct JSONRequestContext: HBRequestContext {
-        // Requirement of `HBRequestContext`
-        var coreContext: HBCoreRequestContext
-
-        init(allocator: ByteBufferAllocator, logger: Logger) {
-            self.coreContext = .init(
-                allocator: allocator,
-                logger: logger
-            )
-        }
-
-        var requestDecoder: JSONDecoder { .init() }
-        var responseEncoder: JSONEncoder { .init() }
-    }
-
     func testGetUUID() async throws {
-        let router = HBRouter(context: JSONRequestContext.self)
+        let router = HBRouter()
         router.get(":id") { _, context -> UUID? in
             return context.parameters.get("id", as: UUID.self)
         }
@@ -50,7 +34,7 @@ final class UUIDTests: XCTestCase {
     }
 
     func testRequireUUID() async throws {
-        let router = HBRouter(context: JSONRequestContext.self)
+        let router = HBRouter()
         router.get(":id") { _, context -> UUID in
             return try context.parameters.require("id", as: UUID.self)
         }
@@ -66,7 +50,7 @@ final class UUIDTests: XCTestCase {
     }
 
     func testGetUUIDs() async throws {
-        let router = HBRouter(context: JSONRequestContext.self)
+        let router = HBRouter()
         router.get { request, _ -> [UUID] in
             let queryParameters = request.uri.queryParameters
             return queryParameters.getAll("id", as: UUID.self)
@@ -84,7 +68,7 @@ final class UUIDTests: XCTestCase {
     }
 
     func testRequireUUIDs() async throws {
-        let router = HBRouter(context: JSONRequestContext.self)
+        let router = HBRouter()
         router.get { request, _ -> [UUID] in
             let queryParameters = request.uri.queryParameters
             return try queryParameters.requireAll("id", as: UUID.self)
