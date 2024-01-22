@@ -65,12 +65,12 @@ public final class HBRouter<Context: HBBaseRequestContext>: HBRouterMethods, HBR
         }
     }
 
-    /// build router
+    /// build responder from router
     public func buildResponder() -> HBRouterResponder<Context> {
         HBRouterResponder(context: Context.self, trie: self.trie.build(), notFoundResponder: self.middlewares.constructResponder(finalResponder: NotFoundResponder<Context>()))
     }
 
-    /// Add path for closure returning type conforming to ResponseFutureEncodable
+    /// Add path for closure returning type conforming to HBResponseGenerator
     @discardableResult public func on(
         _ path: String,
         method: HTTPRequest.Method,

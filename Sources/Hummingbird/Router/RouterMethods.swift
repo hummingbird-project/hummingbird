@@ -41,7 +41,7 @@ public protocol HBRouterMethods {
 }
 
 extension HBRouterMethods {
-    /// GET path for async closure returning type conforming to ResponseEncodable
+    /// GET path for async closure returning type conforming to HBResponseGenerator
     @discardableResult public func get(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
@@ -50,7 +50,7 @@ extension HBRouterMethods {
         return on(path, method: .get, options: options, use: handler)
     }
 
-    /// PUT path for async closure returning type conforming to ResponseEncodable
+    /// PUT path for async closure returning type conforming to HBResponseGenerator
     @discardableResult public func put(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
@@ -59,7 +59,7 @@ extension HBRouterMethods {
         return on(path, method: .put, options: options, use: handler)
     }
 
-    /// DELETE path for async closure returning type conforming to ResponseEncodable
+    /// DELETE path for async closure returning type conforming to HBResponseGenerator
     @discardableResult public func delete(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
@@ -68,7 +68,7 @@ extension HBRouterMethods {
         return on(path, method: .delete, options: options, use: handler)
     }
 
-    /// HEAD path for async closure returning type conforming to ResponseEncodable
+    /// HEAD path for async closure returning type conforming to HBResponseGenerator
     @discardableResult public func head(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
@@ -77,7 +77,7 @@ extension HBRouterMethods {
         return on(path, method: .head, options: options, use: handler)
     }
 
-    /// POST path for async closure returning type conforming to ResponseEncodable
+    /// POST path for async closure returning type conforming to HBResponseGenerator
     @discardableResult public func post(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
@@ -86,7 +86,7 @@ extension HBRouterMethods {
         return on(path, method: .post, options: options, use: handler)
     }
 
-    /// PATCH path for async closure returning type conforming to ResponseEncodable
+    /// PATCH path for async closure returning type conforming to HBResponseGenerator
     @discardableResult public func patch(
         _ path: String = "",
         options: HBRouterMethodOptions = [],
