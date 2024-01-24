@@ -52,8 +52,7 @@ public struct HBApplicationConfiguration: Sendable {
         address: HBBindAddress = .hostname(),
         serverName: String? = nil,
         backlog: Int = 256,
-        reuseAddress: Bool = true,
-        threadPoolSize: Int = 2
+        reuseAddress: Bool = true
     ) {
         self.address = address
         self.serverName = serverName
