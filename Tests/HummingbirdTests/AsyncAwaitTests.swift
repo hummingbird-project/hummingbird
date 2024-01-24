@@ -228,4 +228,28 @@ final class AsyncAwaitTests: XCTestCase {
             XCTAssertEqual(String(buffer: body), "abcdefghijklmnopqrstuvwxyz")
         }
     }
+
+    func testAfterAsyncMiddleware() throws {
+        struct EmptyAsyncMiddleware: HBAsyncMiddleware {
+            func apply(to request: HBRequest, next: HBResponder) async throws -> HBResponse {
+                return try await next.respond(to: request)
+            }
+        }
+        struct TestOnEventLoopMiddleware: HBMiddleware {
+            func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
+                request.eventLoop.preconditionInEventLoop()
+                return next.respond(to: request)
+            }
+        }
+        let app = HBApplication(testing: .asyncTest)
+        app.middleware.add(EmptyAsyncMiddleware())
+        app.middleware.add(TestOnEventLoopMiddleware())
+        app.router.get { _ in HTTPResponseStatus.ok }
+
+        try app.XCTStart()
+        defer { app.XCTStop() }
+        try app.XCTExecute(uri: "/", method: .GET) { response in
+            XCTAssertEqual(response.status, .ok)
+        }
+    }
 }
