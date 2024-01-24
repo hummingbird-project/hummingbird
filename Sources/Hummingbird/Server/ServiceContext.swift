@@ -91,7 +91,7 @@ extension HBRequest {
         ofKind kind: SpanKind = .internal,
         _ operation: (HBRequest, Span) throws -> Return
     ) rethrows -> Return {
-        let span = InstrumentationSystem.legacyTracer.startAnySpan(operationName, context: context, ofKind: kind)
+        let span = InstrumentationSystem.tracer.startAnySpan(operationName, context: context, ofKind: kind)
         defer { span.end() }
         return try self.withServiceContext(span.context) { request in
             do {
@@ -143,7 +143,7 @@ extension HBRequest {
         ofKind kind: SpanKind = .internal,
         _ operation: (HBRequest, Span) -> EventLoopFuture<Return>
     ) -> EventLoopFuture<Return> {
-        let span = InstrumentationSystem.legacyTracer.startAnySpan(operationName, context: context, ofKind: kind)
+        let span = InstrumentationSystem.tracer.startAnySpan(operationName, context: context, ofKind: kind)
         return self.withServiceContext(span.context) { request in
             return operation(request, span)
                 .flatMapErrorThrowing { error in
