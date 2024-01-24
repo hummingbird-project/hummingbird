@@ -100,7 +100,7 @@ extension HBApplicationProtocol {
         @Sendable func respond(to request: HBRequest, channel: Channel) async throws -> HBResponse {
             let context = Self.Responder.Context(
                 channel: channel,
-                logger: loggerWithRequestId(self.logger)
+                logger: self.logger.with(metadataKey: "hb_id", value: .stringConvertible(RequestID()))
             )
             // respond to request
             var response = try await responder.respond(to: request, context: context)
@@ -145,10 +145,6 @@ extension HBApplicationProtocol {
         )
         try await serviceGroup.run()
     }
-}
-
-public func loggerWithRequestId(_ logger: Logger) -> Logger {
-    return logger.with(metadataKey: "hb_id", value: .stringConvertible(RequestID()))
 }
 
 /// Application class. Brings together all the components of Hummingbird together

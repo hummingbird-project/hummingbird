@@ -15,14 +15,15 @@
 import Atomics
 
 /// Generate Unique ID for each request
-struct RequestID: CustomStringConvertible {
+@_spi(HBXCT)
+public struct RequestID: CustomStringConvertible {
     let low: UInt64
 
-    init() {
+    public init() {
         self.low = Self.globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
     }
 
-    var description: String {
+    public var description: String {
         Self.high + self.formatAsHexWithLeadingZeros(self.low)
     }
 

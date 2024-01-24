@@ -175,7 +175,7 @@ public actor HBServer<ChildChannel: HBChildChannel>: Service {
     /// Start server
     /// - Parameter responder: Object that provides responses to requests sent to the server
     /// - Returns: EventLoopFuture that is fulfilled when server has started
-    public func makeServer(childChannelSetup: ChildChannel, configuration: HBServerConfiguration) async throws -> AsyncServerChannel {
+    func makeServer(childChannelSetup: ChildChannel, configuration: HBServerConfiguration) async throws -> AsyncServerChannel {
         let bootstrap: ServerBootstrapProtocol
         #if canImport(Network)
         if let tsBootstrap = self.createTSBootstrap(configuration: configuration) {
