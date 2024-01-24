@@ -42,10 +42,14 @@ struct HBPropagateServiceContextResponder: HBResponder {
     func respond(to request: HBRequest) -> EventLoopFuture<HBResponse> {
         if let serviceContext = ServiceContext.$current.get() {
             return request.withServiceContext(serviceContext) { request in
-                self.responder.respond(to: request)
+                return request.eventLoop.flatSubmit {
+                    self.responder.respond(to: request)
+                }
             }
         } else {
-            return self.responder.respond(to: request)
+            return request.eventLoop.flatSubmit {
+                self.responder.respond(to: request)
+            }
         }
     }
 }
