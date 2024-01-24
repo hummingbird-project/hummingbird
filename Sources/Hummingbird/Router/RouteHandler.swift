@@ -50,10 +50,9 @@ extension HBRouterMethods {
     @discardableResult public func on<Handler: HBRouteHandler, Output: HBResponseGenerator>(
         _ path: String,
         method: HTTPRequest.Method,
-        options: HBRouterMethodOptions = [],
         use handlerType: Handler.Type
     ) -> Self where Handler.Output == Output {
-        return self.on(path, method: method, options: options) { request, context -> Output in
+        return self.on(path, method: method) { request, context -> Output in
             let handler = try await Handler(from: request, context: context)
             return try await handler.handle(context: context)
         }
@@ -62,54 +61,48 @@ extension HBRouterMethods {
     /// GET path for closure returning type conforming to HBResponseGenerator
     @discardableResult public func get<Handler: HBRouteHandler, Output: HBResponseGenerator>(
         _ path: String = "",
-        options: HBRouterMethodOptions = [],
         use handler: Handler.Type
     ) -> Self where Handler.Output == Output {
-        return self.on(path, method: .get, options: options, use: handler)
+        return self.on(path, method: .get, use: handler)
     }
 
     /// PUT path for closure returning type conforming to HBResponseGenerator
     @discardableResult public func put<Handler: HBRouteHandler, Output: HBResponseGenerator>(
         _ path: String = "",
-        options: HBRouterMethodOptions = [],
         use handler: Handler.Type
     ) -> Self where Handler.Output == Output {
-        return self.on(path, method: .put, options: options, use: handler)
+        return self.on(path, method: .put, use: handler)
     }
 
     /// POST path for closure returning type conforming to HBResponseGenerator
     @discardableResult public func post<Handler: HBRouteHandler, Output: HBResponseGenerator>(
         _ path: String = "",
-        options: HBRouterMethodOptions = [],
         use handler: Handler.Type
     ) -> Self where Handler.Output == Output {
-        return self.on(path, method: .post, options: options, use: handler)
+        return self.on(path, method: .post, use: handler)
     }
 
     /// HEAD path for closure returning type conforming to HBResponseGenerator
     @discardableResult public func head<Handler: HBRouteHandler, Output: HBResponseGenerator>(
         _ path: String = "",
-        options: HBRouterMethodOptions = [],
         use handler: Handler.Type
     ) -> Self where Handler.Output == Output {
-        return self.on(path, method: .head, options: options, use: handler)
+        return self.on(path, method: .head, use: handler)
     }
 
     /// DELETE path for closure returning type conforming to HBResponseGenerator
     @discardableResult public func delete<Handler: HBRouteHandler, Output: HBResponseGenerator>(
         _ path: String = "",
-        options: HBRouterMethodOptions = [],
         use handler: Handler.Type
     ) -> Self where Handler.Output == Output {
-        return self.on(path, method: .delete, options: options, use: handler)
+        return self.on(path, method: .delete, use: handler)
     }
 
     /// PATCH path for closure returning type conforming to HBResponseGenerator
     @discardableResult public func patch<Handler: HBRouteHandler, Output: HBResponseGenerator>(
         _ path: String = "",
-        options: HBRouterMethodOptions = [],
         use handler: Handler.Type
     ) -> Self where Handler.Output == Output {
-        return self.on(path, method: .patch, options: options, use: handler)
+        return self.on(path, method: .patch, use: handler)
     }
 }
