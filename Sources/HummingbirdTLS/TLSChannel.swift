@@ -19,7 +19,6 @@ public struct TLSChannel<BaseChannel: HBChildChannel>: HBChildChannel {
     /// Setup child channel with TLS and the base channel setup
     /// - Parameters:
     ///   - channel: Child channel
-    ///   - configuration: Server configuration
     ///   - logger: Logger used during setup
     /// - Returns: Object to process input/output on child channel
     @inlinable
