@@ -25,7 +25,7 @@ public protocol HBChildChannel: Sendable {
     ///   - configuration: Server configuration
     ///   - logger: Logger used during setup
     /// - Returns: Object to process input/output on child channel
-    func setup(channel: Channel, configuration: HBServerConfiguration, logger: Logger) -> EventLoopFuture<Value>
+    func setup(channel: Channel, logger: Logger) -> EventLoopFuture<Value>
 
     /// handle messages being passed down the channel pipeline
     /// - Parameters:

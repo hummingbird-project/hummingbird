@@ -206,7 +206,6 @@ public actor HBServer<ChildChannel: HBChildChannel>: Service {
                 ) { channel in
                     childChannelSetup.setup(
                         channel: channel,
-                        configuration: configuration,
                         logger: self.logger
                     )
                 }
@@ -219,7 +218,6 @@ public actor HBServer<ChildChannel: HBChildChannel>: Service {
                 ) { channel in
                     childChannelSetup.setup(
                         channel: channel,
-                        configuration: configuration,
                         logger: self.logger
                     )
                 }
