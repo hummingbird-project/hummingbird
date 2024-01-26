@@ -17,14 +17,7 @@ public final class HBMiddlewareGroup<Context> {
     var middlewares: [any HBMiddlewareProtocol<Context>]
 
     /// Initialize `HBMiddlewareGroup`
-    ///
-    /// Set middleware array to be empty
-    public init() {
-        // this is set by WebSocketRouterGroup so this needs to be kept public
-        self.middlewares = []
-    }
-
-    init(middlewares: [any HBMiddlewareProtocol<Context>]) {
+    init(middlewares: [any HBMiddlewareProtocol<Context>] = []) {
         self.middlewares = middlewares
     }
 

@@ -26,20 +26,17 @@ public struct HBApplicationConfiguration: Sendable {
     // MARK: Member variables
 
     /// Bind address for server
-    public let address: HBBindAddress
+    public var address: HBBindAddress
     /// Server name to return in "server" header
-    public let serverName: String?
+    public var serverName: String?
     /// Defines the maximum length for the queue of pending connections
-    public let backlog: Int
+    public var backlog: Int
     /// Allows socket to be bound to an address that is already in use.
-    public let reuseAddress: Bool
+    public var reuseAddress: Bool
     #if canImport(Network)
     /// TLS options for NIO Transport services
-    public let tlsOptions: TSTLSOptions
+    public var tlsOptions: TSTLSOptions
     #endif
-
-    /// don't run the HTTP server
-    public let noHTTPServer: Bool
 
     // MARK: Initialization
 
@@ -51,14 +48,11 @@ public struct HBApplicationConfiguration: Sendable {
     ///   - backlog: the maximum length for the queue of pending connections.  If a connection request arrives with the queue full,
     ///         the client may receive an error with an indication of ECONNREFUSE
     ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
-    ///   - noHTTPServer: Don't start up the HTTP server.
     public init(
         address: HBBindAddress = .hostname(),
         serverName: String? = nil,
         backlog: Int = 256,
-        reuseAddress: Bool = true,
-        threadPoolSize: Int = 2,
-        noHTTPServer: Bool = false
+        reuseAddress: Bool = true
     ) {
         self.address = address
         self.serverName = serverName
@@ -67,8 +61,6 @@ public struct HBApplicationConfiguration: Sendable {
         #if canImport(Network)
         self.tlsOptions = .none
         #endif
-
-        self.noHTTPServer = noHTTPServer
     }
 
     #if canImport(Network)
@@ -78,13 +70,11 @@ public struct HBApplicationConfiguration: Sendable {
     ///   - address: Bind address for server
     ///   - serverName: Server name to return in "server" header
     ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
-    ///   - noHTTPServer: Don't start up the HTTP server.
     ///   - tlsOptions: TLS options for when you are using NIOTransportServices
     public init(
         address: HBBindAddress = .hostname(),
         serverName: String? = nil,
         reuseAddress: Bool = true,
-        noHTTPServer: Bool = false,
         tlsOptions: TSTLSOptions
     ) {
         self.address = address
@@ -92,8 +82,6 @@ public struct HBApplicationConfiguration: Sendable {
         self.backlog = 256 // not used by Network framework
         self.reuseAddress = reuseAddress
         self.tlsOptions = tlsOptions
-
-        self.noHTTPServer = noHTTPServer
     }
 
     #endif

@@ -95,7 +95,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                     head: .init(method: method, scheme: "http", authority: "localhost", path: uri, headerFields: headers),
                     body: .stream(streamer)
                 )
-                let logger = loggerWithRequestId(self.logger)
+                let logger = self.logger.with(metadataKey: "hb_id", value: .stringConvertible(RequestID()))
                 let context = self.makeContext(logger)
 
                 group.addTask {

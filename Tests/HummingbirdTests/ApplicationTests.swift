@@ -606,6 +606,29 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    /// test we can create out own application type conforming to HBApplicationProtocol
+    func testBidirectionalStreaming() async throws {
+        let buffer = randomBuffer(size: 1024 * 1024)
+        let router = HBRouter()
+        router.post("/") { request, context -> HBResponse in
+            .init(
+                status: .ok,
+                body: .init { writer in
+                    for try await buffer in request.body {
+                        let processed = context.allocator.buffer(bytes: buffer.readableBytesView.map {$0 ^ 0xff })
+                        try await writer.write(processed)
+                    }
+                }
+            )
+        }
+        let app = HBApplication(router: router)
+        try await app.test(.live) { client in
+            try await client.XCTExecute(uri: "/", method: .post, body: buffer) { response in
+                XCTAssertEqual(response.body, ByteBuffer(bytes: buffer.readableBytesView.map {$0 ^ 0xff }))
+            }
+        }
+    }
+
     // MARK: Helper functions
 
     func getServerTLSConfiguration() throws -> TLSConfiguration {
