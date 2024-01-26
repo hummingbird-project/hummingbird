@@ -15,14 +15,6 @@
 import HTTPTypes
 import NIOCore
 
-/// Options available to routes
-public struct HBRouterMethodOptions: OptionSet, Sendable {
-    public let rawValue: Int
-    public init(rawValue: Int) {
-        self.rawValue = rawValue
-    }
-}
-
 /// Conform to `HBRouterMethods` to add standard router verb (get, post ...) methods
 public protocol HBRouterMethods {
     associatedtype Context: HBBaseRequestContext
@@ -32,7 +24,6 @@ public protocol HBRouterMethods {
     @discardableResult func on<Output: HBResponseGenerator>(
         _ path: String,
         method: HTTPRequest.Method,
-        options: HBRouterMethodOptions,
         use: @Sendable @escaping (HBRequest, Context) async throws -> Output
     ) -> Self
 
@@ -44,59 +35,52 @@ extension HBRouterMethods {
     /// GET path for async closure returning type conforming to HBResponseGenerator
     @discardableResult public func get(
         _ path: String = "",
-        options: HBRouterMethodOptions = [],
         use handler: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
-        return on(path, method: .get, options: options, use: handler)
+        return on(path, method: .get, use: handler)
     }
 
     /// PUT path for async closure returning type conforming to HBResponseGenerator
     @discardableResult public func put(
         _ path: String = "",
-        options: HBRouterMethodOptions = [],
         use handler: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
-        return on(path, method: .put, options: options, use: handler)
+        return on(path, method: .put, use: handler)
     }
 
     /// DELETE path for async closure returning type conforming to HBResponseGenerator
     @discardableResult public func delete(
         _ path: String = "",
-        options: HBRouterMethodOptions = [],
         use handler: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
-        return on(path, method: .delete, options: options, use: handler)
+        return on(path, method: .delete, use: handler)
     }
 
     /// HEAD path for async closure returning type conforming to HBResponseGenerator
     @discardableResult public func head(
         _ path: String = "",
-        options: HBRouterMethodOptions = [],
         use handler: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
-        return on(path, method: .head, options: options, use: handler)
+        return on(path, method: .head, use: handler)
     }
 
     /// POST path for async closure returning type conforming to HBResponseGenerator
     @discardableResult public func post(
         _ path: String = "",
-        options: HBRouterMethodOptions = [],
         use handler: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
-        return on(path, method: .post, options: options, use: handler)
+        return on(path, method: .post, use: handler)
     }
 
     /// PATCH path for async closure returning type conforming to HBResponseGenerator
     @discardableResult public func patch(
         _ path: String = "",
-        options: HBRouterMethodOptions = [],
         use handler: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
-        return on(path, method: .patch, options: options, use: handler)
+        return on(path, method: .patch, use: handler)
     }
 
     func constructResponder(
-        options: HBRouterMethodOptions,
         use closure: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> HBCallbackResponder<Context> {
         return HBCallbackResponder { request, context in

@@ -61,10 +61,9 @@ public struct HBRouterGroup<Context: HBBaseRequestContext>: HBRouterMethods {
     @discardableResult public func on(
         _ path: String = "",
         method: HTTPRequest.Method,
-        options: HBRouterMethodOptions = [],
         use closure: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
-        let responder = constructResponder(options: options, use: closure)
+        let responder = constructResponder(use: closure)
         let path = self.combinePaths(self.path, path)
         self.router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         return self

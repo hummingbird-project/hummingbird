@@ -74,10 +74,9 @@ public final class HBRouter<Context: HBBaseRequestContext>: HBRouterMethods, HBR
     @discardableResult public func on(
         _ path: String,
         method: HTTPRequest.Method,
-        options: HBRouterMethodOptions = [],
         use closure: @escaping @Sendable (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
-        let responder = constructResponder(options: options, use: closure)
+        let responder = constructResponder(use: closure)
         self.add(path, method: method, responder: responder)
         return self
     }
