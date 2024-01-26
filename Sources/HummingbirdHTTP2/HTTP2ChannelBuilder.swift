@@ -23,19 +23,19 @@ extension HBHTTPChannelBuilder {
     /// ```
     /// let app = HBApplication(
     ///     router: router,
-    ///     server: .http2(tlsConfiguration: tlsConfiguration)
+    ///     server: .http2Upgrade(tlsConfiguration: tlsConfiguration)
     /// )
     /// ```
     /// - Parameters:
     ///   - tlsConfiguration: TLS configuration
     ///   - additionalChannelHandlers: Additional channel handlers to call before handling HTTP
     /// - Returns: HTTPChannelHandler builder
-    public static func http2(
+    public static func http2Upgrade(
         tlsConfiguration: TLSConfiguration,
         additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = []
-    ) throws -> HBHTTPChannelBuilder<HTTP2Channel> {
+    ) throws -> HBHTTPChannelBuilder<HTTP2UpgradeChannel> {
         return .init { responder in
-            return try HTTP2Channel(
+            return try HTTP2UpgradeChannel(
                 tlsConfiguration: tlsConfiguration,
                 additionalChannelHandlers: additionalChannelHandlers,
                 responder: responder

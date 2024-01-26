@@ -14,8 +14,8 @@
 
 import AsyncHTTPClient
 import HummingbirdCore
-import HummingbirdXCT
 import HummingbirdHTTP2
+import HummingbirdXCT
 import Logging
 import NIOCore
 import NIOHTTP1
@@ -32,7 +32,7 @@ class HummingBirdHTTP2Tests: XCTestCase {
             responder: { _, _ in
                 .init(status: .ok)
             },
-            httpChannelSetup: .http2(tlsConfiguration: self.getServerTLSConfiguration()),
+            httpChannelSetup: .http2Upgrade(tlsConfiguration: self.getServerTLSConfiguration()),
             configuration: .init(address: .hostname(port: 0), serverName: testServerName),
             eventLoopGroup: eventLoopGroup,
             logger: Logger(label: "HB")

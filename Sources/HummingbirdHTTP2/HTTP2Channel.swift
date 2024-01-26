@@ -24,7 +24,7 @@ import NIOPosix
 import NIOSSL
 
 /// Child channel for processing HTTP1 with the option of upgrading to HTTP2
-public struct HTTP2Channel: HTTPChannelHandler {
+public struct HTTP2UpgradeChannel: HTTPChannelHandler {
     public typealias Value = EventLoopFuture<NIONegotiatedHTTPVersion<HTTP1Channel.Value, (NIOAsyncChannel<HTTP2Frame, HTTP2Frame>, NIOHTTP2Handler.AsyncStreamMultiplexer<HTTP1Channel.Value>)>>
 
     private let sslContext: NIOSSLContext

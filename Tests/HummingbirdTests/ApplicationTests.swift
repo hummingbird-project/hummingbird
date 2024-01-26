@@ -579,7 +579,7 @@ final class ApplicationTests: XCTestCase {
         }
         let app = try HBApplication(
             responder: router.buildResponder(),
-            server: .http2(tlsConfiguration: self.getServerTLSConfiguration())
+            server: .http2Upgrade(tlsConfiguration: self.getServerTLSConfiguration())
         )
         try await app.test(.ahc(.https)) { client in
             try await client.XCTExecute(uri: "/", method: .get) { response in
