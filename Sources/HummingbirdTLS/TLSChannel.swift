@@ -19,13 +19,12 @@ public struct TLSChannel<BaseChannel: HBChildChannel>: HBChildChannel {
     /// Setup child channel with TLS and the base channel setup
     /// - Parameters:
     ///   - channel: Child channel
-    ///   - configuration: Server configuration
     ///   - logger: Logger used during setup
     /// - Returns: Object to process input/output on child channel
     @inlinable
-    public func setup(channel: Channel, configuration: HBServerConfiguration, logger: Logger) -> EventLoopFuture<Value> {
+    public func setup(channel: Channel, logger: Logger) -> EventLoopFuture<Value> {
         return channel.pipeline.addHandler(NIOSSLServerHandler(context: self.sslContext)).flatMap {
-            self.baseChannel.setup(channel: channel, configuration: configuration, logger: logger)
+            self.baseChannel.setup(channel: channel, logger: logger)
         }
     }
 

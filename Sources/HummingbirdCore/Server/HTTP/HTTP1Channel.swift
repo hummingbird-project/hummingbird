@@ -37,10 +37,9 @@ public struct HTTP1Channel: HBChildChannel, HTTPChannelHandler {
     /// Setup child channel for HTTP1
     /// - Parameters:
     ///   - channel: Child channel
-    ///   - configuration: Server configuration
     ///   - logger: Logger used during setup
     /// - Returns: Object to process input/output on child channel
-    public func setup(channel: Channel, configuration: HBServerConfiguration, logger: Logger) -> EventLoopFuture<Value> {
+    public func setup(channel: Channel, logger: Logger) -> EventLoopFuture<Value> {
         let childChannelHandlers: [any ChannelHandler] =
             [HTTP1ToHTTPServerCodec(secure: false)] +
             self.additionalChannelHandlers() +

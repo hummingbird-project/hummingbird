@@ -52,10 +52,9 @@ public struct HTTP2Channel: HTTPChannelHandler {
     /// Setup child channel for HTTP1 with HTTP2 upgrade
     /// - Parameters:
     ///   - channel: Child channel
-    ///   - configuration: Server configuration
     ///   - logger: Logger used during setup
     /// - Returns: Object to process input/output on child channel
-    public func setup(channel: Channel, configuration: HBServerConfiguration, logger: Logger) -> EventLoopFuture<Value> {
+    public func setup(channel: Channel, logger: Logger) -> EventLoopFuture<Value> {
         do {
             try channel.pipeline.syncOperations.addHandler(NIOSSLServerHandler(context: self.sslContext))
         } catch {
