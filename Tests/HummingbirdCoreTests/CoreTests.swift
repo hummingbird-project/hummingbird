@@ -19,27 +19,19 @@ import HummingbirdCore
 import HummingbirdXCT
 import Logging
 import NIOCore
-import NIOEmbedded
 import NIOHTTPTypes
 import NIOPosix
-import NIOTransportServices
 import ServiceLifecycle
 import XCTest
 
 class HummingBirdCoreTests: XCTestCase {
-    static var eventLoopGroup: EventLoopGroup!
-
-    override class func setUp() {
+    static let eventLoopGroup: EventLoopGroup = {
         #if os(iOS)
-        self.eventLoopGroup = NIOTSEventLoopGroup()
+        NIOTSEventLoopGroup.singleton
         #else
-        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        MultiThreadedEventLoopGroup.singleton
         #endif
-    }
-
-    override class func tearDown() {
-        XCTAssertNoThrow(try self.eventLoopGroup.syncShutdownGracefully())
-    }
+    }()
 
     func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)

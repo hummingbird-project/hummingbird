@@ -30,5 +30,5 @@ public protocol HBChildChannel: Sendable {
     /// - Parameters:
     ///   - value: Object to process input/output on child channel
     ///   - logger: Logger to use while processing messages
-    func handle(value: Value, logger: Logger) async
+    func handle(value: Value, logger: Logger) async throws
 }

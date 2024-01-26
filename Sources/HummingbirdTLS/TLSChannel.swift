@@ -33,8 +33,8 @@ public struct TLSChannel<BaseChannel: HBChildChannel>: HBChildChannel {
     /// - Parameters:
     ///   - value: Object to process input/output on child channel
     ///   - logger: Logger to use while processing messages
-    public func handle(value: BaseChannel.Value, logger: Logging.Logger) async {
-        await self.baseChannel.handle(value: value, logger: logger)
+    public func handle(value: BaseChannel.Value, logger: Logging.Logger) async throws {
+        try await self.baseChannel.handle(value: value, logger: logger)
     }
 
     @usableFromInline

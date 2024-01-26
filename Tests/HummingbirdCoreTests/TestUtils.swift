@@ -77,34 +77,21 @@ public func testServer<ChildChannel: HBChildChannel, Value: Sendable>(
     clientConfiguration: HBXCTClient.Configuration = .init(),
     _ test: @escaping @Sendable (HBServer<ChildChannel>, HBXCTClient) async throws -> Value
 ) async throws -> Value {
-    try await withThrowingTaskGroup(of: Void.self) { group in
-        let promise = Promise<Int>()
-        let server = try HBServer(
-            childChannelSetup: httpChannelSetup.build(responder),
-            configuration: configuration,
-            onServerRunning: { await promise.complete($0.localAddress!.port!) },
-            eventLoopGroup: eventLoopGroup,
-            logger: logger
-        )
-        let serviceGroup = ServiceGroup(
-            configuration: .init(
-                services: [server],
-                gracefulShutdownSignals: [.sigterm, .sigint],
-                logger: logger
-            )
-        )
-        group.addTask {
-            try await serviceGroup.run()
-        }
-        let client = await HBXCTClient(
+    try await testServer(
+        responder: responder,
+        httpChannelSetup: httpChannelSetup,
+        configuration: configuration,
+        eventLoopGroup: eventLoopGroup,
+        logger: logger
+    ) { (server: HBServer<ChildChannel>, port: Int) in
+        let client = HBXCTClient(
             host: "localhost",
-            port: promise.wait(),
+            port: port,
             configuration: clientConfiguration,
             eventLoopGroupProvider: .createNew
         )
         client.connect()
         let value = try await test(server, client)
-        await serviceGroup.triggerGracefulShutdown()
         try await client.shutdown()
         return value
     }
