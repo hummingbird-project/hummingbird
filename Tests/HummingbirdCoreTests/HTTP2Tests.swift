@@ -32,40 +32,23 @@ class HummingBirdHTTP2Tests: XCTestCase {
             responder: { _, _ in
                 .init(status: .ok)
             },
-            httpChannelSetup: .http2Upgrade(tlsConfiguration: self.getServerTLSConfiguration()),
+            httpChannelSetup: .http2Upgrade(tlsConfiguration: getServerTLSConfiguration()),
             configuration: .init(address: .hostname(port: 0), serverName: testServerName),
             eventLoopGroup: eventLoopGroup,
             logger: Logger(label: "HB")
         ) { _, port in
-            let httpClient = try HTTPClient(
+            var tlsConfiguration = try getClientTLSConfiguration()
+            // no way to override the SSL server name with AsyncHTTPClient so need to set
+            // hostname verification off
+            tlsConfiguration.certificateVerification = .noHostnameVerification
+            let httpClient = HTTPClient(
                 eventLoopGroupProvider: .shared(eventLoopGroup),
-                configuration: .init(tlsConfiguration: self.getClientTLSConfiguration())
+                configuration: .init(tlsConfiguration: tlsConfiguration)
             )
             defer { try? httpClient.syncShutdown() }
 
             let response = try await httpClient.get(url: "https://localhost:\(port)/").get()
             XCTAssertEqual(response.status, .ok)
         }
-    }
-
-    func getServerTLSConfiguration() throws -> TLSConfiguration {
-        let caCertificate = try NIOSSLCertificate(bytes: [UInt8](caCertificateData.utf8), format: .pem)
-        let certificate = try NIOSSLCertificate(bytes: [UInt8](serverCertificateData.utf8), format: .pem)
-        let privateKey = try NIOSSLPrivateKey(bytes: [UInt8](serverPrivateKeyData.utf8), format: .pem)
-        var tlsConfig = TLSConfiguration.makeServerConfiguration(certificateChain: [.certificate(certificate)], privateKey: .privateKey(privateKey))
-        tlsConfig.trustRoots = .certificates([caCertificate])
-        return tlsConfig
-    }
-
-    func getClientTLSConfiguration() throws -> TLSConfiguration {
-        let caCertificate = try NIOSSLCertificate(bytes: [UInt8](caCertificateData.utf8), format: .pem)
-        let certificate = try NIOSSLCertificate(bytes: [UInt8](clientCertificateData.utf8), format: .pem)
-        let privateKey = try NIOSSLPrivateKey(bytes: [UInt8](clientPrivateKeyData.utf8), format: .pem)
-        var tlsConfig = TLSConfiguration.makeClientConfiguration()
-        tlsConfig.trustRoots = .certificates([caCertificate])
-        tlsConfig.certificateChain = [.certificate(certificate)]
-        tlsConfig.privateKey = .privateKey(privateKey)
-        tlsConfig.certificateVerification = .noHostnameVerification
-        return tlsConfig
     }
 }

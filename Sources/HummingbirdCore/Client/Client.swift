@@ -20,22 +20,22 @@ import ServiceLifecycle
 import NIOTransportServices
 #endif
 
-public struct HBClient<ChildChannel: HBChildChannel> {
-    typealias ChannelResult = ChildChannel.Value
+public struct HBClient<ClientChannel: HBClientChannel> {
+    typealias ChannelResult = ClientChannel.Value
     /// Logger used by Server
     let logger: Logger
     let eventLoopGroup: EventLoopGroup
-    let childChannel: ChildChannel
+    let clientChannel: ClientChannel
     let address: HBAddress
 
     /// Initialize Client
     public init(
-        childChannel: ChildChannel,
+        _ clientChannel: ClientChannel,
         address: HBAddress,
         eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
         logger: Logger
     ) {
-        self.childChannel = childChannel
+        self.clientChannel = clientChannel
         self.address = address
         self.eventLoopGroup = eventLoopGroup
         self.logger = logger
@@ -43,14 +43,14 @@ public struct HBClient<ChildChannel: HBChildChannel> {
 
     public func run() async throws {
         let channelResult = try await self.makeClient(
-            childChannel: self.childChannel,
+            clientChannel: self.clientChannel,
             address: self.address
         )
-        try await self.childChannel.handle(value: channelResult, logger: self.logger)
+        try await self.clientChannel.handle(value: channelResult, logger: self.logger)
     }
 
     /// Connect to server
-    func makeClient(childChannel: ChildChannel, address: HBAddress) async throws -> ChannelResult {
+    func makeClient(clientChannel: ClientChannel, address: HBAddress) async throws -> ChannelResult {
         // get bootstrap
         let bootstrap: ClientBootstrapProtocol
         #if canImport(Network)
@@ -76,13 +76,13 @@ public struct HBClient<ChildChannel: HBChildChannel> {
             case .hostname(let host, let port):
                 result = try await bootstrap
                     .connect(host: host, port: port) { channel in
-                        childChannel.setup(channel: channel, logger: self.logger)
+                        clientChannel.setup(channel: channel, logger: self.logger)
                     }
                 self.logger.debug("Client connnected to \(host):\(port)")
             case .unixDomainSocket(let path):
                 result = try await bootstrap
                     .connect(unixDomainSocketPath: path) { channel in
-                        childChannel.setup(channel: channel, logger: self.logger)
+                        clientChannel.setup(channel: channel, logger: self.logger)
                     }
                 self.logger.debug("Client connnected to socket path \(path)")
             }

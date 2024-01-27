@@ -15,8 +15,8 @@
 import Logging
 import NIOCore
 
-/// HTTPServer child channel setup protocol
-public protocol HBChildChannel: Sendable {
+/// HBClient child channel setup protocol
+public protocol HBClientChannel: Sendable {
     associatedtype Value: Sendable
 
     /// Setup child channel
@@ -30,5 +30,5 @@ public protocol HBChildChannel: Sendable {
     /// - Parameters:
     ///   - value: Object to process input/output on child channel
     ///   - logger: Logger to use while processing messages
-    func handle(value: Value, logger: Logger) async
+    func handle(value: Value, logger: Logger) async throws
 }

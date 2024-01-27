@@ -14,12 +14,14 @@
 
 import HTTPTypes
 import HummingbirdCore
+import HummingbirdTLS
 import HummingbirdXCT
 import Logging
 import NIOCore
 import NIOHTTPTypes
 import NIOHTTPTypesHTTP1
 import NIOPosix
+import NIOSSL
 #if canImport(Network)
 import NIOTransportServices
 #endif
@@ -27,7 +29,11 @@ import ServiceLifecycle
 import XCTest
 
 final class ClientTests: XCTestCase {
-    func testClient(eventLoopGroup: EventLoopGroup) async throws {
+    func testServerChannel(
+        _ server: HBHTTPChannelBuilder<some HBChildChannel>,
+        clientTLSConfiguration: TLSConfiguration? = nil,
+        eventLoopGroup: EventLoopGroup
+    ) async throws {
         let logger = {
             var logger = Logger(label: "TestClient")
             logger.logLevel = .trace
@@ -37,32 +43,63 @@ final class ClientTests: XCTestCase {
             responder: { request, _ in
                 return HBResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
             },
-            httpChannelSetup: .http1(),
+            httpChannelSetup: server,
             configuration: .init(address: .hostname("127.0.0.1", port: 0)),
             eventLoopGroup: MultiThreadedEventLoopGroup.singleton,
             logger: logger
         ) { (_, port: Int) in
             let bufferSize = 20000
             let body = ByteBuffer(bytes: (0..<bufferSize).map { _ in UInt8.random(in: 0...255) })
-            let client = HBClient(
-                childChannel: HTTP1ClientChannel { inbound, outbound in
-                    try await outbound.writeRequest(
-                        .init(
-                            "/",
-                            method: .get,
-                            headers: [.contentLength: bufferSize.description],
-                            body: body
-                        )
+            let clientChannel = HTTP1ClientChannel { inbound, outbound in
+                try await outbound.writeRequest(
+                    .init(
+                        "/",
+                        method: .get,
+                        headers: [.contentLength: bufferSize.description],
+                        body: body
                     )
-                    var inboundIterator = inbound.makeAsyncIterator()
-                    let response = try await inboundIterator.readResponse()
-                    XCTAssertEqual(response.body, body)
-                },
-                address: .hostname("127.0.0.1", port: port),
-                eventLoopGroup: eventLoopGroup,
-                logger: logger
+                )
+                var inboundIterator = inbound.makeAsyncIterator()
+                let response = try await inboundIterator.readResponse()
+                XCTAssertEqual(response.body, body)
+            }
+            if let clientTLSConfiguration {
+                let client = try HBClient(
+                    TLSClientChannel(clientChannel, tlsConfiguration: clientTLSConfiguration, serverHostname: testServerName),
+                    address: .hostname("127.0.0.1", port: port),
+                    eventLoopGroup: eventLoopGroup,
+                    logger: logger
+                )
+                try await client.run()
+            } else {
+                let client = HBClient(
+                    clientChannel,
+                    address: .hostname("127.0.0.1", port: port),
+                    eventLoopGroup: eventLoopGroup,
+                    logger: logger
+                )
+                try await client.run()
+            }
+        }
+    }
+
+    func testClient(
+        eventLoopGroup: EventLoopGroup,
+        serverTLSConfiguration: TLSConfiguration? = nil,
+        clientTLSConfiguration: TLSConfiguration? = nil
+    ) async throws {
+        if let serverTLSConfiguration {
+            try await self.testServerChannel(
+                .tls(.http1(), tlsConfiguration: serverTLSConfiguration),
+                clientTLSConfiguration: clientTLSConfiguration,
+                eventLoopGroup: eventLoopGroup
             )
-            try await client.run()
+        } else {
+            try await self.testServerChannel(
+                .http1(),
+                clientTLSConfiguration: clientTLSConfiguration,
+                eventLoopGroup: eventLoopGroup
+            )
         }
     }
 
@@ -70,14 +107,30 @@ final class ClientTests: XCTestCase {
         try await self.testClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
     }
 
+    func testTLSClient() async throws {
+        try await self.testClient(
+            eventLoopGroup: MultiThreadedEventLoopGroup.singleton,
+            serverTLSConfiguration: getServerTLSConfiguration(),
+            clientTLSConfiguration: getClientTLSConfiguration()
+        )
+    }
+
     #if canImport(Network)
     func testTSClient() async throws {
         try await self.testClient(eventLoopGroup: NIOTSEventLoopGroup.singleton)
     }
+
+    func testTSTClient() async throws {
+        try await self.testClient(
+            eventLoopGroup: NIOTSEventLoopGroup.singleton,
+            serverTLSConfiguration: getServerTLSConfiguration(),
+            clientTLSConfiguration: getClientTLSConfiguration()
+        )
+    }
     #endif
 }
 
-struct HTTP1ClientChannel: HBChildChannel {
+struct HTTP1ClientChannel: HBClientChannel {
     let handler: @Sendable (NIOAsyncChannelInboundStream<HTTPResponsePart>, NIOAsyncChannelOutboundWriter<HTTPRequestPart>) async throws -> Void
 
     /// Setup child channel for HTTP1
