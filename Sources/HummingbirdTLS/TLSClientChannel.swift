@@ -25,7 +25,7 @@ public struct TLSClientChannel<BaseChannel: HBClientChannel>: HBClientChannel {
     /// - Parameters:
     ///   - baseChannel: Base child channel wrap
     ///   - tlsConfiguration: TLS configuration
-    public init(_ baseChannel: BaseChannel, tlsConfiguration: TLSConfiguration, serverHostname: String) throws {
+    public init(_ baseChannel: BaseChannel, tlsConfiguration: TLSConfiguration, serverHostname: String? = nil) throws {
         self.baseChannel = baseChannel
         self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
         self.serverHostname = serverHostname
