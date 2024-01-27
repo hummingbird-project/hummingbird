@@ -43,7 +43,9 @@ public struct HBClient<ClientChannel: HBClientChannel> {
         self.address = address
         self.eventLoopGroup = eventLoopGroup
         self.logger = logger
+        #if canImport(Network)
         self.tlsOptions = nil
+        #endif
     }
 
     #if canImport(Network)
