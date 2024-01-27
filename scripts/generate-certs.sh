@@ -17,12 +17,14 @@ function generateCA() {
         -days 365 \
         -keyout ca.key \
         -out ca.pem
-    openssl x509 -in ca.pem -out ca.der -outform DER
+    TSTESTDER="$FULL_HOME/../Tests/HummingbirdCoreTests/Certificates/ca.der"
+    openssl x509 -in ca.pem -out "$TSTESTDER" -outform DER
 }
 
 function generateServerCertificate() {
     SUBJECT=$1
     NAME=$2
+    PASSWORD=HBTests
     openssl req \
         -new \
         -nodes \
@@ -45,12 +47,15 @@ function generateServerCertificate() {
         -extensions v3_req \
         -out "$NAME".pem \
         -days 365
+
+    TSTESTP12="$FULL_HOME/../Tests/HummingbirdCoreTests/Certificates/server.p12"
+    openssl pkcs12 -legacy -export -passout pass:"$PASSWORD" -out "$TSTESTP12" -in "$NAME".pem -inkey "$NAME".key
 }
 
 function generateClientCertificate() {
     SUBJECT=$1
     NAME=$2
-    PASSWORD=MyPassword
+    PASSWORD=HBTests
     openssl req \
         -new \
         -nodes \
@@ -69,8 +74,8 @@ function generateClientCertificate() {
         -out "$NAME".pem \
         -days 365
 
-    TSTESTP12="$FULL_HOME/../Tests/HummingbirdCoreTests/Certificates/server.p12"
-    openssl pkcs12 -export -passout pass:"$PASSWORD" -out "$TSTESTP12" -in "$NAME".pem -inkey "$NAME".key
+    TSTESTP12="$FULL_HOME/../Tests/HummingbirdCoreTests/Certificates/client.p12"
+    openssl pkcs12 -legacy -export -passout pass:"$PASSWORD" -out "$TSTESTP12" -in "$NAME".pem -inkey "$NAME".key
 }
 
 function createCertSwiftFile() {
@@ -140,9 +145,9 @@ func getClientTLSConfiguration() throws -> TLSConfiguration {
 TMPDIR=$(mktemp -d /tmp/.workingXXXXXX)
 cd "$TMPDIR"
 
-generateCA "/C=UK/ST=Edinburgh/L=Edinburgh/O=MQTTNIO/OU=CA/CN=${SERVER}"
-generateServerCertificate "/C=UK/ST=Edinburgh/L=Edinburgh/O=MQTTNIO/OU=Server/CN=${SERVER}" server
-generateClientCertificate "/C=UK/ST=Edinburgh/L=Edinburgh/O=MQTTNIO/OU=Client/CN=${SERVER}" client
+generateCA "/C=UK/ST=Edinburgh/L=Edinburgh/O=Hummingbird/OU=CA/CN=${SERVER}"
+generateServerCertificate "/C=UK/ST=Edinburgh/L=Edinburgh/O=Hummingbird/OU=Server/CN=${SERVER}" server
+generateClientCertificate "/C=UK/ST=Edinburgh/L=Edinburgh/O=Hummingbird/OU=Client/CN=${SERVER}" client
 
 createCertSwiftFile $FULL_HOME/../Tests/HummingbirdCoreTests/Certificates.swift
 
