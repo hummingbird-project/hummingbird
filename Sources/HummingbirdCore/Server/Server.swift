@@ -115,7 +115,7 @@ public actor HBServer<ChildChannel: HBChildChannel>: Service {
                                 try await asyncChannel.executeThenClose { inbound in
                                     for try await childChannel in inbound {
                                         group.addTask {
-                                            try? await childChannelSetup.handle(value: childChannel, logger: self.logger)
+                                            await childChannelSetup.handle(value: childChannel, logger: self.logger)
                                         }
                                     }
                                 }

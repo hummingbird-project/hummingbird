@@ -126,4 +126,6 @@ protocol ClientBootstrapProtocol {
 }
 
 extension ClientBootstrap: ClientBootstrapProtocol {}
+#if canImport(Network)
 extension NIOTSConnectionBootstrap: ClientBootstrapProtocol {}
+#endif
