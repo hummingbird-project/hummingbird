@@ -21,7 +21,6 @@ import NIOCore
 import NIOHTTPTypes
 import NIOHTTPTypesHTTP1
 import NIOPosix
-import NIOSSL
 #if canImport(Network)
 import NIOTransportServices
 #endif
@@ -29,9 +28,32 @@ import ServiceLifecycle
 import XCTest
 
 final class ClientTests: XCTestCase {
-    func testServerChannel(
-        _ server: HBHTTPChannelBuilder<some HBChildChannel>,
-        clientTLSConfiguration: TLSConfiguration? = nil,
+    enum ClientTLSConfiguration {
+        case niossl(TLSConfiguration)
+        #if canImport(Network)
+        case ts(TSTLSOptions)
+        #endif
+        case none
+    }
+
+    let testClientChannel = HTTP1ClientChannel { inbound, outbound in
+        let body = ByteBuffer(bytes: (0..<20000).map { _ in UInt8.random(in: 0...255) })
+        try await outbound.writeRequest(
+            .init(
+                "/",
+                method: .get,
+                headers: [.contentLength: body.readableBytes.description],
+                body: body
+            )
+        )
+        var inboundIterator = inbound.makeAsyncIterator()
+        let response = try await inboundIterator.readResponse()
+        XCTAssertEqual(response.body, body)
+    }
+
+    func testClient(
+        server: HBHTTPChannelBuilder<some HBChildChannel>,
+        clientTLSConfiguration: ClientTLSConfiguration = .none,
         eventLoopGroup: EventLoopGroup
     ) async throws {
         let logger = {
@@ -63,15 +85,28 @@ final class ClientTests: XCTestCase {
                 let response = try await inboundIterator.readResponse()
                 XCTAssertEqual(response.body, body)
             }
-            if let clientTLSConfiguration {
+            switch clientTLSConfiguration {
+            case .niossl(let tlsConfiguration):
                 let client = try HBClient(
-                    TLSClientChannel(clientChannel, tlsConfiguration: clientTLSConfiguration, serverHostname: testServerName),
+                    TLSClientChannel(clientChannel, tlsConfiguration: tlsConfiguration, serverHostname: testServerName),
                     address: .hostname("127.0.0.1", port: port),
                     eventLoopGroup: eventLoopGroup,
                     logger: logger
                 )
                 try await client.run()
-            } else {
+
+            #if canImport(Network)
+            case .ts(let options):
+                let client = try HBClient(
+                    clientChannel,
+                    address: .hostname("127.0.0.1", port: port),
+                    transportServicesTLSOptions: options,
+                    eventLoopGroup: eventLoopGroup,
+                    logger: logger
+                )
+                try await client.run()
+            #endif
+            case .none:
                 let client = HBClient(
                     clientChannel,
                     address: .hostname("127.0.0.1", port: port),
@@ -83,48 +118,48 @@ final class ClientTests: XCTestCase {
         }
     }
 
-    func testClient(
-        eventLoopGroup: EventLoopGroup,
-        serverTLSConfiguration: TLSConfiguration? = nil,
-        clientTLSConfiguration: TLSConfiguration? = nil
-    ) async throws {
-        if let serverTLSConfiguration {
-            try await self.testServerChannel(
-                .tls(.http1(), tlsConfiguration: serverTLSConfiguration),
-                clientTLSConfiguration: clientTLSConfiguration,
-                eventLoopGroup: eventLoopGroup
-            )
-        } else {
-            try await self.testServerChannel(
-                .http1(),
-                clientTLSConfiguration: clientTLSConfiguration,
-                eventLoopGroup: eventLoopGroup
-            )
-        }
-    }
+    // MARK: Tests
 
     func testClient() async throws {
-        try await self.testClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
+        try await self.testClient(
+            server: .http1(),
+            eventLoopGroup: MultiThreadedEventLoopGroup.singleton
+        )
     }
 
     func testTLSClient() async throws {
         try await self.testClient(
-            eventLoopGroup: MultiThreadedEventLoopGroup.singleton,
-            serverTLSConfiguration: getServerTLSConfiguration(),
-            clientTLSConfiguration: getClientTLSConfiguration()
+            server: .tls(.http1(), tlsConfiguration: getServerTLSConfiguration()),
+            clientTLSConfiguration: .niossl(getClientTLSConfiguration()),
+            eventLoopGroup: MultiThreadedEventLoopGroup.singleton
         )
     }
 
     #if canImport(Network)
     func testTSClient() async throws {
-        try await self.testClient(eventLoopGroup: NIOTSEventLoopGroup.singleton)
+        try await self.testClient(
+            server: .http1(),
+            eventLoopGroup: NIOTSEventLoopGroup.singleton
+        )
     }
 
-    func testTSTClient() async throws {
+    func testTSNIOSSLClient() async throws {
         try await self.testClient(
-            eventLoopGroup: NIOTSEventLoopGroup.singleton,
-            serverTLSConfiguration: getServerTLSConfiguration(),
-            clientTLSConfiguration: getClientTLSConfiguration()
+            server: .tls(.http1(), tlsConfiguration: getServerTLSConfiguration()),
+            clientTLSConfiguration: .niossl(getClientTLSConfiguration()),
+            eventLoopGroup: NIOTSEventLoopGroup.singleton
+        )
+    }
+
+    func testTransportServicesTLSClient() async throws {
+        let p12Path = Bundle.module.path(forResource: "client", ofType: "p12")!
+        let tlsOptions = try XCTUnwrap(TSTLSOptions.options(
+            serverIdentity: .p12(filename: p12Path, password: "MyPassword")
+        ))
+        try await self.testClient(
+            server: .tls(.http1(), tlsConfiguration: getServerTLSConfiguration()),
+            clientTLSConfiguration: .ts(tlsOptions),
+            eventLoopGroup: NIOTSEventLoopGroup.singleton
         )
     }
     #endif

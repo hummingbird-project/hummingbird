@@ -25,7 +25,7 @@ public struct TSTLSOptions: Sendable {
 
     /// Initialize TSTLSOptions
     public init(_ options: NWProtocolTLS.Options?) {
-        if let options = options {
+        if let options {
             self.value = .some(options)
         } else {
             self.value = .none

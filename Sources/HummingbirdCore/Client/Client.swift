@@ -17,6 +17,7 @@ import NIOCore
 import NIOPosix
 import ServiceLifecycle
 #if canImport(Network)
+import Network
 import NIOTransportServices
 #endif
 
@@ -27,6 +28,9 @@ public struct HBClient<ClientChannel: HBClientChannel> {
     let eventLoopGroup: EventLoopGroup
     let clientChannel: ClientChannel
     let address: HBAddress
+    #if canImport(Network)
+    let tlsOptions: NWProtocolTLS.Options?
+    #endif
 
     /// Initialize Client
     public init(
@@ -39,7 +43,25 @@ public struct HBClient<ClientChannel: HBClientChannel> {
         self.address = address
         self.eventLoopGroup = eventLoopGroup
         self.logger = logger
+        self.tlsOptions = nil
     }
+
+    #if canImport(Network)
+    /// Initialize Client with TLS options
+    public init(
+        _ clientChannel: ClientChannel,
+        address: HBAddress,
+        transportServicesTLSOptions: TSTLSOptions,
+        eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
+        logger: Logger
+    ) throws {
+        self.clientChannel = clientChannel
+        self.address = address
+        self.eventLoopGroup = eventLoopGroup
+        self.logger = logger
+        self.tlsOptions = transportServicesTLSOptions.options
+    }
+    #endif
 
     public func run() async throws {
         let channelResult = try await self.makeClient(
@@ -60,9 +82,6 @@ public struct HBClient<ClientChannel: HBClientChannel> {
             #if os(iOS) || os(tvOS)
             self.logger.warning("Running BSD sockets on iOS or tvOS is not recommended. Please use NIOTSEventLoopGroup, to run with the Network framework")
             #endif
-            /*            if configuration.tlsOptions.options != nil {
-                 self.logger.warning("tlsOptions set in Configuration will not be applied to a BSD sockets server. Please use NIOTSEventLoopGroup, to run with the Network framework")
-             }*/
             bootstrap = self.createSocketsBootstrap()
         }
         #else
@@ -103,10 +122,9 @@ public struct HBClient<ClientChannel: HBClientChannel> {
         guard let bootstrap = NIOTSConnectionBootstrap(validatingGroup: self.eventLoopGroup) else {
             return nil
         }
-
-        /* if let tlsOptions = configuration.tlsOptions.options {
-             return bootstrap.tlsOptions(tlsOptions)
-         } */
+        if let tlsOptions {
+            return bootstrap.tlsOptions(tlsOptions)
+        }
         return bootstrap
     }
     #endif
