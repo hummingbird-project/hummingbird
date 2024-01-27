@@ -18,9 +18,60 @@ import Network
 
 /// Wrapper for NIO transport services TLS options
 public struct TSTLSOptions: Sendable {
-    public enum ServerIdentity {
-        case secIdentity(SecIdentity)
-        case p12(filename: String, password: String)
+    struct Error: Swift.Error, Equatable {
+        enum _Internal: Equatable {
+            case invalidFormat
+        }
+
+        private let value: _Internal
+        init(_ value: _Internal) {
+            self.value = value
+        }
+
+        // static invalid conversion
+        static var invalidFormat: Self { .init(.invalidFormat) }
+    }
+
+    public struct Identity {
+        let secIdentity: SecIdentity
+
+        public static func secIdentity(_ secIdentity: SecIdentity) -> Self {
+            return .init(secIdentity: secIdentity)
+        }
+
+        public static func p12(filename: String, password: String) throws -> Self {
+            guard let secIdentity = Self.loadP12(filename: filename, password: password) else { throw Error.invalidFormat }
+            return .init(secIdentity: secIdentity)
+        }
+
+        private static func loadP12(filename: String, password: String) -> SecIdentity? {
+            guard let data = try? Data(contentsOf: URL(fileURLWithPath: filename)) else { return nil }
+            let options: [String: String] = [kSecImportExportPassphrase as String: password]
+            var rawItems: CFArray?
+            let result = SecPKCS12Import(data as CFData, options as CFDictionary, &rawItems)
+            guard result == errSecSuccess else { return nil }
+            let items = rawItems! as! [[String: Any]]
+            let firstItem = items[0]
+            return firstItem[kSecImportItemIdentity as String] as! SecIdentity?
+        }
+    }
+
+    /// Struct defining an array of certificates
+    public struct Certificates {
+        let certificates: [SecCertificate]
+
+        /// Create certificate array from already loaded SecCertificate array
+        public static var none: Self { .init(certificates: []) }
+
+        /// Create certificate array from already loaded SecCertificate array
+        public static func certificates(_ secCertificates: [SecCertificate]) -> Self { .init(certificates: secCertificates) }
+
+        /// Create certificate array from DER file
+        public static func der(filename: String) throws -> Self {
+            let certificateData = try Data(contentsOf: URL(fileURLWithPath: filename))
+            guard let secCertificate = SecCertificateCreateWithData(nil, certificateData as CFData) else { throw Error.invalidFormat }
+            return .init(certificates: [secCertificate])
+        }
     }
 
     /// Initialize TSTLSOptions
@@ -38,23 +89,47 @@ public struct TSTLSOptions: Sendable {
     }
 
     public static func options(
-        serverIdentity: ServerIdentity
+        serverIdentity: Identity
     ) -> Self? {
         let options = NWProtocolTLS.Options()
 
         // server identity
-        let identity: SecIdentity
-        switch serverIdentity {
-        case .secIdentity(let serverIdentity):
-            identity = serverIdentity
-        case .p12(let filename, let password):
-            guard let identity2 = loadP12(filename: filename, password: password) else { return nil }
-            identity = identity2
-        }
-
-        guard let secIdentity = sec_identity_create(identity) else { return nil }
+        guard let secIdentity = sec_identity_create(serverIdentity.secIdentity) else { return nil }
         sec_protocol_options_set_local_identity(options.securityProtocolOptions, secIdentity)
 
+        return .init(value: .some(options))
+    }
+
+    public static func options(
+        clientIdentity: Identity, trustRoots: Certificates = .none, serverName: String? = nil
+    ) -> Self? {
+        let options = NWProtocolTLS.Options()
+
+        // server identity
+        guard let secIdentity = sec_identity_create(clientIdentity.secIdentity) else { return nil }
+        sec_protocol_options_set_local_identity(options.securityProtocolOptions, secIdentity)
+        if let serverName {
+            sec_protocol_options_set_tls_server_name(options.securityProtocolOptions, serverName)
+        }
+        // sec_protocol_options_set
+        sec_protocol_options_set_local_identity(options.securityProtocolOptions, secIdentity)
+
+        // add verify block to control certificate verification
+        if trustRoots.certificates.count > 0 {
+            sec_protocol_options_set_verify_block(
+                options.securityProtocolOptions,
+                { _, sec_trust, sec_protocol_verify_complete in
+                    let trust = sec_trust_copy_ref(sec_trust).takeRetainedValue()
+                    SecTrustSetAnchorCertificates(trust, trustRoots.certificates as CFArray)
+                    SecTrustEvaluateAsyncWithError(trust, Self.tlsDispatchQueue) { _, result, error in
+                        if let error {
+                            print("Trust failed: \(error.localizedDescription)")
+                        }
+                        sec_protocol_verify_complete(result)
+                    }
+                }, Self.tlsDispatchQueue
+            )
+        }
         return .init(value: .some(options))
     }
 
@@ -78,14 +153,7 @@ public struct TSTLSOptions: Sendable {
     private let value: Internal
     private init(value: Internal) { self.value = value }
 
-    private static func loadP12(filename: String, password: String) -> SecIdentity? {
-        guard let data = try? Data(contentsOf: URL(fileURLWithPath: filename)) else { return nil }
-        let options: [String: String] = [kSecImportExportPassphrase as String: password]
-        var rawItems: CFArray?
-        guard SecPKCS12Import(data as CFData, options as CFDictionary, &rawItems) == errSecSuccess else { return nil }
-        let items = rawItems! as! [[String: Any]]
-        let firstItem = items[0]
-        return firstItem[kSecImportItemIdentity as String] as! SecIdentity?
-    }
+    /// Dispatch queue used by Network framework TLS to control certificate verification
+    static var tlsDispatchQueue = DispatchQueue(label: "TSTLSConfiguration")
 }
 #endif

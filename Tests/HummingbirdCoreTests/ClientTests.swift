@@ -153,8 +153,11 @@ final class ClientTests: XCTestCase {
 
     func testTransportServicesTLSClient() async throws {
         let p12Path = Bundle.module.path(forResource: "client", ofType: "p12")!
+        let derPath = Bundle.module.path(forResource: "ca", ofType: "der")!
         let tlsOptions = try XCTUnwrap(TSTLSOptions.options(
-            serverIdentity: .p12(filename: p12Path, password: "MyPassword")
+            clientIdentity: .p12(filename: p12Path, password: "HBTests"),
+            trustRoots: .der(filename: derPath),
+            serverName: testServerName
         ))
         try await self.testClient(
             server: .tls(.http1(), tlsConfiguration: getServerTLSConfiguration()),
