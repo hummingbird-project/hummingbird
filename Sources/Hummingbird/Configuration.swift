@@ -26,7 +26,7 @@ public struct HBApplicationConfiguration: Sendable {
     // MARK: Member variables
 
     /// Bind address for server
-    public var address: HBBindAddress
+    public var address: HBAddress
     /// Server name to return in "server" header
     public var serverName: String?
     /// Defines the maximum length for the queue of pending connections
@@ -49,7 +49,7 @@ public struct HBApplicationConfiguration: Sendable {
     ///         the client may receive an error with an indication of ECONNREFUSE
     ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
     public init(
-        address: HBBindAddress = .hostname(),
+        address: HBAddress = .hostname(),
         serverName: String? = nil,
         backlog: Int = 256,
         reuseAddress: Bool = true
@@ -72,7 +72,7 @@ public struct HBApplicationConfiguration: Sendable {
     ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
     ///   - tlsOptions: TLS options for when you are using NIOTransportServices
     public init(
-        address: HBBindAddress = .hostname(),
+        address: HBAddress = .hostname(),
         serverName: String? = nil,
         reuseAddress: Bool = true,
         tlsOptions: TSTLSOptions
@@ -88,7 +88,7 @@ public struct HBApplicationConfiguration: Sendable {
 
     /// Create new configuration struct with updated values
     public func with(
-        address: HBBindAddress? = nil,
+        address: HBAddress? = nil,
         serverName: String? = nil,
         backlog: Int? = nil,
         reuseAddress: Bool? = nil

@@ -49,7 +49,7 @@ class TransportServicesTests: XCTestCase {
         let eventLoopGroup = NIOTSEventLoopGroup()
         let p12Path = Bundle.module.path(forResource: "server", ofType: "p12")!
         let tlsOptions = try XCTUnwrap(TSTLSOptions.options(
-            serverIdentity: .p12(filename: p12Path, password: "MyPassword")
+            serverIdentity: .p12(filename: p12Path, password: "HBTests")
         ))
         try await testServer(
             responder: helloResponder,

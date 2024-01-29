@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2024 the Hummingbird authors
+// Copyright (c) 2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -17,17 +17,18 @@ import Logging
 import NIOCore
 import NIOSSL
 
-/// Sets up child channel to use TLS before accessing base channel setup
-public struct TLSChannel<BaseChannel: HBChildChannel>: HBChildChannel {
+/// Sets up client channel to use TLS before accessing base channel setup
+public struct TLSClientChannel<BaseChannel: HBClientChannel>: HBClientChannel {
     public typealias Value = BaseChannel.Value
 
     ///  Initialize TLSChannel
     /// - Parameters:
     ///   - baseChannel: Base child channel wrap
     ///   - tlsConfiguration: TLS configuration
-    public init(_ baseChannel: BaseChannel, tlsConfiguration: TLSConfiguration) throws {
-        self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
+    public init(_ baseChannel: BaseChannel, tlsConfiguration: TLSConfiguration, serverHostname: String? = nil) throws {
         self.baseChannel = baseChannel
+        self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
+        self.serverHostname = serverHostname
     }
 
     /// Setup child channel with TLS and the base channel setup
@@ -37,7 +38,10 @@ public struct TLSChannel<BaseChannel: HBChildChannel>: HBChildChannel {
     /// - Returns: Object to process input/output on child channel
     @inlinable
     public func setup(channel: Channel, logger: Logger) -> EventLoopFuture<Value> {
-        return channel.pipeline.addHandler(NIOSSLServerHandler(context: self.sslContext)).flatMap {
+        channel.eventLoop.makeCompletedFuture {
+            let sslHandler = try NIOSSLClientHandler(context: self.sslContext, serverHostname: self.serverHostname)
+            try channel.pipeline.syncOperations.addHandler(sslHandler)
+        }.flatMap {
             self.baseChannel.setup(channel: channel, logger: logger)
         }
     }
@@ -47,18 +51,14 @@ public struct TLSChannel<BaseChannel: HBChildChannel>: HBChildChannel {
     /// - Parameters:
     ///   - value: Object to process input/output on child channel
     ///   - logger: Logger to use while processing messages
-    public func handle(value: BaseChannel.Value, logger: Logging.Logger) async {
-        await self.baseChannel.handle(value: value, logger: logger)
+    public func handle(value: BaseChannel.Value, logger: Logging.Logger) async throws {
+        try await self.baseChannel.handle(value: value, logger: logger)
     }
 
     @usableFromInline
     let sslContext: NIOSSLContext
     @usableFromInline
+    let serverHostname: String?
+    @usableFromInline
     var baseChannel: BaseChannel
-}
-
-extension TLSChannel: HTTPChannelHandler where BaseChannel: HTTPChannelHandler {
-    public var responder: @Sendable (HBRequest, Channel) async throws -> HBResponse {
-        baseChannel.responder
-    }
 }

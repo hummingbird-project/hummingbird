@@ -17,12 +17,14 @@ function generateCA() {
         -days 365 \
         -keyout ca.key \
         -out ca.pem
-    openssl x509 -in ca.pem -out ca.der -outform DER
+    TSTESTDER="$FULL_HOME/../Tests/HummingbirdCoreTests/Certificates/ca.der"
+    openssl x509 -in ca.pem -out "$TSTESTDER" -outform DER
 }
 
 function generateServerCertificate() {
     SUBJECT=$1
     NAME=$2
+    PASSWORD=HBTests
     openssl req \
         -new \
         -nodes \
@@ -45,12 +47,15 @@ function generateServerCertificate() {
         -extensions v3_req \
         -out "$NAME".pem \
         -days 365
+
+    TSTESTP12="$FULL_HOME/../Tests/HummingbirdCoreTests/Certificates/server.p12"
+    openssl pkcs12 -legacy -export -passout pass:"$PASSWORD" -out "$TSTESTP12" -in "$NAME".pem -inkey "$NAME".key
 }
 
 function generateClientCertificate() {
     SUBJECT=$1
     NAME=$2
-    PASSWORD=MyPassword
+    PASSWORD=HBTests
     openssl req \
         -new \
         -nodes \
@@ -69,8 +74,8 @@ function generateClientCertificate() {
         -out "$NAME".pem \
         -days 365
 
-    TSTESTP12="$FULL_HOME/../Tests/HummingbirdCoreTests/Certificates/server.p12"
-    openssl pkcs12 -export -passout pass:"$PASSWORD" -out "$TSTESTP12" -in "$NAME".pem -inkey "$NAME".key
+    TSTESTP12="$FULL_HOME/../Tests/HummingbirdCoreTests/Certificates/client.p12"
+    openssl pkcs12 -legacy -export -passout pass:"$PASSWORD" -out "$TSTESTP12" -in "$NAME".pem -inkey "$NAME".key
 }
 
 function createCertSwiftFile() {
@@ -91,6 +96,7 @@ function createCertSwiftFile() {
 //===----------------------------------------------------------------------===//
 EOF
     printf "
+import NIOSSL
 
 let testServerName = \"$SERVER\"
 
@@ -113,17 +119,36 @@ let clientCertificateData =
 let clientPrivateKeyData =
 \"\"\"\n$(cat client.key)
 \"\"\"
+
+func getServerTLSConfiguration() throws -> TLSConfiguration {
+    let caCertificate = try NIOSSLCertificate(bytes: [UInt8](caCertificateData.utf8), format: .pem)
+    let certificate = try NIOSSLCertificate(bytes: [UInt8](serverCertificateData.utf8), format: .pem)
+    let privateKey = try NIOSSLPrivateKey(bytes: [UInt8](serverPrivateKeyData.utf8), format: .pem)
+    var tlsConfig = TLSConfiguration.makeServerConfiguration(certificateChain: [.certificate(certificate)], privateKey: .privateKey(privateKey))
+    tlsConfig.trustRoots = .certificates([caCertificate])
+    return tlsConfig
+}
+
+func getClientTLSConfiguration() throws -> TLSConfiguration {
+    let caCertificate = try NIOSSLCertificate(bytes: [UInt8](caCertificateData.utf8), format: .pem)
+    let certificate = try NIOSSLCertificate(bytes: [UInt8](clientCertificateData.utf8), format: .pem)
+    let privateKey = try NIOSSLPrivateKey(bytes: [UInt8](clientPrivateKeyData.utf8), format: .pem)
+    var tlsConfig = TLSConfiguration.makeClientConfiguration()
+    tlsConfig.trustRoots = .certificates([caCertificate])
+    tlsConfig.certificateChain = [.certificate(certificate)]
+    tlsConfig.privateKey = .privateKey(privateKey)
+    return tlsConfig
+}
 " >> "$FILENAME"
 }
 
 TMPDIR=$(mktemp -d /tmp/.workingXXXXXX)
 cd "$TMPDIR"
 
-generateCA "/C=UK/ST=Edinburgh/L=Edinburgh/O=MQTTNIO/OU=CA/CN=${SERVER}"
-generateServerCertificate "/C=UK/ST=Edinburgh/L=Edinburgh/O=MQTTNIO/OU=Server/CN=${SERVER}" server
-generateClientCertificate "/C=UK/ST=Edinburgh/L=Edinburgh/O=MQTTNIO/OU=Client/CN=${SERVER}" client
+generateCA "/C=UK/ST=Edinburgh/L=Edinburgh/O=Hummingbird/OU=CA/CN=${SERVER}"
+generateServerCertificate "/C=UK/ST=Edinburgh/L=Edinburgh/O=Hummingbird/OU=Server/CN=${SERVER}" server
+generateClientCertificate "/C=UK/ST=Edinburgh/L=Edinburgh/O=Hummingbird/OU=Client/CN=${SERVER}" client
 
-createCertSwiftFile $FULL_HOME/../Tests/HummingbirdTLSTests/Certificates.swift
 createCertSwiftFile $FULL_HOME/../Tests/HummingbirdCoreTests/Certificates.swift
 
 rm -rf "$TMPDIR"
