@@ -58,6 +58,7 @@ And also the following are available in other repositories in this organisation
 - [`HummingbirdLambda`](https://github.com/hummingbird-project/hummingbird-lambda/tree/2.x.x): Framework for running Hummingbird on AWS Lambdas.
 - [`HummingbirdMustache`](https://github.com/hummingbird-project/hummingbird-mustache): Mustache templating engine.
 - [`HummingbirdRedis`](https://github.com/hummingbird-project/hummingbird-redis/tree/2.x.x): Redis support via [RediStack](https://github.com/swift-server/RediStack).
+- [`HummingbirdWebSocket`](https://github.com/hummingbird-project/hummingbird-websocker/tree/2.x.x): Support for WebSockets (Currently work in progess).
 
 ## Documentation
 
