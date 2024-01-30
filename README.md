@@ -18,7 +18,7 @@ Lightweight, flexible, modern server framework written in Swift.
 
 ## Hummingbird
 
-Hummingbird is a lightweight, flexible moderen web application framework that runs on top of a SwiftNIO based server implementation. It is designed to require the minimum number of dependencies.
+Hummingbird is a lightweight, flexible modern web application framework that runs on top of a SwiftNIO based server implementation. It is designed to require the minimum number of dependencies.
 
 It provides a router for directing different endpoints to their handlers, middleware for processing requests before they reach your handlers and processing the responses returned, custom encoding/decoding of requests/responses, TLS and HTTP2.
 
