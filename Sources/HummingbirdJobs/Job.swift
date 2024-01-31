@@ -14,7 +14,8 @@
 
 import Foundation
 import Logging
-import NIO
+import NIOConcurrencyHelpers
+import NIOCore
 
 /// Protocol for job description
 ///
@@ -47,7 +48,10 @@ enum HBJobRegister {
         let container = try decoder.container(keyedBy: _HBJobCodingKey.self)
         let key = container.allKeys.first!
         let childDecoder = try container.superDecoder(forKey: key)
-        guard let jobType = HBJobRegister.nameTypeMap[key.stringValue] else { throw JobQueueError.decodeJobFailed }
+        let jobType = try HBJobRegister.nameTypeMap.withLockedValue {
+            guard let job = $0[key.stringValue] else { throw JobQueueError.decodeJobFailed }
+            return job
+        }
         return try jobType.init(from: childDecoder)
     }
 
@@ -58,10 +62,10 @@ enum HBJobRegister {
     }
 
     static func register(job: HBJob.Type) {
-        self.nameTypeMap[job.name] = job
+        self.nameTypeMap.withLockedValue { $0[job.name] = job }
     }
 
-    static var nameTypeMap: [String: HBJob.Type] = [:]
+    static let nameTypeMap: NIOLockedValueBox<[String: HBJob.Type]> = .init([:])
 }
 
 internal struct _HBJobCodingKey: CodingKey {
