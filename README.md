@@ -4,10 +4,10 @@
 </picture>
 <p align="center">
 <a href="https://swift.org">
-  <img src="https://img.shields.io/badge/swift-5.7-brightgreen.svg"/>
+  <img src="https://img.shields.io/badge/swift-5.9-brightgreen.svg"/>
 </a>
 <a href="https://github.com/hummingbird-project/hummingbird/actions?query=workflow%3ACI">
-  <img src="https://github.com/hummingbird-project/hummingbird/actions/workflows/ci.yml/badge.svg?branch=main"/>
+  <img src="https://github.com/hummingbird-project/hummingbird/actions/workflows/ci.yml/badge.svg?branch=2.x.x"/>
 </a>
 <a href="https://discord.gg/7ME3nZ7mP2">
   <img src="https://img.shields.io/badge/chat-discord-brightgreen.svg"/>
@@ -16,45 +16,49 @@
 
 Lightweight, flexible, modern server framework written in Swift.
 
-## HummingbirdCore
-
-HummingbirdCore contains a Swift NIO based server framework. The server framework `HBServer` can be used to support many protocols but is primarily designed to support HTTP. By default it is setup to be an HTTP/1.1 server, but it can support TLS and HTTP2 via the `HummingbirdTLS` and `HummingbirdHTTP2` modules.
-
-HummingbirdCore can be used separately from Hummingbird if you want to write your own web application framework.
-
 ## Hummingbird
 
-Hummingbird is a lightweight and flexible web application framework that runs on top of HummingbirdCore. It is designed to require the minimum number of dependencies. It provides a router for directing different endpoints to their handlers, middleware for processing requests before they reach your handlers and processing the responses returned and providing custom encoding/decoding of `Codable` objects.
+Hummingbird is a lightweight, flexible modern web application framework that runs on top of a SwiftNIO based server implementation. It is designed to require the minimum number of dependencies.
+
+It provides a router for directing different endpoints to their handlers, middleware for processing requests before they reach your handlers and processing the responses returned, custom encoding/decoding of requests/responses, TLS and HTTP2.
 
 ```swift
 import Hummingbird
 
+// create router and add a single GET /hello route
 let router = HBRouter()
-router.get("hello") { request -> String in
+router.get("hello") { request, _ -> String in
     return "Hello"
 }
+// create application using router
 let app = HBApplication(
-    responder: router.buildResponder(),
+    router: router,
     configuration: .init(address: .hostname("127.0.0.1", port: 8080))
 )
+// run hummingbird application
 try await app.runService()
 ```
 
-## Hummingbird Extensions
+Hummingbird v2 is currently in development an [alpha release](https://github.com/hummingbird-project/hummingbird/releases/tag/2.0.0-alpha.1) is available if you'd like to try it out.
 
-Hummingbird is designed in a modular manner and many features that are unavailable in the core libraries are provided through extension modules. 
+### Hummingbird Extensions
 
-Extensions provided in other repositories include
+Hummingbird is designed to require the least number of dependencies possible, but this means many features are unavailable to the core libraries. Additional features are provided through extensions. The Hummingbird repository comes with additional modules 
 
-| Extension | Description |
-|-----------|-------------|
-| [HummingbirdAuth](https://github.com/hummingbird-project/hummingbird-auth) | Authentication framework and various support libraries
-| [HummingbirdCompress](https://github.com/hummingbird-project/hummingbird-compression) | Request decompression and response compression (uses [CompressNIO](https://github.com/adam-fowler/compress-nio))
-| [HummingbirdFluent](https://github.com/hummingbird-project/hummingbird-fluent) | Interface to the Vapor database ORM (uses [FluentKit](https://github.com/vapor/fluent))
-| [HummingbirdRedis](https://github.com/hummingbird-project/hummingbird-redis) | Interface to Redis (uses [RediStack](https://gitlab.com/mordil/RediStack))
-| [HummingbirdWebSocket](https://github.com/hummingbird-project/hummingbird-websocket) | Adds support for WebSocket upgrade to server
-| [HummingbirdMustache](https://github.com/hummingbird-project/hummingbird-mustache) | Mustache templating engine
-| [HummingbirdLambda](https://github.com/hummingbird-project/hummingbird-lambda) | Run hummmingbird inside an AWS Lambda
+- `HummingbirdJobs`: framework for pushing work onto a queue to be processed outside of a request (possibly by another server instance).
+- `HummingbirdRouter`: an alternative router that uses a resultbuilder.
+- `HummingbirdTLS`: TLS support.
+- `HummingbirdHTTP2`: Support for HTTP2 upgrades.
+- `HummingbirdXCT`: helper functions to aid testing Hummingbird projects.
+
+And also the following are available in other repositories in this organisation
+
+- [`HummingbirdAuth`](https://github.com/hummingbird-project/hummingbird-auth/tree/2.x.x): Authenticatiion framework
+- [`HummingbirdFluent`](https://github.com/hummingbird-project/hummingbird-fluent/tree/2.x.x): Integration with Vapor's database ORM [FluentKit](https://github.com/Vapor/fluent-kit).
+- [`HummingbirdLambda`](https://github.com/hummingbird-project/hummingbird-lambda/tree/2.x.x): Framework for running Hummingbird on AWS Lambdas.
+- [`HummingbirdMustache`](https://github.com/hummingbird-project/hummingbird-mustache): Mustache templating engine.
+- [`HummingbirdRedis`](https://github.com/hummingbird-project/hummingbird-redis/tree/2.x.x): Redis support via [RediStack](https://github.com/swift-server/RediStack).
+- [`HummingbirdWebSocket`](https://github.com/hummingbird-project/hummingbird-websocker/tree/2.x.x): Support for WebSockets (Currently work in progess).
 
 ## Documentation
 
