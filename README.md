@@ -53,7 +53,7 @@ Hummingbird is designed to require the least number of dependencies possible, bu
 
 And also the following are available in other repositories in this organisation
 
-- [`HummingbirdAuth`](https://github.com/hummingbird-project/hummingbird-auth/tree/2.x.x): Authenticatiion framework
+- [`HummingbirdAuth`](https://github.com/hummingbird-project/hummingbird-auth/tree/2.x.x): Authentication framework
 - [`HummingbirdFluent`](https://github.com/hummingbird-project/hummingbird-fluent/tree/2.x.x): Integration with Vapor's database ORM [FluentKit](https://github.com/Vapor/fluent-kit).
 - [`HummingbirdLambda`](https://github.com/hummingbird-project/hummingbird-lambda/tree/2.x.x): Framework for running Hummingbird on AWS Lambdas.
 - [`HummingbirdMustache`](https://github.com/hummingbird-project/hummingbird-mustache): Mustache templating engine.
