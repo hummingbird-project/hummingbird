@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2023 the Hummingbird authors
+// Copyright (c) 2023-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,10 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-import AsyncAlgorithms
 import NIOCore
 import NIOHTTPTypes
 
+/// Request Body
+///
+/// Can be either a stream of ByteBuffers or a single ByteBuffer
 public enum HBRequestBody: Sendable, AsyncSequence {
     case byteBuffer(ByteBuffer)
     case stream(HBStreamedRequestBody)
@@ -46,13 +48,16 @@ public enum HBRequestBody: Sendable, AsyncSequence {
     }
 }
 
-public struct HBStreamedRequestBody: @unchecked Sendable, AsyncSequence {
+/// Request body that is a stream of ByteBuffers.
+public struct HBStreamedRequestBody: Sendable, AsyncSequence {
     public typealias Element = ByteBuffer
 
+    /// Initialize HBStreamedRequestBody from AsyncIterator of a NIOAsyncChannelInboundStream
     public init(iterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator) {
-        self.underlyingIterator = iterator
+        self.underlyingIterator = .init(iterator)
     }
 
+    /// Async Iterator for HBStreamedRequestBody
     public struct AsyncIterator: AsyncIteratorProtocol {
         public typealias Element = ByteBuffer
 
@@ -79,52 +84,8 @@ public struct HBStreamedRequestBody: @unchecked Sendable, AsyncSequence {
     }
 
     public func makeAsyncIterator() -> AsyncIterator {
-        AsyncIterator(underlyingIterator: self.underlyingIterator)
+        AsyncIterator(underlyingIterator: self.underlyingIterator.wrappedValue)
     }
 
-    private var underlyingIterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator
+    private var underlyingIterator: UnsafeTransfer<NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator>
 }
-
-/// A type that represents an HTTP request body.
-public struct _HBStreamedRequestBody: Sendable, AsyncSequence {
-    public typealias Element = ByteBuffer
-
-    public struct AsyncIterator: AsyncIteratorProtocol {
-        public typealias Element = ByteBuffer
-
-        fileprivate var underlyingIterator: AsyncThrowingChannel<ByteBuffer, Error>.AsyncIterator
-
-        public mutating func next() async throws -> ByteBuffer? {
-            try await self.underlyingIterator.next()
-        }
-    }
-
-    /// HBRequestBody is internally represented by AsyncThrowingChannel
-    private var channel: AsyncThrowingChannel<ByteBuffer, Error>
-
-    public func makeAsyncIterator() -> AsyncIterator {
-        AsyncIterator(underlyingIterator: self.channel.makeAsyncIterator())
-    }
-}
-
-/* extension HBStreamedRequestBody {
-     /// Creates a new HTTP request body
-     @_spi(HBXCT) public init() {
-         self.channel = .init()
-     }
-
-     /// push a single ByteBuffer to the HTTP request body stream
-     @_spi(HBXCT) public func send(_ buffer: ByteBuffer) async {
-         await self.channel.send(buffer)
-     }
-
-     /// pass error to HTTP request body
-     @_spi(HBXCT) public func fail(_ error: Error) {
-         self.channel.fail(error)
-     }
-
-     /// Finish HTTP request body stream
-     @_spi(HBXCT) public func finish() {
-         self.channel.finish()
-     }
- } */
