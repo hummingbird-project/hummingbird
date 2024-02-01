@@ -80,12 +80,11 @@ extension HTTPChannelHandler {
 
                         // Flush current request
                         // read until we don't have a body part
-                        var part = try await {
-                            while true {
-                                let part = try await iterator.next()
-                                guard case .body = part else { return part }
-                            }
-                        }()
+                        var part: HTTPRequestPart?
+                        while true {
+                            part = try await iterator.next()
+                            guard case .body = part else { break }
+                        }
                         // if we have an end then read the next part
                         if case .end = part {
                             part = try await iterator.next()
