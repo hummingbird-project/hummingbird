@@ -46,17 +46,19 @@ extension HTTPChannelHandler {
                 try await asyncChannel.executeThenClose { inbound, outbound in
                     let responseWriter = HBHTTPServerBodyWriter(outbound: outbound)
                     var iterator = inbound.makeAsyncIterator()
-                    while let part = try await iterator.next() {
+
+                    // read first part, verify it is a head
+                    guard let part = try await iterator.next() else { return }
+                    guard case .head(var head) = part else {
+                        throw HTTPChannelError.unexpectedHTTPPart(part)
+                    }
+
+                    while true {
                         // set to processing unless it is cancelled then exit
                         guard processingRequest.exchange(.processing, ordering: .relaxed) == .idle else { break }
-                        guard case .head(let head) = part else {
-                            throw HTTPChannelError.unexpectedHTTPPart(part)
-                        }
+
                         let bodyStream = HBStreamedRequestBody(iterator: iterator)
-                        let body = HBRequestBody.stream(bodyStream)
-                        let request = HBRequest(head: head, body: body)
-                        // add task processing request and writing response
-                        // group.addTask {
+                        let request = HBRequest(head: head, body: .stream(bodyStream))
                         let response: HBResponse
                         do {
                             response = try await self.responder(request, asyncChannel.channel)
@@ -67,11 +69,7 @@ extension HTTPChannelHandler {
                             try await outbound.write(.head(response.head))
                             let tailHeaders = try await response.body.write(responseWriter)
                             try await outbound.write(.end(tailHeaders))
-                            // flush request body
-                            for try await _ in request.body {}
                         } catch {
-                            // flush request body
-                            for try await _ in request.body {}
                             throw error
                         }
                         if request.headers[.connection] == "close" {
@@ -79,6 +77,28 @@ extension HTTPChannelHandler {
                         }
                         // set to idle unless it is cancelled then exit
                         guard processingRequest.exchange(.idle, ordering: .relaxed) == .processing else { break }
+
+                        // Flush current request
+                        // read until we don't have a body part
+                        var part = try await {
+                            while true {
+                                let part = try await iterator.next()
+                                guard case .body = part else { return part }
+                            }
+                        }()
+                        // if we have an end then read the next part
+                        if case .end = part {
+                            part = try await iterator.next()
+                        }
+
+                        // if part is nil break out of loop
+                        guard let part else {
+                            break
+                        }
+
+                        // part should be a head, if not throw error
+                        guard case .head(let newHead) = part else { throw HTTPChannelError.unexpectedHTTPPart(part) }
+                        head = newHead
                     }
                 }
             } onGracefulShutdown: {

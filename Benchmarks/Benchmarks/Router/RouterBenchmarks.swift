@@ -69,6 +69,7 @@ extension Benchmark {
                             _ = try await response.body.write(BenchmarkBodyWriter())
                         }
                         try await writeBody(source)
+                        source.yield(.end(nil))
                         source.finish()
                     }
                 }

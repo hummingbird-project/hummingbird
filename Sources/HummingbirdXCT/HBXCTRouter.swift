@@ -125,6 +125,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                         source.yield(.body(buffer))
                     }
                 }
+                source.yield(.end(nil))
                 source.finish()
                 return try await group.next()!
             }

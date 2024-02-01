@@ -71,7 +71,7 @@ public struct HBStreamedRequestBody: Sendable, AsyncSequence {
         }
 
         public mutating func next() async throws -> ByteBuffer? {
-            guard !self.done else { return nil }
+            if self.done { return nil }
             // if we are still expecting parts and the iterator finishes.
             // In this case I think we can just assume we hit an .end
             guard let part = try await self.underlyingIterator.next() else { return nil }
