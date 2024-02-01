@@ -51,9 +51,10 @@ public enum HBRequestBody: Sendable, AsyncSequence {
 /// Request body that is a stream of ByteBuffers.
 public struct HBStreamedRequestBody: Sendable, AsyncSequence {
     public typealias Element = ByteBuffer
+    public typealias InboundStream = NIOAsyncChannelInboundStream<HTTPRequestPart>
 
     /// Initialize HBStreamedRequestBody from AsyncIterator of a NIOAsyncChannelInboundStream
-    public init(iterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator) {
+    public init(iterator: InboundStream.AsyncIterator) {
         self.underlyingIterator = .init(iterator)
     }
 
@@ -61,10 +62,10 @@ public struct HBStreamedRequestBody: Sendable, AsyncSequence {
     public struct AsyncIterator: AsyncIteratorProtocol {
         public typealias Element = ByteBuffer
 
-        private var underlyingIterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator
+        private var underlyingIterator: InboundStream.AsyncIterator
         private var done: Bool
 
-        init(underlyingIterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator) {
+        init(underlyingIterator: InboundStream.AsyncIterator) {
             self.underlyingIterator = underlyingIterator
             self.done = false
         }
