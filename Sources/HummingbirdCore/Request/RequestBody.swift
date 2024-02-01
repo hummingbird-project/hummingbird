@@ -71,14 +71,17 @@ public struct HBStreamedRequestBody: Sendable, AsyncSequence {
 
         public mutating func next() async throws -> ByteBuffer? {
             guard !self.done else { return nil }
-            switch try await self.underlyingIterator.next() {
+            // if we are still expecting parts and the iterator finishes.
+            // In this case I think we can just assume we hit an .end
+            guard let part = try await self.underlyingIterator.next() else { return nil }
+            switch part {
             case .body(let buffer):
                 return buffer
             case .end:
                 self.done = true
                 return nil
             default:
-                return nil
+                throw HTTPChannelError.unexpectedHTTPPart(part)
             }
         }
     }
