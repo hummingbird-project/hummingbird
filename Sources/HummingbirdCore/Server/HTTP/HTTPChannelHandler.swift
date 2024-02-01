@@ -53,7 +53,7 @@ extension HTTPChannelHandler {
                             guard case .head(let head) = part else {
                                 throw HTTPChannelError.unexpectedHTTPPart(part)
                             }
-                            let bodyStream = HBStreamedRequestBody()
+                            let bodyStream = HBStreamedRequestBody(iterator: iterator)
                             let body = HBRequestBody.stream(bodyStream)
                             let request = HBRequest(head: head, body: body)
                             // add task processing request and writing response
@@ -80,16 +80,16 @@ extension HTTPChannelHandler {
                                 }
                             }
                             // send body parts to request
-                            do {
-                                // pass body part to request
-                                while case .body(let buffer) = try await iterator.next() {
-                                    await bodyStream.send(buffer)
-                                }
-                                bodyStream.finish()
-                            } catch {
-                                // pass failed to read full http body to request
-                                bodyStream.fail(error)
-                            }
+                            /* do {
+                                 // pass body part to request
+                                 while case .body(let buffer) = try await iterator.next() {
+                                     await bodyStream.send(buffer)
+                                 }
+                                 bodyStream.finish()
+                             } catch {
+                                 // pass failed to read full http body to request
+                                 bodyStream.fail(error)
+                             } */
                             try await group.next()
                             // set to idle unless it is cancelled then exit
                             guard processingRequest.exchange(.idle, ordering: .relaxed) == .processing else { break }

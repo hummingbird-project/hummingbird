@@ -19,6 +19,7 @@ import HTTPTypes
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
+import NIOHTTPTypes
 import NIOPosix
 import ServiceLifecycle
 
@@ -90,7 +91,8 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
 
         func execute(uri: String, method: HTTPRequest.Method, headers: HTTPFields, body: ByteBuffer?) async throws -> HBXCTResponse {
             return try await withThrowingTaskGroup(of: HBXCTResponse.self) { group in
-                let streamer = HBStreamedRequestBody()
+                let (inbound, source) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
+                let streamer = HBStreamedRequestBody(iterator: inbound.makeAsyncIterator())
                 let request = HBRequest(
                     head: .init(method: method, scheme: "http", authority: "localhost", path: uri, headerFields: headers),
                     body: .stream(streamer)
@@ -120,10 +122,10 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                     while body.readableBytes > 0 {
                         let chunkSize = min(32 * 1024, body.readableBytes)
                         let buffer = body.readSlice(length: chunkSize)!
-                        await streamer.send(buffer)
+                        source.yield(.body(buffer))
                     }
                 }
-                streamer.finish()
+                source.finish()
                 return try await group.next()!
             }
         }

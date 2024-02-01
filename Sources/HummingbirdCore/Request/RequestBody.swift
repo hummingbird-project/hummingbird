@@ -14,6 +14,7 @@
 
 import AsyncAlgorithms
 import NIOCore
+import NIOHTTPTypes
 
 public enum HBRequestBody: Sendable, AsyncSequence {
     case byteBuffer(ByteBuffer)
@@ -45,8 +46,47 @@ public enum HBRequestBody: Sendable, AsyncSequence {
     }
 }
 
+public struct HBStreamedRequestBody: @unchecked Sendable, AsyncSequence {
+    public typealias Element = ByteBuffer
+
+    public init(iterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator) {
+        self.underlyingIterator = iterator
+    }
+
+    public struct AsyncIterator: AsyncIteratorProtocol {
+        public typealias Element = ByteBuffer
+
+        private var underlyingIterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator
+        private var done: Bool
+
+        init(underlyingIterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator) {
+            self.underlyingIterator = underlyingIterator
+            self.done = false
+        }
+
+        public mutating func next() async throws -> ByteBuffer? {
+            guard !self.done else { return nil }
+            switch try await self.underlyingIterator.next() {
+            case .body(let buffer):
+                return buffer
+            case .end:
+                self.done = true
+                return nil
+            default:
+                return nil
+            }
+        }
+    }
+
+    public func makeAsyncIterator() -> AsyncIterator {
+        AsyncIterator(underlyingIterator: self.underlyingIterator)
+    }
+
+    private var underlyingIterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator
+}
+
 /// A type that represents an HTTP request body.
-public struct HBStreamedRequestBody: Sendable, AsyncSequence {
+public struct _HBStreamedRequestBody: Sendable, AsyncSequence {
     public typealias Element = ByteBuffer
 
     public struct AsyncIterator: AsyncIteratorProtocol {
@@ -62,29 +102,29 @@ public struct HBStreamedRequestBody: Sendable, AsyncSequence {
     /// HBRequestBody is internally represented by AsyncThrowingChannel
     private var channel: AsyncThrowingChannel<ByteBuffer, Error>
 
-    /// Creates a new HTTP request body
-    @_spi(HBXCT) public init() {
-        self.channel = .init()
-    }
-
     public func makeAsyncIterator() -> AsyncIterator {
         AsyncIterator(underlyingIterator: self.channel.makeAsyncIterator())
     }
 }
 
-extension HBStreamedRequestBody {
-    /// push a single ByteBuffer to the HTTP request body stream
-    @_spi(HBXCT) public func send(_ buffer: ByteBuffer) async {
-        await self.channel.send(buffer)
-    }
+/* extension HBStreamedRequestBody {
+     /// Creates a new HTTP request body
+     @_spi(HBXCT) public init() {
+         self.channel = .init()
+     }
 
-    /// pass error to HTTP request body
-    @_spi(HBXCT) public func fail(_ error: Error) {
-        self.channel.fail(error)
-    }
+     /// push a single ByteBuffer to the HTTP request body stream
+     @_spi(HBXCT) public func send(_ buffer: ByteBuffer) async {
+         await self.channel.send(buffer)
+     }
 
-    /// Finish HTTP request body stream
-    @_spi(HBXCT) public func finish() {
-        self.channel.finish()
-    }
-}
+     /// pass error to HTTP request body
+     @_spi(HBXCT) public func fail(_ error: Error) {
+         self.channel.fail(error)
+     }
+
+     /// Finish HTTP request body stream
+     @_spi(HBXCT) public func finish() {
+         self.channel.finish()
+     }
+ } */
