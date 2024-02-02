@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2023 the Hummingbird authors
+// Copyright (c) 2023-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -29,22 +29,26 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
 
     private let sslContext: NIOSSLContext
     private let http1: HTTP1Channel
+    private let idleTimeout: TimeAmount
     private let additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
     public var responder: @Sendable (HBRequest, Channel) async throws -> HBResponse { http1.responder }
 
     ///  Initialize HTTP1Channel
     /// - Parameters:
     ///   - tlsConfiguration: TLS configuration
+    ///   - idleTimeout: Time before closing an idle HTTP2 connection pipeline
     ///   - additionalChannelHandlers: Additional channel handlers to add to channel pipeline
     ///   - responder: Function returning a HTTP response for a HTTP request
     public init(
         tlsConfiguration: TLSConfiguration,
+        idleTimeout: Duration = .seconds(30),
         additionalChannelHandlers: @escaping @Sendable () -> [any RemovableChannelHandler] = { [] },
         responder: @escaping @Sendable (HBRequest, Channel) async throws -> HBResponse = { _, _ in throw HBHTTPError(.notImplemented) }
     ) throws {
         var tlsConfiguration = tlsConfiguration
         tlsConfiguration.applicationProtocols = NIOHTTP2SupportedALPNProtocols
         self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
+        self.idleTimeout = .init(idleTimeout)
         self.additionalChannelHandlers = additionalChannelHandlers
         self.http1 = HTTP1Channel(responder: responder, additionalChannelHandlers: additionalChannelHandlers)
     }
@@ -75,22 +79,20 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
                 }
         } http2ConnectionInitializer: { http2Channel -> EventLoopFuture<NIOAsyncChannel<HTTP2Frame, HTTP2Frame>> in
             http2Channel.eventLoop.makeCompletedFuture {
-                try NIOAsyncChannel<HTTP2Frame, HTTP2Frame>(wrappingChannelSynchronously: http2Channel)
+                try http2Channel.pipeline.syncOperations.addHandler(IdleStateHandler(readTimeout: self.idleTimeout))
+                try http2Channel.pipeline.syncOperations.addHandler(HTTP2UserEventHandler())
+                return try NIOAsyncChannel<HTTP2Frame, HTTP2Frame>(wrappingChannelSynchronously: http2Channel)
             }
         } http2StreamInitializer: { http2ChildChannel -> EventLoopFuture<HTTP1Channel.Value> in
             let childChannelHandlers: [ChannelHandler] =
                 self.additionalChannelHandlers() + [
                     HBHTTPUserEventHandler(logger: logger),
                 ]
-
-            return http2ChildChannel
-                .pipeline
-                .addHandler(HTTP2FramePayloadToHTTPServerCodec())
-                .flatMap {
-                    http2ChildChannel.pipeline.addHandlers(childChannelHandlers)
-                }.flatMapThrowing {
-                    try HTTP1Channel.Value(wrappingChannelSynchronously: http2ChildChannel)
-                }
+            return http2ChildChannel.eventLoop.makeCompletedFuture {
+                try http2ChildChannel.pipeline.syncOperations.addHandler(HTTP2FramePayloadToHTTPServerCodec())
+                try http2ChildChannel.pipeline.syncOperations.addHandlers(childChannelHandlers)
+                return try HTTP1Channel.Value(wrappingChannelSynchronously: http2ChildChannel)
+            }
         }
     }
 
@@ -116,8 +118,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
                 } catch {
                     logger.error("Error handling inbound connection for HTTP2 handler: \(error)")
                 }
-                // have to run this to ensure http2 channel outbound writer is closed
-                try await http2.executeThenClose { _,_ in}
+                try await http2.executeThenClose { _, _ in }
             }
         } catch {
             logger.error("Error getting HTTP2 upgrade negotiated value: \(error)")
