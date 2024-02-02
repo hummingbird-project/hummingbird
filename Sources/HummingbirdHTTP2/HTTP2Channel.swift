@@ -80,8 +80,8 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
         } http2ConnectionInitializer: { http2Channel -> EventLoopFuture<NIOAsyncChannel<HTTP2Frame, HTTP2Frame>> in
             http2Channel.eventLoop.makeCompletedFuture {
                 try http2Channel.pipeline.syncOperations.addHandler(IdleStateHandler(readTimeout: self.idleTimeout))
-                let result = try NIOAsyncChannel<HTTP2Frame, HTTP2Frame>(wrappingChannelSynchronously: http2Channel)
                 try http2Channel.pipeline.syncOperations.addHandler(HTTP2UserEventHandler())
+                let result = try NIOAsyncChannel<HTTP2Frame, HTTP2Frame>(wrappingChannelSynchronously: http2Channel)
                 return result
             }
         } http2StreamInitializer: { http2ChildChannel -> EventLoopFuture<HTTP1Channel.Value> in
@@ -112,7 +112,11 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
                     try await withThrowingDiscardingTaskGroup { group in
                         for try await client in multiplexer.inbound.cancelOnGracefulShutdown() {
                             group.addTask {
+                                // send created event to http2 channel
+                                http2.channel.triggerUserOutboundEvent(HTTP2UserEventHandler.CreateHTTP2StreamEvent(), promise: nil)
                                 await handleHTTP(asyncChannel: client, logger: logger)
+                                // send closed event to http2 channel
+                                http2.channel.triggerUserOutboundEvent(HTTP2UserEventHandler.ClosedHTTP2StreamEvent(), promise: nil)
                             }
                         }
                     }

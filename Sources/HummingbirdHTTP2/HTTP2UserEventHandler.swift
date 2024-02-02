@@ -15,9 +15,17 @@
 import NIOCore
 import NIOHTTP2
 
-final class HTTP2UserEventHandler: ChannelInboundHandler, RemovableChannelHandler {
+final class HTTP2UserEventHandler: ChannelDuplexHandler, RemovableChannelHandler {
     typealias InboundIn = HTTP2Frame
     typealias InboundOut = HTTP2Frame
+    typealias OutboundIn = HTTP2Frame
+    typealias OutboundOut = HTTP2Frame
+
+    /// A `Channel` user event that is sent when a new HTTP2 stream has been created.
+    struct CreateHTTP2StreamEvent: Sendable {}
+
+    /// A `Channel` user event that is sent when a HTTP2 stream is closed.
+    struct ClosedHTTP2StreamEvent: Sendable {}
 
     enum State {
         case active(numberOpenStreams: Int)
@@ -33,22 +41,29 @@ final class HTTP2UserEventHandler: ChannelInboundHandler, RemovableChannelHandle
 
     public func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
         switch event {
-        case is NIOHTTP2StreamCreatedEvent:
-            self.streamOpened()
-
-        case is StreamClosedEvent:
-            self.streamClosed(context: context)
-
         case is ChannelShouldQuiesceEvent:
             self.quiesce(context: context)
 
-        case let evt as IdleStateHandler.IdleStateEvent where evt == .read:
+        case let evt as IdleStateHandler.IdleStateEvent where evt == .read || evt == .write:
             self.processIdleReadState(context: context)
 
         default:
             break
         }
         context.fireUserInboundEventTriggered(event)
+    }
+
+    public func triggerUserOutboundEvent(context: ChannelHandlerContext, event: Any, promise: EventLoopPromise<Void>?) {
+        switch event {
+        case is CreateHTTP2StreamEvent:
+            self.streamOpened()
+
+        case is ClosedHTTP2StreamEvent:
+            self.streamClosed(context: context)
+        default:
+            break
+        }
+        context.triggerUserOutboundEvent(event, promise: promise)
     }
 
     func streamOpened() {
