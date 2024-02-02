@@ -93,12 +93,12 @@ final class HTTP2UserEventHandler: ChannelInboundHandler, RemovableChannelHandle
     func processIdleReadState(context: ChannelHandlerContext) {
         switch self.state {
         case .active(let numberOpenStreams):
-            // if we get a read idle state and there are streams open
+            // if we get a read idle state and there are no streams open
             if numberOpenStreams == 0 {
                 self.close(context: context)
             }
         case .quiescing(let numberOpenStreams):
-            // if we get a read idle state and there are streams open
+            // if we get a read idle state and there are no streams open
             if numberOpenStreams == 0 {
                 self.close(context: context)
             }
