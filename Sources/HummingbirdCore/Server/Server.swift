@@ -109,18 +109,19 @@ public actor HBServer<ChildChannel: HBChildChannel>: Service {
                     await withGracefulShutdownHandler {
                         await onServerRunning?(asyncChannel.channel)
 
+                        let logger = self.logger
                         // We can now start to handle our work.
                         await withDiscardingTaskGroup { group in
                             do {
                                 try await asyncChannel.executeThenClose { inbound in
                                     for try await childChannel in inbound {
                                         group.addTask {
-                                            await childChannelSetup.handle(value: childChannel, logger: self.logger)
+                                            await childChannelSetup.handle(value: childChannel, logger: logger)
                                         }
                                     }
                                 }
                             } catch {
-                                self.logger.error("Waiting on child channel: \(error)")
+                                logger.error("Waiting on child channel: \(error)")
                             }
                         }
                     } onGracefulShutdown: {

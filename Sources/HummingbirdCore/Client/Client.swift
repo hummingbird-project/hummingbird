@@ -21,7 +21,7 @@ import Network
 import NIOTransportServices
 #endif
 
-public struct HBClient<ClientChannel: HBClientChannel> {
+public struct HBClient<ClientChannel: HBClientChannel>: Sendable {
     typealias ChannelResult = ClientChannel.Value
     /// Logger used by Server
     let logger: Logger
