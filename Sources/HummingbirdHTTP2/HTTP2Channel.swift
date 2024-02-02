@@ -80,8 +80,9 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
         } http2ConnectionInitializer: { http2Channel -> EventLoopFuture<NIOAsyncChannel<HTTP2Frame, HTTP2Frame>> in
             http2Channel.eventLoop.makeCompletedFuture {
                 try http2Channel.pipeline.syncOperations.addHandler(IdleStateHandler(readTimeout: self.idleTimeout))
+                let result = try NIOAsyncChannel<HTTP2Frame, HTTP2Frame>(wrappingChannelSynchronously: http2Channel)
                 try http2Channel.pipeline.syncOperations.addHandler(HTTP2UserEventHandler())
-                return try NIOAsyncChannel<HTTP2Frame, HTTP2Frame>(wrappingChannelSynchronously: http2Channel)
+                return result
             }
         } http2StreamInitializer: { http2ChildChannel -> EventLoopFuture<HTTP1Channel.Value> in
             let childChannelHandlers: [ChannelHandler] =
@@ -118,7 +119,14 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
                 } catch {
                     logger.error("Error handling inbound connection for HTTP2 handler: \(error)")
                 }
-                try await http2.executeThenClose { _, _ in }
+                // have to run this to ensure http2 channel is closed. If we ended reading from the
+                // multiplexer because of graceful shutdown or because an error was thrown then the
+                // channel will still be open
+                do {
+                    try await http2.channel.close()
+                } catch let error as ChannelError where error == .alreadyClosed {
+                    // can ignore already closed errors
+                }
             }
         } catch {
             logger.error("Error getting HTTP2 upgrade negotiated value: \(error)")

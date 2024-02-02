@@ -15,11 +15,9 @@
 import NIOCore
 import NIOHTTP2
 
-final class HTTP2UserEventHandler: ChannelDuplexHandler, RemovableChannelHandler {
+final class HTTP2UserEventHandler: ChannelInboundHandler, RemovableChannelHandler {
     typealias InboundIn = HTTP2Frame
     typealias InboundOut = HTTP2Frame
-    typealias OutboundIn = HTTP2Frame
-    typealias OutboundOut = HTTP2Frame
 
     enum State {
         case active(numberOpenStreams: Int)
