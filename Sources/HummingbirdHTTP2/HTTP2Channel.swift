@@ -116,8 +116,11 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
                     case timer
                     case stream(HTTP1Channel.Value)
                 }
+                // sequence to trigger graceful shutdown
                 let (gracefulShutdownSequence, gracefulShutdownSource) = AsyncStream<Void>.makeStream()
-                let timerSequence = AsyncTimerSequence(interval: .seconds(1), clock: .continuous)
+                // timer sequence
+                let timerSequence = AsyncTimerSequence(interval: self.idleTimeout, clock: .continuous)
+                // merge multiplexer with graceful shutdown and timer
                 let mergedSequence = merge(
                     multiplexer.inbound.map { MergeResult.stream($0) },
                     timerSequence.map { _ in .timer },
@@ -126,6 +129,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
                 do {
                     try await withGracefulShutdownHandler {
                         try await withThrowingDiscardingTaskGroup { group in
+                            // stream state.
                             let streamState = NIOLockedValueBox(HTTP2StreamState())
                             loop:
                                 for try await element in mergedSequence
