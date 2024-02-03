@@ -282,6 +282,27 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    func testDoubleStreaming() async throws {
+        let router = HBRouter()
+        router.post("size") { request, context -> String in
+            var request = request
+            _ = try await request.collateBody(context: context)
+            var size = 0
+            for try await buffer in request.body {
+                size += buffer.readableBytes
+            }
+            return size.description
+        }
+        let app = HBApplication(responder: router.buildResponder())
+
+        try await app.test(.router) { client in
+            let buffer = self.randomBuffer(size: 100_000)
+            try await client.XCTExecute(uri: "/size", method: .post, body: buffer) { response in
+                XCTAssertEqual(String(buffer: response.body), "100000")
+            }
+        }
+    }
+
     func testOptional() async throws {
         let router = HBRouter()
         router

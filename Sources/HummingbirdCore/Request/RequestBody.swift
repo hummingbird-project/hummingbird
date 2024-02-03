@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import NIOConcurrencyHelpers
 import NIOCore
 import NIOHTTPTypes
 
@@ -27,10 +28,11 @@ public enum HBRequestBody: Sendable, AsyncSequence {
 
     public func makeAsyncIterator() -> HBStreamedRequestBody.AsyncIterator {
         switch self {
-        case .byteBuffer:
-            /// The server always creates the HBRequestBody as a stream. If it is converted
-            /// into a single ByteBuffer it cannot be treated as a stream after that
-            preconditionFailure("Cannot convert collapsed request body back into a sequence")
+        case .byteBuffer(let buffer):
+            let (stream, source) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
+            source.yield(.body(buffer))
+            source.finish()
+            return HBStreamedRequestBody(iterator: stream.makeAsyncIterator()).makeAsyncIterator()
         case .stream(let streamer):
             return streamer.makeAsyncIterator()
         }
@@ -49,13 +51,19 @@ public enum HBRequestBody: Sendable, AsyncSequence {
 }
 
 /// Request body that is a stream of ByteBuffers.
-public struct HBStreamedRequestBody: Sendable, AsyncSequence {
+///
+/// This is a unicast async sequence that allows a single iterator to be created.
+public final class HBStreamedRequestBody: Sendable, AsyncSequence {
     public typealias Element = ByteBuffer
     public typealias InboundStream = NIOAsyncChannelInboundStream<HTTPRequestPart>
+
+    private let underlyingIterator: UnsafeTransfer<NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator>
+    private let alreadyIterated: NIOLockedValueBox<Bool>
 
     /// Initialize HBStreamedRequestBody from AsyncIterator of a NIOAsyncChannelInboundStream
     public init(iterator: InboundStream.AsyncIterator) {
         self.underlyingIterator = .init(iterator)
+        self.alreadyIterated = .init(false)
     }
 
     /// Async Iterator for HBStreamedRequestBody
@@ -65,9 +73,9 @@ public struct HBStreamedRequestBody: Sendable, AsyncSequence {
         private var underlyingIterator: InboundStream.AsyncIterator
         private var done: Bool
 
-        init(underlyingIterator: InboundStream.AsyncIterator) {
+        init(underlyingIterator: InboundStream.AsyncIterator, done: Bool = false) {
             self.underlyingIterator = underlyingIterator
-            self.done = false
+            self.done = done
         }
 
         public mutating func next() async throws -> ByteBuffer? {
@@ -88,8 +96,15 @@ public struct HBStreamedRequestBody: Sendable, AsyncSequence {
     }
 
     public func makeAsyncIterator() -> AsyncIterator {
-        AsyncIterator(underlyingIterator: self.underlyingIterator.wrappedValue)
+        // verify if an iterator has already been created. If it has then create an
+        // iterator that returns nothing. This could be a precondition failure (currently
+        // an assert) as you should not be allowed to do this.
+        let done = self.alreadyIterated.withLockedValue {
+            assert($0 == false, "Can only create iterator from request body once")
+            let done = $0
+            $0 = true
+            return done
+        }
+        return AsyncIterator(underlyingIterator: self.underlyingIterator.wrappedValue, done: done)
     }
-
-    private var underlyingIterator: UnsafeTransfer<NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator>
 }

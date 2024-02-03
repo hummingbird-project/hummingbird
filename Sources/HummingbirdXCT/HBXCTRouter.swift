@@ -112,7 +112,6 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                     }
                     let responseWriter = RouterResponseWriter()
                     let trailerHeaders = try await response.body.write(responseWriter)
-                    for try await _ in request.body {}
                     return responseWriter.collated.withLockedValue { collated in
                         HBXCTResponse(head: response.head, body: collated, trailerHeaders: trailerHeaders)
                     }
