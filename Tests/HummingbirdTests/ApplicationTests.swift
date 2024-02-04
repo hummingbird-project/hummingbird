@@ -627,7 +627,7 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    /// test we can create out own application type conforming to HBApplicationProtocol
+    /// test we can do bidirectional streaming (streaming request and response at same time)
     func testBidirectionalStreaming() async throws {
         let buffer = self.randomBuffer(size: 1024 * 1024)
         let router = HBRouter()
@@ -647,6 +647,38 @@ final class ApplicationTests: XCTestCase {
             try await client.XCTExecute(uri: "/", method: .post, body: buffer) { response in
                 XCTAssertEqual(response.body, ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 0xFF }))
             }
+        }
+    }
+
+    /// test we can edit request body in middleware
+    func testMiddlewareEditingRequestBody() async throws {
+        struct RequestEditingMiddleware<Context: HBRequestContext>: HBMiddlewareProtocol {
+            func handle(_ request: Input, context: Context, next: (Input, Context) async throws -> Output) async throws -> Output {
+                try await withThrowingTaskGroup(of: Void.self) { group in
+                    let (requestBody, source) = HBStreamedRequestBody.makeRequestBodyStream()
+                    var newRequest = request
+                    newRequest.body = .stream(requestBody)
+                    group.addTask {
+                        for try await buffer in request.body {
+                            try await source.yield(ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 0xFF }))
+                        }
+                        source.finish()
+                    }
+                    return try await next(newRequest, context)
+                }
+            }
+        }
+        let buffer = self.randomBuffer(size: 1024 * 1024)
+        let router = HBRouter()
+        router.middlewares.add(RequestEditingMiddleware())
+        router.post("/") { request, context -> HTTPResponse.Status in
+            let body = try await request.body.collate(maxSize: .max)
+            XCTAssertEqual(body, ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 0xFF }))
+            return .ok
+        }
+        let app = HBApplication(router: router)
+        try await app.test(.live) { client in
+            _ = try await client.XCTExecute(uri: "/", method: .post, body: buffer)
         }
     }
 

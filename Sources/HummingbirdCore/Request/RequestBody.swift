@@ -29,10 +29,7 @@ public enum HBRequestBody: Sendable, AsyncSequence {
     public func makeAsyncIterator() -> HBStreamedRequestBody.AsyncIterator {
         switch self {
         case .byteBuffer(let buffer):
-            let (stream, source) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
-            source.yield(.body(buffer))
-            source.finish()
-            return HBStreamedRequestBody(iterator: stream.makeAsyncIterator()).makeAsyncIterator()
+            return HBStreamedRequestBody(byteBuffer: buffer).makeAsyncIterator()
         case .stream(let streamer):
             return streamer.makeAsyncIterator()
         }
@@ -55,42 +52,63 @@ public enum HBRequestBody: Sendable, AsyncSequence {
 /// This is a unicast async sequence that allows a single iterator to be created.
 public final class HBStreamedRequestBody: Sendable, AsyncSequence {
     public typealias Element = ByteBuffer
-    public typealias InboundStream = NIOAsyncChannelInboundStream<HTTPRequestPart>
 
-    private let underlyingIterator: UnsafeTransfer<NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator>
+    enum _Backing {
+        case nioAsyncChannel(UnsafeTransfer<NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator>)
+        case producer(Producer)
+    }
+    private let _backing: _Backing
     private let alreadyIterated: NIOLockedValueBox<Bool>
 
     /// Initialize HBStreamedRequestBody from AsyncIterator of a NIOAsyncChannelInboundStream
-    public init(iterator: InboundStream.AsyncIterator) {
-        self.underlyingIterator = .init(iterator)
+    init(_ backing: _Backing) {
+        self._backing = backing
         self.alreadyIterated = .init(false)
+    }
+
+    /// Initialize HBStreamedRequestBody from AsyncIterator of a NIOAsyncChannelInboundStream
+    convenience init(iterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator) {
+        self.init(.nioAsyncChannel(.init(iterator)))
     }
 
     /// Async Iterator for HBStreamedRequestBody
     public struct AsyncIterator: AsyncIteratorProtocol {
         public typealias Element = ByteBuffer
-
-        private var underlyingIterator: InboundStream.AsyncIterator
+        enum _Backing {
+            case nioAsyncChannel(NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator)
+            case producer(Producer.AsyncIterator)
+        }
+        private let _backing: _Backing
         private var done: Bool
 
-        init(underlyingIterator: InboundStream.AsyncIterator, done: Bool = false) {
-            self.underlyingIterator = underlyingIterator
+        init(iterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator, done: Bool = false) {
+            self._backing = .nioAsyncChannel(iterator)
+            self.done = done
+        }
+
+        init(iterator: Producer.AsyncIterator, done: Bool = false) {
+            self._backing = .producer(iterator)
             self.done = done
         }
 
         public mutating func next() async throws -> ByteBuffer? {
             if self.done { return nil }
-            // if we are still expecting parts and the iterator finishes.
-            // In this case I think we can just assume we hit an .end
-            guard let part = try await self.underlyingIterator.next() else { return nil }
-            switch part {
-            case .body(let buffer):
-                return buffer
-            case .end:
-                self.done = true
-                return nil
-            default:
-                throw HTTPChannelError.unexpectedHTTPPart(part)
+            switch self._backing {
+            case .producer(let producer):
+                return try await producer.next()
+            case .nioAsyncChannel(var httpPartIterator):
+                // if we are still expecting parts and the iterator finishes.
+                // In this case I think we can just assume we hit an .end
+                guard let part = try await httpPartIterator.next() else { return nil }
+                switch part {
+                case .body(let buffer):
+                    return buffer
+                case .end:
+                    self.done = true
+                    return nil
+                default:
+                    throw HTTPChannelError.unexpectedHTTPPart(part)
+                }
             }
         }
     }
@@ -105,6 +123,137 @@ public final class HBStreamedRequestBody: Sendable, AsyncSequence {
             $0 = true
             return done
         }
-        return AsyncIterator(underlyingIterator: self.underlyingIterator.wrappedValue, done: done)
+        switch self._backing {
+        case .nioAsyncChannel(let iterator):
+            return AsyncIterator(iterator: iterator.wrappedValue, done: done)
+        case .producer(let producer):
+            return AsyncIterator(iterator: producer.makeAsyncIterator(), done: done)
+        }
+    }
+}
+
+/// Request stream with backpressure
+extension HBStreamedRequestBody {
+    @usableFromInline
+    typealias Producer = NIOThrowingAsyncSequenceProducer<
+        ByteBuffer, 
+        any Error, 
+        NIOAsyncSequenceProducerBackPressureStrategies.HighLowWatermark,
+        Delegate
+    >
+
+    @usableFromInline
+    final class Delegate: NIOAsyncSequenceProducerDelegate {
+        let checkedContinuation: NIOLockedValueBox<CheckedContinuation<Void, Never>?>
+        init() {
+            self.checkedContinuation = .init(nil)
+        }
+
+        @usableFromInline
+        func setContinuation(_ cont: CheckedContinuation<Void, Never>) {
+            checkedContinuation.withLockedValue {
+                $0 = cont
+            }
+        }
+
+        @usableFromInline
+        func produceMore() {
+            checkedContinuation.withLockedValue {
+                if let checkedContinuation = $0 {
+                    checkedContinuation.resume()
+                    $0 = nil
+                }
+            }
+        }
+
+        @usableFromInline
+        func didTerminate() {
+            checkedContinuation.withLockedValue {
+                if let checkedContinuation = $0 {
+                    checkedContinuation.resume()
+                    $0 = nil
+                }
+            }
+        }
+    }
+
+    /// A source used for driving a ``NIOAsyncChannelInboundStream`` during tests.
+    public final class Source {
+        @usableFromInline
+        let source: Producer.Source
+        @usableFromInline
+        let delegate: Delegate
+        @usableFromInline
+        var waitForProduceMore: Bool
+
+        init(source: Producer.Source, delegate: Delegate) {
+            self.source = source
+            self.delegate = delegate
+            self.waitForProduceMore = .init(false)
+        }
+
+        /// Yields the element to the inbound stream.
+        ///
+        /// - Parameter element: The element to yield to the inbound stream.
+        @inlinable
+        public func yield(_ element: ByteBuffer) async throws {
+            if self.waitForProduceMore {
+                await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
+                    self.delegate.setContinuation(cont)
+                    self.waitForProduceMore = false
+
+                }
+            }
+            let result = self.source.yield(element)
+            if result == .stopProducing {
+                self.waitForProduceMore = true
+            }
+        }
+
+        /// Finished the inbound stream.
+        ///
+        /// - Parameter error: The error to throw, or nil, to finish normally.
+        @inlinable
+        public func finish() {
+            self.source.finish()
+        }
+
+        /// Finished the inbound stream.
+        ///
+        /// - Parameter error: The error to throw, or nil, to finish normally.
+        @inlinable
+        public func finish(_ error: Error) {
+            self.source.finish(error)
+        }
+    }
+
+    /// Initialize HBStreamedRequestBody from NIOThrowingAsyncSequenceProducer
+    convenience init(producer: Producer) {
+        self.init(.producer(producer))
+    }
+
+    /// Initialize a HBStreamedRequestBody from a ByteBuffer
+    public convenience init(byteBuffer: ByteBuffer) {
+        let delegate = Delegate()
+        let newSequence = Producer.makeSequence(
+            backPressureStrategy: .init(lowWatermark: 2, highWatermark: 4), 
+            finishOnDeinit: false, 
+            delegate: delegate
+        )
+        let result = newSequence.source.yield(byteBuffer)
+        // we are only pushing one ByteBuffer onto the source so yield should be fine
+        assert(result == .produceMore)
+        newSequence.source.finish()
+        self.init(producer: newSequence.sequence)
+    }
+
+    static public func makeRequestBodyStream() -> (HBStreamedRequestBody, Source) {
+        let delegate = Delegate()
+        let newSequence = Producer.makeSequence(
+            backPressureStrategy: .init(lowWatermark: 2, highWatermark: 4), 
+            finishOnDeinit: false, 
+            delegate: delegate
+        )
+        return (.init(producer: newSequence.sequence), Source(source: newSequence.source, delegate: delegate))
     }
 }
