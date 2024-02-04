@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Collections
 import NIOConcurrencyHelpers
 import NIOCore
 import NIOHTTPTypes
@@ -132,7 +133,6 @@ public final class HBStreamedRequestBody: Sendable, AsyncSequence {
     }
 }
 
-/// Request stream with backpressure
 extension HBStreamedRequestBody {
     @usableFromInline
     typealias Producer = NIOThrowingAsyncSequenceProducer<
@@ -142,42 +142,41 @@ extension HBStreamedRequestBody {
         Delegate
     >
 
+    /// Delegate for NIOThrowingAsyncSequenceProducer
     @usableFromInline
     final class Delegate: NIOAsyncSequenceProducerDelegate {
-        let checkedContinuation: NIOLockedValueBox<CheckedContinuation<Void, Never>?>
+        let checkedContinuations: NIOLockedValueBox<Deque<CheckedContinuation<Void, Never>>>
         init() {
-            self.checkedContinuation = .init(nil)
+            self.checkedContinuations = .init([])
         }
 
         @usableFromInline
         func setContinuation(_ cont: CheckedContinuation<Void, Never>) {
-            checkedContinuation.withLockedValue {
-                $0 = cont
+            checkedContinuations.withLockedValue {
+                $0.append(cont)
             }
         }
 
         @usableFromInline
         func produceMore() {
-            checkedContinuation.withLockedValue {
-                if let checkedContinuation = $0 {
-                    checkedContinuation.resume()
-                    $0 = nil
+            checkedContinuations.withLockedValue {
+                if let cont = $0.popFirst() {
+                    cont.resume()
                 }
             }
         }
 
         @usableFromInline
         func didTerminate() {
-            checkedContinuation.withLockedValue {
-                if let checkedContinuation = $0 {
-                    checkedContinuation.resume()
-                    $0 = nil
+            checkedContinuations.withLockedValue {
+                while let cont = $0.popFirst() {
+                    cont.resume()
                 }
             }
         }
     }
 
-    /// A source used for driving a ``NIOAsyncChannelInboundStream`` during tests.
+    /// A source used for driving a ``HBStreamedRequestBody``.
     public final class Source {
         @usableFromInline
         let source: Producer.Source
@@ -192,11 +191,16 @@ extension HBStreamedRequestBody {
             self.waitForProduceMore = .init(false)
         }
 
-        /// Yields the element to the inbound stream.
+        /// Yields the element to the inbound stream. 
+        /// 
+        /// This function implements back pressure in that it will wait if the producer
+        /// sequence indicates the Source should produce more ByteBuffers.
         ///
         /// - Parameter element: The element to yield to the inbound stream.
         @inlinable
         public func yield(_ element: ByteBuffer) async throws {
+            // if previous call indicated we should stop producing wait until the delegate
+            // says we can start producing again
             if self.waitForProduceMore {
                 await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
                     self.delegate.setContinuation(cont)
@@ -211,8 +215,6 @@ extension HBStreamedRequestBody {
         }
 
         /// Finished the inbound stream.
-        ///
-        /// - Parameter error: The error to throw, or nil, to finish normally.
         @inlinable
         public func finish() {
             self.source.finish()
@@ -220,7 +222,7 @@ extension HBStreamedRequestBody {
 
         /// Finished the inbound stream.
         ///
-        /// - Parameter error: The error to throw, or nil, to finish normally.
+        /// - Parameter error: The error to throw
         @inlinable
         public func finish(_ error: Error) {
             self.source.finish(error)
@@ -228,7 +230,7 @@ extension HBStreamedRequestBody {
     }
 
     /// Initialize HBStreamedRequestBody from NIOThrowingAsyncSequenceProducer
-    convenience init(producer: Producer) {
+    convenience private init(producer: Producer) {
         self.init(.producer(producer))
     }
 
@@ -241,12 +243,14 @@ extension HBStreamedRequestBody {
             delegate: delegate
         )
         let result = newSequence.source.yield(byteBuffer)
-        // we are only pushing one ByteBuffer onto the source so yield should be fine
+        // we are only pushing one ByteBuffer onto the source so yield will be fine
         assert(result == .produceMore)
         newSequence.source.finish()
         self.init(producer: newSequence.sequence)
     }
 
+    ///  Make a new ``HBStreamedRequestBody``
+    /// - Returns: The new `HBStreamedRequestBody` and a source to yield ByteBuffers to the `HBStreamedRequestBody`.
     static public func makeRequestBodyStream() -> (HBStreamedRequestBody, Source) {
         let delegate = Delegate()
         let newSequence = Producer.makeSequence(
