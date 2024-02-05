@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Collections
 import NIOConcurrencyHelpers
 import NIOCore
 import NIOHTTPTypes
@@ -29,10 +30,7 @@ public enum HBRequestBody: Sendable, AsyncSequence {
     public func makeAsyncIterator() -> HBStreamedRequestBody.AsyncIterator {
         switch self {
         case .byteBuffer(let buffer):
-            let (stream, source) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
-            source.yield(.body(buffer))
-            source.finish()
-            return HBStreamedRequestBody(iterator: stream.makeAsyncIterator()).makeAsyncIterator()
+            return HBStreamedRequestBody(ByteBufferRequestBody(byteBuffer: buffer)).makeAsyncIterator()
         case .stream(let streamer):
             return streamer.makeAsyncIterator()
         }
@@ -48,25 +46,156 @@ public enum HBRequestBody: Sendable, AsyncSequence {
             return try await collect(upTo: maxSize)
         }
     }
+
+    ///  Make a new ``HBRequestBody.stream`` alongside a Source to yield ByteBuffers to it.
+    /// - Returns: The new `HBRequestBody`
+    public static func makeStream() -> (HBRequestBody, HBStreamedRequestBody.Source) {
+        let (stream, source) = HBStreamedRequestBody.makeStream()
+        return (.stream(stream), source)
+    }
 }
 
-/// Request body that is a stream of ByteBuffers.
+/// Request body that is an existential AsyncSequence of ByteBuffers.
+public struct HBStreamedRequestBody: Sendable, AsyncSequence {
+    public typealias Element = ByteBuffer
+    public typealias AsyncIterator = AnyAsyncSequence<ByteBuffer>.AsyncIterator
+
+    let anyAsyncSequence: AnyAsyncSequence<ByteBuffer>
+
+    init<AS: AsyncSequence>(_ asyncSequence: AS) where AS.Element == ByteBuffer, AS: Sendable {
+        self.anyAsyncSequence = .init(asyncSequence)
+    }
+
+    public func makeAsyncIterator() -> AnyAsyncSequence<ByteBuffer>.AsyncIterator {
+        self.anyAsyncSequence.makeAsyncIterator()
+    }
+}
+
+extension HBStreamedRequestBody {
+    @usableFromInline
+    typealias Producer = NIOThrowingAsyncSequenceProducer<
+        ByteBuffer,
+        any Error,
+        NIOAsyncSequenceProducerBackPressureStrategies.HighLowWatermark,
+        Delegate
+    >
+
+    /// Delegate for NIOThrowingAsyncSequenceProducer
+    @usableFromInline
+    final class Delegate: NIOAsyncSequenceProducerDelegate {
+        let checkedContinuations: NIOLockedValueBox<Deque<CheckedContinuation<Void, Never>>>
+        init() {
+            self.checkedContinuations = .init([])
+        }
+
+        @usableFromInline
+        func produceMore() {
+            self.checkedContinuations.withLockedValue {
+                if let cont = $0.popFirst() {
+                    cont.resume()
+                }
+            }
+        }
+
+        @usableFromInline
+        func didTerminate() {
+            self.checkedContinuations.withLockedValue {
+                while let cont = $0.popFirst() {
+                    cont.resume()
+                }
+            }
+        }
+
+        @usableFromInline
+        func waitForProduceMore() async {
+            await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
+                self.checkedContinuations.withLockedValue {
+                    $0.append(cont)
+                }
+            }
+        }
+    }
+
+    /// A source used for driving a ``HBStreamedRequestBody``.
+    public final class Source {
+        @usableFromInline
+        let source: Producer.Source
+        @usableFromInline
+        let delegate: Delegate
+        @usableFromInline
+        var waitForProduceMore: Bool
+
+        init(source: Producer.Source, delegate: Delegate) {
+            self.source = source
+            self.delegate = delegate
+            self.waitForProduceMore = .init(false)
+        }
+
+        /// Yields the element to the inbound stream.
+        ///
+        /// This function implements back pressure in that it will wait if the producer
+        /// sequence indicates the Source should produce more ByteBuffers.
+        ///
+        /// - Parameter element: The element to yield to the inbound stream.
+        @inlinable
+        public func yield(_ element: ByteBuffer) async throws {
+            // if previous call indicated we should stop producing wait until the delegate
+            // says we can start producing again
+            if self.waitForProduceMore {
+                await self.delegate.waitForProduceMore()
+                self.waitForProduceMore = false
+            }
+            let result = self.source.yield(element)
+            if result == .stopProducing {
+                self.waitForProduceMore = true
+            }
+        }
+
+        /// Finished the inbound stream.
+        @inlinable
+        public func finish() {
+            self.source.finish()
+        }
+
+        /// Finished the inbound stream.
+        ///
+        /// - Parameter error: The error to throw
+        @inlinable
+        public func finish(_ error: Error) {
+            self.source.finish(error)
+        }
+    }
+
+    ///  Make a new ``HBStreamedRequestBody``
+    /// - Returns: The new `HBStreamedRequestBody` and a source to yield ByteBuffers to the `HBStreamedRequestBody`.
+    static func makeStream() -> (HBStreamedRequestBody, Source) {
+        let delegate = Delegate()
+        let newSequence = Producer.makeSequence(
+            backPressureStrategy: .init(lowWatermark: 2, highWatermark: 4),
+            finishOnDeinit: false,
+            delegate: delegate
+        )
+        return (.init(newSequence.sequence), Source(source: newSequence.source, delegate: delegate))
+    }
+}
+
+/// Request body that is a stream of ByteBuffers sourced from a NIOAsyncChannelInboundStream.
 ///
 /// This is a unicast async sequence that allows a single iterator to be created.
-public final class HBStreamedRequestBody: Sendable, AsyncSequence {
+final class NIOAsyncChannelRequestBody: Sendable, AsyncSequence {
     public typealias Element = ByteBuffer
     public typealias InboundStream = NIOAsyncChannelInboundStream<HTTPRequestPart>
 
     private let underlyingIterator: UnsafeTransfer<NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator>
     private let alreadyIterated: NIOLockedValueBox<Bool>
 
-    /// Initialize HBStreamedRequestBody from AsyncIterator of a NIOAsyncChannelInboundStream
+    /// Initialize NIOAsyncChannelRequestBody from AsyncIterator of a NIOAsyncChannelInboundStream
     public init(iterator: InboundStream.AsyncIterator) {
         self.underlyingIterator = .init(iterator)
         self.alreadyIterated = .init(false)
     }
 
-    /// Async Iterator for HBStreamedRequestBody
+    /// Async Iterator for NIOAsyncChannelRequestBody
     public struct AsyncIterator: AsyncIteratorProtocol {
         public typealias Element = ByteBuffer
 
@@ -107,4 +236,35 @@ public final class HBStreamedRequestBody: Sendable, AsyncSequence {
         }
         return AsyncIterator(underlyingIterator: self.underlyingIterator.wrappedValue, done: done)
     }
+}
+
+/// Request body stream that is a single ByteBuffer
+///
+/// This is used when converting a ByteBuffer back to a stream of ByteBuffers
+struct ByteBufferRequestBody: Sendable, AsyncSequence {
+    typealias Element = ByteBuffer
+
+    struct AsyncIterator: AsyncIteratorProtocol {
+        var byteBuffer: ByteBuffer
+        var iterated: Bool
+
+        init(byteBuffer: ByteBuffer) {
+            self.byteBuffer = byteBuffer
+            self.iterated = false
+        }
+
+        @inlinable
+        mutating func next() async throws -> ByteBuffer? {
+            guard self.iterated == false else { return nil }
+            self.iterated = true
+            return self.byteBuffer
+        }
+    }
+
+    @inlinable
+    func makeAsyncIterator() -> AsyncIterator {
+        .init(byteBuffer: self.byteBuffer)
+    }
+
+    let byteBuffer: ByteBuffer
 }

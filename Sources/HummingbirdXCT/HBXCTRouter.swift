@@ -91,11 +91,10 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
 
         func execute(uri: String, method: HTTPRequest.Method, headers: HTTPFields, body: ByteBuffer?) async throws -> HBXCTResponse {
             return try await withThrowingTaskGroup(of: HBXCTResponse.self) { group in
-                let (inbound, source) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
-                let streamer = HBStreamedRequestBody(iterator: inbound.makeAsyncIterator())
+                let (stream, source) = HBRequestBody.makeStream()
                 let request = HBRequest(
                     head: .init(method: method, scheme: "http", authority: "localhost", path: uri, headerFields: headers),
-                    body: .stream(streamer)
+                    body: stream
                 )
                 let logger = self.logger.with(metadataKey: "hb_id", value: .stringConvertible(RequestID()))
                 let context = self.makeContext(logger)
@@ -121,10 +120,9 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                     while body.readableBytes > 0 {
                         let chunkSize = min(32 * 1024, body.readableBytes)
                         let buffer = body.readSlice(length: chunkSize)!
-                        source.yield(.body(buffer))
+                        try await source.yield(buffer)
                     }
                 }
-                source.yield(.end(nil))
                 source.finish()
                 return try await group.next()!
             }

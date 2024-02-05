@@ -57,8 +57,8 @@ extension HTTPChannelHandler {
                         // set to processing unless it is cancelled then exit
                         guard processingRequest.exchange(.processing, ordering: .relaxed) == .idle else { break }
 
-                        let bodyStream = HBStreamedRequestBody(iterator: iterator)
-                        let request = HBRequest(head: head, body: .stream(bodyStream))
+                        let bodyStream = NIOAsyncChannelRequestBody(iterator: iterator)
+                        let request = HBRequest(head: head, body: .stream(.init(bodyStream)))
                         let response: HBResponse
                         do {
                             response = try await self.responder(request, asyncChannel.channel)
