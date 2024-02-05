@@ -50,10 +50,6 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
             logger: self.logger,
             makeContext: self.makeContext
         )
-        // run the runBeforeServer processes before we start testing
-        for process in self.processesRunBeforeServerStart {
-            try await process()
-        }
         // if we have no services then just run test
         if self.services.count == 0 {
             return try await test(client)
@@ -71,6 +67,11 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                 try await serviceGroup.run()
             }
             do {
+                // run the runBeforeServer processes before we run test closure. Need to do this
+                // after we have run the serviceGroup though
+                for process in self.processesRunBeforeServerStart {
+                    try await process()
+                }
                 let value = try await test(client)
                 await serviceGroup.triggerGracefulShutdown()
                 return value
