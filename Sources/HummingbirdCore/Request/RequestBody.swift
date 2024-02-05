@@ -46,6 +46,13 @@ public enum HBRequestBody: Sendable, AsyncSequence {
             return try await collect(upTo: maxSize)
         }
     }
+
+    ///  Make a new ``HBStreamedRequestBody``
+    /// - Returns: The new `HBStreamedRequestBody` and a source to yield ByteBuffers to the `HBStreamedRequestBody`.
+    static public func makeRequestBodyStream() -> (HBRequestBody, HBStreamedRequestBody.Source) {
+        let (stream, source) = HBStreamedRequestBody.makeStream()
+        return (.stream(stream), source)
+    }
 }
 
 /// Request body that is a stream of ByteBuffers.
@@ -251,7 +258,7 @@ extension HBStreamedRequestBody {
 
     ///  Make a new ``HBStreamedRequestBody``
     /// - Returns: The new `HBStreamedRequestBody` and a source to yield ByteBuffers to the `HBStreamedRequestBody`.
-    static public func makeRequestBodyStream() -> (HBStreamedRequestBody, Source) {
+    static public func makeStream() -> (HBStreamedRequestBody, Source) {
         let delegate = Delegate()
         let newSequence = Producer.makeSequence(
             backPressureStrategy: .init(lowWatermark: 2, highWatermark: 4), 

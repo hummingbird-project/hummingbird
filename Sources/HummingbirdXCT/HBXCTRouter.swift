@@ -91,10 +91,10 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
 
         func execute(uri: String, method: HTTPRequest.Method, headers: HTTPFields, body: ByteBuffer?) async throws -> HBXCTResponse {
             return try await withThrowingTaskGroup(of: HBXCTResponse.self) { group in
-                let (streamer, source) = HBStreamedRequestBody.makeRequestBodyStream()
+                let (stream, source) = HBRequestBody.makeRequestBodyStream()
                 let request = HBRequest(
                     head: .init(method: method, scheme: "http", authority: "localhost", path: uri, headerFields: headers),
-                    body: .stream(streamer)
+                    body: stream
                 )
                 let logger = self.logger.with(metadataKey: "hb_id", value: .stringConvertible(RequestID()))
                 let context = self.makeContext(logger)

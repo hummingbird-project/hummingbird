@@ -177,9 +177,9 @@ final class MiddlewareTests: XCTestCase {
         struct RequestEditingMiddleware<Context: HBRequestContext>: HBMiddlewareProtocol {
             func handle(_ request: Input, context: Context, next: (Input, Context) async throws -> Output) async throws -> Output {
                 try await withThrowingTaskGroup(of: Void.self) { group in
-                    let (requestBody, source) = HBStreamedRequestBody.makeRequestBodyStream()
+                    let (requestBody, source) = HBRequestBody.makeRequestBodyStream()
                     var newRequest = request
-                    newRequest.body = .stream(requestBody)
+                    newRequest.body = requestBody
                     group.addTask {
                         for try await buffer in request.body {
                             try await source.yield(ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 0xFF }))
