@@ -48,12 +48,12 @@ public final class HBDateCache: Service {
             .cancelOnGracefulShutdown()
         for try await _ in timerSequence {
             let epochTime = time(nil)
-            self.dateContainer.store(.init(date: Self.formatRFC1123Date(epochTime)), ordering: .relaxed)
+            self.dateContainer.store(.init(date: Self.formatRFC1123Date(epochTime)), ordering: .releasing)
         }
     }
 
     public var date: String {
-        return self.dateContainer.load(ordering: .relaxed).date
+        return self.dateContainer.load(ordering: .acquiring).date
     }
 
     /// Render Epoch seconds as RFC1123 formatted date

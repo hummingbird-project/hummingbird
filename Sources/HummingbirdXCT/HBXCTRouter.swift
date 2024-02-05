@@ -156,6 +156,3 @@ extension Logger {
         return logger
     }
 }
-
-/// Current global request ID
-private let globalRequestID = ManagedAtomic(0)
