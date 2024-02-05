@@ -55,7 +55,7 @@ extension HTTPChannelHandler {
 
                     while true {
                         // set to processing unless it is cancelled then exit
-                        guard processingRequest.exchange(.processing, ordering: .relaxed) == .idle else { break }
+                        guard processingRequest.exchange(.processing, ordering: .releasing) == .idle else { break }
 
                         let bodyStream = HBStreamedRequestBody(iterator: iterator)
                         let request = HBRequest(head: head, body: .stream(bodyStream))
@@ -76,7 +76,7 @@ extension HTTPChannelHandler {
                             throw HTTPChannelError.closeConnection
                         }
                         // set to idle unless it is cancelled then exit
-                        guard processingRequest.exchange(.idle, ordering: .relaxed) == .processing else { break }
+                        guard processingRequest.exchange(.idle, ordering: .releasing) == .processing else { break }
 
                         // Flush current request
                         // read until we don't have a body part
@@ -102,7 +102,7 @@ extension HTTPChannelHandler {
                 }
             } onGracefulShutdown: {
                 // set to cancelled
-                if processingRequest.exchange(.cancelled, ordering: .relaxed) == .idle {
+                if processingRequest.exchange(.cancelled, ordering: .acquiring) == .idle {
                     // only close the channel input if it is idle
                     asyncChannel.channel.close(mode: .input, promise: nil)
                 }
