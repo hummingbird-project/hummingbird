@@ -191,7 +191,7 @@ final class ApplicationTests: XCTestCase {
         router
             .group("/echo-body")
             .post { request, _ -> HBResponse in
-                let buffer = try await request.body.collate(maxSize: .max)
+                let buffer = try await request.body.collect(upTo: .max)
                 return .init(status: .ok, headers: [:], body: .init(byteBuffer: buffer))
             }
         let app = HBApplication(responder: router.buildResponder())
@@ -268,7 +268,7 @@ final class ApplicationTests: XCTestCase {
         let router = HBRouter()
         router.middlewares.add(CollateMiddleware())
         router.put("/hello") { request, _ -> String in
-            guard case .byteBuffer(let buffer) = request.body else { throw HBHTTPError(.internalServerError) }
+            let buffer = try await request.body.collect(upTo: .max)
             return buffer.readableBytes.description
         }
         let app = HBApplication(responder: router.buildResponder())
@@ -282,12 +282,33 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    func testDoubleStreaming() async throws {
+        let router = HBRouter()
+        router.post("size") { request, context -> String in
+            var request = request
+            _ = try await request.collateBody(context: context)
+            var size = 0
+            for try await buffer in request.body {
+                size += buffer.readableBytes
+            }
+            return size.description
+        }
+        let app = HBApplication(responder: router.buildResponder())
+
+        try await app.test(.router) { client in
+            let buffer = self.randomBuffer(size: 100_000)
+            try await client.XCTExecute(uri: "/size", method: .post, body: buffer) { response in
+                XCTAssertEqual(String(buffer: response.body), "100000")
+            }
+        }
+    }
+
     func testOptional() async throws {
         let router = HBRouter()
         router
             .group("/echo-body")
             .post { request, _ -> ByteBuffer? in
-                let buffer = try await request.body.collate(maxSize: .max)
+                let buffer = try await request.body.collect(upTo: .max)
                 return buffer.readableBytes > 0 ? buffer : nil
             }
         let app = HBApplication(responder: router.buildResponder())
@@ -392,7 +413,7 @@ final class ApplicationTests: XCTestCase {
         }
         let router = HBRouter(context: MaxUploadRequestContext.self)
         router.post("upload") { request, context in
-            _ = try await request.body.collate(maxSize: context.maxUploadSize)
+            _ = try await request.body.collect(upTo: context.maxUploadSize)
             return "ok"
         }
         router.post("stream") { _, _ in
@@ -608,14 +629,14 @@ final class ApplicationTests: XCTestCase {
 
     /// test we can create out own application type conforming to HBApplicationProtocol
     func testBidirectionalStreaming() async throws {
-        let buffer = randomBuffer(size: 1024 * 1024)
+        let buffer = self.randomBuffer(size: 1024 * 1024)
         let router = HBRouter()
         router.post("/") { request, context -> HBResponse in
             .init(
                 status: .ok,
                 body: .init { writer in
                     for try await buffer in request.body {
-                        let processed = context.allocator.buffer(bytes: buffer.readableBytesView.map {$0 ^ 0xff })
+                        let processed = context.allocator.buffer(bytes: buffer.readableBytesView.map { $0 ^ 0xFF })
                         try await writer.write(processed)
                     }
                 }
@@ -624,7 +645,7 @@ final class ApplicationTests: XCTestCase {
         let app = HBApplication(router: router)
         try await app.test(.live) { client in
             try await client.XCTExecute(uri: "/", method: .post, body: buffer) { response in
-                XCTAssertEqual(response.body, ByteBuffer(bytes: buffer.readableBytesView.map {$0 ^ 0xff }))
+                XCTAssertEqual(response.body, ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 0xFF }))
             }
         }
     }

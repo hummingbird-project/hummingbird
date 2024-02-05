@@ -85,7 +85,7 @@ class HummingBirdCoreTests: XCTestCase {
     func testConsumeBody() async throws {
         try await testServer(
             responder: { request, _ in
-                let buffer = try await request.body.collate(maxSize: .max)
+                let buffer = try await request.body.collect(upTo: .max)
                 return HBResponse(status: .ok, body: .init(byteBuffer: buffer))
             },
             configuration: .init(address: .hostname(port: 0)),
@@ -203,7 +203,7 @@ class HummingBirdCoreTests: XCTestCase {
         }
         try await testServer(
             responder: { request, _ in
-                _ = try await request.body.collate(maxSize: .max)
+                _ = try await request.body.collect(upTo: .max)
                 return HBResponse(status: .ok)
             },
             httpChannelSetup: .http1(additionalChannelHandlers: [CreateErrorHandler()]),
@@ -269,7 +269,7 @@ class HummingBirdCoreTests: XCTestCase {
         }
         try await testServer(
             responder: { request, _ in
-                _ = try await request.body.collate(maxSize: .max)
+                _ = try await request.body.collect(upTo: .max)
                 return .init(status: .ok)
             },
             httpChannelSetup: .http1(additionalChannelHandlers: [HTTPServerIncompleteRequest(), IdleStateHandler(readTimeout: .seconds(1))]),
@@ -292,7 +292,7 @@ class HummingBirdCoreTests: XCTestCase {
     func testWriteIdleTimeout() async throws {
         try await testServer(
             responder: { request, _ in
-                _ = try await request.body.collate(maxSize: .max)
+                _ = try await request.body.collect(upTo: .max)
                 return .init(status: .ok)
             },
             httpChannelSetup: .http1(additionalChannelHandlers: [IdleStateHandler(writeTimeout: .seconds(1))]),

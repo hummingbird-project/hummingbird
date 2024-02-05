@@ -24,14 +24,14 @@ final class PersistTests: XCTestCase {
         let persist = HBMemoryPersistDriver()
 
         router.put("/persist/:tag") { request, context -> HTTPResponse.Status in
-            let buffer = try await request.body.collate(maxSize: .max)
+            let buffer = try await request.body.collect(upTo: .max)
             let tag = try context.parameters.require("tag")
             try await persist.set(key: tag, value: String(buffer: buffer))
             return .ok
         }
         router.put("/persist/:tag/:time") { request, context -> HTTPResponse.Status in
             guard let time = context.parameters.get("time", as: Int.self) else { throw HBHTTPError(.badRequest) }
-            let buffer = try await request.body.collate(maxSize: .max)
+            let buffer = try await request.body.collect(upTo: .max)
             let tag = try context.parameters.require("tag")
             try await persist.set(key: tag, value: String(buffer: buffer), expires: .seconds(time))
             return .ok
@@ -64,7 +64,7 @@ final class PersistTests: XCTestCase {
         let (router, persist) = try createRouter()
 
         router.put("/create/:tag") { request, context -> HTTPResponse.Status in
-            let buffer = try await request.body.collate(maxSize: .max)
+            let buffer = try await request.body.collect(upTo: .max)
             let tag = try context.parameters.require("tag")
             try await persist.create(key: tag, value: String(buffer: buffer))
             return .ok
@@ -82,7 +82,7 @@ final class PersistTests: XCTestCase {
     func testDoubleCreateFail() async throws {
         let (router, persist) = try createRouter()
         router.put("/create/:tag") { request, context -> HTTPResponse.Status in
-            let buffer = try await request.body.collate(maxSize: .max)
+            let buffer = try await request.body.collect(upTo: .max)
             let tag = try context.parameters.require("tag")
             do {
                 try await persist.create(key: tag, value: String(buffer: buffer))
@@ -150,7 +150,7 @@ final class PersistTests: XCTestCase {
         let (router, persist) = try createRouter()
         router.put("/codable/:tag") { request, context -> HTTPResponse.Status in
             guard let tag = context.parameters.get("tag") else { throw HBHTTPError(.badRequest) }
-            let buffer = try await request.body.collate(maxSize: .max)
+            let buffer = try await request.body.collect(upTo: .max)
             try await persist.set(key: tag, value: TestCodable(buffer: String(buffer: buffer)))
             return .ok
         }

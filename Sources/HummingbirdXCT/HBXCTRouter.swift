@@ -19,6 +19,7 @@ import HTTPTypes
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
+import NIOHTTPTypes
 import NIOPosix
 import ServiceLifecycle
 
@@ -95,10 +96,10 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
 
         func execute(uri: String, method: HTTPRequest.Method, headers: HTTPFields, body: ByteBuffer?) async throws -> HBXCTResponse {
             return try await withThrowingTaskGroup(of: HBXCTResponse.self) { group in
-                let streamer = HBStreamedRequestBody()
+                let (stream, source) = HBRequestBody.makeStream()
                 let request = HBRequest(
                     head: .init(method: method, scheme: "http", authority: "localhost", path: uri, headerFields: headers),
-                    body: .stream(streamer)
+                    body: stream
                 )
                 let logger = self.logger.with(metadataKey: "hb_id", value: .stringConvertible(RequestID()))
                 let context = self.makeContext(logger)
@@ -115,7 +116,6 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                     }
                     let responseWriter = RouterResponseWriter()
                     let trailerHeaders = try await response.body.write(responseWriter)
-                    for try await _ in request.body {}
                     return responseWriter.collated.withLockedValue { collated in
                         HBXCTResponse(head: response.head, body: collated, trailerHeaders: trailerHeaders)
                     }
@@ -125,10 +125,10 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                     while body.readableBytes > 0 {
                         let chunkSize = min(32 * 1024, body.readableBytes)
                         let buffer = body.readSlice(length: chunkSize)!
-                        await streamer.send(buffer)
+                        try await source.yield(buffer)
                     }
                 }
-                streamer.finish()
+                source.finish()
                 return try await group.next()!
             }
         }
