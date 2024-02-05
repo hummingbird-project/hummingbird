@@ -108,11 +108,8 @@ public struct HBFileIO: Sendable {
             try? handle.close()
         }
         context.logger.debug("[FileIO] PUT", metadata: ["file": .string(path)])
-        switch contents {
-        case .byteBuffer(let buffer):
-            try await self.writeFile(buffer: buffer, handle: handle, on: eventLoop)
-        case .stream(let streamer):
-            try await self.writeFile(asyncSequence: streamer, handle: handle, on: eventLoop)
+        for try await buffer in contents {
+            try await self.fileIO.write(fileHandle: handle, buffer: buffer, eventLoop: eventLoop).get()
         }
     }
 
@@ -151,22 +148,6 @@ public struct HBFileIO: Sendable {
                 try await writer.write(buffer)
             }
             try handle.close()
-        }
-    }
-
-    /// write byte buffer to file
-    func writeFile(buffer: ByteBuffer, handle: NIOFileHandle, on eventLoop: EventLoop) async throws {
-        return try await self.fileIO.write(fileHandle: handle, buffer: buffer, eventLoop: eventLoop).get()
-    }
-
-    /// write output of streamer to file
-    func writeFile<BufferSequence: AsyncSequence>(
-        asyncSequence: BufferSequence,
-        handle: NIOFileHandle,
-        on eventLoop: EventLoop
-    ) async throws where BufferSequence.Element == ByteBuffer {
-        for try await buffer in asyncSequence {
-            try await self.fileIO.write(fileHandle: handle, buffer: buffer, eventLoop: eventLoop).get()
         }
     }
 }

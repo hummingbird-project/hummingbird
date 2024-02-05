@@ -27,6 +27,7 @@ public protocol HTTPChannelHandler: HBChildChannel {
 
 /// Internal error thrown when an unexpected HTTP part is received eg we didn't receive
 /// a head part when we expected one
+@usableFromInline
 enum HTTPChannelError: Error {
     case unexpectedHTTPPart(HTTPRequestPart)
     case closeConnection
@@ -58,7 +59,7 @@ extension HTTPChannelHandler {
                         guard processingRequest.exchange(.processing, ordering: .relaxed) == .idle else { break }
 
                         let bodyStream = NIOAsyncChannelRequestBody(iterator: iterator)
-                        let request = HBRequest(head: head, body: .stream(.init(bodyStream)))
+                        let request = HBRequest(head: head, body: .init(asyncSequence: bodyStream))
                         let response: HBResponse
                         do {
                             response = try await self.responder(request, asyncChannel.channel)

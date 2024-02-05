@@ -25,7 +25,7 @@ extension HBRequest {
     /// - Returns: Collated body
     public mutating func collateBody(context: some HBBaseRequestContext) async throws -> ByteBuffer {
         let byteBuffer = try await self.body.collate(maxSize: context.maxUploadSize)
-        self.body = .byteBuffer(byteBuffer)
+        self.body = .init(buffer: byteBuffer)
         return byteBuffer
     }
 

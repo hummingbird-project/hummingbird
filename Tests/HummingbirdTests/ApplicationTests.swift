@@ -268,7 +268,7 @@ final class ApplicationTests: XCTestCase {
         let router = HBRouter()
         router.middlewares.add(CollateMiddleware())
         router.put("/hello") { request, _ -> String in
-            guard case .byteBuffer(let buffer) = request.body else { throw HBHTTPError(.internalServerError) }
+            let buffer = try await request.body.collect(upTo: .max)
             return buffer.readableBytes.description
         }
         let app = HBApplication(responder: router.buildResponder())
