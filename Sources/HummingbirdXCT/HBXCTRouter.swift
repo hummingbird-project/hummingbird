@@ -52,6 +52,10 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
         )
         // if we have no services then just run test
         if self.services.count == 0 {
+            // run the runBeforeServer processes before we run test closure.
+            for process in self.processesRunBeforeServerStart {
+                try await process()
+            }
             return try await test(client)
         }
         // if we have services then setup task group with service group running in separate task from test
