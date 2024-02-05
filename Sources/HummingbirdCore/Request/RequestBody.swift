@@ -45,18 +45,6 @@ public struct HBRequestBody: Sendable, AsyncSequence {
     init<AS: AsyncSequence & Sendable>(asyncSequence: AS) where AS.Element == ByteBuffer {
         self.init(.stream(.init(asyncSequence)))
     }
-
-    /// Return as a single ByteBuffer. This function is required as `ByteBuffer.collect(upTo:)`
-    /// assumes the request body can be iterated.
-    @inlinable
-    public func collate(maxSize: Int) async throws -> ByteBuffer {
-        switch self._backing {
-        case .byteBuffer(let buffer):
-            return buffer
-        case .stream:
-            return try await collect(upTo: maxSize)
-        }
-    }
 }
 
 /// AsyncSequence protocol requirements
