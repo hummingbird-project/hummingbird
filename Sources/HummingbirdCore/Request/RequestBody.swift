@@ -257,7 +257,7 @@ extension HBStreamedRequestBody {
 
     ///  Make a new ``HBStreamedRequestBody``
     /// - Returns: The new `HBStreamedRequestBody` and a source to yield ByteBuffers to the `HBStreamedRequestBody`.
-    public static func makeStream() -> (HBStreamedRequestBody, Source) {
+    static func makeStream() -> (HBStreamedRequestBody, Source) {
         let delegate = Delegate()
         let newSequence = Producer.makeSequence(
             backPressureStrategy: .init(lowWatermark: 2, highWatermark: 4),

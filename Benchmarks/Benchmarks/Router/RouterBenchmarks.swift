@@ -45,7 +45,7 @@ extension Benchmark {
         context: Context.Type = BasicBenchmarkContext.self,
         configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
         request: HTTPRequest,
-        writeBody: @escaping @Sendable (HBStreamedRequestBody.InboundStream.TestSource) async throws -> Void = { _ in },
+        writeBody: @escaping @Sendable (HBStreamedRequestBody.Source) async throws -> Void = { _ in },
         setupRouter: @escaping @Sendable (HBRouter<Context>) async throws -> Void
     ) {
         let router = HBRouter(context: Context.self)
@@ -60,16 +60,13 @@ extension Benchmark {
                             allocator: ByteBufferAllocator(), 
                             logger: Logger(label: "Benchmark")
                         )
-                        let (inbound, source) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
-                        let streamer = HBStreamedRequestBody(iterator: inbound.makeAsyncIterator())
-                        let requestBody = HBRequestBody.stream(streamer)
+                        let (requestBody, source) = HBRequestBody.makeStream()
                         let hbRequest = HBRequest(head: request, body: requestBody)
                         group.addTask {
                             let response = try await responder.respond(to: hbRequest, context: context)
                             _ = try await response.body.write(BenchmarkBodyWriter())
                         }
                         try await writeBody(source)
-                        source.yield(.end(nil))
                         source.finish()
                     }
                 }
@@ -102,10 +99,10 @@ func routerBenchmarks() {
         configuration: .init(warmupIterations: 10),
         request: .init(method: .put, scheme: "http", authority: "localhost", path: "/")
     ) { bodyStream in
-        bodyStream.yield(.body(buffer))
-        bodyStream.yield(.body(buffer))
-        bodyStream.yield(.body(buffer))
-        bodyStream.yield(.body(buffer))
+        try await bodyStream.yield(buffer)
+        try await bodyStream.yield(buffer)
+        try await bodyStream.yield(buffer)
+        try await bodyStream.yield(buffer)
     } setupRouter: { router in
         router.put { request, _ in
             let body = try await request.body.collate(maxSize: .max)
@@ -118,10 +115,10 @@ func routerBenchmarks() {
         configuration: .init(warmupIterations: 10),
         request: .init(method: .post, scheme: "http", authority: "localhost", path: "/")
     ) { bodyStream in
-        bodyStream.yield(.body(buffer))
-        bodyStream.yield(.body(buffer))
-        bodyStream.yield(.body(buffer))
-        bodyStream.yield(.body(buffer))
+        try await bodyStream.yield(buffer)
+        try await bodyStream.yield(buffer)
+        try await bodyStream.yield(buffer)
+        try await bodyStream.yield(buffer)
     } setupRouter: { router in
         router.post { request, _ in
             HBResponse(status: .ok, headers: [:], body: .init { writer in
