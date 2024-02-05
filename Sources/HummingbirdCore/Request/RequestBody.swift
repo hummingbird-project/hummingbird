@@ -47,9 +47,9 @@ public enum HBRequestBody: Sendable, AsyncSequence {
         }
     }
 
-    ///  Make a new ``HBStreamedRequestBody``
-    /// - Returns: The new `HBStreamedRequestBody` and a source to yield ByteBuffers to the `HBStreamedRequestBody`.
-    static public func makeRequestBodyStream() -> (HBRequestBody, HBStreamedRequestBody.Source) {
+    ///  Make a new ``HBRequestBody.stream`` alongside a Source to yield ByteBuffers to it.
+    /// - Returns: The new `HBRequestBody`
+    public static func makeStream() -> (HBRequestBody, HBStreamedRequestBody.Source) {
         let (stream, source) = HBStreamedRequestBody.makeStream()
         return (.stream(stream), source)
     }
@@ -65,6 +65,7 @@ public final class HBStreamedRequestBody: Sendable, AsyncSequence {
         case nioAsyncChannel(UnsafeTransfer<NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator>)
         case producer(Producer)
     }
+
     private let _backing: _Backing
     private let alreadyIterated: NIOLockedValueBox<Bool>
 
@@ -86,6 +87,7 @@ public final class HBStreamedRequestBody: Sendable, AsyncSequence {
             case nioAsyncChannel(NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator)
             case producer(Producer.AsyncIterator)
         }
+
         private let _backing: _Backing
         private var done: Bool
 
@@ -143,8 +145,8 @@ public final class HBStreamedRequestBody: Sendable, AsyncSequence {
 extension HBStreamedRequestBody {
     @usableFromInline
     typealias Producer = NIOThrowingAsyncSequenceProducer<
-        ByteBuffer, 
-        any Error, 
+        ByteBuffer,
+        any Error,
         NIOAsyncSequenceProducerBackPressureStrategies.HighLowWatermark,
         Delegate
     >
@@ -158,15 +160,8 @@ extension HBStreamedRequestBody {
         }
 
         @usableFromInline
-        func setContinuation(_ cont: CheckedContinuation<Void, Never>) {
-            checkedContinuations.withLockedValue {
-                $0.append(cont)
-            }
-        }
-
-        @usableFromInline
         func produceMore() {
-            checkedContinuations.withLockedValue {
+            self.checkedContinuations.withLockedValue {
                 if let cont = $0.popFirst() {
                     cont.resume()
                 }
@@ -175,9 +170,18 @@ extension HBStreamedRequestBody {
 
         @usableFromInline
         func didTerminate() {
-            checkedContinuations.withLockedValue {
+            self.checkedContinuations.withLockedValue {
                 while let cont = $0.popFirst() {
                     cont.resume()
+                }
+            }
+        }
+
+        @usableFromInline
+        func waitForProduceMore() async {
+            await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
+                self.checkedContinuations.withLockedValue {
+                    $0.append(cont)
                 }
             }
         }
@@ -198,8 +202,8 @@ extension HBStreamedRequestBody {
             self.waitForProduceMore = .init(false)
         }
 
-        /// Yields the element to the inbound stream. 
-        /// 
+        /// Yields the element to the inbound stream.
+        ///
         /// This function implements back pressure in that it will wait if the producer
         /// sequence indicates the Source should produce more ByteBuffers.
         ///
@@ -209,11 +213,8 @@ extension HBStreamedRequestBody {
             // if previous call indicated we should stop producing wait until the delegate
             // says we can start producing again
             if self.waitForProduceMore {
-                await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
-                    self.delegate.setContinuation(cont)
-                    self.waitForProduceMore = false
-
-                }
+                await self.delegate.waitForProduceMore()
+                self.waitForProduceMore = false
             }
             let result = self.source.yield(element)
             if result == .stopProducing {
@@ -237,7 +238,7 @@ extension HBStreamedRequestBody {
     }
 
     /// Initialize HBStreamedRequestBody from NIOThrowingAsyncSequenceProducer
-    convenience private init(producer: Producer) {
+    private convenience init(producer: Producer) {
         self.init(.producer(producer))
     }
 
@@ -245,8 +246,8 @@ extension HBStreamedRequestBody {
     public convenience init(byteBuffer: ByteBuffer) {
         let delegate = Delegate()
         let newSequence = Producer.makeSequence(
-            backPressureStrategy: .init(lowWatermark: 2, highWatermark: 4), 
-            finishOnDeinit: false, 
+            backPressureStrategy: .init(lowWatermark: 2, highWatermark: 4),
+            finishOnDeinit: false,
             delegate: delegate
         )
         let result = newSequence.source.yield(byteBuffer)
@@ -258,11 +259,11 @@ extension HBStreamedRequestBody {
 
     ///  Make a new ``HBStreamedRequestBody``
     /// - Returns: The new `HBStreamedRequestBody` and a source to yield ByteBuffers to the `HBStreamedRequestBody`.
-    static public func makeStream() -> (HBStreamedRequestBody, Source) {
+    public static func makeStream() -> (HBStreamedRequestBody, Source) {
         let delegate = Delegate()
         let newSequence = Producer.makeSequence(
-            backPressureStrategy: .init(lowWatermark: 2, highWatermark: 4), 
-            finishOnDeinit: false, 
+            backPressureStrategy: .init(lowWatermark: 2, highWatermark: 4),
+            finishOnDeinit: false,
             delegate: delegate
         )
         return (.init(producer: newSequence.sequence), Source(source: newSequence.source, delegate: delegate))

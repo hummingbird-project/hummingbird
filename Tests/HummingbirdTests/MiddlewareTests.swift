@@ -177,14 +177,16 @@ final class MiddlewareTests: XCTestCase {
         struct RequestEditingMiddleware<Context: HBRequestContext>: HBMiddlewareProtocol {
             func handle(_ request: Input, context: Context, next: (Input, Context) async throws -> Output) async throws -> Output {
                 try await withThrowingTaskGroup(of: Void.self) { group in
-                    let (requestBody, source) = HBRequestBody.makeRequestBodyStream()
+                    let (requestBody, source) = HBRequestBody.makeStream()
                     var newRequest = request
                     newRequest.body = requestBody
                     group.addTask {
+                        defer {
+                            source.finish()
+                        }
                         for try await buffer in request.body {
                             try await source.yield(ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 0xFF }))
                         }
-                        source.finish()
                     }
                     return try await next(newRequest, context)
                 }
@@ -193,7 +195,7 @@ final class MiddlewareTests: XCTestCase {
         let buffer = self.randomBuffer(size: 1024 * 1024)
         let router = HBRouter()
         router.middlewares.add(RequestEditingMiddleware())
-        router.post("/") { request, context -> HTTPResponse.Status in
+        router.post("/") { request, _ -> HTTPResponse.Status in
             let body = try await request.body.collate(maxSize: .max)
             XCTAssertEqual(body, ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 0xFF }))
             return .ok
