@@ -250,9 +250,7 @@ extension HBStreamedRequestBody {
             finishOnDeinit: false,
             delegate: delegate
         )
-        let result = newSequence.source.yield(byteBuffer)
-        // we are only pushing one ByteBuffer onto the source so yield will be fine
-        assert(result == .produceMore)
+        _ = newSequence.source.yield(byteBuffer)
         newSequence.source.finish()
         self.init(producer: newSequence.sequence)
     }
