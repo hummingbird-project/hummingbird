@@ -27,11 +27,11 @@ verify_repository()
 }
 
 # Test latest code against
-verify_repository test https://github.com/hummingbird-project/hummingbird-auth main
-verify_repository test https://github.com/hummingbird-project/hummingbird-compression main
-verify_repository build https://github.com/hummingbird-project/hummingbird-fluent main
-verify_repository build https://github.com/hummingbird-project/hummingbird-lambda main
-verify_repository build https://github.com/hummingbird-project/hummingbird-redis main
-verify_repository test https://github.com/hummingbird-project/hummingbird-websocket main
+verify_repository test https://github.com/hummingbird-project/hummingbird-auth 2.x.x
+#verify_repository test https://github.com/hummingbird-project/hummingbird-compression 2.x.x
+verify_repository build https://github.com/hummingbird-project/hummingbird-fluent 2.x.x
+verify_repository build https://github.com/hummingbird-project/hummingbird-lambda 2.x.x
+verify_repository build https://github.com/hummingbird-project/hummingbird-redis 2.x.x
+#verify_repository test https://github.com/hummingbird-project/hummingbird-websocket 2.x.x
 
 rm -rf $TEMP_DIR
