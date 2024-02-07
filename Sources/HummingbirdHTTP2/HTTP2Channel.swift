@@ -105,23 +105,22 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
             case .http1_1(let http1):
                 await handleHTTP(asyncChannel: http1, logger: logger)
             case .http2((let http2, let multiplexer)):
-                try await withThrowingDiscardingTaskGroup { group in
-                    for try await client in multiplexer.inbound.cancelOnGracefulShutdown() {
-                        group.addTask {
-                            await handleHTTP(asyncChannel: client, logger: logger)
+                do {
+                    try await withThrowingDiscardingTaskGroup { group in
+                        for try await client in multiplexer.inbound.cancelOnGracefulShutdown() {
+                            group.addTask {
+                                await handleHTTP(asyncChannel: client, logger: logger)
+                            }
                         }
                     }
+                } catch {
+                    logger.error("Error handling inbound connection for HTTP2 handler: \(error)")
                 }
-
-                // Close the `http2` NIOAsyncCannel here. Closing it here ensures we retain the `http2` instance,
-                // preventing it from being `deinit`-ed.
-                // Not having this will cause HTTP2 connections to close shortly after the first request
-                // is handled. When NIOAsyncChannel `deinit`s, it closes the channel. So this ensures
-                // that closing the HTTP2 channel happens when we need it to.
-                try await http2.channel.close()
+                // have to run this to ensure http2 channel outbound writer is closed
+                try await http2.executeThenClose { _,_ in}
             }
         } catch {
-            logger.error("Error handling inbound connection for HTTP2 handler: \(error)")
+            logger.error("Error getting HTTP2 upgrade negotiated value: \(error)")
         }
     }
 }
