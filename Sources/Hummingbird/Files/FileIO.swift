@@ -101,7 +101,11 @@ public struct HBFileIO: Sendable {
     ///   - contents: Request body to write.
     ///   - path: Path to write to
     ///   - logger: Logger
-    public func writeFile(contents: HBRequestBody, path: String, context: some HBBaseRequestContext) async throws {
+    public func writeFile<AS: AsyncSequence>(
+        contents: AS,
+        path: String,
+        context: some HBBaseRequestContext
+    ) async throws where AS.Element == ByteBuffer {
         let eventLoop = self.eventLoopGroup.any()
         let handle = try await self.fileIO.openFile(path: path, mode: .write, flags: .allowFileCreation(), eventLoop: eventLoop).get()
         defer {
@@ -111,6 +115,27 @@ public struct HBFileIO: Sendable {
         for try await buffer in contents {
             try await self.fileIO.write(fileHandle: handle, buffer: buffer, eventLoop: eventLoop).get()
         }
+    }
+
+    /// Write contents of request body to file
+    ///
+    /// This can be used to save arbitrary ByteBuffers by passing in `.byteBuffer(ByteBuffer)` as contents
+    /// - Parameters:
+    ///   - contents: Request body to write.
+    ///   - path: Path to write to
+    ///   - logger: Logger
+    public func writeFile(
+        buffer: ByteBuffer,
+        path: String,
+        context: some HBBaseRequestContext
+    ) async throws {
+        let eventLoop = self.eventLoopGroup.any()
+        let handle = try await self.fileIO.openFile(path: path, mode: .write, flags: .allowFileCreation(), eventLoop: eventLoop).get()
+        defer {
+            try? handle.close()
+        }
+        context.logger.debug("[FileIO] PUT", metadata: ["file": .string(path)])
+        try await self.fileIO.write(fileHandle: handle, buffer: buffer, eventLoop: eventLoop).get()
     }
 
     /// Load file as ByteBuffer
@@ -149,5 +174,11 @@ public struct HBFileIO: Sendable {
             }
             try handle.close()
         }
+    }
+
+    public func makeDirectory(path: String, context: some HBBaseRequestContext) async throws {
+        let eventLoop = self.eventLoopGroup.any()
+        context.logger.debug("[FileIO] Create directory", metadata: ["path": .string(path)])
+        try await self.fileIO.createDirectory(path: path, withIntermediateDirectories: true, mode: S_IRWXU, eventLoop: eventLoop).get()
     }
 }

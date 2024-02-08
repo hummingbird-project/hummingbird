@@ -112,7 +112,7 @@ extension HTTPChannelHandler {
             // channel is being closed because we received a connection: close header
         } catch {
             // we got here because we failed to either read or write to the channel
-            logger.trace("Failed to read/write to Channel. Error: \(error)")
+            logger.debug("Failed to read/write to Channel. Error: \(error)")
         }
     }
 
