@@ -269,6 +269,45 @@ final class RouterTests: XCTestCase {
         }
     }
 
+    func testRequireLosslessStringParameter() async throws {
+        let router = HBRouter()
+        router
+            .delete("/user/:id") { _, context -> String in
+                let id = try context.parameters.require("id", as: Int.self)
+                return (id + 1).description
+            }
+        let app = HBApplication(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.XCTExecute(uri: "/user/1234", method: .delete) { response in
+                XCTAssertEqual(String(buffer: response.body), "1235")
+            }
+            try await client.XCTExecute(uri: "/user/what", method: .delete) { response in
+                XCTAssertEqual(response.status, .badRequest)
+            }
+        }
+    }
+
+    func testRequireRawRepresentableParameter() async throws {
+        enum TestEnum: String {
+            case this
+            case that
+        }
+        let router = HBRouter()
+        router
+            .delete("/user/:id") { _, context -> String in
+                return try context.parameters.require("id", as: TestEnum.self).rawValue
+            }
+        let app = HBApplication(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.XCTExecute(uri: "/user/this", method: .delete) { response in
+                XCTAssertEqual(String(buffer: response.body), "this")
+            }
+            try await client.XCTExecute(uri: "/user/what", method: .delete) { response in
+                XCTAssertEqual(response.status, .badRequest)
+            }
+        }
+    }
+
     func testParameterCollection() async throws {
         let router = HBRouter()
         router
@@ -314,6 +353,47 @@ final class RouterTests: XCTestCase {
             }
             try await client.XCTExecute(uri: "/files/file.doc/test.png", method: .get) { response in
                 XCTAssertEqual(response.status, .notFound)
+            }
+        }
+    }
+
+    func testRequireLosslessStringQuery() async throws {
+        let router = HBRouter()
+        router
+            .get("/user/") { request, _ -> [Int] in
+                let ids = try request.uri.queryParameters.requireAll("id", as: Int.self)
+                return ids.map { $0 + 1 }
+            }
+        let app = HBApplication(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.XCTExecute(uri: "/user/?id=24&id=56", method: .get) { response in
+                XCTAssertEqual(String(buffer: response.body), "[25,57]")
+            }
+            try await client.XCTExecute(uri: "/user/?id=24&id=hello", method: .get) { response in
+                XCTAssertEqual(response.status, .badRequest)
+            }
+        }
+    }
+
+    func testRequireRawRepresentableQuery() async throws {
+        enum TestEnum: String, Codable {
+            case this
+            case and
+            case that
+        }
+        let router = HBRouter()
+        router
+            .patch("/user/") { request, _ -> [TestEnum] in
+                let ids = try request.uri.queryParameters.requireAll("id", as: TestEnum.self)
+                return ids
+            }
+        let app = HBApplication(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.XCTExecute(uri: "/user/?id=this&id=and&id=that", method: .patch) { response in
+                XCTAssertEqual(String(buffer: response.body), "[\"this\",\"and\",\"that\"]")
+            }
+            try await client.XCTExecute(uri: "/user/?id=this&id=hello", method: .patch) { response in
+                XCTAssertEqual(response.status, .badRequest)
             }
         }
     }
