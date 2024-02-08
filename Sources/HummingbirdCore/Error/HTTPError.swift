@@ -18,11 +18,11 @@ import NIOCore
 /// Default HTTP error. Provides an HTTP status and a message is so desired
 public struct HBHTTPError: Error, HBHTTPResponseError, Sendable {
     /// status code for the error
-    public let status: HTTPResponse.Status
+    public var status: HTTPResponse.Status
     /// any addiitional headers required
-    public let headers: HTTPFields
+    public var headers: HTTPFields
     /// error payload, assumed to be a string
-    public let body: String?
+    public var body: String?
 
     /// Initialize HTTPError
     /// - Parameters:
