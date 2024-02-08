@@ -69,7 +69,12 @@ public final class HBRouter<Context: HBBaseRequestContext>: HBRouterMethods, HBR
 
     /// build responder from router
     public func buildResponder() -> HBRouterResponder<Context> {
-        HBRouterResponder(
+        if self.options.contains(.autoGenerateHeadEndpoints) {
+            self.trie.forEach { node in
+                node.value?.autoGenerateHeadEndpoint()
+            }
+        }
+        return HBRouterResponder(
             context: Context.self,
             trie: self.trie.build(),
             options: self.options,
@@ -121,5 +126,8 @@ public struct HBRouterOptions: OptionSet, Sendable {
         self.rawValue = rawValue
     }
 
+    /// Router path comparisons will be case insensitive
     static var caseInsensitive: Self { .init(rawValue: 1 << 0) }
+    /// For every GET request that does not have a HEAD request, auto generate the HEAD request
+    static var autoGenerateHeadEndpoints: Self { .init(rawValue: 1 << 1) }
 }

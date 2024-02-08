@@ -44,6 +44,10 @@ struct RouterPathTrieBuilder<Value: Sendable> {
         .init(root: self.root.build())
     }
 
+    func forEach(_ process: (Node) throws -> Void) rethrows {
+        try self.root.forEach(process)
+    }
+
     /// Trie Node. Each node represents one component of a URI path
     final class Node {
         let key: RouterPath.Element
@@ -78,6 +82,13 @@ struct RouterPathTrieBuilder<Value: Sendable> {
 
         func build() -> RouterPathTrie<Value>.Node {
             return .init(key: self.key, value: self.value, children: self.children.map { $0.build() })
+        }
+
+        func forEach(_ process: (Node) throws -> Void) rethrows {
+            try process(self)
+            for node in self.children {
+                try node.forEach(process)
+            }
         }
     }
 }

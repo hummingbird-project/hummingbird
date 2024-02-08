@@ -450,6 +450,37 @@ final class RouterTests: XCTestCase {
             }
         }
     }
+
+    // Test auto generation of HEAD endpoints works
+    func testAutoGenerateHeadEndpoints() async throws {
+        let router = HBRouter(options: .autoGenerateHeadEndpoints)
+        router.get("nohead") { _, _ in
+            return "TestString"
+        }
+        router.head("withhead") { _, _ in
+            return HBResponse(status: .ok, headers: [.contentLength: "0", .contentLanguage: "en"], body: .init())
+        }
+        router.get("withhead") { _, _ in
+            return HBResponse(status: .ok, headers: [.contentLength: "999"], body: .init())
+        }
+        router.post("post") { _, _ in
+            return HBResponse(status: .ok, headers: [.contentLength: "999"], body: .init())
+        }
+        let app = HBApplication(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.XCTExecute(uri: "/nohead", method: .head) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(response.headers[.contentLength], "10")
+            }
+            try await client.XCTExecute(uri: "/withhead", method: .head) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(response.headers[.contentLanguage], "en")
+            }
+            try await client.XCTExecute(uri: "/post", method: .head) { response in
+                XCTAssertEqual(response.status, .notFound)
+            }
+        }
+    }
 }
 
 public struct HBTestRouterContext2: HBRequestContext {

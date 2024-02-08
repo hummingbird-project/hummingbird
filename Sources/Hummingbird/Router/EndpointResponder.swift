@@ -22,16 +22,26 @@ struct HBEndpointResponders<Context: HBBaseRequestContext>: Sendable {
     }
 
     public func getResponder(for method: HTTPRequest.Method) -> (any HBResponder<Context>)? {
-        return self.methods[method.rawValue]
+        return self.methods[method]
     }
 
     mutating func addResponder(for method: HTTPRequest.Method, responder: any HBResponder<Context>) {
-        guard self.methods[method.rawValue] == nil else {
+        guard self.methods[method] == nil else {
             preconditionFailure("\(method.rawValue) already has a handler")
         }
-        self.methods[method.rawValue] = responder
+        self.methods[method] = responder
     }
 
-    var methods: [String: any HBResponder<Context>]
+    mutating func autoGenerateHeadEndpoint() {
+        if self.methods[.head] == nil, let get = methods[.get] {
+            self.methods[.head] = HBCallbackResponder { request, context in
+                var response = try await get.respond(to: request, context: context)
+                response.body = .init()
+                return response
+            }
+        }
+    }
+
+    var methods: [HTTPRequest.Method: any HBResponder<Context>]
     var path: String
 }
