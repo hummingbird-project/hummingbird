@@ -34,6 +34,14 @@ public extension HBParameters {
         return self[s[...]].map { T(String($0)) } ?? nil
     }
 
+    /// Return parameter with specified id as a certain type
+    /// - Parameters:
+    ///   - s: parameter id
+    ///   - as: type we want returned
+    func get<T: RawRepresentable>(_ s: String, as: T.Type) -> T? where T.RawValue == String {
+        return self[s[...]].map { T(rawValue: String($0)) } ?? nil
+    }
+
     /// Return parameter with specified id
     /// - Parameter s: parameter id
     func require(_ s: String) throws -> String {
@@ -60,8 +68,36 @@ public extension HBParameters {
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
+    func require<T: RawRepresentable>(_ s: String, as: T.Type) throws -> T where T.RawValue == String {
+        guard let param = self[s[...]],
+              let result = T(rawValue: String(param))
+        else {
+            throw HBHTTPError(.badRequest)
+        }
+        return result
+    }
+
+    /// Return parameter with specified id as a certain type
+    /// - Parameters:
+    ///   - s: parameter id
+    func getAll(_ s: String) -> [String] {
+        return self[values: s[...]].compactMap { String($0) }
+    }
+
+    /// Return parameter with specified id as a certain type
+    /// - Parameters:
+    ///   - s: parameter id
+    ///   - as: type we want returned
     func getAll<T: LosslessStringConvertible>(_ s: String, as: T.Type) -> [T] {
         return self[values: s[...]].compactMap { T(String($0)) }
+    }
+
+    /// Return parameter with specified id as a certain type
+    /// - Parameters:
+    ///   - s: parameter id
+    ///   - as: type we want returned
+    func getAll<T: RawRepresentable>(_ s: String, as: T.Type) -> [T] where T.RawValue == String {
+        return self[values: s[...]].compactMap { T(rawValue: String($0)) }
     }
 
     /// Return parameter with specified id as a certain type
@@ -71,6 +107,19 @@ public extension HBParameters {
     func requireAll<T: LosslessStringConvertible>(_ s: String, as: T.Type) throws -> [T] {
         return try self[values: s[...]].map {
             guard let result = T(String($0)) else {
+                throw HBHTTPError(.badRequest)
+            }
+            return result
+        }
+    }
+
+    /// Return parameter with specified id as a certain type
+    /// - Parameters:
+    ///   - s: parameter id
+    ///   - as: type we want returned
+    func requireAll<T: RawRepresentable>(_ s: String, as: T.Type) throws -> [T] where T.RawValue == String {
+        return try self[values: s[...]].map {
+            guard let result = T(rawValue: String($0)) else {
                 throw HBHTTPError(.badRequest)
             }
             return result
