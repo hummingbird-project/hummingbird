@@ -20,9 +20,16 @@
 public struct HBRouterResponder<Context: HBBaseRequestContext>: HBResponder {
     let trie: RouterPathTrie<HBEndpointResponders<Context>>
     let notFoundResponder: any HBResponder<Context>
+    let options: HBRouterOptions
 
-    init(context: Context.Type, trie: RouterPathTrie<HBEndpointResponders<Context>>, notFoundResponder: any HBResponder<Context>) {
+    init(
+        context: Context.Type,
+        trie: RouterPathTrie<HBEndpointResponders<Context>>,
+        options: HBRouterOptions,
+        notFoundResponder: any HBResponder<Context>
+    ) {
         self.trie = trie
+        self.options = options
         self.notFoundResponder = notFoundResponder
     }
 
@@ -30,7 +37,12 @@ public struct HBRouterResponder<Context: HBBaseRequestContext>: HBResponder {
     /// - Parameter request: HTTP request
     /// - Returns: EventLoopFuture that will be fulfilled with the Response
     public func respond(to request: HBRequest, context: Context) async throws -> HBResponse {
-        let path = request.uri.path
+        let path: String
+        if self.options.contains(.caseInsensitive) {
+            path = request.uri.path.lowercased()
+        } else {
+            path = request.uri.path
+        }
         guard let result = trie.getValueAndParameters(path),
               let responder = result.value.getResponder(for: request.method)
         else {

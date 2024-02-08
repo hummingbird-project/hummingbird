@@ -430,6 +430,26 @@ final class RouterTests: XCTestCase {
             }
         }
     }
+
+    // Test case insensitive router works
+    func testCaseInsensitive() async throws {
+        let router = HBRouter(options: .caseInsensitive)
+        router.get("Uppercased") { _, _ in
+            return HTTPResponse.Status.ok
+        }
+        router.get("lowercased") { _, _ in
+            return HTTPResponse.Status.ok
+        }
+        let app = HBApplication(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.XCTExecute(uri: "/uppercased", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+            try await client.XCTExecute(uri: "/LOWERCASED", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+        }
+    }
 }
 
 public struct HBTestRouterContext2: HBRequestContext {

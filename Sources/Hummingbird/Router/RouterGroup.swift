@@ -64,7 +64,10 @@ public struct HBRouterGroup<Context: HBBaseRequestContext>: HBRouterMethods {
         use closure: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
         let responder = constructResponder(use: closure)
-        let path = self.combinePaths(self.path, path)
+        var path = self.combinePaths(self.path, path)
+        if self.router.options.contains(.caseInsensitive) {
+            path = path.lowercased()
+        }
         self.router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         return self
     }

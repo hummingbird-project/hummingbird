@@ -46,10 +46,12 @@ import NIOCore
 public final class HBRouter<Context: HBBaseRequestContext>: HBRouterMethods, HBResponderBuilder {
     var trie: RouterPathTrieBuilder<HBEndpointResponders<Context>>
     public let middlewares: HBMiddlewareGroup<Context>
+    let options: HBRouterOptions
 
-    public init(context: Context.Type = HBBasicRequestContext.self) {
+    public init(context: Context.Type = HBBasicRequestContext.self, options: HBRouterOptions = []) {
         self.trie = RouterPathTrieBuilder()
         self.middlewares = .init()
+        self.options = options
     }
 
     /// Add route to router
@@ -67,7 +69,12 @@ public final class HBRouter<Context: HBBaseRequestContext>: HBRouterMethods, HBR
 
     /// build responder from router
     public func buildResponder() -> HBRouterResponder<Context> {
-        HBRouterResponder(context: Context.self, trie: self.trie.build(), notFoundResponder: self.middlewares.constructResponder(finalResponder: NotFoundResponder<Context>()))
+        HBRouterResponder(
+            context: Context.self,
+            trie: self.trie.build(),
+            options: self.options,
+            notFoundResponder: self.middlewares.constructResponder(finalResponder: NotFoundResponder<Context>())
+        )
     }
 
     /// Add path for closure returning type conforming to HBResponseGenerator
@@ -77,6 +84,10 @@ public final class HBRouter<Context: HBBaseRequestContext>: HBRouterMethods, HBR
         use closure: @escaping @Sendable (HBRequest, Context) async throws -> some HBResponseGenerator
     ) -> Self {
         let responder = constructResponder(use: closure)
+        var path = path
+        if self.options.contains(.caseInsensitive) {
+            path = path.lowercased()
+        }
         self.add(path, method: method, responder: responder)
         return self
     }
@@ -100,4 +111,15 @@ public protocol HBResponderBuilder {
     associatedtype Responder: HBResponder
     /// build a responder
     func buildResponder() -> Responder
+}
+
+/// Router Options
+public struct HBRouterOptions: OptionSet, Sendable {
+    public let rawValue: Int
+
+    public init(rawValue: Int) {
+        self.rawValue = rawValue
+    }
+
+    static var caseInsensitive: Self { .init(rawValue: 1 << 0) }
 }
