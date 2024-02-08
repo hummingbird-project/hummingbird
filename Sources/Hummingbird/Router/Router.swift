@@ -127,7 +127,7 @@ public struct HBRouterOptions: OptionSet, Sendable {
     }
 
     /// Router path comparisons will be case insensitive
-    static var caseInsensitive: Self { .init(rawValue: 1 << 0) }
+    public static var caseInsensitive: Self { .init(rawValue: 1 << 0) }
     /// For every GET request that does not have a HEAD request, auto generate the HEAD request
-    static var autoGenerateHeadEndpoints: Self { .init(rawValue: 1 << 1) }
+    public static var autoGenerateHeadEndpoints: Self { .init(rawValue: 1 << 1) }
 }
