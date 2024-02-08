@@ -11,12 +11,17 @@ needs to be listed here.
 ### Contributors
 
 - Adam Fowler <adamfowler71@gmail.com>
+- Brian Michel <brian.michel@gmail.com>
 - Chris <4376956+SoftwareEngineerChris@users.noreply.github.com>
 - Derek Clarkson <d4rkf1br3@gmail.com>
 - Florion <florion@lilo.org>
+- Iceman <side.junktown@gmail.com>
+- Joannis Orlandos <joannis@orlandos.nl>
 - Moritz Lang <hi@slashmo.codes>
 - Simon Leeb <52261246+sliemeobn@users.noreply.github.com>
-- PO Bengtsson <po@niffic.se>
+- Tibor Bödecs <mail.tib@gmail.com>
+- Ronald Mannak <ronaldmannak@me.com>
+- Nicholas Trienens <nick@fuzzproductions.com>
 - Michael Critz <github@michaelcritz.com>
 - Patrick Heneise <patrick@zentered.co>
 

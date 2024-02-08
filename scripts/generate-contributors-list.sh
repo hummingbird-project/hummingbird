@@ -16,6 +16,7 @@
 #set -eux
 here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 CONTRIBUTORS=""
+BRANCH="2.x.x"
 
 embed_newline()
 {
@@ -32,13 +33,18 @@ get_contributors() {
     PROJECT=$1
     TEMP_DIR=$(mktemp -d)
 
-    git clone https://github.com/hummingbird-project/"$PROJECT" "$TEMP_DIR"
+    git clone -b "$BRANCH" https://github.com/hummingbird-project/"$PROJECT" "$TEMP_DIR"
+    cp .mailmap "$TEMP_DIR"
     CONTRIBUTORS=$(embed_newline "$CONTRIBUTORS" "$(cd "$TEMP_DIR" && git shortlog -es | cut -f2 | sed -e 's/^/- /')")
     rm -rf "$TEMP_DIR"
 }
 
 get_contributors hummingbird
-get_contributors hummingbird-core
+get_contributors hummingbird-auth
+get_contributors hummingbird-fluent
+get_contributors hummingbird-lambda
+get_contributors hummingbird-mustache
+get_contributors hummingbird-redis
 get_contributors hummingbird-examples
 
 CONTRIBUTORS=$(awk '!a[$0]++' <<< """$CONTRIBUTORS""")
