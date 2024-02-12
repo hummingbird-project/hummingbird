@@ -16,7 +16,7 @@ import HTTPTypes
 import NIOCore
 
 /// Conform to `HBRouterMethods` to add standard router verb (get, post ...) methods
-public protocol HBRouterMethods {
+public protocol HBRouterMethods<Context> {
     associatedtype Context: HBBaseRequestContext
 
     /// Add path for async closure
