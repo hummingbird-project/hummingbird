@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2023 the Hummingbird authors
+// Copyright (c) 2023-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -29,22 +29,26 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
 
     private let sslContext: NIOSSLContext
     private let http1: HTTP1Channel
+    private let idleTimeout: TimeAmount
     private let additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
     public var responder: @Sendable (HBRequest, Channel) async throws -> HBResponse { http1.responder }
 
     ///  Initialize HTTP1Channel
     /// - Parameters:
     ///   - tlsConfiguration: TLS configuration
+    ///   - idleTimeout: Time before closing an idle HTTP2 connection pipeline
     ///   - additionalChannelHandlers: Additional channel handlers to add to channel pipeline
     ///   - responder: Function returning a HTTP response for a HTTP request
     public init(
         tlsConfiguration: TLSConfiguration,
+        idleTimeout: Duration = .seconds(30),
         additionalChannelHandlers: @escaping @Sendable () -> [any RemovableChannelHandler] = { [] },
         responder: @escaping @Sendable (HBRequest, Channel) async throws -> HBResponse = { _, _ in throw HBHTTPError(.notImplemented) }
     ) throws {
         var tlsConfiguration = tlsConfiguration
         tlsConfiguration.applicationProtocols = NIOHTTP2SupportedALPNProtocols
         self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
+        self.idleTimeout = .init(idleTimeout)
         self.additionalChannelHandlers = additionalChannelHandlers
         self.http1 = HTTP1Channel(responder: responder, additionalChannelHandlers: additionalChannelHandlers)
     }
@@ -75,22 +79,21 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
                 }
         } http2ConnectionInitializer: { http2Channel -> EventLoopFuture<NIOAsyncChannel<HTTP2Frame, HTTP2Frame>> in
             http2Channel.eventLoop.makeCompletedFuture {
-                try NIOAsyncChannel<HTTP2Frame, HTTP2Frame>(wrappingChannelSynchronously: http2Channel)
+                try http2Channel.pipeline.syncOperations.addHandler(IdleStateHandler(readTimeout: self.idleTimeout))
+                try http2Channel.pipeline.syncOperations.addHandler(HTTP2UserEventHandler())
+                let result = try NIOAsyncChannel<HTTP2Frame, HTTP2Frame>(wrappingChannelSynchronously: http2Channel)
+                return result
             }
         } http2StreamInitializer: { http2ChildChannel -> EventLoopFuture<HTTP1Channel.Value> in
             let childChannelHandlers: [ChannelHandler] =
                 self.additionalChannelHandlers() + [
                     HBHTTPUserEventHandler(logger: logger),
                 ]
-
-            return http2ChildChannel
-                .pipeline
-                .addHandler(HTTP2FramePayloadToHTTPServerCodec())
-                .flatMap {
-                    http2ChildChannel.pipeline.addHandlers(childChannelHandlers)
-                }.flatMapThrowing {
-                    try HTTP1Channel.Value(wrappingChannelSynchronously: http2ChildChannel)
-                }
+            return http2ChildChannel.eventLoop.makeCompletedFuture {
+                try http2ChildChannel.pipeline.syncOperations.addHandler(HTTP2FramePayloadToHTTPServerCodec())
+                try http2ChildChannel.pipeline.syncOperations.addHandlers(childChannelHandlers)
+                return try HTTP1Channel.Value(wrappingChannelSynchronously: http2ChildChannel)
+            }
         }
     }
 
@@ -109,15 +112,25 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
                     try await withThrowingDiscardingTaskGroup { group in
                         for try await client in multiplexer.inbound.cancelOnGracefulShutdown() {
                             group.addTask {
+                                // send created event to http2 channel
+                                http2.channel.triggerUserOutboundEvent(HTTP2UserEventHandler.CreateHTTP2StreamEvent(), promise: nil)
                                 await handleHTTP(asyncChannel: client, logger: logger)
+                                // send closed event to http2 channel
+                                http2.channel.triggerUserOutboundEvent(HTTP2UserEventHandler.ClosedHTTP2StreamEvent(), promise: nil)
                             }
                         }
                     }
                 } catch {
                     logger.error("Error handling inbound connection for HTTP2 handler: \(error)")
                 }
-                // have to run this to ensure http2 channel outbound writer is closed
-                try await http2.executeThenClose { _,_ in}
+                // have to run this to ensure http2 channel is closed. If we ended reading from the
+                // multiplexer because of graceful shutdown or because an error was thrown then the
+                // channel will still be open
+                do {
+                    try await http2.channel.close()
+                } catch let error as ChannelError where error == .alreadyClosed {
+                    // can ignore already closed errors
+                }
             }
         } catch {
             logger.error("Error getting HTTP2 upgrade negotiated value: \(error)")

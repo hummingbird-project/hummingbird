@@ -32,11 +32,13 @@ extension HBHTTPChannelBuilder {
     /// - Returns: HTTPChannelHandler builder
     public static func http2Upgrade(
         tlsConfiguration: TLSConfiguration,
+        idleTimeout: Duration = .seconds(30),
         additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = []
     ) throws -> HBHTTPChannelBuilder<HTTP2UpgradeChannel> {
         return .init { responder in
             return try HTTP2UpgradeChannel(
                 tlsConfiguration: tlsConfiguration,
+                idleTimeout: idleTimeout,
                 additionalChannelHandlers: additionalChannelHandlers,
                 responder: responder
             )
