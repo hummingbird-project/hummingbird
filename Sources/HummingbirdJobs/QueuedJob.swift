@@ -14,55 +14,53 @@
 
 import Foundation
 
-/// Holder for all data related to a job
-public struct HBJobInstance: Codable, Sendable {
-    /// Time created
-    public let createdAt: Date
+/// Add codable support for decoding/encoding any HBJob
+public struct HBAnyCodableJob: Codable, Sendable {
     /// Job data
     public let job: HBJob
 
     /// Initialize a queue job
     public init(_ job: HBJob) {
         self.job = job
-        self.createdAt = Date()
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.createdAt = try container.decode(Date.self, forKey: .createdAt)
         let jobDecoder = try container.superDecoder(forKey: .job)
         self.job = try HBJobRegister.decode(from: jobDecoder)
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(self.createdAt, forKey: .createdAt)
         let jobEncoder = container.superEncoder(forKey: .job)
         try HBJobRegister.encode(job: self.job, to: jobEncoder)
     }
 
     private enum CodingKeys: String, CodingKey {
-        case createdAt
         case job
     }
 }
 
 /// Queued job. Includes job, plus the id for the job
-public struct HBQueuedJob: Codable, Sendable {
+public struct HBQueuedJob: Sendable, Codable {
     /// Job id
     public let id: JobIdentifier
     /// Job data
-    public let job: HBJobInstance
+    private let _job: HBAnyCodableJob
+    /// Job data
+    public var job: HBJob { self._job.job }
+    /// Job data in a codable form
+    public var anyCodableJob: HBAnyCodableJob { self._job }
 
     /// Initialize a queue job
     public init(_ job: HBJob) {
-        self.job = .init(job)
+        self._job = .init(job)
         self.id = .init()
     }
 
     /// Initialize a queue job
-    public init(id: JobIdentifier, job: HBJobInstance) {
-        self.job = job
+    public init(id: JobIdentifier, job: HBJob) {
+        self._job = .init(job)
         self.id = id
     }
 }

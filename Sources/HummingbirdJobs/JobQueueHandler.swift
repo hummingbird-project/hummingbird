@@ -68,14 +68,14 @@ public final class HBJobQueueHandler<Queue: HBJobQueue>: Service {
     func runJob(_ queuedJob: HBQueuedJob) async throws {
         var logger = logger
         logger[metadataKey: "hb_job_id"] = .stringConvertible(queuedJob.id)
-        logger[metadataKey: "hb_job_type"] = .string(String(describing: type(of: queuedJob.job.job)))
+        logger[metadataKey: "hb_job_type"] = .string(String(describing: type(of: queuedJob.job)))
 
         let job = queuedJob.job
-        var count = type(of: job.job).maxRetryCount
+        var count = type(of: job).maxRetryCount
         logger.trace("Starting Job")
         while true {
             do {
-                try await job.job.execute(logger: self.logger)
+                try await job.execute(logger: self.logger)
                 break
             } catch let error as CancellationError {
                 logger.error("Job cancelled")

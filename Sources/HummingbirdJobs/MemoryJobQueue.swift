@@ -61,7 +61,7 @@ public final class HBMemoryJobQueue: HBJobQueue {
     /// Internal actor managing the job queue
     fileprivate actor Internal {
         var queue: Deque<Data>
-        var pendingJobs: [JobIdentifier: HBJobInstance]
+        var pendingJobs: [JobIdentifier: HBJob]
         var isStopped: Bool
 
         init() {
@@ -81,7 +81,7 @@ public final class HBMemoryJobQueue: HBJobQueue {
             self.pendingJobs[jobId] = nil
         }
 
-        func clearAndReturnPendingJob(jobId: JobIdentifier) -> HBJobInstance? {
+        func clearAndReturnPendingJob(jobId: JobIdentifier) -> HBJob? {
             let instance = self.pendingJobs[jobId]
             self.pendingJobs[jobId] = nil
             return instance

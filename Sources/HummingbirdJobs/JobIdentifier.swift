@@ -14,30 +14,32 @@
 
 import Foundation
 
+public typealias JobIdentifier = UUID
 /// Identifier for Job
-public struct JobIdentifier: Sendable, CustomStringConvertible, Codable, Hashable {
-    let id: String
+/* public struct JobIdentifier: Sendable, CustomStringConvertible, Codable, Hashable {
+     let id: String
 
-    init() {
-        self.id = UUID().uuidString
-    }
+     init() {
+         self.id = UUID().uuidString
+     }
 
-    /// Initialize JobIdentifier from String
-    /// - Parameter value: string value
-    public init(_ value: String) {
-        self.id = value
-    }
+     /// Initialize JobIdentifier from String
+     /// - Parameter value: string value
+     public init(_ value: String) {
+         self.id = value
+     }
 
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        self.id = try container.decode(String.self)
-    }
+     public init(from decoder: Decoder) throws {
+         let container = try decoder.singleValueContainer()
+         self.id = try container.decode(String.self)
+     }
 
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(self.id)
-    }
+     public func encode(to encoder: Encoder) throws {
+         var container = encoder.singleValueContainer()
+         try container.encode(self.id)
+     }
 
-    /// String description of Identifier
-    public var description: String { self.id }
-}
+     /// String description of Identifier
+     public var description: String { self.id }
+ }
+ */
