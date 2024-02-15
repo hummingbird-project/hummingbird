@@ -42,9 +42,9 @@ public struct HBAnyCodableJob: Codable, Sendable {
 }
 
 /// Queued job. Includes job, plus the id for the job
-public struct HBQueuedJob: Sendable, Codable {
+public struct HBQueuedJob<JobID: Sendable>: Sendable {
     /// Job id
-    public let id: JobIdentifier
+    public let id: JobID
     /// Job data
     private let _job: HBAnyCodableJob
     /// Job data
@@ -53,14 +53,10 @@ public struct HBQueuedJob: Sendable, Codable {
     public var anyCodableJob: HBAnyCodableJob { self._job }
 
     /// Initialize a queue job
-    public init(_ job: HBJob) {
-        self._job = .init(job)
-        self.id = .init()
-    }
-
-    /// Initialize a queue job
-    public init(id: JobIdentifier, job: HBJob) {
+    public init(id: JobID, job: HBJob) {
         self._job = .init(job)
         self.id = id
     }
 }
+
+extension HBQueuedJob: Codable where JobID: Codable {}

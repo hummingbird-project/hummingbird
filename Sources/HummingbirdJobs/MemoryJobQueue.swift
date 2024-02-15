@@ -17,19 +17,19 @@ import Foundation
 
 /// In memory implementation of job queue driver. Stores jobs in a circular buffer
 public final class HBMemoryJobQueue: HBJobQueue {
-    public typealias Element = HBQueuedJob
+    public typealias JobID = UUID
 
     /// queue of jobs
     fileprivate let queue: Internal
-    private let onFailedJob: @Sendable (HBQueuedJob, any Error) -> Void
+    private let onFailedJob: @Sendable (HBQueuedJob<JobID>, any Error) -> Void
 
     /// Initialise In memory job queue
-    public init(onFailedJob: @escaping @Sendable (HBQueuedJob, any Error) -> Void = { _, _ in }) {
+    public init(onFailedJob: @escaping @Sendable (HBQueuedJob<JobID>, any Error) -> Void = { _, _ in }) {
         self.queue = .init()
         self.onFailedJob = onFailedJob
     }
 
-    /// Shutdown queue
+    /// Stop queue serving more jobs
     public func stop() async {
         await self.queue.stop()
     }
@@ -44,15 +44,15 @@ public final class HBMemoryJobQueue: HBJobQueue {
     ///   - job: Job
     ///   - eventLoop: Eventloop to run process on (ignored in this case)
     /// - Returns: Queued job
-    @discardableResult public func push(_ job: HBJob) async throws -> JobIdentifier {
+    @discardableResult public func push(_ job: HBJob) async throws -> JobID {
         try await self.queue.push(job)
     }
 
-    public func finished(jobId: JobIdentifier) async throws {
+    public func finished(jobId: JobID) async throws {
         await self.queue.clearPendingJob(jobId: jobId)
     }
 
-    public func failed(jobId: JobIdentifier, error: any Error) async throws {
+    public func failed(jobId: JobID, error: any Error) async throws {
         if let job = await self.queue.clearAndReturnPendingJob(jobId: jobId) {
             self.onFailedJob(.init(id: jobId, job: job), error)
         }
@@ -61,7 +61,7 @@ public final class HBMemoryJobQueue: HBJobQueue {
     /// Internal actor managing the job queue
     fileprivate actor Internal {
         var queue: Deque<Data>
-        var pendingJobs: [JobIdentifier: HBJob]
+        var pendingJobs: [JobID: HBJob]
         var isStopped: Bool
 
         init() {
@@ -70,31 +70,31 @@ public final class HBMemoryJobQueue: HBJobQueue {
             self.pendingJobs = .init()
         }
 
-        func push(_ job: HBJob) throws -> JobIdentifier {
-            let queuedJob = HBQueuedJob(job)
+        func push(_ job: HBJob) throws -> JobID {
+            let queuedJob = HBQueuedJob<JobID>(id: JobID(), job: job)
             let jsonData = try JSONEncoder().encode(queuedJob)
             self.queue.append(jsonData)
             return queuedJob.id
         }
 
-        func clearPendingJob(jobId: JobIdentifier) {
+        func clearPendingJob(jobId: JobID) {
             self.pendingJobs[jobId] = nil
         }
 
-        func clearAndReturnPendingJob(jobId: JobIdentifier) -> HBJob? {
+        func clearAndReturnPendingJob(jobId: JobID) -> HBJob? {
             let instance = self.pendingJobs[jobId]
             self.pendingJobs[jobId] = nil
             return instance
         }
 
-        func next() async throws -> HBQueuedJob? {
+        func next() async throws -> HBQueuedJob<JobID>? {
             while true {
                 if self.isStopped {
                     return nil
                 }
                 if let data = queue.popFirst() {
                     do {
-                        let job = try JSONDecoder().decode(HBQueuedJob.self, from: data)
+                        let job = try JSONDecoder().decode(HBQueuedJob<JobID>.self, from: data)
                         self.pendingJobs[job.id] = job.job
                         return job
                     } catch {
