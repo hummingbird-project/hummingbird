@@ -107,3 +107,7 @@ public final class HBJobQueueHandler<Queue: HBJobQueue>: Service {
     private let numWorkers: Int
     let logger: Logger
 }
+
+extension HBJobQueueHandler: CustomStringConvertible {
+    public var description: String { "HBJobQueueHandler<\(String(describing: Queue.self))>" }
+}
