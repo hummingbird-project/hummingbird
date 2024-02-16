@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Atomics
 import HTTPTypes
 import Logging
+import NIOConcurrencyHelpers
 import NIOCore
 import NIOHTTPTypes
 import ServiceLifecycle
@@ -33,7 +33,7 @@ enum HTTPChannelError: Error {
     case closeConnection
 }
 
-enum HTTPState: Int, AtomicValue {
+enum HTTPState: Int, Sendable {
     case idle
     case processing
     case cancelled
@@ -41,72 +41,88 @@ enum HTTPState: Int, AtomicValue {
 
 extension HTTPChannelHandler {
     public func handleHTTP(asyncChannel: NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>, logger: Logger) async {
-        let processingRequest = ManagedAtomic(HTTPState.idle)
+        let processingRequest = NIOLockedValueBox(HTTPState.idle)
         do {
-            try await withGracefulShutdownHandler {
-                try await asyncChannel.executeThenClose { inbound, outbound in
-                    let responseWriter = HBHTTPServerBodyWriter(outbound: outbound)
-                    var iterator = inbound.makeAsyncIterator()
+            try await withTaskCancellationHandler {
+                try await withGracefulShutdownHandler {
+                    try await asyncChannel.executeThenClose { inbound, outbound in
+                        let responseWriter = HBHTTPServerBodyWriter(outbound: outbound)
+                        var iterator = inbound.makeAsyncIterator()
 
-                    // read first part, verify it is a head
-                    guard let part = try await iterator.next() else { return }
-                    guard case .head(var head) = part else {
-                        throw HTTPChannelError.unexpectedHTTPPart(part)
-                    }
-
-                    while true {
-                        // set to processing unless it is cancelled then exit
-                        guard processingRequest.exchange(.processing, ordering: .relaxed) == .idle else { break }
-
-                        let bodyStream = NIOAsyncChannelRequestBody(iterator: iterator)
-                        let request = HBRequest(head: head, body: .init(asyncSequence: bodyStream))
-                        let response: HBResponse
-                        do {
-                            response = try await self.responder(request, asyncChannel.channel)
-                        } catch {
-                            response = self.getErrorResponse(from: error, allocator: asyncChannel.channel.allocator)
+                        // read first part, verify it is a head
+                        guard let part = try await iterator.next() else { return }
+                        guard case .head(var head) = part else {
+                            throw HTTPChannelError.unexpectedHTTPPart(part)
                         }
-                        do {
-                            try await outbound.write(.head(response.head))
-                            let tailHeaders = try await response.body.write(responseWriter)
-                            try await outbound.write(.end(tailHeaders))
-                        } catch {
-                            throw error
-                        }
-                        if request.headers[.connection] == "close" {
-                            throw HTTPChannelError.closeConnection
-                        }
-                        // set to idle unless it is cancelled then exit
-                        guard processingRequest.exchange(.idle, ordering: .relaxed) == .processing else { break }
 
-                        // Flush current request
-                        // read until we don't have a body part
-                        var part: HTTPRequestPart?
                         while true {
-                            part = try await iterator.next()
-                            guard case .body = part else { break }
-                        }
-                        // if we have an end then read the next part
-                        if case .end = part {
-                            part = try await iterator.next()
-                        }
+                            // set to processing unless it is cancelled then exit
+                            guard processingRequest.withLockedValue({ value -> HTTPState in
+                                let prevValue = value
+                                value = .processing
+                                return prevValue
+                            }) == .idle else { break }
 
-                        // if part is nil break out of loop
-                        guard let part else {
-                            break
-                        }
+                            let bodyStream = NIOAsyncChannelRequestBody(iterator: iterator)
+                            let request = HBRequest(head: head, body: .init(asyncSequence: bodyStream))
+                            let response: HBResponse
+                            do {
+                                response = try await self.responder(request, asyncChannel.channel)
+                            } catch {
+                                response = self.getErrorResponse(from: error, allocator: asyncChannel.channel.allocator)
+                            }
+                            do {
+                                try await outbound.write(.head(response.head))
+                                let tailHeaders = try await response.body.write(responseWriter)
+                                try await outbound.write(.end(tailHeaders))
+                            } catch {
+                                throw error
+                            }
+                            if request.headers[.connection] == "close" {
+                                throw HTTPChannelError.closeConnection
+                            }
+                            // set to idle unless it is cancelled then exit
+                            guard processingRequest.withLockedValue({ value -> HTTPState in
+                                let prevValue = value
+                                value = .idle
+                                return prevValue
+                            }) == .processing else { break }
 
-                        // part should be a head, if not throw error
-                        guard case .head(let newHead) = part else { throw HTTPChannelError.unexpectedHTTPPart(part) }
-                        head = newHead
+                            // Flush current request
+                            // read until we don't have a body part
+                            var part: HTTPRequestPart?
+                            while true {
+                                part = try await iterator.next()
+                                guard case .body = part else { break }
+                            }
+                            // if we have an end then read the next part
+                            if case .end = part {
+                                part = try await iterator.next()
+                            }
+
+                            // if part is nil break out of loop
+                            guard let part else {
+                                break
+                            }
+
+                            // part should be a head, if not throw error
+                            guard case .head(let newHead) = part else { throw HTTPChannelError.unexpectedHTTPPart(part) }
+                            head = newHead
+                        }
+                    }
+                } onGracefulShutdown: {
+                    // set to cancelled
+                    if processingRequest.withLockedValue({ value -> HTTPState in
+                        let prevValue = value
+                        value = .cancelled
+                        return prevValue
+                    }) == .idle {
+                        // only close the channel input if it is idle
+                        asyncChannel.channel.close(mode: .input, promise: nil)
                     }
                 }
-            } onGracefulShutdown: {
-                // set to cancelled
-                if processingRequest.exchange(.cancelled, ordering: .relaxed) == .idle {
-                    // only close the channel input if it is idle
-                    asyncChannel.channel.close(mode: .input, promise: nil)
-                }
+            } onCancel: {
+                asyncChannel.channel.close(mode: .input, promise: nil)
             }
         } catch HTTPChannelError.closeConnection {
             // channel is being closed because we received a connection: close header
