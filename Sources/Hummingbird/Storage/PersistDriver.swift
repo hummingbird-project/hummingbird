@@ -54,7 +54,7 @@ extension HBPersistDriver {
     /// - Parameters:
     ///   - key: Key to store value against
     ///   - value: Codable value to store
-    public func create<Object: Codable & Sendable>(key: String, value: Object) async throws {
+    public func create(key: String, value: some Codable & Sendable) async throws {
         try await self.create(key: key, value: value, expires: nil)
     }
 
@@ -63,12 +63,13 @@ extension HBPersistDriver {
     ///   - key: Key to store value against
     ///   - value: Codable value to store
     ///   - expires: If non-nil defines time that value will expire
-    public func set<Object: Codable & Sendable>(key: String, value: Object) async throws {
+    public func set(key: String, value: some Codable & Sendable) async throws {
         try await self.set(key: key, value: value, expires: nil)
     }
 
     public func run() async throws {
-        await GracefulShutdownWaiter().wait()
+        // ignore cancellation error as we need to shutdown
+        try? await gracefulShutdown()
         try await self.shutdown()
     }
 }
