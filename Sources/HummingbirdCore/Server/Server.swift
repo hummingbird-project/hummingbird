@@ -114,7 +114,7 @@ public actor HBServer<ChildChannel: HBChildChannel>: Service {
                         await withDiscardingTaskGroup { group in
                             do {
                                 try await asyncChannel.executeThenClose { inbound in
-                                    for try await childChannel in inbound {
+                                    for try await childChannel in inbound.cancelOnGracefulShutdown() {
                                         group.addTask {
                                             await childChannelSetup.handle(value: childChannel, logger: logger)
                                         }
