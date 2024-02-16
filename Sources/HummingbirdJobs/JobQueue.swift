@@ -19,16 +19,18 @@ import Logging
 /// Job queue protocol.
 ///
 /// Defines how to push and pop jobs off a queue
-public protocol HBJobQueue: AsyncSequence, Sendable where Element == HBQueuedJob {
+public protocol HBJobQueue: AsyncSequence, Sendable where Element == HBQueuedJob<JobID> {
+    associatedtype JobID: CustomStringConvertible & Sendable
+
     /// Called when JobQueueHandler is initialised with this queue
     func onInit() async throws
     /// Push Job onto queue
     /// - Returns: Identifier of queued job
-    @discardableResult func push(_ job: HBJob) async throws -> JobIdentifier
+    @discardableResult func push(_ job: HBJob) async throws -> JobID
     /// This is called to say job has finished processing and it can be deleted
-    func finished(jobId: JobIdentifier) async throws
+    func finished(jobId: JobID) async throws
     /// This is called to say job has failed to run and should be put aside
-    func failed(jobId: JobIdentifier, error: any Error) async throws
+    func failed(jobId: JobID, error: any Error) async throws
     /// stop serving jobs
     func stop() async
     /// shutdown queue

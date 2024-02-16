@@ -34,14 +34,14 @@ public final class HBJobQueueHandler<Queue: HBJobQueue>: Service {
                 for _ in 0..<self.numWorkers {
                     if let job = try await self.getNextJob(&iterator) {
                         group.addTask {
-                            try await self.runJob(job)
+                            await self.runJob(job)
                         }
                     }
                 }
                 while let job = try await self.getNextJob(&iterator) {
                     try await group.next()
                     group.addTask {
-                        try await self.runJob(job)
+                        await self.runJob(job)
                     }
                 }
                 group.cancelAll()
@@ -54,7 +54,7 @@ public final class HBJobQueueHandler<Queue: HBJobQueue>: Service {
         }
     }
 
-    func getNextJob(_ queueIterator: inout Queue.AsyncIterator) async throws -> HBQueuedJob? {
+    func getNextJob(_ queueIterator: inout Queue.AsyncIterator) async throws -> HBQueuedJob<Queue.JobID>? {
         while true {
             do {
                 let job = try await queueIterator.next()
@@ -65,37 +65,49 @@ public final class HBJobQueueHandler<Queue: HBJobQueue>: Service {
         }
     }
 
-    func runJob(_ queuedJob: HBQueuedJob) async throws {
+    func runJob(_ queuedJob: HBQueuedJob<Queue.JobID>) async {
         var logger = logger
         logger[metadataKey: "hb_job_id"] = .stringConvertible(queuedJob.id)
-        logger[metadataKey: "hb_job_type"] = .string(String(describing: type(of: queuedJob.job.job)))
+        logger[metadataKey: "hb_job_type"] = .string(String(describing: type(of: queuedJob.job)))
 
         let job = queuedJob.job
-        var count = type(of: job.job).maxRetryCount
-        logger.trace("Starting Job")
-        while true {
-            do {
-                try await job.job.execute(logger: self.logger)
-                break
-            } catch let error as CancellationError {
-                logger.error("Job cancelled")
-                try await self.queue.failed(jobId: queuedJob.id, error: error)
-                return
-            } catch {
-                if count == 0 {
-                    logger.error("Job failed")
+        var count = type(of: job).maxRetryCount
+        logger.debug("Starting Job")
+
+        do {
+            while true {
+                do {
+                    try await job.execute(logger: self.logger)
+                    break
+                } catch let error as CancellationError {
+                    logger.debug("Job cancelled")
+                    // Job failed is called but due to the fact the task is cancelled, depending on the
+                    // job queue driver, the process of failing the job might not occur because itself
+                    // might get cancelled
                     try await self.queue.failed(jobId: queuedJob.id, error: error)
                     return
+                } catch {
+                    if count == 0 {
+                        logger.debug("Job failed")
+                        try await self.queue.failed(jobId: queuedJob.id, error: error)
+                        return
+                    }
+                    count -= 1
+                    logger.debug("Retrying Job")
                 }
-                count -= 1
-                logger.debug("Retrying Job")
             }
+            logger.debug("Finished Job")
+            try await self.queue.finished(jobId: queuedJob.id)
+        } catch {
+            logger.debug("Failed to set job status")
         }
-        logger.trace("Finished Job")
-        try await self.queue.finished(jobId: queuedJob.id)
     }
 
     private let queue: Queue
     private let numWorkers: Int
     let logger: Logger
+}
+
+extension HBJobQueueHandler: CustomStringConvertible {
+    public var description: String { "HBJobQueueHandler<\(String(describing: Queue.self))>" }
 }

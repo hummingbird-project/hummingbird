@@ -177,10 +177,10 @@ final class HummingbirdJobsTests: XCTestCase {
         }
         TestJob.register()
         let job = TestJob(value: 2)
-        let jobInstance = HBJobInstance(job)
-        let data = try JSONEncoder().encode(jobInstance)
-        let jobInstance2 = try JSONDecoder().decode(HBJobInstance.self, from: data)
-        XCTAssertEqual(jobInstance2.job as? TestJob, job)
+        let codableJob = HBAnyCodableJob(job)
+        let data = try JSONEncoder().encode(codableJob)
+        let codableJob2 = try JSONDecoder().decode(HBAnyCodableJob.self, from: data)
+        XCTAssertEqual(codableJob2.job as? TestJob, job)
     }
 
     /// Test job is cancelled on shutdown
