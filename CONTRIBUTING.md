@@ -2,7 +2,7 @@
 
 ## Legal
 By submitting a pull request, you represent that you have the right to license your contribution to the community, and agree by submitting the patch
-that your contributions are licensed under the Apache 2.0 license (see [LICENSE](LICENSE.txt)).
+that your contributions are licensed under the Apache 2.0 license (see [LICENSE](LICENSE)).
 
 ## Contributor Conduct
 All contributors are expected to adhere to the project's [Code of Conduct](CODE_OF_CONDUCT.md).
