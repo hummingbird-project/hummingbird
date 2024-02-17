@@ -57,11 +57,7 @@ extension HTTPChannelHandler {
 
                         while true {
                             // set to processing unless it is cancelled then exit
-                            guard processingRequest.withLockedValue({ value -> HTTPState in
-                                let prevValue = value
-                                value = .processing
-                                return prevValue
-                            }) == .idle else { break }
+                            guard processingRequest.exchange(.processing) == .idle else { break }
 
                             let bodyStream = NIOAsyncChannelRequestBody(iterator: iterator)
                             let request = HBRequest(head: head, body: .init(asyncSequence: bodyStream))
@@ -82,11 +78,7 @@ extension HTTPChannelHandler {
                                 throw HTTPChannelError.closeConnection
                             }
                             // set to idle unless it is cancelled then exit
-                            guard processingRequest.withLockedValue({ value -> HTTPState in
-                                let prevValue = value
-                                value = .idle
-                                return prevValue
-                            }) == .processing else { break }
+                            guard processingRequest.exchange(.idle) == .processing else { break }
 
                             // Flush current request
                             // read until we don't have a body part
@@ -112,11 +104,7 @@ extension HTTPChannelHandler {
                     }
                 } onGracefulShutdown: {
                     // set to cancelled
-                    if processingRequest.withLockedValue({ value -> HTTPState in
-                        let prevValue = value
-                        value = .cancelled
-                        return prevValue
-                    }) == .idle {
+                    if processingRequest.exchange(.cancelled) == .idle {
                         // only close the channel input if it is idle
                         asyncChannel.channel.close(mode: .input, promise: nil)
                     }
@@ -165,4 +153,15 @@ extension NIOTooManyBytesError: HBHTTPResponseError {
     public var status: HTTPResponse.Status { .contentTooLarge }
     public var headers: HTTPFields { [:] }
     public func body(allocator: ByteBufferAllocator) -> ByteBuffer? { nil }
+}
+
+extension NIOLockedValueBox {
+    /// Exchange stored value for new value and return the old stored value
+    func exchange(_ newValue: Value) -> Value {
+        self.withLockedValue { value in
+            let prevValue = value
+            value = newValue
+            return prevValue
+        }
+    }
 }
