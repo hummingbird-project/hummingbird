@@ -14,6 +14,7 @@ jobs:
   benchmark-delta:
 
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     continue-on-error: true
 
     strategy:

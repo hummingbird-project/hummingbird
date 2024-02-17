@@ -9,6 +9,7 @@ on:
 jobs:
   linux:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     container:
       image: swift:5.8
     steps:

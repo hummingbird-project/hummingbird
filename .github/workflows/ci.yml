@@ -35,11 +35,13 @@ jobs:
 #        file: info.lcov
   linux:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       matrix:
         image:
           - 'swift:5.9'
           - 'swiftlang/swift:nightly-5.10-jammy'
+          - 'swiftlang/swift:nightly-jammy'
     
     container:
       image: ${{ matrix.image }}

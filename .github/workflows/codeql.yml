@@ -10,6 +10,7 @@ jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     container: swift:5.8
     permissions:
       security-events: write
