@@ -36,11 +36,11 @@ final class TestTracer: LegacyTracer {
     private(set) var spans = [TestSpan]()
     var onEndSpan: (TestSpan) -> Void = { _ in }
 
-    func startAnySpan<Instant: TracerInstant>(
+    func startAnySpan(
         _ operationName: String,
         context: @autoclosure () -> ServiceContext,
         ofKind kind: SpanKind,
-        at instant: @autoclosure () -> Instant,
+        at instant: @autoclosure () -> some TracerInstant,
         function: String,
         file fileID: String,
         line: UInt
@@ -79,11 +79,11 @@ final class TestTracer: LegacyTracer {
 
 #if swift(>=5.7.0)
 extension TestTracer: Tracer {
-    func startSpan<Instant: TracerInstant>(
+    func startSpan(
         _ operationName: String,
         context: @autoclosure () -> ServiceContext,
         ofKind kind: SpanKind,
-        at instant: @autoclosure () -> Instant,
+        at instant: @autoclosure () -> some TracerInstant,
         function: String,
         file fileID: String,
         line: UInt
@@ -161,9 +161,9 @@ final class TestSpan: Span {
 
     let onEnd: (TestSpan) -> Void
 
-    init<Instant: TracerInstant>(
+    init(
         operationName: String,
-        at instant: Instant,
+        at instant: some TracerInstant,
         context: ServiceContext,
         kind: SpanKind,
         onEnd: @escaping (TestSpan) -> Void
@@ -188,15 +188,15 @@ final class TestSpan: Span {
         self.events.append(event)
     }
 
-    func recordError<Instant: TracerInstant>(
+    func recordError(
         _ error: Error,
         attributes: SpanAttributes,
-        at instant: @autoclosure () -> Instant
+        at instant: @autoclosure () -> some TracerInstant
     ) {
         self.recordedErrors.append((error, attributes))
     }
 
-    func end<Instant: TracerInstant>(at instant: @autoclosure () -> Instant) {
+    func end(at instant: @autoclosure () -> some TracerInstant) {
         self.endTime = instant().millisecondsSinceEpoch
         self.onEnd(self)
     }

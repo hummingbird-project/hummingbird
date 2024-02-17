@@ -197,8 +197,7 @@ public actor HBServer<ChildChannel: HBChildChannel>: Service {
         #endif
 
         do {
-            let asyncChannel: AsyncServerChannel
-            switch configuration.address.value {
+            let asyncChannel = switch configuration.address.value {
             case .hostname(let host, let port):
                 asyncChannel = try await bootstrap.bind(
                     host: host,

@@ -75,7 +75,7 @@ public struct URLEncodedFormEncoder: Sendable {
     /// - Parameters:
     ///   - value: Value to encode
     /// - Returns: URL encoded form data
-    public func encode<T: Encodable>(_ value: T) throws -> String {
+    public func encode(_ value: some Encodable) throws -> String {
         let encoder = _URLEncodedFormEncoder(options: options)
         try value.encode(to: encoder)
         guard let result = encoder.result else {
@@ -158,7 +158,7 @@ private class _URLEncodedFormEncoder: Encoder {
         mutating func encode(_ value: UInt32, forKey key: Key) throws { self.encode(value, key: key.stringValue) }
         mutating func encode(_ value: UInt64, forKey key: Key) throws { self.encode(value, key: key.stringValue) }
 
-        mutating func encode<T: Encodable>(_ value: T, forKey key: Key) throws {
+        mutating func encode(_ value: some Encodable, forKey key: Key) throws {
             self.encoder.codingPath.append(key)
             defer { self.encoder.codingPath.removeLast() }
 
@@ -238,7 +238,7 @@ private class _URLEncodedFormEncoder: Encoder {
         mutating func encode(_ value: UInt32) throws { self.encodeResult(value) }
         mutating func encode(_ value: UInt64) throws { self.encodeResult(value) }
 
-        mutating func encode<T: Encodable>(_ value: T) throws {
+        mutating func encode(_ value: some Encodable) throws {
             self.count += 1
 
             self.encoder.codingPath.append(URLEncodedForm.Key(index: self.count))
@@ -304,7 +304,7 @@ extension _URLEncodedFormEncoder: SingleValueEncodingContainer {
     func encode(_ value: UInt32) throws { self.encodeResult(value) }
     func encode(_ value: UInt64) throws { self.encodeResult(value) }
 
-    func encode<T: Encodable>(_ value: T) throws {
+    func encode(_ value: some Encodable) throws {
         try value.encode(to: self)
     }
 

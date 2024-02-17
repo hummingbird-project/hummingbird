@@ -23,12 +23,12 @@ public actor HBMemoryPersistDriver<C: Clock>: HBPersistDriver where C.Duration =
         self.clock = clock
     }
 
-    public func create<Object: Codable & Sendable>(key: String, value: Object, expires: Duration?) async throws {
+    public func create(key: String, value: some Codable & Sendable, expires: Duration?) async throws {
         guard self.values[key] == nil else { throw HBPersistError.duplicate }
         self.values[key] = .init(value: value, expires: expires.map { self.clock.now.advanced(by: $0) })
     }
 
-    public func set<Object: Codable & Sendable>(key: String, value: Object, expires: Duration?) async throws {
+    public func set(key: String, value: some Codable & Sendable, expires: Duration?) async throws {
         self.values[key] = .init(value: value, expires: expires.map { self.clock.now.advanced(by: $0) })
     }
 
