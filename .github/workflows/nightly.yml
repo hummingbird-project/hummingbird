@@ -17,7 +17,7 @@ jobs:
       image: swiftlang/swift:${{ matrix.image }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Test
       run: |
         swift test --enable-test-discovery
