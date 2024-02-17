@@ -57,22 +57,22 @@ public struct HBResponseBody: Sendable {
         }
     }
 
-    /// Create HBResponseBody that returns trailing headers from its closure once all the 
-    /// body parts have been written 
+    /// Create HBResponseBody that returns trailing headers from its closure once all the
+    /// body parts have been written
     /// - Parameters:
     ///   - contentLength: Optional length of body
     ///   - write: closure provided with `writer` type that can be used to write to response body
     ///         trailing headers are returned from the closure after all the body parts have been
     ///         written
     public static func withTrailingHeaders(
-        contentLength: Int? = nil, 
+        contentLength: Int? = nil,
         _ write: @Sendable @escaping (any HBResponseBodyWriter) async throws -> HTTPFields?
     ) -> Self {
         self.init(contentLength: contentLength, write: write)
     }
 
     /// Initialise HBResponseBody with closure writing body contents
-    /// 
+    ///
     /// This version of init is private and only available via ``withTrailingHeaders`` because
     /// if it is public the compiler gets confused when a complex closure is provided.
     private init(contentLength: Int? = nil, write: @Sendable @escaping (any HBResponseBodyWriter) async throws -> HTTPFields?) {

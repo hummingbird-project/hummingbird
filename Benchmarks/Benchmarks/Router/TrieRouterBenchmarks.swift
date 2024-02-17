@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import Hummingbird
 import Benchmark
+@testable import Hummingbird
 
 func trieRouterBenchmarks() {
     var trie: RouterPathTrie<String>!
@@ -25,9 +25,9 @@ func trieRouterBenchmarks() {
             "/doesntExist",
         ]
         benchmark.startMeasurement()
-        
+
         for _ in benchmark.scaledIterations {
-            blackHole(testValues.map { trie.getValueAndParameters($0)})
+            blackHole(testValues.map { trie.getValueAndParameters($0) })
         }
     } setup: {
         let trieBuilder = RouterPathTrieBuilder<String>()
@@ -48,9 +48,9 @@ func trieRouterBenchmarks() {
             "/test2/one/two",
         ]
         benchmark.startMeasurement()
-        
+
         for _ in benchmark.scaledIterations {
-            blackHole(testValues.map { trie2.getValueAndParameters($0)})
+            blackHole(testValues.map { trie2.getValueAndParameters($0) })
         }
     } setup: {
         let trieBuilder = RouterPathTrieBuilder<String>()

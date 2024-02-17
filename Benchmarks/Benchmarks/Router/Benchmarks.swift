@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import Hummingbird
 import Benchmark
+@testable import Hummingbird
 
 let benchmarks = {
     Benchmark.defaultConfiguration = .init(

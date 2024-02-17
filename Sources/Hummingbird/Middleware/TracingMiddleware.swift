@@ -32,7 +32,7 @@ public struct HBTracingMiddleware<Context: HBBaseRequestContext>: HBMiddlewarePr
     /// - Parameters
     ///     - recordingHeaders: A list of HTTP header names to be recorded as span attributes. By default, no headers
     ///         are being recorded.
-    ///     - parameters: A list of static parameters added to every span. These could be the "net.host.name", 
+    ///     - parameters: A list of static parameters added to every span. These could be the "net.host.name",
     ///         "net.host.port" or "http.scheme"
     public init(recordingHeaders headerNamesToRecord: some Collection<HTTPField.Name> = [], attributes: SpanAttributes? = nil) {
         self.headerNamesToRecord = Set(headerNamesToRecord.map(RecordingHeader.init))
