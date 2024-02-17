@@ -2,7 +2,7 @@
 --minversion 0.51.0
 
 # Swift version
---swiftversion 5.3
+--swiftversion 5.9
 
 # file options
 --exclude .build
