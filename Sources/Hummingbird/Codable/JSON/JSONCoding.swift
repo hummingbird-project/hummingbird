@@ -48,7 +48,7 @@ extension JSONDecoder: HBRequestDecoder {
 /// `HBRequestDecoder` and `HBResponseEncoder` both require conformance to `Sendable`. Given
 /// `JSONEncoder`` and `JSONDecoder`` conform to Sendable in macOS 13+ I think I can just
 /// back date the conformance to all versions of Swift, macOS we support
-#if $RetroactiveAttribute
+#if hasFeature(RetroactiveAttribute)
 extension JSONEncoder: @retroactive @unchecked Sendable {}
 extension JSONDecoder: @retroactive @unchecked Sendable {}
 #else

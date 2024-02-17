@@ -104,7 +104,7 @@ class URLEncodedFormNodeTests: XCTestCase {
     }
 }
 
-#if $RetroactiveAttribute
+#if hasFeature(RetroactiveAttribute)
 extension URLEncodedFormNode: @retroactive ExpressibleByStringLiteral {}
 extension URLEncodedFormNode: @retroactive ExpressibleByDictionaryLiteral {}
 extension URLEncodedFormNode: @retroactive ExpressibleByArrayLiteral {}
