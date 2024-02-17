@@ -1,7 +1,7 @@
 # ================================
 # Build image
 # ================================
-FROM swift:5.7 as build
+FROM swift:5.9 as build
 
 WORKDIR /build
 
