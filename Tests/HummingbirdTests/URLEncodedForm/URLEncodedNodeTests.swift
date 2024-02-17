@@ -104,22 +104,27 @@ class URLEncodedFormNodeTests: XCTestCase {
     }
 }
 
-extension URLEncodedFormNode: ExpressibleByStringLiteral {
+#if $RetroactiveAttribute
+extension URLEncodedFormNode: @retroactive ExpressibleByStringLiteral {}
+extension URLEncodedFormNode: @retroactive ExpressibleByDictionaryLiteral {}
+extension URLEncodedFormNode: @retroactive ExpressibleByArrayLiteral {}
+#else
+extension URLEncodedFormNode: ExpressibleByStringLiteral {}
+extension URLEncodedFormNode: ExpressibleByDictionaryLiteral {}
+extension URLEncodedFormNode: ExpressibleByArrayLiteral {}
+#endif
+extension URLEncodedFormNode {
+    public typealias Key = String
+    public typealias Value = URLEncodedFormNode
+
     public init(stringLiteral value: String) {
         self = .leaf(.init(value))
     }
-}
-
-extension URLEncodedFormNode: ExpressibleByDictionaryLiteral {
-    public typealias Key = String
-    public typealias Value = URLEncodedFormNode
 
     public init(dictionaryLiteral elements: (String, URLEncodedFormNode)...) {
         self = .map(.init(values: .init(elements) { first, _ in first }))
     }
-}
 
-extension URLEncodedFormNode: ExpressibleByArrayLiteral {
     public init(arrayLiteral elements: URLEncodedFormNode...) {
         self = .array(.init(values: .init(elements)))
     }

@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
+@preconcurrency import Foundation
 import HTTPTypes
 import Logging
 import NIOCore

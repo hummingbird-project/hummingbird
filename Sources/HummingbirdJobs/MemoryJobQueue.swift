@@ -17,6 +17,7 @@ import Foundation
 
 /// In memory implementation of job queue driver. Stores jobs in a circular buffer
 public final class HBMemoryJobQueue: HBJobQueue {
+    public typealias Element = HBQueuedJob<JobID>
     public typealias JobID = UUID
 
     /// queue of jobs
@@ -120,7 +121,7 @@ extension HBMemoryJobQueue {
     public struct AsyncIterator: AsyncIteratorProtocol {
         fileprivate let queue: Internal
 
-        public func next() async throws -> Element? {
+        public mutating func next() async throws -> Element? {
             try await self.queue.next()
         }
     }

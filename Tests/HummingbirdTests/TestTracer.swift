@@ -32,11 +32,11 @@ import ServiceContextModule
 import Tracing
 
 /// Only intended to be used in single-threaded testing.
-final class TestTracer: LegacyTracer {
+final class TestTracer: Tracer {
     private(set) var spans = [TestSpan]()
     var onEndSpan: (TestSpan) -> Void = { _ in }
 
-    func startAnySpan(
+    func startSpan(
         _ operationName: String,
         context: @autoclosure () -> ServiceContext,
         ofKind kind: SpanKind,
@@ -44,7 +44,7 @@ final class TestTracer: LegacyTracer {
         function: String,
         file fileID: String,
         line: UInt
-    ) -> any Span {
+    ) -> TestSpan {
         let span = TestSpan(
             operationName: operationName,
             at: instant(),
@@ -76,30 +76,6 @@ final class TestTracer: LegacyTracer {
         injector.inject(traceID, forKey: "trace-id", into: &carrier)
     }
 }
-
-#if swift(>=5.7.0)
-extension TestTracer: Tracer {
-    func startSpan(
-        _ operationName: String,
-        context: @autoclosure () -> ServiceContext,
-        ofKind kind: SpanKind,
-        at instant: @autoclosure () -> some TracerInstant,
-        function: String,
-        file fileID: String,
-        line: UInt
-    ) -> TestSpan {
-        let span = TestSpan(
-            operationName: operationName,
-            at: instant(),
-            context: context(),
-            kind: kind,
-            onEnd: self.onEndSpan
-        )
-        self.spans.append(span)
-        return span
-    }
-}
-#endif
 
 extension TestTracer {
     enum TraceIDKey: ServiceContextKey {
