@@ -66,7 +66,7 @@ private extension CodingKey {
     }
 }
 
-private extension [CodingKey] {
+private extension Array<CodingKey> {
     /// returns a path key using a dot character as a separator
     var pathKeyValue: String {
         map(\.pathKeyValue).joined(separator: ".")
