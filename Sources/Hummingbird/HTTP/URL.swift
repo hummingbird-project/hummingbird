@@ -139,7 +139,7 @@ extension HBParameters {
     /// Initialize parameters from parser struct
     /// - Parameter query: parser holding query strings
     init(fromQuery query: HBParser?) {
-        guard var query = query else {
+        guard var query else {
             self.parameters = .init()
             return
         }

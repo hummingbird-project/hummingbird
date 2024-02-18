@@ -111,7 +111,7 @@ public struct HBFileIO {
             let futureResult: EventLoopFuture<Void>
             switch contents {
             case .byteBuffer(let buffer):
-                guard let buffer = buffer else { return context.eventLoop.makeSucceededVoidFuture() }
+                guard let buffer else { return context.eventLoop.makeSucceededVoidFuture() }
                 futureResult = self.writeFile(buffer: buffer, handle: handle, on: context.eventLoop)
             case .stream(let streamer):
                 futureResult = self.writeFile(stream: streamer, handle: handle, on: context.eventLoop)

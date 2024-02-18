@@ -87,7 +87,7 @@ public struct HBEmbeddedApplication {
             // write request
             let requestHead = HTTPRequestHead(version: .init(major: 1, minor: 1), method: method, uri: uri, headers: headers)
             try writeInbound(.head(requestHead))
-            if let body = body {
+            if let body {
                 try self.writeInbound(.body(body))
             }
             try self.writeInbound(.end(nil))

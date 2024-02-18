@@ -75,13 +75,13 @@ public struct FlatDictionary<Key: Hashable, Value>: Collection, ExpressibleByDic
         set {
             let hashKey = Self.hashKey(key)
             if let index = hashKeys.firstIndex(of: hashKey) {
-                if let newValue = newValue {
+                if let newValue {
                     self.elements[index].value = newValue
                 } else {
                     self.elements.remove(at: index)
                     self.hashKeys.remove(at: index)
                 }
-            } else if let newValue = newValue {
+            } else if let newValue {
                 self.elements.append((key: key, value: newValue))
                 self.hashKeys.append(hashKey)
             }

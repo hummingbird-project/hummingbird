@@ -59,7 +59,7 @@ struct HBXCTAsyncTesting: HBXCT {
             // shutdown eventloop
             try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
                 self.asyncTestingEventLoop.shutdownGracefully { error in
-                    if let error = error {
+                    if let error {
                         cont.resume(throwing: error)
                     } else {
                         cont.resume()
@@ -95,7 +95,7 @@ struct HBXCTAsyncTesting: HBXCT {
         // write request
         let requestHead = HTTPRequestHead(version: .init(major: 1, minor: 1), method: method, uri: uri, headers: headers)
         try await writeInbound(.head(requestHead))
-        if let body = body {
+        if let body {
             try await self.writeInbound(.body(body))
         }
         try await self.writeInbound(.end(nil))

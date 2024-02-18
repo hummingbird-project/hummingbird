@@ -114,12 +114,12 @@ public struct HBFileMiddleware: HBMiddleware {
                 var headers = HTTPHeaders()
 
                 // content-length
-                if let contentSize = contentSize {
+                if let contentSize {
                     headers.add(name: "content-length", value: String(describing: contentSize))
                 }
                 // modified-date
                 var modificationDateString: String?
-                if let modificationDate = modificationDate {
+                if let modificationDate {
                     modificationDateString = HBDateCache.rfc1123Formatter.string(from: modificationDate)
                     headers.add(name: "modified-date", value: modificationDateString!)
                 }
@@ -150,7 +150,7 @@ public struct HBFileMiddleware: HBMiddleware {
                 }
                 // verify if-modified-since
                 else if let ifModifiedSince = request.headers["if-modified-since"].first,
-                        let modificationDate = modificationDate
+                        let modificationDate
                 {
                     if let ifModifiedSinceDate = HBDateCache.rfc1123Formatter.date(from: ifModifiedSince) {
                         // round modification date of file down to seconds for comparison
@@ -170,7 +170,7 @@ public struct HBFileMiddleware: HBMiddleware {
                     if let ifRange = request.headers["if-range"].first, ifRange != headers["eTag"].first, ifRange != headers["modified-date"].first {
                         // do nothing and drop down to returning full file
                     } else {
-                        if let contentSize = contentSize {
+                        if let contentSize {
                             let lowerBound = max(range.lowerBound, 0)
                             let upperBound = min(range.upperBound, contentSize - 1)
                             headers.replaceOrAdd(name: "content-range", value: "bytes \(lowerBound)-\(upperBound)/\(contentSize)")
@@ -188,7 +188,7 @@ public struct HBFileMiddleware: HBMiddleware {
                 case .loadFile(let headers, let range):
                     switch request.method {
                     case .GET:
-                        if let range = range {
+                        if let range {
                             return self.fileIO.loadFile(path: fullPath.relativePath, range: range, context: request.context, logger: request.logger)
                                 .map { body, _ in
                                     return HBResponse(status: .partialContent, headers: headers, body: body)
@@ -276,7 +276,7 @@ extension HBFileMiddleware {
     }
 }
 
-extension Sequence where Element == UInt8 {
+extension Sequence<UInt8> {
     /// return a hexEncoded string buffer from an array of bytes
     func hexDigest() -> String {
         return self.map { String(format: "%02x", $0) }.joined(separator: "")

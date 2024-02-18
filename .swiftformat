@@ -1,14 +1,14 @@
 # Minimum swiftformat version
---minversion 0.47.4
+--minversion 0.51.0
 
 # Swift version
---swiftversion 5.3
+--swiftversion 5.7
 
 # file options
 --exclude .build
 
 # rules
---disable redundantReturn, extensionAccessControl
+--disable redundantReturn, extensionAccessControl, opaqueGenericParameters, typeSugar
 
 # format options
 --ifdef no-indent
