@@ -94,7 +94,7 @@ class HBJobQueueWorker {
             }
             return self.queue.pop(on: eventLoop)
                 .map { value in
-                    if let value = value {
+                    if let value {
                         promise.succeed(value)
                         task.cancel()
                     }

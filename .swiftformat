@@ -8,7 +8,7 @@
 --exclude .build
 
 # rules
---disable redundantReturn, extensionAccessControl
+--disable redundantReturn, extensionAccessControl, opaqueGenericParameters, typeSugar
 
 # format options
 --ifdef no-indent

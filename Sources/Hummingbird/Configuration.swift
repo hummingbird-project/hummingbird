@@ -110,7 +110,7 @@ extension HBApplication {
             self.threadPoolSize = threadPoolSize
             self.noHTTPServer = noHTTPServer
 
-            if let logLevel = logLevel {
+            if let logLevel {
                 self.logLevel = logLevel
             } else if let logLevel = env.get("LOG_LEVEL") {
                 self.logLevel = Logger.Level(rawValue: logLevel) ?? .info
@@ -169,7 +169,7 @@ extension HBApplication {
             self.threadPoolSize = threadPoolSize
             self.noHTTPServer = noHTTPServer
 
-            if let logLevel = logLevel {
+            if let logLevel {
                 self.logLevel = logLevel
             } else if let logLevel = env.get("LOG_LEVEL") {
                 self.logLevel = Logger.Level(rawValue: logLevel) ?? .info
@@ -223,7 +223,7 @@ extension HBApplication {
             self.threadPoolSize = threadPoolSize
             self.noHTTPServer = noHTTPServer
 
-            if let logLevel = logLevel {
+            if let logLevel {
                 self.logLevel = logLevel
             } else if let logLevel = env.get("LOG_LEVEL") {
                 self.logLevel = Logger.Level(rawValue: logLevel) ?? .info
@@ -277,7 +277,7 @@ extension HBApplication {
             self.threadPoolSize = threadPoolSize
             self.noHTTPServer = noHTTPServer
 
-            if let logLevel = logLevel {
+            if let logLevel {
                 self.logLevel = logLevel
             } else if let logLevel = env.get("LOG_LEVEL") {
                 self.logLevel = Logger.Level(rawValue: logLevel) ?? .info

@@ -97,8 +97,8 @@ public struct HBMediaType: Sendable, CustomStringConvertible {
                 break
             }
         }
-        if let category = category,
-           let subCategory = subCategory
+        if let category,
+           let subCategory
         {
             self.type = category
             self.subType = subCategory.lowercased()

@@ -97,7 +97,7 @@ struct RouterPathTrie<Value> {
     }
 }
 
-extension Optional where Wrapped == HBParameters {
+extension Optional<HBParameters> {
     mutating func set(_ s: Substring, value: Substring) {
         switch self {
         case .some(var parameters):

@@ -663,7 +663,7 @@ extension Unicode.Scalar {
     }
 }
 
-extension Set where Element == Unicode.Scalar {
+extension Set<Unicode.Scalar> {
     public init(_ string: String) {
         self = Set(string.unicodeScalars)
     }
