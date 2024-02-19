@@ -448,11 +448,6 @@ final class ApplicationTests: XCTestCase {
                 self.coreContext = .init(allocator: channel.allocator, logger: logger)
                 self.remoteAddress = channel.remoteAddress
             }
-
-            init(allocator: ByteBufferAllocator, logger: Logger) {
-                self.coreContext = .init(allocator: allocator, logger: logger)
-                self.remoteAddress = nil
-            }
         }
         let router = HBRouter(context: HBSocketAddressRequestContext.self)
         router.get("/") { _, context -> String in

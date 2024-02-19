@@ -29,10 +29,7 @@ class HummingBirdURLEncodedTests: XCTestCase {
         var coreContext: HBCoreRequestContext
 
         init(channel: Channel, logger: Logger) {
-            self.coreContext = .init(
-                allocator: channel.allocator,
-                logger: logger
-            )
+            self.coreContext = .init(allocator: channel.allocator, logger: logger)
         }
 
         var requestDecoder: URLEncodedFormDecoder { .init() }
