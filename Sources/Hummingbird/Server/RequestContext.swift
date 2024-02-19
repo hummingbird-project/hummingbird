@@ -122,21 +122,6 @@ public protocol HBRequestContext: HBBaseRequestContext {
     ///   - channel: Channel that initiated this request
     ///   - logger: Logger used for this request
     init(channel: Channel, logger: Logger)
-    /// initialize an `HBRequestContext`
-    /// - Parameters
-    ///   - allocator: ByteBuffer allocator
-    ///   - logger: Logger used for this request
-    init(allocator: ByteBufferAllocator, logger: Logger)
-}
-
-extension HBRequestContext {
-    ///  Initialize an `HBRequestContext`
-    /// - Parameters:
-    ///   - channel: Channel that initiated this request
-    ///   - logger: Logger used for this request
-    public init(channel: Channel, logger: Logger) {
-        self.init(allocator: channel.allocator, logger: logger)
-    }
 }
 
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
@@ -148,12 +133,9 @@ public struct HBBasicRequestContext: HBRequestContext {
     /// - Parameters:
     ///   - allocator: Allocator
     ///   - logger: Logger
-    public init(
-        allocator: ByteBufferAllocator,
-        logger: Logger
-    ) {
+    public init(channel: Channel, logger: Logger) {
         self.coreContext = .init(
-            allocator: allocator,
+            allocator: channel.allocator,
             logger: logger
         )
     }

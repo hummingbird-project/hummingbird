@@ -334,8 +334,8 @@ final class ApplicationTests: XCTestCase {
                 return encoder
             }
 
-            init(allocator: ByteBufferAllocator, logger: Logger) {
-                self.coreContext = .init(allocator: allocator, logger: logger)
+            init(channel: Channel, logger: Logger) {
+                self.coreContext = .init(allocator: channel.allocator, logger: logger)
             }
         }
         struct Name: HBResponseCodable {
@@ -404,8 +404,8 @@ final class ApplicationTests: XCTestCase {
 
     func testMaxUploadSize() async throws {
         struct MaxUploadRequestContext: HBRequestContext {
-            init(allocator: ByteBufferAllocator, logger: Logger) {
-                self.coreContext = .init(allocator: allocator, logger: logger)
+            init(channel: Channel, logger: Logger) {
+                self.coreContext = .init(allocator: channel.allocator, logger: logger)
             }
 
             var coreContext: HBCoreRequestContext
