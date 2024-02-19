@@ -176,7 +176,7 @@ public actor HBServer<ChildChannel: HBChildChannel>: Service {
     /// Start server
     /// - Parameter responder: Object that provides responses to requests sent to the server
     /// - Returns: EventLoopFuture that is fulfilled when server has started
-    func makeServer(childChannelSetup: ChildChannel, configuration: HBServerConfiguration) async throws -> AsyncServerChannel {
+    nonisolated func makeServer(childChannelSetup: ChildChannel, configuration: HBServerConfiguration) async throws -> AsyncServerChannel {
         let bootstrap: ServerBootstrapProtocol
         #if canImport(Network)
         if let tsBootstrap = self.createTSBootstrap(configuration: configuration) {
@@ -233,7 +233,7 @@ public actor HBServer<ChildChannel: HBChildChannel>: Service {
     }
 
     /// create a BSD sockets based bootstrap
-    private func createSocketsBootstrap(
+    private nonisolated func createSocketsBootstrap(
         configuration: HBServerConfiguration
     ) -> ServerBootstrap {
         return ServerBootstrap(group: self.eventLoopGroup)
@@ -248,7 +248,7 @@ public actor HBServer<ChildChannel: HBChildChannel>: Service {
     #if canImport(Network)
     /// create a NIOTransportServices bootstrap using Network.framework
     @available(macOS 10.14, iOS 12, tvOS 12, *)
-    private func createTSBootstrap(
+    private nonisolated func createTSBootstrap(
         configuration: HBServerConfiguration
     ) -> NIOTSListenerBootstrap? {
         guard let bootstrap = NIOTSListenerBootstrap(validatingGroup: self.eventLoopGroup)?
