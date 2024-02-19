@@ -2,7 +2,7 @@
 
 ## Legal
 By submitting a pull request, you represent that you have the right to license your contribution to the community, and agree by submitting the patch
-that your contributions are licensed under the Apache 2.0 license (see [LICENSE](LICENSE.txt)).
+that your contributions are licensed under the Apache 2.0 license (see [LICENSE](LICENSE)).
 
 ## Contributor Conduct
 All contributors are expected to adhere to the project's [Code of Conduct](CODE_OF_CONDUCT.md).
@@ -30,4 +30,4 @@ The main development branch of the repository is  `main`.
 
 ### Formatting
 
-We use Nick Lockwood's SwiftFormat for formatting code. PRs will not be accepted if they haven't be formatted. The current version of SwiftFormat we are using is v0.48.17.
+We use Nick Lockwood's SwiftFormat for formatting code. PRs will not be accepted if they haven't be formatted. The current version of SwiftFormat we are using is v0.51.15.

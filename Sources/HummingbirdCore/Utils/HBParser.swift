@@ -28,7 +28,7 @@ public struct HBParser: Sendable {
 
     /// Create a Parser object
     /// - Parameter string: UTF8 data to parse
-    public init?<Bytes: Collection>(_ utf8Data: Bytes, validateUTF8: Bool = true) where Bytes.Element == UInt8 {
+    public init?(_ utf8Data: some Collection<UInt8>, validateUTF8: Bool = true) {
         if let buffer = utf8Data as? [UInt8] {
             self.buffer = buffer
         } else {
@@ -663,7 +663,7 @@ extension Unicode.Scalar {
     }
 }
 
-extension Set where Element == Unicode.Scalar {
+extension Set<Unicode.Scalar> {
     public init(_ string: String) {
         self = Set(string.unicodeScalars)
     }

@@ -4,18 +4,20 @@ on:
   pull_request:
     branches:
     - main
+    - 2.x.x
 
 jobs:
   validate:
     runs-on: macOS-latest
+    timeout-minutes: 15
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 1
     - name: Install Dependencies
       run: |
         brew install mint
-        mint install NickLockwood/SwiftFormat@0.48.17 --no-link
+        mint install NickLockwood/SwiftFormat@0.51.15 --no-link
     - name: run script
       run: ./scripts/validate.sh

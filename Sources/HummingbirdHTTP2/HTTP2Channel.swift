@@ -117,7 +117,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
                     logger.error("Error handling inbound connection for HTTP2 handler: \(error)")
                 }
                 // have to run this to ensure http2 channel outbound writer is closed
-                try await http2.executeThenClose { _,_ in}
+                try await http2.executeThenClose { _, _ in }
             }
         } catch {
             logger.error("Error getting HTTP2 upgrade negotiated value: \(error)")

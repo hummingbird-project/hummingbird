@@ -197,10 +197,9 @@ public actor HBServer<ChildChannel: HBChildChannel>: Service {
         #endif
 
         do {
-            let asyncChannel: AsyncServerChannel
             switch configuration.address.value {
             case .hostname(let host, let port):
-                asyncChannel = try await bootstrap.bind(
+                let asyncChannel = try await bootstrap.bind(
                     host: host,
                     port: port,
                     serverBackPressureStrategy: nil
@@ -211,8 +210,10 @@ public actor HBServer<ChildChannel: HBChildChannel>: Service {
                     )
                 }
                 self.logger.info("Server started and listening on \(host):\(port)")
+                return asyncChannel
+
             case .unixDomainSocket(let path):
-                asyncChannel = try await bootstrap.bind(
+                let asyncChannel = try await bootstrap.bind(
                     unixDomainSocketPath: path,
                     cleanupExistingSocketFile: false,
                     serverBackPressureStrategy: nil
@@ -223,8 +224,8 @@ public actor HBServer<ChildChannel: HBChildChannel>: Service {
                     )
                 }
                 self.logger.info("Server started and listening on socket path \(path)")
+                return asyncChannel
             }
-            return asyncChannel
         } catch {
             // should we close the channel here
             throw error

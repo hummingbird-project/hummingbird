@@ -161,7 +161,7 @@ struct RouterPathTrie<Value: Sendable>: Sendable {
     }
 }
 
-extension HBParameters? {
+extension Optional<HBParameters> {
     fileprivate mutating func set(_ s: Substring, value: Substring) {
         switch self {
         case .some(var parameters):

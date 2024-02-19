@@ -1,5 +1,5 @@
 # Minimum swiftformat version
---minversion 0.47.4
+--minversion 0.51.0
 
 # Swift version
 --swiftversion 5.9
@@ -8,7 +8,7 @@
 --exclude .build
 
 # rules
---disable redundantReturn, extensionAccessControl, conditionalAssignment
+--disable redundantReturn, extensionAccessControl, typeSugar
 
 # format options
 --ifdef no-indent

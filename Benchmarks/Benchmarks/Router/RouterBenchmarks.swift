@@ -57,7 +57,7 @@ extension Benchmark {
                 for _ in 0..<50 {
                     try await withThrowingTaskGroup(of: Void.self) { group in
                         let context = Context(
-                            allocator: ByteBufferAllocator(), 
+                            allocator: ByteBufferAllocator(),
                             logger: Logger(label: "Benchmark")
                         )
                         let (inbound, source) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
@@ -86,7 +86,7 @@ extension HTTPField.Name {
 }
 
 func routerBenchmarks() {
-    let buffer = ByteBufferAllocator().buffer(repeating: 0xff, count: 10000)
+    let buffer = ByteBufferAllocator().buffer(repeating: 0xFF, count: 10000)
     Benchmark(
         name: "Router:GET",
         configuration: .init(warmupIterations: 10),

@@ -4,16 +4,17 @@ name: API breaking changes
 on:
   pull_request:
     branches:
-      - main    
+      - main
 
 jobs:
   linux:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     container:
-      image: swift:5.8
+      image: swift:5.9
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
     # https://github.com/actions/checkout/issues/766
