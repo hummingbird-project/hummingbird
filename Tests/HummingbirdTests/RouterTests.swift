@@ -483,18 +483,15 @@ final class RouterTests: XCTestCase {
     }
 }
 
-public struct HBTestRouterContext2: HBRequestContext {
-    public init(
-        allocator: ByteBufferAllocator,
-        logger: Logger
-    ) {
-        self.coreContext = .init(allocator: allocator, logger: logger)
+struct HBTestRouterContext2: HBRequestContext {
+    init(channel: Channel, logger: Logger) {
+        self.coreContext = .init(allocator: channel.allocator, logger: logger)
         self.string = ""
     }
 
     /// parameters
-    public var coreContext: HBCoreRequestContext
+    var coreContext: HBCoreRequestContext
 
     /// additional data
-    public var string: String
+    var string: String
 }

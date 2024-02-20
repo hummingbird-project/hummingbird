@@ -14,6 +14,7 @@
 
 import Atomics
 import HTTPTypes
+import NIOEmbedded
 @_spi(HBXCT) import Hummingbird
 @_spi(HBXCT) import HummingbirdCore
 import Logging
@@ -38,7 +39,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
         self.logger = app.logger
         self.makeContext = { logger in
             Responder.Context(
-                allocator: ByteBufferAllocator(),
+                channel: NIOAsyncTestingChannel(),
                 logger: logger
             )
         }

@@ -25,11 +25,8 @@ import NIOPosix
 struct BasicBenchmarkContext: HBRequestContext {
     var coreContext: HBCoreRequestContext
 
-    init(
-        allocator: ByteBufferAllocator,
-        logger: Logger
-    ) {
-        self.coreContext = .init(allocator: allocator, logger: logger)
+    public init(channel: Channel, logger: Logger) {
+        self.coreContext = .init(allocator: channel.allocator, logger: logger)
     }
 }
 

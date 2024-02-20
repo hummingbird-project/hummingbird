@@ -15,6 +15,7 @@
 import Hummingbird
 import HummingbirdXCT
 import Logging
+import NIOCore
 import XCTest
 
 class HummingBirdURLEncodedTests: XCTestCase {
@@ -27,11 +28,8 @@ class HummingBirdURLEncodedTests: XCTestCase {
     struct URLEncodedCodingRequestContext: HBRequestContext {
         var coreContext: HBCoreRequestContext
 
-        init(allocator: ByteBufferAllocator, logger: Logger) {
-            self.coreContext = .init(
-                allocator: allocator,
-                logger: logger
-            )
+        init(channel: Channel, logger: Logger) {
+            self.coreContext = .init(allocator: channel.allocator, logger: logger)
         }
 
         var requestDecoder: URLEncodedFormDecoder { .init() }
