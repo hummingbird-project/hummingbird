@@ -67,7 +67,7 @@ public struct HBFileIO: Sendable {
     ///   - range:Range defining how much of the file is to be loaded
     ///   - context: Context this request is being called in
     /// - Returns: Response body plus file size
-    public func loadFile(path: String, range: ClosedRange<Int>, context: some HBBaseRequestContext) async throws -> (HBResponseBody, Int) {
+    public func loadFile(path: String, range: ClosedRange<Int>, context: some HBBaseRequestContext) async throws -> HBResponseBody {
         do {
             let (handle, region) = try await self.fileIO.openFile(path: path, eventLoop: self.eventLoopGroup.any()).get()
             context.logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
@@ -80,27 +80,26 @@ public struct HBFileIO: Sendable {
 
             if loadRegion.readableBytes > self.chunkSize {
                 let stream = try self.streamFile(handle: handle, region: loadRegion, context: context)
-                return (stream, region.readableBytes)
+                return stream
             } else {
                 // only close file handle for load, as streamer hasn't loaded data at this point
                 defer {
                     try? handle.close()
                 }
                 let buffer = try await self.loadFile(handle: handle, region: loadRegion, context: context)
-                return (buffer, region.readableBytes)
+                return buffer
             }
         } catch {
             throw HBHTTPError(.notFound)
         }
     }
 
-    /// Write contents of request body to file
+    /// Write contents of async sequence to file
     ///
-    /// This can be used to save arbitrary ByteBuffers by passing in `.byteBuffer(ByteBuffer)` as contents
     /// - Parameters:
-    ///   - contents: Request body to write.
+    ///   - contents: AsyncSequence of buffers.
     ///   - path: Path to write to
-    ///   - logger: Logger
+    ///   - context: request context
     public func writeFile<AS: AsyncSequence>(
         contents: AS,
         path: String,
@@ -117,13 +116,12 @@ public struct HBFileIO: Sendable {
         }
     }
 
-    /// Write contents of request body to file
+    /// Write buffer to file
     ///
-    /// This can be used to save arbitrary ByteBuffers by passing in `.byteBuffer(ByteBuffer)` as contents
     /// - Parameters:
-    ///   - contents: Request body to write.
+    ///   - buffer: Buffer to write.
     ///   - path: Path to write to
-    ///   - logger: Logger
+    ///   - context: request context
     public func writeFile(
         buffer: ByteBuffer,
         path: String,
@@ -176,6 +174,10 @@ public struct HBFileIO: Sendable {
         }
     }
 
+    ///  Make a directory
+    /// - Parameters:
+    ///   - path: path of directory
+    ///   - context: request context
     public func makeDirectory(path: String, context: some HBBaseRequestContext) async throws {
         let eventLoop = self.eventLoopGroup.any()
         context.logger.debug("[FileIO] Create directory", metadata: ["path": .string(path)])
