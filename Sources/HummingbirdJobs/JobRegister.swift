@@ -36,7 +36,7 @@ struct HBJobRegister: Sendable {
     }
 
     func decode(data: Data) throws -> any HBJob {
-        return try JSONDecoder().decode(HBAnyCodableJob.self, from: data, configuration: self).job
+        return try JSONDecoder().decode(HBAnyCodableJob.self, from: data, userInfoConfiguration: self).job
     }
 
     func decode(from decoder: Decoder) throws -> any HBJob {
@@ -75,7 +75,7 @@ internal struct HBJobInstance<Parameters: Codable & Sendable>: HBJob {
 }
 
 /// Add codable support for decoding/encoding any HBJob
-internal struct HBAnyCodableJob: DecodableWithConfiguration, Sendable {
+internal struct HBAnyCodableJob: DecodableWithUserInfoConfiguration, Sendable {
     typealias DecodingConfiguration = HBJobRegister
 
     init(from decoder: Decoder, configuration register: DecodingConfiguration) throws {
