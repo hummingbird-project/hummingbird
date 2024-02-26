@@ -32,7 +32,10 @@ public struct HBJobQueue<Queue: HBJobQueueDriver>: Service {
         self.handler = .init(queue: queue, numWorkers: numWorkers, logger: logger)
     }
 
-    /// Push Job onto queue
+    ///  Push Job onto queue
+    /// - Parameters:
+    ///   - id: Job identifier
+    ///   - parameters: parameters for the job
     /// - Returns: Identifier of queued job
     @discardableResult public func push<Parameters: Codable & Sendable>(id: HBJobIdentifier<Parameters>, parameters: Parameters) async throws -> Queue.JobID {
         let jobRequest = HBJobRequest(id: id, parameters: parameters)
