@@ -34,7 +34,10 @@ public enum HBJobRegister {
             let parameters = try Parameters(from: decoder)
             return try HBJobInstance(job: definition, parameters: parameters)
         }
-        self.idTypeMap.withLockedValue { $0[id.name] = builder }
+        self.idTypeMap.withLockedValue {
+            precondition($0[id.name] == nil, "There is a job already registered under id \"\(id.name)\"")
+            $0[id.name] = builder
+        }
     }
 
     static func decode(from decoder: Decoder) throws -> any HBJob {
