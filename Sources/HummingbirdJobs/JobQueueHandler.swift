@@ -18,8 +18,8 @@ import Logging
 import ServiceLifecycle
 
 /// Object handling a single job queue
-public final class HBJobQueueHandler<Queue: HBJobQueue>: Service {
-    public init(queue: Queue, numWorkers: Int, logger: Logger) {
+final class HBJobQueueHandler<Queue: HBJobQueueDriver>: Service {
+    init(queue: Queue, numWorkers: Int, logger: Logger) {
         self.queue = queue
         self.numWorkers = numWorkers
         self.logger = logger
@@ -31,28 +31,11 @@ public final class HBJobQueueHandler<Queue: HBJobQueue>: Service {
     ///   - id: Job Identifier
     ///   - maxRetryCount: Maximum number of times job is retried before being flagged as failed
     ///   - execute: Job code
-    public func registerJob<Parameters: Codable & Sendable>(
-        _ id: HBJobIdentifier<Parameters>,
-        maxRetryCount: Int = 0,
-        execute: @escaping @Sendable (
-            Parameters,
-            HBJobContext
-        ) async throws -> Void
-    ) {
-        let definition = HBJobDefinition<Parameters>(id: id, maxRetryCount: maxRetryCount, execute: execute)
-        self.jobRegister.registerJob(job: definition)
-    }
-
-    ///  Register job
-    /// - Parameters:
-    ///   - id: Job Identifier
-    ///   - maxRetryCount: Maximum number of times job is retried before being flagged as failed
-    ///   - execute: Job code
-    public func registerJob(_ job: HBJobDefinition<some Codable & Sendable>) {
+    func registerJob(_ job: HBJobDefinition<some Codable & Sendable>) {
         self.jobRegister.registerJob(job: job)
     }
 
-    public func run() async throws {
+    func run() async throws {
         try await self.queue.onInit()
 
         try await withGracefulShutdownHandler {

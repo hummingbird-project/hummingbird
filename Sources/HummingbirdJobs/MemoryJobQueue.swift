@@ -16,7 +16,7 @@ import Collections
 import Foundation
 
 /// In memory implementation of job queue driver. Stores jobs in a circular buffer
-public final class HBMemoryJobQueue: HBJobQueue {
+public final class HBMemoryJobQueue: HBJobQueueDriver {
     public typealias Element = HBQueuedJob<JobID>
     public typealias JobID = UUID
 
@@ -45,7 +45,7 @@ public final class HBMemoryJobQueue: HBJobQueue {
     ///   - job: Job
     ///   - eventLoop: Eventloop to run process on (ignored in this case)
     /// - Returns: Queued job
-    @discardableResult public func _push(data: Data) async throws -> JobID {
+    @discardableResult public func push(data: Data) async throws -> JobID {
         return try await self.queue.push(data)
     }
 
@@ -93,12 +93,8 @@ public final class HBMemoryJobQueue: HBJobQueue {
                     return nil
                 }
                 if let request = queue.popFirst() {
-                    do {
-                        self.pendingJobs[request.id] = request.jobData
-                        return request
-                    } catch {
-                        throw JobQueueError.decodeJobFailed
-                    }
+                    self.pendingJobs[request.id] = request.jobData
+                    return request
                 }
                 try await Task.sleep(for: .milliseconds(100))
             }

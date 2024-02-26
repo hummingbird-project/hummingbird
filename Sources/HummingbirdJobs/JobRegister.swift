@@ -25,7 +25,7 @@ struct HBJobRegister: Sendable {
     public func registerJob<Parameters: Codable & Sendable>(
         job: HBJobDefinition<Parameters>
     ) {
-        let builder = { (decoder: Decoder) in
+        let builder: @Sendable (Decoder) throws -> any HBJob = { decoder in
             let parameters = try Parameters(from: decoder)
             return try HBJobInstance<Parameters>(job: job, parameters: parameters)
         }

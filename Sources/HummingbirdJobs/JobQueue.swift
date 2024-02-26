@@ -15,37 +15,60 @@
 import Foundation
 import Hummingbird
 import Logging
+import ServiceLifecycle
 
-/// Job queue protocol.
+/// Job queue
 ///
-/// Defines how to push and pop jobs off a queue
-public protocol HBJobQueue: AsyncSequence, Sendable where Element == HBQueuedJob<JobID> {
-    associatedtype JobID: CustomStringConvertible & Sendable
+/// Wrapper type to bring together a job queue implementation and a job queue
+/// handler. Before you can push jobs onto a queue you should register it
+/// with the queue via either ``HBJobQueue.registerJob(id:maxRetryCount:execute:)`` or
+/// ``HBJobQueue.registerJob(_:)``.
+public struct HBJobQueue<Queue: HBJobQueueDriver>: Service {
+    let queue: Queue
+    let handler: HBJobQueueHandler<Queue>
 
-    /// Called when JobQueueHandler is initialised with this queue
-    func onInit() async throws
+    public init(_ queue: Queue, numWorkers: Int = 1, logger: Logger) {
+        self.queue = queue
+        self.handler = .init(queue: queue, numWorkers: numWorkers, logger: logger)
+    }
+
     /// Push Job onto queue
     /// - Returns: Identifier of queued job
-    @discardableResult func _push(data: Data) async throws -> JobID
-    /// This is called to say job has finished processing and it can be deleted
-    func finished(jobId: JobID) async throws
-    /// This is called to say job has failed to run and should be put aside
-    func failed(jobId: JobID, error: any Error) async throws
-    /// stop serving jobs
-    func stop() async
-    /// shutdown queue
-    func shutdownGracefully() async
-}
-
-extension HBJobQueue {
-    // default version of onInit doing nothing
-    public func onInit() async throws {}
-    /// Push Job onto queue
-    /// - Returns: Identifier of queued job
-    @discardableResult public func push<Parameters: Codable & Sendable>(id: HBJobIdentifier<Parameters>, parameters: Parameters) async throws -> JobID {
+    @discardableResult public func push<Parameters: Codable & Sendable>(id: HBJobIdentifier<Parameters>, parameters: Parameters) async throws -> Queue.JobID {
         let jobRequest = HBJobRequest(id: id, parameters: parameters)
         let data = try JSONEncoder().encode(jobRequest)
-        return try await _push(data: data)
+        return try await self.queue.push(data: data)
+    }
+
+    ///  Register job
+    /// - Parameters:
+    ///   - id: Job Identifier
+    ///   - maxRetryCount: Maximum number of times job is retried before being flagged as failed
+    ///   - execute: Job code
+    public func registerJob<Parameters: Codable & Sendable>(
+        _ id: HBJobIdentifier<Parameters>,
+        maxRetryCount: Int = 0,
+        execute: @escaping @Sendable (
+            Parameters,
+            HBJobContext
+        ) async throws -> Void
+    ) {
+        let job = HBJobDefinition<Parameters>(id: id, maxRetryCount: maxRetryCount, execute: execute)
+        self.handler.registerJob(job)
+    }
+
+    ///  Register job
+    /// - Parameters:
+    ///   - id: Job Identifier
+    ///   - maxRetryCount: Maximum number of times job is retried before being flagged as failed
+    ///   - execute: Job code
+    public func registerJob(_ job: HBJobDefinition<some Codable & Sendable>) {
+        self.handler.registerJob(job)
+    }
+
+    ///  Run queue handler
+    public func run() async throws {
+        try await self.handler.run()
     }
 }
 
