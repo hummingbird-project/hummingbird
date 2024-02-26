@@ -45,9 +45,8 @@ public final class HBMemoryJobQueue: HBJobQueue {
     ///   - job: Job
     ///   - eventLoop: Eventloop to run process on (ignored in this case)
     /// - Returns: Queued job
-    @discardableResult public func push<Parameters: Codable & Sendable>(id: HBJobIdentifier<Parameters>, parameters: Parameters) async throws -> JobID {
-        let job = _HBJobRequest(id: id, parameters: parameters)
-        return try await self.queue.push(job)
+    @discardableResult public func _push(data: Data) async throws -> JobID {
+        return try await self.queue.push(data)
     }
 
     public func finished(jobId: JobID) async throws {
@@ -56,14 +55,14 @@ public final class HBMemoryJobQueue: HBJobQueue {
 
     public func failed(jobId: JobID, error: any Error) async throws {
         if let job = await self.queue.clearAndReturnPendingJob(jobId: jobId) {
-            self.onFailedJob(.init(id: jobId, job: job), error)
+            self.onFailedJob(.init(id: jobId, jobData: job), error)
         }
     }
 
     /// Internal actor managing the job queue
     fileprivate actor Internal {
-        var queue: Deque<(JobID, Data)>
-        var pendingJobs: [JobID: any HBJob]
+        var queue: Deque<HBQueuedJob<JobID>>
+        var pendingJobs: [JobID: Data]
         var isStopped: Bool
 
         init() {
@@ -72,10 +71,9 @@ public final class HBMemoryJobQueue: HBJobQueue {
             self.pendingJobs = .init()
         }
 
-        func push(_ jobRequest: _HBJobRequest<some Codable>) throws -> JobID {
+        func push(_ jobData: Data) throws -> JobID {
             let id = JobID()
-            let request = try (id, JSONEncoder().encode(jobRequest))
-            self.queue.append(request)
+            self.queue.append(HBQueuedJob(id: id, jobData: jobData))
             return id
         }
 
@@ -83,7 +81,7 @@ public final class HBMemoryJobQueue: HBJobQueue {
             self.pendingJobs[jobId] = nil
         }
 
-        func clearAndReturnPendingJob(jobId: JobID) -> (any HBJob)? {
+        func clearAndReturnPendingJob(jobId: JobID) -> Data? {
             let instance = self.pendingJobs[jobId]
             self.pendingJobs[jobId] = nil
             return instance
@@ -96,9 +94,8 @@ public final class HBMemoryJobQueue: HBJobQueue {
                 }
                 if let request = queue.popFirst() {
                     do {
-                        let job = try JSONDecoder().decode(HBAnyCodableJob.self, from: request.1)
-                        self.pendingJobs[request.0] = job.job
-                        return HBQueuedJob(id: request.0, job: job.job)
+                        self.pendingJobs[request.id] = request.jobData
+                        return request
                     } catch {
                         throw JobQueueError.decodeJobFailed
                     }

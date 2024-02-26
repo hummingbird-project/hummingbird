@@ -23,6 +23,33 @@ public final class HBJobQueueHandler<Queue: HBJobQueue>: Service {
         self.queue = queue
         self.numWorkers = numWorkers
         self.logger = logger
+        self.jobRegister = .init()
+    }
+
+    ///  Register job
+    /// - Parameters:
+    ///   - id: Job Identifier
+    ///   - maxRetryCount: Maximum number of times job is retried before being flagged as failed
+    ///   - execute: Job code
+    public func registerJob<Parameters: Codable & Sendable>(
+        _ id: HBJobIdentifier<Parameters>,
+        maxRetryCount: Int = 0,
+        execute: @escaping @Sendable (
+            Parameters,
+            HBJobContext
+        ) async throws -> Void
+    ) {
+        let definition = HBJobDefinition<Parameters>(id: id, maxRetryCount: maxRetryCount, execute: execute)
+        self.jobRegister.registerJob(job: definition)
+    }
+
+    ///  Register job
+    /// - Parameters:
+    ///   - id: Job Identifier
+    ///   - maxRetryCount: Maximum number of times job is retried before being flagged as failed
+    ///   - execute: Job code
+    public func registerJob(_ job: HBJobDefinition<some Codable & Sendable>) {
+        self.jobRegister.registerJob(job: job)
     }
 
     public func run() async throws {
@@ -32,16 +59,16 @@ public final class HBJobQueueHandler<Queue: HBJobQueue>: Service {
             try await withThrowingTaskGroup(of: Void.self) { group in
                 var iterator = self.queue.makeAsyncIterator()
                 for _ in 0..<self.numWorkers {
-                    if let job = try await self.getNextJob(&iterator) {
+                    if let job = try await iterator.next() {
                         group.addTask {
-                            await self.runJob(job)
+                            try await self.runJob(job)
                         }
                     }
                 }
-                while let job = try await self.getNextJob(&iterator) {
+                while let job = try await iterator.next() {
                     try await group.next()
                     group.addTask {
-                        await self.runJob(job)
+                        try await self.runJob(job)
                     }
                 }
                 group.cancelAll()
@@ -54,23 +81,23 @@ public final class HBJobQueueHandler<Queue: HBJobQueue>: Service {
         }
     }
 
-    func getNextJob(_ queueIterator: inout Queue.AsyncIterator) async throws -> HBQueuedJob<Queue.JobID>? {
-        while true {
-            do {
-                let job = try await queueIterator.next()
-                return job
-            } catch let error as JobQueueError where error == JobQueueError.decodeJobFailed {
-                self.logger.error("Job failed to decode.")
-            }
-        }
-    }
-
-    func runJob(_ queuedJob: HBQueuedJob<Queue.JobID>) async {
+    func runJob(_ queuedJob: HBQueuedJob<Queue.JobID>) async throws {
         var logger = logger
         logger[metadataKey: "hb_job_id"] = .stringConvertible(queuedJob.id)
-        logger[metadataKey: "hb_job_type"] = .string(queuedJob.job.name)
+        let job: any HBJob
+        do {
+            job = try self.jobRegister.decode(data: queuedJob.jobData)
+        } catch let error as JobQueueError where error == .unrecognisedJobId {
+            logger.debug("Failed to find Job with ID while decoding")
+            try await self.queue.failed(jobId: queuedJob.id, error: error)
+            return
+        } catch {
+            logger.debug("Job failed to decode")
+            try await self.queue.failed(jobId: queuedJob.id, error: JobQueueError.decodeJobFailed)
+            return
+        }
+        logger[metadataKey: "hb_job_type"] = .string(job.name)
 
-        let job = queuedJob.job
         var count = job.maxRetryCount
         logger.debug("Starting Job")
 
@@ -103,6 +130,7 @@ public final class HBJobQueueHandler<Queue: HBJobQueue>: Service {
         }
     }
 
+    private let jobRegister: HBJobRegister
     private let queue: Queue
     private let numWorkers: Int
     let logger: Logger

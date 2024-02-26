@@ -30,20 +30,3 @@ extension HBJob {
         id.name
     }
 }
-
-/// Type used internally by job queue implementations to encode a job request
-public struct _HBJobRequest<Parameters: Codable & Sendable>: Encodable, Sendable {
-    let id: HBJobIdentifier<Parameters>
-    let parameters: Parameters
-
-    public init(id: HBJobIdentifier<Parameters>, parameters: Parameters) {
-        self.id = id
-        self.parameters = parameters
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: _HBJobCodingKey.self)
-        let childEncoder = container.superEncoder(forKey: .init(stringValue: self.id.name, intValue: nil))
-        try self.parameters.encode(to: childEncoder)
-    }
-}

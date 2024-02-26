@@ -26,7 +26,7 @@ public protocol HBJobQueue: AsyncSequence, Sendable where Element == HBQueuedJob
     func onInit() async throws
     /// Push Job onto queue
     /// - Returns: Identifier of queued job
-    @discardableResult func push<Parameters: Codable & Sendable>(id: HBJobIdentifier<Parameters>, parameters: Parameters) async throws -> JobID
+    @discardableResult func _push(data: Data) async throws -> JobID
     /// This is called to say job has finished processing and it can be deleted
     func finished(jobId: JobID) async throws
     /// This is called to say job has failed to run and should be put aside
@@ -40,4 +40,28 @@ public protocol HBJobQueue: AsyncSequence, Sendable where Element == HBQueuedJob
 extension HBJobQueue {
     // default version of onInit doing nothing
     public func onInit() async throws {}
+    /// Push Job onto queue
+    /// - Returns: Identifier of queued job
+    @discardableResult public func push<Parameters: Codable & Sendable>(id: HBJobIdentifier<Parameters>, parameters: Parameters) async throws -> JobID {
+        let jobRequest = HBJobRequest(id: id, parameters: parameters)
+        let data = try JSONEncoder().encode(jobRequest)
+        return try await _push(data: data)
+    }
+}
+
+/// Type used internally to encode a request
+struct HBJobRequest<Parameters: Codable & Sendable>: Encodable, Sendable {
+    let id: HBJobIdentifier<Parameters>
+    let parameters: Parameters
+
+    public init(id: HBJobIdentifier<Parameters>, parameters: Parameters) {
+        self.id = id
+        self.parameters = parameters
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: _HBJobCodingKey.self)
+        let childEncoder = container.superEncoder(forKey: .init(stringValue: self.id.name, intValue: nil))
+        try self.parameters.encode(to: childEncoder)
+    }
 }

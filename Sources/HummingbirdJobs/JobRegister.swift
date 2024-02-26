@@ -12,69 +12,51 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import NIOConcurrencyHelpers
 
 /// Registry for job types
-public enum HBJobRegister {
+struct HBJobRegister: Sendable {
     ///  Register job
     /// - Parameters:
     ///   - id: Job Identifier
     ///   - maxRetryCount: Maximum number of times job is retried before being flagged as failed
     ///   - execute: Job code
-    public static func registerJob<Parameters: Codable & Sendable>(
-        _ id: HBJobIdentifier<Parameters>,
-        maxRetryCount: Int = 0,
-        execute: @escaping @Sendable (
-            Parameters,
-            HBJobContext
-        ) async throws -> Void
+    public func registerJob<Parameters: Codable & Sendable>(
+        job: HBJobDefinition<Parameters>
     ) {
-        let definition = HBJobInstance<Parameters>.Definition(id: id, maxRetryCount: maxRetryCount, execute: execute)
         let builder = { (decoder: Decoder) in
             let parameters = try Parameters(from: decoder)
-            return try HBJobInstance(job: definition, parameters: parameters)
+            return try HBJobInstance<Parameters>(job: job, parameters: parameters)
         }
-        self.idTypeMap.withLockedValue {
-            precondition($0[id.name] == nil, "There is a job already registered under id \"\(id.name)\"")
-            $0[id.name] = builder
+        self.builderTypeMap.withLockedValue {
+            precondition($0[job.id.name] == nil, "There is a job already registered under id \"\(job.id.name)\"")
+            $0[job.id.name] = builder
         }
     }
 
-    static func decode(from decoder: Decoder) throws -> any HBJob {
+    func decode(data: Data) throws -> any HBJob {
+        return try JSONDecoder().decode(HBAnyCodableJob.self, from: data, configuration: self).job
+    }
+
+    func decode(from decoder: Decoder) throws -> any HBJob {
         let container = try decoder.container(keyedBy: _HBJobCodingKey.self)
         let key = container.allKeys.first!
         let childDecoder = try container.superDecoder(forKey: key)
-        let jobDefinitionBuilder = try Self.idTypeMap.withLockedValue {
-            guard let job = $0[key.stringValue] else { throw JobQueueError.decodeJobFailed }
+        let jobDefinitionBuilder = try self.builderTypeMap.withLockedValue {
+            guard let job = $0[key.stringValue] else { throw JobQueueError.unrecognisedJobId }
             return job
         }
         return try jobDefinitionBuilder(childDecoder)
     }
 
-    static let idTypeMap: NIOLockedValueBox < [String: (Decoder) throws -> any HBJob]> = .init([:])
+    let builderTypeMap: NIOLockedValueBox < [String: @Sendable (Decoder) throws -> any HBJob]> = .init([:])
 }
 
 /// Internal job instance type
-struct HBJobInstance<Parameters: Codable & Sendable>: HBJob {
-    /// Job definition type
-    struct Definition {
-        let id: HBJobIdentifier<Parameters>
-        let maxRetryCount: Int
-        let _execute: @Sendable (Parameters, HBJobContext) async throws -> Void
-
-        init(id: HBJobIdentifier<Parameters>, maxRetryCount: Int, execute: @escaping @Sendable (Parameters, HBJobContext) async throws -> Void) {
-            self.id = id
-            self.maxRetryCount = maxRetryCount
-            self._execute = execute
-        }
-
-        public func execute(_ parameters: Parameters, context: HBJobContext) async throws {
-            try await self._execute(parameters, context)
-        }
-    }
-
+internal struct HBJobInstance<Parameters: Codable & Sendable>: HBJob {
     /// job definition
-    let job: Definition
+    let job: HBJobDefinition<Parameters>
     /// job parameters
     let parameters: Parameters
 
@@ -86,9 +68,30 @@ struct HBJobInstance<Parameters: Codable & Sendable>: HBJob {
         try await self.job.execute(self.parameters, context: context)
     }
 
-    init(job: Definition, parameters: Parameters) throws {
+    init(job: HBJobDefinition<Parameters>, parameters: Parameters) throws {
         self.job = job
         self.parameters = parameters
+    }
+}
+
+/// Add codable support for decoding/encoding any HBJob
+internal struct HBAnyCodableJob: DecodableWithConfiguration, Sendable {
+    typealias DecodingConfiguration = HBJobRegister
+
+    init(from decoder: Decoder, configuration register: DecodingConfiguration) throws {
+        self.job = try register.decode(from: decoder)
+    }
+
+    /// Job data
+    let job: any HBJob
+
+    /// Initialize a queue job
+    init(_ job: any HBJob) {
+        self.job = job
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case job
     }
 }
 
