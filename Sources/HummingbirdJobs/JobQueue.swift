@@ -26,7 +26,7 @@ public protocol HBJobQueue: AsyncSequence, Sendable where Element == HBQueuedJob
     func onInit() async throws
     /// Push Job onto queue
     /// - Returns: Identifier of queued job
-    @discardableResult func push(_ job: HBJob) async throws -> JobID
+    @discardableResult func push<Parameters: Codable & Sendable>(id: HBJobIdentifier<Parameters>, parameters: Parameters) async throws -> JobID
     /// This is called to say job has finished processing and it can be deleted
     func finished(jobId: JobID) async throws
     /// This is called to say job has failed to run and should be put aside

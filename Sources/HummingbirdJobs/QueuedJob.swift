@@ -15,25 +15,17 @@
 import Foundation
 
 /// Add codable support for decoding/encoding any HBJob
-public struct HBAnyCodableJob: Codable, Sendable {
+public struct HBAnyCodableJob: Decodable, Sendable {
     /// Job data
-    public let job: HBJob
+    public let job: any HBJob
 
     /// Initialize a queue job
-    public init(_ job: HBJob) {
+    public init(_ job: any HBJob) {
         self.job = job
     }
 
     public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let jobDecoder = try container.superDecoder(forKey: .job)
-        self.job = try HBJobRegister.decode(from: jobDecoder)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        let jobEncoder = container.superEncoder(forKey: .job)
-        try HBJobRegister.encode(job: self.job, to: jobEncoder)
+        self.job = try HBJobRegister.decode(from: decoder)
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -43,20 +35,14 @@ public struct HBAnyCodableJob: Codable, Sendable {
 
 /// Queued job. Includes job, plus the id for the job
 public struct HBQueuedJob<JobID: Sendable>: Sendable {
-    /// Job id
+    /// Job instance id
     public let id: JobID
     /// Job data
-    private let _job: HBAnyCodableJob
-    /// Job data
-    public var job: HBJob { self._job.job }
-    /// Job data in a codable form
-    public var anyCodableJob: HBAnyCodableJob { self._job }
+    public let job: any HBJob
 
     /// Initialize a queue job
-    public init(id: JobID, job: HBJob) {
-        self._job = .init(job)
+    public init(id: JobID, job: any HBJob) {
+        self.job = job
         self.id = id
     }
 }
-
-extension HBQueuedJob: Codable where JobID: Codable {}

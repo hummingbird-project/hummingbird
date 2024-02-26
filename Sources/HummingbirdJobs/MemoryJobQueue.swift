@@ -45,8 +45,9 @@ public final class HBMemoryJobQueue: HBJobQueue {
     ///   - job: Job
     ///   - eventLoop: Eventloop to run process on (ignored in this case)
     /// - Returns: Queued job
-    @discardableResult public func push(_ job: HBJob) async throws -> JobID {
-        try await self.queue.push(job)
+    @discardableResult public func push<Parameters: Codable & Sendable>(id: HBJobIdentifier<Parameters>, parameters: Parameters) async throws -> JobID {
+        let job = _HBJobRequest(id: id, parameters: parameters)
+        return try await self.queue.push(job)
     }
 
     public func finished(jobId: JobID) async throws {
@@ -61,8 +62,8 @@ public final class HBMemoryJobQueue: HBJobQueue {
 
     /// Internal actor managing the job queue
     fileprivate actor Internal {
-        var queue: Deque<Data>
-        var pendingJobs: [JobID: HBJob]
+        var queue: Deque<(JobID, Data)>
+        var pendingJobs: [JobID: any HBJob]
         var isStopped: Bool
 
         init() {
@@ -71,18 +72,18 @@ public final class HBMemoryJobQueue: HBJobQueue {
             self.pendingJobs = .init()
         }
 
-        func push(_ job: HBJob) throws -> JobID {
-            let queuedJob = HBQueuedJob<JobID>(id: JobID(), job: job)
-            let jsonData = try JSONEncoder().encode(queuedJob)
-            self.queue.append(jsonData)
-            return queuedJob.id
+        func push(_ jobRequest: _HBJobRequest<some Codable>) throws -> JobID {
+            let id = JobID()
+            let request = try (id, JSONEncoder().encode(jobRequest))
+            self.queue.append(request)
+            return id
         }
 
         func clearPendingJob(jobId: JobID) {
             self.pendingJobs[jobId] = nil
         }
 
-        func clearAndReturnPendingJob(jobId: JobID) -> HBJob? {
+        func clearAndReturnPendingJob(jobId: JobID) -> (any HBJob)? {
             let instance = self.pendingJobs[jobId]
             self.pendingJobs[jobId] = nil
             return instance
@@ -93,11 +94,11 @@ public final class HBMemoryJobQueue: HBJobQueue {
                 if self.isStopped {
                     return nil
                 }
-                if let data = queue.popFirst() {
+                if let request = queue.popFirst() {
                     do {
-                        let job = try JSONDecoder().decode(HBQueuedJob<JobID>.self, from: data)
-                        self.pendingJobs[job.id] = job.job
-                        return job
+                        let job = try JSONDecoder().decode(HBAnyCodableJob.self, from: request.1)
+                        self.pendingJobs[request.0] = job.job
+                        return HBQueuedJob(id: request.0, job: job.job)
                     } catch {
                         throw JobQueueError.decodeJobFailed
                     }
