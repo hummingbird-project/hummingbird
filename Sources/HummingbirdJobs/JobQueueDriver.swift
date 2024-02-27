@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import Hummingbird
 import Logging
 
 /// Job queue protocol.

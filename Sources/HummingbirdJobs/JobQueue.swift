@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import Hummingbird
 import Logging
 import ServiceLifecycle
 
@@ -43,7 +42,7 @@ public struct HBJobQueue<Queue: HBJobQueueDriver>: Service {
         return try await self.queue.push(data: data)
     }
 
-    ///  Register job
+    ///  Register job type
     /// - Parameters:
     ///   - id: Job Identifier
     ///   - maxRetryCount: Maximum number of times job is retried before being flagged as failed
@@ -57,15 +56,13 @@ public struct HBJobQueue<Queue: HBJobQueueDriver>: Service {
         ) async throws -> Void
     ) {
         let job = HBJobDefinition<Parameters>(id: id, maxRetryCount: maxRetryCount, execute: execute)
-        self.handler.registerJob(job)
+        self.registerJob(job)
     }
 
-    ///  Register job
+    ///  Register job type
     /// - Parameters:
-    ///   - id: Job Identifier
-    ///   - maxRetryCount: Maximum number of times job is retried before being flagged as failed
-    ///   - execute: Job code
-    public func registerJob(_ job: HBJobDefinition<some Codable & Sendable>) {
+    ///   - job: Job definition
+    public func registerJob<Parameters: Codable & Sendable>(_ job: HBJobDefinition<Parameters>) {
         self.handler.registerJob(job)
     }
 

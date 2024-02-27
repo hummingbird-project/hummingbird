@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import AsyncAlgorithms
-import Hummingbird
 import Logging
 import ServiceLifecycle
 
