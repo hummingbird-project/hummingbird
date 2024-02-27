@@ -15,8 +15,8 @@
 import Collections
 import Foundation
 
-/// In memory implementation of job queue driver. Stores jobs in a circular buffer
-public final class HBMemoryJobQueue: HBJobQueueDriver {
+/// In memory implementation of job queue driver. Stores job data in a circular buffer
+public final class HBMemoryQueue: HBJobQueueDriver {
     public typealias Element = HBQueuedJob<JobID>
     public typealias JobID = UUID
 
@@ -111,7 +111,7 @@ public final class HBMemoryJobQueue: HBJobQueueDriver {
     }
 }
 
-extension HBMemoryJobQueue {
+extension HBMemoryQueue {
     public struct AsyncIterator: AsyncIteratorProtocol {
         fileprivate let queue: Internal
 
@@ -122,5 +122,14 @@ extension HBMemoryJobQueue {
 
     public func makeAsyncIterator() -> AsyncIterator {
         .init(queue: self.queue)
+    }
+}
+
+extension HBJobQueueDriver where Self == HBMemoryQueue {
+    /// Return In memory driver for Job Queue
+    /// - Parameters:
+    ///   - onFailedJob: Closure called when a job fails
+    public static var memory: HBMemoryQueue {
+        .init()
     }
 }

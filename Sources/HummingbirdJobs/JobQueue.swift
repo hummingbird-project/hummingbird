@@ -23,7 +23,8 @@ import ServiceLifecycle
 /// with the queue via either ``HBJobQueue.registerJob(id:maxRetryCount:execute:)`` or
 /// ``HBJobQueue.registerJob(_:)``.
 public struct HBJobQueue<Queue: HBJobQueueDriver>: Service {
-    let queue: Queue
+    /// underlying driver for queue
+    public let queue: Queue
     let handler: HBJobQueueHandler<Queue>
 
     public init(_ queue: Queue, numWorkers: Int = 1, logger: Logger) {
@@ -62,7 +63,7 @@ public struct HBJobQueue<Queue: HBJobQueueDriver>: Service {
     ///  Register job type
     /// - Parameters:
     ///   - job: Job definition
-    public func registerJob<Parameters: Codable & Sendable>(_ job: HBJobDefinition<Parameters>) {
+    public func registerJob(_ job: HBJobDefinition<some Codable & Sendable>) {
         self.handler.registerJob(job)
     }
 

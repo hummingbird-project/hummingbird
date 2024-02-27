@@ -62,7 +62,7 @@ final class HummingbirdJobsTests: XCTestCase {
 
     func testBasic() async throws {
         let expectation = XCTestExpectation(description: "TestJob.execute was called", expectedFulfillmentCount: 10)
-        let jobQueue = HBJobQueue(HBMemoryJobQueue(), numWorkers: 1, logger: Logger(label: "HummingbirdJobsTests"))
+        let jobQueue = HBJobQueue(.memory, numWorkers: 1, logger: Logger(label: "HummingbirdJobsTests"))
         let job = HBJobDefinition(id: "testBasic") { (parameters: Int, context) in
             context.logger.info("Parameters=\(parameters)")
             try await Task.sleep(for: .milliseconds(Int.random(in: 10..<50)))
@@ -91,7 +91,7 @@ final class HummingbirdJobsTests: XCTestCase {
         let maxRunningJobCounter = ManagedAtomic(0)
         let expectation = XCTestExpectation(description: "TestJob.execute was called", expectedFulfillmentCount: 10)
 
-        let jobQueue = HBJobQueue(HBMemoryJobQueue(), numWorkers: 4, logger: Logger(label: "HummingbirdJobsTests"))
+        let jobQueue = HBJobQueue(.memory, numWorkers: 4, logger: Logger(label: "HummingbirdJobsTests"))
         jobQueue.registerJob(jobIdentifer) { parameters, context in
             let runningJobs = runningJobCounter.wrappingIncrementThenLoad(by: 1, ordering: .relaxed)
             if runningJobs > maxRunningJobCounter.load(ordering: .relaxed) {
@@ -129,7 +129,7 @@ final class HummingbirdJobsTests: XCTestCase {
         var logger = Logger(label: "HummingbirdJobsTests")
         logger.logLevel = .trace
         let jobQueue = HBJobQueue(
-            HBMemoryJobQueue { _, _ in failedJobCount.wrappingIncrement(by: 1, ordering: .relaxed) },
+            HBMemoryQueue { _, _ in failedJobCount.wrappingIncrement(by: 1, ordering: .relaxed) },
             logger: logger
         )
         jobQueue.registerJob(jobIdentifer, maxRetryCount: 3) { _, _ in
@@ -151,7 +151,7 @@ final class HummingbirdJobsTests: XCTestCase {
         }
         let expectation = XCTestExpectation(description: "TestJob.execute was called")
         let jobIdentifer = HBJobIdentifier<TestJobParameters>(#function)
-        let jobQueue = HBJobQueue(HBMemoryJobQueue(), numWorkers: 1, logger: Logger(label: "HummingbirdJobsTests"))
+        let jobQueue = HBJobQueue(.memory, numWorkers: 1, logger: Logger(label: "HummingbirdJobsTests"))
         jobQueue.registerJob(jobIdentifer) { parameters, _ in
             XCTAssertEqual(parameters.id, 23)
             XCTAssertEqual(parameters.message, "Hello!")
@@ -173,7 +173,7 @@ final class HummingbirdJobsTests: XCTestCase {
         var logger = Logger(label: "HummingbirdJobsTests")
         logger.logLevel = .trace
         let jobQueue = HBJobQueue(
-            HBMemoryJobQueue { _, error in
+            HBMemoryQueue { _, error in
                 if error is CancellationError {
                     cancelledJobCount.wrappingIncrement(by: 1, ordering: .relaxed)
                 }
@@ -202,7 +202,7 @@ final class HummingbirdJobsTests: XCTestCase {
 
         var logger = Logger(label: "HummingbirdJobsTests")
         logger.logLevel = .debug
-        let jobQueue = HBJobQueue(HBMemoryJobQueue(), numWorkers: 1, logger: Logger(label: "HummingbirdJobsTests"))
+        let jobQueue = HBJobQueue(.memory, numWorkers: 1, logger: Logger(label: "HummingbirdJobsTests"))
         jobQueue.registerJob(jobIdentifer2) { parameters, _ in
             string.withLockedValue { $0 = parameters }
             expectation.fulfill()
@@ -230,9 +230,9 @@ final class HummingbirdJobsTests: XCTestCase {
             logger.logLevel = .debug
             return logger
         }()
-        let jobQueue = HBJobQueue(HBMemoryJobQueue(), numWorkers: 2, logger: Logger(label: "HummingbirdJobsTests"))
+        let jobQueue = HBJobQueue(.memory, numWorkers: 2, logger: Logger(label: "HummingbirdJobsTests"))
         jobQueue.registerJob(job)
-        let jobQueue2 = HBJobQueue(HBMemoryJobQueue(), numWorkers: 1, logger: Logger(label: "HummingbirdJobsTests"))
+        let jobQueue2 = HBJobQueue(.memory, numWorkers: 1, logger: Logger(label: "HummingbirdJobsTests"))
         jobQueue2.registerJob(job)
 
         try await withThrowingTaskGroup(of: Void.self) { group in
