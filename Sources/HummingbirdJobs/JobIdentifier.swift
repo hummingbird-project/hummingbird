@@ -23,7 +23,20 @@
 ///     static var myJob: Self { .init("my-job") }
 /// }
 /// ```
-public struct HBJobIdentifier<Parameters>: Sendable, Hashable {
+public struct HBJobIdentifier<Parameters>: Sendable, Hashable, ExpressibleByStringLiteral {
     let name: String
+    /// Initialize a HBJobIdentifier
+    ///
+    /// - Parameters:
+    ///   - name: Unique name for identifier
+    ///   - parameters: Parameter type associated with Job
     public init(_ name: String, parameters: Parameters.Type = Parameters.self) { self.name = name }
+
+    /// Initialize a HBJobIdentifier from a string literal
+    ///
+    /// This can only be used in a situation where the Parameter type is defined elsewhere
+    /// - Parameter string:
+    public init(stringLiteral string: String) {
+        self.name = string
+    }
 }
