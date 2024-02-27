@@ -16,7 +16,7 @@ import Foundation
 import NIOConcurrencyHelpers
 
 /// Registry for job types
-struct HBJobRegister: Sendable {
+struct HBJobRegistry: Sendable {
     ///  Register job
     /// - Parameters:
     ///   - id: Job Identifier
@@ -76,7 +76,7 @@ internal struct HBJobInstance<Parameters: Codable & Sendable>: HBJob {
 
 /// Add codable support for decoding/encoding any HBJob
 internal struct HBAnyCodableJob: DecodableWithUserInfoConfiguration, Sendable {
-    typealias DecodingConfiguration = HBJobRegister
+    typealias DecodingConfiguration = HBJobRegistry
 
     init(from decoder: Decoder, configuration register: DecodingConfiguration) throws {
         self.job = try register.decode(from: decoder)

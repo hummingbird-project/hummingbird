@@ -62,24 +62,24 @@ final class HummingbirdJobsTests: XCTestCase {
 
     func testBasic() async throws {
         let expectation = XCTestExpectation(description: "TestJob.execute was called", expectedFulfillmentCount: 10)
-        let jobIdentifer = HBJobIdentifier<Int>(#function)
         let jobQueue = HBJobQueue(HBMemoryJobQueue(), numWorkers: 1, logger: Logger(label: "HummingbirdJobsTests"))
-        jobQueue.registerJob(jobIdentifer) { parameters, context in
+        let job = HBJobDefinition(id: "testBasic") { (parameters: Int, context) in
             context.logger.info("Parameters=\(parameters)")
             try await Task.sleep(for: .milliseconds(Int.random(in: 10..<50)))
             expectation.fulfill()
         }
+        jobQueue.registerJob(job)
         try await self.testJobQueue(jobQueue) {
-            try await jobQueue.push(id: jobIdentifer, parameters: 1)
-            try await jobQueue.push(id: jobIdentifer, parameters: 2)
-            try await jobQueue.push(id: jobIdentifer, parameters: 3)
-            try await jobQueue.push(id: jobIdentifer, parameters: 4)
-            try await jobQueue.push(id: jobIdentifer, parameters: 5)
-            try await jobQueue.push(id: jobIdentifer, parameters: 6)
-            try await jobQueue.push(id: jobIdentifer, parameters: 7)
-            try await jobQueue.push(id: jobIdentifer, parameters: 8)
-            try await jobQueue.push(id: jobIdentifer, parameters: 9)
-            try await jobQueue.push(id: jobIdentifer, parameters: 10)
+            try await jobQueue.push(id: job.id, parameters: 1)
+            try await jobQueue.push(id: job.id, parameters: 2)
+            try await jobQueue.push(id: job.id, parameters: 3)
+            try await jobQueue.push(id: job.id, parameters: 4)
+            try await jobQueue.push(id: job.id, parameters: 5)
+            try await jobQueue.push(id: job.id, parameters: 6)
+            try await jobQueue.push(id: job.id, parameters: 7)
+            try await jobQueue.push(id: job.id, parameters: 8)
+            try await jobQueue.push(id: job.id, parameters: 9)
+            try await jobQueue.push(id: job.id, parameters: 10)
 
             await self.wait(for: [expectation], timeout: 5)
         }

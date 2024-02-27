@@ -14,7 +14,7 @@
 
 /// Job definition type
 public struct HBJobDefinition<Parameters: Codable & Sendable>: Sendable {
-    let id: HBJobIdentifier<Parameters>
+    public let id: HBJobIdentifier<Parameters>
     let maxRetryCount: Int
     let _execute: @Sendable (Parameters, HBJobContext) async throws -> Void
 

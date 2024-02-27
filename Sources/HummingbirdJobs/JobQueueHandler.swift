@@ -23,7 +23,7 @@ final class HBJobQueueHandler<Queue: HBJobQueueDriver>: Service {
         self.queue = queue
         self.numWorkers = numWorkers
         self.logger = logger
-        self.jobRegister = .init()
+        self.jobRegistry = .init()
     }
 
     ///  Register job
@@ -32,7 +32,7 @@ final class HBJobQueueHandler<Queue: HBJobQueueDriver>: Service {
     ///   - maxRetryCount: Maximum number of times job is retried before being flagged as failed
     ///   - execute: Job code
     func registerJob(_ job: HBJobDefinition<some Codable & Sendable>) {
-        self.jobRegister.registerJob(job: job)
+        self.jobRegistry.registerJob(job: job)
     }
 
     func run() async throws {
@@ -69,7 +69,7 @@ final class HBJobQueueHandler<Queue: HBJobQueueDriver>: Service {
         logger[metadataKey: "hb_job_id"] = .stringConvertible(queuedJob.id)
         let job: any HBJob
         do {
-            job = try self.jobRegister.decode(data: queuedJob.jobData)
+            job = try self.jobRegistry.decode(data: queuedJob.jobData)
         } catch let error as JobQueueError where error == .unrecognisedJobId {
             logger.debug("Failed to find Job with ID while decoding")
             try await self.queue.failed(jobId: queuedJob.id, error: error)
@@ -113,7 +113,7 @@ final class HBJobQueueHandler<Queue: HBJobQueueDriver>: Service {
         }
     }
 
-    private let jobRegister: HBJobRegister
+    private let jobRegistry: HBJobRegistry
     private let queue: Queue
     private let numWorkers: Int
     let logger: Logger
