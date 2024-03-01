@@ -38,14 +38,15 @@ class HummingbirdFilesTests: XCTestCase {
         router.middlewares.add(HBFileMiddleware("."))
         let app = HBApplication(responder: router.buildResponder())
 
+        let filename = "\(#function).jpg"
         let text = "Test file contents"
         let data = Data(text.utf8)
-        let fileURL = URL(fileURLWithPath: "\(#function).jpg")
+        let fileURL = URL(fileURLWithPath: filename)
         XCTAssertNoThrow(try data.write(to: fileURL))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/test.jpg", method: .get) { response in
+            try await client.XCTExecute(uri: filename, method: .get) { response in
                 XCTAssertEqual(String(buffer: response.body), text)
                 XCTAssertEqual(response.headers[.contentType], "image/jpeg")
             }
