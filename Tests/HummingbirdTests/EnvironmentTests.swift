@@ -142,14 +142,14 @@ final class EnvironmentTests: XCTestCase {
         TEST_VAR=testDotEnvOverridingEnvironment
         """
         let data = dotenv.data(using: .utf8)
-        let envURL = URL(fileURLWithPath: ".env")
+        let envURL = URL(fileURLWithPath: ".override.env")
         try data?.write(to: envURL)
         defer {
             try? FileManager.default.removeItem(at: envURL)
         }
         XCTAssertEqual(setenv("TEST_VAR", "testSetFromEnvironment", 1), 0)
         XCTAssertEqual(setenv("TEST_VAR2", "testSetFromEnvironment2", 1), 0)
-        let env = try await HBEnvironment().merging(with: .dotEnv())
+        let env = try await HBEnvironment().merging(with: .dotEnv(".override.env"))
         XCTAssertEqual(env.get("TEST_VAR"), "testDotEnvOverridingEnvironment")
         XCTAssertEqual(env.get("TEST_VAR2"), "testSetFromEnvironment2")
     }
