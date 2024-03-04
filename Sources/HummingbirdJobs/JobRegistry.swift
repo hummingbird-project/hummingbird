@@ -14,6 +14,7 @@
 
 import Foundation
 import NIOConcurrencyHelpers
+import NIOCore
 
 /// Registry for job types
 struct HBJobRegistry: Sendable {
@@ -35,8 +36,8 @@ struct HBJobRegistry: Sendable {
         }
     }
 
-    func decode(data: Data) throws -> any HBJob {
-        return try JSONDecoder().decode(HBAnyCodableJob.self, from: data, userInfoConfiguration: self).job
+    func decode(_ buffer: ByteBuffer) throws -> any HBJob {
+        return try JSONDecoder().decode(HBAnyCodableJob.self, from: buffer, userInfoConfiguration: self).job
     }
 
     func decode(from decoder: Decoder) throws -> any HBJob {

@@ -14,6 +14,7 @@
 
 import Collections
 import Foundation
+import NIOCore
 
 /// In memory implementation of job queue driver. Stores job data in a circular buffer
 public final class HBMemoryQueue: HBJobQueueDriver {
@@ -45,8 +46,8 @@ public final class HBMemoryQueue: HBJobQueueDriver {
     ///   - job: Job
     ///   - eventLoop: Eventloop to run process on (ignored in this case)
     /// - Returns: Queued job
-    @discardableResult public func push(data: Data) async throws -> JobID {
-        return try await self.queue.push(data)
+    @discardableResult public func push(_ buffer: ByteBuffer) async throws -> JobID {
+        return try await self.queue.push(buffer)
     }
 
     public func finished(jobId: JobID) async throws {
@@ -55,14 +56,14 @@ public final class HBMemoryQueue: HBJobQueueDriver {
 
     public func failed(jobId: JobID, error: any Error) async throws {
         if let job = await self.queue.clearAndReturnPendingJob(jobId: jobId) {
-            self.onFailedJob(.init(id: jobId, jobData: job), error)
+            self.onFailedJob(.init(id: jobId, jobBuffer: job), error)
         }
     }
 
     /// Internal actor managing the job queue
     fileprivate actor Internal {
         var queue: Deque<HBQueuedJob<JobID>>
-        var pendingJobs: [JobID: Data]
+        var pendingJobs: [JobID: ByteBuffer]
         var isStopped: Bool
 
         init() {
@@ -71,9 +72,9 @@ public final class HBMemoryQueue: HBJobQueueDriver {
             self.pendingJobs = .init()
         }
 
-        func push(_ jobData: Data) throws -> JobID {
+        func push(_ jobBuffer: ByteBuffer) throws -> JobID {
             let id = JobID()
-            self.queue.append(HBQueuedJob(id: id, jobData: jobData))
+            self.queue.append(HBQueuedJob(id: id, jobBuffer: jobBuffer))
             return id
         }
 
@@ -81,7 +82,7 @@ public final class HBMemoryQueue: HBJobQueueDriver {
             self.pendingJobs[jobId] = nil
         }
 
-        func clearAndReturnPendingJob(jobId: JobID) -> Data? {
+        func clearAndReturnPendingJob(jobId: JobID) -> ByteBuffer? {
             let instance = self.pendingJobs[jobId]
             self.pendingJobs[jobId] = nil
             return instance
@@ -93,7 +94,7 @@ public final class HBMemoryQueue: HBJobQueueDriver {
                     return nil
                 }
                 if let request = queue.popFirst() {
-                    self.pendingJobs[request.id] = request.jobData
+                    self.pendingJobs[request.id] = request.jobBuffer
                     return request
                 }
                 try await Task.sleep(for: .milliseconds(100))

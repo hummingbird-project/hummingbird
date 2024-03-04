@@ -67,7 +67,7 @@ final class HBJobQueueHandler<Queue: HBJobQueueDriver>: Service {
         logger[metadataKey: "hb_job_id"] = .stringConvertible(queuedJob.id)
         let job: any HBJob
         do {
-            job = try self.jobRegistry.decode(data: queuedJob.jobData)
+            job = try self.jobRegistry.decode(queuedJob.jobBuffer)
         } catch let error as JobQueueError where error == .unrecognisedJobId {
             logger.debug("Failed to find Job with ID while decoding")
             try await self.queue.failed(jobId: queuedJob.id, error: error)

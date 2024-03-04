@@ -13,6 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import NIOCore
+import NIOFoundationCompat
 
 /// Implementation of DecodableWithConfiguration which extracts the configuration from the userInfo array
 ///
@@ -40,10 +42,10 @@ extension JSONDecoder {
     /// protocol
     func decode<T>(
         _ type: T.Type,
-        from data: Data,
+        from buffer: ByteBuffer,
         userInfoConfiguration: T.DecodingConfiguration
     ) throws -> T where T: DecodableWithUserInfoConfiguration {
         self.userInfo[.configuration] = userInfoConfiguration
-        return try self.decode(type, from: data)
+        return try self.decode(type, from: buffer)
     }
 }

@@ -13,17 +13,18 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import NIOCore
 
 /// Queued job. Includes job data, plus the id for the job
 public struct HBQueuedJob<JobID: Sendable>: Sendable {
     /// Job instance id
     public let id: JobID
     /// Job data
-    public let jobData: Data
+    public let jobBuffer: ByteBuffer
 
     /// Initialize a queue job
-    public init(id: JobID, jobData: Data) {
-        self.jobData = jobData
+    public init(id: JobID, jobBuffer: ByteBuffer) {
+        self.jobBuffer = jobBuffer
         self.id = id
     }
 }

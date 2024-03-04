@@ -14,6 +14,7 @@
 
 import Foundation
 import Logging
+import NIOCore
 
 /// Job queue protocol.
 ///
@@ -25,7 +26,7 @@ public protocol HBJobQueueDriver: AsyncSequence, Sendable where Element == HBQue
     func onInit() async throws
     /// Push Job onto queue
     /// - Returns: Identifier of queued job
-    func push(data: Data) async throws -> JobID
+    func push(_ buffer: ByteBuffer) async throws -> JobID
     /// This is called to say job has finished processing and it can be deleted
     func finished(jobId: JobID) async throws
     /// This is called to say job has failed to run and should be put aside

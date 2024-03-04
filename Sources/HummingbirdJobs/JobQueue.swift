@@ -14,6 +14,8 @@
 
 import Foundation
 import Logging
+import NIOCore
+import NIOFoundationCompat
 import ServiceLifecycle
 
 /// Job queue
@@ -26,10 +28,12 @@ public struct HBJobQueue<Queue: HBJobQueueDriver>: Service {
     /// underlying driver for queue
     public let queue: Queue
     let handler: HBJobQueueHandler<Queue>
+    let allocator: ByteBufferAllocator
 
     public init(_ queue: Queue, numWorkers: Int = 1, logger: Logger) {
         self.queue = queue
         self.handler = .init(queue: queue, numWorkers: numWorkers, logger: logger)
+        self.allocator = .init()
     }
 
     ///  Push Job onto queue
@@ -39,8 +43,8 @@ public struct HBJobQueue<Queue: HBJobQueueDriver>: Service {
     /// - Returns: Identifier of queued job
     @discardableResult public func push<Parameters: Codable & Sendable>(id: HBJobIdentifier<Parameters>, parameters: Parameters) async throws -> Queue.JobID {
         let jobRequest = HBJobRequest(id: id, parameters: parameters)
-        let data = try JSONEncoder().encode(jobRequest)
-        return try await self.queue.push(data: data)
+        let buffer = try JSONEncoder().encodeAsByteBuffer(jobRequest, allocator: self.allocator)
+        return try await self.queue.push(buffer)
     }
 
     ///  Register job type
