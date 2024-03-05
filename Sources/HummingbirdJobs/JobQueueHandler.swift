@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,36 +12,44 @@
 //
 //===----------------------------------------------------------------------===//
 
-import AsyncAlgorithms
-import Hummingbird
 import Logging
 import ServiceLifecycle
 
 /// Object handling a single job queue
-public final class HBJobQueueHandler<Queue: HBJobQueue>: Service {
-    public init(queue: Queue, numWorkers: Int, logger: Logger) {
+final class HBJobQueueHandler<Queue: HBJobQueueDriver>: Service {
+    init(queue: Queue, numWorkers: Int, logger: Logger) {
         self.queue = queue
         self.numWorkers = numWorkers
         self.logger = logger
+        self.jobRegistry = .init()
     }
 
-    public func run() async throws {
+    ///  Register job
+    /// - Parameters:
+    ///   - id: Job Identifier
+    ///   - maxRetryCount: Maximum number of times job is retried before being flagged as failed
+    ///   - execute: Job code
+    func registerJob(_ job: HBJobDefinition<some Codable & Sendable>) {
+        self.jobRegistry.registerJob(job: job)
+    }
+
+    func run() async throws {
         try await self.queue.onInit()
 
         try await withGracefulShutdownHandler {
             try await withThrowingTaskGroup(of: Void.self) { group in
                 var iterator = self.queue.makeAsyncIterator()
                 for _ in 0..<self.numWorkers {
-                    if let job = try await self.getNextJob(&iterator) {
+                    if let job = try await iterator.next() {
                         group.addTask {
-                            await self.runJob(job)
+                            try await self.runJob(job)
                         }
                     }
                 }
-                while let job = try await self.getNextJob(&iterator) {
+                while let job = try await iterator.next() {
                     try await group.next()
                     group.addTask {
-                        await self.runJob(job)
+                        try await self.runJob(job)
                     }
                 }
                 group.cancelAll()
@@ -54,30 +62,30 @@ public final class HBJobQueueHandler<Queue: HBJobQueue>: Service {
         }
     }
 
-    func getNextJob(_ queueIterator: inout Queue.AsyncIterator) async throws -> HBQueuedJob<Queue.JobID>? {
-        while true {
-            do {
-                let job = try await queueIterator.next()
-                return job
-            } catch let error as JobQueueError where error == JobQueueError.decodeJobFailed {
-                self.logger.error("Job failed to decode.")
-            }
-        }
-    }
-
-    func runJob(_ queuedJob: HBQueuedJob<Queue.JobID>) async {
+    func runJob(_ queuedJob: HBQueuedJob<Queue.JobID>) async throws {
         var logger = logger
         logger[metadataKey: "hb_job_id"] = .stringConvertible(queuedJob.id)
-        logger[metadataKey: "hb_job_type"] = .string(String(describing: type(of: queuedJob.job)))
+        let job: any HBJob
+        do {
+            job = try self.jobRegistry.decode(queuedJob.jobBuffer)
+        } catch let error as JobQueueError where error == .unrecognisedJobId {
+            logger.debug("Failed to find Job with ID while decoding")
+            try await self.queue.failed(jobId: queuedJob.id, error: error)
+            return
+        } catch {
+            logger.debug("Job failed to decode")
+            try await self.queue.failed(jobId: queuedJob.id, error: JobQueueError.decodeJobFailed)
+            return
+        }
+        logger[metadataKey: "hb_job_type"] = .string(job.name)
 
-        let job = queuedJob.job
-        var count = type(of: job).maxRetryCount
+        var count = job.maxRetryCount
         logger.debug("Starting Job")
 
         do {
             while true {
                 do {
-                    try await job.execute(logger: self.logger)
+                    try await job.execute(context: .init(logger: logger))
                     break
                 } catch let error as CancellationError {
                     logger.debug("Job cancelled")
@@ -103,6 +111,7 @@ public final class HBJobQueueHandler<Queue: HBJobQueue>: Service {
         }
     }
 
+    private let jobRegistry: HBJobRegistry
     private let queue: Queue
     private let numWorkers: Int
     let logger: Logger

@@ -21,6 +21,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-collections.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.4.0"),
         .package(url: "https://github.com/apple/swift-http-types.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
@@ -70,8 +71,12 @@ let package = Package(
         .target(
             name: "HummingbirdJobs",
             dependencies: [
-                .byName(name: "Hummingbird"),
+                .product(name: "Collections", package: "swift-collections"),
                 .product(name: "Logging", package: "swift-log"),
+                .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
+                .product(name: "NIOCore", package: "swift-nio"),
+                .product(name: "NIOFoundationCompat", package: "swift-nio"),
+                .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
             ],
             swiftSettings: swiftSettings
         ),
@@ -138,6 +143,7 @@ let package = Package(
         .testTarget(name: "HummingbirdJobsTests", dependencies: [
             .byName(name: "HummingbirdJobs"),
             .byName(name: "HummingbirdXCT"),
+            .product(name: "Atomics", package: "swift-atomics"),
         ]),
         .testTarget(name: "HummingbirdRouterTests", dependencies: [
             .byName(name: "HummingbirdRouter"),

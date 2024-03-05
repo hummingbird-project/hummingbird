@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2023 the Hummingbird authors
+// Copyright (c) 2021-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -13,31 +13,83 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import Hummingbird
 import Logging
+import NIOCore
+import NIOFoundationCompat
+import ServiceLifecycle
 
-/// Job queue protocol.
+/// Job queue
 ///
-/// Defines how to push and pop jobs off a queue
-public protocol HBJobQueue: AsyncSequence, Sendable where Element == HBQueuedJob<JobID> {
-    associatedtype JobID: CustomStringConvertible & Sendable
+/// Wrapper type to bring together a job queue implementation and a job queue
+/// handler. Before you can push jobs onto a queue you should register it
+/// with the queue via either ``HBJobQueue.registerJob(id:maxRetryCount:execute:)`` or
+/// ``HBJobQueue.registerJob(_:)``.
+public struct HBJobQueue<Queue: HBJobQueueDriver>: Service {
+    /// underlying driver for queue
+    public let queue: Queue
+    let handler: HBJobQueueHandler<Queue>
+    let allocator: ByteBufferAllocator
 
-    /// Called when JobQueueHandler is initialised with this queue
-    func onInit() async throws
-    /// Push Job onto queue
+    public init(_ queue: Queue, numWorkers: Int = 1, logger: Logger) {
+        self.queue = queue
+        self.handler = .init(queue: queue, numWorkers: numWorkers, logger: logger)
+        self.allocator = .init()
+    }
+
+    ///  Push Job onto queue
+    /// - Parameters:
+    ///   - id: Job identifier
+    ///   - parameters: parameters for the job
     /// - Returns: Identifier of queued job
-    @discardableResult func push(_ job: HBJob) async throws -> JobID
-    /// This is called to say job has finished processing and it can be deleted
-    func finished(jobId: JobID) async throws
-    /// This is called to say job has failed to run and should be put aside
-    func failed(jobId: JobID, error: any Error) async throws
-    /// stop serving jobs
-    func stop() async
-    /// shutdown queue
-    func shutdownGracefully() async
+    @discardableResult public func push<Parameters: Codable & Sendable>(id: HBJobIdentifier<Parameters>, parameters: Parameters) async throws -> Queue.JobID {
+        let jobRequest = HBJobRequest(id: id, parameters: parameters)
+        let buffer = try JSONEncoder().encodeAsByteBuffer(jobRequest, allocator: self.allocator)
+        return try await self.queue.push(buffer)
+    }
+
+    ///  Register job type
+    /// - Parameters:
+    ///   - id: Job Identifier
+    ///   - maxRetryCount: Maximum number of times job is retried before being flagged as failed
+    ///   - execute: Job code
+    public func registerJob<Parameters: Codable & Sendable>(
+        _ id: HBJobIdentifier<Parameters>,
+        maxRetryCount: Int = 0,
+        execute: @escaping @Sendable (
+            Parameters,
+            HBJobContext
+        ) async throws -> Void
+    ) {
+        let job = HBJobDefinition<Parameters>(id: id, maxRetryCount: maxRetryCount, execute: execute)
+        self.registerJob(job)
+    }
+
+    ///  Register job type
+    /// - Parameters:
+    ///   - job: Job definition
+    public func registerJob(_ job: HBJobDefinition<some Codable & Sendable>) {
+        self.handler.registerJob(job)
+    }
+
+    ///  Run queue handler
+    public func run() async throws {
+        try await self.handler.run()
+    }
 }
 
-extension HBJobQueue {
-    // default version of onInit doing nothing
-    public func onInit() async throws {}
+/// Type used internally to encode a request
+struct HBJobRequest<Parameters: Codable & Sendable>: Encodable, Sendable {
+    let id: HBJobIdentifier<Parameters>
+    let parameters: Parameters
+
+    public init(id: HBJobIdentifier<Parameters>, parameters: Parameters) {
+        self.id = id
+        self.parameters = parameters
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: _HBJobCodingKey.self)
+        let childEncoder = container.superEncoder(forKey: .init(stringValue: self.id.name, intValue: nil))
+        try self.parameters.encode(to: childEncoder)
+    }
 }

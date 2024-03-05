@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -14,9 +14,10 @@
 
 import Collections
 import Foundation
+import NIOCore
 
-/// In memory implementation of job queue driver. Stores jobs in a circular buffer
-public final class HBMemoryJobQueue: HBJobQueue {
+/// In memory implementation of job queue driver. Stores job data in a circular buffer
+public final class HBMemoryQueue: HBJobQueueDriver {
     public typealias Element = HBQueuedJob<JobID>
     public typealias JobID = UUID
 
@@ -45,8 +46,8 @@ public final class HBMemoryJobQueue: HBJobQueue {
     ///   - job: Job
     ///   - eventLoop: Eventloop to run process on (ignored in this case)
     /// - Returns: Queued job
-    @discardableResult public func push(_ job: HBJob) async throws -> JobID {
-        try await self.queue.push(job)
+    @discardableResult public func push(_ buffer: ByteBuffer) async throws -> JobID {
+        return try await self.queue.push(buffer)
     }
 
     public func finished(jobId: JobID) async throws {
@@ -55,14 +56,14 @@ public final class HBMemoryJobQueue: HBJobQueue {
 
     public func failed(jobId: JobID, error: any Error) async throws {
         if let job = await self.queue.clearAndReturnPendingJob(jobId: jobId) {
-            self.onFailedJob(.init(id: jobId, job: job), error)
+            self.onFailedJob(.init(id: jobId, jobBuffer: job), error)
         }
     }
 
     /// Internal actor managing the job queue
     fileprivate actor Internal {
-        var queue: Deque<Data>
-        var pendingJobs: [JobID: HBJob]
+        var queue: Deque<HBQueuedJob<JobID>>
+        var pendingJobs: [JobID: ByteBuffer]
         var isStopped: Bool
 
         init() {
@@ -71,18 +72,17 @@ public final class HBMemoryJobQueue: HBJobQueue {
             self.pendingJobs = .init()
         }
 
-        func push(_ job: HBJob) throws -> JobID {
-            let queuedJob = HBQueuedJob<JobID>(id: JobID(), job: job)
-            let jsonData = try JSONEncoder().encode(queuedJob)
-            self.queue.append(jsonData)
-            return queuedJob.id
+        func push(_ jobBuffer: ByteBuffer) throws -> JobID {
+            let id = JobID()
+            self.queue.append(HBQueuedJob(id: id, jobBuffer: jobBuffer))
+            return id
         }
 
         func clearPendingJob(jobId: JobID) {
             self.pendingJobs[jobId] = nil
         }
 
-        func clearAndReturnPendingJob(jobId: JobID) -> HBJob? {
+        func clearAndReturnPendingJob(jobId: JobID) -> ByteBuffer? {
             let instance = self.pendingJobs[jobId]
             self.pendingJobs[jobId] = nil
             return instance
@@ -93,14 +93,9 @@ public final class HBMemoryJobQueue: HBJobQueue {
                 if self.isStopped {
                     return nil
                 }
-                if let data = queue.popFirst() {
-                    do {
-                        let job = try JSONDecoder().decode(HBQueuedJob<JobID>.self, from: data)
-                        self.pendingJobs[job.id] = job.job
-                        return job
-                    } catch {
-                        throw JobQueueError.decodeJobFailed
-                    }
+                if let request = queue.popFirst() {
+                    self.pendingJobs[request.id] = request.jobBuffer
+                    return request
                 }
                 try await Task.sleep(for: .milliseconds(100))
             }
@@ -117,7 +112,7 @@ public final class HBMemoryJobQueue: HBJobQueue {
     }
 }
 
-extension HBMemoryJobQueue {
+extension HBMemoryQueue {
     public struct AsyncIterator: AsyncIteratorProtocol {
         fileprivate let queue: Internal
 
@@ -128,5 +123,14 @@ extension HBMemoryJobQueue {
 
     public func makeAsyncIterator() -> AsyncIterator {
         .init(queue: self.queue)
+    }
+}
+
+extension HBJobQueueDriver where Self == HBMemoryQueue {
+    /// Return In memory driver for Job Queue
+    /// - Parameters:
+    ///   - onFailedJob: Closure called when a job fails
+    public static var memory: HBMemoryQueue {
+        .init()
     }
 }

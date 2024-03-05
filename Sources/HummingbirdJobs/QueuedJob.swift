@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2023 the Hummingbird authors
+// Copyright (c) 2021-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -13,50 +13,18 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import NIOCore
 
-/// Add codable support for decoding/encoding any HBJob
-public struct HBAnyCodableJob: Codable, Sendable {
-    /// Job data
-    public let job: HBJob
-
-    /// Initialize a queue job
-    public init(_ job: HBJob) {
-        self.job = job
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let jobDecoder = try container.superDecoder(forKey: .job)
-        self.job = try HBJobRegister.decode(from: jobDecoder)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        let jobEncoder = container.superEncoder(forKey: .job)
-        try HBJobRegister.encode(job: self.job, to: jobEncoder)
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case job
-    }
-}
-
-/// Queued job. Includes job, plus the id for the job
+/// Queued job. Includes job data, plus the id for the job
 public struct HBQueuedJob<JobID: Sendable>: Sendable {
-    /// Job id
+    /// Job instance id
     public let id: JobID
     /// Job data
-    private let _job: HBAnyCodableJob
-    /// Job data
-    public var job: HBJob { self._job.job }
-    /// Job data in a codable form
-    public var anyCodableJob: HBAnyCodableJob { self._job }
+    public let jobBuffer: ByteBuffer
 
     /// Initialize a queue job
-    public init(id: JobID, job: HBJob) {
-        self._job = .init(job)
+    public init(id: JobID, jobBuffer: ByteBuffer) {
+        self.jobBuffer = jobBuffer
         self.id = id
     }
 }
-
-extension HBQueuedJob: Codable where JobID: Codable {}
