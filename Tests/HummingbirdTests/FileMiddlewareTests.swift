@@ -15,7 +15,7 @@
 import Foundation
 import HTTPTypes
 import Hummingbird
-import HummingbirdXCT
+import HummingbirdTesting
 import XCTest
 
 class HummingbirdFilesTests: XCTestCase {

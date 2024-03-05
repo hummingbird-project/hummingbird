@@ -15,7 +15,7 @@ let package = Package(
         .library(name: "HummingbirdTLS", targets: ["HummingbirdTLS"]),
         .library(name: "HummingbirdJobs", targets: ["HummingbirdJobs"]),
         .library(name: "HummingbirdRouter", targets: ["HummingbirdRouter"]),
-        .library(name: "HummingbirdXCT", targets: ["HummingbirdXCT"]),
+        .library(name: "HummingbirdTesting", targets: ["HummingbirdTesting"]),
         .executable(name: "PerformanceTest", targets: ["PerformanceTest"]),
     ],
     dependencies: [
@@ -89,7 +89,7 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .target(
-            name: "HummingbirdXCT",
+            name: "HummingbirdTesting",
             dependencies: [
                 .byName(name: "Hummingbird"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
@@ -138,16 +138,16 @@ let package = Package(
             .byName(name: "Hummingbird"),
             .byName(name: "HummingbirdTLS"),
             .byName(name: "HummingbirdHTTP2"),
-            .byName(name: "HummingbirdXCT"),
+            .byName(name: "HummingbirdTesting"),
         ]),
         .testTarget(name: "HummingbirdJobsTests", dependencies: [
             .byName(name: "HummingbirdJobs"),
-            .byName(name: "HummingbirdXCT"),
+            .byName(name: "HummingbirdTesting"),
             .product(name: "Atomics", package: "swift-atomics"),
         ]),
         .testTarget(name: "HummingbirdRouterTests", dependencies: [
             .byName(name: "HummingbirdRouter"),
-            .byName(name: "HummingbirdXCT"),
+            .byName(name: "HummingbirdTesting"),
         ]),
         .testTarget(
             name: "HummingbirdCoreTests",
@@ -156,7 +156,7 @@ let package = Package(
                 .byName(name: "HummingbirdCore"),
                 .byName(name: "HummingbirdHTTP2"),
                 .byName(name: "HummingbirdTLS"),
-                .byName(name: "HummingbirdXCT"),
+                .byName(name: "HummingbirdTesting"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
             ],
             resources: [.process("Certificates")]

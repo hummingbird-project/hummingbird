@@ -14,7 +14,7 @@
 
 import HTTPTypes
 import Hummingbird
-import HummingbirdXCT
+import HummingbirdTesting
 @testable import Instrumentation
 import Tracing
 import XCTest

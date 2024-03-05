@@ -52,7 +52,7 @@ struct HBXCTError: Error, Equatable {
     static var timeout: Self { .init(.timeout) }
 }
 
-/// Protocol for client used by HummingbirdXCT
+/// Protocol for client used by HummingbirdTesting
 public protocol HBXCTClientProtocol: Sendable {
     /// Execute URL request and provide response
     func execute(

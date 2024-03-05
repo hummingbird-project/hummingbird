@@ -15,7 +15,7 @@
 import HTTPTypes
 import Hummingbird
 import HummingbirdRouter
-import HummingbirdXCT
+import HummingbirdTesting
 import Logging
 import NIOCore
 import XCTest

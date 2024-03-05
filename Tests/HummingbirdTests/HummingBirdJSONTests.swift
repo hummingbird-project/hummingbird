@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
-import HummingbirdXCT
+import HummingbirdTesting
 import Logging
 import XCTest
 

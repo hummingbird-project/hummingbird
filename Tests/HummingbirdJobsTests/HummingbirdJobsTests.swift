@@ -14,7 +14,7 @@
 
 import Atomics
 import HummingbirdJobs
-import HummingbirdXCT
+import HummingbirdTesting
 import Logging
 import NIOConcurrencyHelpers
 import ServiceLifecycle

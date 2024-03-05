@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 @testable import Hummingbird
-import HummingbirdXCT
+import HummingbirdTesting
 import XCTest
 
 final class MiddlewareTests: XCTestCase {
