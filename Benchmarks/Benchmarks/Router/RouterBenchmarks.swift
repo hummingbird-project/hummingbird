@@ -16,7 +16,7 @@ import Benchmark
 import HTTPTypes
 import Hummingbird
 import NIOHTTPTypes
-@_spi(HBXCT) import HummingbirdCore
+@_spi(HBInternal) import HummingbirdCore
 import Logging
 import NIOCore
 import NIOPosix

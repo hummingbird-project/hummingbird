@@ -201,7 +201,7 @@ struct HTTP1ClientChannel: HBClientChannel {
 struct InvalidHTTPPart: Error {}
 
 extension NIOAsyncChannelInboundStream<HTTPResponsePart>.AsyncIterator {
-    mutating func readResponse() async throws -> HBXCTClient.Response {
+    mutating func readResponse() async throws -> HBTestClient.Response {
         let headPart = try await self.next()
         guard case .head(let head) = headPart else { throw InvalidHTTPPart() }
         var body = ByteBuffer()
@@ -220,7 +220,7 @@ extension NIOAsyncChannelInboundStream<HTTPResponsePart>.AsyncIterator {
 }
 
 extension NIOAsyncChannelOutboundWriter<HTTPRequestPart> {
-    func writeRequest(_ request: HBXCTClient.Request) async throws {
+    func writeRequest(_ request: HBTestClient.Request) async throws {
         try await self.write(.head(request.head))
         if let body = request.body, body.readableBytes > 0 {
             try await self.write(.body(body))

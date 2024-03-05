@@ -17,8 +17,8 @@ import Hummingbird
 import NIOCore
 import ServiceLifecycle
 
-/// Response structure returned by XCT testing framework
-public struct HBXCTResponse: Sendable {
+/// Response structure returned by testing framework
+public struct HBTestResponse: Sendable {
     public let head: HTTPResponse
     /// response status
     public var status: HTTPResponse.Status { self.head.status }
@@ -30,8 +30,8 @@ public struct HBXCTResponse: Sendable {
     public let trailerHeaders: HTTPFields?
 }
 
-/// Errors thrown by XCT framework.
-struct HBXCTError: Error, Equatable {
+/// Errors thrown by testing framework.
+struct HBTestError: Error, Equatable {
     private enum _Internal {
         case notStarted
         case noHead
@@ -53,17 +53,17 @@ struct HBXCTError: Error, Equatable {
 }
 
 /// Protocol for client used by HummingbirdTesting
-public protocol HBXCTClientProtocol: Sendable {
+public protocol HBTestClientProtocol: Sendable {
     /// Execute URL request and provide response
     func execute(
         uri: String,
         method: HTTPRequest.Method,
         headers: HTTPFields,
         body: ByteBuffer?
-    ) async throws -> HBXCTResponse
+    ) async throws -> HBTestResponse
 }
 
-extension HBXCTClientProtocol {
+extension HBTestClientProtocol {
     /// Send request to associated test framework and call test callback on the response returned
     ///
     /// - Parameters:
@@ -78,18 +78,18 @@ extension HBXCTClientProtocol {
         method: HTTPRequest.Method,
         headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
-        testCallback: @escaping (HBXCTResponse) async throws -> Return = { $0 }
+        testCallback: @escaping (HBTestResponse) async throws -> Return = { $0 }
     ) async throws -> Return {
         let response = try await execute(uri: uri, method: method, headers: headers, body: body)
         return try await testCallback(response)
     }
 }
 
-/// Protocol for Test application.
-protocol HBXCTApplication {
-    /// Associated client with XCT server type
-    associatedtype Client: HBXCTClientProtocol
+/// Protocol for application test framework
+protocol HBApplicationTestFramework {
+    /// Associated client for application test
+    associatedtype Client: HBTestClientProtocol
 
-    /// Run XCT server
-    func run<Value>(_ test: @escaping @Sendable (any HBXCTClientProtocol) async throws -> Value) async throws -> Value
+    /// Run test server
+    func run<Value>(_ test: @escaping @Sendable (any HBTestClientProtocol) async throws -> Value) async throws -> Value
 }

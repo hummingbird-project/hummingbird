@@ -21,7 +21,7 @@ import ServiceLifecycle
 /// TestApplication used to wrap HBApplication being tested.
 ///
 /// This is needed to override the `onServerRunning` function
-struct TestApplication<BaseApp: HBApplicationProtocol>: HBApplicationProtocol, Service {
+internal struct TestApplication<BaseApp: HBApplicationProtocol>: HBApplicationProtocol, Service {
     typealias Responder = BaseApp.Responder
     typealias ChildChannel = BaseApp.ChildChannel
 

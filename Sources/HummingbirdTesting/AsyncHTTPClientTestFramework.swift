@@ -25,8 +25,8 @@ import ServiceLifecycle
 import XCTest
 
 /// Test using a live server and AsyncHTTPClient as a client
-final class HBXCTAsyncHTTPClient<App: HBApplicationProtocol>: HBXCTApplication {
-    struct Client: HBXCTClientProtocol {
+final class HBAsyncHTTPClientTestFramework<App: HBApplicationProtocol>: HBApplicationTestFramework {
+    struct Client: HBTestClientProtocol {
         let client: HTTPClient
         let urlPrefix: String
         let timeout: TimeAmount
@@ -37,7 +37,7 @@ final class HBXCTAsyncHTTPClient<App: HBApplicationProtocol>: HBXCTApplication {
             method: HTTPRequest.Method,
             headers: HTTPFields = [:],
             body: ByteBuffer? = nil
-        ) async throws -> HBXCTResponse {
+        ) async throws -> HBTestResponse {
             let url = "\(self.urlPrefix)\(uri.first == "/" ? "" : "/")\(uri)"
             var request = HTTPClientRequest(url: url)
             request.method = .init(method)
@@ -49,14 +49,14 @@ final class HBXCTAsyncHTTPClient<App: HBApplicationProtocol>: HBXCTApplication {
         }
     }
 
-    init(app: App, scheme: XCTScheme) {
+    init(app: App, scheme: HBTestHTTPScheme) {
         self.timeout = .seconds(15)
         self.application = TestApplication(base: app)
         self.scheme = scheme
     }
 
     /// Start tests
-    func run<Value>(_ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Value) async throws -> Value {
+    func run<Value>(_ test: @escaping @Sendable (HBTestClientProtocol) async throws -> Value) async throws -> Value {
         try await withThrowingTaskGroup(of: Void.self) { group in
             let serviceGroup = ServiceGroup(
                 configuration: .init(
@@ -90,7 +90,7 @@ final class HBXCTAsyncHTTPClient<App: HBApplicationProtocol>: HBXCTApplication {
     }
 
     let application: TestApplication<App>
-    let scheme: XCTScheme
+    let scheme: HBTestHTTPScheme
     let timeout: TimeAmount
 }
 
