@@ -55,7 +55,7 @@ struct HBTestError: Error, Equatable {
 /// Protocol for client used by HummingbirdTesting
 public protocol HBTestClientProtocol: Sendable {
     /// Execute URL request and provide response
-    func execute(
+    func executeRequest(
         uri: String,
         method: HTTPRequest.Method,
         headers: HTTPFields,
@@ -73,14 +73,14 @@ extension HBTestClientProtocol {
     ///   - body: Request body
     ///   - testCallback: closure to call on response returned by test framework
     /// - Returns: Return value of test closure
-    @discardableResult public func XCTExecute<Return>(
+    @discardableResult public func execute<Return>(
         uri: String,
         method: HTTPRequest.Method,
         headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
         testCallback: @escaping (HBTestResponse) async throws -> Return = { $0 }
     ) async throws -> Return {
-        let response = try await execute(uri: uri, method: method, headers: headers, body: body)
+        let response = try await executeRequest(uri: uri, method: method, headers: headers, body: body)
         return try await testCallback(response)
     }
 }

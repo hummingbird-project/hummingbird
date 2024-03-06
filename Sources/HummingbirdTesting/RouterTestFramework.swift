@@ -95,7 +95,7 @@ struct HBRouterTestFramework<Responder: HBResponder>: HBApplicationTestFramework
         let logger: Logger
         let makeContext: @Sendable (Logger) -> Responder.Context
 
-        func execute(uri: String, method: HTTPRequest.Method, headers: HTTPFields, body: ByteBuffer?) async throws -> HBTestResponse {
+        func executeRequest(uri: String, method: HTTPRequest.Method, headers: HTTPFields, body: ByteBuffer?) async throws -> HBTestResponse {
             return try await withThrowingTaskGroup(of: HBTestResponse.self) { group in
                 let (stream, source) = HBRequestBody.makeStream()
                 let request = HBRequest(

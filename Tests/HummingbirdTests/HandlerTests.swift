@@ -38,7 +38,7 @@ final class HandlerTests: XCTestCase {
         try await app.test(.router) { client in
             let body = ByteBufferAllocator().buffer(string: #"{"foo": "bar"}"#)
 
-            try await client.XCTExecute(
+            try await client.execute(
                 uri: "/hello",
                 method: .post,
                 body: body
@@ -58,7 +58,7 @@ final class HandlerTests: XCTestCase {
         try await app.test(.router) { client in
             let body = ByteBufferAllocator().buffer(string: #"{"value": "bar"}"#)
 
-            try await client.XCTExecute(
+            try await client.execute(
                 uri: "/hello",
                 method: .post,
                 body: body
@@ -78,7 +78,7 @@ final class HandlerTests: XCTestCase {
         try await app.test(.router) { client in
             let body = ByteBufferAllocator().buffer(string: #"{"value": null}"#)
 
-            try await client.XCTExecute(
+            try await client.execute(
                 uri: "/hello",
                 method: .post,
                 body: body
@@ -103,7 +103,7 @@ final class HandlerTests: XCTestCase {
         try await app.test(.router) { client in
             let body = ByteBufferAllocator().buffer(string: #"{invalid}"#)
 
-            try await client.XCTExecute(
+            try await client.execute(
                 uri: "/hello",
                 method: .post,
                 body: body
@@ -122,7 +122,7 @@ final class HandlerTests: XCTestCase {
 
         try await app.test(.router) { client in
 
-            try await client.XCTExecute(uri: "/hello", method: .post, body: ByteBufferAllocator().buffer(string: #"{"value": "Adam"}"#)) { response in
+            try await client.execute(uri: "/hello", method: .post, body: ByteBufferAllocator().buffer(string: #"{"value": "Adam"}"#)) { response in
                 XCTAssertEqual(String(buffer: response.body), "String: Adam")
             }
         }
@@ -134,7 +134,7 @@ final class HandlerTests: XCTestCase {
         let app = HBApplication(responder: router.buildResponder())
 
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/hello", method: .get, body: ByteBufferAllocator().buffer(string: #"{"name2": "Adam"}"#)) { response in
+            try await client.execute(uri: "/hello", method: .get, body: ByteBufferAllocator().buffer(string: #"{"name2": "Adam"}"#)) { response in
                 XCTAssertEqual(response.status, .badRequest)
             }
         }
@@ -158,7 +158,7 @@ final class HandlerTests: XCTestCase {
 
         try await app.test(.router) { client in
 
-            try await client.XCTExecute(uri: "/23", method: .put) { response in
+            try await client.execute(uri: "/23", method: .put) { response in
                 XCTAssertEqual(String(buffer: response.body), "23")
             }
         }

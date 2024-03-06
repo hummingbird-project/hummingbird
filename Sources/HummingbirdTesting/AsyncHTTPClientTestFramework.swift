@@ -32,7 +32,7 @@ final class HBAsyncHTTPClientTestFramework<App: HBApplicationProtocol>: HBApplic
         let timeout: TimeAmount
 
         /// Send request and call test callback on the response returned
-        func execute(
+        func executeRequest(
             uri: String,
             method: HTTPRequest.Method,
             headers: HTTPFields = [:],

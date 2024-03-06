@@ -42,7 +42,7 @@ final class TracingTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/users/42", method: .get) { response in
+            try await client.execute(uri: "/users/42", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(String(buffer: response.body), "42")
             }
@@ -81,7 +81,7 @@ final class TracingTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/users", method: .post, headers: [.contentLength: "2"], body: ByteBuffer(string: "42")) { response in
+            try await client.execute(uri: "/users", method: .post, headers: [.contentLength: "2"], body: ByteBuffer(string: "42")) { response in
                 XCTAssertEqual(response.status, .internalServerError)
             }
         }
@@ -132,7 +132,7 @@ final class TracingTests: XCTestCase {
             var requestHeaders = HTTPFields()
             requestHeaders[values: .accept] = ["text/plain", "application/json"]
             requestHeaders[.cacheControl] = "no-cache"
-            try await client.XCTExecute(uri: "/users/42", method: .get, headers: requestHeaders) { response in
+            try await client.execute(uri: "/users/42", method: .get, headers: requestHeaders) { response in
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(String(buffer: response.body), "42")
             }
@@ -173,7 +173,7 @@ final class TracingTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/users", method: .post) { response in
+            try await client.execute(uri: "/users", method: .post) { response in
                 XCTAssertEqual(response.status, .noContent)
             }
         }
@@ -209,7 +209,7 @@ final class TracingTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .get) { response in
+            try await client.execute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
             }
         }
@@ -242,7 +242,7 @@ final class TracingTests: XCTestCase {
         router.middlewares.add(HBTracingMiddleware())
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .get) { response in
+            try await client.execute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .notFound)
             }
         }
@@ -285,7 +285,7 @@ final class TracingTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .get) { response in
+            try await client.execute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
             }
         }
@@ -320,7 +320,7 @@ final class TracingTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .get) { response in
+            try await client.execute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
             }
         }
@@ -368,7 +368,7 @@ final class TracingTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .get) { response in
+            try await client.execute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
             }
         }
@@ -405,7 +405,7 @@ extension TracingTests {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .get) { response in
+            try await client.execute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
             }
         }
