@@ -18,8 +18,8 @@
 // https://github.com/fabianfett/pure-swift-json/blob/master/Sources/PureSwiftJSONParsing/DocumentReader.swift
 
 /// Reader object for parsing String buffers
-public struct HBParser: Sendable {
-    public enum Error: Swift.Error {
+package struct HBParser: Sendable {
+    package enum Error: Swift.Error {
         case overflow
         case unexpected
         case emptyString
@@ -28,7 +28,7 @@ public struct HBParser: Sendable {
 
     /// Create a Parser object
     /// - Parameter string: UTF8 data to parse
-    public init?(_ utf8Data: some Collection<UInt8>, validateUTF8: Bool = true) {
+    package init?(_ utf8Data: some Collection<UInt8>, validateUTF8: Bool = true) {
         if let buffer = utf8Data as? [UInt8] {
             self.buffer = buffer
         } else {
@@ -43,19 +43,19 @@ public struct HBParser: Sendable {
         }
     }
 
-    public init(_ string: String) {
+    package init(_ string: String) {
         self.buffer = Array(string.utf8)
         self.index = 0
         self.range = 0..<self.buffer.endIndex
     }
 
     /// Return contents of parser as a string
-    public var count: Int {
+    package var count: Int {
         return self.range.count
     }
 
     /// Return contents of parser as a string
-    public var string: String {
+    package var string: String {
         return makeString(self.buffer[self.range])
     }
 
@@ -83,7 +83,7 @@ extension HBParser {
     }
 }
 
-public extension HBParser {
+package extension HBParser {
     /// Return current character
     /// - Throws: .overflow
     /// - Returns: Current character
@@ -347,7 +347,7 @@ public extension HBParser {
 }
 
 /// Public versions of internal functions which include tests for overflow
-public extension HBParser {
+package extension HBParser {
     /// Return the character at the current position
     /// - Throws: .overflow
     /// - Returns: Unicode.Scalar
@@ -636,11 +636,11 @@ extension HBParser {
 }
 
 extension Unicode.Scalar {
-    public var isWhitespace: Bool {
+    package var isWhitespace: Bool {
         return properties.isWhitespace
     }
 
-    public var isNewline: Bool {
+    package var isNewline: Bool {
         switch self.value {
         case 0x000A...0x000D /* LF ... CR */: return true
         case 0x0085 /* NEXT LINE (NEL) */: return true
@@ -649,22 +649,10 @@ extension Unicode.Scalar {
         default: return false
         }
     }
-
-    public var isNumber: Bool {
-        return properties.numericType != nil
-    }
-
-    public var isLetter: Bool {
-        return properties.isAlphabetic
-    }
-
-    public var isLetterOrNumber: Bool {
-        return self.isLetter || self.isNumber
-    }
 }
 
 extension Set<Unicode.Scalar> {
-    public init(_ string: String) {
+    init(_ string: String) {
         self = Set(string.unicodeScalars)
     }
 }
