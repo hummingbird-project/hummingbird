@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
-import HummingbirdXCT
+import HummingbirdTesting
 import Logging
 import NIOCore
 import XCTest
@@ -50,7 +50,7 @@ class HummingBirdURLEncodedTests: XCTestCase {
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
             let body = "name=John%20Smith&email=john.smith%40email.com&age=25"
-            try await client.XCTExecute(uri: "/user", method: .put, body: ByteBufferAllocator().buffer(string: body)) {
+            try await client.execute(uri: "/user", method: .put, body: ByteBufferAllocator().buffer(string: body)) {
                 XCTAssertEqual($0.status, .ok)
             }
         }
@@ -63,7 +63,7 @@ class HummingBirdURLEncodedTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/user", method: .get) { response in
+            try await client.execute(uri: "/user", method: .get) { response in
                 let user = try URLEncodedFormDecoder().decode(User.self, from: String(buffer: response.body))
                 XCTAssertEqual(user.name, "John Smith")
                 XCTAssertEqual(user.email, "john.smith@email.com")

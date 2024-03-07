@@ -15,7 +15,7 @@
 #if canImport(Network)
 
 import HummingbirdCore
-import HummingbirdXCT
+import HummingbirdTesting
 import Logging
 import Network
 import NIOCore

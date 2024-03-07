@@ -49,7 +49,7 @@ Hummingbird is designed to require the least number of dependencies possible, bu
 - `HummingbirdRouter`: an alternative router that uses a resultbuilder.
 - `HummingbirdTLS`: TLS support.
 - `HummingbirdHTTP2`: Support for HTTP2 upgrades.
-- `HummingbirdXCT`: helper functions to aid testing Hummingbird projects.
+- `HummingbirdTesting`: helper functions to aid testing Hummingbird projects.
 
 And also the following are available in other repositories in this organisation
 

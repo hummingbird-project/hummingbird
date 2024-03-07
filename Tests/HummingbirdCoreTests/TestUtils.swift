@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import HummingbirdCore
-import HummingbirdXCT
+import HummingbirdTesting
 import Logging
 import NIOCore
 import NIOSSL
@@ -74,8 +74,8 @@ public func testServer<ChildChannel: HBChildChannel, Value: Sendable>(
     configuration: HBServerConfiguration,
     eventLoopGroup: EventLoopGroup,
     logger: Logger,
-    clientConfiguration: HBXCTClient.Configuration = .init(),
-    _ test: @escaping @Sendable (HBServer<ChildChannel>, HBXCTClient) async throws -> Value
+    clientConfiguration: HBTestClient.Configuration = .init(),
+    _ test: @escaping @Sendable (HBServer<ChildChannel>, HBTestClient) async throws -> Value
 ) async throws -> Value {
     try await testServer(
         responder: responder,
@@ -84,7 +84,7 @@ public func testServer<ChildChannel: HBChildChannel, Value: Sendable>(
         eventLoopGroup: eventLoopGroup,
         logger: logger
     ) { (server: HBServer<ChildChannel>, port: Int) in
-        let client = HBXCTClient(
+        let client = HBTestClient(
             host: "localhost",
             port: port,
             configuration: clientConfiguration,
@@ -103,8 +103,8 @@ public func testServer<Value: Sendable>(
     configuration: HBServerConfiguration,
     eventLoopGroup: EventLoopGroup,
     logger: Logger,
-    clientConfiguration: HBXCTClient.Configuration = .init(),
-    _ test: @escaping @Sendable (HBXCTClient) async throws -> Value
+    clientConfiguration: HBTestClient.Configuration = .init(),
+    _ test: @escaping @Sendable (HBTestClient) async throws -> Value
 ) async throws -> Value {
     try await testServer(
         responder: responder,

@@ -15,8 +15,8 @@
 import Atomics
 import HTTPTypes
 import NIOEmbedded
-@_spi(HBXCT) import Hummingbird
-@_spi(HBXCT) import HummingbirdCore
+@_spi(HBInternal) import Hummingbird
+@_spi(HBInternal) import HummingbirdCore
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
@@ -25,7 +25,7 @@ import NIOPosix
 import ServiceLifecycle
 
 /// Test sending requests directly to router. This does not setup a live server
-struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Context: HBBaseRequestContext {
+struct HBRouterTestFramework<Responder: HBResponder>: HBApplicationTestFramework where Responder.Context: HBBaseRequestContext {
     let responder: Responder
     let makeContext: @Sendable (Logger) -> Responder.Context
     let services: [any Service]
@@ -46,7 +46,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
     }
 
     /// Run test
-    func run<Value>(_ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Value) async throws -> Value {
+    func run<Value>(_ test: @escaping @Sendable (HBTestClientProtocol) async throws -> Value) async throws -> Value {
         let client = Client(
             responder: self.responder,
             logger: self.logger,
@@ -88,15 +88,15 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
         }
     }
 
-    /// HBXCTRouter client. Constructs an `HBRequest` sends it to the router and then converts
-    /// resulting response back to XCT response type
-    struct Client: HBXCTClientProtocol {
+    /// HBRouterTestFramework client. Constructs an `HBRequest` sends it to the router and then converts
+    /// resulting response back to test response type
+    struct Client: HBTestClientProtocol {
         let responder: Responder
         let logger: Logger
         let makeContext: @Sendable (Logger) -> Responder.Context
 
-        func execute(uri: String, method: HTTPRequest.Method, headers: HTTPFields, body: ByteBuffer?) async throws -> HBXCTResponse {
-            return try await withThrowingTaskGroup(of: HBXCTResponse.self) { group in
+        func executeRequest(uri: String, method: HTTPRequest.Method, headers: HTTPFields, body: ByteBuffer?) async throws -> HBTestResponse {
+            return try await withThrowingTaskGroup(of: HBTestResponse.self) { group in
                 let (stream, source) = HBRequestBody.makeStream()
                 let request = HBRequest(
                     head: .init(method: method, scheme: "http", authority: "localhost", path: uri, headerFields: headers),
@@ -118,7 +118,7 @@ struct HBXCTRouter<Responder: HBResponder>: HBXCTApplication where Responder.Con
                     let responseWriter = RouterResponseWriter()
                     let trailerHeaders = try await response.body.write(responseWriter)
                     return responseWriter.collated.withLockedValue { collated in
-                        HBXCTResponse(head: response.head, body: collated, trailerHeaders: trailerHeaders)
+                        HBTestResponse(head: response.head, body: collated, trailerHeaders: trailerHeaders)
                     }
                 }
 

@@ -16,7 +16,7 @@ import AsyncAlgorithms
 import Atomics
 import HTTPTypes
 import HummingbirdCore
-import HummingbirdXCT
+import HummingbirdTesting
 import Logging
 import NIOCore
 import NIOHTTPTypes
@@ -281,7 +281,7 @@ class HummingBirdCoreTests: XCTestCase {
                 do {
                     _ = try await client.get("/", headers: [.connection: "keep-alive"])
                     XCTFail("Should not get here")
-                } catch HBXCTClient.Error.connectionClosing {
+                } catch HBTestClient.Error.connectionClosing {
                 } catch {
                     XCTFail("Unexpected error: \(error)")
                 }

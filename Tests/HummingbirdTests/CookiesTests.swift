@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 @testable import Hummingbird
-import HummingbirdXCT
+import HummingbirdTesting
 import XCTest
 
 class CookieTests: XCTestCase {
@@ -73,7 +73,7 @@ class CookieTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .post) { response in
+            try await client.execute(uri: "/", method: .post) { response in
                 XCTAssertEqual(response.headers[.setCookie], "test=value; HttpOnly")
             }
         }
@@ -86,7 +86,7 @@ class CookieTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .post) { response in
+            try await client.execute(uri: "/", method: .post) { response in
                 XCTAssertEqual(response.headers[.setCookie], "test=value; HttpOnly")
             }
         }
@@ -99,7 +99,7 @@ class CookieTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .post, headers: [.cookie: "test=value"]) { response in
+            try await client.execute(uri: "/", method: .post, headers: [.cookie: "test=value"]) { response in
                 XCTAssertEqual(String(buffer: response.body), "value")
             }
         }

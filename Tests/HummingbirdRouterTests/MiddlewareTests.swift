@@ -15,7 +15,7 @@
 import HTTPTypes
 import Hummingbird
 import HummingbirdRouter
-import HummingbirdXCT
+import HummingbirdTesting
 import Logging
 import NIOCore
 import XCTest
@@ -43,7 +43,7 @@ final class MiddlewareTests: XCTestCase {
         }
         let app = HBApplication(responder: router)
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/hello", method: .get) { response in
+            try await client.execute(uri: "/hello", method: .get) { response in
                 XCTAssertEqual(response.headers[.middleware], "TestMiddleware")
             }
         }
@@ -67,7 +67,7 @@ final class MiddlewareTests: XCTestCase {
         }
         let app = HBApplication(responder: router)
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/hello", method: .get) { response in
+            try await client.execute(uri: "/hello", method: .get) { response in
                 // headers come back in opposite order as middleware is applied to responses in that order
                 XCTAssertEqual(response.headers[values: .middleware].first, "second")
                 XCTAssertEqual(response.headers[values: .middleware].last, "first")
@@ -92,7 +92,7 @@ final class MiddlewareTests: XCTestCase {
         }
         let app = HBApplication(responder: router)
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/hello", method: .get) { _ in
+            try await client.execute(uri: "/hello", method: .get) { _ in
             }
         }
     }
@@ -113,7 +113,7 @@ final class MiddlewareTests: XCTestCase {
         let app = HBApplication(responder: router)
 
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/hello", method: .get) { response in
+            try await client.execute(uri: "/hello", method: .get) { response in
                 XCTAssertEqual(String(buffer: response.body), "Edited error")
                 XCTAssertEqual(response.status, .notFound)
             }
@@ -154,7 +154,7 @@ final class MiddlewareTests: XCTestCase {
 
         try await app.test(.router) { client in
             let buffer = self.randomBuffer(size: 64000)
-            try await client.XCTExecute(uri: "/test", method: .get, body: buffer) { response in
+            try await client.execute(uri: "/test", method: .get, body: buffer) { response in
                 let expectedOutput = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
                 XCTAssertEqual(expectedOutput, response.body)
             }

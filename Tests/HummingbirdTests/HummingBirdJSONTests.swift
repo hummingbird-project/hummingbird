@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
-import HummingbirdXCT
+import HummingbirdTesting
 import Logging
 import XCTest
 
@@ -38,7 +38,7 @@ class HummingbirdJSONTests: XCTestCase {
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
             let body = #"{"name": "John Smith", "email": "john.smith@email.com", "age": 25}"#
-            try await client.XCTExecute(uri: "/user", method: .put, body: ByteBufferAllocator().buffer(string: body)) {
+            try await client.execute(uri: "/user", method: .put, body: ByteBufferAllocator().buffer(string: body)) {
                 XCTAssertEqual($0.status, .ok)
             }
         }
@@ -51,7 +51,7 @@ class HummingbirdJSONTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/user", method: .get) { response in
+            try await client.execute(uri: "/user", method: .get) { response in
                 let user = try JSONDecoder().decode(User.self, from: response.body)
                 XCTAssertEqual(user.name, "John Smith")
                 XCTAssertEqual(user.email, "john.smith@email.com")
@@ -67,7 +67,7 @@ class HummingbirdJSONTests: XCTestCase {
         }
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/json", method: .get) { response in
+            try await client.execute(uri: "/json", method: .get) { response in
                 XCTAssertEqual(String(buffer: response.body), #"{"message":"Hello, world!"}"#)
             }
         }

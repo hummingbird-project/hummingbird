@@ -17,7 +17,7 @@ import HTTPTypes
 import NIOCore
 
 /// HTTP client types
-extension HBXCTClient {
+extension HBTestClient {
     public enum Error: Swift.Error {
         case invalidURL
         case malformedResponse

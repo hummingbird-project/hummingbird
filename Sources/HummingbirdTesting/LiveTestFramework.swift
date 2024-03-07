@@ -23,20 +23,20 @@ import ServiceLifecycle
 import XCTest
 
 /// Test using a live server
-final class HBXCTLive<App: HBApplicationProtocol>: HBXCTApplication {
-    struct Client: HBXCTClientProtocol {
-        let client: HBXCTClient
+final class HBLiveTestFramework<App: HBApplicationProtocol>: HBApplicationTestFramework {
+    struct Client: HBTestClientProtocol {
+        let client: HBTestClient
 
         /// Send request and call test callback on the response returned
-        func execute(
+        func executeRequest(
             uri: String,
             method: HTTPRequest.Method,
             headers: HTTPFields = [:],
             body: ByteBuffer? = nil
-        ) async throws -> HBXCTResponse {
+        ) async throws -> HBTestResponse {
             var headers = headers
             headers[.connection] = "keep-alive"
-            let request = HBXCTClient.Request(uri, method: method, authority: "localhost", headers: headers, body: body)
+            let request = HBTestClient.Request(uri, method: method, authority: "localhost", headers: headers, body: body)
             let response = try await client.execute(request)
             return .init(head: response.head, body: response.body ?? ByteBuffer(), trailerHeaders: response.trailerHeaders)
         }
@@ -48,7 +48,7 @@ final class HBXCTLive<App: HBApplicationProtocol>: HBXCTApplication {
     }
 
     /// Start tests
-    func run<Value>(_ test: @escaping @Sendable (HBXCTClientProtocol) async throws -> Value) async throws -> Value {
+    func run<Value>(_ test: @escaping @Sendable (HBTestClientProtocol) async throws -> Value) async throws -> Value {
         try await withThrowingTaskGroup(of: Void.self) { group in
             let serviceGroup = ServiceGroup(
                 configuration: .init(
@@ -61,7 +61,7 @@ final class HBXCTLive<App: HBApplicationProtocol>: HBXCTApplication {
                 try await serviceGroup.run()
             }
             let port = await self.application.portPromise.wait()
-            let client = HBXCTClient(
+            let client = HBTestClient(
                 host: "localhost",
                 port: port,
                 configuration: .init(timeout: self.timeout),

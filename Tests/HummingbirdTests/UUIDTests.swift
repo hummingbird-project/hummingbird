@@ -25,7 +25,7 @@ final class UUIDTests: XCTestCase {
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
             let uuid = UUID()
-            try await client.XCTExecute(uri: "\(uuid)", method: .get) { response in
+            try await client.execute(uri: "\(uuid)", method: .get) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(String(buffer: body), "\"\(uuid.uuidString)\"")
@@ -41,7 +41,7 @@ final class UUIDTests: XCTestCase {
         let app = HBApplication(responder: router.buildResponder())
         try await app.test(.router) { client in
             let uuid = UUID()
-            try await client.XCTExecute(uri: "\(uuid)", method: .get) { response in
+            try await client.execute(uri: "\(uuid)", method: .get) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(String(buffer: body), "\"\(uuid.uuidString)\"")
@@ -59,7 +59,7 @@ final class UUIDTests: XCTestCase {
         try await app.test(.router) { client in
             let uuid = UUID()
             let uuid2 = UUID()
-            try await client.XCTExecute(uri: "/?id=\(uuid)&id=\(uuid2)&id=Wrong", method: .get) { response in
+            try await client.execute(uri: "/?id=\(uuid)&id=\(uuid2)&id=Wrong", method: .get) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(String(buffer: body), "[\"\(uuid.uuidString)\",\"\(uuid2.uuidString)\"]")
@@ -78,13 +78,13 @@ final class UUIDTests: XCTestCase {
             let uuid = UUID()
             let uuid2 = UUID()
             // test good request
-            try await client.XCTExecute(uri: "/?id=\(uuid)&id=\(uuid2)", method: .get) { response in
+            try await client.execute(uri: "/?id=\(uuid)&id=\(uuid2)", method: .get) { response in
                 let body = try XCTUnwrap(response.body)
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(String(buffer: body), "[\"\(uuid.uuidString)\",\"\(uuid2.uuidString)\"]")
             }
             // test bad request
-            try await client.XCTExecute(uri: "/?id=\(uuid)&id=\(uuid2)&id=Wrong", method: .get) { response in
+            try await client.execute(uri: "/?id=\(uuid)&id=\(uuid2)&id=Wrong", method: .get) { response in
                 XCTAssertEqual(response.status, .badRequest)
             }
         }

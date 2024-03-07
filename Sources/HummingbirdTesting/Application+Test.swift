@@ -17,27 +17,27 @@ import HummingbirdCore
 import NIOCore
 
 /// HTTP Scheme to use with AsyncHTTPClient test framework
-public enum XCTScheme: String {
+public enum HBTestHTTPScheme: String {
     case http
     case https
 }
 
 /// Type of test framework
-public struct XCTTestingSetup {
+public struct HBTestingSetup {
     enum Internal {
         case router
         case live
-        case ahc(XCTScheme)
+        case ahc(HBTestHTTPScheme)
     }
 
     let value: Internal
 
     /// Test writing requests directly to router.
-    public static var router: XCTTestingSetup { .init(value: .router) }
+    public static var router: HBTestingSetup { .init(value: .router) }
     /// Sets up a live server and execute tests using a HTTP client. Only supports HTTP1
-    public static var live: XCTTestingSetup { .init(value: .live) }
+    public static var live: HBTestingSetup { .init(value: .live) }
     /// Sets up a live server and execute tests using a HTTP client. Does not support trailer headers
-    public static func ahc(_ scheme: XCTScheme) -> XCTTestingSetup { .init(value: .ahc(scheme)) }
+    public static func ahc(_ scheme: HBTestHTTPScheme) -> HBTestingSetup { .init(value: .ahc(scheme)) }
 }
 
 /// Extends `HBApplicationProtocol` to support testing of applications
@@ -46,7 +46,7 @@ extension HBApplicationProtocol where Responder.Context: HBRequestContext {
 
     /// Test `HBApplication`
     ///
-    /// You use `test` and `XCTExecute` to test applications. You can either test using
+    /// You use `test` and `execute` to test applications. You can either test using
     /// the `.router` test framework which sends requests directly to the router for testing your code or
     /// the `.live` or `.ahc` frameworks which both run live servers to pass requests to, but provide
     /// a single connection HTTP client or AsyncHTTPClient as a client respectively . The `.router` test
@@ -62,7 +62,7 @@ extension HBApplicationProtocol where Responder.Context: HBRequestContext {
     /// let app = HBApplication(router: router)
     /// app.test(.router) { client in
     ///     // does my app return "hello" in the body for this route
-    ///     client.XCTExecute(uri: "/hello", method: .GET) { response in
+    ///     client.execute(uri: "/hello", method: .GET) { response in
     ///         XCTAssertEqual(String(buffer: response.body), "hello")
     ///     }
     /// }
@@ -72,13 +72,13 @@ extension HBApplicationProtocol where Responder.Context: HBRequestContext {
     ///   - testing: indicates which type of testing framework we want
     ///   - configuration: configuration of application
     public func test<Value>(
-        _ testingSetup: XCTTestingSetup,
-        _ test: @escaping @Sendable (any HBXCTClientProtocol) async throws -> Value
+        _ testingSetup: HBTestingSetup,
+        _ test: @escaping @Sendable (any HBTestClientProtocol) async throws -> Value
     ) async throws -> Value {
-        let app: any HBXCTApplication = switch testingSetup.value {
-        case .router: try await HBXCTRouter(app: self)
-        case .live: HBXCTLive(app: self)
-        case .ahc(let scheme): HBXCTAsyncHTTPClient(app: self, scheme: scheme)
+        let app: any HBApplicationTestFramework = switch testingSetup.value {
+        case .router: try await HBRouterTestFramework(app: self)
+        case .live: HBLiveTestFramework(app: self)
+        case .ahc(let scheme): HBAsyncHTTPClientTestFramework(app: self, scheme: scheme)
         }
         return try await app.run(test)
     }
