@@ -164,7 +164,7 @@ final class HummingbirdJobsTests: XCTestCase {
         }
     }
 
-    /// Test job is cancelled on shutdown
+    /// Verify test job is cancelled when service group is cancelled
     func testShutdownJob() async throws {
         let jobIdentifer = HBJobIdentifier<Int>(#function)
         let expectation = XCTestExpectation(description: "TestJob.execute was called", expectedFulfillmentCount: 1)
@@ -185,8 +185,19 @@ final class HummingbirdJobsTests: XCTestCase {
             expectation.fulfill()
             try await Task.sleep(for: .milliseconds(1000))
         }
-        try await self.testJobQueue(jobQueue) {
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            let serviceGroup = ServiceGroup(
+                configuration: .init(
+                    services: [jobQueue],
+                    gracefulShutdownSignals: [.sigterm, .sigint],
+                    logger: Logger(label: "JobQueueService")
+                )
+            )
+            group.addTask {
+                try await serviceGroup.run()
+            }
             try await jobQueue.push(id: jobIdentifer, parameters: 0)
+            group.cancelAll()
             await self.wait(for: [expectation], timeout: 5)
         }
 

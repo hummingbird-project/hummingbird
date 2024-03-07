@@ -52,7 +52,6 @@ final class HBJobQueueHandler<Queue: HBJobQueueDriver>: Service {
                         try await self.runJob(job)
                     }
                 }
-                group.cancelAll()
             }
             await self.queue.shutdownGracefully()
         } onGracefulShutdown: {
