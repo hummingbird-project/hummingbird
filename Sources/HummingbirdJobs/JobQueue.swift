@@ -44,7 +44,9 @@ public struct HBJobQueue<Queue: HBJobQueueDriver>: Service {
     @discardableResult public func push<Parameters: Codable & Sendable>(id: HBJobIdentifier<Parameters>, parameters: Parameters) async throws -> Queue.JobID {
         let jobRequest = HBJobRequest(id: id, parameters: parameters)
         let buffer = try JSONEncoder().encodeAsByteBuffer(jobRequest, allocator: self.allocator)
-        return try await self.queue.push(buffer)
+        let id = try await self.queue.push(buffer)
+        self.handler.logger.debug("Pushed Job", metadata: ["hb_job_id": .stringConvertible(id), "hb_job_type": .string(jobRequest.id.name)])
+        return id
     }
 
     ///  Register job type
@@ -60,6 +62,7 @@ public struct HBJobQueue<Queue: HBJobQueueDriver>: Service {
             HBJobContext
         ) async throws -> Void
     ) {
+        self.handler.logger.info("Registered Job", metadata: ["hb_job_type": .string(id.name)])
         let job = HBJobDefinition<Parameters>(id: id, maxRetryCount: maxRetryCount, execute: execute)
         self.registerJob(job)
     }
@@ -75,6 +78,10 @@ public struct HBJobQueue<Queue: HBJobQueueDriver>: Service {
     public func run() async throws {
         try await self.handler.run()
     }
+}
+
+extension HBJobQueue: CustomStringConvertible {
+    public var description: String { "HBJobQueue<\(String(describing: Queue.self))>" }
 }
 
 /// Type used internally to encode a request
