@@ -2,9 +2,6 @@ name: Validity Check
 
 on:
   pull_request:
-    branches:
-    - main
-    - 2.x.x
 
 jobs:
   validate:

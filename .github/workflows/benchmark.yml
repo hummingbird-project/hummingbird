@@ -5,7 +5,6 @@ on:
   pull_request:
     branches:
       - main
-      - 2.x.x
     paths:
     - '**.swift'
     - '**.yml'
