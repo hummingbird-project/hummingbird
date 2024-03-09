@@ -16,7 +16,7 @@
 #set -eux
 here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 CONTRIBUTORS=""
-BRANCH="2.x.x"
+BRANCH="main"
 
 embed_newline()
 {

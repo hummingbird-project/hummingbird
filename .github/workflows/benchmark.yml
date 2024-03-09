@@ -1,4 +1,4 @@
-name: Benchmark PR vs 2.x.x
+name: Benchmark PR vs main
 
 on:
   workflow_dispatch:
@@ -47,24 +47,24 @@ jobs:
         run: |
           cd Benchmarks
           swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update pull_request
-      - name: Switch to branch '2.x.x'
+      - name: Switch to branch 'main'
         if: ${{ env.hasBenchmark == '1' }}
         run: |
           git stash
-          git checkout 2.x.x
-      - name: Run benchmarks for branch '2.x.x'
+          git checkout main
+      - name: Run benchmarks for branch 'main'
         if: ${{ env.hasBenchmark == '1' }}
         run: |
           cd Benchmarks
-          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update 2.x.x
-      - name: Compare PR and 2.x.x
+          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update main
+      - name: Compare PR and main
         if: ${{ env.hasBenchmark == '1' }}
         id: benchmark
         run: |
           echo $(date) >> $GITHUB_STEP_SUMMARY
           echo "exitStatus=1" >> $GITHUB_ENV
           cd Benchmarks
-          swift package benchmark baseline check 2.x.x pull_request --format markdown >> $GITHUB_STEP_SUMMARY
+          swift package benchmark baseline check main pull_request --format markdown >> $GITHUB_STEP_SUMMARY
           echo "exitStatus=0" >> $GITHUB_ENV
         continue-on-error: true
       - if: ${{ env.exitStatus == '0' }}
@@ -72,14 +72,14 @@ jobs:
         id: prtestsuccess
         run: |
           echo 'PRTEST<<EOF' >> $GITHUB_ENV
-          echo "[Pull request benchmark comparison [${{ matrix.os }}] with '2.x.x' run at $(date -Iseconds)](https://github.com/hummingbird-project/${{ github.event.repository.name }}/actions/runs/${{ github.run_id }})" >> $GITHUB_ENV
+          echo "[Pull request benchmark comparison [${{ matrix.os }}] with 'main' run at $(date -Iseconds)](https://github.com/hummingbird-project/${{ github.event.repository.name }}/actions/runs/${{ github.run_id }})" >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
       - if: ${{ env.exitStatus == '1' }}
         name: Pull request comment text failure
         id: prtestfailure
         run: |
           echo 'PRTEST<<EOF' >> $GITHUB_ENV
-          echo "[Pull request benchmark comparison [${{ matrix.os }}] with '2.x.x' run at $(date -Iseconds)](https://github.com/hummingbird-project/${{ github.event.repository.name }}/actions/runs/${{ github.run_id }})" >> $GITHUB_ENV
+          echo "[Pull request benchmark comparison [${{ matrix.os }}] with 'main' run at $(date -Iseconds)](https://github.com/hummingbird-project/${{ github.event.repository.name }}/actions/runs/${{ github.run_id }})" >> $GITHUB_ENV
           echo "_Pull request had performance regressions_" >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
       - name: Comment PR
