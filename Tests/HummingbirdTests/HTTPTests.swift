@@ -17,7 +17,7 @@ import HummingbirdCore
 import XCTest
 
 class HTTPTests: XCTestCase {
-    func testURI<T: Equatable>(_ uri: HBURL, _ component: KeyPath<HBURL, T>, _ value: T) {
+    func testURI<T: Equatable>(_ uri: HBURI, _ component: KeyPath<HBURI, T>, _ value: T) {
         XCTAssertEqual(uri[keyPath: component], value)
     }
 
@@ -62,7 +62,7 @@ class HTTPTests: XCTestCase {
         let urlString = "https://hummingbird.co.uk/test/url?test1=hello%20rg&test2=true"
         let date = Date()
         for _ in 0..<10000 {
-            _ = HBURL(urlString).queryParameters
+            _ = HBURI(urlString).queryParameters
         }
         print("\(-date.timeIntervalSinceNow)")
     }

@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Simple URL parser
-public struct HBURL: Sendable, CustomStringConvertible, ExpressibleByStringLiteral {
+public struct HBURI: Sendable, CustomStringConvertible, ExpressibleByStringLiteral {
     public struct Scheme: RawRepresentable, Equatable {
         public let rawValue: String
 
@@ -74,7 +74,7 @@ public struct HBURL: Sendable, CustomStringConvertible, ExpressibleByStringLiter
 
     public var description: String { self.string }
 
-    /// Initialize `HBURL` from `String`
+    /// Initialize `HBURI` from `String`
     /// - Parameter string: input string
     public init(_ string: String) {
         enum ParsingState {

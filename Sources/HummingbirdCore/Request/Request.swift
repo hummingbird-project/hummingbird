@@ -19,7 +19,7 @@ public struct HBRequest: Sendable {
     // MARK: Member variables
 
     /// URI path
-    public let uri: HBURL
+    public let uri: HBURI
     /// HTTP head
     public let head: HTTPRequest
     /// Body of HTTP request
