@@ -26,19 +26,24 @@ public struct MetricsMiddleware<Context: BaseRequestContext>: RouterMiddleware {
         let startTime = DispatchTime.now().uptimeNanoseconds
 
         do {
-            let response = try await next(request, context)
-            // need to create dimensions once request has been responded to ensure
-            // we have the correct endpoint path
-            let dimensions: [(String, String)] = [
-                ("hb_uri", context.endpointPath ?? request.uri.path),
-                ("hb_method", request.method.rawValue),
-            ]
-            Counter(label: "hb_requests", dimensions: dimensions).increment()
-            Metrics.Timer(
-                label: "hb_request_duration",
-                dimensions: dimensions,
-                preferredDisplayUnit: .seconds
-            ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
+            var response = try await next(request, context)
+            let originalBody = response.body
+            response.body = .withTrailingHeaders { writer in
+                let headers = try await originalBody.write(writer)
+                // need to create dimensions once request has been responded to ensure
+                // we have the correct endpoint path
+                let dimensions: [(String, String)] = [
+                    ("hb_uri", context.endpointPath ?? request.uri.path),
+                    ("hb_method", request.method.rawValue),
+                ]
+                Counter(label: "hb_requests", dimensions: dimensions).increment()
+                Metrics.Timer(
+                    label: "hb_request_duration",
+                    dimensions: dimensions,
+                    preferredDisplayUnit: .seconds
+                ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
+                return headers
+            }
             return response
         } catch {
             // need to create dimensions once request has been responded to ensure
