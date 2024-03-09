@@ -16,7 +16,7 @@ import Logging
 import NIOCore
 
 /// HTTPServer child channel setup protocol
-public protocol HBChildChannel: Sendable {
+public protocol HBServerChildChannel: Sendable {
     associatedtype Value: Sendable
 
     /// Setup child channel

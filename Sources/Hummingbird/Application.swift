@@ -43,9 +43,9 @@ public enum EventLoopGroupProvider {
 
 public protocol HBApplicationProtocol: Service where Context: HBRequestContext {
     /// Responder that generates a response from a requests and context
-    associatedtype Responder: HBResponder
+    associatedtype Responder: HBRequestResponder
     /// Child Channel setup. This defaults to support HTTP1
-    associatedtype ChildChannel: HBChildChannel & HTTPChannelHandler = HTTP1Channel
+    associatedtype ChildChannel: HBServerChildChannel & HTTPChannelHandler = HTTP1Channel
     /// Context passed with HBRequest to responder
     typealias Context = Responder.Context
 
@@ -159,7 +159,7 @@ extension HBApplicationProtocol {
 /// try await app.runService()
 /// ```
 /// Editing the application setup after calling `runService` will produce undefined behaviour.
-public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel & HTTPChannelHandler>: HBApplicationProtocol where Responder.Context: HBRequestContext {
+public struct HBApplication<Responder: HBRequestResponder, ChildChannel: HBServerChildChannel & HTTPChannelHandler>: HBApplicationProtocol where Responder.Context: HBRequestContext {
     public typealias Context = Responder.Context
     public typealias ChildChannel = ChildChannel
     public typealias Responder = Responder

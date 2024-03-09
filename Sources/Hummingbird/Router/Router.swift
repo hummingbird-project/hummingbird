@@ -59,7 +59,7 @@ public final class HBRouter<Context: HBBaseRequestContext>: HBRouterMethods, HBR
     ///   - path: URI path
     ///   - method: http method
     ///   - responder: handler to call
-    public func add(_ path: String, method: HTTPRequest.Method, responder: any HBResponder<Context>) {
+    public func add(_ path: String, method: HTTPRequest.Method, responder: any HBRequestResponder<Context>) {
         // ensure path starts with a "/" and doesn't end with a "/"
         let path = "/\(path.dropSuffix("/").dropPrefix("/"))"
         self.trie.addEntry(.init(path), value: HBEndpointResponders(path: path)) { node in
@@ -105,7 +105,7 @@ public final class HBRouter<Context: HBBaseRequestContext>: HBRouterMethods, HBR
 }
 
 /// Responder that return a not found error
-struct NotFoundResponder<Context: HBBaseRequestContext>: HBResponder {
+struct NotFoundResponder<Context: HBBaseRequestContext>: HBRequestResponder {
     func respond(to request: HBRequest, context: Context) throws -> HBResponse {
         throw HBHTTPError(.notFound)
     }
@@ -113,7 +113,7 @@ struct NotFoundResponder<Context: HBBaseRequestContext>: HBResponder {
 
 /// A type that has a single method to build a responder
 public protocol HBResponderBuilder {
-    associatedtype Responder: HBResponder
+    associatedtype Responder: HBRequestResponder
     /// build a responder
     func buildResponder() -> Responder
 }

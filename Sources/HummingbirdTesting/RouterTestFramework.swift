@@ -25,7 +25,7 @@ import NIOPosix
 import ServiceLifecycle
 
 /// Test sending requests directly to router. This does not setup a live server
-struct HBRouterTestFramework<Responder: HBResponder>: HBApplicationTestFramework where Responder.Context: HBBaseRequestContext {
+struct HBRouterTestFramework<Responder: HBRequestResponder>: HBApplicationTestFramework where Responder.Context: HBBaseRequestContext {
     let responder: Responder
     let makeContext: @Sendable (Logger) -> Responder.Context
     let services: [any Service]

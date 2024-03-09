@@ -23,7 +23,7 @@ import NIOTransportServices
 import ServiceLifecycle
 
 /// HTTP server class
-public actor HBServer<ChildChannel: HBChildChannel>: Service {
+public actor HBServer<ChildChannel: HBServerChildChannel>: Service {
     public typealias AsyncChildChannel = ChildChannel.Value
     public typealias AsyncServerChannel = NIOAsyncChannel<AsyncChildChannel, Never>
     enum State: CustomStringConvertible {

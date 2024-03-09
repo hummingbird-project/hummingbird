@@ -18,7 +18,7 @@ import NIOCore
 import NIOSSL
 
 /// Sets up child channel to use TLS before accessing base channel setup
-public struct TLSChannel<BaseChannel: HBChildChannel>: HBChildChannel {
+public struct TLSChannel<BaseChannel: HBServerChildChannel>: HBServerChildChannel {
     public typealias Value = BaseChannel.Value
 
     ///  Initialize TLSChannel

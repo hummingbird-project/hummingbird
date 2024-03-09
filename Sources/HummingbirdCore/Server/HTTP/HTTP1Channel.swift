@@ -19,7 +19,7 @@ import NIOHTTPTypes
 import NIOHTTPTypesHTTP1
 
 /// Child channel for processing HTTP1
-public struct HTTP1Channel: HBChildChannel, HTTPChannelHandler {
+public struct HTTP1Channel: HBServerChildChannel, HTTPChannelHandler {
     public typealias Value = NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>
 
     ///  Initialize HTTP1Channel

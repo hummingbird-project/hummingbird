@@ -20,7 +20,7 @@ import NIOHTTPTypes
 import ServiceLifecycle
 
 /// Protocol for HTTP channels
-public protocol HTTPChannelHandler: HBChildChannel {
+public protocol HTTPChannelHandler: HBServerChildChannel {
     typealias Responder = @Sendable (HBRequest, Channel) async throws -> HBResponse
     var responder: Responder { get }
 }

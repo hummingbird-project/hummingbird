@@ -29,7 +29,7 @@ extension HBHTTPChannelBuilder {
     ///   - base: Base child channel to wrap with TLS
     ///   - tlsConfiguration: TLS configuration
     /// - Returns: HTTPChannelHandler builder
-    public static func tls<BaseChannel: HBChildChannel>(
+    public static func tls<BaseChannel: HBServerChildChannel>(
         _ base: HBHTTPChannelBuilder<BaseChannel> = .http1(),
         tlsConfiguration: TLSConfiguration
     ) throws -> HBHTTPChannelBuilder<TLSChannel<BaseChannel>> {

@@ -18,7 +18,7 @@ import NIOCore
 ///
 /// Used when building an ``Hummingbird/HBApplication``. It delays the building
 /// of the ``HBChildChannel`` until the HTTP responder has been built.
-public struct HBHTTPChannelBuilder<ChildChannel: HBChildChannel>: Sendable {
+public struct HBHTTPChannelBuilder<ChildChannel: HBServerChildChannel>: Sendable {
     /// build child channel from HTTP responder
     public let build: @Sendable (@escaping HTTPChannelHandler.Responder) throws -> ChildChannel
 

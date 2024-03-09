@@ -17,16 +17,16 @@
 /// Conforms to `HBResponder` so need to provide its own implementation of
 /// `func respond(to request: HBRequest, context: Context) async throws -> HBResponse`.
 ///
-public struct HBRouterResponder<Context: HBBaseRequestContext>: HBResponder {
+public struct HBRouterResponder<Context: HBBaseRequestContext>: HBRequestResponder {
     let trie: RouterPathTrie<HBEndpointResponders<Context>>
-    let notFoundResponder: any HBResponder<Context>
+    let notFoundResponder: any HBRequestResponder<Context>
     let options: HBRouterOptions
 
     init(
         context: Context.Type,
         trie: RouterPathTrie<HBEndpointResponders<Context>>,
         options: HBRouterOptions,
-        notFoundResponder: any HBResponder<Context>
+        notFoundResponder: any HBRequestResponder<Context>
     ) {
         self.trie = trie
         self.options = options

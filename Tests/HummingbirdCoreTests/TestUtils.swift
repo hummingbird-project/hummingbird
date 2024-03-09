@@ -31,7 +31,7 @@ public enum TestErrors: Error {
 }
 
 /// Helper function for testing a server
-public func testServer<ChildChannel: HBChildChannel, Value: Sendable>(
+public func testServer<ChildChannel: HBServerChildChannel, Value: Sendable>(
     responder: @escaping HTTPChannelHandler.Responder,
     httpChannelSetup: HBHTTPChannelBuilder<ChildChannel>,
     configuration: HBServerConfiguration,
@@ -68,7 +68,7 @@ public func testServer<ChildChannel: HBChildChannel, Value: Sendable>(
 ///
 /// Creates test client, runs test function abd ensures everything is
 /// shutdown correctly
-public func testServer<ChildChannel: HBChildChannel, Value: Sendable>(
+public func testServer<ChildChannel: HBServerChildChannel, Value: Sendable>(
     responder: @escaping HTTPChannelHandler.Responder,
     httpChannelSetup: HBHTTPChannelBuilder<ChildChannel>,
     configuration: HBServerConfiguration,
@@ -99,7 +99,7 @@ public func testServer<ChildChannel: HBChildChannel, Value: Sendable>(
 
 public func testServer<Value: Sendable>(
     responder: @escaping HTTPChannelHandler.Responder,
-    httpChannelSetup: HBHTTPChannelBuilder<some HBChildChannel> = .http1(),
+    httpChannelSetup: HBHTTPChannelBuilder<some HBServerChildChannel> = .http1(),
     configuration: HBServerConfiguration,
     eventLoopGroup: EventLoopGroup,
     logger: Logger,

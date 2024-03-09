@@ -52,7 +52,7 @@ final class ClientTests: XCTestCase {
     }
 
     func testClient(
-        server: HBHTTPChannelBuilder<some HBChildChannel>,
+        server: HBHTTPChannelBuilder<some HBServerChildChannel>,
         clientTLSConfiguration: ClientTLSConfiguration = .none,
         eventLoopGroup: EventLoopGroup
     ) async throws {
