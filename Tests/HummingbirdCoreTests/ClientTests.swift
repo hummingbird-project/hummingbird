@@ -87,7 +87,7 @@ final class ClientTests: XCTestCase {
             }
             switch clientTLSConfiguration {
             case .niossl(let tlsConfiguration):
-                let client = try HBClient(
+                let client = try HBClientConnection(
                     TLSClientChannel(clientChannel, tlsConfiguration: tlsConfiguration, serverHostname: testServerName),
                     address: .hostname("127.0.0.1", port: port),
                     eventLoopGroup: eventLoopGroup,
@@ -97,7 +97,7 @@ final class ClientTests: XCTestCase {
 
             #if canImport(Network)
             case .ts(let options):
-                let client = try HBClient(
+                let client = try HBClientConnection(
                     clientChannel,
                     address: .hostname("127.0.0.1", port: port),
                     transportServicesTLSOptions: options,
@@ -107,7 +107,7 @@ final class ClientTests: XCTestCase {
                 try await client.run()
             #endif
             case .none:
-                let client = HBClient(
+                let client = HBClientConnection(
                     clientChannel,
                     address: .hostname("127.0.0.1", port: port),
                     eventLoopGroup: eventLoopGroup,
@@ -168,7 +168,7 @@ final class ClientTests: XCTestCase {
     #endif
 }
 
-struct HTTP1ClientChannel: HBClientChannel {
+struct HTTP1ClientChannel: HBClientConnectionChannel {
     let handler: @Sendable (NIOAsyncChannelInboundStream<HTTPResponsePart>, NIOAsyncChannelOutboundWriter<HTTPRequestPart>) async throws -> Void
 
     /// Setup child channel for HTTP1

@@ -21,7 +21,10 @@ import Network
 import NIOTransportServices
 #endif
 
-public struct HBClient<ClientChannel: HBClientChannel>: Sendable {
+/// A generic client connection to a server.
+///
+/// Actual client protocol is implemented in `ClientChannel` generic parameter
+public struct HBClientConnection<ClientChannel: HBClientConnectionChannel>: Sendable {
     typealias ChannelResult = ClientChannel.Value
     /// Logger used by Server
     let logger: Logger

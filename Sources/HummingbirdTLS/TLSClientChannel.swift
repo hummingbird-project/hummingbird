@@ -18,7 +18,7 @@ import NIOCore
 import NIOSSL
 
 /// Sets up client channel to use TLS before accessing base channel setup
-public struct TLSClientChannel<BaseChannel: HBClientChannel>: HBClientChannel {
+public struct TLSClientChannel<BaseChannel: HBClientConnectionChannel>: HBClientConnectionChannel {
     public typealias Value = BaseChannel.Value
 
     ///  Initialize TLSChannel
