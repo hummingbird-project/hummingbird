@@ -228,7 +228,7 @@ public struct HBApplication<Responder: HBRequestResponder, ChildChannel: HBServe
     ///   - onServerRunning: Function called once the server is running
     ///   - eventLoopGroupProvider: Where to get our EventLoopGroup
     ///   - logger: Logger application uses
-    public init<ResponderBuilder: HBResponderBuilder>(
+    public init<ResponderBuilder: HBRequestResponderBuilder>(
         router: ResponderBuilder,
         server: HBHTTPChannelBuilder<ChildChannel> = .http1(),
         configuration: HBApplicationConfiguration = HBApplicationConfiguration(),

@@ -43,7 +43,7 @@ import NIOCore
 /// Both of these match routes which start with "/user" and the next path segment being anything.
 /// The second version extracts the path segment out and adds it to `HBRequest.parameters` with the
 /// key "id".
-public final class HBRouter<Context: HBBaseRequestContext>: HBRouterMethods, HBResponderBuilder {
+public final class HBRouter<Context: HBBaseRequestContext>: HBRouterMethods, HBRequestResponderBuilder {
     var trie: RouterPathTrieBuilder<HBEndpointResponders<Context>>
     public let middlewares: HBMiddlewareGroup<Context>
     let options: HBRouterOptions
@@ -112,7 +112,7 @@ struct NotFoundResponder<Context: HBBaseRequestContext>: HBRequestResponder {
 }
 
 /// A type that has a single method to build a responder
-public protocol HBResponderBuilder {
+public protocol HBRequestResponderBuilder {
     associatedtype Responder: HBRequestResponder
     /// build a responder
     func buildResponder() -> Responder
