@@ -20,7 +20,7 @@ import NIOCore
 import XCTest
 
 final class RouterTests: XCTestCase {
-    struct TestMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
+    struct TestMiddleware<Context: HBBaseRequestContext>: HBRouterMiddleware {
         let output: String
 
         init(_ output: String = "TestMiddleware") {
@@ -36,7 +36,7 @@ final class RouterTests: XCTestCase {
 
     /// Test endpointPath is set
     func testEndpointPath() async throws {
-        struct TestEndpointMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
+        struct TestEndpointMiddleware<Context: HBBaseRequestContext>: HBRouterMiddleware {
             func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
                 _ = try await next(request, context)
                 guard let endpointPath = context.endpointPath else { return try await next(request, context) }
@@ -61,7 +61,7 @@ final class RouterTests: XCTestCase {
 
     /// Test endpointPath is prefixed with a "/"
     func testEndpointPathPrefix() async throws {
-        struct TestEndpointMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
+        struct TestEndpointMiddleware<Context: HBBaseRequestContext>: HBRouterMiddleware {
             func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
                 _ = try await next(request, context)
                 guard let endpointPath = context.endpointPath else { return try await next(request, context) }
@@ -98,7 +98,7 @@ final class RouterTests: XCTestCase {
 
     /// Test endpointPath doesn't have "/" at end
     func testEndpointPathSuffix() async throws {
-        struct TestEndpointMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
+        struct TestEndpointMiddleware<Context: HBBaseRequestContext>: HBRouterMiddleware {
             func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
                 guard let endpointPath = context.endpointPath else { return try await next(request, context) }
                 return .init(status: .ok, body: .init(byteBuffer: ByteBuffer(string: endpointPath)))
@@ -233,7 +233,7 @@ final class RouterTests: XCTestCase {
 
     /// Test adding middleware to group doesn't affect middleware in parent groups
     func testGroupGroupMiddleware2() async throws {
-        struct TestGroupMiddleware: HBMiddlewareProtocol {
+        struct TestGroupMiddleware: HBRouterMiddleware {
             typealias Context = HBTestRouterContext2
             let output: String
 
@@ -271,7 +271,7 @@ final class RouterTests: XCTestCase {
 
     /// Test adding middleware to group doesn't affect middleware in parent groups
     func testRouteBuilder() async throws {
-        struct TestGroupMiddleware: HBMiddlewareProtocol {
+        struct TestGroupMiddleware: HBRouterMiddleware {
             typealias Context = HBTestRouterContext2
             let output: String
 

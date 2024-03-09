@@ -19,7 +19,7 @@ import Metrics
 ///
 /// Records the number of requests, the request duration and how many errors were thrown. Each metric has additional
 /// dimensions URI and method.
-public struct HBMetricsMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
+public struct HBMetricsMiddleware<Context: HBBaseRequestContext>: HBRouterMiddleware {
     public init() {}
 
     public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {

@@ -33,7 +33,7 @@ extension ServiceContext {
 }
 
 /// Router middleware that applies a middleware chain to URIs with a specified prefix
-public struct RouteGroup<Context: HBRouterRequestContext, Handler: MiddlewareProtocol>: HBMiddlewareProtocol where Handler.Input == HBRequest, Handler.Output == HBResponse, Handler.Context == Context {
+public struct RouteGroup<Context: HBRouterRequestContext, Handler: MiddlewareProtocol>: HBRouterMiddleware where Handler.Input == HBRequest, Handler.Output == HBResponse, Handler.Context == Context {
     public typealias Input = HBRequest
     public typealias Output = HBResponse
 

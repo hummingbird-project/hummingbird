@@ -17,7 +17,7 @@ import Hummingbird
 import ServiceContextModule
 
 /// Route definition
-public struct Route<Handler: _RouteHandlerProtocol, Context: HBRouterRequestContext>: HBMiddlewareProtocol where Handler.Context == Context {
+public struct Route<Handler: _RouteHandlerProtocol, Context: HBRouterRequestContext>: HBRouterMiddleware where Handler.Context == Context {
     /// Full URI path to route
     public let fullPath: String
     /// Route path local to group route is defined in.

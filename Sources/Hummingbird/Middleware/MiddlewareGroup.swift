@@ -14,15 +14,15 @@
 
 /// Group of middleware that can be used to create a responder chain. Each middleware calls the next one
 public final class HBMiddlewareGroup<Context> {
-    var middlewares: [any HBMiddlewareProtocol<Context>]
+    var middlewares: [any HBRouterMiddleware<Context>]
 
     /// Initialize `HBMiddlewareGroup`
-    init(middlewares: [any HBMiddlewareProtocol<Context>] = []) {
+    init(middlewares: [any HBRouterMiddleware<Context>] = []) {
         self.middlewares = middlewares
     }
 
     /// Add middleware to group
-    public func add(_ middleware: any HBMiddlewareProtocol<Context>) {
+    public func add(_ middleware: any HBRouterMiddleware<Context>) {
         self.middlewares.append(middleware)
     }
 

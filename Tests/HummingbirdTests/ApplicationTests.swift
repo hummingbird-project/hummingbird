@@ -258,7 +258,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testCollateBody() async throws {
-        struct CollateMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
+        struct CollateMiddleware<Context: HBBaseRequestContext>: HBRouterMiddleware {
             public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
                 var request = request
                 _ = try await request.collateBody(context: context)

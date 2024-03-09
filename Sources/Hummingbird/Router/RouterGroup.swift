@@ -42,7 +42,7 @@ public struct HBRouterGroup<Context: HBBaseRequestContext>: HBRouterMethods {
     }
 
     /// Add middleware to RouterEndpoint
-    @discardableResult public func add(middleware: any HBMiddlewareProtocol<Context>) -> HBRouterGroup<Context> {
+    @discardableResult public func add(middleware: any HBRouterMiddleware<Context>) -> HBRouterGroup<Context> {
         self.middlewares.add(middleware)
         return self
     }

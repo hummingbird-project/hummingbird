@@ -14,9 +14,6 @@
 
 import NIOCore
 
-/// Middleware Handler with generic input, context and output types
-public typealias Middleware<Input, Output, Context> = @Sendable (Input, Context, _ next: (Input, Context) async throws -> Output) async throws -> Output
-
 /// Middleware protocol with generic input, context and output types
 public protocol MiddlewareProtocol<Input, Output, Context>: Sendable {
     associatedtype Input
@@ -53,10 +50,10 @@ public protocol MiddlewareProtocol<Input, Output, Context>: Sendable {
 /// ```
 
 /// Middleware protocol with HBRequest as input and HBResponse as output
-public protocol HBMiddlewareProtocol<Context>: MiddlewareProtocol where Input == HBRequest, Output == HBResponse {}
+public protocol HBRouterMiddleware<Context>: MiddlewareProtocol where Input == HBRequest, Output == HBResponse {}
 
 struct MiddlewareResponder<Context>: HBRequestResponder {
-    let middleware: any HBMiddlewareProtocol<Context>
+    let middleware: any HBRouterMiddleware<Context>
     let next: @Sendable (HBRequest, Context) async throws -> HBResponse
 
     func respond(to request: HBRequest, context: Context) async throws -> HBResponse {

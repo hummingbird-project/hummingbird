@@ -21,7 +21,7 @@ import NIOCore
 /// then return an empty body with all the standard CORS headers otherwise send
 /// request onto the next handler and when you receive the response add a
 /// "access-control-allow-origin" header
-public struct HBCORSMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
+public struct HBCORSMiddleware<Context: HBBaseRequestContext>: HBRouterMiddleware {
     /// Defines what origins are allowed
     public enum AllowOrigin: Sendable {
         case none
