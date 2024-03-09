@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/badge/swift-5.9-brightgreen.svg"/>
 </a>
 <a href="https://github.com/hummingbird-project/hummingbird/actions?query=workflow%3ACI">
-  <img src="https://github.com/hummingbird-project/hummingbird/actions/workflows/ci.yml/badge.svg?branch=2.x.x"/>
+  <img src="https://github.com/hummingbird-project/hummingbird/actions/workflows/ci.yml/badge.svg?branch=main"/>
 </a>
 <a href="https://discord.gg/7ME3nZ7mP2">
   <img src="https://img.shields.io/badge/chat-discord-brightgreen.svg"/>
@@ -53,13 +53,13 @@ Hummingbird is designed to require the least number of dependencies possible, bu
 
 And also the following are available in other repositories in this organisation
 
-- [`HummingbirdAuth`](https://github.com/hummingbird-project/hummingbird-auth/tree/2.x.x): Authentication framework
-- [`HummingbirdFluent`](https://github.com/hummingbird-project/hummingbird-fluent/tree/2.x.x): Integration with Vapor's database ORM [FluentKit](https://github.com/Vapor/fluent-kit).
-- [`HummingbirdLambda`](https://github.com/hummingbird-project/hummingbird-lambda/tree/2.x.x): Framework for running Hummingbird on AWS Lambdas.
+- [`HummingbirdAuth`](https://github.com/hummingbird-project/hummingbird-auth/tree/main): Authentication framework
+- [`HummingbirdFluent`](https://github.com/hummingbird-project/hummingbird-fluent/tree/main): Integration with Vapor's database ORM [FluentKit](https://github.com/Vapor/fluent-kit).
+- [`HummingbirdLambda`](https://github.com/hummingbird-project/hummingbird-lambda/tree/main): Framework for running Hummingbird on AWS Lambdas.
 - [`HummingbirdMustache`](https://github.com/hummingbird-project/hummingbird-mustache): Mustache templating engine.
-- [`HummingbirdRedis`](https://github.com/hummingbird-project/hummingbird-redis/tree/2.x.x): Redis support via [RediStack](https://github.com/swift-server/RediStack).
-- [`HummingbirdWebSocket`](https://github.com/hummingbird-project/hummingbird-websocker/tree/2.x.x): Support for WebSockets (Currently work in progess).
+- [`HummingbirdRedis`](https://github.com/hummingbird-project/hummingbird-redis/tree/main): Redis support via [RediStack](https://github.com/swift-server/RediStack).
+- [`HummingbirdWebSocket`](https://github.com/hummingbird-project/hummingbird-websocker/tree/main): Support for WebSockets (Currently work in progess).
 
 ## Documentation
 
-You can find reference documentation and user guides for Hummingbird [here](https://hummingbird-project.github.io/hummingbird-docs/2.0/documentation/hummingbird/). The [hummingbird-examples](https://github.com/hummingbird-project/hummingbird-examples/tree/2.x.x) repository has a number of examples of different uses of the library.
+You can find reference documentation and user guides for Hummingbird [here](https://hummingbird-project.github.io/hummingbird-docs/2.0/documentation/hummingbird/). The [hummingbird-examples](https://github.com/hummingbird-project/hummingbird-examples/tree/main) repository has a number of examples of different uses of the library.
