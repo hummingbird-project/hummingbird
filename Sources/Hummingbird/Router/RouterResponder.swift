@@ -17,16 +17,16 @@
 /// Conforms to `Responder` so need to provide its own implementation of
 /// `func respond(to request: Request, context: Context) async throws -> Response`.
 ///
-public struct RouterResponder<Context: BaseRequestContext>: RequestResponder {
+public struct RouterResponder<Context: BaseRequestContext>: HTTPResponder {
     let trie: RouterPathTrie<EndpointResponders<Context>>
-    let notFoundResponder: any RequestResponder<Context>
+    let notFoundResponder: any HTTPResponder<Context>
     let options: RouterOptions
 
     init(
         context: Context.Type,
         trie: RouterPathTrie<EndpointResponders<Context>>,
         options: RouterOptions,
-        notFoundResponder: any RequestResponder<Context>
+        notFoundResponder: any HTTPResponder<Context>
     ) {
         self.trie = trie
         self.options = options

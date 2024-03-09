@@ -43,7 +43,7 @@ public enum EventLoopGroupProvider {
 
 public protocol ApplicationProtocol: Service where Context: RequestContext {
     /// Responder that generates a response from a requests and context
-    associatedtype Responder: RequestResponder
+    associatedtype Responder: HTTPResponder
     /// Child Channel setup. This defaults to support HTTP1
     associatedtype ChildChannel: ServerChildChannel & HTTPChannelHandler = HTTP1Channel
     /// Context passed with Request to responder
@@ -159,7 +159,7 @@ extension ApplicationProtocol {
 /// try await app.runService()
 /// ```
 /// Editing the application setup after calling `runService` will produce undefined behaviour.
-public struct Application<Responder: RequestResponder, ChildChannel: ServerChildChannel & HTTPChannelHandler>: ApplicationProtocol where Responder.Context: RequestContext {
+public struct Application<Responder: HTTPResponder, ChildChannel: ServerChildChannel & HTTPChannelHandler>: ApplicationProtocol where Responder.Context: RequestContext {
     public typealias Context = Responder.Context
     public typealias ChildChannel = ChildChannel
     public typealias Responder = Responder
@@ -168,7 +168,7 @@ public struct Application<Responder: RequestResponder, ChildChannel: ServerChild
 
     /// event loop group used by application
     public let eventLoopGroup: EventLoopGroup
-    /// routes requests to requestResponders based on URI
+    /// routes requests to responders based on URI
     public let responder: Responder
     /// Configuration
     public var configuration: ApplicationConfiguration
@@ -228,7 +228,7 @@ public struct Application<Responder: RequestResponder, ChildChannel: ServerChild
     ///   - onServerRunning: Function called once the server is running
     ///   - eventLoopGroupProvider: Where to get our EventLoopGroup
     ///   - logger: Logger application uses
-    public init<ResponderBuilder: RequestResponderBuilder>(
+    public init<ResponderBuilder: HTTPResponderBuilder>(
         router: ResponderBuilder,
         server: HTTPChannelBuilder<ChildChannel> = .http1(),
         configuration: ApplicationConfiguration = ApplicationConfiguration(),

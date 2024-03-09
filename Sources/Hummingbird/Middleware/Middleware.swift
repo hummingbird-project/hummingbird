@@ -52,7 +52,7 @@ public protocol MiddlewareProtocol<Input, Output, Context>: Sendable {
 /// Middleware protocol with Request as input and Response as output
 public protocol RouterMiddleware<Context>: MiddlewareProtocol where Input == Request, Output == Response {}
 
-struct MiddlewareResponder<Context>: RequestResponder {
+struct MiddlewareResponder<Context>: HTTPResponder {
     let middleware: any RouterMiddleware<Context>
     let next: @Sendable (Request, Context) async throws -> Response
 

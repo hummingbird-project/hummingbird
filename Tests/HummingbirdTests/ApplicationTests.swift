@@ -495,7 +495,7 @@ final class ApplicationTests: XCTestCase {
         struct MyApp: ApplicationProtocol {
             typealias Context = BasicRequestContext
 
-            var responder: some RequestResponder<Context> {
+            var responder: some HTTPResponder<Context> {
                 let router = Router(context: Context.self)
                 router.get("/hello") { _, context -> ByteBuffer in
                     return context.allocator.buffer(string: "GET: Hello")

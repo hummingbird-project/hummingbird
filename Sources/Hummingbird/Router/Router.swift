@@ -43,7 +43,7 @@ import NIOCore
 /// Both of these match routes which start with "/user" and the next path segment being anything.
 /// The second version extracts the path segment out and adds it to `Request.parameters` with the
 /// key "id".
-public final class Router<Context: BaseRequestContext>: RouterMethods, RequestResponderBuilder {
+public final class Router<Context: BaseRequestContext>: RouterMethods, HTTPResponderBuilder {
     var trie: RouterPathTrieBuilder<EndpointResponders<Context>>
     public let middlewares: MiddlewareGroup<Context>
     let options: RouterOptions
@@ -59,7 +59,7 @@ public final class Router<Context: BaseRequestContext>: RouterMethods, RequestRe
     ///   - path: URI path
     ///   - method: http method
     ///   - responder: handler to call
-    public func add(_ path: String, method: HTTPRequest.Method, responder: any RequestResponder<Context>) {
+    public func add(_ path: String, method: HTTPRequest.Method, responder: any HTTPResponder<Context>) {
         // ensure path starts with a "/" and doesn't end with a "/"
         let path = "/\(path.dropSuffix("/").dropPrefix("/"))"
         self.trie.addEntry(.init(path), value: EndpointResponders(path: path)) { node in
@@ -105,15 +105,15 @@ public final class Router<Context: BaseRequestContext>: RouterMethods, RequestRe
 }
 
 /// Responder that return a not found error
-struct NotFoundResponder<Context: BaseRequestContext>: RequestResponder {
+struct NotFoundResponder<Context: BaseRequestContext>: HTTPResponder {
     func respond(to request: Request, context: Context) throws -> Response {
         throw HTTPError(.notFound)
     }
 }
 
-/// A type that has a single method to build a responder
-public protocol RequestResponderBuilder {
-    associatedtype Responder: RequestResponder
+/// A type that has a single method to build a HTTPResponder
+public protocol HTTPResponderBuilder {
+    associatedtype Responder: HTTPResponder
     /// build a responder
     func buildResponder() -> Responder
 }
