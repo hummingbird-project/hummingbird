@@ -13,23 +13,23 @@
 //===----------------------------------------------------------------------===//
 
 /// Group of middleware that can be used to create a responder chain. Each middleware calls the next one
-public final class HBMiddlewareGroup<Context> {
-    var middlewares: [any HBRouterMiddleware<Context>]
+public final class MiddlewareGroup<Context> {
+    var middlewares: [any RouterMiddleware<Context>]
 
-    /// Initialize `HBMiddlewareGroup`
-    init(middlewares: [any HBRouterMiddleware<Context>] = []) {
+    /// Initialize `MiddlewareGroup`
+    init(middlewares: [any RouterMiddleware<Context>] = []) {
         self.middlewares = middlewares
     }
 
     /// Add middleware to group
-    public func add(_ middleware: any HBRouterMiddleware<Context>) {
+    public func add(_ middleware: any RouterMiddleware<Context>) {
         self.middlewares.append(middleware)
     }
 
     /// Construct responder chain from this middleware group
     /// - Parameter finalResponder: The responder the last middleware calls
     /// - Returns: Responder chain
-    public func constructResponder(finalResponder: any HBRequestResponder<Context>) -> any HBRequestResponder<Context> {
+    public func constructResponder(finalResponder: any RequestResponder<Context>) -> any RequestResponder<Context> {
         var currentResponser = finalResponder
         for i in (0..<self.middlewares.count).reversed() {
             let responder = MiddlewareResponder(middleware: middlewares[i], next: currentResponser.respond(to:context:))

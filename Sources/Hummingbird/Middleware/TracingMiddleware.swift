@@ -23,11 +23,11 @@ import Tracing
 /// You may opt in to recording a specific subset of HTTP request/response header values by passing
 /// a set of header names.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-public struct HBTracingMiddleware<Context: HBBaseRequestContext>: HBRouterMiddleware {
+public struct TracingMiddleware<Context: BaseRequestContext>: RouterMiddleware {
     private let headerNamesToRecord: Set<RecordingHeader>
     private let attributes: SpanAttributes?
 
-    /// Intialize a new HBTracingMiddleware.
+    /// Intialize a new TracingMiddleware.
     ///
     /// - Parameters
     ///     - recordingHeaders: A list of HTTP header names to be recorded as span attributes. By default, no headers
@@ -39,7 +39,7 @@ public struct HBTracingMiddleware<Context: HBBaseRequestContext>: HBRouterMiddle
         self.attributes = attributes
     }
 
-    public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
         var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
         InstrumentationSystem.instrument.extract(request.headers, into: &serviceContext, using: HTTPHeadersExtractor())
 
@@ -63,7 +63,7 @@ public struct HBTracingMiddleware<Context: HBBaseRequestContext>: HBRouterMiddle
                 attributes["http.user_agent"] = request.headers[.userAgent]
                 attributes["http.request_content_length"] = request.headers[.contentLength].map { Int($0) } ?? nil
 
-                if let remoteAddress = (context as? any HBRemoteAddressRequestContext)?.remoteAddress {
+                if let remoteAddress = (context as? any RemoteAddressRequestContext)?.remoteAddress {
                     attributes["net.sock.peer.port"] = remoteAddress.port
 
                     switch remoteAddress.protocol {
@@ -91,7 +91,7 @@ public struct HBTracingMiddleware<Context: HBBaseRequestContext>: HBRouterMiddle
                     attributes["http.response_content_length"] = response.body.contentLength
                 }
                 return response
-            } catch let error as HBHTTPResponseError {
+            } catch let error as HTTPResponseError {
                 span.attributes["http.status_code"] = Int(error.status.code)
 
                 if 500..<600 ~= error.status.code {
@@ -122,9 +122,9 @@ public struct HBTracingMiddleware<Context: HBBaseRequestContext>: HBRouterMiddle
 
 /// Protocol for request context that stores the remote address of connected client.
 ///
-/// If you want the HBTracingMiddleware to record the remote address of requests
+/// If you want the TracingMiddleware to record the remote address of requests
 /// then your request context will need to conform to this protocol
-public protocol HBRemoteAddressRequestContext: HBBaseRequestContext {
+public protocol RemoteAddressRequestContext: BaseRequestContext {
     /// Connected host address
     var remoteAddress: SocketAddress? { get }
 }

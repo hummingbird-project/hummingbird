@@ -21,7 +21,7 @@ import NIOCore
 /// then return an empty body with all the standard CORS headers otherwise send
 /// request onto the next handler and when you receive the response add a
 /// "access-control-allow-origin" header
-public struct HBCORSMiddleware<Context: HBBaseRequestContext>: HBRouterMiddleware {
+public struct CORSMiddleware<Context: BaseRequestContext>: RouterMiddleware {
     /// Defines what origins are allowed
     public enum AllowOrigin: Sendable {
         case none
@@ -29,7 +29,7 @@ public struct HBCORSMiddleware<Context: HBBaseRequestContext>: HBRouterMiddlewar
         case originBased
         case custom(String)
 
-        func value(for request: HBRequest) -> String? {
+        func value(for request: Request) -> String? {
             switch self {
             case .none:
                 return nil
@@ -84,7 +84,7 @@ public struct HBCORSMiddleware<Context: HBBaseRequestContext>: HBRouterMiddlewar
     }
 
     /// apply CORS middleware
-    public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
         // if no origin header then don't apply CORS
         guard request.headers[.origin] != nil else {
             return try await next(request, context)
@@ -110,7 +110,7 @@ public struct HBCORSMiddleware<Context: HBBaseRequestContext>: HBRouterMiddlewar
                 headers[.vary] = "Origin"
             }
 
-            return HBResponse(status: .noContent, headers: headers, body: .init())
+            return Response(status: .noContent, headers: headers, body: .init())
         } else {
             // if not OPTIONS then run rest of middleware chain and add origin value at the end
             var response = try await next(request, context)

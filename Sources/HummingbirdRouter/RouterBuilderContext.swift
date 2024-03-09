@@ -16,8 +16,8 @@ import Hummingbird
 import Logging
 import NIOCore
 
-/// Context data required by `HBRouterBuilder`
-public struct HBRouterBuilderContext: Sendable {
+/// Context data required by `RouterBuilder`
+public struct RouterBuilderContext: Sendable {
     /// remaining path components to match
     @usableFromInline
     var remainingPathComponents: ArraySlice<Substring>
@@ -27,15 +27,15 @@ public struct HBRouterBuilderContext: Sendable {
     }
 }
 
-/// Protocol that all request contexts used with HBRouterBuilder should conform to.
-public protocol HBRouterRequestContext: HBBaseRequestContext {
-    var routerContext: HBRouterBuilderContext { get set }
+/// Protocol that all request contexts used with RouterBuilder should conform to.
+public protocol RouterRequestContext: BaseRequestContext {
+    var routerContext: RouterBuilderContext { get set }
 }
 
-/// Basic implementation of a context that can be used with `HBRouterBuilder``
-public struct HBBasicRouterRequestContext: HBRequestContext, HBRouterRequestContext {
-    public var routerContext: HBRouterBuilderContext
-    public var coreContext: HBCoreRequestContext
+/// Basic implementation of a context that can be used with `RouterBuilder``
+public struct BasicRouterRequestContext: RequestContext, RouterRequestContext {
+    public var routerContext: RouterBuilderContext
+    public var coreContext: CoreRequestContext
 
     public init(channel: Channel, logger: Logger) {
         self.coreContext = .init(allocator: channel.allocator, logger: logger)

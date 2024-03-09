@@ -35,7 +35,7 @@ public struct _Middleware2<M0: MiddlewareProtocol, M1: MiddlewareProtocol>: Midd
     }
 }
 
-/// Result builder used by ``HBRouterBuilder``
+/// Result builder used by ``RouterBuilder``
 ///
 /// Generates a middleware stack from the elements inside the result builder. The input,
 /// context and output types passed through the middleware stack are fixed and cannot be changed.

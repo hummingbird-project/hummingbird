@@ -14,7 +14,7 @@
 
 import HummingbirdCore
 
-extension HBRequest {
+extension Request {
     /// Collapse body into one ByteBuffer.
     ///
     /// This will store the collated ByteBuffer back into the request so is a mutating method. If
@@ -23,33 +23,33 @@ extension HBRequest {
     ///
     /// - Parameter context: request context
     /// - Returns: Collated body
-    public mutating func collateBody(context: some HBBaseRequestContext) async throws -> ByteBuffer {
+    public mutating func collateBody(context: some BaseRequestContext) async throws -> ByteBuffer {
         let byteBuffer = try await self.body.collect(upTo: context.maxUploadSize)
         self.body = .init(buffer: byteBuffer)
         return byteBuffer
     }
 
-    /// Decode request using decoder stored at `HBApplication.decoder`.
+    /// Decode request using decoder stored at `Application.decoder`.
     /// - Parameter type: Type you want to decode to
-    public func decode<Type: Decodable>(as type: Type.Type, context: some HBBaseRequestContext) async throws -> Type {
+    public func decode<Type: Decodable>(as type: Type.Type, context: some BaseRequestContext) async throws -> Type {
         do {
             return try await context.requestDecoder.decode(type, from: self, context: context)
         } catch DecodingError.dataCorrupted(_) {
             let message = "The given data was not valid input."
-            throw HBHTTPError(.badRequest, message: message)
+            throw HTTPError(.badRequest, message: message)
         } catch DecodingError.keyNotFound(let key, _) {
             let path = key.pathKeyValue
             let message = "Coding key `\(path)` not found."
-            throw HBHTTPError(.badRequest, message: message)
+            throw HTTPError(.badRequest, message: message)
         } catch DecodingError.valueNotFound(_, let context) {
             let path = context.codingPath.pathKeyValue
             let message = "Value not found for `\(path)` key."
-            throw HBHTTPError(.badRequest, message: message)
+            throw HTTPError(.badRequest, message: message)
         } catch DecodingError.typeMismatch(let type, let context) {
             let path = context.codingPath.pathKeyValue
             let message = "Type mismatch for `\(path)` key, expected `\(type)` type."
-            throw HBHTTPError(.badRequest, message: message)
-        } catch let error as HBHTTPResponseError {
+            throw HTTPError(.badRequest, message: message)
+        } catch let error as HTTPResponseError {
             context.logger.debug("Decode Error: \(error)")
             throw error
         }

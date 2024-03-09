@@ -33,9 +33,9 @@ extension ServiceContext {
 }
 
 /// Router middleware that applies a middleware chain to URIs with a specified prefix
-public struct RouteGroup<Context: HBRouterRequestContext, Handler: MiddlewareProtocol>: HBRouterMiddleware where Handler.Input == HBRequest, Handler.Output == HBResponse, Handler.Context == Context {
-    public typealias Input = HBRequest
-    public typealias Output = HBResponse
+public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProtocol>: RouterMiddleware where Handler.Input == Request, Handler.Output == Response, Handler.Context == Context {
+    public typealias Input = Request
+    public typealias Output = Response
 
     /// Path local to group route this group is defined in.
     @usableFromInline
@@ -50,7 +50,7 @@ public struct RouteGroup<Context: HBRouterRequestContext, Handler: MiddlewarePro
     ///   - builder: RouteGroup builder
     public init(
         _ routerPath: RouterPath,
-        @MiddlewareFixedTypeBuilder<HBRequest, HBResponse, Context> builder: () -> Handler
+        @MiddlewareFixedTypeBuilder<Request, Response, Context> builder: () -> Handler
     ) {
         self.routerPath = routerPath
         var serviceContext = ServiceContext.current ?? ServiceContext.topLevel

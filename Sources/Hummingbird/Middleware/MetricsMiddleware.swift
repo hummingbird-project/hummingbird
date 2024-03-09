@@ -19,10 +19,10 @@ import Metrics
 ///
 /// Records the number of requests, the request duration and how many errors were thrown. Each metric has additional
 /// dimensions URI and method.
-public struct HBMetricsMiddleware<Context: HBBaseRequestContext>: HBRouterMiddleware {
+public struct MetricsMiddleware<Context: BaseRequestContext>: RouterMiddleware {
     public init() {}
 
-    public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
         let startTime = DispatchTime.now().uptimeNanoseconds
 
         do {
@@ -30,12 +30,12 @@ public struct HBMetricsMiddleware<Context: HBBaseRequestContext>: HBRouterMiddle
             // need to create dimensions once request has been responded to ensure
             // we have the correct endpoint path
             let dimensions: [(String, String)] = [
-                ("hb_uri", context.endpointPath ?? request.uri.path),
-                ("hb_method", request.method.rawValue),
+                ("_uri", context.endpointPath ?? request.uri.path),
+                ("_method", request.method.rawValue),
             ]
-            Counter(label: "hb_requests", dimensions: dimensions).increment()
+            Counter(label: "_requests", dimensions: dimensions).increment()
             Metrics.Timer(
-                label: "hb_request_duration",
+                label: "_request_duration",
                 dimensions: dimensions,
                 preferredDisplayUnit: .seconds
             ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
@@ -47,16 +47,16 @@ public struct HBMetricsMiddleware<Context: HBBaseRequestContext>: HBRouterMiddle
             // Don't record uri in 404 errors, to avoid spamming of metrics
             if let endpointPath = context.endpointPath {
                 dimensions = [
-                    ("hb_uri", endpointPath),
-                    ("hb_method", request.method.rawValue),
+                    ("_uri", endpointPath),
+                    ("_method", request.method.rawValue),
                 ]
-                Counter(label: "hb_requests", dimensions: dimensions).increment()
+                Counter(label: "_requests", dimensions: dimensions).increment()
             } else {
                 dimensions = [
-                    ("hb_method", request.method.rawValue),
+                    ("_method", request.method.rawValue),
                 ]
             }
-            Counter(label: "hb_errors", dimensions: dimensions).increment()
+            Counter(label: "_errors", dimensions: dimensions).increment()
             throw error
         }
     }

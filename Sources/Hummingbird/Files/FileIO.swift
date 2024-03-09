@@ -18,7 +18,7 @@ import NIOCore
 import NIOPosix
 
 /// Manages File reading and writing.
-public struct HBFileIO: Sendable {
+public struct FileIO: Sendable {
     let eventLoopGroup: EventLoopGroup
     let fileIO: NonBlockingFileIO
     let chunkSize: Int
@@ -39,7 +39,7 @@ public struct HBFileIO: Sendable {
     ///   - path: System file path
     ///   - context: Context this request is being called in
     /// - Returns: Response body
-    public func loadFile(path: String, context: some HBBaseRequestContext) async throws -> HBResponseBody {
+    public func loadFile(path: String, context: some BaseRequestContext) async throws -> ResponseBody {
         do {
             let (handle, region) = try await self.fileIO.openFile(path: path, eventLoop: self.eventLoopGroup.any()).get()
             context.logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
@@ -54,7 +54,7 @@ public struct HBFileIO: Sendable {
                 return try await self.loadFile(handle: handle, region: region, context: context)
             }
         } catch {
-            throw HBHTTPError(.notFound)
+            throw HTTPError(.notFound)
         }
     }
 
@@ -67,7 +67,7 @@ public struct HBFileIO: Sendable {
     ///   - range:Range defining how much of the file is to be loaded
     ///   - context: Context this request is being called in
     /// - Returns: Response body plus file size
-    public func loadFile(path: String, range: ClosedRange<Int>, context: some HBBaseRequestContext) async throws -> (HBResponseBody, Int) {
+    public func loadFile(path: String, range: ClosedRange<Int>, context: some BaseRequestContext) async throws -> (ResponseBody, Int) {
         do {
             let (handle, region) = try await self.fileIO.openFile(path: path, eventLoop: self.eventLoopGroup.any()).get()
             context.logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
@@ -90,7 +90,7 @@ public struct HBFileIO: Sendable {
                 return (buffer, region.readableBytes)
             }
         } catch {
-            throw HBHTTPError(.notFound)
+            throw HTTPError(.notFound)
         }
     }
 
@@ -101,7 +101,7 @@ public struct HBFileIO: Sendable {
     ///   - contents: Request body to write.
     ///   - path: Path to write to
     ///   - logger: Logger
-    public func writeFile(contents: HBRequestBody, path: String, context: some HBBaseRequestContext) async throws {
+    public func writeFile(contents: RequestBody, path: String, context: some BaseRequestContext) async throws {
         let eventLoop = self.eventLoopGroup.any()
         let handle = try await self.fileIO.openFile(path: path, mode: .write, flags: .allowFileCreation(), eventLoop: eventLoop).get()
         defer {
@@ -114,7 +114,7 @@ public struct HBFileIO: Sendable {
     }
 
     /// Load file as ByteBuffer
-    func loadFile(handle: NIOFileHandle, region: FileRegion, context: some HBBaseRequestContext) async throws -> HBResponseBody {
+    func loadFile(handle: NIOFileHandle, region: FileRegion, context: some BaseRequestContext) async throws -> ResponseBody {
         let buffer = try await self.fileIO.read(
             fileHandle: handle,
             fromOffset: Int64(region.readerIndex),
@@ -126,10 +126,10 @@ public struct HBFileIO: Sendable {
     }
 
     /// Return streamer that will load file
-    func streamFile(handle: NIOFileHandle, region: FileRegion, context: some HBBaseRequestContext) throws -> HBResponseBody {
+    func streamFile(handle: NIOFileHandle, region: FileRegion, context: some BaseRequestContext) throws -> ResponseBody {
         let fileOffset = region.readerIndex
         let endOffset = region.endIndex
-        return HBResponseBody(contentLength: region.readableBytes) { writer in
+        return ResponseBody(contentLength: region.readableBytes) { writer in
             let chunkSize = 8 * 1024
             var fileOffset = fileOffset
 

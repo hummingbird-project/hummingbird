@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Simple URL parser
-public struct HBURI: Sendable, CustomStringConvertible, ExpressibleByStringLiteral {
+public struct URI: Sendable, CustomStringConvertible, ExpressibleByStringLiteral {
     public struct Scheme: RawRepresentable, Equatable {
         public let rawValue: String
 
@@ -47,7 +47,7 @@ public struct HBURI: Sendable, CustomStringConvertible, ExpressibleByStringLiter
         guard var query = _query else {
             return .init()
         }
-        let queries: [HBParser] = query.split(separator: "&")
+        let queries: [Parser] = query.split(separator: "&")
         let queryKeyValues = queries.map { query -> (key: Substring, value: Substring) in
             do {
                 var query = query
@@ -66,15 +66,15 @@ public struct HBURI: Sendable, CustomStringConvertible, ExpressibleByStringLiter
         return .init(queryKeyValues)
     }
 
-    private let _scheme: HBParser?
-    private let _host: HBParser?
-    private let _port: HBParser?
-    private let _path: HBParser?
-    private let _query: HBParser?
+    private let _scheme: Parser?
+    private let _host: Parser?
+    private let _port: Parser?
+    private let _path: Parser?
+    private let _query: Parser?
 
     public var description: String { self.string }
 
-    /// Initialize `HBURI` from `String`
+    /// Initialize `URI` from `String`
     /// - Parameter string: input string
     public init(_ string: String) {
         enum ParsingState {
@@ -85,17 +85,17 @@ public struct HBURI: Sendable, CustomStringConvertible, ExpressibleByStringLiter
             case readingQuery
             case finished
         }
-        var scheme: HBParser?
-        var host: HBParser?
-        var port: HBParser?
-        var path: HBParser?
-        var query: HBParser?
+        var scheme: Parser?
+        var host: Parser?
+        var port: Parser?
+        var path: Parser?
+        var query: Parser?
         var state: ParsingState = .readingScheme
         if string.first == "/" {
             state = .readingPath
         }
 
-        var parser = HBParser(string)
+        var parser = Parser(string)
         while state != .finished {
             if parser.reachedEnd() { break }
             switch state {

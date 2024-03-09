@@ -15,8 +15,8 @@
 import Atomics
 import HTTPTypes
 import NIOEmbedded
-@_spi(HBInternal) import Hummingbird
-@_spi(HBInternal) import HummingbirdCore
+@_spi(Internal) import Hummingbird
+@_spi(Internal) import HummingbirdCore
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
@@ -25,14 +25,14 @@ import NIOPosix
 import ServiceLifecycle
 
 /// Test sending requests directly to router. This does not setup a live server
-struct HBRouterTestFramework<Responder: HBRequestResponder>: HBApplicationTestFramework where Responder.Context: HBBaseRequestContext {
+struct RouterTestFramework<Responder: RequestResponder>: ApplicationTestFramework where Responder.Context: BaseRequestContext {
     let responder: Responder
     let makeContext: @Sendable (Logger) -> Responder.Context
     let services: [any Service]
     let logger: Logger
     let processesRunBeforeServerStart: [@Sendable () async throws -> Void]
 
-    init<App: HBApplicationProtocol>(app: App) async throws where App.Responder == Responder, Responder.Context: HBRequestContext {
+    init<App: ApplicationProtocol>(app: App) async throws where App.Responder == Responder, Responder.Context: RequestContext {
         self.responder = try await app.responder
         self.processesRunBeforeServerStart = app.processesRunBeforeServerStart
         self.services = app.services
@@ -46,7 +46,7 @@ struct HBRouterTestFramework<Responder: HBRequestResponder>: HBApplicationTestFr
     }
 
     /// Run test
-    func run<Value>(_ test: @escaping @Sendable (HBTestClientProtocol) async throws -> Value) async throws -> Value {
+    func run<Value>(_ test: @escaping @Sendable (TestClientProtocol) async throws -> Value) async throws -> Value {
         let client = Client(
             responder: self.responder,
             logger: self.logger,
@@ -88,37 +88,37 @@ struct HBRouterTestFramework<Responder: HBRequestResponder>: HBApplicationTestFr
         }
     }
 
-    /// HBRouterTestFramework client. Constructs an `HBRequest` sends it to the router and then converts
+    /// RouterTestFramework client. Constructs an `Request` sends it to the router and then converts
     /// resulting response back to test response type
-    struct Client: HBTestClientProtocol {
+    struct Client: TestClientProtocol {
         let responder: Responder
         let logger: Logger
         let makeContext: @Sendable (Logger) -> Responder.Context
 
-        func executeRequest(uri: String, method: HTTPRequest.Method, headers: HTTPFields, body: ByteBuffer?) async throws -> HBTestResponse {
-            return try await withThrowingTaskGroup(of: HBTestResponse.self) { group in
-                let (stream, source) = HBRequestBody.makeStream()
-                let request = HBRequest(
+        func executeRequest(uri: String, method: HTTPRequest.Method, headers: HTTPFields, body: ByteBuffer?) async throws -> TestResponse {
+            return try await withThrowingTaskGroup(of: TestResponse.self) { group in
+                let (stream, source) = RequestBody.makeStream()
+                let request = Request(
                     head: .init(method: method, scheme: "http", authority: "localhost", path: uri, headerFields: headers),
                     body: stream
                 )
-                let logger = self.logger.with(metadataKey: "hb_id", value: .stringConvertible(RequestID()))
+                let logger = self.logger.with(metadataKey: "_id", value: .stringConvertible(RequestID()))
                 let context = self.makeContext(logger)
 
                 group.addTask {
-                    let response: HBResponse
+                    let response: Response
                     do {
                         response = try await self.responder.respond(to: request, context: context)
-                    } catch let error as HBHTTPResponseError {
+                    } catch let error as HTTPResponseError {
                         let httpResponse = error.response(allocator: ByteBufferAllocator())
-                        response = HBResponse(status: httpResponse.status, headers: httpResponse.headers, body: httpResponse.body)
+                        response = Response(status: httpResponse.status, headers: httpResponse.headers, body: httpResponse.body)
                     } catch {
-                        response = HBResponse(status: .internalServerError)
+                        response = Response(status: .internalServerError)
                     }
                     let responseWriter = RouterResponseWriter()
                     let trailerHeaders = try await response.body.write(responseWriter)
                     return responseWriter.collated.withLockedValue { collated in
-                        HBTestResponse(head: response.head, body: collated, trailerHeaders: trailerHeaders)
+                        TestResponse(head: response.head, body: collated, trailerHeaders: trailerHeaders)
                     }
                 }
 
@@ -135,7 +135,7 @@ struct HBRouterTestFramework<Responder: HBRequestResponder>: HBApplicationTestFr
         }
     }
 
-    final class RouterResponseWriter: HBResponseBodyWriter {
+    final class RouterResponseWriter: ResponseBodyWriter {
         let collated: NIOLockedValueBox<ByteBuffer>
 
         init() {

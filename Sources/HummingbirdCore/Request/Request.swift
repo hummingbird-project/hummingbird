@@ -15,15 +15,15 @@
 import HTTPTypes
 
 /// Holds all the values required to process a request
-public struct HBRequest: Sendable {
+public struct Request: Sendable {
     // MARK: Member variables
 
     /// URI path
-    public let uri: HBURI
+    public let uri: URI
     /// HTTP head
     public let head: HTTPRequest
     /// Body of HTTP request
-    public var body: HBRequestBody
+    public var body: RequestBody
     /// Request HTTP method
     public var method: HTTPRequest.Method { self.head.method }
     /// Request HTTP headers
@@ -31,14 +31,14 @@ public struct HBRequest: Sendable {
 
     // MARK: Initialization
 
-    /// Create new HBRequest
+    /// Create new Request
     /// - Parameters:
     ///   - head: HTTP head
     ///   - body: HTTP body
     ///   - id: Unique RequestID
     public init(
         head: HTTPRequest,
-        body: HBRequestBody
+        body: RequestBody
     ) {
         self.uri = .init(head.path ?? "")
         self.head = head
@@ -46,7 +46,7 @@ public struct HBRequest: Sendable {
     }
 }
 
-extension HBRequest: CustomStringConvertible {
+extension Request: CustomStringConvertible {
     public var description: String {
         "uri: \(self.uri), method: \(self.method), headers: \(self.headers), body: \(self.body)"
     }

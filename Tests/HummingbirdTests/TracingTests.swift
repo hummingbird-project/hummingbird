@@ -35,12 +35,12 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let router = HBRouter()
-        router.middlewares.add(HBTracingMiddleware(attributes: ["net.host.name": "127.0.0.1", "net.host.port": 8080]))
+        let router = Router()
+        router.middlewares.add(TracingMiddleware(attributes: ["net.host.name": "127.0.0.1", "net.host.port": 8080]))
         router.get("users/:id") { _, _ -> String in
             return "42"
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/users/42", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
@@ -74,12 +74,12 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let router = HBRouter()
-        router.middlewares.add(HBTracingMiddleware())
+        let router = Router()
+        router.middlewares.add(TracingMiddleware())
         router.post("users") { _, _ -> String in
-            throw HBHTTPError(.internalServerError)
+            throw HTTPError(.internalServerError)
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/users", method: .post, headers: [.contentLength: "2"], body: ByteBuffer(string: "42")) { response in
                 XCTAssertEqual(response.status, .internalServerError)
@@ -95,7 +95,7 @@ final class TracingTests: XCTestCase {
         XCTAssertEqual(span.status, .init(code: .error))
 
         XCTAssertEqual(span.recordedErrors.count, 1)
-        let error = try XCTUnwrap(span.recordedErrors.first?.0 as? HBHTTPError, "Recorded unexpected errors: \(span.recordedErrors)")
+        let error = try XCTUnwrap(span.recordedErrors.first?.0 as? HTTPError, "Recorded unexpected errors: \(span.recordedErrors)")
         XCTAssertEqual(error.status, .internalServerError)
 
         XCTAssertSpanAttributesEqual(span.attributes, [
@@ -113,21 +113,21 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let router = HBRouter()
-        router.middlewares.add(HBTracingMiddleware(recordingHeaders: [
+        let router = Router()
+        router.middlewares.add(TracingMiddleware(recordingHeaders: [
             .accept, .contentType, .cacheControl, .test,
         ]))
-        router.get("users/:id") { _, _ -> HBResponse in
+        router.get("users/:id") { _, _ -> Response in
             var headers = HTTPFields()
             headers[values: .cacheControl] = ["86400", "public"]
             headers[.contentType] = "text/plain"
-            return HBResponse(
+            return Response(
                 status: .ok,
                 headers: headers,
                 body: .init(byteBuffer: ByteBuffer(string: "42"))
             )
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             var requestHeaders = HTTPFields()
             requestHeaders[values: .accept] = ["text/plain", "application/json"]
@@ -166,12 +166,12 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let router = HBRouter()
-        router.middlewares.add(HBTracingMiddleware())
+        let router = Router()
+        router.middlewares.add(TracingMiddleware())
         router.post("/users") { _, _ -> HTTPResponse.Status in
             return .noContent
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/users", method: .post) { response in
                 XCTAssertEqual(response.status, .noContent)
@@ -202,12 +202,12 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let router = HBRouter()
-        router.middlewares.add(HBTracingMiddleware())
+        let router = Router()
+        router.middlewares.add(TracingMiddleware())
         router.get("/") { _, _ -> HTTPResponse.Status in
             return .ok
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
@@ -238,9 +238,9 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let router = HBRouter()
-        router.middlewares.add(HBTracingMiddleware())
-        let app = HBApplication(responder: router.buildResponder())
+        let router = Router()
+        router.middlewares.add(TracingMiddleware())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .notFound)
@@ -255,7 +255,7 @@ final class TracingTests: XCTestCase {
         XCTAssertNil(span.status)
 
         XCTAssertEqual(span.recordedErrors.count, 1)
-        let error = try XCTUnwrap(span.recordedErrors.first?.0 as? HBHTTPError, "Recorded unexpected errors: \(span.recordedErrors)")
+        let error = try XCTUnwrap(span.recordedErrors.first?.0 as? HTTPError, "Recorded unexpected errors: \(span.recordedErrors)")
         XCTAssertEqual(error.status, .notFound)
 
         XCTAssertSpanAttributesEqual(span.attributes, [
@@ -274,8 +274,8 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let router = HBRouter()
-        router.middlewares.add(HBTracingMiddleware())
+        let router = Router()
+        router.middlewares.add(TracingMiddleware())
         router.get("/") { _, _ -> HTTPResponse.Status in
             var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
             serviceContext.testID = "test"
@@ -283,7 +283,7 @@ final class TracingTests: XCTestCase {
             span.end()
             return .ok
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
@@ -308,8 +308,8 @@ final class TracingTests: XCTestCase {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let router = HBRouter()
-        router.middlewares.add(HBTracingMiddleware())
+        let router = Router()
+        router.middlewares.add(TracingMiddleware())
         router.get("/") { _, _ -> HTTPResponse.Status in
             var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
             serviceContext.testID = "test"
@@ -318,7 +318,7 @@ final class TracingTests: XCTestCase {
                 return .ok
             }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
@@ -342,8 +342,8 @@ final class TracingTests: XCTestCase {
         let expectation = expectation(description: "Expected span to be ended.")
         expectation.expectedFulfillmentCount = 2
 
-        struct SpanMiddleware<Context: HBBaseRequestContext>: HBRouterMiddleware {
-            public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+        struct SpanMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
                 serviceContext.testID = "testMiddleware"
 
@@ -359,14 +359,14 @@ final class TracingTests: XCTestCase {
         }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let router = HBRouter()
+        let router = Router()
         router.middlewares.add(SpanMiddleware())
-        router.middlewares.add(HBTracingMiddleware())
+        router.middlewares.add(TracingMiddleware())
         router.get("/") { _, _ -> HTTPResponse.Status in
             try await Task.sleep(for: .milliseconds(2))
             return .ok
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
@@ -395,15 +395,15 @@ extension TracingTests {
         tracer.onEndSpan = { _ in expectation.fulfill() }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let router = HBRouter()
-        router.middlewares.add(HBTracingMiddleware())
+        let router = Router()
+        router.middlewares.add(TracingMiddleware())
         router.get("/") { _, _ -> HTTPResponse.Status in
             try await Task.sleep(nanoseconds: 1000)
             return InstrumentationSystem.tracer.withAnySpan("testing", ofKind: .server) { _ in
                 return .ok
             }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)

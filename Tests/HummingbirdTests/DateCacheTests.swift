@@ -26,16 +26,16 @@ class HummingbirdDateTests: XCTestCase {
 
         for _ in 0..<1000 {
             let time = Int.random(in: 1...4 * Int(Int32.max))
-            XCTAssertEqual(formatter.string(from: Date(timeIntervalSince1970: Double(time))), HBDateCache.formatRFC1123Date(time))
+            XCTAssertEqual(formatter.string(from: Date(timeIntervalSince1970: Double(time))), DateCache.formatRFC1123Date(time))
         }
     }
 
     func testDateHeader() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.get("date") { _, _ in
             return "hello"
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
 
         try await app.test(.live) { client in
             let date = try await client.execute(uri: "/date", method: .get) { response in

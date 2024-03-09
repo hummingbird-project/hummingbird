@@ -18,22 +18,22 @@ import Logging
 import XCTest
 
 final class HandlerTests: XCTestCase {
-    struct DecodeTest<Value: Decodable>: HBRouteHandler, Decodable {
+    struct DecodeTest<Value: Decodable>: RouteHandler, Decodable {
         let value: Value
 
-        init(from request: HBRequest, context: some HBBaseRequestContext) async throws {
+        init(from request: Request, context: some BaseRequestContext) async throws {
             self = try await request.decode(as: Self.self, context: context)
         }
 
-        func handle(context: some HBBaseRequestContext) -> String {
+        func handle(context: some BaseRequestContext) -> String {
             return "\(Value.self): \(self.value)"
         }
     }
 
     func testDecodeKeyError() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.post("/hello", use: DecodeTest<String>.self)
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
             let body = ByteBufferAllocator().buffer(string: #"{"foo": "bar"}"#)
@@ -51,9 +51,9 @@ final class HandlerTests: XCTestCase {
     }
 
     func testDecodeTypeError() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.post("/hello", use: DecodeTest<Int>.self)
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
             let body = ByteBufferAllocator().buffer(string: #"{"value": "bar"}"#)
@@ -71,9 +71,9 @@ final class HandlerTests: XCTestCase {
     }
 
     func testDecodeValueError() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.post("/hello", use: DecodeTest<String>.self)
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
             let body = ByteBufferAllocator().buffer(string: #"{"value": null}"#)
@@ -96,9 +96,9 @@ final class HandlerTests: XCTestCase {
     }
 
     func testDecodeInputError() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.post("/hello", use: DecodeTest<String>.self)
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
             let body = ByteBufferAllocator().buffer(string: #"{invalid}"#)
@@ -116,9 +116,9 @@ final class HandlerTests: XCTestCase {
     }
 
     func testDecode() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.post("/hello", use: DecodeTest<String>.self)
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
 
@@ -129,9 +129,9 @@ final class HandlerTests: XCTestCase {
     }
 
     func testDecodeFail() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.get("/hello", use: DecodeTest<String>.self)
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get, body: ByteBufferAllocator().buffer(string: #"{"name2": "Adam"}"#)) { response in
@@ -141,20 +141,20 @@ final class HandlerTests: XCTestCase {
     }
 
     func testEmptyRequest() async throws {
-        struct ParameterTest: HBRouteHandler {
+        struct ParameterTest: RouteHandler {
             let parameter: Int
-            init(from request: HBRequest, context: some HBBaseRequestContext) throws {
+            init(from request: Request, context: some BaseRequestContext) throws {
                 self.parameter = try context.parameters.require("test", as: Int.self)
             }
 
-            func handle(context: some HBBaseRequestContext) -> String {
+            func handle(context: some BaseRequestContext) -> String {
                 return "\(self.parameter)"
             }
         }
 
-        let router = HBRouter()
+        let router = Router()
         router.put("/:test", use: ParameterTest.self)
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
 

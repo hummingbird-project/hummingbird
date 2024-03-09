@@ -19,20 +19,20 @@ import Hummingbird
 /// Requires a function that returns a HTTP response from a HTTP request and context.
 @_documentation(visibility: internal)
 public protocol _RouteHandlerProtocol<Context>: Sendable {
-    associatedtype Context: HBRouterRequestContext
-    func handle(_ request: HBRequest, context: Context) async throws -> HBResponse
+    associatedtype Context: RouterRequestContext
+    func handle(_ request: Request, context: Context) async throws -> Response
 }
 
 /// Implementatinon of ``_RouteHandlerProtocol`` that uses a closure to produce a response.
 ///
 /// This is used internally to implement `Route` when it is initialized with a closure.
 @_documentation(visibility: internal)
-public struct _RouteHandlerClosure<RouteOutput: HBResponseGenerator, Context: HBRouterRequestContext>: _RouteHandlerProtocol {
+public struct _RouteHandlerClosure<RouteOutput: ResponseGenerator, Context: RouterRequestContext>: _RouteHandlerProtocol {
     @usableFromInline
-    let closure: @Sendable (HBRequest, Context) async throws -> RouteOutput
+    let closure: @Sendable (Request, Context) async throws -> RouteOutput
 
     @inlinable
-    public func handle(_ request: HBRequest, context: Context) async throws -> HBResponse {
+    public func handle(_ request: Request, context: Context) async throws -> Response {
         try await self.closure(request, context).response(from: request, context: context)
     }
 }
@@ -42,12 +42,12 @@ public struct _RouteHandlerClosure<RouteOutput: HBResponseGenerator, Context: HB
 /// This is used internally to implement `Route` when it is initialized with a middleware built
 /// from the ``RouteBuilder`` result builder.
 @_documentation(visibility: internal)
-public struct _RouteHandlerMiddleware<M0: MiddlewareProtocol>: _RouteHandlerProtocol where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context: HBRouterRequestContext {
+public struct _RouteHandlerMiddleware<M0: MiddlewareProtocol>: _RouteHandlerProtocol where M0.Input == Request, M0.Output == Response, M0.Context: RouterRequestContext {
     public typealias Context = M0.Context
 
     /// Dummy function passed to middleware handle
     @usableFromInline
-    static func notFound(_: HBRequest, _: Context) -> HBResponse {
+    static func notFound(_: Request, _: Context) -> Response {
         .init(status: .notFound)
     }
 
@@ -55,7 +55,7 @@ public struct _RouteHandlerMiddleware<M0: MiddlewareProtocol>: _RouteHandlerProt
     let middleware: M0
 
     @inlinable
-    public func handle(_ request: HBRequest, context: Context) async throws -> HBResponse {
+    public func handle(_ request: Request, context: Context) async throws -> Response {
         try await self.middleware.handle(request, context: context, next: Self.notFound)
     }
 }

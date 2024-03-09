@@ -25,23 +25,23 @@ public enum TestErrors: Error {
 }
 
 /// Basic responder that just returns "Hello" in body
-@Sendable public func helloResponder(to request: HBRequest, channel: Channel) async -> HBResponse {
+@Sendable public func helloResponder(to request: Request, channel: Channel) async -> Response {
     let responseBody = channel.allocator.buffer(string: "Hello")
-    return HBResponse(status: .ok, body: .init(byteBuffer: responseBody))
+    return Response(status: .ok, body: .init(byteBuffer: responseBody))
 }
 
 /// Helper function for testing a server
-public func testServer<ChildChannel: HBServerChildChannel, Value: Sendable>(
+public func testServer<ChildChannel: ServerChildChannel, Value: Sendable>(
     responder: @escaping HTTPChannelHandler.Responder,
-    httpChannelSetup: HBHTTPChannelBuilder<ChildChannel>,
-    configuration: HBServerConfiguration,
+    httpChannelSetup: HTTPChannelBuilder<ChildChannel>,
+    configuration: ServerConfiguration,
     eventLoopGroup: EventLoopGroup,
     logger: Logger,
-    _ test: @escaping @Sendable (HBServer<ChildChannel>, Int) async throws -> Value
+    _ test: @escaping @Sendable (Server<ChildChannel>, Int) async throws -> Value
 ) async throws -> Value {
     try await withThrowingTaskGroup(of: Void.self) { group in
         let promise = Promise<Int>()
-        let server = try HBServer(
+        let server = try Server(
             childChannelSetup: httpChannelSetup.build(responder),
             configuration: configuration,
             onServerRunning: { await promise.complete($0.localAddress!.port!) },
@@ -68,14 +68,14 @@ public func testServer<ChildChannel: HBServerChildChannel, Value: Sendable>(
 ///
 /// Creates test client, runs test function abd ensures everything is
 /// shutdown correctly
-public func testServer<ChildChannel: HBServerChildChannel, Value: Sendable>(
+public func testServer<ChildChannel: ServerChildChannel, Value: Sendable>(
     responder: @escaping HTTPChannelHandler.Responder,
-    httpChannelSetup: HBHTTPChannelBuilder<ChildChannel>,
-    configuration: HBServerConfiguration,
+    httpChannelSetup: HTTPChannelBuilder<ChildChannel>,
+    configuration: ServerConfiguration,
     eventLoopGroup: EventLoopGroup,
     logger: Logger,
-    clientConfiguration: HBTestClient.Configuration = .init(),
-    _ test: @escaping @Sendable (HBServer<ChildChannel>, HBTestClient) async throws -> Value
+    clientConfiguration: TestClient.Configuration = .init(),
+    _ test: @escaping @Sendable (Server<ChildChannel>, TestClient) async throws -> Value
 ) async throws -> Value {
     try await testServer(
         responder: responder,
@@ -83,8 +83,8 @@ public func testServer<ChildChannel: HBServerChildChannel, Value: Sendable>(
         configuration: configuration,
         eventLoopGroup: eventLoopGroup,
         logger: logger
-    ) { (server: HBServer<ChildChannel>, port: Int) in
-        let client = HBTestClient(
+    ) { (server: Server<ChildChannel>, port: Int) in
+        let client = TestClient(
             host: "localhost",
             port: port,
             configuration: clientConfiguration,
@@ -99,12 +99,12 @@ public func testServer<ChildChannel: HBServerChildChannel, Value: Sendable>(
 
 public func testServer<Value: Sendable>(
     responder: @escaping HTTPChannelHandler.Responder,
-    httpChannelSetup: HBHTTPChannelBuilder<some HBServerChildChannel> = .http1(),
-    configuration: HBServerConfiguration,
+    httpChannelSetup: HTTPChannelBuilder<some ServerChildChannel> = .http1(),
+    configuration: ServerConfiguration,
     eventLoopGroup: EventLoopGroup,
     logger: Logger,
-    clientConfiguration: HBTestClient.Configuration = .init(),
-    _ test: @escaping @Sendable (HBTestClient) async throws -> Value
+    clientConfiguration: TestClient.Configuration = .init(),
+    _ test: @escaping @Sendable (TestClient) async throws -> Value
 ) async throws -> Value {
     try await testServer(
         responder: responder,

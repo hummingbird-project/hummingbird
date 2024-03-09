@@ -21,7 +21,7 @@ import HummingbirdCore
 import NIOCore
 
 /// Access environment variables
-public struct HBEnvironment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
+public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
     struct Error: Swift.Error, Equatable {
         enum Value {
             case dotEnvParseError
@@ -36,7 +36,7 @@ public struct HBEnvironment: Sendable, Decodable, ExpressibleByDictionaryLiteral
     }
 
     // shared environment
-    public static let shared: HBEnvironment = .init()
+    public static let shared: Environment = .init()
 
     var values: [String: String]
 
@@ -98,7 +98,7 @@ public struct HBEnvironment: Sendable, Decodable, ExpressibleByDictionaryLiteral
     /// If an environment variable exists in both sets it will choose the version from the second
     /// set of environment variables
     /// - Parameter env: environemnt variables to merge into this environment variable set
-    public func merging(with env: HBEnvironment) -> HBEnvironment {
+    public func merging(with env: Environment) -> Environment {
         .init(rawValues: self.values.merging(env.values) { $1 })
     }
 
@@ -121,7 +121,7 @@ public struct HBEnvironment: Sendable, Decodable, ExpressibleByDictionaryLiteral
         return values
     }
 
-    /// Create HBEnvironment initialised from the `.env` file
+    /// Create Environment initialised from the `.env` file
     public static func dotEnv(_ dovEnvPath: String = ".env") async throws -> Self {
         guard let dotEnv = await loadDotEnv(dovEnvPath) else { return [:] }
         return try .init(rawValues: self.parseDotEnv(dotEnv))
@@ -155,7 +155,7 @@ public struct HBEnvironment: Sendable, Decodable, ExpressibleByDictionaryLiteral
             case readingValue(key: String)
         }
         var dotEnvDictionary: [String: String] = [:]
-        var parser = HBParser(dotEnv)
+        var parser = Parser(dotEnv)
         var state: DotEnvParserState = .readingKey
         do {
             while !parser.reachedEnd() {
@@ -172,7 +172,7 @@ public struct HBEnvironment: Sendable, Decodable, ExpressibleByDictionaryLiteral
                         do {
                             _ = try parser.read(until: \.isNewline)
                             parser.unsafeAdvance()
-                        } catch HBParser.Error.overflow {
+                        } catch Parser.Error.overflow {
                             parser.moveToEnd()
                             break
                         }
@@ -212,7 +212,7 @@ public struct HBEnvironment: Sendable, Decodable, ExpressibleByDictionaryLiteral
     }
 }
 
-extension HBEnvironment: CustomStringConvertible {
+extension Environment: CustomStringConvertible {
     public var description: String {
         String(describing: self.values)
     }

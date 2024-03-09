@@ -20,7 +20,7 @@ import NIOHTTPTypes
 /// Request Body
 ///
 /// Can be either a stream of ByteBuffers or a single ByteBuffer
-public struct HBRequestBody: Sendable, AsyncSequence {
+public struct RequestBody: Sendable, AsyncSequence {
     @usableFromInline
     internal enum _Backing: Sendable {
         case byteBuffer(ByteBuffer)
@@ -35,7 +35,7 @@ public struct HBRequestBody: Sendable, AsyncSequence {
         self._backing = backing
     }
 
-    ///  Initialise ``HBRequestBody`` from ByteBuffer
+    ///  Initialise ``RequestBody`` from ByteBuffer
     /// - Parameter buffer: ByteBuffer
     public init(buffer: ByteBuffer) {
         self.init(.byteBuffer(buffer))
@@ -48,7 +48,7 @@ public struct HBRequestBody: Sendable, AsyncSequence {
 }
 
 /// AsyncSequence protocol requirements
-extension HBRequestBody {
+extension RequestBody {
     public typealias Element = ByteBuffer
 
     public struct AsyncIterator: AsyncIteratorProtocol {
@@ -77,8 +77,8 @@ extension HBRequestBody {
     }
 }
 
-/// Extend HBRequestBody to create request body streams backed by `NIOThrowingAsyncSequenceProducer`.
-extension HBRequestBody {
+/// Extend RequestBody to create request body streams backed by `NIOThrowingAsyncSequenceProducer`.
+extension RequestBody {
     @usableFromInline
     typealias Producer = NIOThrowingAsyncSequenceProducer<
         ByteBuffer,
@@ -125,7 +125,7 @@ extension HBRequestBody {
         }
     }
 
-    /// A source used for driving a ``HBRequestBody`` stream.
+    /// A source used for driving a ``RequestBody`` stream.
     public final class Source {
         @usableFromInline
         let source: Producer.Source
@@ -176,10 +176,10 @@ extension HBRequestBody {
         }
     }
 
-    ///  Make a new ``HBRequestBody`` stream
-    /// - Returns: The new `HBRequestBody` and a source to yield ByteBuffers to the `HBRequestBody`.
+    ///  Make a new ``RequestBody`` stream
+    /// - Returns: The new `RequestBody` and a source to yield ByteBuffers to the `RequestBody`.
     @inlinable
-    public static func makeStream() -> (HBRequestBody, Source) {
+    public static func makeStream() -> (RequestBody, Source) {
         let delegate = Delegate()
         let newSequence = Producer.makeSequence(
             backPressureStrategy: .init(lowWatermark: 2, highWatermark: 4),

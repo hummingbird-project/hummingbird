@@ -22,11 +22,11 @@ import Network
 // MARK: Configuration
 
 /// Application configuration
-public struct HBApplicationConfiguration: Sendable {
+public struct ApplicationConfiguration: Sendable {
     // MARK: Member variables
 
     /// Bind address for server
-    public var address: HBAddress
+    public var address: Address
     /// Server name to return in "server" header
     public var serverName: String?
     /// Defines the maximum length for the queue of pending connections
@@ -40,7 +40,7 @@ public struct HBApplicationConfiguration: Sendable {
 
     // MARK: Initialization
 
-    /// Initialize HBApplication configuration
+    /// Initialize Application configuration
     ///
     /// - Parameters:
     ///   - address: Bind address for server
@@ -49,7 +49,7 @@ public struct HBApplicationConfiguration: Sendable {
     ///         the client may receive an error with an indication of ECONNREFUSE
     ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
     public init(
-        address: HBAddress = .hostname(),
+        address: Address = .hostname(),
         serverName: String? = nil,
         backlog: Int = 256,
         reuseAddress: Bool = true
@@ -64,7 +64,7 @@ public struct HBApplicationConfiguration: Sendable {
     }
 
     #if canImport(Network)
-    /// Initialize HBApplication configuration
+    /// Initialize Application configuration
     ///
     /// - Parameters:
     ///   - address: Bind address for server
@@ -72,7 +72,7 @@ public struct HBApplicationConfiguration: Sendable {
     ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
     ///   - tlsOptions: TLS options for when you are using NIOTransportServices
     public init(
-        address: HBAddress = .hostname(),
+        address: Address = .hostname(),
         serverName: String? = nil,
         reuseAddress: Bool = true,
         tlsOptions: TSTLSOptions
@@ -88,7 +88,7 @@ public struct HBApplicationConfiguration: Sendable {
 
     /// Create new configuration struct with updated values
     public func with(
-        address: HBAddress? = nil,
+        address: Address? = nil,
         serverName: String? = nil,
         backlog: Int? = nil,
         reuseAddress: Bool? = nil
@@ -103,7 +103,7 @@ public struct HBApplicationConfiguration: Sendable {
 
     /// return HTTP server configuration
     #if canImport(Network)
-    var httpServer: HBServerConfiguration {
+    var httpServer: ServerConfiguration {
         return .init(
             address: self.address,
             serverName: self.serverName,
@@ -113,7 +113,7 @@ public struct HBApplicationConfiguration: Sendable {
         )
     }
     #else
-    var httpServer: HBServerConfiguration {
+    var httpServer: ServerConfiguration {
         return .init(
             address: self.address,
             serverName: self.serverName,

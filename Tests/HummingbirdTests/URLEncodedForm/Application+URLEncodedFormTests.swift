@@ -19,14 +19,14 @@ import NIOCore
 import XCTest
 
 class HummingBirdURLEncodedTests: XCTestCase {
-    struct User: HBResponseCodable {
+    struct User: ResponseCodable {
         let name: String
         let email: String
         let age: Int
     }
 
-    struct URLEncodedCodingRequestContext: HBRequestContext {
-        var coreContext: HBCoreRequestContext
+    struct URLEncodedCodingRequestContext: RequestContext {
+        var coreContext: CoreRequestContext
 
         init(channel: Channel, logger: Logger) {
             self.coreContext = .init(allocator: channel.allocator, logger: logger)
@@ -39,15 +39,15 @@ class HummingBirdURLEncodedTests: XCTestCase {
     struct Error: Swift.Error {}
 
     func testDecode() async throws {
-        let router = HBRouter(context: URLEncodedCodingRequestContext.self)
+        let router = Router(context: URLEncodedCodingRequestContext.self)
         router.put("/user") { request, context -> HTTPResponse.Status in
-            guard let user = try? await request.decode(as: User.self, context: context) else { throw HBHTTPError(.badRequest) }
+            guard let user = try? await request.decode(as: User.self, context: context) else { throw HTTPError(.badRequest) }
             XCTAssertEqual(user.name, "John Smith")
             XCTAssertEqual(user.email, "john.smith@email.com")
             XCTAssertEqual(user.age, 25)
             return .ok
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             let body = "name=John%20Smith&email=john.smith%40email.com&age=25"
             try await client.execute(uri: "/user", method: .put, body: ByteBufferAllocator().buffer(string: body)) {
@@ -57,11 +57,11 @@ class HummingBirdURLEncodedTests: XCTestCase {
     }
 
     func testEncode() async throws {
-        let router = HBRouter(context: URLEncodedCodingRequestContext.self)
+        let router = Router(context: URLEncodedCodingRequestContext.self)
         router.get("/user") { _, _ -> User in
             return User(name: "John Smith", email: "john.smith@email.com", age: 25)
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/user", method: .get) { response in
                 let user = try URLEncodedFormDecoder().decode(User.self, from: String(buffer: response.body))

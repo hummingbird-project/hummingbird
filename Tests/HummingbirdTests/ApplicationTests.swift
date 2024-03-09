@@ -33,11 +33,11 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testGetRoute() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.get("/hello") { _, context -> ByteBuffer in
             return context.allocator.buffer(string: "GET: Hello")
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
@@ -47,11 +47,11 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testHTTPStatusRoute() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.get("/accepted") { _, _ -> HTTPResponse.Status in
             return .accepted
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/accepted", method: .get) { response in
                 XCTAssertEqual(response.status, .accepted)
@@ -60,11 +60,11 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testStandardHeaders() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.get("/hello") { _, _ in
             return "Hello"
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.live) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
                 XCTAssertEqual(response.headers[.contentLength], "5")
@@ -74,11 +74,11 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testServerHeaders() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.get("/hello") { _, _ in
             return "Hello"
         }
-        let app = HBApplication(responder: router.buildResponder(), configuration: .init(serverName: "TestServer"))
+        let app = Application(responder: router.buildResponder(), configuration: .init(serverName: "TestServer"))
         try await app.test(.live) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
                 XCTAssertEqual(response.headers[.server], "TestServer")
@@ -87,11 +87,11 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testPostRoute() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.post("/hello") { _, _ -> String in
             return "POST: Hello"
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
             try await client.execute(uri: "/hello", method: .post) { response in
@@ -102,14 +102,14 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testMultipleMethods() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.post("/hello") { _, _ -> String in
             return "POST"
         }
         router.get("/hello") { _, _ -> String in
             return "GET"
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
             try await client.execute(uri: "/hello", method: .get) { response in
@@ -122,7 +122,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testMultipleGroupMethods() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.group("hello")
             .post { _, _ -> String in
                 return "POST"
@@ -130,7 +130,7 @@ final class ApplicationTests: XCTestCase {
             .get { _, _ -> String in
                 return "GET"
             }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
             try await client.execute(uri: "/hello", method: .get) { response in
@@ -143,11 +143,11 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testQueryRoute() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.post("/query") { request, context -> ByteBuffer in
             return context.allocator.buffer(string: request.uri.queryParameters["test"].map { String($0) } ?? "")
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
             try await client.execute(uri: "/query?test=test%20data%C3%A9", method: .post) { response in
@@ -158,11 +158,11 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testMultipleQueriesRoute() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.post("/add") { request, _ -> String in
             return request.uri.queryParameters.getAll("value", as: Int.self).reduce(0,+).description
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
             try await client.execute(uri: "/add?value=3&value=45&value=7", method: .post) { response in
@@ -173,11 +173,11 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testArray() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.get("array") { _, _ -> [String] in
             return ["yes", "no"]
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
             try await client.execute(uri: "/array", method: .get) { response in
@@ -187,14 +187,14 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testResponseBody() async throws {
-        let router = HBRouter()
+        let router = Router()
         router
             .group("/echo-body")
-            .post { request, _ -> HBResponse in
+            .post { request, _ -> Response in
                 let buffer = try await request.body.collect(upTo: .max)
                 return .init(status: .ok, headers: [:], body: .init(byteBuffer: buffer))
             }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
             let buffer = self.randomBuffer(size: 1_140_000)
@@ -207,9 +207,9 @@ final class ApplicationTests: XCTestCase {
 
     /// Test streaming of requests and streaming of responses by streaming the request body into a response streamer
     func testStreaming() async throws {
-        let router = HBRouter()
-        router.post("streaming") { request, _ -> HBResponse in
-            return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
+        let router = Router()
+        router.post("streaming") { request, _ -> Response in
+            return Response(status: .ok, body: .init(asyncSequence: request.body))
         }
         router.post("size") { request, _ -> String in
             var size = 0
@@ -218,7 +218,7 @@ final class ApplicationTests: XCTestCase {
             }
             return size.description
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
 
@@ -239,11 +239,11 @@ final class ApplicationTests: XCTestCase {
 
     /// Test streaming of requests and streaming of responses by streaming the request body into a response streamer
     func testStreamingSmallBuffer() async throws {
-        let router = HBRouter()
-        router.post("streaming") { request, _ -> HBResponse in
-            return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
+        let router = Router()
+        router.post("streaming") { request, _ -> Response in
+            return Response(status: .ok, body: .init(asyncSequence: request.body))
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             let buffer = self.randomBuffer(size: 64)
             try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
@@ -258,20 +258,20 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testCollateBody() async throws {
-        struct CollateMiddleware<Context: HBBaseRequestContext>: HBRouterMiddleware {
-            public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+        struct CollateMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 var request = request
                 _ = try await request.collateBody(context: context)
                 return try await next(request, context)
             }
         }
-        let router = HBRouter()
+        let router = Router()
         router.middlewares.add(CollateMiddleware())
         router.put("/hello") { request, _ -> String in
             let buffer = try await request.body.collect(upTo: .max)
             return buffer.readableBytes.description
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
             let buffer = self.randomBuffer(size: 512_000)
@@ -283,7 +283,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testDoubleStreaming() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.post("size") { request, context -> String in
             var request = request
             _ = try await request.collateBody(context: context)
@@ -293,7 +293,7 @@ final class ApplicationTests: XCTestCase {
             }
             return size.description
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
             let buffer = self.randomBuffer(size: 100_000)
@@ -304,14 +304,14 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testOptional() async throws {
-        let router = HBRouter()
+        let router = Router()
         router
             .group("/echo-body")
             .post { request, _ -> ByteBuffer? in
                 let buffer = try await request.body.collect(upTo: .max)
                 return buffer.readableBytes > 0 ? buffer : nil
             }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
             let buffer = self.randomBuffer(size: 64)
@@ -326,8 +326,8 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testOptionalCodable() async throws {
-        struct SortedJSONRequestContext: HBRequestContext {
-            var coreContext: HBCoreRequestContext
+        struct SortedJSONRequestContext: RequestContext {
+            var coreContext: CoreRequestContext
             var responseEncoder: JSONEncoder {
                 let encoder = JSONEncoder()
                 encoder.outputFormatting = .sortedKeys
@@ -338,17 +338,17 @@ final class ApplicationTests: XCTestCase {
                 self.coreContext = .init(allocator: channel.allocator, logger: logger)
             }
         }
-        struct Name: HBResponseCodable {
+        struct Name: ResponseCodable {
             let first: String
             let last: String
         }
-        let router = HBRouter(context: SortedJSONRequestContext.self)
+        let router = Router(context: SortedJSONRequestContext.self)
         router
             .group("/name")
             .patch { _, _ -> Name? in
                 return Name(first: "john", last: "smith")
             }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
             try await client.execute(uri: "/name", method: .patch) { response in
@@ -358,15 +358,15 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testTypedResponse() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.delete("/hello") { _, _ in
-            return HBEditedResponse(
+            return EditedResponse(
                 status: .preconditionRequired,
                 headers: [.test: "value", .contentType: "application/json"],
                 response: "Hello"
             )
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
             try await client.execute(uri: "/hello", method: .delete) { response in
@@ -379,18 +379,18 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testCodableTypedResponse() async throws {
-        struct Result: HBResponseEncodable {
+        struct Result: ResponseEncodable {
             let value: String
         }
-        let router = HBRouter()
+        let router = Router()
         router.patch("/hello") { _, _ in
-            return HBEditedResponse(
+            return EditedResponse(
                 status: .multipleChoices,
                 headers: [.test: "value", .contentType: "application/json"],
                 response: Result(value: "true")
             )
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
             try await client.execute(uri: "/hello", method: .patch) { response in
@@ -403,15 +403,15 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testMaxUploadSize() async throws {
-        struct MaxUploadRequestContext: HBRequestContext {
+        struct MaxUploadRequestContext: RequestContext {
             init(channel: Channel, logger: Logger) {
                 self.coreContext = .init(allocator: channel.allocator, logger: logger)
             }
 
-            var coreContext: HBCoreRequestContext
+            var coreContext: CoreRequestContext
             var maxUploadSize: Int { 64 * 1024 }
         }
-        let router = HBRouter(context: MaxUploadRequestContext.self)
+        let router = Router(context: MaxUploadRequestContext.self)
         router.post("upload") { request, context in
             _ = try await request.body.collect(upTo: context.maxUploadSize)
             return "ok"
@@ -419,7 +419,7 @@ final class ApplicationTests: XCTestCase {
         router.post("stream") { _, _ in
             "ok"
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.live) { client in
             let buffer = self.randomBuffer(size: 128 * 1024)
             // check non streamed route throws an error
@@ -435,9 +435,9 @@ final class ApplicationTests: XCTestCase {
 
     func testRemoteAddress() async throws {
         /// Implementation of a basic request context that supports everything the Hummingbird library needs
-        struct HBSocketAddressRequestContext: HBRequestContext {
+        struct SocketAddressRequestContext: RequestContext {
             /// core context
-            var coreContext: HBCoreRequestContext
+            var coreContext: CoreRequestContext
             // socket address
             let remoteAddress: SocketAddress?
 
@@ -449,7 +449,7 @@ final class ApplicationTests: XCTestCase {
                 self.remoteAddress = channel.remoteAddress
             }
         }
-        let router = HBRouter(context: HBSocketAddressRequestContext.self)
+        let router = Router(context: SocketAddressRequestContext.self)
         router.get("/") { _, context -> String in
             switch context.remoteAddress {
             case .v4(let address):
@@ -457,10 +457,10 @@ final class ApplicationTests: XCTestCase {
             case .v6(let address):
                 return String(describing: address.host)
             default:
-                throw HBHTTPError(.internalServerError)
+                throw HTTPError(.internalServerError)
             }
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.live) { client in
 
             try await client.execute(uri: "/", method: .get) { response in
@@ -471,15 +471,15 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    /// test we can create an application and pass it around as a `some HBApplicationProtocol`. This
+    /// test we can create an application and pass it around as a `some ApplicationProtocol`. This
     /// is more a compilation test than a runtime test
     func testApplicationProtocolReturnValue() async throws {
-        func createApplication() -> some HBApplicationProtocol {
-            let router = HBRouter()
+        func createApplication() -> some ApplicationProtocol {
+            let router = Router()
             router.get("/hello") { _, context -> ByteBuffer in
                 return context.allocator.buffer(string: "GET: Hello")
             }
-            return HBApplication(responder: router.buildResponder())
+            return Application(responder: router.buildResponder())
         }
         let app = createApplication()
         try await app.test(.live) { client in
@@ -490,13 +490,13 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    /// test we can create out own application type conforming to HBApplicationProtocol
+    /// test we can create out own application type conforming to ApplicationProtocol
     func testApplicationProtocol() async throws {
-        struct MyApp: HBApplicationProtocol {
-            typealias Context = HBBasicRequestContext
+        struct MyApp: ApplicationProtocol {
+            typealias Context = BasicRequestContext
 
-            var responder: some HBRequestResponder<Context> {
-                let router = HBRouter(context: Context.self)
+            var responder: some RequestResponder<Context> {
+                let router = Router(context: Context.self)
                 router.get("/hello") { _, context -> ByteBuffer in
                     return context.allocator.buffer(string: "GET: Hello")
                 }
@@ -522,8 +522,8 @@ final class ApplicationTests: XCTestCase {
                 Self.shutdown.store(true, ordering: .relaxed)
             }
         }
-        let router = HBRouter()
-        var app = HBApplication(responder: router.buildResponder())
+        let router = Router()
+        var app = Application(responder: router.buildResponder())
         app.addServices(MyService())
         try await app.test(.live) { _ in
             XCTAssertEqual(MyService.started.load(ordering: .relaxed), true)
@@ -536,8 +536,8 @@ final class ApplicationTests: XCTestCase {
 
     func testOnServerRunning() async throws {
         let runOnServerRunning = ManagedAtomic(false)
-        let router = HBRouter()
-        let app = HBApplication(
+        let router = Router()
+        let app = Application(
             responder: router.buildResponder(),
             onServerRunning: { _ in
                 runOnServerRunning.store(true, ordering: .relaxed)
@@ -552,8 +552,8 @@ final class ApplicationTests: XCTestCase {
 
     func testRunBeforeServer() async throws {
         let runBeforeServer = ManagedAtomic(false)
-        let router = HBRouter()
-        var app = HBApplication(
+        let router = Router()
+        var app = Application(
             responder: router.buildResponder(),
             onServerRunning: { _ in
                 XCTAssertEqual(runBeforeServer.load(ordering: .relaxed), true)
@@ -568,13 +568,13 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    /// test we can create out own application type conforming to HBApplicationProtocol
+    /// test we can create out own application type conforming to ApplicationProtocol
     func testTLS() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.get("/") { _, _ -> String in
             "Hello"
         }
-        let app = try HBApplication(
+        let app = try Application(
             responder: router.buildResponder(),
             server: .tls(tlsConfiguration: self.getServerTLSConfiguration())
         )
@@ -587,13 +587,13 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    /// test we can create out own application type conforming to HBApplicationProtocol
+    /// test we can create out own application type conforming to ApplicationProtocol
     func testHTTP2() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.get("/") { _, _ -> String in
             "Hello"
         }
-        let app = try HBApplication(
+        let app = try Application(
             responder: router.buildResponder(),
             server: .http2Upgrade(tlsConfiguration: self.getServerTLSConfiguration())
         )
@@ -606,13 +606,13 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    /// test we can create out own application type conforming to HBApplicationProtocol
+    /// test we can create out own application type conforming to ApplicationProtocol
     func testApplicationRouterInit() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.get("/") { _, _ -> String in
             "Hello"
         }
-        let app = HBApplication(router: router)
+        let app = Application(router: router)
         try await app.test(.live) { client in
             try await client.execute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
@@ -622,11 +622,11 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    /// test we can create out own application type conforming to HBApplicationProtocol
+    /// test we can create out own application type conforming to ApplicationProtocol
     func testBidirectionalStreaming() async throws {
         let buffer = self.randomBuffer(size: 1024 * 1024)
-        let router = HBRouter()
-        router.post("/") { request, context -> HBResponse in
+        let router = Router()
+        router.post("/") { request, context -> Response in
             .init(
                 status: .ok,
                 body: .init { writer in
@@ -637,7 +637,7 @@ final class ApplicationTests: XCTestCase {
                 }
             )
         }
-        let app = HBApplication(router: router)
+        let app = Application(router: router)
         try await app.test(.live) { client in
             try await client.execute(uri: "/", method: .post, body: buffer) { response in
                 XCTAssertEqual(response.body, ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 0xFF }))
@@ -659,5 +659,5 @@ final class ApplicationTests: XCTestCase {
 
 /// HTTPField used during tests
 extension HTTPField.Name {
-    static let test = Self("Test")!
+    static let test = Self("HBTest")!
 }

@@ -14,6 +14,6 @@
 
 import Logging
 
-public struct HBJobContext {
+public struct JobContext {
     public let logger: Logger
 }

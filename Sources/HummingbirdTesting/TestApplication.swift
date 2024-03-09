@@ -18,10 +18,10 @@ import Logging
 import NIOCore
 import ServiceLifecycle
 
-/// TestApplication used to wrap HBApplication being tested.
+/// TestApplication used to wrap Application being tested.
 ///
 /// This is needed to override the `onServerRunning` function
-internal struct TestApplication<BaseApp: HBApplicationProtocol>: HBApplicationProtocol, Service {
+internal struct TestApplication<BaseApp: ApplicationProtocol>: ApplicationProtocol, Service {
     typealias Responder = BaseApp.Responder
     typealias ChildChannel = BaseApp.ChildChannel
 
@@ -31,14 +31,14 @@ internal struct TestApplication<BaseApp: HBApplicationProtocol>: HBApplicationPr
         get async throws { try await self.base.responder }
     }
 
-    var server: HBHTTPChannelBuilder<ChildChannel> {
+    var server: HTTPChannelBuilder<ChildChannel> {
         self.base.server
     }
 
     /// Event loop group used by application
     var eventLoopGroup: EventLoopGroup { self.base.eventLoopGroup }
     /// Configuration
-    var configuration: HBApplicationConfiguration { self.base.configuration.with(address: .hostname("localhost", port: 0)) }
+    var configuration: ApplicationConfiguration { self.base.configuration.with(address: .hostname("localhost", port: 0)) }
     /// Logger
     var logger: Logger { self.base.logger }
     /// On server running

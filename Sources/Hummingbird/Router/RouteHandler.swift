@@ -20,7 +20,7 @@ import HTTPTypes
 /// create before handling the request. This allows you to separate the extraction of data
 /// from the request and the processing of the request. For example
 /// ```
-/// struct UpdateReminder: HBRouteHandler {
+/// struct UpdateReminder: RouteHandler {
 ///     struct Request: Codable {
 ///         let description: String
 ///         let date: Date
@@ -28,26 +28,26 @@ import HTTPTypes
 ///     let update: Request
 ///     let id: String
 ///
-///     init(from request: HBRequest, context: some HBBaseRequestContext) throws {
+///     init(from request: Request, context: some BaseRequestContext) throws {
 ///         self.update = try await request.decode(as: Request.self, context: context)
 ///         self.id = try request.parameters.require("id")
 ///     }
-///     func handle(context: some HBBaseRequestContext) async throws -> HTTPResponse.Status {
+///     func handle(context: some BaseRequestContext) async throws -> HTTPResponse.Status {
 ///         let reminder = Reminder(id: id, update: update)
 ///         return reminder.update(on: db)
 ///             .map { _ in .ok }
 ///     }
 /// }
 /// ```
-public protocol HBRouteHandler {
+public protocol RouteHandler {
     associatedtype Output
-    init(from: HBRequest, context: some HBBaseRequestContext) async throws
-    func handle(context: some HBBaseRequestContext) async throws -> Output
+    init(from: Request, context: some BaseRequestContext) async throws
+    func handle(context: some BaseRequestContext) async throws -> Output
 }
 
-extension HBRouterMethods {
-    /// Add path for `HBRouteHandler` that returns a value conforming to `HBResponseGenerator`
-    @discardableResult public func on<Handler: HBRouteHandler, Output: HBResponseGenerator>(
+extension RouterMethods {
+    /// Add path for `RouteHandler` that returns a value conforming to `ResponseGenerator`
+    @discardableResult public func on<Handler: RouteHandler, Output: ResponseGenerator>(
         _ path: String,
         method: HTTPRequest.Method,
         use handlerType: Handler.Type
@@ -58,48 +58,48 @@ extension HBRouterMethods {
         }
     }
 
-    /// GET path for closure returning type conforming to HBResponseGenerator
-    @discardableResult public func get<Handler: HBRouteHandler, Output: HBResponseGenerator>(
+    /// GET path for closure returning type conforming to ResponseGenerator
+    @discardableResult public func get<Handler: RouteHandler, Output: ResponseGenerator>(
         _ path: String = "",
         use handler: Handler.Type
     ) -> Self where Handler.Output == Output {
         return self.on(path, method: .get, use: handler)
     }
 
-    /// PUT path for closure returning type conforming to HBResponseGenerator
-    @discardableResult public func put<Handler: HBRouteHandler, Output: HBResponseGenerator>(
+    /// PUT path for closure returning type conforming to ResponseGenerator
+    @discardableResult public func put<Handler: RouteHandler, Output: ResponseGenerator>(
         _ path: String = "",
         use handler: Handler.Type
     ) -> Self where Handler.Output == Output {
         return self.on(path, method: .put, use: handler)
     }
 
-    /// POST path for closure returning type conforming to HBResponseGenerator
-    @discardableResult public func post<Handler: HBRouteHandler, Output: HBResponseGenerator>(
+    /// POST path for closure returning type conforming to ResponseGenerator
+    @discardableResult public func post<Handler: RouteHandler, Output: ResponseGenerator>(
         _ path: String = "",
         use handler: Handler.Type
     ) -> Self where Handler.Output == Output {
         return self.on(path, method: .post, use: handler)
     }
 
-    /// HEAD path for closure returning type conforming to HBResponseGenerator
-    @discardableResult public func head<Handler: HBRouteHandler, Output: HBResponseGenerator>(
+    /// HEAD path for closure returning type conforming to ResponseGenerator
+    @discardableResult public func head<Handler: RouteHandler, Output: ResponseGenerator>(
         _ path: String = "",
         use handler: Handler.Type
     ) -> Self where Handler.Output == Output {
         return self.on(path, method: .head, use: handler)
     }
 
-    /// DELETE path for closure returning type conforming to HBResponseGenerator
-    @discardableResult public func delete<Handler: HBRouteHandler, Output: HBResponseGenerator>(
+    /// DELETE path for closure returning type conforming to ResponseGenerator
+    @discardableResult public func delete<Handler: RouteHandler, Output: ResponseGenerator>(
         _ path: String = "",
         use handler: Handler.Type
     ) -> Self where Handler.Output == Output {
         return self.on(path, method: .delete, use: handler)
     }
 
-    /// PATCH path for closure returning type conforming to HBResponseGenerator
-    @discardableResult public func patch<Handler: HBRouteHandler, Output: HBResponseGenerator>(
+    /// PATCH path for closure returning type conforming to ResponseGenerator
+    @discardableResult public func patch<Handler: RouteHandler, Output: ResponseGenerator>(
         _ path: String = "",
         use handler: Handler.Type
     ) -> Self where Handler.Output == Output {

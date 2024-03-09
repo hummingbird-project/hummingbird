@@ -12,14 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-@_exported import struct HummingbirdCore.HBAddress
-@_exported import struct HummingbirdCore.HBHTTPError
-@_exported import protocol HummingbirdCore.HBHTTPResponseError
-@_exported import struct HummingbirdCore.HBRequest
-@_exported import struct HummingbirdCore.HBRequestBody
-@_exported import struct HummingbirdCore.HBResponse
-@_exported import struct HummingbirdCore.HBResponseBody
-@_exported import protocol HummingbirdCore.HBResponseBodyWriter
+@_exported import struct HummingbirdCore.Address
+@_exported import struct HummingbirdCore.HTTPError
+@_exported import protocol HummingbirdCore.HTTPResponseError
+@_exported import struct HummingbirdCore.Request
+@_exported import struct HummingbirdCore.RequestBody
+@_exported import struct HummingbirdCore.Response
+@_exported import struct HummingbirdCore.ResponseBody
+@_exported import protocol HummingbirdCore.ResponseBodyWriter
 #if canImport(Network)
 @_exported import struct HummingbirdCore.TSTLSOptions
 #endif

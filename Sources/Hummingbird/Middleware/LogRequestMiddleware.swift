@@ -15,7 +15,7 @@
 import Logging
 
 /// Middleware outputting to log for every call to server
-public struct HBLogRequestsMiddleware<Context: HBBaseRequestContext>: HBRouterMiddleware {
+public struct LogRequestsMiddleware<Context: BaseRequestContext>: RouterMiddleware {
     let logLevel: Logger.Level
     let includeHeaders: Bool
 
@@ -24,18 +24,18 @@ public struct HBLogRequestsMiddleware<Context: HBBaseRequestContext>: HBRouterMi
         self.includeHeaders = includeHeaders
     }
 
-    public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
         if self.includeHeaders {
             context.logger.log(
                 level: self.logLevel,
                 "\(request.headers)",
-                metadata: ["hb_uri": .stringConvertible(request.uri), "hb_method": .string(request.method.rawValue)]
+                metadata: ["_uri": .stringConvertible(request.uri), "_method": .string(request.method.rawValue)]
             )
         } else {
             context.logger.log(
                 level: self.logLevel,
                 "",
-                metadata: ["hb_uri": .stringConvertible(request.uri), "hb_method": .string(request.method.rawValue)]
+                metadata: ["_uri": .stringConvertible(request.uri), "_method": .string(request.method.rawValue)]
             )
         }
         return try await next(request, context)

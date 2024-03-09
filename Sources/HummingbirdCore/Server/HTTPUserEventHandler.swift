@@ -16,7 +16,7 @@ import Logging
 import NIOCore
 import NIOHTTPTypes
 
-public class HBHTTPUserEventHandler: ChannelDuplexHandler, RemovableChannelHandler {
+public class HTTPUserEventHandler: ChannelDuplexHandler, RemovableChannelHandler {
     public typealias InboundIn = HTTPRequestPart
     public typealias InboundOut = HTTPRequestPart
     public typealias OutboundIn = HTTPResponsePart

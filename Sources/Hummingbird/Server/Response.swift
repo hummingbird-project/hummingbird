@@ -14,7 +14,7 @@
 
 import HummingbirdCore
 
-extension HBResponse {
+extension Response {
     /// Specifies the type of redirect that the client should receive.
     public enum RedirectType {
         /// `301 moved permanently`: The URL of the requested resource has been changed permanently.
@@ -49,8 +49,8 @@ extension HBResponse {
     /// - Parameters:
     ///   - location: Location to redirect to
     ///   - type: Redirection type
-    /// - Returns: HBResponse with redirection
-    public static func redirect(to location: String, type: RedirectType = .normal) -> HBResponse {
+    /// - Returns: Response with redirection
+    public static func redirect(to location: String, type: RedirectType = .normal) -> Response {
         return .init(status: type.status, headers: [.location: location])
     }
 }

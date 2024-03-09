@@ -23,13 +23,13 @@ import NIOTransportServices
 import ServiceLifecycle
 
 /// HTTP server class
-public actor HBServer<ChildChannel: HBServerChildChannel>: Service {
+public actor Server<ChildChannel: ServerChildChannel>: Service {
     public typealias AsyncChildChannel = ChildChannel.Value
     public typealias AsyncServerChannel = NIOAsyncChannel<AsyncChildChannel, Never>
     enum State: CustomStringConvertible {
         case initial(
             childChannelSetup: ChildChannel,
-            configuration: HBServerConfiguration,
+            configuration: ServerConfiguration,
             onServerRunning: (@Sendable (Channel) async -> Void)?
         )
         case starting
@@ -73,7 +73,7 @@ public actor HBServer<ChildChannel: HBServerChildChannel>: Service {
     ///   - configuration: Configuration for server
     public init(
         childChannelSetup: ChildChannel,
-        configuration: HBServerConfiguration,
+        configuration: ServerConfiguration,
         onServerRunning: (@Sendable (Channel) async -> Void)? = { _ in },
         eventLoopGroup: EventLoopGroup,
         logger: Logger
@@ -176,7 +176,7 @@ public actor HBServer<ChildChannel: HBServerChildChannel>: Service {
     /// Start server
     /// - Parameter responder: Object that provides responses to requests sent to the server
     /// - Returns: EventLoopFuture that is fulfilled when server has started
-    nonisolated func makeServer(childChannelSetup: ChildChannel, configuration: HBServerConfiguration) async throws -> AsyncServerChannel {
+    nonisolated func makeServer(childChannelSetup: ChildChannel, configuration: ServerConfiguration) async throws -> AsyncServerChannel {
         let bootstrap: ServerBootstrapProtocol
         #if canImport(Network)
         if let tsBootstrap = self.createTSBootstrap(configuration: configuration) {
@@ -234,7 +234,7 @@ public actor HBServer<ChildChannel: HBServerChildChannel>: Service {
 
     /// create a BSD sockets based bootstrap
     private nonisolated func createSocketsBootstrap(
-        configuration: HBServerConfiguration
+        configuration: ServerConfiguration
     ) -> ServerBootstrap {
         return ServerBootstrap(group: self.eventLoopGroup)
             // Specify backlog and enable SO_REUSEADDR for the server itself
@@ -249,7 +249,7 @@ public actor HBServer<ChildChannel: HBServerChildChannel>: Service {
     /// create a NIOTransportServices bootstrap using Network.framework
     @available(macOS 10.14, iOS 12, tvOS 12, *)
     private nonisolated func createTSBootstrap(
-        configuration: HBServerConfiguration
+        configuration: ServerConfiguration
     ) -> NIOTSListenerBootstrap? {
         guard let bootstrap = NIOTSListenerBootstrap(validatingGroup: self.eventLoopGroup)?
             .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: configuration.reuseAddress ? 1 : 0)
@@ -304,7 +304,7 @@ extension NIOTSListenerBootstrap: ServerBootstrapProtocol {
 }
 #endif
 
-extension HBServer: CustomStringConvertible {
+extension Server: CustomStringConvertible {
     public nonisolated var description: String {
         "Hummingbird"
     }

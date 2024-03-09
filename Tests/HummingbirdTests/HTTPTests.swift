@@ -17,7 +17,7 @@ import HummingbirdCore
 import XCTest
 
 class HTTPTests: XCTestCase {
-    func testURI<T: Equatable>(_ uri: HBURI, _ component: KeyPath<HBURI, T>, _ value: T) {
+    func testURI<T: Equatable>(_ uri: URI, _ component: KeyPath<URI, T>, _ value: T) {
         XCTAssertEqual(uri[keyPath: component], value)
     }
 
@@ -62,41 +62,41 @@ class HTTPTests: XCTestCase {
         let urlString = "https://hummingbird.co.uk/test/url?test1=hello%20rg&test2=true"
         let date = Date()
         for _ in 0..<10000 {
-            _ = HBURI(urlString).queryParameters
+            _ = URI(urlString).queryParameters
         }
         print("\(-date.timeIntervalSinceNow)")
     }
 
     func testMediaTypeExtensions() {
-        XCTAssert(HBMediaType.getMediaType(forExtension: "jpg")?.isType(.imageJpeg) == true)
-        XCTAssert(HBMediaType.getMediaType(forExtension: "txt")?.isType(.textPlain) == true)
-        XCTAssert(HBMediaType.getMediaType(forExtension: "html")?.isType(.textHtml) == true)
-        XCTAssert(HBMediaType.getMediaType(forExtension: "css")?.isType(.textCss) == true)
+        XCTAssert(MediaType.getMediaType(forExtension: "jpg")?.isType(.imageJpeg) == true)
+        XCTAssert(MediaType.getMediaType(forExtension: "txt")?.isType(.textPlain) == true)
+        XCTAssert(MediaType.getMediaType(forExtension: "html")?.isType(.textHtml) == true)
+        XCTAssert(MediaType.getMediaType(forExtension: "css")?.isType(.textCss) == true)
     }
 
     func testMediaTypeHeaderValues() {
-        XCTAssert(HBMediaType.applicationUrlEncoded.isType(.application))
-        XCTAssert(HBMediaType.audioOgg.isType(.audio))
-        XCTAssert(HBMediaType.videoMp4.isType(.video))
-        XCTAssert(HBMediaType.fontOtf.isType(.font))
-        XCTAssert(HBMediaType.multipartForm.isType(.multipart))
-        XCTAssert(HBMediaType.imageSvg.isType(.image))
-        XCTAssert(HBMediaType(from: "image/jpeg")?.isType(.imageJpeg) == true)
-        XCTAssert(HBMediaType(from: "text/plain")?.isType(.textPlain) == true)
-        XCTAssert(HBMediaType(from: "application/json")?.isType(.applicationJson) == true)
-        XCTAssert(HBMediaType(from: "application/json; charset=utf8")?.isType(.applicationJson) == true)
-        XCTAssert(HBMediaType(from: "application/xml")?.isType(.applicationXml) == true)
-        XCTAssert(HBMediaType(from: "multipart/form-data")?.isType(.multipartForm) == true)
-        XCTAssert(HBMediaType(from: "audio/ogg")?.isType(.audioOgg) == true)
+        XCTAssert(MediaType.applicationUrlEncoded.isType(.application))
+        XCTAssert(MediaType.audioOgg.isType(.audio))
+        XCTAssert(MediaType.videoMp4.isType(.video))
+        XCTAssert(MediaType.fontOtf.isType(.font))
+        XCTAssert(MediaType.multipartForm.isType(.multipart))
+        XCTAssert(MediaType.imageSvg.isType(.image))
+        XCTAssert(MediaType(from: "image/jpeg")?.isType(.imageJpeg) == true)
+        XCTAssert(MediaType(from: "text/plain")?.isType(.textPlain) == true)
+        XCTAssert(MediaType(from: "application/json")?.isType(.applicationJson) == true)
+        XCTAssert(MediaType(from: "application/json; charset=utf8")?.isType(.applicationJson) == true)
+        XCTAssert(MediaType(from: "application/xml")?.isType(.applicationXml) == true)
+        XCTAssert(MediaType(from: "multipart/form-data")?.isType(.multipartForm) == true)
+        XCTAssert(MediaType(from: "audio/ogg")?.isType(.audioOgg) == true)
     }
 
     func testMediaTypeMatching() {
-        switch HBMediaType(from: "application/json; charset=utf8") {
+        switch MediaType(from: "application/json; charset=utf8") {
         case .some(.application), .some(.applicationJson):
             break
         default: XCTFail()
         }
-        switch HBMediaType(from: "application/json") {
+        switch MediaType(from: "application/json") {
         case .some(.application), .some(.applicationJson):
             break
         default: XCTFail()
@@ -104,12 +104,12 @@ class HTTPTests: XCTestCase {
     }
 
     func testMediaTypeMisMatching() {
-        switch HBMediaType.applicationJson {
-        case HBMediaType(from: "application/json; charset=utf8")!:
+        switch MediaType.applicationJson {
+        case MediaType(from: "application/json; charset=utf8")!:
             XCTFail()
         default: break
         }
-        switch HBMediaType.application {
+        switch MediaType.application {
         case .applicationJson:
             XCTFail()
         default: break
@@ -117,20 +117,20 @@ class HTTPTests: XCTestCase {
     }
 
     func testMediaTypeParameters() {
-        let mediaType = HBMediaType(from: "application/json; charset=utf8")
+        let mediaType = MediaType(from: "application/json; charset=utf8")
         XCTAssertEqual(mediaType?.parameter?.name, "charset")
         XCTAssertEqual(mediaType?.parameter?.value, "utf8")
-        let mediaType2 = HBMediaType(from: "multipart/form-data; boundary=\"---{}hello\"")
+        let mediaType2 = MediaType(from: "multipart/form-data; boundary=\"---{}hello\"")
         XCTAssertEqual(mediaType2?.parameter?.name, "boundary")
         XCTAssertEqual(mediaType2?.parameter?.value, "---{}hello")
-        let mediaType3 = HBMediaType.multipartForm.withParameter(name: "boundary", value: "----{}hello")
+        let mediaType3 = MediaType.multipartForm.withParameter(name: "boundary", value: "----{}hello")
         XCTAssertEqual(mediaType3.parameter?.name, "boundary")
         XCTAssertEqual(mediaType3.parameter?.value, "----{}hello")
     }
 
     func testInvalidMediaTypes() {
-        XCTAssertNil(HBMediaType(from: "application/json; charset"))
-        XCTAssertNil(HBMediaType(from: "appl2ication/json"))
-        XCTAssertNil(HBMediaType(from: "application/json charset=utf8"))
+        XCTAssertNil(MediaType(from: "application/json; charset"))
+        XCTAssertNil(MediaType(from: "appl2ication/json"))
+        XCTAssertNil(MediaType(from: "application/json charset=utf8"))
     }
 }

@@ -15,8 +15,8 @@
 import Logging
 import NIOCore
 
-/// HBClientConnection child channel setup protocol
-public protocol HBClientConnectionChannel: Sendable {
+/// ClientConnection child channel setup protocol
+public protocol ClientConnectionChannel: Sendable {
     associatedtype Value: Sendable
 
     /// Setup child channel

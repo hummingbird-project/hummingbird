@@ -16,65 +16,65 @@ import HTTPTypes
 
 /// Object that can generate a `Response`.
 ///
-/// This is used by `Router` to convert handler return values into a `HBResponse`.
-public protocol HBResponseGenerator {
+/// This is used by `Router` to convert handler return values into a `Response`.
+public protocol ResponseGenerator {
     /// Generate response based on the request this object came from
-    func response(from request: HBRequest, context: some HBBaseRequestContext) throws -> HBResponse
+    func response(from request: Request, context: some BaseRequestContext) throws -> Response
 }
 
 /// Extend Response to conform to ResponseGenerator
-extension HBResponse: HBResponseGenerator {
+extension Response: ResponseGenerator {
     /// Return self as the response
-    public func response(from request: HBRequest, context: some HBBaseRequestContext) -> HBResponse { self }
+    public func response(from request: Request, context: some BaseRequestContext) -> Response { self }
 }
 
 /// Extend String to conform to ResponseGenerator
-extension String: HBResponseGenerator {
+extension String: ResponseGenerator {
     /// Generate response holding string
-    public func response(from request: HBRequest, context: some HBBaseRequestContext) -> HBResponse {
+    public func response(from request: Request, context: some BaseRequestContext) -> Response {
         let buffer = context.allocator.buffer(string: self)
-        return HBResponse(status: .ok, headers: [.contentType: "text/plain; charset=utf-8"], body: .init(byteBuffer: buffer))
+        return Response(status: .ok, headers: [.contentType: "text/plain; charset=utf-8"], body: .init(byteBuffer: buffer))
     }
 }
 
 /// Extend String to conform to ResponseGenerator
-extension Substring: HBResponseGenerator {
+extension Substring: ResponseGenerator {
     /// Generate response holding string
-    public func response(from request: HBRequest, context: some HBBaseRequestContext) -> HBResponse {
+    public func response(from request: Request, context: some BaseRequestContext) -> Response {
         let buffer = context.allocator.buffer(substring: self)
-        return HBResponse(status: .ok, headers: [.contentType: "text/plain; charset=utf-8"], body: .init(byteBuffer: buffer))
+        return Response(status: .ok, headers: [.contentType: "text/plain; charset=utf-8"], body: .init(byteBuffer: buffer))
     }
 }
 
 /// Extend ByteBuffer to conform to ResponseGenerator
-extension ByteBuffer: HBResponseGenerator {
+extension ByteBuffer: ResponseGenerator {
     /// Generate response holding bytebuffer
-    public func response(from request: HBRequest, context: some HBBaseRequestContext) -> HBResponse {
-        HBResponse(status: .ok, headers: [.contentType: "application/octet-stream"], body: .init(byteBuffer: self))
+    public func response(from request: Request, context: some BaseRequestContext) -> Response {
+        Response(status: .ok, headers: [.contentType: "application/octet-stream"], body: .init(byteBuffer: self))
     }
 }
 
 /// Extend HTTPResponseStatus to conform to ResponseGenerator
-extension HTTPResponse.Status: HBResponseGenerator {
+extension HTTPResponse.Status: ResponseGenerator {
     /// Generate response with this response status code
-    public func response(from request: HBRequest, context: some HBBaseRequestContext) -> HBResponse {
-        HBResponse(status: self, headers: [:], body: .init())
+    public func response(from request: Request, context: some BaseRequestContext) -> Response {
+        Response(status: self, headers: [:], body: .init())
     }
 }
 
-/// Extend Optional to conform to HBResponseGenerator
-extension Optional: HBResponseGenerator where Wrapped: HBResponseGenerator {
-    public func response(from request: HBRequest, context: some HBBaseRequestContext) throws -> HBResponse {
+/// Extend Optional to conform to ResponseGenerator
+extension Optional: ResponseGenerator where Wrapped: ResponseGenerator {
+    public func response(from request: Request, context: some BaseRequestContext) throws -> Response {
         switch self {
         case .some(let wrapped):
             return try wrapped.response(from: request, context: context)
         case .none:
-            return HBResponse(status: .noContent, headers: [:], body: .init())
+            return Response(status: .noContent, headers: [:], body: .init())
         }
     }
 }
 
-public struct HBEditedResponse<Generator: HBResponseGenerator>: HBResponseGenerator {
+public struct EditedResponse<Generator: ResponseGenerator>: ResponseGenerator {
     public var status: HTTPResponse.Status?
     public var headers: HTTPFields
     public var responseGenerator: Generator
@@ -89,7 +89,7 @@ public struct HBEditedResponse<Generator: HBResponseGenerator>: HBResponseGenera
         self.responseGenerator = response
     }
 
-    public func response(from request: HBRequest, context: some HBBaseRequestContext) throws -> HBResponse {
+    public func response(from request: Request, context: some BaseRequestContext) throws -> Response {
         var response = try responseGenerator.response(from: request, context: context)
         if let status = self.status {
             response.status = status

@@ -17,18 +17,18 @@ import NIOConcurrencyHelpers
 import NIOCore
 
 /// Registry for job types
-struct HBJobRegistry: Sendable {
+struct JobRegistry: Sendable {
     ///  Register job
     /// - Parameters:
     ///   - id: Job Identifier
     ///   - maxRetryCount: Maximum number of times job is retried before being flagged as failed
     ///   - execute: Job code
     public func registerJob<Parameters: Codable & Sendable>(
-        job: HBJobDefinition<Parameters>
+        job: JobDefinition<Parameters>
     ) {
-        let builder: @Sendable (Decoder) throws -> any HBJob = { decoder in
+        let builder: @Sendable (Decoder) throws -> any Job = { decoder in
             let parameters = try Parameters(from: decoder)
-            return try HBJobInstance<Parameters>(job: job, parameters: parameters)
+            return try JobInstance<Parameters>(job: job, parameters: parameters)
         }
         self.builderTypeMap.withLockedValue {
             precondition($0[job.id.name] == nil, "There is a job already registered under id \"\(job.id.name)\"")
@@ -36,12 +36,12 @@ struct HBJobRegistry: Sendable {
         }
     }
 
-    func decode(_ buffer: ByteBuffer) throws -> any HBJob {
-        return try JSONDecoder().decode(HBAnyCodableJob.self, from: buffer, userInfoConfiguration: self).job
+    func decode(_ buffer: ByteBuffer) throws -> any Job {
+        return try JSONDecoder().decode(AnyCodableJob.self, from: buffer, userInfoConfiguration: self).job
     }
 
-    func decode(from decoder: Decoder) throws -> any HBJob {
-        let container = try decoder.container(keyedBy: _HBJobCodingKey.self)
+    func decode(from decoder: Decoder) throws -> any Job {
+        let container = try decoder.container(keyedBy: _JobCodingKey.self)
         let key = container.allKeys.first!
         let childDecoder = try container.superDecoder(forKey: key)
         let jobDefinitionBuilder = try self.builderTypeMap.withLockedValue {
@@ -51,43 +51,43 @@ struct HBJobRegistry: Sendable {
         return try jobDefinitionBuilder(childDecoder)
     }
 
-    let builderTypeMap: NIOLockedValueBox < [String: @Sendable (Decoder) throws -> any HBJob]> = .init([:])
+    let builderTypeMap: NIOLockedValueBox < [String: @Sendable (Decoder) throws -> any Job]> = .init([:])
 }
 
 /// Internal job instance type
-internal struct HBJobInstance<Parameters: Codable & Sendable>: HBJob {
+internal struct JobInstance<Parameters: Codable & Sendable>: Job {
     /// job definition
-    let job: HBJobDefinition<Parameters>
+    let job: JobDefinition<Parameters>
     /// job parameters
     let parameters: Parameters
 
     /// get i
-    var id: HBJobIdentifier<Parameters> { self.job.id }
+    var id: JobIdentifier<Parameters> { self.job.id }
     var maxRetryCount: Int { self.job.maxRetryCount }
 
-    func execute(context: HBJobContext) async throws {
+    func execute(context: JobContext) async throws {
         try await self.job.execute(self.parameters, context: context)
     }
 
-    init(job: HBJobDefinition<Parameters>, parameters: Parameters) throws {
+    init(job: JobDefinition<Parameters>, parameters: Parameters) throws {
         self.job = job
         self.parameters = parameters
     }
 }
 
-/// Add codable support for decoding/encoding any HBJob
-internal struct HBAnyCodableJob: DecodableWithUserInfoConfiguration, Sendable {
-    typealias DecodingConfiguration = HBJobRegistry
+/// Add codable support for decoding/encoding any Job
+internal struct AnyCodableJob: DecodableWithUserInfoConfiguration, Sendable {
+    typealias DecodingConfiguration = JobRegistry
 
     init(from decoder: Decoder, configuration register: DecodingConfiguration) throws {
         self.job = try register.decode(from: decoder)
     }
 
     /// Job data
-    let job: any HBJob
+    let job: any Job
 
     /// Initialize a queue job
-    init(_ job: any HBJob) {
+    init(_ job: any Job) {
         self.job = job
     }
 
@@ -96,7 +96,7 @@ internal struct HBAnyCodableJob: DecodableWithUserInfoConfiguration, Sendable {
     }
 }
 
-internal struct _HBJobCodingKey: CodingKey {
+internal struct _JobCodingKey: CodingKey {
     public var stringValue: String
     public var intValue: Int?
 

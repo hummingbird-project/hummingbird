@@ -16,11 +16,11 @@ import Hummingbird
 
 /// Route Handler Middleware.
 ///
-/// Requires that the return value of handler conforms to ``Hummingbird/HBResponseGenerator`` so
-/// that the `handle` function can return an ``HummingbirdCore/HBResponse``
-public struct Handle<HandlerOutput: HBResponseGenerator, Context: HBRouterRequestContext>: Sendable, MiddlewareProtocol {
-    public typealias Input = HBRequest
-    public typealias Output = HBResponse
+/// Requires that the return value of handler conforms to ``Hummingbird/ResponseGenerator`` so
+/// that the `handle` function can return an ``HummingbirdCore/Response``
+public struct Handle<HandlerOutput: ResponseGenerator, Context: RouterRequestContext>: Sendable, MiddlewareProtocol {
+    public typealias Input = Request
+    public typealias Output = Response
     public typealias Handler = @Sendable (Input, Context) async throws -> HandlerOutput
 
     let handler: Handler
@@ -48,18 +48,18 @@ public struct Handle<HandlerOutput: HBResponseGenerator, Context: HBRouterReques
 /// the last entry of the builder to be a ``Handle`` so we are guaranteed a Response. It also
 /// adds the ability to pass in a closure instead of ``Handle`` type.
 @resultBuilder
-public enum RouteBuilder<Context: HBRouterRequestContext> {
+public enum RouteBuilder<Context: RouterRequestContext> {
     /// Provide generic requirements for MiddlewareProtocol
-    public static func buildExpression<M0: MiddlewareProtocol>(_ m0: M0) -> M0 where M0.Input == HBRequest, M0.Output == HBResponse, M0.Context == Context {
+    public static func buildExpression<M0: MiddlewareProtocol>(_ m0: M0) -> M0 where M0.Input == Request, M0.Output == Response, M0.Context == Context {
         return m0
     }
 
     /// Build a ``Handle`` from a closure
-    public static func buildExpression<HandlerOutput: HBResponseGenerator>(_ handler: @escaping @Sendable (HBRequest, Context) async throws -> HandlerOutput) -> Handle<HandlerOutput, Context> {
+    public static func buildExpression<HandlerOutput: ResponseGenerator>(_ handler: @escaping @Sendable (Request, Context) async throws -> HandlerOutput) -> Handle<HandlerOutput, Context> {
         return .init(handler)
     }
 
-    public static func buildBlock<RouteOutput: HBResponseGenerator>(_ m0: Handle<RouteOutput, Context>) -> Handle<RouteOutput, Context> {
+    public static func buildBlock<RouteOutput: ResponseGenerator>(_ m0: Handle<RouteOutput, Context>) -> Handle<RouteOutput, Context> {
         m0
     }
 
@@ -75,12 +75,12 @@ public enum RouteBuilder<Context: HBRouterRequestContext> {
     }
 
     /// Build the final result where the input is a single ``Handle`` middleware
-    public static func buildFinalResult<RouteOutput: HBResponseGenerator>(_ m0: Handle<RouteOutput, Context>) -> Handle<RouteOutput, Context> {
+    public static func buildFinalResult<RouteOutput: ResponseGenerator>(_ m0: Handle<RouteOutput, Context>) -> Handle<RouteOutput, Context> {
         m0
     }
 
     /// Build the final result where input is multiple middleware with the final middleware being a ``Handle`` middleware.
-    public static func buildFinalResult<M0: MiddlewareProtocol, RouteOutput: HBResponseGenerator>(_ m0: _Middleware2<M0, Handle<RouteOutput, M0.Context>>) -> _Middleware2<M0, Handle<RouteOutput, M0.Context>> {
+    public static func buildFinalResult<M0: MiddlewareProtocol, RouteOutput: ResponseGenerator>(_ m0: _Middleware2<M0, Handle<RouteOutput, M0.Context>>) -> _Middleware2<M0, Handle<RouteOutput, M0.Context>> {
         m0
     }
 }

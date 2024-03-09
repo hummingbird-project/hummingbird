@@ -34,9 +34,9 @@ class HummingbirdFilesTests: XCTestCase {
     }
 
     func testRead() async throws {
-        let router = HBRouter()
-        router.middlewares.add(HBFileMiddleware("."))
-        let app = HBApplication(responder: router.buildResponder())
+        let router = Router()
+        router.middlewares.add(FileMiddleware("."))
+        let app = Application(responder: router.buildResponder())
 
         let filename = "\(#function).jpg"
         let text = "Test file contents"
@@ -54,9 +54,9 @@ class HummingbirdFilesTests: XCTestCase {
     }
 
     func testReadLargeFile() async throws {
-        let router = HBRouter()
-        router.middlewares.add(HBFileMiddleware("."))
-        let app = HBApplication(responder: router.buildResponder())
+        let router = Router()
+        router.middlewares.add(FileMiddleware("."))
+        let app = Application(responder: router.buildResponder())
 
         let filename = "\(#function).txt"
         let buffer = self.randomBuffer(size: 380_000)
@@ -73,9 +73,9 @@ class HummingbirdFilesTests: XCTestCase {
     }
 
     func testReadRange() async throws {
-        let router = HBRouter()
-        router.middlewares.add(HBFileMiddleware("."))
-        let app = HBApplication(responder: router.buildResponder())
+        let router = Router()
+        router.middlewares.add(FileMiddleware("."))
+        let app = Application(responder: router.buildResponder())
 
         let filename = "\(#function).txt"
         let buffer = self.randomBuffer(size: 326_000)
@@ -115,9 +115,9 @@ class HummingbirdFilesTests: XCTestCase {
     }
 
     func testIfRangeRead() async throws {
-        let router = HBRouter()
-        router.middlewares.add(HBFileMiddleware("."))
-        let app = HBApplication(responder: router.buildResponder())
+        let router = Router()
+        router.middlewares.add(FileMiddleware("."))
+        let app = Application(responder: router.buildResponder())
 
         let filename = "\(#function).txt"
         let buffer = self.randomBuffer(size: 10000)
@@ -151,9 +151,9 @@ class HummingbirdFilesTests: XCTestCase {
     }
 
     func testHead() async throws {
-        let router = HBRouter()
-        router.middlewares.add(HBFileMiddleware("."))
-        let app = HBApplication(responder: router.buildResponder())
+        let router = Router()
+        router.middlewares.add(FileMiddleware("."))
+        let app = Application(responder: router.buildResponder())
 
         let date = Date()
         let text = "Test file contents"
@@ -175,9 +175,9 @@ class HummingbirdFilesTests: XCTestCase {
     }
 
     func testETag() async throws {
-        let router = HBRouter()
-        router.middlewares.add(HBFileMiddleware("."))
-        let app = HBApplication(responder: router.buildResponder())
+        let router = Router()
+        router.middlewares.add(FileMiddleware("."))
+        let app = Application(responder: router.buildResponder())
 
         let filename = "\(#function).txt"
         let buffer = self.randomBuffer(size: 16200)
@@ -198,9 +198,9 @@ class HummingbirdFilesTests: XCTestCase {
     }
 
     func testIfNoneMatch() async throws {
-        let router = HBRouter()
-        router.middlewares.add(HBFileMiddleware("."))
-        let app = HBApplication(responder: router.buildResponder())
+        let router = Router()
+        router.middlewares.add(FileMiddleware("."))
+        let app = Application(responder: router.buildResponder())
 
         let filename = "\(#function).txt"
         let buffer = self.randomBuffer(size: 16200)
@@ -228,9 +228,9 @@ class HummingbirdFilesTests: XCTestCase {
     }
 
     func testIfModifiedSince() async throws {
-        let router = HBRouter()
-        router.middlewares.add(HBFileMiddleware("."))
-        let app = HBApplication(responder: router.buildResponder())
+        let router = Router()
+        router.middlewares.add(FileMiddleware("."))
+        let app = Application(responder: router.buildResponder())
 
         let filename = "\(#function).txt"
         let buffer = self.randomBuffer(size: 16200)
@@ -255,13 +255,13 @@ class HummingbirdFilesTests: XCTestCase {
     }
 
     func testCacheControl() async throws {
-        let router = HBRouter()
-        let cacheControl: HBCacheControl = .init([
+        let router = Router()
+        let cacheControl: CacheControl = .init([
             (.text, [.maxAge(60 * 60 * 24 * 30)]),
             (.imageJpeg, [.maxAge(60 * 60 * 24 * 30), .private]),
         ])
-        router.middlewares.add(HBFileMiddleware(".", cacheControl: cacheControl))
-        let app = HBApplication(responder: router.buildResponder())
+        router.middlewares.add(FileMiddleware(".", cacheControl: cacheControl))
+        let app = Application(responder: router.buildResponder())
 
         let filename = "\(#function).txt"
         let text = "Test file contents"
@@ -284,9 +284,9 @@ class HummingbirdFilesTests: XCTestCase {
     }
 
     func testIndexHtml() async throws {
-        let router = HBRouter()
-        router.middlewares.add(HBFileMiddleware(".", searchForIndexHtml: true))
-        let app = HBApplication(responder: router.buildResponder())
+        let router = Router()
+        router.middlewares.add(FileMiddleware(".", searchForIndexHtml: true))
+        let app = Application(responder: router.buildResponder())
 
         let text = "Test file contents"
         let data = Data(text.utf8)
