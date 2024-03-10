@@ -70,6 +70,8 @@ public typealias HBMetricsMiddleware = MetricsMiddleware
 public typealias HBMiddlewareGroup = MiddlewareGroup
 @_documentation(visibility: internal) @available(*, deprecated, renamed: "TracingMiddleware")
 public typealias HBTracingMiddleware = TracingMiddleware
+@_documentation(visibility: internal) @available(*, deprecated, renamed: "RouterMiddleware")
+public typealias HBMiddlewareProtocol = RouterMiddleware
 
 @_documentation(visibility: internal) @available(*, deprecated, renamed: "CacheControl")
 public typealias HBCacheControl = CacheControl
