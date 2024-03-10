@@ -39,6 +39,8 @@ public typealias HBCoreRequestContext = CoreRequestContext
 public typealias HBRequestContext = RequestContext
 @_documentation(visibility: internal) @available(*, deprecated, renamed: "RequestDecoder")
 public typealias HBRequestDecoder = RequestDecoder
+@_documentation(visibility: internal) @available(*, deprecated, renamed: "ResponseCodable")
+public typealias HBResponseCodable = ResponseCodable
 @_documentation(visibility: internal) @available(*, deprecated, renamed: "ResponseEncodable")
 public typealias HBResponseEncodable = ResponseEncodable
 @_documentation(visibility: internal) @available(*, deprecated, renamed: "ResponseEncoder")
