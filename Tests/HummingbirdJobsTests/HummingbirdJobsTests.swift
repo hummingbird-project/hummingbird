@@ -92,7 +92,7 @@ final class HummingbirdJobsTests: XCTestCase {
         let expectation = XCTestExpectation(description: "TestJob.execute was called", expectedFulfillmentCount: 10)
 
         let jobQueue = JobQueue(.memory, numWorkers: 4, logger: Logger(label: "HummingbirdJobsTests"))
-        jobQueue.registerJob(jobIdentifer) { parameters, context in
+        jobQueue.registerJob(id: jobIdentifer) { parameters, context in
             let runningJobs = runningJobCounter.wrappingIncrementThenLoad(by: 1, ordering: .relaxed)
             if runningJobs > maxRunningJobCounter.load(ordering: .relaxed) {
                 maxRunningJobCounter.store(runningJobs, ordering: .relaxed)
@@ -132,7 +132,7 @@ final class HummingbirdJobsTests: XCTestCase {
             MemoryQueue { _, _ in failedJobCount.wrappingIncrement(by: 1, ordering: .relaxed) },
             logger: logger
         )
-        jobQueue.registerJob(jobIdentifer, maxRetryCount: 3) { _, _ in
+        jobQueue.registerJob(id: jobIdentifer, maxRetryCount: 3) { _, _ in
             expectation.fulfill()
             throw FailedError()
         }
@@ -152,7 +152,7 @@ final class HummingbirdJobsTests: XCTestCase {
         let expectation = XCTestExpectation(description: "TestJob.execute was called")
         let jobIdentifer = JobIdentifier<TestJobParameters>(#function)
         let jobQueue = JobQueue(.memory, numWorkers: 1, logger: Logger(label: "HummingbirdJobsTests"))
-        jobQueue.registerJob(jobIdentifer) { parameters, _ in
+        jobQueue.registerJob(id: jobIdentifer) { parameters, _ in
             XCTAssertEqual(parameters.id, 23)
             XCTAssertEqual(parameters.message, "Hello!")
             expectation.fulfill()
@@ -181,7 +181,7 @@ final class HummingbirdJobsTests: XCTestCase {
             numWorkers: 4,
             logger: logger
         )
-        jobQueue.registerJob(jobIdentifer) { _, _ in
+        jobQueue.registerJob(id: jobIdentifer) { _, _ in
             expectation.fulfill()
             try await Task.sleep(for: .milliseconds(1000))
         }
@@ -214,7 +214,7 @@ final class HummingbirdJobsTests: XCTestCase {
         var logger = Logger(label: "HummingbirdJobsTests")
         logger.logLevel = .debug
         let jobQueue = JobQueue(.memory, numWorkers: 1, logger: Logger(label: "HummingbirdJobsTests"))
-        jobQueue.registerJob(jobIdentifer2) { parameters, _ in
+        jobQueue.registerJob(id: jobIdentifer2) { parameters, _ in
             string.withLockedValue { $0 = parameters }
             expectation.fulfill()
         }

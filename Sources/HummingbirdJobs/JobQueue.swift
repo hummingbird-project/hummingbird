@@ -55,7 +55,7 @@ public struct JobQueue<Queue: JobQueueDriver>: Service {
     ///   - maxRetryCount: Maximum number of times job is retried before being flagged as failed
     ///   - execute: Job code
     public func registerJob<Parameters: Codable & Sendable>(
-        _ id: JobIdentifier<Parameters>,
+        id: JobIdentifier<Parameters>,
         maxRetryCount: Int = 0,
         execute: @escaping @Sendable (
             Parameters,
