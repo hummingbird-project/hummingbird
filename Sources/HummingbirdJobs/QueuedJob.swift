@@ -16,7 +16,7 @@ import Foundation
 import NIOCore
 
 /// Queued job. Includes job data, plus the id for the job
-public struct HBQueuedJob<JobID: Sendable>: Sendable {
+public struct QueuedJob<JobID: Sendable>: Sendable {
     /// Job instance id
     public let id: JobID
     /// Job data

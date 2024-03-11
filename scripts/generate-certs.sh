@@ -55,7 +55,7 @@ function generateServerCertificate() {
 function generateClientCertificate() {
     SUBJECT=$1
     NAME=$2
-    PASSWORD=HBTests
+    PASSWORD=Tests
     openssl req \
         -new \
         -nodes \

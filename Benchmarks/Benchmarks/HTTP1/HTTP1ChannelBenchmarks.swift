@@ -27,7 +27,7 @@ extension Benchmark {
         name: String,
         configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
         write: @escaping @Sendable (Benchmark, NIOAsyncTestingChannel) async throws -> Void,
-        responder: @escaping @Sendable (HBRequest, Channel) async throws -> HBResponse
+        responder: @escaping @Sendable (Request, Channel) async throws -> Response
     ) {
         let http1 = HTTP1Channel(responder: responder)
         let channel = NIOAsyncTestingChannel()

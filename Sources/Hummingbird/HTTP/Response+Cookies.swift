@@ -14,18 +14,18 @@
 
 import HummingbirdCore
 
-extension HBResponse {
+extension Response {
     /// Set cookie on response
-    public mutating func setCookie(_ cookie: HBCookie) {
+    public mutating func setCookie(_ cookie: Cookie) {
         self.headers[values: .setCookie].append(cookie.description)
     }
 }
 
-extension HBEditedResponse {
+extension EditedResponse {
     /// Set cookie on reponse patch
     ///
     /// Can be accessed via `request.response.setCookie(myCookie)`
-    public mutating func setCookie(_ cookie: HBCookie) {
+    public mutating func setCookie(_ cookie: Cookie) {
         self.headers[values: .setCookie].append(cookie.description)
     }
 }

@@ -17,11 +17,11 @@ import HummingbirdTesting
 import XCTest
 
 final class PersistTests: XCTestCase {
-    static let redisHostname = HBEnvironment.shared.get("REDIS_HOSTNAME") ?? "localhost"
+    static let redisHostname = Environment.shared.get("REDIS_HOSTNAME") ?? "localhost"
 
-    func createRouter() throws -> (HBRouter<HBBasicRequestContext>, HBPersistDriver) {
-        let router = HBRouter()
-        let persist = HBMemoryPersistDriver()
+    func createRouter() throws -> (Router<BasicRequestContext>, PersistDriver) {
+        let router = Router()
+        let persist = MemoryPersistDriver()
 
         router.put("/persist/:tag") { request, context -> HTTPResponse.Status in
             let buffer = try await request.body.collect(upTo: .max)
@@ -30,18 +30,18 @@ final class PersistTests: XCTestCase {
             return .ok
         }
         router.put("/persist/:tag/:time") { request, context -> HTTPResponse.Status in
-            guard let time = context.parameters.get("time", as: Int.self) else { throw HBHTTPError(.badRequest) }
+            guard let time = context.parameters.get("time", as: Int.self) else { throw HTTPError(.badRequest) }
             let buffer = try await request.body.collect(upTo: .max)
             let tag = try context.parameters.require("tag")
             try await persist.set(key: tag, value: String(buffer: buffer), expires: .seconds(time))
             return .ok
         }
         router.get("/persist/:tag") { _, context -> String? in
-            guard let tag = context.parameters.get("tag", as: String.self) else { throw HBHTTPError(.badRequest) }
+            guard let tag = context.parameters.get("tag", as: String.self) else { throw HTTPError(.badRequest) }
             return try await persist.get(key: tag, as: String.self)
         }
         router.delete("/persist/:tag") { _, context -> HTTPResponse.Status in
-            guard let tag = context.parameters.get("tag", as: String.self) else { throw HBHTTPError(.badRequest) }
+            guard let tag = context.parameters.get("tag", as: String.self) else { throw HTTPError(.badRequest) }
             try await persist.remove(key: tag)
             return .noContent
         }
@@ -50,7 +50,7 @@ final class PersistTests: XCTestCase {
 
     func testSetGet() async throws {
         let (router, _) = try createRouter()
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             let tag = UUID().uuidString
             try await client.execute(uri: "/persist/\(tag)", method: .put, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
@@ -69,7 +69,7 @@ final class PersistTests: XCTestCase {
             try await persist.create(key: tag, value: String(buffer: buffer))
             return .ok
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             let tag = UUID().uuidString
             try await client.execute(uri: "/create/\(tag)", method: .put, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
@@ -86,12 +86,12 @@ final class PersistTests: XCTestCase {
             let tag = try context.parameters.require("tag")
             do {
                 try await persist.create(key: tag, value: String(buffer: buffer))
-            } catch let error as HBPersistError where error == .duplicate {
-                throw HBHTTPError(.conflict)
+            } catch let error as PersistError where error == .duplicate {
+                throw HTTPError(.conflict)
             }
             return .ok
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             let tag = UUID().uuidString
             try await client.execute(uri: "/create/\(tag)", method: .put, body: ByteBufferAllocator().buffer(string: "Persist")) { response in
@@ -105,7 +105,7 @@ final class PersistTests: XCTestCase {
 
     func testSetTwice() async throws {
         let (router, _) = try createRouter()
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
             let tag = UUID().uuidString
@@ -121,7 +121,7 @@ final class PersistTests: XCTestCase {
 
     func testExpires() async throws {
         let (router, _) = try createRouter()
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
             let tag1 = UUID().uuidString
@@ -142,24 +142,24 @@ final class PersistTests: XCTestCase {
     func testCodable() async throws {
         #if os(macOS)
         // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
-        guard HBEnvironment().get("CI") != "true" else { throw XCTSkip() }
+        guard Environment().get("CI") != "true" else { throw XCTSkip() }
         #endif
         struct TestCodable: Codable {
             let buffer: String
         }
         let (router, persist) = try createRouter()
         router.put("/codable/:tag") { request, context -> HTTPResponse.Status in
-            guard let tag = context.parameters.get("tag") else { throw HBHTTPError(.badRequest) }
+            guard let tag = context.parameters.get("tag") else { throw HTTPError(.badRequest) }
             let buffer = try await request.body.collect(upTo: .max)
             try await persist.set(key: tag, value: TestCodable(buffer: String(buffer: buffer)))
             return .ok
         }
         router.get("/codable/:tag") { _, context -> String? in
-            guard let tag = context.parameters.get("tag") else { throw HBHTTPError(.badRequest) }
+            guard let tag = context.parameters.get("tag") else { throw HTTPError(.badRequest) }
             let value = try await persist.get(key: tag, as: TestCodable.self)
             return value?.buffer
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
 
@@ -173,7 +173,7 @@ final class PersistTests: XCTestCase {
 
     func testRemove() async throws {
         let (router, _) = try createRouter()
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             let tag = UUID().uuidString
             try await client.execute(uri: "/persist/\(tag)", method: .put, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { _ in }
@@ -186,7 +186,7 @@ final class PersistTests: XCTestCase {
 
     func testExpireAndAdd() async throws {
         let (router, _) = try createRouter()
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
             let tag = UUID().uuidString

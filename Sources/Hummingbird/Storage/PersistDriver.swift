@@ -16,11 +16,11 @@ import NIOCore
 import ServiceLifecycle
 
 /// Protocol for driver supporting persistent Key/Value pairs across requests
-public protocol HBPersistDriver: Service {
+public protocol PersistDriver: Service {
     /// shutdown driver
     func shutdown() async throws
 
-    /// create key/value pair. If key already exist throw `HBPersistError.duplicate` error
+    /// create key/value pair. If key already exist throw `PersistError.duplicate` error
     /// - Parameters:
     ///   - key: Key to store value against
     ///   - value: Codable value to store
@@ -46,11 +46,11 @@ public protocol HBPersistDriver: Service {
     func remove(key: String) async throws
 }
 
-extension HBPersistDriver {
+extension PersistDriver {
     /// default implemenation of shutdown()
     public func shutdown() async throws {}
 
-    /// create key/value pair. If key already exist throw `HBPersistError.duplicate` error
+    /// create key/value pair. If key already exist throw `PersistError.duplicate` error
     /// - Parameters:
     ///   - key: Key to store value against
     ///   - value: Codable value to store

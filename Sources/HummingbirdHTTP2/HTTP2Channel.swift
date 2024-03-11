@@ -30,7 +30,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
     private let sslContext: NIOSSLContext
     private let http1: HTTP1Channel
     private let additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
-    public var responder: @Sendable (HBRequest, Channel) async throws -> HBResponse { http1.responder }
+    public var responder: @Sendable (Request, Channel) async throws -> Response { http1.responder }
 
     ///  Initialize HTTP1Channel
     /// - Parameters:
@@ -40,7 +40,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
     public init(
         tlsConfiguration: TLSConfiguration,
         additionalChannelHandlers: @escaping @Sendable () -> [any RemovableChannelHandler] = { [] },
-        responder: @escaping @Sendable (HBRequest, Channel) async throws -> HBResponse = { _, _ in throw HBHTTPError(.notImplemented) }
+        responder: @escaping @Sendable (Request, Channel) async throws -> Response = { _, _ in throw HTTPError(.notImplemented) }
     ) throws {
         var tlsConfiguration = tlsConfiguration
         tlsConfiguration.applicationProtocols = NIOHTTP2SupportedALPNProtocols
@@ -65,7 +65,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
             let childChannelHandlers: [ChannelHandler] =
                 [HTTP1ToHTTPServerCodec(secure: false)] +
                 self.additionalChannelHandlers() +
-                [HBHTTPUserEventHandler(logger: logger)]
+                [HTTPUserEventHandler(logger: logger)]
 
             return http1Channel
                 .pipeline
@@ -80,7 +80,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
         } http2StreamInitializer: { http2ChildChannel -> EventLoopFuture<HTTP1Channel.Value> in
             let childChannelHandlers: [ChannelHandler] =
                 self.additionalChannelHandlers() + [
-                    HBHTTPUserEventHandler(logger: logger),
+                    HTTPUserEventHandler(logger: logger),
                 ]
 
             return http2ChildChannel

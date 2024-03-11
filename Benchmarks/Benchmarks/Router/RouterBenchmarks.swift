@@ -16,14 +16,14 @@ import Benchmark
 import HTTPTypes
 import Hummingbird
 import NIOHTTPTypes
-@_spi(HBInternal) import HummingbirdCore
+@_spi(Internal) import HummingbirdCore
 import Logging
 import NIOCore
 import NIOPosix
 
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
-struct BasicBenchmarkContext: HBRequestContext {
-    var coreContext: HBCoreRequestContext
+struct BasicBenchmarkContext: RequestContext {
+    var coreContext: CoreRequestContext
 
     public init(channel: Channel, logger: Logger) {
         self.coreContext = .init(allocator: channel.allocator, logger: logger)
@@ -31,21 +31,21 @@ struct BasicBenchmarkContext: HBRequestContext {
 }
 
 /// Writes ByteBuffers to AsyncChannel outbound writer
-struct BenchmarkBodyWriter: Sendable, HBResponseBodyWriter {
+struct BenchmarkBodyWriter: Sendable, ResponseBodyWriter {
     func write(_: ByteBuffer) async throws {}
 }
 
 extension Benchmark {
     @discardableResult
-    convenience init?<Context: HBRequestContext>(
+    convenience init?<Context: RequestContext>(
         name: String,
         context: Context.Type = BasicBenchmarkContext.self,
         configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
         request: HTTPRequest,
-        writeBody: @escaping @Sendable (HBStreamedRequestBody.InboundStream.TestSource) async throws -> Void = { _ in },
-        setupRouter: @escaping @Sendable (HBRouter<Context>) async throws -> Void
+        writeBody: @escaping @Sendable (StreamedRequestBody.InboundStream.TestSource) async throws -> Void = { _ in },
+        setupRouter: @escaping @Sendable (Router<Context>) async throws -> Void
     ) {
-        let router = HBRouter(context: Context.self)
+        let router = Router(context: Context.self)
         self.init(name, configuration: configuration) { benchmark in
             let responder = router.buildResponder()
             benchmark.startMeasurement()
@@ -58,11 +58,11 @@ extension Benchmark {
                             logger: Logger(label: "Benchmark")
                         )
                         let (inbound, source) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
-                        let streamer = HBStreamedRequestBody(iterator: inbound.makeAsyncIterator())
-                        let requestBody = HBRequestBody.stream(streamer)
-                        let hbRequest = HBRequest(head: request, body: requestBody)
+                        let streamer = StreamedRequestBody(iterator: inbound.makeAsyncIterator())
+                        let requestBody = RequestBody.stream(streamer)
+                        let Request = Request(head: request, body: requestBody)
                         group.addTask {
-                            let response = try await responder.respond(to: hbRequest, context: context)
+                            let response = try await responder.respond(to: Request, context: context)
                             _ = try await response.body.write(BenchmarkBodyWriter())
                         }
                         try await writeBody(source)
@@ -121,7 +121,7 @@ func routerBenchmarks() {
         bodyStream.yield(.body(buffer))
     } setupRouter: { router in
         router.post { request, _ in
-            HBResponse(status: .ok, headers: [:], body: .init { writer in
+            Response(status: .ok, headers: [:], body: .init { writer in
                 for try await buffer in request.body {
                     try await writer.write(buffer)
                 }
@@ -134,8 +134,8 @@ func routerBenchmarks() {
         configuration: .init(warmupIterations: 10),
         request: .init(method: .get, scheme: "http", authority: "localhost", path: "/")
     ) { router in
-        struct EmptyMiddleware<Context>: HBMiddlewareProtocol {
-            func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+        struct EmptyMiddleware<Context>: MiddlewareProtocol {
+            func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 return try await next(request, context)
             }
         }

@@ -17,14 +17,14 @@ import Atomics
 import NIOCore
 
 /// In memory driver for persist system for storing persistent cross request key/value pairs
-public actor HBMemoryPersistDriver<C: Clock>: HBPersistDriver where C.Duration == Duration {
+public actor MemoryPersistDriver<C: Clock>: PersistDriver where C.Duration == Duration {
     public init(_ clock: C = .suspending) {
         self.values = [:]
         self.clock = clock
     }
 
     public func create(key: String, value: some Codable & Sendable, expires: Duration?) async throws {
-        guard self.values[key] == nil else { throw HBPersistError.duplicate }
+        guard self.values[key] == nil else { throw PersistError.duplicate }
         self.values[key] = .init(value: value, expires: expires.map { self.clock.now.advanced(by: $0) })
     }
 

@@ -37,7 +37,7 @@ class TransportServicesTests: XCTestCase {
             responder: helloResponder,
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: eventLoopGroup,
-            logger: Logger(label: "HB")
+            logger: Logger(label: "Hummingbird")
         ) { client in
             let response = try await client.get("/")
             var body = try XCTUnwrap(response.body)
@@ -55,7 +55,7 @@ class TransportServicesTests: XCTestCase {
             responder: helloResponder,
             configuration: .init(address: .hostname(port: 0), serverName: testServerName, tlsOptions: tlsOptions),
             eventLoopGroup: eventLoopGroup,
-            logger: Logger(label: "HB"),
+            logger: Logger(label: "Hummingbird"),
             clientConfiguration: .init(tlsConfiguration: self.getClientTLSConfiguration(), serverName: testServerName)
         ) { client in
             let response = try await client.get("/")

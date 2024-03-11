@@ -18,7 +18,7 @@ import NIOCore
 import ServiceLifecycle
 
 /// Response structure returned by testing framework
-public struct HBTestResponse: Sendable {
+public struct TestResponse: Sendable {
     public let head: HTTPResponse
     /// response status
     public var status: HTTPResponse.Status { self.head.status }
@@ -31,7 +31,7 @@ public struct HBTestResponse: Sendable {
 }
 
 /// Errors thrown by testing framework.
-struct HBTestError: Error, Equatable {
+struct TestError: Error, Equatable {
     private enum _Internal {
         case notStarted
         case noHead
@@ -53,17 +53,17 @@ struct HBTestError: Error, Equatable {
 }
 
 /// Protocol for client used by HummingbirdTesting
-public protocol HBTestClientProtocol: Sendable {
+public protocol TestClientProtocol: Sendable {
     /// Execute URL request and provide response
     func executeRequest(
         uri: String,
         method: HTTPRequest.Method,
         headers: HTTPFields,
         body: ByteBuffer?
-    ) async throws -> HBTestResponse
+    ) async throws -> TestResponse
 }
 
-extension HBTestClientProtocol {
+extension TestClientProtocol {
     /// Send request to associated test framework and call test callback on the response returned
     ///
     /// - Parameters:
@@ -78,7 +78,7 @@ extension HBTestClientProtocol {
         method: HTTPRequest.Method,
         headers: HTTPFields = [:],
         body: ByteBuffer? = nil,
-        testCallback: @escaping (HBTestResponse) async throws -> Return = { $0 }
+        testCallback: @escaping (TestResponse) async throws -> Return = { $0 }
     ) async throws -> Return {
         let response = try await executeRequest(uri: uri, method: method, headers: headers, body: body)
         return try await testCallback(response)
@@ -86,10 +86,10 @@ extension HBTestClientProtocol {
 }
 
 /// Protocol for application test framework
-protocol HBApplicationTestFramework {
+protocol ApplicationTestFramework {
     /// Associated client for application test
-    associatedtype Client: HBTestClientProtocol
+    associatedtype Client: TestClientProtocol
 
     /// Run test server
-    func run<Value>(_ test: @escaping @Sendable (any HBTestClientProtocol) async throws -> Value) async throws -> Value
+    func run<Value>(_ test: @escaping @Sendable (any TestClientProtocol) async throws -> Value) async throws -> Value
 }

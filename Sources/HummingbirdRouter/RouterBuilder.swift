@@ -15,14 +15,14 @@
 import Hummingbird
 
 /// Router built using a result builder
-public struct HBRouterBuilder<Context: HBRouterRequestContext, Handler: MiddlewareProtocol>: MiddlewareProtocol where Handler.Input == HBRequest, Handler.Output == HBResponse, Handler.Context == Context
+public struct RouterBuilder<Context: RouterRequestContext, Handler: MiddlewareProtocol>: MiddlewareProtocol where Handler.Input == Request, Handler.Output == Response, Handler.Context == Context
 {
-    public typealias Input = HBRequest
-    public typealias Output = HBResponse
+    public typealias Input = Request
+    public typealias Output = Response
 
     let handler: Handler
 
-    ///  Initialize HBRouterBuilder with contents of result builder
+    ///  Initialize RouterBuilder with contents of result builder
     /// - Parameters:
     ///   - context: Request context used by router
     ///   - builder: Result builder for router
@@ -43,11 +43,11 @@ public struct HBRouterBuilder<Context: HBRouterRequestContext, Handler: Middlewa
     }
 }
 
-/// extend Router to conform to HBResponder so we can use it to process `HBRequest``
-extension HBRouterBuilder: HBResponder, HBResponderBuilder {
+/// extend Router to conform to Responder so we can use it to process `Request``
+extension RouterBuilder: HTTPResponder, HTTPResponderBuilder {
     public func respond(to request: Input, context: Context) async throws -> Output {
         try await self.handle(request, context: context) { _, _ in
-            throw HBHTTPError(.notFound)
+            throw HTTPError(.notFound)
         }
     }
 

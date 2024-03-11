@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Associates cache control values with filename
-public struct HBCacheControl: Sendable {
+public struct CacheControl: Sendable {
     public enum Value: CustomStringConvertible, Sendable {
         case noStore
         case noCache
@@ -42,7 +42,7 @@ public struct HBCacheControl: Sendable {
 
     /// Initialize cache control
     /// - Parameter entries: cache control entries
-    public init(_ entries: [(HBMediaType, [Value])]) {
+    public init(_ entries: [(MediaType, [Value])]) {
         self.entries = entries.map { .init(mediaType: $0.0, cacheControl: $0.1) }
     }
 
@@ -53,7 +53,7 @@ public struct HBCacheControl: Sendable {
         guard let extPointIndex = file.lastIndex(of: ".") else { return nil }
         let extIndex = file.index(after: extPointIndex)
         let ext = String(file.suffix(from: extIndex))
-        guard let mediaType = HBMediaType.getMediaType(forExtension: ext) else { return nil }
+        guard let mediaType = MediaType.getMediaType(forExtension: ext) else { return nil }
         guard let entry = self.entries.first(where: { mediaType.isType($0.mediaType) }) else { return nil }
         return entry.cacheControl
             .map(\.description)
@@ -61,7 +61,7 @@ public struct HBCacheControl: Sendable {
     }
 
     private struct Entry: Sendable {
-        let mediaType: HBMediaType
+        let mediaType: MediaType
         let cacheControl: [Value]
     }
 

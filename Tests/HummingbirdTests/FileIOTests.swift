@@ -24,9 +24,9 @@ class FileIOTests: XCTestCase {
     }
 
     func testReadFileIO() async throws {
-        let router = HBRouter()
-        router.get("test.jpg") { _, context -> HBResponse in
-            let fileIO = HBFileIO(threadPool: .singleton)
+        let router = Router()
+        router.get("test.jpg") { _, context -> Response in
+            let fileIO = FileIO(threadPool: .singleton)
             let body = try await fileIO.loadFile(path: "test.jpg", context: context)
             return .init(status: .ok, headers: [:], body: body)
         }
@@ -36,7 +36,7 @@ class FileIOTests: XCTestCase {
         XCTAssertNoThrow(try data.write(to: fileURL))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
             try await client.execute(uri: "/test.jpg", method: .get) { response in
@@ -47,13 +47,13 @@ class FileIOTests: XCTestCase {
 
     func testWrite() async throws {
         let filename = "testWrite.txt"
-        let router = HBRouter()
+        let router = Router()
         router.put("store") { request, context -> HTTPResponse.Status in
-            let fileIO = HBFileIO(threadPool: .singleton)
+            let fileIO = FileIO(threadPool: .singleton)
             try await fileIO.writeFile(contents: request.body, path: filename, context: context)
             return .ok
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
             let buffer = ByteBufferAllocator().buffer(string: "This is a test")
@@ -70,13 +70,13 @@ class FileIOTests: XCTestCase {
 
     func testWriteLargeFile() async throws {
         let filename = "testWriteLargeFile.txt"
-        let router = HBRouter()
+        let router = Router()
         router.put("store") { request, context -> HTTPResponse.Status in
-            let fileIO = HBFileIO(threadPool: .singleton)
+            let fileIO = FileIO(threadPool: .singleton)
             try await fileIO.writeFile(contents: request.body, path: filename, context: context)
             return .ok
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
 
         try await app.test(.live) { client in
             let buffer = self.randomBuffer(size: 400_000)

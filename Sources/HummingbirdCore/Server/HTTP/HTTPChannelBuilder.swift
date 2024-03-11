@@ -16,25 +16,25 @@ import NIOCore
 
 /// Build Channel Setup that takes an HTTP responder
 ///
-/// Used when building an ``Hummingbird/HBApplication``. It delays the building
-/// of the ``HBChildChannel`` until the HTTP responder has been built.
-public struct HBHTTPChannelBuilder<ChildChannel: HBChildChannel>: Sendable {
+/// Used when building an ``Hummingbird/Application``. It delays the building
+/// of the ``ChildChannel`` until the HTTP responder has been built.
+public struct HTTPChannelBuilder<ChildChannel: ServerChildChannel>: Sendable {
     /// build child channel from HTTP responder
     public let build: @Sendable (@escaping HTTPChannelHandler.Responder) throws -> ChildChannel
 
-    /// Initialize HBHTTPChannelBuilder
+    /// Initialize HTTPChannelBuilder
     /// - Parameter build: closure building child channel from HTTP responder
     public init(_ build: @escaping @Sendable (@escaping HTTPChannelHandler.Responder) throws -> ChildChannel) {
         self.build = build
     }
 }
 
-extension HBHTTPChannelBuilder {
+extension HTTPChannelBuilder {
     ///  Build HTTP1 channel
     ///
-    /// Use in ``Hummingbird/HBApplication`` initialization.
+    /// Use in ``Hummingbird/Application`` initialization.
     /// ```
-    /// let app = HBApplication(
+    /// let app = Application(
     ///     router: router,
     ///     server: .http1()
     /// )
@@ -43,7 +43,7 @@ extension HBHTTPChannelBuilder {
     /// - Returns: HTTPChannelHandler builder
     public static func http1(
         additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = []
-    ) -> HBHTTPChannelBuilder<HTTP1Channel> {
+    ) -> HTTPChannelBuilder<HTTP1Channel> {
         return .init { responder in
             return HTTP1Channel(responder: responder, additionalChannelHandlers: additionalChannelHandlers)
         }

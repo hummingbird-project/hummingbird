@@ -15,17 +15,17 @@
 import HTTPTypes
 
 /// Stores endpoint responders for each HTTP method
-struct HBEndpointResponders<Context: HBBaseRequestContext>: Sendable {
+struct EndpointResponders<Context: BaseRequestContext>: Sendable {
     init(path: String) {
         self.path = path
         self.methods = [:]
     }
 
-    public func getResponder(for method: HTTPRequest.Method) -> (any HBResponder<Context>)? {
+    public func getResponder(for method: HTTPRequest.Method) -> (any HTTPResponder<Context>)? {
         return self.methods[method]
     }
 
-    mutating func addResponder(for method: HTTPRequest.Method, responder: any HBResponder<Context>) {
+    mutating func addResponder(for method: HTTPRequest.Method, responder: any HTTPResponder<Context>) {
         guard self.methods[method] == nil else {
             preconditionFailure("\(method.rawValue) already has a handler")
         }
@@ -34,7 +34,7 @@ struct HBEndpointResponders<Context: HBBaseRequestContext>: Sendable {
 
     mutating func autoGenerateHeadEndpoint() {
         if self.methods[.head] == nil, let get = methods[.get] {
-            self.methods[.head] = HBCallbackResponder { request, context in
+            self.methods[.head] = CallbackResponder { request, context in
                 var response = try await get.respond(to: request, context: context)
                 response.body = .init()
                 return response
@@ -42,6 +42,6 @@ struct HBEndpointResponders<Context: HBBaseRequestContext>: Sendable {
         }
     }
 
-    var methods: [HTTPRequest.Method: any HBResponder<Context>]
+    var methods: [HTTPRequest.Method: any HTTPResponder<Context>]
     var path: String
 }

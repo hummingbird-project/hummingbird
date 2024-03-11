@@ -18,7 +18,7 @@ import NIOCore
 import NIOSSL
 
 /// Sets up child channel to use TLS before accessing base channel setup
-public struct TLSChannel<BaseChannel: HBChildChannel>: HBChildChannel {
+public struct TLSChannel<BaseChannel: ServerChildChannel>: ServerChildChannel {
     public typealias Value = BaseChannel.Value
 
     ///  Initialize TLSChannel
@@ -58,7 +58,7 @@ public struct TLSChannel<BaseChannel: HBChildChannel>: HBChildChannel {
 }
 
 extension TLSChannel: HTTPChannelHandler where BaseChannel: HTTPChannelHandler {
-    public var responder: @Sendable (HBRequest, Channel) async throws -> HBResponse {
+    public var responder: @Sendable (Request, Channel) async throws -> Response {
         baseChannel.responder
     }
 }

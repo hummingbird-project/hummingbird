@@ -45,7 +45,7 @@ class HummingBirdCoreTests: XCTestCase {
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "HB")
+            logger: Logger(label: "Hummingbird")
         ) { client in
             let response = try await client.get("/")
             var body = try XCTUnwrap(response.body)
@@ -58,7 +58,7 @@ class HummingBirdCoreTests: XCTestCase {
             responder: helloResponder,
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "HB")
+            logger: Logger(label: "Hummingbird")
         ) { client in
             for _ in 0..<10 {
                 let response = try await client.post("/", body: ByteBuffer(string: "Hello"))
@@ -70,11 +70,11 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testError() async throws {
         try await testServer(
-            responder: { _, _ in throw HBHTTPError(.unauthorized) },
+            responder: { _, _ in throw HTTPError(.unauthorized) },
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "HB")
+            logger: Logger(label: "Hummingbird")
         ) { client in
             let response = try await client.get("/")
             XCTAssertEqual(response.status, .unauthorized)
@@ -86,11 +86,11 @@ class HummingBirdCoreTests: XCTestCase {
         try await testServer(
             responder: { request, _ in
                 let buffer = try await request.body.collect(upTo: .max)
-                return HBResponse(status: .ok, body: .init(byteBuffer: buffer))
+                return Response(status: .ok, body: .init(byteBuffer: buffer))
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "HB")
+            logger: Logger(label: "Hummingbird")
         ) { client in
             let buffer = self.randomBuffer(size: 1_140_000)
             let response = try await client.post("/", body: buffer)
@@ -103,11 +103,11 @@ class HummingBirdCoreTests: XCTestCase {
         try await testServer(
             responder: { _, _ in
                 let buffer = self.randomBuffer(size: 1_140_000)
-                return HBResponse(status: .ok, body: .init(byteBuffer: buffer))
+                return Response(status: .ok, body: .init(byteBuffer: buffer))
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "HB")
+            logger: Logger(label: "Hummingbird")
         ) { client in
             let response = try await client.get("/")
             let body = try XCTUnwrap(response.body)
@@ -118,11 +118,11 @@ class HummingBirdCoreTests: XCTestCase {
     func testStreamBody() async throws {
         try await testServer(
             responder: { request, _ in
-                return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
+                return Response(status: .ok, body: .init(asyncSequence: request.body))
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "HB")
+            logger: Logger(label: "Hummingbird")
         ) { client in
             let buffer = self.randomBuffer(size: 1_140_000)
             let response = try await client.post("/", body: buffer)
@@ -134,11 +134,11 @@ class HummingBirdCoreTests: XCTestCase {
     func testStreamBodyWriteSlow() async throws {
         try await testServer(
             responder: { request, _ in
-                return HBResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
+                return Response(status: .ok, body: .init(asyncSequence: request.body.delayed()))
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "HB")
+            logger: Logger(label: "Hummingbird")
         ) { client in
             let buffer = self.randomBuffer(size: 1_140_000)
             let response = try await client.post("/", body: buffer)
@@ -162,12 +162,12 @@ class HummingBirdCoreTests: XCTestCase {
         }
         try await testServer(
             responder: { request, _ in
-                return HBResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
+                return Response(status: .ok, body: .init(asyncSequence: request.body.delayed()))
             },
             httpChannelSetup: .http1(additionalChannelHandlers: [SlowInputChannelHandler()]),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "HB")
+            logger: Logger(label: "Hummingbird")
         ) { client in
             let buffer = self.randomBuffer(size: 1_140_000)
             let response = try await client.post("/", body: buffer)
@@ -182,7 +182,7 @@ class HummingBirdCoreTests: XCTestCase {
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "HB")
+            logger: Logger(label: "Hummingbird")
         ) { client in
             let response = try await client.get("/")
             XCTAssertEqual(response.trailerHeaders?[.contentType], "text")
@@ -196,7 +196,7 @@ class HummingBirdCoreTests: XCTestCase {
             var seen: Bool = false
             func channelRead(context: ChannelHandlerContext, data: NIOAny) {
                 if case .body = self.unwrapInboundIn(data) {
-                    context.fireErrorCaught(HBHTTPError(.unavailableForLegalReasons))
+                    context.fireErrorCaught(HTTPError(.unavailableForLegalReasons))
                 }
                 context.fireChannelRead(data)
             }
@@ -204,12 +204,12 @@ class HummingBirdCoreTests: XCTestCase {
         try await testServer(
             responder: { request, _ in
                 _ = try await request.body.collect(upTo: .max)
-                return HBResponse(status: .ok)
+                return Response(status: .ok)
             },
             httpChannelSetup: .http1(additionalChannelHandlers: [CreateErrorHandler()]),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "HB")
+            logger: Logger(label: "Hummingbird")
         ) { client in
             let buffer = self.randomBuffer(size: 32)
             let response = try await client.post("/", body: buffer)
@@ -221,11 +221,11 @@ class HummingBirdCoreTests: XCTestCase {
         try await testServer(
             responder: { _, _ in
                 // ignore request body
-                return HBResponse(status: .accepted)
+                return Response(status: .accepted)
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "HB")
+            logger: Logger(label: "Hummingbird")
         ) { client in
             let buffer = self.randomBuffer(size: 16384)
             let response = try await client.post("/", body: buffer)
@@ -241,7 +241,7 @@ class HummingBirdCoreTests: XCTestCase {
             responder: helloResponder,
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "HB")
+            logger: Logger(label: "Hummingbird")
         ) { client in
             try await withTimeout(.seconds(5)) {
                 _ = try await client.get("/", headers: [.connection: "close"])
@@ -275,13 +275,13 @@ class HummingBirdCoreTests: XCTestCase {
             httpChannelSetup: .http1(additionalChannelHandlers: [HTTPServerIncompleteRequest(), IdleStateHandler(readTimeout: .seconds(1))]),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "HB")
+            logger: Logger(label: "Hummingbird")
         ) { client in
             try await withTimeout(.seconds(5)) {
                 do {
                     _ = try await client.get("/", headers: [.connection: "keep-alive"])
                     XCTFail("Should not get here")
-                } catch HBTestClient.Error.connectionClosing {
+                } catch TestClient.Error.connectionClosing {
                 } catch {
                     XCTFail("Unexpected error: \(error)")
                 }
@@ -298,7 +298,7 @@ class HummingBirdCoreTests: XCTestCase {
             httpChannelSetup: .http1(additionalChannelHandlers: [IdleStateHandler(writeTimeout: .seconds(1))]),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "HB")
+            logger: Logger(label: "Hummingbird")
         ) { client in
             try await withTimeout(.seconds(5)) {
                 _ = try await client.get("/", headers: [.connection: "keep-alive"])
@@ -315,12 +315,12 @@ class HummingBirdCoreTests: XCTestCase {
             responder: { request, _ in
                 await promise.complete(())
                 try await Task.sleep(for: .milliseconds(500))
-                return HBResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
+                return Response(status: .ok, body: .init(asyncSequence: request.body.delayed()))
             },
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "HB")
+            logger: Logger(label: "Hummingbird")
         ) { server, client in
             try await withTimeout(.seconds(5)) {
                 try await withThrowingTaskGroup(of: Void.self) { group in
@@ -344,12 +344,12 @@ class HummingBirdCoreTests: XCTestCase {
         try await testServer(
             responder: { request, _ in
                 try await Task.sleep(for: .milliseconds(500))
-                return HBResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
+                return Response(status: .ok, body: .init(asyncSequence: request.body.delayed()))
             },
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "HB")
+            logger: Logger(label: "Hummingbird")
         ) { server, client in
             try await withTimeout(.seconds(5)) {
                 let response = try await client.get("/")

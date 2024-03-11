@@ -18,21 +18,21 @@ import ServiceContextModule
 /// Protocol for object that produces a response given a request
 ///
 /// This is the core protocol for Hummingbird. It defines an object that can respond to a request.
-public protocol HBResponder<Context>: Sendable {
+public protocol HTTPResponder<Context>: Sendable {
     associatedtype Context
-    /// Return EventLoopFuture that will be fulfilled with response to the request supplied
-    @Sendable func respond(to request: HBRequest, context: Context) async throws -> HBResponse
+    /// Return response to the request supplied
+    @Sendable func respond(to request: Request, context: Context) async throws -> Response
 }
 
 /// Responder that calls supplied closure
-public struct HBCallbackResponder<Context>: HBResponder {
-    let callback: @Sendable (HBRequest, Context) async throws -> HBResponse
+public struct CallbackResponder<Context>: HTTPResponder {
+    let callback: @Sendable (Request, Context) async throws -> Response
 
-    public init(callback: @escaping @Sendable (HBRequest, Context) async throws -> HBResponse) {
+    public init(callback: @escaping @Sendable (Request, Context) async throws -> Response) {
         self.callback = callback
     }
 
-    public func respond(to request: HBRequest, context: Context) async throws -> HBResponse {
+    public func respond(to request: Request, context: Context) async throws -> Response {
         try await self.callback(request, context)
     }
 }

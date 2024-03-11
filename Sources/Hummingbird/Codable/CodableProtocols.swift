@@ -15,20 +15,20 @@
 import HTTPTypes
 
 /// protocol for encoders generating a Response
-public protocol HBResponseEncoder: Sendable {
+public protocol ResponseEncoder: Sendable {
     /// Encode value returned by handler to request
     ///
     /// - Parameters:
     ///   - value: value to encode
     ///   - request: request that generated this value
-    func encode(_ value: some Encodable, from request: HBRequest, context: some HBBaseRequestContext) throws -> HBResponse
+    func encode(_ value: some Encodable, from request: Request, context: some BaseRequestContext) throws -> Response
 }
 
 /// protocol for decoder deserializing from a Request body
-public protocol HBRequestDecoder: Sendable {
+public protocol RequestDecoder: Sendable {
     /// Decode type from request
     /// - Parameters:
     ///   - type: type to decode to
     ///   - request: request
-    func decode<T: Decodable>(_ type: T.Type, from request: HBRequest, context: some HBBaseRequestContext) async throws -> T
+    func decode<T: Decodable>(_ type: T.Type, from request: Request, context: some BaseRequestContext) async throws -> T
 }

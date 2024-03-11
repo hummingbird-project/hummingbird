@@ -17,16 +17,16 @@ import struct Foundation.Date
 @_exported import class Foundation.JSONEncoder
 import NIOFoundationCompat
 
-extension JSONEncoder: HBResponseEncoder {
-    /// Extend JSONEncoder to support encoding `HBResponse`'s. Sets body and header values
+extension JSONEncoder: ResponseEncoder {
+    /// Extend JSONEncoder to support encoding `Response`'s. Sets body and header values
     /// - Parameters:
     ///   - value: Value to encode
     ///   - request: Request used to generate response
-    public func encode(_ value: some Encodable, from request: HBRequest, context: some HBBaseRequestContext) throws -> HBResponse {
+    public func encode(_ value: some Encodable, from request: Request, context: some BaseRequestContext) throws -> Response {
         var buffer = context.allocator.buffer(capacity: 0)
         let data = try self.encode(value)
         buffer.writeBytes(data)
-        return HBResponse(
+        return Response(
             status: .ok,
             headers: [.contentType: "application/json; charset=utf-8"],
             body: .init(byteBuffer: buffer)
@@ -34,18 +34,18 @@ extension JSONEncoder: HBResponseEncoder {
     }
 }
 
-extension JSONDecoder: HBRequestDecoder {
-    /// Extend JSONDecoder to decode from `HBRequest`.
+extension JSONDecoder: RequestDecoder {
+    /// Extend JSONDecoder to decode from `Request`.
     /// - Parameters:
     ///   - type: Type to decode
     ///   - request: Request to decode from
-    public func decode<T: Decodable>(_ type: T.Type, from request: HBRequest, context: some HBBaseRequestContext) async throws -> T {
+    public func decode<T: Decodable>(_ type: T.Type, from request: Request, context: some BaseRequestContext) async throws -> T {
         let buffer = try await request.body.collect(upTo: context.maxUploadSize)
         return try self.decode(T.self, from: buffer)
     }
 }
 
-/// `HBRequestDecoder` and `HBResponseEncoder` both require conformance to `Sendable`. Given
+/// `RequestDecoder` and `ResponseEncoder` both require conformance to `Sendable`. Given
 /// `JSONEncoder`` and `JSONDecoder`` conform to Sendable in macOS 13+ I think I can just
 /// back date the conformance to all versions of Swift, macOS we support
 #if hasFeature(RetroactiveAttribute)

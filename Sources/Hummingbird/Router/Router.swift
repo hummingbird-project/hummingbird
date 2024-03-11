@@ -16,12 +16,12 @@ import HTTPTypes
 import HummingbirdCore
 import NIOCore
 
-/// Create rules for routing requests and then create `HBResponder` that will follow these rules.
+/// Create rules for routing requests and then create `Responder` that will follow these rules.
 ///
-/// `HBRouter` requires an implementation of  the `on(path:method:use)` functions but because it
-/// also conforms to `HBRouterMethods` it is also possible to call the method specific functions `get`, `put`,
+/// `Router` requires an implementation of  the `on(path:method:use)` functions but because it
+/// also conforms to `RouterMethods` it is also possible to call the method specific functions `get`, `put`,
 /// `head`, `post` and `patch`.  The route handler closures all return objects conforming to
-/// `HBResponseGenerator`.  This allows us to support routes which return a multitude of types eg
+/// `ResponseGenerator`.  This allows us to support routes which return a multitude of types eg
 /// ```
 /// router.get("string") { _, _ -> String in
 ///     return "string"
@@ -34,21 +34,21 @@ import NIOCore
 /// }
 /// ```
 ///
-/// The default `Router` setup in `HBApplication` is the `TrieRouter` . This uses a
+/// The default `Router` setup in `Application` is the `TrieRouter` . This uses a
 /// trie to partition all the routes for faster access. It also supports wildcards and parameter extraction
 /// ```
 /// router.get("user/*", use: anyUser)
 /// router.get("user/:id", use: userWithId)
 /// ```
 /// Both of these match routes which start with "/user" and the next path segment being anything.
-/// The second version extracts the path segment out and adds it to `HBRequest.parameters` with the
+/// The second version extracts the path segment out and adds it to `Request.parameters` with the
 /// key "id".
-public final class HBRouter<Context: HBBaseRequestContext>: HBRouterMethods, HBResponderBuilder {
-    var trie: RouterPathTrieBuilder<HBEndpointResponders<Context>>
-    public let middlewares: HBMiddlewareGroup<Context>
-    let options: HBRouterOptions
+public final class Router<Context: BaseRequestContext>: RouterMethods, HTTPResponderBuilder {
+    var trie: RouterPathTrieBuilder<EndpointResponders<Context>>
+    public let middlewares: MiddlewareGroup<Context>
+    let options: RouterOptions
 
-    public init(context: Context.Type = HBBasicRequestContext.self, options: HBRouterOptions = []) {
+    public init(context: Context.Type = BasicRequestContext.self, options: RouterOptions = []) {
         self.trie = RouterPathTrieBuilder()
         self.middlewares = .init()
         self.options = options
@@ -59,22 +59,22 @@ public final class HBRouter<Context: HBBaseRequestContext>: HBRouterMethods, HBR
     ///   - path: URI path
     ///   - method: http method
     ///   - responder: handler to call
-    public func add(_ path: String, method: HTTPRequest.Method, responder: any HBResponder<Context>) {
+    public func add(_ path: String, method: HTTPRequest.Method, responder: any HTTPResponder<Context>) {
         // ensure path starts with a "/" and doesn't end with a "/"
         let path = "/\(path.dropSuffix("/").dropPrefix("/"))"
-        self.trie.addEntry(.init(path), value: HBEndpointResponders(path: path)) { node in
+        self.trie.addEntry(.init(path), value: EndpointResponders(path: path)) { node in
             node.value!.addResponder(for: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         }
     }
 
     /// build responder from router
-    public func buildResponder() -> HBRouterResponder<Context> {
+    public func buildResponder() -> RouterResponder<Context> {
         if self.options.contains(.autoGenerateHeadEndpoints) {
             self.trie.forEach { node in
                 node.value?.autoGenerateHeadEndpoint()
             }
         }
-        return HBRouterResponder(
+        return RouterResponder(
             context: Context.self,
             trie: self.trie.build(),
             options: self.options,
@@ -82,11 +82,11 @@ public final class HBRouter<Context: HBBaseRequestContext>: HBRouterMethods, HBR
         )
     }
 
-    /// Add path for closure returning type conforming to HBResponseGenerator
+    /// Add path for closure returning type conforming to ResponseGenerator
     @discardableResult public func on(
         _ path: String,
         method: HTTPRequest.Method,
-        use closure: @escaping @Sendable (HBRequest, Context) async throws -> some HBResponseGenerator
+        use closure: @escaping @Sendable (Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
         let responder = constructResponder(use: closure)
         var path = path
@@ -99,27 +99,27 @@ public final class HBRouter<Context: HBBaseRequestContext>: HBRouterMethods, HBR
 
     /// return new `RouterGroup`
     /// - Parameter path: prefix to add to paths inside the group
-    public func group(_ path: String = "") -> HBRouterGroup<Context> {
+    public func group(_ path: String = "") -> RouterGroup<Context> {
         return .init(path: path, router: self)
     }
 }
 
 /// Responder that return a not found error
-struct NotFoundResponder<Context: HBBaseRequestContext>: HBResponder {
-    func respond(to request: HBRequest, context: Context) throws -> HBResponse {
-        throw HBHTTPError(.notFound)
+struct NotFoundResponder<Context: BaseRequestContext>: HTTPResponder {
+    func respond(to request: Request, context: Context) throws -> Response {
+        throw HTTPError(.notFound)
     }
 }
 
-/// A type that has a single method to build a responder
-public protocol HBResponderBuilder {
-    associatedtype Responder: HBResponder
+/// A type that has a single method to build a HTTPResponder
+public protocol HTTPResponderBuilder {
+    associatedtype Responder: HTTPResponder
     /// build a responder
     func buildResponder() -> Responder
 }
 
 /// Router Options
-public struct HBRouterOptions: OptionSet, Sendable {
+public struct RouterOptions: OptionSet, Sendable {
     public let rawValue: Int
 
     public init(rawValue: Int) {

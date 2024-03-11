@@ -14,12 +14,12 @@
 
 import HummingbirdCore
 
-/// HBParameters is a special case of FlatDictionary where both the key
+/// Parameters is a special case of FlatDictionary where both the key
 /// and value types are Substrings. It is used for parameters extracted
 /// from URIs
-public typealias HBParameters = FlatDictionary<Substring, Substring>
+public typealias Parameters = FlatDictionary<Substring, Substring>
 
-public extension HBParameters {
+public extension Parameters {
     /// Return parameter with specified id
     /// - Parameter s: parameter id
     func get(_ s: String) -> String? {
@@ -46,7 +46,7 @@ public extension HBParameters {
     /// - Parameter s: parameter id
     func require(_ s: String) throws -> String {
         guard let param = self[s[...]].map({ String($0) }) else {
-            throw HBHTTPError(.badRequest)
+            throw HTTPError(.badRequest)
         }
         return param
     }
@@ -59,7 +59,7 @@ public extension HBParameters {
         guard let param = self[s[...]],
               let result = T(String(param))
         else {
-            throw HBHTTPError(.badRequest)
+            throw HTTPError(.badRequest)
         }
         return result
     }
@@ -72,7 +72,7 @@ public extension HBParameters {
         guard let param = self[s[...]],
               let result = T(rawValue: String(param))
         else {
-            throw HBHTTPError(.badRequest)
+            throw HTTPError(.badRequest)
         }
         return result
     }
@@ -107,7 +107,7 @@ public extension HBParameters {
     func requireAll<T: LosslessStringConvertible>(_ s: String, as: T.Type) throws -> [T] {
         return try self[values: s[...]].map {
             guard let result = T(String($0)) else {
-                throw HBHTTPError(.badRequest)
+                throw HTTPError(.badRequest)
             }
             return result
         }
@@ -120,7 +120,7 @@ public extension HBParameters {
     func requireAll<T: RawRepresentable>(_ s: String, as: T.Type) throws -> [T] where T.RawValue == String {
         return try self[values: s[...]].map {
             guard let result = T(rawValue: String($0)) else {
-                throw HBHTTPError(.badRequest)
+                throw HTTPError(.badRequest)
             }
             return result
         }
@@ -128,7 +128,7 @@ public extension HBParameters {
 }
 
 /// Catch all support
-public extension HBParameters {
+public extension Parameters {
     static let recursiveCaptureKey: Substring = ":**:"
 
     ///  Return path elements caught by recursive capture

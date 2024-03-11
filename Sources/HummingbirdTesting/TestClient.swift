@@ -23,7 +23,7 @@ import NIOSSL
 ///
 /// This HTTP client is used for internal testing of Hummingbird and is also
 /// the client used by `.live` testing framework.
-public struct HBTestClient: Sendable {
+public struct TestClient: Sendable {
     public let channelPromise: EventLoopPromise<Channel>
     let eventLoopGroup: EventLoopGroup
     let eventLoopGroupProvider: NIOEventLoopGroupProvider
@@ -31,7 +31,7 @@ public struct HBTestClient: Sendable {
     let port: Int
     let configuration: Configuration
 
-    /// HBTestClient configuration
+    /// TestClient configuration
     public struct Configuration: Sendable {
         public init(
             tlsConfiguration: TLSConfiguration? = nil,
@@ -51,7 +51,7 @@ public struct HBTestClient: Sendable {
         public let serverName: String?
     }
 
-    /// Initialize HBTestClient
+    /// Initialize TestClient
     /// - Parameters:
     ///   - host: host to connect
     ///   - port: port to connect to
@@ -97,7 +97,7 @@ public struct HBTestClient: Sendable {
                 .connect(host: self.host, port: self.port)
                 .cascade(to: self.channelPromise)
         } catch {
-            self.channelPromise.fail(HBTestClient.Error.tlsSetupFailed)
+            self.channelPromise.fail(TestClient.Error.tlsSetupFailed)
         }
     }
 
@@ -105,7 +105,7 @@ public struct HBTestClient: Sendable {
     public func shutdown() async throws {
         do {
             try await self.close()
-        } catch HBTestClient.Error.connectionNotOpen {
+        } catch TestClient.Error.connectionNotOpen {
         } catch ChannelError.alreadyClosed {}
         if case .createNew = self.eventLoopGroupProvider {
             try await self.eventLoopGroup.shutdownGracefully()
@@ -113,45 +113,45 @@ public struct HBTestClient: Sendable {
     }
 
     /// GET request
-    public func get(_ uri: String, headers: HTTPFields = [:]) async throws -> HBTestClient.Response {
-        let request = HBTestClient.Request(uri, method: .get, headers: headers)
+    public func get(_ uri: String, headers: HTTPFields = [:]) async throws -> TestClient.Response {
+        let request = TestClient.Request(uri, method: .get, headers: headers)
         return try await self.execute(request)
     }
 
     /// HEAD request
-    public func head(_ uri: String, headers: HTTPFields = [:]) async throws -> HBTestClient.Response {
-        let request = HBTestClient.Request(uri, method: .head, headers: headers)
+    public func head(_ uri: String, headers: HTTPFields = [:]) async throws -> TestClient.Response {
+        let request = TestClient.Request(uri, method: .head, headers: headers)
         return try await self.execute(request)
     }
 
     /// PUT request
-    public func put(_ uri: String, headers: HTTPFields = [:], body: ByteBuffer) async throws -> HBTestClient.Response {
-        let request = HBTestClient.Request(uri, method: .put, headers: headers, body: body)
+    public func put(_ uri: String, headers: HTTPFields = [:], body: ByteBuffer) async throws -> TestClient.Response {
+        let request = TestClient.Request(uri, method: .put, headers: headers, body: body)
         return try await self.execute(request)
     }
 
     /// POST request
-    public func post(_ uri: String, headers: HTTPFields = [:], body: ByteBuffer) async throws -> HBTestClient.Response {
-        let request = HBTestClient.Request(uri, method: .post, headers: headers, body: body)
+    public func post(_ uri: String, headers: HTTPFields = [:], body: ByteBuffer) async throws -> TestClient.Response {
+        let request = TestClient.Request(uri, method: .post, headers: headers, body: body)
         return try await self.execute(request)
     }
 
     /// DELETE request
-    public func delete(_ uri: String, headers: HTTPFields = [:], body: ByteBuffer) async throws -> HBTestClient.Response {
-        let request = HBTestClient.Request(uri, method: .delete, headers: headers, body: body)
+    public func delete(_ uri: String, headers: HTTPFields = [:], body: ByteBuffer) async throws -> TestClient.Response {
+        let request = TestClient.Request(uri, method: .delete, headers: headers, body: body)
         return try await self.execute(request)
     }
 
     /// Execute request to server. Return `EventLoopFuture` that will be fulfilled with HTTP response
-    public func execute(_ request: HBTestClient.Request) async throws -> HBTestClient.Response {
+    public func execute(_ request: TestClient.Request) async throws -> TestClient.Response {
         let channel = try await getChannel()
-        let response = try await withThrowingTaskGroup(of: HBTestClient.Response.self) { group in
+        let response = try await withThrowingTaskGroup(of: TestClient.Response.self) { group in
             group.addTask {
                 try await Task.sleep(for: self.configuration.timeout)
                 throw Error.readTimeout
             }
             group.addTask {
-                let promise = self.eventLoopGroup.any().makePromise(of: HBTestClient.Response.self)
+                let promise = self.eventLoopGroup.any().makePromise(of: TestClient.Response.self)
                 let task = HTTPTask(request: self.cleanupRequest(request), responsePromise: promise)
                 channel.writeAndFlush(task, promise: nil)
                 return try await promise.futureResult.get()
@@ -164,7 +164,7 @@ public struct HBTestClient: Sendable {
     }
 
     public func close() async throws {
-        self.channelPromise.completeWith(.failure(HBTestClient.Error.connectionNotOpen))
+        self.channelPromise.completeWith(.failure(TestClient.Error.connectionNotOpen))
         let channel = try await getChannel()
         return try await channel.close()
     }
@@ -173,7 +173,7 @@ public struct HBTestClient: Sendable {
         try await self.channelPromise.futureResult.get()
     }
 
-    private func cleanupRequest(_ request: HBTestClient.Request) -> HBTestClient.Request {
+    private func cleanupRequest(_ request: TestClient.Request) -> TestClient.Request {
         var request = request
         if let contentLength = request.body.map(\.readableBytes) {
             request.headers[.contentLength] = String(describing: contentLength)
@@ -195,7 +195,7 @@ public struct HBTestClient: Sendable {
 
     /// Channel Handler for serializing request header and data
     private class HTTPClientRequestSerializer: ChannelOutboundHandler {
-        typealias OutboundIn = HBTestClient.Request
+        typealias OutboundIn = TestClient.Request
         typealias OutboundOut = HTTPRequestPart
 
         func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
@@ -212,7 +212,7 @@ public struct HBTestClient: Sendable {
     /// Channel Handler for parsing response from server
     private class HTTPClientResponseHandler: ChannelInboundHandler {
         typealias InboundIn = HTTPResponsePart
-        typealias InboundOut = HBTestClient.Response
+        typealias InboundOut = TestClient.Response
 
         private enum ResponseState {
             /// Waiting to parse the next response.
@@ -236,7 +236,7 @@ public struct HBTestClient: Sendable {
                 body.writeBuffer(&part)
                 self.state = .body(head, body)
             case (.end(let trailerHeaders), .body(let head, let body)):
-                let response = HBTestClient.Response(
+                let response = TestClient.Response(
                     head: head,
                     body: body,
                     trailerHeaders: trailerHeaders
@@ -246,7 +246,7 @@ public struct HBTestClient: Sendable {
                 }
                 self.state = .idle
             case (.end(let trailerHeaders), .head(let head)):
-                let response = HBTestClient.Response(
+                let response = TestClient.Response(
                     head: head,
                     body: nil,
                     trailerHeaders: trailerHeaders
@@ -256,22 +256,22 @@ public struct HBTestClient: Sendable {
                 }
                 self.state = .idle
             default:
-                context.fireErrorCaught(HBTestClient.Error.malformedResponse)
+                context.fireErrorCaught(TestClient.Error.malformedResponse)
             }
         }
     }
 
     /// HTTP Task structure
     private struct HTTPTask {
-        let request: HBTestClient.Request
-        let responsePromise: EventLoopPromise<HBTestClient.Response>
+        let request: TestClient.Request
+        let responsePromise: EventLoopPromise<TestClient.Response>
     }
 
     /// HTTP Task handler. Kicks off HTTP Request and fulfills Response promise when response is returned
     private class HTTPTaskHandler: ChannelDuplexHandler {
-        typealias InboundIn = HBTestClient.Response
+        typealias InboundIn = TestClient.Response
         typealias OutboundIn = HTTPTask
-        typealias OutboundOut = HBTestClient.Request
+        typealias OutboundOut = TestClient.Request
 
         var queue: CircularBuffer<HTTPTask>
 
@@ -311,7 +311,7 @@ public struct HBTestClient: Sendable {
             switch event {
             case let evt as IdleStateHandler.IdleStateEvent where evt == .read:
                 while let task = self.queue.popFirst() {
-                    task.responsePromise.fail(HBTestClient.Error.readTimeout)
+                    task.responsePromise.fail(TestClient.Error.readTimeout)
                 }
 
             default:

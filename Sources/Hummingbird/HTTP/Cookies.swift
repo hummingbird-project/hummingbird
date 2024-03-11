@@ -14,25 +14,25 @@
 
 /// Structure holding an array of cookies
 ///
-/// Cookies can be accessed from request via `HBRequest.cookies`.
-public struct HBCookies: Sendable {
-    /// Construct cookies accessor from `HBRequest`
+/// Cookies can be accessed from request via `Request.cookies`.
+public struct Cookies: Sendable {
+    /// Construct cookies accessor from `Request`
     /// - Parameter request: request to get cookies from
-    init(from request: HBRequest) {
+    init(from request: Request) {
         self.cookieStrings = request.headers[values: .cookie].flatMap {
             return $0.split(separator: ";").map { $0.drop { $0.isWhitespace } }
         }
     }
 
     /// access cookies via dictionary subscript
-    public subscript(_ key: String) -> HBCookie? {
+    public subscript(_ key: String) -> Cookie? {
         guard let cookieString = cookieStrings.first(where: {
-            guard let cookieName = HBCookie.getName(from: $0) else { return false }
+            guard let cookieName = Cookie.getName(from: $0) else { return false }
             return cookieName == key
         }) else {
             return nil
         }
-        return HBCookie(from: cookieString)
+        return Cookie(from: cookieString)
     }
 
     var cookieStrings: [Substring]

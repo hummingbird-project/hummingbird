@@ -26,12 +26,12 @@ It provides a router for directing different endpoints to their handlers, middle
 import Hummingbird
 
 // create router and add a single GET /hello route
-let router = HBRouter()
+let router = Router()
 router.get("hello") { request, _ -> String in
     return "Hello"
 }
 // create application using router
-let app = HBApplication(
+let app = Application(
     router: router,
     configuration: .init(address: .hostname("127.0.0.1", port: 8080))
 )

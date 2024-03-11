@@ -14,7 +14,7 @@
 
 import Foundation
 
-extension HBDateCache {
+extension DateCache {
     /// Date formatter as per section 5.2.14 of RFC 1123
     /// https://www.rfc-editor.org/rfc/rfc1123#page-55
     static var rfc1123Formatter: DateFormatter {

@@ -19,7 +19,7 @@ import NIOCore
 /// Job queue protocol.
 ///
 /// Defines how to push and pop job data off a queue
-public protocol HBJobQueueDriver: AsyncSequence, Sendable where Element == HBQueuedJob<JobID> {
+public protocol JobQueueDriver: AsyncSequence, Sendable where Element == QueuedJob<JobID> {
     associatedtype JobID: CustomStringConvertible & Sendable
 
     /// Called when JobQueueHandler is initialised with this queue
@@ -37,7 +37,7 @@ public protocol HBJobQueueDriver: AsyncSequence, Sendable where Element == HBQue
     func shutdownGracefully() async
 }
 
-extension HBJobQueueDriver {
+extension JobQueueDriver {
     // default version of onInit doing nothing
     public func onInit() async throws {}
 }

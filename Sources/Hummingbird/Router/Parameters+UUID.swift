@@ -15,8 +15,8 @@
 import Foundation
 
 /// It is common for UUID's to be passed in as parameters. So lets add helper
-/// functions to extract them from HBParameters
-extension HBParameters {
+/// functions to extract them from Parameters
+extension Parameters {
     /// Return parameter with specified id as a certain type
     /// - Parameters:
     ///   - s: parameter id
@@ -33,7 +33,7 @@ extension HBParameters {
         guard let param = self[s[...]],
               let result = UUID(uuidString: String(param))
         else {
-            throw HBHTTPError(.badRequest)
+            throw HTTPError(.badRequest)
         }
         return result
     }
@@ -53,11 +53,11 @@ extension HBParameters {
     public func requireAll(_ s: String, as: UUID.Type) throws -> [UUID] {
         return try self[values: s[...]].map {
             guard let result = UUID(uuidString: String($0)) else {
-                throw HBHTTPError(.badRequest)
+                throw HTTPError(.badRequest)
             }
             return result
         }
     }
 }
 
-extension UUID: HBResponseEncodable {}
+extension UUID: ResponseEncodable {}

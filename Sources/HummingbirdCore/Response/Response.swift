@@ -15,11 +15,11 @@
 import HTTPTypes
 
 /// Holds all the required to generate a HTTP Response
-public struct HBResponse: Sendable {
+public struct Response: Sendable {
     public var head: HTTPResponse
-    public var body: HBResponseBody
+    public var body: ResponseBody
 
-    public init(status: HTTPResponse.Status, headers: HTTPFields = .init(), body: HBResponseBody = .init()) {
+    public init(status: HTTPResponse.Status, headers: HTTPFields = .init(), body: ResponseBody = .init()) {
         self.head = .init(status: status, headerFields: headers)
         self.body = body
         if let contentLength = body.contentLength, headers[.contentLength] == nil {
@@ -38,7 +38,7 @@ public struct HBResponse: Sendable {
     }
 }
 
-extension HBResponse: CustomStringConvertible {
+extension Response: CustomStringConvertible {
     public var description: String {
         "status: \(self.status), headers: \(self.headers), body: \(self.body)"
     }

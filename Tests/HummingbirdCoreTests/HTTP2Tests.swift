@@ -35,7 +35,7 @@ class HummingBirdHTTP2Tests: XCTestCase {
             httpChannelSetup: .http2Upgrade(tlsConfiguration: getServerTLSConfiguration()),
             configuration: .init(address: .hostname(port: 0), serverName: testServerName),
             eventLoopGroup: eventLoopGroup,
-            logger: Logger(label: "HB")
+            logger: Logger(label: "Hummingbird")
         ) { _, port in
             var tlsConfiguration = try getClientTLSConfiguration()
             // no way to override the SSL server name with AsyncHTTPClient so need to set

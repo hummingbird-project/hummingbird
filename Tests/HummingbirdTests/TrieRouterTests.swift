@@ -83,7 +83,7 @@ class TrieRouterTests: XCTestCase {
         XCTAssertEqual(trie.getValueAndParameters("/Test/")?.parameters?.getCatchAll(), nil)
         XCTAssertEqual(trie.getValueAndParameters("/Test/one/two")?.parameters?.getCatchAll(), ["one", "two"])
         XCTAssertEqual(trie.getValueAndParameters("/Test2/one/two")?.parameters?.getCatchAll(), ["two"])
-        XCTAssertEqual(HBParameters().getCatchAll(), [])
+        XCTAssertEqual(Parameters().getCatchAll(), [])
     }
 
     func testPrefixWildcard() {

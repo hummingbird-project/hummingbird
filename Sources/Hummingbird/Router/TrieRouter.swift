@@ -93,7 +93,7 @@ struct RouterPathTrieBuilder<Value: Sendable> {
     }
 }
 
-/// Trie used by HBRouter responder
+/// Trie used by Router responder
 struct RouterPathTrie<Value: Sendable>: Sendable {
     let root: Node
 
@@ -106,9 +106,9 @@ struct RouterPathTrie<Value: Sendable>: Sendable {
     /// Get value from trie and any parameters from capture nodes
     /// - Parameter path: Path to process
     /// - Returns: value and parameters
-    func getValueAndParameters(_ path: String) -> (value: Value, parameters: HBParameters?)? {
+    func getValueAndParameters(_ path: String) -> (value: Value, parameters: Parameters?)? {
         let pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
-        var parameters: HBParameters?
+        var parameters: Parameters?
         var node = self.root
         for component in pathComponents {
             if let childNode = node.getChild(component) {
@@ -161,7 +161,7 @@ struct RouterPathTrie<Value: Sendable>: Sendable {
     }
 }
 
-extension Optional<HBParameters> {
+extension Optional<Parameters> {
     fileprivate mutating func set(_ s: Substring, value: Substring) {
         switch self {
         case .some(var parameters):
@@ -178,7 +178,7 @@ extension Optional<HBParameters> {
             parameters.setCatchAll(value)
             self = .some(parameters)
         case .none:
-            self = .some(.init(.init([(HBParameters.recursiveCaptureKey, value)])))
+            self = .some(.init(.init([(Parameters.recursiveCaptureKey, value)])))
         }
     }
 }

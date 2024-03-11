@@ -15,30 +15,30 @@
 import HTTPTypes
 import NIOCore
 
-public protocol HBResponseBodyWriter {
+public protocol ResponseBodyWriter {
     func write(_ buffer: ByteBuffer) async throws
 }
 
 /// Response body
-public struct HBResponseBody: Sendable {
-    public let write: @Sendable (any HBResponseBodyWriter) async throws -> HTTPFields?
+public struct ResponseBody: Sendable {
+    public let write: @Sendable (any ResponseBodyWriter) async throws -> HTTPFields?
     public let contentLength: Int?
 
-    /// Initialise HBResponseBody with closure writing body contents
+    /// Initialise ResponseBody with closure writing body contents
     /// - Parameters:
     ///   - contentLength: Optional length of body
     ///   - write: closure provided with `writer` type that can be used to write to response body
-    public init(contentLength: Int? = nil, _ write: @Sendable @escaping (any HBResponseBodyWriter) async throws -> Void) {
+    public init(contentLength: Int? = nil, _ write: @Sendable @escaping (any ResponseBodyWriter) async throws -> Void) {
         self.write = { try await write($0); return nil }
         self.contentLength = contentLength
     }
 
-    /// Initialise empty HBResponseBody
+    /// Initialise empty ResponseBody
     public init() {
         self.init(contentLength: 0) { _ in }
     }
 
-    /// Initialise HBResponseBody that contains a single ByteBuffer
+    /// Initialise ResponseBody that contains a single ByteBuffer
     /// - Parameter byteBuffer: ByteBuffer to write
     public init(byteBuffer: ByteBuffer) {
         self.init(contentLength: byteBuffer.readableBytes) { writer in
@@ -46,7 +46,7 @@ public struct HBResponseBody: Sendable {
         }
     }
 
-    /// Initialise HBResponseBody with an AsyncSequence of ByteBuffers
+    /// Initialise ResponseBody with an AsyncSequence of ByteBuffers
     /// - Parameter asyncSequence: ByteBuffer AsyncSequence
     public init<BufferSequence: AsyncSequence & Sendable>(asyncSequence: BufferSequence) where BufferSequence.Element == ByteBuffer {
         self.init { writer in
@@ -57,7 +57,7 @@ public struct HBResponseBody: Sendable {
         }
     }
 
-    /// Create HBResponseBody that returns trailing headers from its closure once all the
+    /// Create ResponseBody that returns trailing headers from its closure once all the
     /// body parts have been written
     /// - Parameters:
     ///   - contentLength: Optional length of body
@@ -66,16 +66,16 @@ public struct HBResponseBody: Sendable {
     ///         written
     public static func withTrailingHeaders(
         contentLength: Int? = nil,
-        _ write: @Sendable @escaping (any HBResponseBodyWriter) async throws -> HTTPFields?
+        _ write: @Sendable @escaping (any ResponseBodyWriter) async throws -> HTTPFields?
     ) -> Self {
         self.init(contentLength: contentLength, write: write)
     }
 
-    /// Initialise HBResponseBody with closure writing body contents
+    /// Initialise ResponseBody with closure writing body contents
     ///
     /// This version of init is private and only available via ``withTrailingHeaders`` because
     /// if it is public the compiler gets confused when a complex closure is provided.
-    private init(contentLength: Int? = nil, write: @Sendable @escaping (any HBResponseBodyWriter) async throws -> HTTPFields?) {
+    private init(contentLength: Int? = nil, write: @Sendable @escaping (any ResponseBodyWriter) async throws -> HTTPFields?) {
         self.write = { return try await write($0) }
         self.contentLength = contentLength
     }

@@ -18,13 +18,13 @@ import NIOCore
 import NIOPosix
 
 // get environment
-let hostname = HBEnvironment.shared.get("SERVER_HOSTNAME") ?? "127.0.0.1"
-let port = HBEnvironment.shared.get("SERVER_PORT", as: Int.self) ?? 8080
+let hostname = Environment.shared.get("SERVER_HOSTNAME") ?? "127.0.0.1"
+let port = Environment.shared.get("SERVER_PORT", as: Int.self) ?? 8080
 
 // create app
 let elg = MultiThreadedEventLoopGroup(numberOfThreads: 4)
 defer { try? elg.syncShutdownGracefully() }
-var router = HBRouter()
+var router = Router()
 // number of raw requests
 // ./wrk -c 128 -d 15s -t 8 http://localhost:8080
 router.get { _, _ in
@@ -34,7 +34,7 @@ router.get { _, _ in
 // request with a body
 // ./wrk -c 128 -d 15s -t 8 -s scripts/post.lua http://localhost:8080
 router.post { request, _ in
-    return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
+    return Response(status: .ok, body: .init(asyncSequence: request.body))
 }
 
 // return JSON
@@ -50,7 +50,7 @@ router.get("wait") { _, _ in
     return "I waited"
 }
 
-var app = HBApplication(
+var app = Application(
     responder: router.buildResponder(),
     configuration: .init(
         address: .hostname(hostname, port: port),

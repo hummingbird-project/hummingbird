@@ -14,19 +14,19 @@
 
 /// Directs requests to handlers based on the request uri and method.
 ///
-/// Conforms to `HBResponder` so need to provide its own implementation of
-/// `func respond(to request: HBRequest, context: Context) async throws -> HBResponse`.
+/// Conforms to `Responder` so need to provide its own implementation of
+/// `func respond(to request: Request, context: Context) async throws -> Response`.
 ///
-public struct HBRouterResponder<Context: HBBaseRequestContext>: HBResponder {
-    let trie: RouterPathTrie<HBEndpointResponders<Context>>
-    let notFoundResponder: any HBResponder<Context>
-    let options: HBRouterOptions
+public struct RouterResponder<Context: BaseRequestContext>: HTTPResponder {
+    let trie: RouterPathTrie<EndpointResponders<Context>>
+    let notFoundResponder: any HTTPResponder<Context>
+    let options: RouterOptions
 
     init(
         context: Context.Type,
-        trie: RouterPathTrie<HBEndpointResponders<Context>>,
-        options: HBRouterOptions,
-        notFoundResponder: any HBResponder<Context>
+        trie: RouterPathTrie<EndpointResponders<Context>>,
+        options: RouterOptions,
+        notFoundResponder: any HTTPResponder<Context>
     ) {
         self.trie = trie
         self.options = options
@@ -36,7 +36,7 @@ public struct HBRouterResponder<Context: HBBaseRequestContext>: HBResponder {
     /// Respond to request by calling correct handler
     /// - Parameter request: HTTP request
     /// - Returns: EventLoopFuture that will be fulfilled with the Response
-    public func respond(to request: HBRequest, context: Context) async throws -> HBResponse {
+    public func respond(to request: Request, context: Context) async throws -> Response {
         let path: String
         if self.options.contains(.caseInsensitive) {
             path = request.uri.path.lowercased()

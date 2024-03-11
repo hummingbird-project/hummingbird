@@ -18,7 +18,7 @@ import Logging
 import XCTest
 
 class HummingbirdJSONTests: XCTestCase {
-    struct User: HBResponseCodable {
+    struct User: ResponseCodable {
         let name: String
         let email: String
         let age: Int
@@ -27,15 +27,15 @@ class HummingbirdJSONTests: XCTestCase {
     struct Error: Swift.Error {}
 
     func testDecode() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.put("/user") { request, context -> HTTPResponse.Status in
-            guard let user = try? await request.decode(as: User.self, context: context) else { throw HBHTTPError(.badRequest) }
+            guard let user = try? await request.decode(as: User.self, context: context) else { throw HTTPError(.badRequest) }
             XCTAssertEqual(user.name, "John Smith")
             XCTAssertEqual(user.email, "john.smith@email.com")
             XCTAssertEqual(user.age, 25)
             return .ok
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             let body = #"{"name": "John Smith", "email": "john.smith@email.com", "age": 25}"#
             try await client.execute(uri: "/user", method: .put, body: ByteBufferAllocator().buffer(string: body)) {
@@ -45,11 +45,11 @@ class HummingbirdJSONTests: XCTestCase {
     }
 
     func testEncode() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.get("/user") { _, _ -> User in
             return User(name: "John Smith", email: "john.smith@email.com", age: 25)
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/user", method: .get) { response in
                 let user = try JSONDecoder().decode(User.self, from: response.body)
@@ -61,11 +61,11 @@ class HummingbirdJSONTests: XCTestCase {
     }
 
     func testEncode2() async throws {
-        let router = HBRouter()
+        let router = Router()
         router.get("/json") { _, _ in
             return ["message": "Hello, world!"]
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/json", method: .get) { response in
                 XCTAssertEqual(String(buffer: response.body), #"{"message":"Hello, world!"}"#)

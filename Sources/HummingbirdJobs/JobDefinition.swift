@@ -13,18 +13,18 @@
 //===----------------------------------------------------------------------===//
 
 /// Job definition type
-public struct HBJobDefinition<Parameters: Codable & Sendable>: Sendable {
-    public let id: HBJobIdentifier<Parameters>
+public struct JobDefinition<Parameters: Codable & Sendable>: Sendable {
+    public let id: JobIdentifier<Parameters>
     let maxRetryCount: Int
-    let _execute: @Sendable (Parameters, HBJobContext) async throws -> Void
+    let _execute: @Sendable (Parameters, JobContext) async throws -> Void
 
-    public init(id: HBJobIdentifier<Parameters>, maxRetryCount: Int = 0, execute: @escaping @Sendable (Parameters, HBJobContext) async throws -> Void) {
+    public init(id: JobIdentifier<Parameters>, maxRetryCount: Int = 0, execute: @escaping @Sendable (Parameters, JobContext) async throws -> Void) {
         self.id = id
         self.maxRetryCount = maxRetryCount
         self._execute = execute
     }
 
-    func execute(_ parameters: Parameters, context: HBJobContext) async throws {
+    func execute(_ parameters: Parameters, context: JobContext) async throws {
         try await self._execute(parameters, context)
     }
 }

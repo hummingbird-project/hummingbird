@@ -15,12 +15,12 @@
 import HummingbirdCore
 import NIOSSL
 
-extension HBHTTPChannelBuilder {
+extension HTTPChannelBuilder {
     ///  Build child channel supporting HTTP with TLS
     ///
-    /// Use in ``Hummingbird/HBApplication`` initialization.
+    /// Use in ``Hummingbird/Application`` initialization.
     /// ```
-    /// let app = HBApplication(
+    /// let app = Application(
     ///     router: router,
     ///     server: .tls(.http1(), tlsConfiguration: tlsConfiguration)
     /// )
@@ -29,10 +29,10 @@ extension HBHTTPChannelBuilder {
     ///   - base: Base child channel to wrap with TLS
     ///   - tlsConfiguration: TLS configuration
     /// - Returns: HTTPChannelHandler builder
-    public static func tls<BaseChannel: HBChildChannel>(
-        _ base: HBHTTPChannelBuilder<BaseChannel> = .http1(),
+    public static func tls<BaseChannel: ServerChildChannel>(
+        _ base: HTTPChannelBuilder<BaseChannel> = .http1(),
         tlsConfiguration: TLSConfiguration
-    ) throws -> HBHTTPChannelBuilder<TLSChannel<BaseChannel>> {
+    ) throws -> HTTPChannelBuilder<TLSChannel<BaseChannel>> {
         return .init { responder in
             return try TLSChannel(base.build(responder), tlsConfiguration: tlsConfiguration)
         }

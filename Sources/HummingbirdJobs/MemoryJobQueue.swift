@@ -17,16 +17,16 @@ import Foundation
 import NIOCore
 
 /// In memory implementation of job queue driver. Stores job data in a circular buffer
-public final class HBMemoryQueue: HBJobQueueDriver {
-    public typealias Element = HBQueuedJob<JobID>
+public final class MemoryQueue: JobQueueDriver {
+    public typealias Element = QueuedJob<JobID>
     public typealias JobID = UUID
 
     /// queue of jobs
     fileprivate let queue: Internal
-    private let onFailedJob: @Sendable (HBQueuedJob<JobID>, any Error) -> Void
+    private let onFailedJob: @Sendable (QueuedJob<JobID>, any Error) -> Void
 
     /// Initialise In memory job queue
-    public init(onFailedJob: @escaping @Sendable (HBQueuedJob<JobID>, any Error) -> Void = { _, _ in }) {
+    public init(onFailedJob: @escaping @Sendable (QueuedJob<JobID>, any Error) -> Void = { _, _ in }) {
         self.queue = .init()
         self.onFailedJob = onFailedJob
     }
@@ -62,7 +62,7 @@ public final class HBMemoryQueue: HBJobQueueDriver {
 
     /// Internal actor managing the job queue
     fileprivate actor Internal {
-        var queue: Deque<HBQueuedJob<JobID>>
+        var queue: Deque<QueuedJob<JobID>>
         var pendingJobs: [JobID: ByteBuffer]
         var isStopped: Bool
 
@@ -74,7 +74,7 @@ public final class HBMemoryQueue: HBJobQueueDriver {
 
         func push(_ jobBuffer: ByteBuffer) throws -> JobID {
             let id = JobID()
-            self.queue.append(HBQueuedJob(id: id, jobBuffer: jobBuffer))
+            self.queue.append(QueuedJob(id: id, jobBuffer: jobBuffer))
             return id
         }
 
@@ -88,7 +88,7 @@ public final class HBMemoryQueue: HBJobQueueDriver {
             return instance
         }
 
-        func next() async throws -> HBQueuedJob<JobID>? {
+        func next() async throws -> QueuedJob<JobID>? {
             while true {
                 if self.isStopped {
                     return nil
@@ -112,7 +112,7 @@ public final class HBMemoryQueue: HBJobQueueDriver {
     }
 }
 
-extension HBMemoryQueue {
+extension MemoryQueue {
     public struct AsyncIterator: AsyncIteratorProtocol {
         fileprivate let queue: Internal
 
@@ -126,11 +126,11 @@ extension HBMemoryQueue {
     }
 }
 
-extension HBJobQueueDriver where Self == HBMemoryQueue {
+extension JobQueueDriver where Self == MemoryQueue {
     /// Return In memory driver for Job Queue
     /// - Parameters:
     ///   - onFailedJob: Closure called when a job fails
-    public static var memory: HBMemoryQueue {
+    public static var memory: MemoryQueue {
         .init()
     }
 }

@@ -52,7 +52,7 @@ final class ClientTests: XCTestCase {
     }
 
     func testClient(
-        server: HBHTTPChannelBuilder<some HBChildChannel>,
+        server: HTTPChannelBuilder<some ServerChildChannel>,
         clientTLSConfiguration: ClientTLSConfiguration = .none,
         eventLoopGroup: EventLoopGroup
     ) async throws {
@@ -63,7 +63,7 @@ final class ClientTests: XCTestCase {
         }()
         try await testServer(
             responder: { request, _ in
-                return HBResponse(status: .ok, body: .init(asyncSequence: request.body.delayed()))
+                return Response(status: .ok, body: .init(asyncSequence: request.body.delayed()))
             },
             httpChannelSetup: server,
             configuration: .init(address: .hostname("127.0.0.1", port: 0)),
@@ -87,7 +87,7 @@ final class ClientTests: XCTestCase {
             }
             switch clientTLSConfiguration {
             case .niossl(let tlsConfiguration):
-                let client = try HBClient(
+                let client = try ClientConnection(
                     TLSClientChannel(clientChannel, tlsConfiguration: tlsConfiguration, serverHostname: testServerName),
                     address: .hostname("127.0.0.1", port: port),
                     eventLoopGroup: eventLoopGroup,
@@ -97,7 +97,7 @@ final class ClientTests: XCTestCase {
 
             #if canImport(Network)
             case .ts(let options):
-                let client = try HBClient(
+                let client = try ClientConnection(
                     clientChannel,
                     address: .hostname("127.0.0.1", port: port),
                     transportServicesTLSOptions: options,
@@ -107,7 +107,7 @@ final class ClientTests: XCTestCase {
                 try await client.run()
             #endif
             case .none:
-                let client = HBClient(
+                let client = ClientConnection(
                     clientChannel,
                     address: .hostname("127.0.0.1", port: port),
                     eventLoopGroup: eventLoopGroup,
@@ -168,7 +168,7 @@ final class ClientTests: XCTestCase {
     #endif
 }
 
-struct HTTP1ClientChannel: HBClientChannel {
+struct HTTP1ClientChannel: ClientConnectionChannel {
     let handler: @Sendable (NIOAsyncChannelInboundStream<HTTPResponsePart>, NIOAsyncChannelOutboundWriter<HTTPRequestPart>) async throws -> Void
 
     /// Setup child channel for HTTP1
@@ -201,7 +201,7 @@ struct HTTP1ClientChannel: HBClientChannel {
 struct InvalidHTTPPart: Error {}
 
 extension NIOAsyncChannelInboundStream<HTTPResponsePart>.AsyncIterator {
-    mutating func readResponse() async throws -> HBTestClient.Response {
+    mutating func readResponse() async throws -> TestClient.Response {
         let headPart = try await self.next()
         guard case .head(let head) = headPart else { throw InvalidHTTPPart() }
         var body = ByteBuffer()
@@ -220,7 +220,7 @@ extension NIOAsyncChannelInboundStream<HTTPResponsePart>.AsyncIterator {
 }
 
 extension NIOAsyncChannelOutboundWriter<HTTPRequestPart> {
-    func writeRequest(_ request: HBTestClient.Request) async throws {
+    func writeRequest(_ request: TestClient.Request) async throws {
         try await self.write(.head(request.head))
         if let body = request.body, body.readableBytes > 0 {
             try await self.write(.body(body))

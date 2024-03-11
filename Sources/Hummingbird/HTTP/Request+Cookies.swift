@@ -14,9 +14,9 @@
 
 import HummingbirdCore
 
-extension HBRequest {
-    /// access cookies from request. When accessing this for the first time the HBCookies struct will be created
-    public var cookies: HBCookies {
-        HBCookies(from: self)
+extension Request {
+    /// access cookies from request. When accessing this for the first time the Cookies struct will be created
+    public var cookies: Cookies {
+        Cookies(from: self)
     }
 }

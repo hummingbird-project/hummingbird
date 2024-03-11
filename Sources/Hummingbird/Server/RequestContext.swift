@@ -34,7 +34,7 @@ public struct EndpointPath: Sendable {
 }
 
 /// Request context values required by Hummingbird itself.
-public struct HBCoreRequestContext: Sendable {
+public struct CoreRequestContext: Sendable {
     /// ByteBuffer allocator used by request
     @usableFromInline
     let allocator: ByteBufferAllocator
@@ -44,7 +44,7 @@ public struct HBCoreRequestContext: Sendable {
     /// Endpoint path
     public var endpointPath: EndpointPath
     /// Parameters extracted from URI
-    public var parameters: HBParameters
+    public var parameters: Parameters
 
     @inlinable
     public init(
@@ -60,12 +60,12 @@ public struct HBCoreRequestContext: Sendable {
 
 /// Protocol that all request contexts should conform to. Holds data associated with
 /// a request. Provides context for request processing
-public protocol HBBaseRequestContext: Sendable {
-    associatedtype Decoder: HBRequestDecoder = JSONDecoder
-    associatedtype Encoder: HBResponseEncoder = JSONEncoder
+public protocol BaseRequestContext: Sendable {
+    associatedtype Decoder: RequestDecoder = JSONDecoder
+    associatedtype Encoder: ResponseEncoder = JSONEncoder
 
     /// Core context
-    var coreContext: HBCoreRequestContext { get set }
+    var coreContext: CoreRequestContext { get set }
     /// Maximum upload size allowed for routes that don't stream the request payload. This
     /// limits how much memory would be used for one request
     var maxUploadSize: Int { get }
@@ -75,7 +75,7 @@ public protocol HBBaseRequestContext: Sendable {
     var responseEncoder: Encoder { get }
 }
 
-extension HBBaseRequestContext {
+extension BaseRequestContext {
     @inlinable
     public var allocator: ByteBufferAllocator { coreContext.allocator }
     /// Logger to use with Request
@@ -93,13 +93,13 @@ extension HBBaseRequestContext {
     public var endpointPath: String? { coreContext.endpointPath.value }
     /// Parameters extracted from URI
     @inlinable
-    public var parameters: HBParameters { coreContext.parameters }
+    public var parameters: Parameters { coreContext.parameters }
     /// Request ID, extracted from Logger
     @inlinable
-    public var id: String { self.logger[metadataKey: "hb_id"]!.description }
+    public var id: String { self.logger[metadataKey: "_id"]!.description }
 }
 
-extension HBBaseRequestContext where Decoder == JSONDecoder {
+extension BaseRequestContext where Decoder == JSONDecoder {
     public var requestDecoder: Decoder {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
@@ -107,7 +107,7 @@ extension HBBaseRequestContext where Decoder == JSONDecoder {
     }
 }
 
-extension HBBaseRequestContext where Encoder == JSONEncoder {
+extension BaseRequestContext where Encoder == JSONEncoder {
     public var responseEncoder: Encoder {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
@@ -116,8 +116,8 @@ extension HBBaseRequestContext where Encoder == JSONEncoder {
 }
 
 /// Protocol for a request context that can be created from a NIO Channel
-public protocol HBRequestContext: HBBaseRequestContext {
-    /// initialize an `HBRequestContext`
+public protocol RequestContext: BaseRequestContext {
+    /// initialize an `RequestContext`
     /// - Parameters:
     ///   - channel: Channel that initiated this request
     ///   - logger: Logger used for this request
@@ -125,11 +125,11 @@ public protocol HBRequestContext: HBBaseRequestContext {
 }
 
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
-public struct HBBasicRequestContext: HBRequestContext {
+public struct BasicRequestContext: RequestContext {
     /// core context
-    public var coreContext: HBCoreRequestContext
+    public var coreContext: CoreRequestContext
 
-    ///  Initialize an `HBRequestContext`
+    ///  Initialize an `RequestContext`
     /// - Parameters:
     ///   - allocator: Allocator
     ///   - logger: Logger

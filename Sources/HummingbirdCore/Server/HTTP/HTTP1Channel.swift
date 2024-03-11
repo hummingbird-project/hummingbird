@@ -19,7 +19,7 @@ import NIOHTTPTypes
 import NIOHTTPTypesHTTP1
 
 /// Child channel for processing HTTP1
-public struct HTTP1Channel: HBChildChannel, HTTPChannelHandler {
+public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
     public typealias Value = NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>
 
     ///  Initialize HTTP1Channel
@@ -27,7 +27,7 @@ public struct HTTP1Channel: HBChildChannel, HTTPChannelHandler {
     ///   - responder: Function returning a HTTP response for a HTTP request
     ///   - additionalChannelHandlers: Additional channel handlers to add to channel pipeline
     public init(
-        responder: @escaping @Sendable (HBRequest, Channel) async throws -> HBResponse,
+        responder: @escaping @Sendable (Request, Channel) async throws -> Response,
         additionalChannelHandlers: @escaping @Sendable () -> [any RemovableChannelHandler] = { [] }
     ) {
         self.additionalChannelHandlers = additionalChannelHandlers
@@ -43,7 +43,7 @@ public struct HTTP1Channel: HBChildChannel, HTTPChannelHandler {
         let childChannelHandlers: [any ChannelHandler] =
             [HTTP1ToHTTPServerCodec(secure: false)] +
             self.additionalChannelHandlers() +
-            [HBHTTPUserEventHandler(logger: logger)]
+            [HTTPUserEventHandler(logger: logger)]
         return channel.eventLoop.makeCompletedFuture {
             try channel.pipeline.syncOperations.configureHTTPServerPipeline(
                 withPipeliningAssistance: false,
@@ -65,6 +65,6 @@ public struct HTTP1Channel: HBChildChannel, HTTPChannelHandler {
         await handleHTTP(asyncChannel: asyncChannel, logger: logger)
     }
 
-    public let responder: @Sendable (HBRequest, Channel) async throws -> HBResponse
+    public let responder: @Sendable (Request, Channel) async throws -> Response
     let additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
 }

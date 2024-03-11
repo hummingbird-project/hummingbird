@@ -19,38 +19,38 @@ import XCTest
 final class EnvironmentTests: XCTestCase {
     func testInitFromEnvironment() {
         XCTAssertEqual(setenv("TEST_VAR", "testSetFromEnvironment", 1), 0)
-        let env = HBEnvironment()
+        let env = Environment()
         XCTAssertEqual(env.get("TEST_VAR"), "testSetFromEnvironment")
     }
 
     func testInitFromDictionary() {
-        let env = HBEnvironment(values: ["TEST_VAR": "testSetFromDictionary"])
+        let env = Environment(values: ["TEST_VAR": "testSetFromDictionary"])
         XCTAssertEqual(env.get("TEST_VAR"), "testSetFromDictionary")
     }
 
     func testInitFromCodable() {
         let json = #"{"TEST_VAR": "testSetFromCodable"}"#
-        var env: HBEnvironment?
-        XCTAssertNoThrow(env = try JSONDecoder().decode(HBEnvironment.self, from: Data(json.utf8)))
+        var env: Environment?
+        XCTAssertNoThrow(env = try JSONDecoder().decode(Environment.self, from: Data(json.utf8)))
         XCTAssertEqual(env?.get("TEST_VAR"), "testSetFromCodable")
     }
 
     func testSet() {
-        var env = HBEnvironment()
+        var env = Environment()
         env.set("TEST_VAR", value: "testSet")
         XCTAssertEqual(env.get("TEST_VAR"), "testSet")
     }
 
     func testLogLevel() {
         setenv("LOG_LEVEL", "trace", 1)
-        let router = HBRouter()
-        let app = HBApplication(responder: router.buildResponder())
+        let router = Router()
+        let app = Application(responder: router.buildResponder())
         XCTAssertEqual(app.logger.logLevel, .trace)
     }
 
     func testCaseInsensitive() {
         XCTAssertEqual(setenv("test_VAR", "testSetFromEnvironment", 1), 0)
-        let env = HBEnvironment()
+        let env = Environment()
         XCTAssertEqual(env.get("TEST_VAR"), "testSetFromEnvironment")
         XCTAssertEqual(env.get("test_var"), "testSetFromEnvironment")
     }
@@ -67,7 +67,7 @@ final class EnvironmentTests: XCTestCase {
             try? FileManager.default.removeItem(at: envURL)
         }
 
-        let result = try await HBEnvironment.dotEnv()
+        let result = try await Environment.dotEnv()
         XCTAssertEqual(result.get("test"), "this")
         XCTAssertEqual(result.get("credentials"), "sdkfjh")
     }
@@ -77,9 +77,9 @@ final class EnvironmentTests: XCTestCase {
         TEST #thse
         """
         do {
-            _ = try HBEnvironment.parseDotEnv(dotenv)
+            _ = try Environment.parseDotEnv(dotenv)
             XCTFail("Should fail")
-        } catch let error as HBEnvironment.Error where error == .dotEnvParseError {}
+        } catch let error as Environment.Error where error == .dotEnvParseError {}
     }
 
     func testDotEnvSpeechMarks() throws {
@@ -87,7 +87,7 @@ final class EnvironmentTests: XCTestCase {
         TEST="test this"
         CREDENTIALS=sdkfjh
         """
-        let result = try HBEnvironment.parseDotEnv(dotenv)
+        let result = try Environment.parseDotEnv(dotenv)
         XCTAssertEqual(result["test"], "test this")
         XCTAssertEqual(result["credentials"], "sdkfjh")
     }
@@ -98,7 +98,7 @@ final class EnvironmentTests: XCTestCase {
         this"
         CREDENTIALS=sdkfjh
         """
-        let result = try HBEnvironment.parseDotEnv(dotenv)
+        let result = try Environment.parseDotEnv(dotenv)
         XCTAssertEqual(result["test"], "test\nthis")
         XCTAssertEqual(result["credentials"], "sdkfjh")
     }
@@ -110,7 +110,7 @@ final class EnvironmentTests: XCTestCase {
         CREDENTIALS=sdkfjh
         # Comment at end
         """
-        let result = try HBEnvironment.parseDotEnv(dotenv)
+        let result = try Environment.parseDotEnv(dotenv)
         XCTAssertEqual(result["test"], "this")
         XCTAssertEqual(result["credentials"], "sdkfjh")
     }
@@ -122,7 +122,7 @@ final class EnvironmentTests: XCTestCase {
 
 
         """
-        let result = try HBEnvironment.parseDotEnv(dotenv)
+        let result = try Environment.parseDotEnv(dotenv)
         XCTAssertEqual(result["foo"], "BAR")
         XCTAssertEqual(result.count, 1)
     }
@@ -132,7 +132,7 @@ final class EnvironmentTests: XCTestCase {
         FOO=BAR
 
         """
-        let result = try HBEnvironment.parseDotEnv(dotenv)
+        let result = try Environment.parseDotEnv(dotenv)
         XCTAssertEqual(result["foo"], "BAR")
         XCTAssertEqual(result.count, 1)
     }
@@ -149,7 +149,7 @@ final class EnvironmentTests: XCTestCase {
         }
         XCTAssertEqual(setenv("TEST_VAR", "testSetFromEnvironment", 1), 0)
         XCTAssertEqual(setenv("TEST_VAR2", "testSetFromEnvironment2", 1), 0)
-        let env = try await HBEnvironment().merging(with: .dotEnv(".override.env"))
+        let env = try await Environment().merging(with: .dotEnv(".override.env"))
         XCTAssertEqual(env.get("TEST_VAR"), "testDotEnvOverridingEnvironment")
         XCTAssertEqual(env.get("TEST_VAR2"), "testSetFromEnvironment2")
     }

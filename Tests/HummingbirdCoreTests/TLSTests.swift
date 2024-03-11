@@ -31,7 +31,7 @@ class HummingBirdTLSTests: XCTestCase {
             httpChannelSetup: .tls(tlsConfiguration: getServerTLSConfiguration()),
             configuration: .init(address: .hostname(port: 0), serverName: testServerName),
             eventLoopGroup: eventLoopGroup,
-            logger: Logger(label: "HB"),
+            logger: Logger(label: "Hummingbird"),
             clientConfiguration: .init(tlsConfiguration: getClientTLSConfiguration(), serverName: testServerName)
         ) { client in
             let response = try await client.get("/")

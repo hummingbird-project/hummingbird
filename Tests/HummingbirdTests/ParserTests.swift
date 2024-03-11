@@ -17,13 +17,13 @@ import XCTest
 
 final class ParserTests: XCTestCase {
     func testCharacter() {
-        var parser = HBParser("TestString")
+        var parser = Parser("TestString")
         XCTAssertEqual(try parser.character(), "T")
         XCTAssertEqual(try parser.character(), "e")
     }
 
     func testSubstring() {
-        var parser = HBParser("TestString")
+        var parser = Parser("TestString")
         XCTAssertThrowsError(try parser.read(count: 23))
         XCTAssertEqual(try parser.read(count: 3).string, "Tes")
         XCTAssertEqual(try parser.read(count: 5).string, "tStri")
@@ -32,7 +32,7 @@ final class ParserTests: XCTestCase {
     }
 
     func testReadCharacter() {
-        var parser = HBParser("TestString")
+        var parser = Parser("TestString")
         XCTAssertNoThrow(try parser.read("T"))
         XCTAssertNoThrow(try parser.read("e"))
         XCTAssertEqual(try parser.read("e"), false)
@@ -40,40 +40,40 @@ final class ParserTests: XCTestCase {
     }
 
     func testReadUntilCharacter() throws {
-        var parser = HBParser("TestString")
+        var parser = Parser("TestString")
         XCTAssertEqual(try parser.read(until: "S").string, "Test")
         XCTAssertEqual(try parser.read(until: "n").string, "Stri")
         XCTAssertThrowsError(try parser.read(until: "!"))
     }
 
     func testReadUntilCharacterSet() throws {
-        var parser = HBParser("TestString")
+        var parser = Parser("TestString")
         XCTAssertEqual(try parser.read(until: Set("Sr")).string, "Test")
         XCTAssertEqual(try parser.read(until: Set("abcdefg")).string, "Strin")
     }
 
     func testReadUntilString() throws {
-        var parser = HBParser("<!-- check for -comment end -->")
+        var parser = Parser("<!-- check for -comment end -->")
         XCTAssertEqual(try parser.read(untilString: "-->").string, "<!-- check for -comment end ")
         XCTAssertTrue(try parser.read("-->"))
     }
 
     func testReadWhileCharacter() throws {
-        var parser = HBParser("122333")
+        var parser = Parser("122333")
         XCTAssertEqual(parser.read(while: "1"), 1)
         XCTAssertEqual(parser.read(while: "2"), 2)
         XCTAssertEqual(parser.read(while: "3"), 3)
     }
 
     func testReadWhileCharacterSet() throws {
-        var parser = HBParser("aabbcdd836de")
+        var parser = Parser("aabbcdd836de")
         XCTAssertEqual(parser.read(while: Set("abcdef")).string, "aabbcdd")
         XCTAssertEqual(parser.read(while: Set("123456789")).string, "836")
         XCTAssertEqual(parser.read(while: Set("abcdef")).string, "de")
     }
 
     func testRetreat() throws {
-        var parser = HBParser("abcdef")
+        var parser = Parser("abcdef")
         XCTAssertThrowsError(try parser.retreat())
         _ = try parser.read(count: 4)
         try parser.retreat(by: 3)
@@ -81,7 +81,7 @@ final class ParserTests: XCTestCase {
     }
 
     func testCopy() throws {
-        var parser = HBParser("abcdef")
+        var parser = Parser("abcdef")
         XCTAssertEqual(try parser.read(count: 3).string, "abc")
         var reader2 = parser
         XCTAssertEqual(try parser.read(count: 3).string, "def")
@@ -89,7 +89,7 @@ final class ParserTests: XCTestCase {
     }
 
     func testSplit() throws {
-        var parser = HBParser("abc,defgh,ijk")
+        var parser = Parser("abc,defgh,ijk")
         let split = parser.split(separator: ",")
         XCTAssertEqual(split.count, 3)
         XCTAssertEqual(split[0].string, "abc")
@@ -100,7 +100,7 @@ final class ParserTests: XCTestCase {
     func testPercentDecode() throws {
         let string = "abc,é☺😀併"
         let encoded = string.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!
-        var parser = HBParser(encoded)
+        var parser = Parser(encoded)
         try! parser.read(until: ",")
         let decoded = try XCTUnwrap(parser.percentDecode())
 
@@ -109,13 +109,13 @@ final class ParserTests: XCTestCase {
 
     func testValidate() {
         let string = "abc,é☺😀併"
-        XCTAssertNotNil(HBParser([UInt8](string.utf8), validateUTF8: true))
+        XCTAssertNotNil(Parser([UInt8](string.utf8), validateUTF8: true))
     }
 
     func testSequence() {
         let string = "abc,é☺😀併 lorem"
         var string2 = ""
-        let parser = HBParser(string)
+        let parser = Parser(string)
         for c in parser {
             string2 += String(c)
         }

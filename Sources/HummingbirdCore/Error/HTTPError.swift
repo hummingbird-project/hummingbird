@@ -16,7 +16,7 @@ import HTTPTypes
 import NIOCore
 
 /// Default HTTP error. Provides an HTTP status and a message is so desired
-public struct HBHTTPError: Error, HBHTTPResponseError, Sendable {
+public struct HTTPError: Error, HTTPResponseError, Sendable {
     /// status code for the error
     public var status: HTTPResponse.Status
     /// any addiitional headers required
@@ -49,7 +49,7 @@ public struct HBHTTPError: Error, HBHTTPResponseError, Sendable {
     }
 }
 
-extension HBHTTPError: CustomStringConvertible {
+extension HTTPError: CustomStringConvertible {
     /// Description of error for logging
     public var description: String {
         let status = self.status.reasonPhrase

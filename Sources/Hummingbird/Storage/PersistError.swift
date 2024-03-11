@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Errors return by persist framework
-public struct HBPersistError: Error, Equatable {
+public struct PersistError: Error, Equatable {
     private enum Internal {
         case duplicate
     }

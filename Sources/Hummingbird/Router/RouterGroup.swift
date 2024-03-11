@@ -19,7 +19,7 @@ import NIOCore
 /// Used to group together routes under a single path. Additional middleware can be added to the endpoint and each route can add a
 /// suffix to the endpoint path
 ///
-/// The code below creates an `HBRouterGroup`with path "todos" and adds GET and PUT routes on "todos" and adds GET, PUT and
+/// The code below creates an `RouterGroup`with path "todos" and adds GET and PUT routes on "todos" and adds GET, PUT and
 /// DELETE routes on "todos/:id" where id is the identifier for the todo
 /// ```
 /// app.router
@@ -30,27 +30,27 @@ import NIOCore
 /// .put(":id", use: todoController.update)
 /// .delete(":id", use: todoController.delete)
 /// ```
-public struct HBRouterGroup<Context: HBBaseRequestContext>: HBRouterMethods {
+public struct RouterGroup<Context: BaseRequestContext>: RouterMethods {
     let path: String
-    let router: HBRouter<Context>
-    let middlewares: HBMiddlewareGroup<Context>
+    let router: Router<Context>
+    let middlewares: MiddlewareGroup<Context>
 
-    init(path: String = "", middlewares: HBMiddlewareGroup<Context> = .init(), router: HBRouter<Context>) {
+    init(path: String = "", middlewares: MiddlewareGroup<Context> = .init(), router: Router<Context>) {
         self.path = path
         self.router = router
         self.middlewares = middlewares
     }
 
     /// Add middleware to RouterEndpoint
-    @discardableResult public func add(middleware: any HBMiddlewareProtocol<Context>) -> HBRouterGroup<Context> {
+    @discardableResult public func add(middleware: any RouterMiddleware<Context>) -> RouterGroup<Context> {
         self.middlewares.add(middleware)
         return self
     }
 
     /// Return a group inside the current group
     /// - Parameter path: path prefix to add to routes inside this group
-    @discardableResult public func group(_ path: String = "") -> HBRouterGroup<Context> {
-        return HBRouterGroup(
+    @discardableResult public func group(_ path: String = "") -> RouterGroup<Context> {
+        return RouterGroup(
             path: self.combinePaths(self.path, path),
             middlewares: .init(middlewares: self.middlewares.middlewares),
             router: self.router
@@ -61,7 +61,7 @@ public struct HBRouterGroup<Context: HBBaseRequestContext>: HBRouterMethods {
     @discardableResult public func on(
         _ path: String = "",
         method: HTTPRequest.Method,
-        use closure: @Sendable @escaping (HBRequest, Context) async throws -> some HBResponseGenerator
+        use closure: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
         let responder = constructResponder(use: closure)
         var path = self.combinePaths(self.path, path)

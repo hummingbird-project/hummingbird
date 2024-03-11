@@ -20,8 +20,8 @@ import NIOHTTPTypes
 import ServiceLifecycle
 
 /// Protocol for HTTP channels
-public protocol HTTPChannelHandler: HBChildChannel {
-    typealias Responder = @Sendable (HBRequest, Channel) async throws -> HBResponse
+public protocol HTTPChannelHandler: ServerChildChannel {
+    typealias Responder = @Sendable (Request, Channel) async throws -> Response
     var responder: Responder { get }
 }
 
@@ -46,7 +46,7 @@ extension HTTPChannelHandler {
             try await withTaskCancellationHandler {
                 try await withGracefulShutdownHandler {
                     try await asyncChannel.executeThenClose { inbound, outbound in
-                        let responseWriter = HBHTTPServerBodyWriter(outbound: outbound)
+                        let responseWriter = HTTPServerBodyWriter(outbound: outbound)
                         var iterator = inbound.makeAsyncIterator()
 
                         // read first part, verify it is a head
@@ -60,8 +60,8 @@ extension HTTPChannelHandler {
                             guard processingRequest.exchange(.processing) == .idle else { break }
 
                             let bodyStream = NIOAsyncChannelRequestBody(iterator: iterator)
-                            let request = HBRequest(head: head, body: .init(asyncSequence: bodyStream))
-                            let response: HBResponse
+                            let request = Request(head: head, body: .init(asyncSequence: bodyStream))
+                            let response: Response
                             do {
                                 response = try await self.responder(request, asyncChannel.channel)
                             } catch {
@@ -120,14 +120,14 @@ extension HTTPChannelHandler {
         }
     }
 
-    func getErrorResponse(from error: Error, allocator: ByteBufferAllocator) -> HBResponse {
+    func getErrorResponse(from error: Error, allocator: ByteBufferAllocator) -> Response {
         switch error {
-        case let httpError as HBHTTPResponseError:
+        case let httpError as HTTPResponseError:
             // this is a processed error so don't log as Error
             return httpError.response(allocator: allocator)
         default:
             // this error has not been recognised
-            return HBResponse(
+            return Response(
                 status: .internalServerError,
                 body: .init()
             )
@@ -136,7 +136,7 @@ extension HTTPChannelHandler {
 }
 
 /// Writes ByteBuffers to AsyncChannel outbound writer
-struct HBHTTPServerBodyWriter: Sendable, HBResponseBodyWriter {
+struct HTTPServerBodyWriter: Sendable, ResponseBodyWriter {
     typealias Out = HTTPResponsePart
     /// The components of a HTTP response from the view of a HTTP server.
     public typealias OutboundWriter = NIOAsyncChannelOutboundWriter<Out>
@@ -149,7 +149,7 @@ struct HBHTTPServerBodyWriter: Sendable, HBResponseBodyWriter {
 }
 
 // If we catch a too many bytes error report that as payload too large
-extension NIOTooManyBytesError: HBHTTPResponseError {
+extension NIOTooManyBytesError: HTTPResponseError {
     public var status: HTTPResponse.Status { .contentTooLarge }
     public var headers: HTTPFields { [:] }
     public func body(allocator: ByteBufferAllocator) -> ByteBuffer? { nil }

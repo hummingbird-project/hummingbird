@@ -41,23 +41,23 @@ public enum EventLoopGroupProvider {
     }
 }
 
-public protocol HBApplicationProtocol: Service where Context: HBRequestContext {
+public protocol ApplicationProtocol: Service where Context: RequestContext {
     /// Responder that generates a response from a requests and context
-    associatedtype Responder: HBResponder
+    associatedtype Responder: HTTPResponder
     /// Child Channel setup. This defaults to support HTTP1
-    associatedtype ChildChannel: HBChildChannel & HTTPChannelHandler = HTTP1Channel
-    /// Context passed with HBRequest to responder
+    associatedtype ChildChannel: ServerChildChannel & HTTPChannelHandler = HTTP1Channel
+    /// Context passed with Request to responder
     typealias Context = Responder.Context
 
     /// Build the responder
     var responder: Responder { get async throws }
     /// Server channel setup
-    var server: HBHTTPChannelBuilder<ChildChannel> { get }
+    var server: HTTPChannelBuilder<ChildChannel> { get }
 
     /// event loop group used by application
     var eventLoopGroup: EventLoopGroup { get }
     /// Application configuration
-    var configuration: HBApplicationConfiguration { get }
+    var configuration: ApplicationConfiguration { get }
     /// Logger
     var logger: Logger { get }
     /// This is called once the server is running and we have an active Channel
@@ -69,16 +69,16 @@ public protocol HBApplicationProtocol: Service where Context: HBRequestContext {
     var processesRunBeforeServerStart: [@Sendable () async throws -> Void] { get }
 }
 
-extension HBApplicationProtocol {
+extension ApplicationProtocol {
     /// Server channel setup
-    public var server: HBHTTPChannelBuilder<HTTP1Channel> { .http1() }
+    public var server: HTTPChannelBuilder<HTTP1Channel> { .http1() }
 }
 
-extension HBApplicationProtocol {
+extension ApplicationProtocol {
     /// Default event loop group used by application
     public var eventLoopGroup: EventLoopGroup { MultiThreadedEventLoopGroup.singleton }
     /// Default Configuration
-    public var configuration: HBApplicationConfiguration { .init() }
+    public var configuration: ApplicationConfiguration { .init() }
     /// Default Logger
     public var logger: Logger { Logger(label: self.configuration.serverName ?? "HummingBird") }
     /// Default onServerRunning that does nothing
@@ -90,17 +90,17 @@ extension HBApplicationProtocol {
 }
 
 /// Conform to `Service` from `ServiceLifecycle`.
-extension HBApplicationProtocol {
+extension ApplicationProtocol {
     /// Construct application and run it
     public func run() async throws {
-        let dateCache = HBDateCache()
+        let dateCache = DateCache()
         let responder = try await self.responder
 
         // Function responding to HTTP request
-        @Sendable func respond(to request: HBRequest, channel: Channel) async throws -> HBResponse {
+        @Sendable func respond(to request: Request, channel: Channel) async throws -> Response {
             let context = Self.Responder.Context(
                 channel: channel,
-                logger: self.logger.with(metadataKey: "hb_id", value: .stringConvertible(RequestID()))
+                logger: self.logger.with(metadataKey: "_id", value: .stringConvertible(RequestID()))
             )
             // respond to request
             var response = try await responder.respond(to: request, context: context)
@@ -114,7 +114,7 @@ extension HBApplicationProtocol {
         // get channel Setup
         let channelSetup = try self.server.build(respond)
         // create server
-        let server = HBServer(
+        let server = Server(
             childChannelSetup: channelSetup,
             configuration: self.configuration.httpServer,
             onServerRunning: self.onServerRunning,
@@ -150,16 +150,16 @@ extension HBApplicationProtocol {
 /// Application class. Brings together all the components of Hummingbird together
 ///
 /// ```
-/// let router = HBRouter()
+/// let router = Router()
 /// router.middleware.add(MyMiddleware())
 /// router.get("hello") { _ in
 ///     return "hello"
 /// }
-/// let app = HBApplication(responder: router.buildResponder())
+/// let app = Application(responder: router.buildResponder())
 /// try await app.runService()
 /// ```
 /// Editing the application setup after calling `runService` will produce undefined behaviour.
-public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel & HTTPChannelHandler>: HBApplicationProtocol where Responder.Context: HBRequestContext {
+public struct Application<Responder: HTTPResponder, ChildChannel: ServerChildChannel & HTTPChannelHandler>: ApplicationProtocol where Responder.Context: RequestContext {
     public typealias Context = Responder.Context
     public typealias ChildChannel = ChildChannel
     public typealias Responder = Responder
@@ -168,16 +168,16 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
 
     /// event loop group used by application
     public let eventLoopGroup: EventLoopGroup
-    /// routes requests to requestResponders based on URI
+    /// routes requests to responders based on URI
     public let responder: Responder
     /// Configuration
-    public var configuration: HBApplicationConfiguration
+    public var configuration: ApplicationConfiguration
     /// Logger
     public var logger: Logger
     /// on server running
     private var _onServerRunning: @Sendable (Channel) async -> Void
     /// Server channel setup
-    public let server: HBHTTPChannelBuilder<ChildChannel>
+    public let server: HTTPChannelBuilder<ChildChannel>
     /// services attached to the application.
     public var services: [any Service]
     /// Processes to be run before server is started
@@ -196,8 +196,8 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
     ///   - logger: Logger application uses
     public init(
         responder: Responder,
-        server: HBHTTPChannelBuilder<ChildChannel> = .http1(),
-        configuration: HBApplicationConfiguration = HBApplicationConfiguration(),
+        server: HTTPChannelBuilder<ChildChannel> = .http1(),
+        configuration: ApplicationConfiguration = ApplicationConfiguration(),
         onServerRunning: @escaping @Sendable (Channel) async -> Void = { _ in },
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton,
         logger: Logger? = nil
@@ -206,7 +206,7 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
             self.logger = logger
         } else {
             var logger = Logger(label: configuration.serverName ?? "Hummingbird")
-            logger.logLevel = HBEnvironment().get("LOG_LEVEL").map { Logger.Level(rawValue: $0) ?? .info } ?? .info
+            logger.logLevel = Environment().get("LOG_LEVEL").map { Logger.Level(rawValue: $0) ?? .info } ?? .info
             self.logger = logger
         }
         self.responder = responder
@@ -228,10 +228,10 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
     ///   - onServerRunning: Function called once the server is running
     ///   - eventLoopGroupProvider: Where to get our EventLoopGroup
     ///   - logger: Logger application uses
-    public init<ResponderBuilder: HBResponderBuilder>(
+    public init<ResponderBuilder: HTTPResponderBuilder>(
         router: ResponderBuilder,
-        server: HBHTTPChannelBuilder<ChildChannel> = .http1(),
-        configuration: HBApplicationConfiguration = HBApplicationConfiguration(),
+        server: HTTPChannelBuilder<ChildChannel> = .http1(),
+        configuration: ApplicationConfiguration = ApplicationConfiguration(),
         onServerRunning: @escaping @Sendable (Channel) async -> Void = { _ in },
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton,
         logger: Logger? = nil
@@ -240,7 +240,7 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
             self.logger = logger
         } else {
             var logger = Logger(label: configuration.serverName ?? "Hummingbird")
-            logger.logLevel = HBEnvironment().get("LOG_LEVEL").map { Logger.Level(rawValue: $0) ?? .info } ?? .info
+            logger.logLevel = Environment().get("LOG_LEVEL").map { Logger.Level(rawValue: $0) ?? .info } ?? .info
             self.logger = logger
         }
         self.responder = router.buildResponder()
@@ -284,8 +284,8 @@ public struct HBApplication<Responder: HBResponder, ChildChannel: HBChildChannel
     }
 }
 
-extension HBApplication: CustomStringConvertible {
-    public var description: String { "HBApplication" }
+extension Application: CustomStringConvertible {
+    public var description: String { "Application" }
 }
 
 extension Logger {

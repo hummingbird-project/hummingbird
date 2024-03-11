@@ -12,16 +12,16 @@
 //
 //===----------------------------------------------------------------------===//
 
-extension URLEncodedFormEncoder: HBResponseEncoder {
-    /// Extend URLEncodedFormEncoder to support encoding `HBResponse`'s. Sets body and header values
+extension URLEncodedFormEncoder: ResponseEncoder {
+    /// Extend URLEncodedFormEncoder to support encoding `Response`'s. Sets body and header values
     /// - Parameters:
     ///   - value: Value to encode
     ///   - request: Request used to generate response
-    public func encode(_ value: some Encodable, from request: HBRequest, context: some HBBaseRequestContext) throws -> HBResponse {
+    public func encode(_ value: some Encodable, from request: Request, context: some BaseRequestContext) throws -> Response {
         var buffer = context.allocator.buffer(capacity: 0)
         let string = try self.encode(value)
         buffer.writeString(string)
-        return HBResponse(
+        return Response(
             status: .ok,
             headers: [.contentType: "application/x-www-form-urlencoded"],
             body: .init(byteBuffer: buffer)
@@ -29,12 +29,12 @@ extension URLEncodedFormEncoder: HBResponseEncoder {
     }
 }
 
-extension URLEncodedFormDecoder: HBRequestDecoder {
-    /// Extend URLEncodedFormDecoder to decode from `HBRequest`.
+extension URLEncodedFormDecoder: RequestDecoder {
+    /// Extend URLEncodedFormDecoder to decode from `Request`.
     /// - Parameters:
     ///   - type: Type to decode
     ///   - request: Request to decode from
-    public func decode<T: Decodable>(_ type: T.Type, from request: HBRequest, context: some HBBaseRequestContext) async throws -> T {
+    public func decode<T: Decodable>(_ type: T.Type, from request: Request, context: some BaseRequestContext) async throws -> T {
         let buffer = try await request.body.collect(upTo: context.maxUploadSize)
         let string = String(buffer: buffer)
         return try self.decode(T.self, from: string)

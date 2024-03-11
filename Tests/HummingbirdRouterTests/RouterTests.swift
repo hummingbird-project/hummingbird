@@ -20,14 +20,14 @@ import NIOCore
 import XCTest
 
 final class RouterTests: XCTestCase {
-    struct TestMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
+    struct TestMiddleware<Context: BaseRequestContext>: RouterMiddleware {
         let output: String
 
         init(_ output: String = "TestMiddleware") {
             self.output = output
         }
 
-        func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+        func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
             var response = try await next(request, context)
             response.headers[.middleware] = self.output
             return response
@@ -36,21 +36,21 @@ final class RouterTests: XCTestCase {
 
     /// Test endpointPath is set
     func testEndpointPath() async throws {
-        struct TestEndpointMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
-            func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+        struct TestEndpointMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+            func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 _ = try await next(request, context)
                 guard let endpointPath = context.endpointPath else { return try await next(request, context) }
                 return .init(status: .ok, body: .init(byteBuffer: ByteBuffer(string: endpointPath)))
             }
         }
 
-        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
+        let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             TestEndpointMiddleware()
             Get("/test/{number}") { _, _ in
                 return "xxx"
             }
         }
-        let app = HBApplication(responder: router)
+        let app = Application(responder: router)
 
         try await app.test(.router) { client in
             try await client.execute(uri: "/test/1", method: .get) { response in
@@ -61,15 +61,15 @@ final class RouterTests: XCTestCase {
 
     /// Test endpointPath is prefixed with a "/"
     func testEndpointPathPrefix() async throws {
-        struct TestEndpointMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
-            func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+        struct TestEndpointMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+            func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 _ = try await next(request, context)
                 guard let endpointPath = context.endpointPath else { return try await next(request, context) }
                 return .init(status: .ok, body: .init(byteBuffer: ByteBuffer(string: endpointPath)))
             }
         }
 
-        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
+        let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             TestEndpointMiddleware()
             Get("test") { _, context in
                 return context.endpointPath
@@ -81,7 +81,7 @@ final class RouterTests: XCTestCase {
                 return context.endpointPath
             }
         }
-        let app = HBApplication(responder: router)
+        let app = Application(responder: router)
 
         try await app.test(.router) { client in
             try await client.execute(uri: "/", method: .get) { response in
@@ -98,14 +98,14 @@ final class RouterTests: XCTestCase {
 
     /// Test endpointPath doesn't have "/" at end
     func testEndpointPathSuffix() async throws {
-        struct TestEndpointMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
-            func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+        struct TestEndpointMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+            func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 guard let endpointPath = context.endpointPath else { return try await next(request, context) }
                 return .init(status: .ok, body: .init(byteBuffer: ByteBuffer(string: endpointPath)))
             }
         }
 
-        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
+        let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             TestEndpointMiddleware()
             Get("test/") { _, context in
                 return context.endpointPath
@@ -124,7 +124,7 @@ final class RouterTests: XCTestCase {
                 }
             }
         }
-        let app = HBApplication(responder: router)
+        let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/test/", method: .get) { response in
                 XCTAssertEqual(String(buffer: response.body), "/test")
@@ -146,7 +146,7 @@ final class RouterTests: XCTestCase {
 
     /// Test correct endpoints are called from group
     func testMethodEndpoint() async throws {
-        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
+        let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             RouteGroup("/endpoint") {
                 Get { _, _ in
                     return "GET"
@@ -156,7 +156,7 @@ final class RouterTests: XCTestCase {
                 }
             }
         }
-        let app = HBApplication(responder: router)
+        let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/endpoint", method: .get) { response in
                 XCTAssertEqual(String(buffer: response.body), "GET")
@@ -171,7 +171,7 @@ final class RouterTests: XCTestCase {
     /// Test middle in group is applied to group but not to routes outside
     /// group
     func testGroupMiddleware() async throws {
-        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
+        let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             RouteGroup("/group") {
                 TestMiddleware()
                 Get { _, _ in
@@ -182,7 +182,7 @@ final class RouterTests: XCTestCase {
                 return "hello"
             }
         }
-        let app = HBApplication(responder: router)
+        let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/group", method: .get) { response in
                 XCTAssertEqual(response.headers[.middleware], "TestMiddleware")
@@ -195,7 +195,7 @@ final class RouterTests: XCTestCase {
     }
 
     func testEndpointMiddleware() async throws {
-        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
+        let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             RouteGroup("/group") {
                 TestMiddleware()
                 Head { _, _ in
@@ -203,7 +203,7 @@ final class RouterTests: XCTestCase {
                 }
             }
         }
-        let app = HBApplication(responder: router)
+        let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/group", method: .head) { response in
                 XCTAssertEqual(response.headers[.middleware], "TestMiddleware")
@@ -213,7 +213,7 @@ final class RouterTests: XCTestCase {
 
     /// Test middleware in parent group is applied to routes in child group
     func testGroupGroupMiddleware() async throws {
-        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
+        let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             RouteGroup("/test") {
                 TestMiddleware()
                 RouteGroup("/group") {
@@ -223,7 +223,7 @@ final class RouterTests: XCTestCase {
                 }
             }
         }
-        let app = HBApplication(responder: router)
+        let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/test/group", method: .get) { response in
                 XCTAssertEqual(response.headers[.middleware], "TestMiddleware")
@@ -233,18 +233,18 @@ final class RouterTests: XCTestCase {
 
     /// Test adding middleware to group doesn't affect middleware in parent groups
     func testGroupGroupMiddleware2() async throws {
-        struct TestGroupMiddleware: HBMiddlewareProtocol {
-            typealias Context = HBTestRouterContext2
+        struct TestGroupMiddleware: RouterMiddleware {
+            typealias Context = TestRouterContext2
             let output: String
 
-            func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+            func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 var context = context
                 context.string = self.output
                 return try await next(request, context)
             }
         }
 
-        let router = HBRouterBuilder(context: HBTestRouterContext2.self) {
+        let router = RouterBuilder(context: TestRouterContext2.self) {
             RouteGroup("/test") {
                 TestGroupMiddleware(output: "route1")
                 Get { _, context in
@@ -258,7 +258,7 @@ final class RouterTests: XCTestCase {
                 }
             }
         }
-        let app = HBApplication(responder: router)
+        let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/test/group", method: .get) { response in
                 XCTAssertEqual(String(buffer: response.body), "route2")
@@ -271,21 +271,21 @@ final class RouterTests: XCTestCase {
 
     /// Test adding middleware to group doesn't affect middleware in parent groups
     func testRouteBuilder() async throws {
-        struct TestGroupMiddleware: HBMiddlewareProtocol {
-            typealias Context = HBTestRouterContext2
+        struct TestGroupMiddleware: RouterMiddleware {
+            typealias Context = TestRouterContext2
             let output: String
 
-            func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+            func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 var context = context
                 context.string += self.output
                 return try await next(request, context)
             }
         }
 
-        @Sendable func handle(_: HBRequest, _ context: HBTestRouterContext2) async throws -> String {
+        @Sendable func handle(_: Request, _ context: TestRouterContext2) async throws -> String {
             context.string
         }
-        let router = HBRouterBuilder(context: HBTestRouterContext2.self) {
+        let router = RouterBuilder(context: TestRouterContext2.self) {
             RouteGroup("/test") {
                 Get {
                     TestGroupMiddleware(output: "route1")
@@ -299,7 +299,7 @@ final class RouterTests: XCTestCase {
                 }
             }
         }
-        let app = HBApplication(responder: router)
+        let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/test", method: .get) { response in
                 XCTAssertEqual(String(buffer: response.body), "route1")
@@ -311,12 +311,12 @@ final class RouterTests: XCTestCase {
     }
 
     func testParameters() async throws {
-        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
+        let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Delete("/user/:id") { _, context -> String? in
                 return context.parameters.get("id", as: String.self)
             }
         }
-        let app = HBApplication(responder: router)
+        let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/user/1234", method: .delete) { response in
                 XCTAssertEqual(String(buffer: response.body), "1234")
@@ -325,13 +325,13 @@ final class RouterTests: XCTestCase {
     }
 
     func testParameterCollection() async throws {
-        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
+        let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Delete("/user/:username/:id") { _, context -> String? in
                 XCTAssertEqual(context.parameters.count, 2)
                 return context.parameters.get("id", as: String.self)
             }
         }
-        let app = HBApplication(responder: router)
+        let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/user/john/1234", method: .delete) { response in
                 XCTAssertEqual(String(buffer: response.body), "1234")
@@ -340,7 +340,7 @@ final class RouterTests: XCTestCase {
     }
 
     func testPartialCapture() async throws {
-        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
+        let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Route(.get, "/files/file.{ext}/{name}.jpg") { _, context -> String in
                 XCTAssertEqual(context.parameters.count, 2)
                 let ext = try context.parameters.require("ext")
@@ -348,7 +348,7 @@ final class RouterTests: XCTestCase {
                 return "\(name).\(ext)"
             }
         }
-        let app = HBApplication(responder: router)
+        let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/files/file.doc/test.jpg", method: .get) { response in
                 XCTAssertEqual(String(buffer: response.body), "test.doc")
@@ -357,12 +357,12 @@ final class RouterTests: XCTestCase {
     }
 
     func testPartialWildcard() async throws {
-        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
+        let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Get("/files/file.*/*.jpg") { _, _ -> HTTPResponse.Status in
                 return .ok
             }
         }
-        let app = HBApplication(responder: router)
+        let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/files/file.doc/test.jpg", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
@@ -375,12 +375,12 @@ final class RouterTests: XCTestCase {
 
     /// Test we have a request id and that it increments with each request
     func testRequestId() async throws {
-        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
+        let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Get("id") { _, context in
                 return context.id.description
             }
         }
-        let app = HBApplication(responder: router)
+        let app = Application(responder: router)
         try await app.test(.router) { client in
             let id = try await client.execute(uri: "/id", method: .get) { response -> String in
                 return String(buffer: response.body)
@@ -394,12 +394,12 @@ final class RouterTests: XCTestCase {
 
     // Test redirect response
     func testRedirect() async throws {
-        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
+        let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Get("redirect") { _, _ in
-                return HBResponse.redirect(to: "/other")
+                return Response.redirect(to: "/other")
             }
         }
-        let app = HBApplication(responder: router)
+        let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/redirect", method: .get) { response in
                 XCTAssertEqual(response.headers[.location], "/other")
@@ -409,12 +409,12 @@ final class RouterTests: XCTestCase {
     }
 
     func testResponderBuilder() async throws {
-        let router = HBRouterBuilder(context: HBBasicRouterRequestContext.self) {
+        let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Get("hello") { _, _ in
                 return "hello"
             }
         }
-        let app = HBApplication(router: router)
+        let app = Application(router: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
                 XCTAssertEqual(String(buffer: response.body), "hello")
@@ -423,11 +423,11 @@ final class RouterTests: XCTestCase {
     }
 }
 
-public struct HBTestRouterContext2: HBRouterRequestContext, HBRequestContext {
+public struct TestRouterContext2: RouterRequestContext, RequestContext {
     /// router context
-    public var routerContext: HBRouterBuilderContext
+    public var routerContext: RouterBuilderContext
     /// core context
-    public var coreContext: HBCoreRequestContext
+    public var coreContext: CoreRequestContext
     /// Connected remote host
     public var remoteAddress: SocketAddress? { nil }
 

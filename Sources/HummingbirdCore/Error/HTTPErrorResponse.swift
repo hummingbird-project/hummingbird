@@ -17,9 +17,9 @@ import NIOCore
 
 /// An error that is capable of generating an HTTP response
 ///
-/// By conforming to `HBHTTPResponseError` you can control how your error will be presented to
+/// By conforming to `HTTPResponseError` you can control how your error will be presented to
 /// the client. Errors not conforming to this will be returned with status internalServerError.
-public protocol HBHTTPResponseError: Error {
+public protocol HTTPResponseError: Error {
     /// status code for the error
     var status: HTTPResponse.Status { get }
     /// any addiitional headers required
@@ -28,12 +28,12 @@ public protocol HBHTTPResponseError: Error {
     func body(allocator: ByteBufferAllocator) -> ByteBuffer?
 }
 
-extension HBHTTPResponseError {
+extension HTTPResponseError {
     /// Generate response from error
     /// - Parameter allocator: Byte buffer allocator used to allocate message body
     /// - Returns: Response
-    public func response(allocator: ByteBufferAllocator) -> HBResponse {
-        let body: HBResponseBody
+    public func response(allocator: ByteBufferAllocator) -> Response {
+        let body: ResponseBody
         if let buffer = self.body(allocator: allocator) {
             body = .init(byteBuffer: buffer)
         } else {

@@ -28,16 +28,16 @@ import NIOPosix
 /// "if-modified-since", "if-none-match", "if-range" and 'range" headers. It will output "content-length",
 /// "modified-date", "eTag", "content-type", "cache-control" and "content-range" headers where
 /// they are relevant.
-public struct HBFileMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
+public struct FileMiddleware<Context: BaseRequestContext>: RouterMiddleware {
     struct IsDirectoryError: Error {}
 
     let rootFolder: URL
     let threadPool: NIOThreadPool
-    let fileIO: HBFileIO
-    let cacheControl: HBCacheControl
+    let fileIO: FileIO
+    let cacheControl: CacheControl
     let searchForIndexHtml: Bool
 
-    /// Create HBFileMiddleware
+    /// Create FileMiddleware
     /// - Parameters:
     ///   - rootFolder: Root folder to look for files
     ///   - cacheControl: What cache control headers to include in response
@@ -45,10 +45,10 @@ public struct HBFileMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProto
     ///   - application: Application we are attaching to
     public init(
         _ rootFolder: String = "public",
-        cacheControl: HBCacheControl = .init([]),
+        cacheControl: CacheControl = .init([]),
         searchForIndexHtml: Bool = false,
         threadPool: NIOThreadPool = NIOThreadPool.singleton,
-        logger: Logger = Logger(label: "HBFileMiddleware")
+        logger: Logger = Logger(label: "FileMiddleware")
     ) {
         self.rootFolder = URL(fileURLWithPath: rootFolder)
         self.threadPool = threadPool
@@ -70,20 +70,20 @@ public struct HBFileMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProto
         logger.info("FileMiddleware serving from \(workingFolder)\(rootFolder)")
     }
 
-    public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
         do {
             return try await next(request, context)
         } catch {
-            guard let httpError = error as? HBHTTPError, httpError.status == .notFound else {
+            guard let httpError = error as? HTTPError, httpError.status == .notFound else {
                 throw error
             }
 
             guard let path = request.uri.path.removingPercentEncoding else {
-                throw HBHTTPError(.badRequest)
+                throw HTTPError(.badRequest)
             }
 
             guard !path.contains("..") else {
-                throw HBHTTPError(.badRequest)
+                throw HTTPError(.badRequest)
             }
 
             let fileResult = try await self.threadPool.runIfActive { () -> FileResult in
@@ -106,7 +106,7 @@ public struct HBFileMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProto
                         contentSize = attributes[.size] as? Int
                     }
                 } catch {
-                    throw HBHTTPError(.notFound)
+                    throw HTTPError(.notFound)
                 }
                 let eTag = createETag([
                     String(describing: modificationDate?.timeIntervalSince1970 ?? 0),
@@ -123,7 +123,7 @@ public struct HBFileMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProto
                 // modified-date
                 var modificationDateString: String?
                 if let modificationDate {
-                    modificationDateString = HBDateCache.rfc1123Formatter.string(from: modificationDate)
+                    modificationDateString = DateCache.rfc1123Formatter.string(from: modificationDate)
                     headers[.lastModified] = modificationDateString!
                 }
                 // eTag (constructed from modification date and content size)
@@ -133,7 +133,7 @@ public struct HBFileMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProto
                 if let extPointIndex = path.lastIndex(of: ".") {
                     let extIndex = path.index(after: extPointIndex)
                     let ext = String(path.suffix(from: extIndex))
-                    if let contentType = HBMediaType.getMediaType(forExtension: ext) {
+                    if let contentType = MediaType.getMediaType(forExtension: ext) {
                         headers[.contentType] = contentType.description
                     }
                 }
@@ -159,7 +159,7 @@ public struct HBFileMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProto
                 else if let ifModifiedSince = request.headers[.ifModifiedSince],
                         let modificationDate
                 {
-                    if let ifModifiedSinceDate = HBDateCache.rfc1123Formatter.date(from: ifModifiedSince) {
+                    if let ifModifiedSinceDate = DateCache.rfc1123Formatter.date(from: ifModifiedSince) {
                         // round modification date of file down to seconds for comparison
                         let modificationDateTimeInterval = modificationDate.timeIntervalSince1970.rounded(.down)
                         let ifModifiedSinceDateTimeInterval = ifModifiedSinceDate.timeIntervalSince1970
@@ -171,7 +171,7 @@ public struct HBFileMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProto
 
                 if let rangeHeader = request.headers[.range] {
                     guard let range = getRangeFromHeaderValue(rangeHeader) else {
-                        throw HBHTTPError(.rangeNotSatisfiable)
+                        throw HTTPError(.rangeNotSatisfiable)
                     }
                     // range request conditional on etag or modified date being equal to value in if-range
                     if let ifRange = request.headers[.ifRange], ifRange != headers[.eTag], ifRange != headers[.lastModified] {
@@ -192,20 +192,20 @@ public struct HBFileMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProto
 
             switch fileResult {
             case .notModified(let headers):
-                return HBResponse(status: .notModified, headers: headers)
+                return Response(status: .notModified, headers: headers)
             case .loadFile(let fullPath, let headers, let range):
                 switch request.method {
                 case .get:
                     if let range {
                         let (body, _) = try await self.fileIO.loadFile(path: fullPath, range: range, context: context)
-                        return HBResponse(status: .partialContent, headers: headers, body: body)
+                        return Response(status: .partialContent, headers: headers, body: body)
                     }
 
                     let body = try await self.fileIO.loadFile(path: fullPath, context: context)
-                    return HBResponse(status: .ok, headers: headers, body: body)
+                    return Response(status: .ok, headers: headers, body: body)
 
                 case .head:
-                    return HBResponse(status: .ok, headers: headers, body: .init())
+                    return Response(status: .ok, headers: headers, body: .init())
 
                 default:
                     throw error
@@ -221,7 +221,7 @@ public struct HBFileMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProto
     }
 }
 
-extension HBFileMiddleware {
+extension FileMiddleware {
     /// Convert "bytes=value-value" range header into `ClosedRange<Int>`
     ///
     /// Also supports open ended ranges

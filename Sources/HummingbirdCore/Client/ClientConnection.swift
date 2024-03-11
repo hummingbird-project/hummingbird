@@ -21,13 +21,16 @@ import Network
 import NIOTransportServices
 #endif
 
-public struct HBClient<ClientChannel: HBClientChannel>: Sendable {
+/// A generic client connection to a server.
+///
+/// Actual client protocol is implemented in `ClientChannel` generic parameter
+public struct ClientConnection<ClientChannel: ClientConnectionChannel>: Sendable {
     typealias ChannelResult = ClientChannel.Value
     /// Logger used by Server
     let logger: Logger
     let eventLoopGroup: EventLoopGroup
     let clientChannel: ClientChannel
-    let address: HBAddress
+    let address: Address
     #if canImport(Network)
     let tlsOptions: NWProtocolTLS.Options?
     #endif
@@ -35,7 +38,7 @@ public struct HBClient<ClientChannel: HBClientChannel>: Sendable {
     /// Initialize Client
     public init(
         _ clientChannel: ClientChannel,
-        address: HBAddress,
+        address: Address,
         eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
         logger: Logger
     ) {
@@ -52,7 +55,7 @@ public struct HBClient<ClientChannel: HBClientChannel>: Sendable {
     /// Initialize Client with TLS options
     public init(
         _ clientChannel: ClientChannel,
-        address: HBAddress,
+        address: Address,
         transportServicesTLSOptions: TSTLSOptions,
         eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
         logger: Logger
@@ -74,7 +77,7 @@ public struct HBClient<ClientChannel: HBClientChannel>: Sendable {
     }
 
     /// Connect to server
-    func makeClient(clientChannel: ClientChannel, address: HBAddress) async throws -> ChannelResult {
+    func makeClient(clientChannel: ClientChannel, address: Address) async throws -> ChannelResult {
         // get bootstrap
         let bootstrap: ClientBootstrapProtocol
         #if canImport(Network)

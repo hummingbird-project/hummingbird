@@ -15,7 +15,7 @@
 import HummingbirdCore
 
 /// Define media type of file
-public struct HBMediaType: Sendable, CustomStringConvertible {
+public struct MediaType: Sendable, CustomStringConvertible {
     /// general category
     public let type: Category
     /// exact kind of data specified
@@ -23,7 +23,7 @@ public struct HBMediaType: Sendable, CustomStringConvertible {
     /// optional parameter
     public let parameter: (name: String, value: String)?
 
-    /// Initialize `HBMediaType`
+    /// Initialize `MediaType`
     /// - Parameters:
     ///   - type: category
     ///   - subType: specific kind of data
@@ -34,7 +34,7 @@ public struct HBMediaType: Sendable, CustomStringConvertible {
         self.parameter = parameter
     }
 
-    /// Construct `HBMediaType` from header value
+    /// Construct `MediaType` from header value
     public init?(from header: String) {
         enum State: Equatable {
             case readingCategory
@@ -43,7 +43,7 @@ public struct HBMediaType: Sendable, CustomStringConvertible {
             case readingParameterValue(key: String)
             case finished
         }
-        var parser = HBParser(header)
+        var parser = Parser(header)
         var state = State.readingCategory
 
         var category: Category?
@@ -111,7 +111,7 @@ public struct HBMediaType: Sendable, CustomStringConvertible {
     }
 
     /// Return media type with new parameter
-    public func withParameter(name: String, value: String) -> HBMediaType {
+    public func withParameter(name: String, value: String) -> MediaType {
         return .init(type: self.type, subType: self.subType, parameter: (name, value))
     }
 
@@ -125,7 +125,7 @@ public struct HBMediaType: Sendable, CustomStringConvertible {
     }
 
     /// Return if media type matches the input
-    public func isType(_ type: HBMediaType) -> Bool {
+    public func isType(_ type: MediaType) -> Bool {
         guard self.type == type.type,
               self.subType == type.subType || type.subType == "*"
         else {
@@ -141,7 +141,7 @@ public struct HBMediaType: Sendable, CustomStringConvertible {
     /// Get media type from a file extension
     /// - Parameter extension: file extension
     /// - Returns: media type
-    public static func getMediaType(forExtension: String) -> HBMediaType? {
+    public static func getMediaType(forExtension: String) -> MediaType? {
         return extensionMediaTypeMap[forExtension]
     }
 
@@ -172,7 +172,7 @@ public struct HBMediaType: Sendable, CustomStringConvertible {
     static let tSpecial = Set<Unicode.Scalar>(["(", ")", "<", ">", "@", ",", ";", ":", "\\", "\"", "/", "[", "]", "?", ".", "="])
 }
 
-extension HBMediaType {
+extension MediaType {
     // types
     public static var application: Self { .init(type: .application) }
     public static var audio: Self { .init(type: .audio) }
@@ -351,7 +351,7 @@ extension HBMediaType {
     public static var multipartForm: Self { .init(type: .multipart, subType: "form-data") }
 
     /// map from extension string to media type
-    static let extensionMediaTypeMap: [String: HBMediaType] = [
+    static let extensionMediaTypeMap: [String: MediaType] = [
         "aac": .audioAac,
         "abw": .applicationAbiWord,
         "arc": .applicationArc,
@@ -428,7 +428,7 @@ extension HBMediaType {
     ]
 }
 
-extension HBMediaType {
+extension MediaType {
     // Allow matching media types in switch statements
     public static func ~= (_ lhs: Self, _ rhs: Self) -> Bool {
         rhs.isType(lhs)

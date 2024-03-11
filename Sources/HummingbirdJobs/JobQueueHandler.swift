@@ -16,7 +16,7 @@ import Logging
 import ServiceLifecycle
 
 /// Object handling a single job queue
-final class HBJobQueueHandler<Queue: HBJobQueueDriver>: Service {
+final class JobQueueHandler<Queue: JobQueueDriver>: Service {
     init(queue: Queue, numWorkers: Int, logger: Logger) {
         self.queue = queue
         self.numWorkers = numWorkers
@@ -29,7 +29,7 @@ final class HBJobQueueHandler<Queue: HBJobQueueDriver>: Service {
     ///   - id: Job Identifier
     ///   - maxRetryCount: Maximum number of times job is retried before being flagged as failed
     ///   - execute: Job code
-    func registerJob(_ job: HBJobDefinition<some Codable & Sendable>) {
+    func registerJob(_ job: JobDefinition<some Codable & Sendable>) {
         self.jobRegistry.registerJob(job: job)
     }
 
@@ -61,10 +61,10 @@ final class HBJobQueueHandler<Queue: HBJobQueueDriver>: Service {
         }
     }
 
-    func runJob(_ queuedJob: HBQueuedJob<Queue.JobID>) async throws {
+    func runJob(_ queuedJob: QueuedJob<Queue.JobID>) async throws {
         var logger = logger
-        logger[metadataKey: "hb_job_id"] = .stringConvertible(queuedJob.id)
-        let job: any HBJob
+        logger[metadataKey: "_job_id"] = .stringConvertible(queuedJob.id)
+        let job: any Job
         do {
             job = try self.jobRegistry.decode(queuedJob.jobBuffer)
         } catch let error as JobQueueError where error == .unrecognisedJobId {
@@ -76,7 +76,7 @@ final class HBJobQueueHandler<Queue: HBJobQueueDriver>: Service {
             try await self.queue.failed(jobId: queuedJob.id, error: JobQueueError.decodeJobFailed)
             return
         }
-        logger[metadataKey: "hb_job_type"] = .string(job.name)
+        logger[metadataKey: "_job_type"] = .string(job.name)
 
         var count = job.maxRetryCount
         logger.debug("Starting Job")
@@ -110,12 +110,12 @@ final class HBJobQueueHandler<Queue: HBJobQueueDriver>: Service {
         }
     }
 
-    private let jobRegistry: HBJobRegistry
+    private let jobRegistry: JobRegistry
     private let queue: Queue
     private let numWorkers: Int
     let logger: Logger
 }
 
-extension HBJobQueueHandler: CustomStringConvertible {
-    public var description: String { "HBJobQueueHandler<\(String(describing: Queue.self))>" }
+extension JobQueueHandler: CustomStringConvertible {
+    public var description: String { "JobQueueHandler<\(String(describing: Queue.self))>" }
 }
