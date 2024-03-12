@@ -15,7 +15,7 @@
 import HTTPTypes
 import NIOCore
 
-/// Default HTTP error. Provides an HTTP status and a message is so desired
+/// Default HTTP error. Provides an HTTP status and a message
 public struct HTTPError: Error, HTTPResponseError, Sendable {
     /// status code for the error
     public var status: HTTPResponse.Status
