@@ -166,7 +166,7 @@ final class HummingbirdJobsTests: XCTestCase {
 
     func testJobParameters() async throws {
         struct TestJobParameters: JobParameters {
-            static let id: JobIdentifier<Self> = "TestJobParameters"
+            static let jobID: String = "TestJobParameters"
             let id: Int
             let message: String
         }
