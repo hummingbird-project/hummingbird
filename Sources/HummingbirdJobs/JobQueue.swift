@@ -22,8 +22,8 @@ import ServiceLifecycle
 ///
 /// Wrapper type to bring together a job queue implementation and a job queue
 /// handler. Before you can push jobs onto a queue you should register it
-/// with the queue via either ``JobQueue.registerJob(id:maxRetryCount:execute:)`` or
-/// ``JobQueue.registerJob(_:)``.
+/// with the queue via either ``registerJob(id:maxRetryCount:execute:)`` or
+/// ``registerJob(_:)``.
 public struct JobQueue<Queue: JobQueueDriver>: Service {
     /// underlying driver for queue
     public let queue: Queue

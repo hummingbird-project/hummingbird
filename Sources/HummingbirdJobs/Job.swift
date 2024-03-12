@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Protocol for a Job
-public protocol Job: Sendable {
+protocol Job: Sendable {
     /// Parameters job requries
     associatedtype Parameters: Codable & Sendable
     /// Job Type identifier
