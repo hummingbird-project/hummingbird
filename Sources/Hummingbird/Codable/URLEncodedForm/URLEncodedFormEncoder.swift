@@ -12,7 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if os(Linux)
 @preconcurrency import Foundation
+#else
+import Foundation
+#endif
 
 /// The wrapper struct for encoding Codable classes to URL encoded form data
 public struct URLEncodedFormEncoder: Sendable {
