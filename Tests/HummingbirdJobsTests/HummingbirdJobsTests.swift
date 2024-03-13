@@ -164,6 +164,26 @@ final class HummingbirdJobsTests: XCTestCase {
         }
     }
 
+    func testJobParameters() async throws {
+        struct TestJobParameters: JobParameters {
+            static let jobID: String = "TestJobParameters"
+            let id: Int
+            let message: String
+        }
+        let expectation = XCTestExpectation(description: "TestJob.execute was called")
+        let jobQueue = JobQueue(.memory, numWorkers: 1, logger: Logger(label: "HummingbirdJobsTests"))
+        jobQueue.registerJob(parameters: TestJobParameters.self) { parameters, _ in
+            XCTAssertEqual(parameters.id, 23)
+            XCTAssertEqual(parameters.message, "Hello!")
+            expectation.fulfill()
+        }
+        try await self.testJobQueue(jobQueue) {
+            try await jobQueue.push(TestJobParameters(id: 23, message: "Hello!"))
+
+            await self.wait(for: [expectation], timeout: 5)
+        }
+    }
+
     /// Verify test job is cancelled when service group is cancelled
     func testShutdownJob() async throws {
         let jobIdentifer = JobIdentifier<Int>(#function)

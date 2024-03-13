@@ -18,6 +18,11 @@ public struct JobDefinition<Parameters: Codable & Sendable>: Sendable {
     let maxRetryCount: Int
     let _execute: @Sendable (Parameters, JobContext) async throws -> Void
 
+    ///  Initialize JobDefinition
+    /// - Parameters:
+    ///   - id: Job identifier
+    ///   - maxRetryCount: Maxiumum times this job will be retried if it fails
+    ///   - execute: Closure that executes job
     public init(id: JobIdentifier<Parameters>, maxRetryCount: Int = 0, execute: @escaping @Sendable (Parameters, JobContext) async throws -> Void) {
         self.id = id
         self.maxRetryCount = maxRetryCount
