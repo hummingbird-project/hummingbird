@@ -17,7 +17,7 @@ import NIOCore
 /// Build Channel Setup that takes an HTTP responder
 ///
 /// Used when building an ``Hummingbird/Application``. It delays the building
-/// of the ``ChildChannel`` until the HTTP responder has been built.
+/// of the ``ServerChildChannel`` until the HTTP responder has been built.
 public struct HTTPChannelBuilder<ChildChannel: ServerChildChannel>: Sendable {
     /// build child channel from HTTP responder
     public let build: @Sendable (@escaping HTTPChannelHandler.Responder) throws -> ChildChannel
