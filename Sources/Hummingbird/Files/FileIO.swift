@@ -19,15 +19,13 @@ import NIOPosix
 
 /// Manages File reading and writing.
 public struct FileIO: Sendable {
-    let eventLoopGroup: EventLoopGroup
     let fileIO: NonBlockingFileIO
     let chunkSize: Int
 
     /// Initialize FileIO
     /// - Parameter application: application using FileIO
-    public init(eventLoopGroupProvider: EventLoopGroupProvider = .singleton, threadPool: NIOThreadPool = .singleton) {
+    public init(threadPool: NIOThreadPool = .singleton) {
         self.fileIO = .init(threadPool: threadPool)
-        self.eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
         self.chunkSize = NonBlockingFileIO.defaultChunkSize
     }
 
@@ -80,14 +78,29 @@ public struct FileIO: Sendable {
         path: String,
         context: some BaseRequestContext
     ) async throws where AS.Element == ByteBuffer {
-        let eventLoop = self.eventLoopGroup.any()
-        let handle = try await self.fileIO.openFile(path: path, mode: .write, flags: .allowFileCreation(), eventLoop: eventLoop).get()
-        defer {
-            try? handle.close()
-        }
         context.logger.debug("[FileIO] PUT", metadata: ["file": .string(path)])
-        for try await buffer in contents {
-            try await self.fileIO.write(fileHandle: handle, buffer: buffer, eventLoop: eventLoop).get()
+        try await self.fileIO.withFileHandle(path: path, mode: .write, flags: .allowFileCreation()) { handle in
+            for try await buffer in contents {
+                try await self.fileIO.write(fileHandle: handle, buffer: buffer)
+            }
+        }
+    }
+
+    /// Write contents of request body to file
+    ///
+    /// This can be used to save arbitrary ByteBuffers by passing in `.byteBuffer(ByteBuffer)` as contents
+    /// - Parameters:
+    ///   - contents: Request body to write.
+    ///   - path: Path to write to
+    ///   - logger: Logger
+    public func writeFile(
+        buffer: ByteBuffer,
+        path: String,
+        context: some BaseRequestContext
+    ) async throws {
+        context.logger.debug("[FileIO] PUT", metadata: ["file": .string(path)])
+        try await self.fileIO.withFileHandle(path: path, mode: .write, flags: .allowFileCreation()) { handle in
+            try await self.fileIO.write(fileHandle: handle, buffer: buffer)
         }
     }
 
@@ -106,9 +119,8 @@ public struct FileIO: Sendable {
                         fileHandle: handle,
                         fromOffset: numericCast(offset),
                         byteCount: bytesToRead,
-                        allocator: context.allocator,
-                        eventLoop: self.eventLoopGroup.any()
-                    ).get()
+                        allocator: context.allocator
+                    )
                     fileOffset = range.index(fileOffset, offsetBy: bytesToRead)
                     try await writer.write(buffer)
                 }
