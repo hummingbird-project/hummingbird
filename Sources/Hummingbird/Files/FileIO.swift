@@ -66,11 +66,10 @@ public struct FileIO: Sendable {
         }
     }
 
-    /// Write contents of request body to file
+    /// Write contents of AsyncSequence of buffers to file
     ///
-    /// This can be used to save arbitrary ByteBuffers by passing in `.byteBuffer(ByteBuffer)` as contents
     /// - Parameters:
-    ///   - contents: Request body to write.
+    ///   - contents: AsyncSequence of buffers to write.
     ///   - path: Path to write to
     ///   - logger: Logger
     public func writeFile<AS: AsyncSequence>(
@@ -86,11 +85,10 @@ public struct FileIO: Sendable {
         }
     }
 
-    /// Write contents of request body to file
+    /// Write contents of buffer to file
     ///
-    /// This can be used to save arbitrary ByteBuffers by passing in `.byteBuffer(ByteBuffer)` as contents
     /// - Parameters:
-    ///   - contents: Request body to write.
+    ///   - contents: ByteBuffer to write.
     ///   - path: Path to write to
     ///   - logger: Logger
     public func writeFile(
