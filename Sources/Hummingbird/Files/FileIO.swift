@@ -41,18 +41,8 @@ public struct FileIO: Sendable {
     /// - Returns: Response body
     public func loadFile(path: String, context: some BaseRequestContext) async throws -> ResponseBody {
         do {
-            let (handle, region) = try await self.fileIO.openFile(path: path, eventLoop: self.eventLoopGroup.any()).get()
-            context.logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
-
-            if region.readableBytes > self.chunkSize {
-                return try self.streamFile(handle: handle, region: region, context: context)
-            } else {
-                // only close file handle for load, as streamer hasn't loaded data at this point
-                defer {
-                    try? handle.close()
-                }
-                return try await self.loadFile(handle: handle, region: region, context: context)
-            }
+            let stat = try await fileIO.lstat(path: path)
+            return self.readFile(path: path, range: 0...numericCast(stat.st_size - 1), context: context)
         } catch {
             throw HTTPError(.notFound)
         }
@@ -67,28 +57,12 @@ public struct FileIO: Sendable {
     ///   - range:Range defining how much of the file is to be loaded
     ///   - context: Context this request is being called in
     /// - Returns: Response body plus file size
-    public func loadFile(path: String, range: ClosedRange<Int>, context: some BaseRequestContext) async throws -> (ResponseBody, Int) {
+    public func loadFile(path: String, range: ClosedRange<Int>, context: some BaseRequestContext) async throws -> ResponseBody {
         do {
-            let (handle, region) = try await self.fileIO.openFile(path: path, eventLoop: self.eventLoopGroup.any()).get()
-            context.logger.debug("[FileIO] GET", metadata: ["file": .string(path)])
-
-            // work out region to load
-            let regionRange = region.readerIndex...region.endIndex
-            let range = range.clamped(to: regionRange)
-            // add one to upperBound as range is inclusive of upper bound
-            let loadRegion = FileRegion(fileHandle: handle, readerIndex: range.lowerBound, endIndex: range.upperBound + 1)
-
-            if loadRegion.readableBytes > self.chunkSize {
-                let stream = try self.streamFile(handle: handle, region: loadRegion, context: context)
-                return (stream, region.readableBytes)
-            } else {
-                // only close file handle for load, as streamer hasn't loaded data at this point
-                defer {
-                    try? handle.close()
-                }
-                let buffer = try await self.loadFile(handle: handle, region: loadRegion, context: context)
-                return (buffer, region.readableBytes)
-            }
+            let stat = try await fileIO.lstat(path: path)
+            let fileRange: ClosedRange<Int> = 0...numericCast(stat.st_size - 1)
+            let range = range.clamped(to: fileRange)
+            return self.readFile(path: path, range: range, context: context)
         } catch {
             throw HTTPError(.notFound)
         }
@@ -101,7 +75,11 @@ public struct FileIO: Sendable {
     ///   - contents: Request body to write.
     ///   - path: Path to write to
     ///   - logger: Logger
-    public func writeFile(contents: RequestBody, path: String, context: some BaseRequestContext) async throws {
+    public func writeFile<AS: AsyncSequence>(
+        contents: AS,
+        path: String,
+        context: some BaseRequestContext
+    ) async throws where AS.Element == ByteBuffer {
         let eventLoop = self.eventLoopGroup.any()
         let handle = try await self.fileIO.openFile(path: path, mode: .write, flags: .allowFileCreation(), eventLoop: eventLoop).get()
         defer {
@@ -113,41 +91,28 @@ public struct FileIO: Sendable {
         }
     }
 
-    /// Load file as ByteBuffer
-    func loadFile(handle: NIOFileHandle, region: FileRegion, context: some BaseRequestContext) async throws -> ResponseBody {
-        let buffer = try await self.fileIO.read(
-            fileHandle: handle,
-            fromOffset: Int64(region.readerIndex),
-            byteCount: region.readableBytes,
-            allocator: context.allocator,
-            eventLoop: self.eventLoopGroup.any()
-        ).get()
-        return .init(byteBuffer: buffer)
-    }
+    /// Return response body that will read file
+    func readFile(path: String, range: ClosedRange<Int>, context: some BaseRequestContext) -> ResponseBody {
+        return ResponseBody(contentLength: range.count) { writer in
+            try await self.fileIO.withFileHandle(path: path, mode: .read) { handle in
+                let endOffset = range.endIndex
+                let chunkSize = 8 * 1024
+                var fileOffset = range.startIndex
 
-    /// Return streamer that will load file
-    func streamFile(handle: NIOFileHandle, region: FileRegion, context: some BaseRequestContext) throws -> ResponseBody {
-        let fileOffset = region.readerIndex
-        let endOffset = region.endIndex
-        return ResponseBody(contentLength: region.readableBytes) { writer in
-            let chunkSize = 8 * 1024
-            var fileOffset = fileOffset
-
-            while fileOffset < endOffset {
-                let bytesLeft = endOffset - fileOffset
-                let bytesToRead = Swift.min(chunkSize, bytesLeft)
-                let fileOffsetToRead = fileOffset
-                let buffer = try await self.fileIO.read(
-                    fileHandle: handle,
-                    fromOffset: Int64(fileOffsetToRead),
-                    byteCount: bytesToRead,
-                    allocator: context.allocator,
-                    eventLoop: self.eventLoopGroup.any()
-                ).get()
-                fileOffset += bytesToRead
-                try await writer.write(buffer)
+                while case .inRange(let offset) = fileOffset {
+                    let bytesLeft = range.distance(from: fileOffset, to: endOffset)
+                    let bytesToRead = Swift.min(chunkSize, bytesLeft)
+                    let buffer = try await self.fileIO.read(
+                        fileHandle: handle,
+                        fromOffset: numericCast(offset),
+                        byteCount: bytesToRead,
+                        allocator: context.allocator,
+                        eventLoop: self.eventLoopGroup.any()
+                    ).get()
+                    fileOffset = range.index(fileOffset, offsetBy: bytesToRead)
+                    try await writer.write(buffer)
+                }
             }
-            try handle.close()
         }
     }
 }

@@ -18,7 +18,7 @@ import Hummingbird
 import HummingbirdTesting
 import XCTest
 
-class HummingbirdFilesTests: XCTestCase {
+class FileMiddlewareTests: XCTestCase {
     func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
         data = data.map { _ in UInt8.random(in: 0...255) }
@@ -89,6 +89,7 @@ class HummingbirdFilesTests: XCTestCase {
                 let slice = buffer.getSlice(at: 100, length: 3900)
                 XCTAssertEqual(response.body, slice)
                 XCTAssertEqual(response.headers[.contentRange], "bytes 100-3999/326000")
+                XCTAssertEqual(response.headers[.contentLength], "3900")
                 XCTAssertEqual(response.headers[.contentType], "text/plain")
             }
 
@@ -96,6 +97,7 @@ class HummingbirdFilesTests: XCTestCase {
                 let slice = buffer.getSlice(at: 0, length: 1)
                 XCTAssertEqual(response.body, slice)
                 XCTAssertEqual(response.headers[.contentRange], "bytes 0-0/326000")
+                XCTAssertEqual(response.headers[.contentLength], "1")
                 XCTAssertEqual(response.headers[.contentType], "text/plain")
             }
 
@@ -109,6 +111,7 @@ class HummingbirdFilesTests: XCTestCase {
             try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=6000-"]) { response in
                 let slice = buffer.getSlice(at: 6000, length: 320_000)
                 XCTAssertEqual(response.body, slice)
+                XCTAssertEqual(response.headers[.contentLength], "320000")
                 XCTAssertEqual(response.headers[.contentRange], "bytes 6000-325999/326000")
             }
         }
