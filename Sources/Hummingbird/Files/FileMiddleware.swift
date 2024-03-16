@@ -235,7 +235,7 @@ extension FileMiddleware {
 
         if groups[1] == "" {
             guard let upperBound = Int(groups[2]) else { return nil }
-            return Int.min...upperBound
+            return 0...upperBound
         } else if groups[2] == "" {
             guard let lowerBound = Int(groups[1]) else { return nil }
             return lowerBound...Int.max
