@@ -201,7 +201,7 @@ public struct FileMiddleware<Context: BaseRequestContext>: RouterMiddleware {
                 switch request.method {
                 case .get:
                     if let range {
-                        let (body, _) = try await self.fileIO.loadFile(path: fullPath, range: range, context: context)
+                        let body = try await self.fileIO.loadFile(path: fullPath, range: range, context: context)
                         return Response(status: .partialContent, headers: headers, body: body)
                     }
 
@@ -235,7 +235,7 @@ extension FileMiddleware {
 
         if groups[1] == "" {
             guard let upperBound = Int(groups[2]) else { return nil }
-            return Int.min...upperBound
+            return 0...upperBound
         } else if groups[2] == "" {
             guard let lowerBound = Int(groups[1]) else { return nil }
             return lowerBound...Int.max
