@@ -93,6 +93,48 @@ struct RouterPathTrieBuilder<Value: Sendable> {
     }
 }
 
+import NIOCore
+
+public struct BinaryRouterResponder<Context: BaseRequestContext>: HTTPResponder {
+    let trie: BinaryTrie<EndpointResponders<Context>>
+    let notFoundResponder: any HTTPResponder<Context>
+    let options: RouterOptions
+
+    init(
+        context: Context.Type,
+        trie: RouterPathTrie<EndpointResponders<Context>>,
+        options: RouterOptions,
+        notFoundResponder: any HTTPResponder<Context>
+    ) throws {
+        self.trie = try BinaryTrie(base: trie)
+        self.options = options
+        self.notFoundResponder = notFoundResponder
+    }
+
+    /// Respond to request by calling correct handler
+    /// - Parameter request: HTTP request
+    /// - Returns: EventLoopFuture that will be fulfilled with the Response
+    public func respond(to request: Request, context: Context) async throws -> Response {
+        let path: String
+        if self.options.contains(.caseInsensitive) {
+            path = request.uri.path.lowercased()
+        } else {
+            path = request.uri.path
+        }
+        guard 
+            let (responderChain, parameters) = trie.resolve(path),
+            let responder = responderChain.getResponder(for: request.method)
+        else {
+            return try await self.notFoundResponder.respond(to: request, context: context)
+        }
+        var context = context
+        context.coreContext.parameters = parameters
+        // store endpoint path in request (mainly for metrics)
+        context.coreContext.endpointPath.value = responderChain.path
+        return try await responder.respond(to: request, context: context)
+    }
+}
+
 /// Trie used by Router responder
 struct RouterPathTrie<Value: Sendable>: Sendable {
     let root: Node

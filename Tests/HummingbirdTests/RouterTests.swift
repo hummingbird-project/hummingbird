@@ -220,6 +220,8 @@ final class RouterTests: XCTestCase {
         }
     }
 
+    // TODO: No recursive wildcard test yet
+
     /// Test adding middleware to group doesn't affect middleware in parent groups
     func testGroupGroupMiddleware2() async throws {
         struct TestGroupMiddleware: RouterMiddleware {
