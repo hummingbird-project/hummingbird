@@ -22,7 +22,7 @@ public struct RouterBuilder<Context: RouterRequestContext, Handler: MiddlewarePr
 
     let handler: Handler
 
-    ///  Initialize RouterBuilder with contents of result builder
+    /// Initialize RouterBuilder with contents of result builder
     /// - Parameters:
     ///   - context: Request context used by router
     ///   - builder: Result builder for router
