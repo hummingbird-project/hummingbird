@@ -600,6 +600,9 @@ extension Parser {
             while index < original.endIndex {
                 // if we have found a percent sign
                 if original[index] == 0x25 {
+                    guard original.endIndex - index >= 2 else {
+                        throw DecodeError()
+                    }
                     let high = Self.asciiHexValues[Int(original[index + 1])]
                     let low = Self.asciiHexValues[Int(original[index + 2])]
                     index += 3
