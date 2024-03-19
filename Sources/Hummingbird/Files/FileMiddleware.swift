@@ -12,11 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if os(Linux)
-@preconcurrency import Foundation
-#else
 import Foundation
-#endif
 import HTTPTypes
 import Logging
 import NIOCore
