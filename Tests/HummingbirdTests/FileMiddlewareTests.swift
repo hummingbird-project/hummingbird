@@ -53,6 +53,18 @@ class FileMiddlewareTests: XCTestCase {
         }
     }
 
+    func testNotAFile() async throws {
+        let router = Router()
+        router.middlewares.add(FileMiddleware("."))
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.router) { client in
+            try await client.execute(uri: "missed.jpg", method: .get) { response in
+                XCTAssertEqual(response.status, .notFound)
+            }
+        }
+    }
+
     func testReadLargeFile() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware("."))

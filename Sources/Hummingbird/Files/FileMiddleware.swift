@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2023 the Hummingbird authors
+// Copyright (c) 2021-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -32,180 +32,89 @@ import NIOPosix
 /// "if-modified-since", "if-none-match", "if-range" and 'range" headers. It will output "content-length",
 /// "modified-date", "eTag", "content-type", "cache-control" and "content-range" headers where
 /// they are relevant.
-public struct FileMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+public struct FileMiddleware<Context: BaseRequestContext, Provider: FileProvider>: RouterMiddleware {
     struct IsDirectoryError: Error {}
 
-    let rootFolder: URL
-    let threadPool: NIOThreadPool
-    let fileIO: FileIO
     let cacheControl: CacheControl
     let searchForIndexHtml: Bool
+    let fileProvider: Provider
 
     /// Create FileMiddleware
     /// - Parameters:
     ///   - rootFolder: Root folder to look for files
     ///   - cacheControl: What cache control headers to include in response
-    ///   - indexHtml: Should we look for index.html in folders
-    ///   - application: Application we are attaching to
+    ///   - searchForIndexHtml: Should we look for index.html in folders
+    ///   - threadPool: ThreadPool used by file loading
+    ///   - logger: Logger used to output file information
     public init(
         _ rootFolder: String = "public",
         cacheControl: CacheControl = .init([]),
         searchForIndexHtml: Bool = false,
         threadPool: NIOThreadPool = NIOThreadPool.singleton,
         logger: Logger = Logger(label: "FileMiddleware")
-    ) {
-        self.rootFolder = URL(fileURLWithPath: rootFolder)
-        self.threadPool = threadPool
-        self.fileIO = .init(threadPool: threadPool)
+    ) where Provider == LocalFileSystem {
         self.cacheControl = cacheControl
         self.searchForIndexHtml = searchForIndexHtml
-
-        let workingFolder: String
-        if rootFolder.first == "/" {
-            workingFolder = ""
-        } else {
-            if let cwd = getcwd(nil, Int(PATH_MAX)) {
-                workingFolder = String(cString: cwd) + "/"
-                free(cwd)
-            } else {
-                workingFolder = "./"
-            }
-        }
-        logger.info("FileMiddleware serving from \(workingFolder)\(rootFolder)")
+        self.fileProvider = LocalFileSystem(
+            rootFolder: rootFolder,
+            threadPool: threadPool,
+            logger: logger
+        )
     }
 
+    /// Create FileMiddleware using custom ``FileProvider``.
+    /// - Parameters:
+    ///   - fileProvider: File provider
+    ///   - cacheControl: What cache control headers to include in response
+    ///   - indexHtml: Should we look for index.html in folders
+    public init(
+        fileProvider: Provider,
+        cacheControl: CacheControl = .init([]),
+        searchForIndexHtml: Bool = false
+    ) {
+        self.cacheControl = cacheControl
+        self.searchForIndexHtml = searchForIndexHtml
+        self.fileProvider = fileProvider
+    }
+
+    /// Handle request
     public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
         do {
             return try await next(request, context)
         } catch {
+            // Guard that error is HTTP error notFound
             guard let httpError = error as? HTTPError, httpError.status == .notFound else {
                 throw error
             }
 
+            // Remove percent encoding from URI path
             guard let path = request.uri.path.removingPercentEncoding else {
                 throw HTTPError(.badRequest)
             }
 
+            // file paths that contain ".." are considered illegal
             guard !path.contains("..") else {
                 throw HTTPError(.badRequest)
             }
 
-            let fileResult = try await self.threadPool.runIfActive { () -> FileResult in
-                var fullPath = self.rootFolder.appendingPathComponent(path)
-
-                let modificationDate: Date?
-                let contentSize: Int?
-                do {
-                    let attributes = try FileManager.default.attributesOfItem(atPath: fullPath.relativePath)
-                    // if file is a directory seach and `searchForIndexHtml` is set to true
-                    // then search for index.html in directory
-                    if let fileType = attributes[.type] as? FileAttributeType, fileType == .typeDirectory {
-                        guard self.searchForIndexHtml else { throw IsDirectoryError() }
-                        fullPath = fullPath.appendingPathComponent("index.html")
-                        let attributes = try FileManager.default.attributesOfItem(atPath: fullPath.relativePath)
-                        modificationDate = attributes[.modificationDate] as? Date
-                        contentSize = attributes[.size] as? Int
-                    } else {
-                        modificationDate = attributes[.modificationDate] as? Date
-                        contentSize = attributes[.size] as? Int
-                    }
-                } catch {
-                    throw HTTPError(.notFound)
-                }
-                let eTag = createETag([
-                    String(describing: modificationDate?.timeIntervalSince1970 ?? 0),
-                    String(describing: contentSize ?? 0),
-                ])
-
-                // construct headers
-                var headers = HTTPFields()
-
-                // content-length
-                if let contentSize {
-                    headers[.contentLength] = String(describing: contentSize)
-                }
-                // modified-date
-                var modificationDateString: String?
-                if let modificationDate {
-                    modificationDateString = DateCache.rfc1123Formatter.string(from: modificationDate)
-                    headers[.lastModified] = modificationDateString!
-                }
-                // eTag (constructed from modification date and content size)
-                headers[.eTag] = eTag
-
-                // content-type
-                if let extPointIndex = path.lastIndex(of: ".") {
-                    let extIndex = path.index(after: extPointIndex)
-                    let ext = String(path.suffix(from: extIndex))
-                    if let contentType = MediaType.getMediaType(forExtension: ext) {
-                        headers[.contentType] = contentType.description
-                    }
-                }
-
-                headers[.acceptRanges] = "bytes"
-
-                // cache-control
-                if let cacheControlValue = self.cacheControl.getCacheControlHeader(for: path) {
-                    headers[.cacheControl] = cacheControlValue
-                }
-
-                // verify if-none-match. No need to verify if-match as this is used for state changing
-                // operations. Also the eTag we generate is considered weak.
-                let ifNoneMatch = request.headers[values: .ifNoneMatch]
-                if ifNoneMatch.count > 0 {
-                    for match in ifNoneMatch {
-                        if eTag == match {
-                            return .notModified(headers)
-                        }
-                    }
-                }
-                // verify if-modified-since
-                else if let ifModifiedSince = request.headers[.ifModifiedSince],
-                        let modificationDate
-                {
-                    if let ifModifiedSinceDate = DateCache.rfc1123Formatter.date(from: ifModifiedSince) {
-                        // round modification date of file down to seconds for comparison
-                        let modificationDateTimeInterval = modificationDate.timeIntervalSince1970.rounded(.down)
-                        let ifModifiedSinceDateTimeInterval = ifModifiedSinceDate.timeIntervalSince1970
-                        if modificationDateTimeInterval <= ifModifiedSinceDateTimeInterval {
-                            return .notModified(headers)
-                        }
-                    }
-                }
-
-                if let rangeHeader = request.headers[.range] {
-                    guard let range = getRangeFromHeaderValue(rangeHeader) else {
-                        throw HTTPError(.rangeNotSatisfiable)
-                    }
-                    // range request conditional on etag or modified date being equal to value in if-range
-                    if let ifRange = request.headers[.ifRange], ifRange != headers[.eTag], ifRange != headers[.lastModified] {
-                        // do nothing and drop down to returning full file
-                    } else {
-                        if let contentSize {
-                            let lowerBound = max(range.lowerBound, 0)
-                            let upperBound = min(range.upperBound, contentSize - 1)
-                            headers[.contentRange] = "bytes \(lowerBound)-\(upperBound)/\(contentSize)"
-                            // override content-length set above
-                            headers[.contentLength] = String(describing: upperBound - lowerBound + 1)
-                        }
-                        return .loadFile(fullPath.relativePath, headers, range)
-                    }
-                }
-                return .loadFile(fullPath.relativePath, headers, nil)
-            }
+            let fullPath = self.fileProvider.getFullPath(path)
+            // get file attributes and actual file path (It might be an index.html)
+            let (actualPath, attributes) = try await self.getFileAttributes(path: fullPath)
+            // get how we should respond
+            let fileResult = try await self.constructResponse(path: actualPath, attributes: attributes, request: request)
 
             switch fileResult {
             case .notModified(let headers):
                 return Response(status: .notModified, headers: headers)
-            case .loadFile(let fullPath, let headers, let range):
+            case .loadFile(let headers, let range):
                 switch request.method {
                 case .get:
                     if let range {
-                        let body = try await self.fileIO.loadFile(path: fullPath, range: range, context: context)
+                        let body = try await self.fileProvider.loadFile(path: actualPath, range: range, context: context)
                         return Response(status: .partialContent, headers: headers, body: body)
                     }
 
-                    let body = try await self.fileIO.loadFile(path: fullPath, context: context)
+                    let body = try await self.fileProvider.loadFile(path: actualPath, context: context)
                     return Response(status: .ok, headers: headers, body: body)
 
                 case .head:
@@ -217,15 +126,109 @@ public struct FileMiddleware<Context: BaseRequestContext>: RouterMiddleware {
             }
         }
     }
-
-    /// Whether to return data from the file or a not modified response
-    private enum FileResult {
-        case notModified(HTTPFields)
-        case loadFile(String, HTTPFields, ClosedRange<Int>?)
-    }
 }
 
 extension FileMiddleware {
+    /// Whether to return data from the file or a not modified response
+    private enum FileResult {
+        case notModified(HTTPFields)
+        case loadFile(HTTPFields, ClosedRange<Int>?)
+    }
+
+    /// Return file attributes, and actual file path
+    private func getFileAttributes(path: String) async throws -> (path: String, attributes: FileAttributes) {
+        guard let attributes = try await self.fileProvider.getAttributes(path: path) else {
+            throw HTTPError(.notFound)
+        }
+        // if file is a directory seach and `searchForIndexHtml` is set to true
+        // then search for index.html in directory
+        if attributes.isFolder {
+            guard self.searchForIndexHtml else { throw IsDirectoryError() }
+            let indexPath = self.appendingPathComponent(path, "index.html")
+            guard let indexAttributes = try await self.fileProvider.getAttributes(path: indexPath) else {
+                throw HTTPError(.notFound)
+            }
+            return (path: indexPath, attributes: indexAttributes)
+        } else {
+            return (path: path, attributes: attributes)
+        }
+    }
+
+    /// Parse request headers and generate response headers
+    private func constructResponse(path: String, attributes: FileAttributes, request: Request) async throws -> FileResult {
+        let eTag = self.createETag([
+            String(describing: attributes.modificationDate.timeIntervalSince1970),
+            String(describing: attributes.size),
+        ])
+
+        // construct headers
+        var headers = HTTPFields()
+
+        // content-length
+        headers[.contentLength] = String(describing: attributes.size)
+        // modified-date
+        let modificationDateString = DateCache.rfc1123Formatter.string(from: attributes.modificationDate)
+        headers[.lastModified] = modificationDateString
+        // eTag (constructed from modification date and content size)
+        headers[.eTag] = eTag
+
+        // content-type
+        if let extPointIndex = path.lastIndex(of: ".") {
+            let extIndex = path.index(after: extPointIndex)
+            let ext = String(path.suffix(from: extIndex))
+            if let contentType = MediaType.getMediaType(forExtension: ext) {
+                headers[.contentType] = contentType.description
+            }
+        }
+
+        headers[.acceptRanges] = "bytes"
+
+        // cache-control
+        if let cacheControlValue = self.cacheControl.getCacheControlHeader(for: path) {
+            headers[.cacheControl] = cacheControlValue
+        }
+
+        // verify if-none-match. No need to verify if-match as this is used for state changing
+        // operations. Also the eTag we generate is considered weak.
+        let ifNoneMatch = request.headers[values: .ifNoneMatch]
+        if ifNoneMatch.count > 0 {
+            for match in ifNoneMatch {
+                if eTag == match {
+                    return .notModified(headers)
+                }
+            }
+        }
+        // verify if-modified-since
+        else if let ifModifiedSince = request.headers[.ifModifiedSince] {
+            if let ifModifiedSinceDate = DateCache.rfc1123Formatter.date(from: ifModifiedSince) {
+                // round modification date of file down to seconds for comparison
+                let modificationDateTimeInterval = attributes.modificationDate.timeIntervalSince1970.rounded(.down)
+                let ifModifiedSinceDateTimeInterval = ifModifiedSinceDate.timeIntervalSince1970
+                if modificationDateTimeInterval <= ifModifiedSinceDateTimeInterval {
+                    return .notModified(headers)
+                }
+            }
+        }
+
+        if let rangeHeader = request.headers[.range] {
+            guard let range = getRangeFromHeaderValue(rangeHeader) else {
+                throw HTTPError(.rangeNotSatisfiable)
+            }
+            // range request conditional on etag or modified date being equal to value in if-range
+            if let ifRange = request.headers[.ifRange], ifRange != headers[.eTag], ifRange != headers[.lastModified] {
+                // do nothing and drop down to returning full file
+            } else {
+                let lowerBound = max(range.lowerBound, 0)
+                let upperBound = min(range.upperBound, attributes.size - 1)
+                headers[.contentRange] = "bytes \(lowerBound)-\(upperBound)/\(attributes.size)"
+                // override content-length set above
+                headers[.contentLength] = String(describing: upperBound - lowerBound + 1)
+                return .loadFile(headers, range)
+            }
+        }
+        return .loadFile(headers, nil)
+    }
+
     /// Convert "bytes=value-value" range header into `ClosedRange<Int>`
     ///
     /// Also supports open ended ranges
@@ -281,6 +284,14 @@ extension FileMiddleware {
         }
 
         return "W/\"\(buffer.hexDigest())\""
+    }
+
+    private func appendingPathComponent(_ root: String, _ component: String) -> String {
+        if root.last == "/" {
+            return "\(root)\(component)"
+        } else {
+            return "\(root)/\(component)"
+        }
     }
 }
 
