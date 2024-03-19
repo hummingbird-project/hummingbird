@@ -96,7 +96,7 @@ extension BaseRequestContext {
     public var parameters: Parameters { coreContext.parameters }
     /// Request ID, extracted from Logger
     @inlinable
-    public var id: String { self.logger[metadataKey: "_id"]!.description }
+    public var id: String { self.logger[metadataKey: "hb_id"]!.description }
 }
 
 extension BaseRequestContext where Decoder == JSONDecoder {
