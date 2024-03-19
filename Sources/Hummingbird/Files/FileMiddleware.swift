@@ -231,7 +231,7 @@ extension FileMiddleware {
     /// Also supports open ended ranges
     private func getRangeFromHeaderValue(_ header: String) -> ClosedRange<Int>? {
         do {
-        var parser = Parser(header)
+            var parser = Parser(header)
             guard try parser.read("bytes=") else { return nil }
             let lower = parser.read { $0.properties.numericType == .decimal }.string
             guard try parser.read("-") else { return nil }
@@ -245,7 +245,7 @@ extension FileMiddleware {
                 return lowerBound...Int.max
             } else {
                 guard let lowerBound = Int(lower),
-                    let upperBound = Int(upper) else { return nil }
+                      let upperBound = Int(upper) else { return nil }
                 return lowerBound...upperBound
             }
         } catch {
