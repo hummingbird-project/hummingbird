@@ -14,6 +14,7 @@
 
 import Foundation
 import HTTPTypes
+import HummingbirdCore
 import Logging
 import NIOCore
 import NIOPosix
@@ -229,37 +230,27 @@ extension FileMiddleware {
     ///
     /// Also supports open ended ranges
     private func getRangeFromHeaderValue(_ header: String) -> ClosedRange<Int>? {
-        let groups = self.matchRegex(header, expression: "^bytes=([\\d]*)-([\\d]*)$")
-        guard groups.count == 3 else { return nil }
+        do {
+        var parser = Parser(header)
+            guard try parser.read("bytes=") else { return nil }
+            let lower = parser.read { $0.properties.numericType == .decimal }.string
+            guard try parser.read("-") else { return nil }
+            let upper = parser.read { $0.properties.numericType == .decimal }.string
 
-        if groups[1] == "" {
-            guard let upperBound = Int(groups[2]) else { return nil }
-            return 0...upperBound
-        } else if groups[2] == "" {
-            guard let lowerBound = Int(groups[1]) else { return nil }
-            return lowerBound...Int.max
-        } else {
-            guard let lowerBound = Int(groups[1]),
-                  let upperBound = Int(groups[2]) else { return nil }
-            return lowerBound...upperBound
+            if lower == "" {
+                guard let upperBound = Int(upper) else { return nil }
+                return 0...upperBound
+            } else if upper == "" {
+                guard let lowerBound = Int(lower) else { return nil }
+                return lowerBound...Int.max
+            } else {
+                guard let lowerBound = Int(lower),
+                    let upperBound = Int(upper) else { return nil }
+                return lowerBound...upperBound
+            }
+        } catch {
+            return nil
         }
-    }
-
-    private func matchRegex(_ string: String, expression: String) -> [Substring] {
-        let nsRange = NSRange(string.startIndex..<string.endIndex, in: string)
-        guard let regularExpression = try? NSRegularExpression(pattern: expression, options: []),
-              let firstMatch = regularExpression.firstMatch(in: string, range: nsRange)
-        else {
-            return []
-        }
-
-        var groups: [Substring] = []
-        groups.reserveCapacity(firstMatch.numberOfRanges)
-        for i in 0..<firstMatch.numberOfRanges {
-            guard let range = Range(firstMatch.range(at: i), in: string) else { continue }
-            groups.append(string[range])
-        }
-        return groups
     }
 
     private func createETag(_ strings: [String]) -> String {
