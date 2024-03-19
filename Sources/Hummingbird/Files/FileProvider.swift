@@ -23,6 +23,13 @@ public struct FileAttributes: Sendable {
     public let size: Int
     /// Last time file was modified
     public let modificationDate: Date
+
+    /// Initialize FileAttributes
+    public init(isFolder: Bool, size: Int, modificationDate: Date) {
+        self.isFolder = isFolder
+        self.size = size
+        self.modificationDate = modificationDate
+    }
 }
 
 /// Protocol for file provider type used by ``FileMiddleware``

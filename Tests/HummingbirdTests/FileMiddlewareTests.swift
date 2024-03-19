@@ -315,4 +315,48 @@ class FileMiddlewareTests: XCTestCase {
             }
         }
     }
+
+    func testCustomFileProvider() async throws {
+        // basic file provider
+        struct MemoryFileProvider: FileProvider {
+            init() {
+                self.files = [:]
+            }
+
+            func getFullPath(_ path: String) -> String {
+                return path
+            }
+
+            func getAttributes(path: String) async throws -> Hummingbird.FileAttributes? {
+                guard let file = files[path] else { return nil }
+                return .init(isFolder: false, size: file.readableBytes, modificationDate: Date.distantPast)
+            }
+
+            func loadFile(path: String, context: some Hummingbird.BaseRequestContext) async throws -> ResponseBody {
+                guard let file = files[path] else { throw HTTPError(.notFound) }
+                return .init(byteBuffer: file)
+            }
+
+            func loadFile(path: String, range: ClosedRange<Int>, context: some Hummingbird.BaseRequestContext) async throws -> ResponseBody {
+                guard let file = files[path] else { throw HTTPError(.notFound) }
+                guard let slice = file.getSlice(at: range.lowerBound, length: range.count) else { throw HTTPError(.rangeNotSatisfiable) }
+                return .init(byteBuffer: slice)
+            }
+
+            var files: [String: ByteBuffer]
+        }
+
+        var fileProvider = MemoryFileProvider()
+        fileProvider.files["test"] = ByteBuffer(string: "Test this")
+
+        let router = Router()
+        router.middlewares.add(FileMiddleware(fileProvider: fileProvider))
+        let app = Application(router: router)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "test", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(String(buffer: response.body), "Test this")
+            }
+        }
+    }
 }
