@@ -51,7 +51,9 @@ extension Benchmark {
                 try HTTP1Channel.Value(wrappingChannelSynchronously: channel)
             }.get()
             task = Task {
-                await http1.handle(value: asyncChannel, logger: Logger(label: "Testing"))
+                await withDiscardingTaskGroup { taskGroup in
+                    http1.handle(value: asyncChannel, logger: Logger(label: "Testing"), onTaskGroup: &taskGroup)
+                }
             }
         } teardown: {
             try await channel.close()
@@ -104,7 +106,7 @@ let benchmarks = {
         try await channel.writeInbound(HTTPRequestPart.body(buffer))
         try await channel.writeInbound(HTTPRequestPart.end(nil))
     } responder: { request, _ in
-        let buffer = try await request.body.collate(maxSize: .max)
+        let buffer = try await request.body.collect(upTo: .max)
         return .init(status: .ok, body: .init(byteBuffer: buffer))
     }
 }

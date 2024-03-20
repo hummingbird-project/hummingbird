@@ -1,4 +1,4 @@
-internal final class BinaryTrie<Value: Sendable>: Sendable {
+@_spi(Internal) public final class BinaryTrie<Value: Sendable>: Sendable {
     typealias Integer = UInt8
     let trie: ByteBuffer
     let values: [Value?]
@@ -9,7 +9,7 @@ internal final class BinaryTrie<Value: Sendable>: Sendable {
         case deadEnd
     }
 
-    init(base: RouterPathTrie<Value>) throws {
+    @_spi(Internal) public init(base: RouterPathTrie<Value>) throws {
         var trie = ByteBufferAllocator().buffer(capacity: 1024)
         var values = [base.root.value]
 

@@ -15,9 +15,9 @@
 import Benchmark
 @_spi(Internal) import Hummingbird
 
-func trieRouterBenchmarks() {
-    var trie: RouterPathTrie<String>!
-    Benchmark("TrieRouter", configuration: .init(scalingFactor: .kilo)) { benchmark in
+func binaryTrieRouterBenchmarks() {
+    var trie: BinaryTrie<String>!
+    Benchmark("BinaryTrieRouter", configuration: .init(scalingFactor: .kilo)) { benchmark in
         let testValues = [
             "/test/",
             "/test/one",
@@ -28,7 +28,7 @@ func trieRouterBenchmarks() {
         benchmark.startMeasurement()
 
         for _ in benchmark.scaledIterations {
-            blackHole(testValues.map { trie.getValueAndParameters($0) })
+            blackHole(testValues.map { trie.resolve($0) })
         }
     } setup: {
         let trieBuilder = RouterPathTrieBuilder<String>()
@@ -39,11 +39,11 @@ func trieRouterBenchmarks() {
         trieBuilder.addEntry("/test/:value/:value2", value: "/test/:value:/:value2")
         trieBuilder.addEntry("/api/v1/users/:id/profile", value: "/api/v1/users/:id/profile")
         trieBuilder.addEntry("/test2/*/*", value: "/test2/*/*")
-        trie = trieBuilder.build()
+        trie = try! BinaryTrie(base: trieBuilder.build())
     }
 
-    var trie2: RouterPathTrie<String>!
-    Benchmark("TrieRouterParameters", configuration: .init(scalingFactor: .kilo)) { benchmark in
+    var trie2: BinaryTrie<String>!
+    Benchmark("BinaryTrieRouterParameters", configuration: .init(scalingFactor: .kilo)) { benchmark in
         let testValues = [
             "/test/value",
             "/test/value1/value2",
@@ -53,7 +53,7 @@ func trieRouterBenchmarks() {
         benchmark.startMeasurement()
 
         for _ in benchmark.scaledIterations {
-            blackHole(testValues.map { trie2.getValueAndParameters($0) })
+            blackHole(testValues.map { trie2.resolve($0) })
         }
     } setup: {
         let trieBuilder = RouterPathTrieBuilder<String>()
@@ -61,6 +61,6 @@ func trieRouterBenchmarks() {
         trieBuilder.addEntry("/test/:value/:value2", value: "/test/:value:/:value2")
         trieBuilder.addEntry("/test2/*/*", value: "/test2/*/*")
         trieBuilder.addEntry("/api/v1/users/:id/profile", value: "/api/v1/users/:id/profile")
-        trie2 = trieBuilder.build()
+        trie2 = try! BinaryTrie(base: trieBuilder.build())
     }
 }
