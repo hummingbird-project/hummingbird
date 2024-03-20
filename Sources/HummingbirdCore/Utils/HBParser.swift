@@ -596,8 +596,7 @@ extension Parser {
         func _percentDecode(_ original: ArraySlice<UInt8>, _ bytes: UnsafeMutableBufferPointer<UInt8>) throws -> Int {
             var newIndex = 0
             var index = original.startIndex
-
-            while index < original.endIndex {
+            while index < (original.endIndex - 2) {
                 // if we have found a percent sign
                 if original[index] == 0x25 {
                     let high = Self.asciiHexValues[Int(original[index + 1])]
@@ -614,9 +613,13 @@ extension Parser {
                     index += 1
                 }
             }
+            while index < original.endIndex {
+                bytes[newIndex] = original[index]
+                newIndex += 1
+                index += 1
+            }
             return newIndex
         }
-
         guard self.index != self.range.endIndex else { return "" }
         do {
             if #available(macOS 11, macCatalyst 14.0, iOS 14.0, tvOS 14.0, *) {
