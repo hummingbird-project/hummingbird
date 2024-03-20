@@ -100,7 +100,7 @@ extension ApplicationProtocol {
         @Sendable func respond(to request: Request, channel: Channel) async throws -> Response {
             let context = Self.Responder.Context(
                 channel: channel,
-                logger: self.logger.with(metadataKey: "_id", value: .stringConvertible(RequestID()))
+                logger: self.logger.with(metadataKey: "hb_id", value: .stringConvertible(RequestID()))
             )
             // respond to request
             var response = try await responder.respond(to: request, context: context)

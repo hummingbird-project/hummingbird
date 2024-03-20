@@ -29,13 +29,13 @@ public struct LogRequestsMiddleware<Context: BaseRequestContext>: RouterMiddlewa
             context.logger.log(
                 level: self.logLevel,
                 "\(request.headers)",
-                metadata: ["_uri": .stringConvertible(request.uri), "_method": .string(request.method.rawValue)]
+                metadata: ["hb_uri": .stringConvertible(request.uri), "hb_method": .string(request.method.rawValue)]
             )
         } else {
             context.logger.log(
                 level: self.logLevel,
                 "",
-                metadata: ["_uri": .stringConvertible(request.uri), "_method": .string(request.method.rawValue)]
+                metadata: ["hb_uri": .stringConvertible(request.uri), "hb_method": .string(request.method.rawValue)]
             )
         }
         return try await next(request, context)

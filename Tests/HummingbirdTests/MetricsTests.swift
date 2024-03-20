@@ -194,11 +194,11 @@ final class MetricsTests: XCTestCase {
             try await client.execute(uri: "/hello", method: .get) { _ in }
         }
 
-        let counter = try XCTUnwrap(Self.testMetrics.counters["_requests"] as? TestCounter)
+        let counter = try XCTUnwrap(Self.testMetrics.counters["hb_requests"] as? TestCounter)
         XCTAssertEqual(counter.values[0].1, 1)
-        XCTAssertEqual(counter.dimensions[0].0, "_uri")
+        XCTAssertEqual(counter.dimensions[0].0, "hb_uri")
         XCTAssertEqual(counter.dimensions[0].1, "/hello")
-        XCTAssertEqual(counter.dimensions[1].0, "_method")
+        XCTAssertEqual(counter.dimensions[1].0, "hb_method")
         XCTAssertEqual(counter.dimensions[1].1, "GET")
     }
 
@@ -213,12 +213,12 @@ final class MetricsTests: XCTestCase {
             try await client.execute(uri: "/hello", method: .get) { _ in }
         }
 
-        let counter = try XCTUnwrap(Self.testMetrics.counters["_errors"] as? TestCounter)
+        let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
         XCTAssertEqual(counter.values.count, 1)
         XCTAssertEqual(counter.values[0].1, 1)
-        XCTAssertEqual(counter.dimensions[0].0, "_uri")
+        XCTAssertEqual(counter.dimensions[0].0, "hb_uri")
         XCTAssertEqual(counter.dimensions[0].1, "/hello")
-        XCTAssertEqual(counter.dimensions[1].0, "_method")
+        XCTAssertEqual(counter.dimensions[1].0, "hb_method")
         XCTAssertEqual(counter.dimensions[1].1, "GET")
     }
 
@@ -233,11 +233,11 @@ final class MetricsTests: XCTestCase {
             try await client.execute(uri: "/hello2", method: .get) { _ in }
         }
 
-        let counter = try XCTUnwrap(Self.testMetrics.counters["_errors"] as? TestCounter)
+        let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
         XCTAssertEqual(counter.values.count, 1)
         XCTAssertEqual(counter.values[0].1, 1)
         XCTAssertEqual(counter.dimensions.count, 1)
-        XCTAssertEqual(counter.dimensions[0].0, "_method")
+        XCTAssertEqual(counter.dimensions[0].0, "hb_method")
         XCTAssertEqual(counter.dimensions[0].1, "GET")
     }
 
@@ -252,13 +252,13 @@ final class MetricsTests: XCTestCase {
             try await client.execute(uri: "/user/765", method: .get) { _ in }
         }
 
-        let counter = try XCTUnwrap(Self.testMetrics.counters["_errors"] as? TestCounter)
+        let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
         XCTAssertEqual(counter.values.count, 1)
         XCTAssertEqual(counter.values[0].1, 1)
         XCTAssertEqual(counter.dimensions.count, 2)
-        XCTAssertEqual(counter.dimensions[0].0, "_uri")
+        XCTAssertEqual(counter.dimensions[0].0, "hb_uri")
         XCTAssertEqual(counter.dimensions[0].1, "/user/:id")
-        XCTAssertEqual(counter.dimensions[1].0, "_method")
+        XCTAssertEqual(counter.dimensions[1].0, "hb_method")
         XCTAssertEqual(counter.dimensions[1].1, "GET")
     }
 }
