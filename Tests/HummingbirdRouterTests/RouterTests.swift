@@ -309,7 +309,7 @@ final class RouterTests: XCTestCase {
             }
         }
     }
-    
+
     /// Test the hummingbird core parser against possible overflows of the percent encoder. this issue was introduced in pr #404 in the context of query parameters but I've thrown in some other random overflow scenarios in here too for good measure. if it doesn't crash, its a win.
     func testQueryParameterOverflow() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
@@ -318,7 +318,7 @@ final class RouterTests: XCTestCase {
                 return String("\(currentQP ?? "")")
             }
         }
-        let app = Application(router:router)
+        let app = Application(router: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/overflow?query=value%", method: .get) { response in
                 XCTAssertEqual(String(buffer: response.body), "value%")
@@ -327,7 +327,7 @@ final class RouterTests: XCTestCase {
                 XCTAssertEqual(String(buffer: response.body), "")
             }
             try await client.execute(uri: "/overflow?%&", method: .get) { response in
-            	XCTAssertEqual(String(buffer: response.body), "")
+                XCTAssertEqual(String(buffer: response.body), "")
             }
         }
     }
