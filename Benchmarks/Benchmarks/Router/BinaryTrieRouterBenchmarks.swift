@@ -63,4 +63,22 @@ func binaryTrieRouterBenchmarks() {
         trieBuilder.addEntry("/api/v1/users/:id/profile", value: "/api/v1/users/:id/profile")
         trie2 = try! BinaryTrie(base: trieBuilder.build())
     }
+
+    var trie3: BinaryTrie<String>!
+    Benchmark("BinaryTrie:LongPaths", configuration: .init(scalingFactor: .kilo)) { benchmark in
+        let testValues = [
+            "/api/v1/users/1/profile",
+            "/api/v1/a/very/long/path/with/lots/of/segments",
+        ]
+        benchmark.startMeasurement()
+
+        for _ in benchmark.scaledIterations {
+            blackHole(testValues.map { trie3.resolve($0) })
+        }
+    } setup: {
+        let trieBuilder = RouterPathTrieBuilder<String>()
+        trieBuilder.addEntry("/api/v1/a/very/long/path/with/lots/of/segments", value: "/api/v1/a/very/long/path/with/lots/of/segments")
+        trieBuilder.addEntry("/api/v1/users/:id/profile", value: "/api/v1/users/:id/profile")
+        trie3 = try! BinaryTrie(base: trieBuilder.build())
+    }
 }
