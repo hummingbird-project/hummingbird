@@ -15,6 +15,7 @@
 import Benchmark
 import HTTPTypes
 import Hummingbird
+import NIOEmbedded
 import NIOHTTPTypes
 @_spi(Internal) import HummingbirdCore
 import Logging
@@ -35,6 +36,7 @@ struct BenchmarkBodyWriter: Sendable, ResponseBodyWriter {
     func write(_: ByteBuffer) async throws {}
 }
 
+typealias ByteBufferWriter = (ByteBuffer) async throws -> Void
 extension Benchmark {
     @discardableResult
     convenience init?<Context: RequestContext>(
@@ -42,7 +44,7 @@ extension Benchmark {
         context: Context.Type = BasicBenchmarkContext.self,
         configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
         request: HTTPRequest,
-        writeBody: @escaping @Sendable (StreamedRequestBody.InboundStream.TestSource) async throws -> Void = { _ in },
+        writeBody: @escaping @Sendable (ByteBufferWriter) async throws -> Void = { _ in },
         setupRouter: @escaping @Sendable (Router<Context>) async throws -> Void
     ) {
         let router = Router(context: Context.self)
@@ -54,19 +56,16 @@ extension Benchmark {
                 for _ in 0..<50 {
                     try await withThrowingTaskGroup(of: Void.self) { group in
                         let context = Context(
-                            allocator: ByteBufferAllocator(),
+                            channel: EmbeddedChannel(),
                             logger: Logger(label: "Benchmark")
                         )
-                        let (inbound, source) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
-                        let streamer = StreamedRequestBody(iterator: inbound.makeAsyncIterator())
-                        let requestBody = RequestBody.stream(streamer)
+                        let (requestBody, source) = RequestBody.makeStream()
                         let Request = Request(head: request, body: requestBody)
                         group.addTask {
                             let response = try await responder.respond(to: Request, context: context)
                             _ = try await response.body.write(BenchmarkBodyWriter())
                         }
-                        try await writeBody(source)
-                        source.yield(.end(nil))
+                        try await writeBody(source.yield)
                         source.finish()
                     }
                 }
@@ -98,14 +97,14 @@ func routerBenchmarks() {
         name: "Router:PUT",
         configuration: .init(warmupIterations: 10),
         request: .init(method: .put, scheme: "http", authority: "localhost", path: "/")
-    ) { bodyStream in
-        bodyStream.yield(.body(buffer))
-        bodyStream.yield(.body(buffer))
-        bodyStream.yield(.body(buffer))
-        bodyStream.yield(.body(buffer))
+    ) { write in
+        try await write(buffer)
+        try await write(buffer)
+        try await write(buffer)
+        try await write(buffer)
     } setupRouter: { router in
         router.put { request, _ in
-            let body = try await request.body.collate(maxSize: .max)
+            let body = try await request.body.collect(upTo: .max)
             return body.readableBytes.description
         }
     }
@@ -114,11 +113,11 @@ func routerBenchmarks() {
         name: "Router:Echo",
         configuration: .init(warmupIterations: 10),
         request: .init(method: .post, scheme: "http", authority: "localhost", path: "/")
-    ) { bodyStream in
-        bodyStream.yield(.body(buffer))
-        bodyStream.yield(.body(buffer))
-        bodyStream.yield(.body(buffer))
-        bodyStream.yield(.body(buffer))
+    ) { write in
+        try await write(buffer)
+        try await write(buffer)
+        try await write(buffer)
+        try await write(buffer)
     } setupRouter: { router in
         router.post { request, _ in
             Response(status: .ok, headers: [:], body: .init { writer in
@@ -134,7 +133,7 @@ func routerBenchmarks() {
         configuration: .init(warmupIterations: 10),
         request: .init(method: .get, scheme: "http", authority: "localhost", path: "/")
     ) { router in
-        struct EmptyMiddleware<Context>: MiddlewareProtocol {
+        struct EmptyMiddleware<Context>: RouterMiddleware {
             func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 return try await next(request, context)
             }

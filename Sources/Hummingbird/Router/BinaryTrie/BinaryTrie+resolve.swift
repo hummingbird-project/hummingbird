@@ -2,7 +2,7 @@ import NIOCore
 
 extension BinaryTrie {
     /// Resolve a path to a `Value` if available
-    func resolve(_ path: String) -> (value: Value, parameters: Parameters)? {
+    @_spi(Internal) public func resolve(_ path: String) -> (value: Value, parameters: Parameters)? {
         var trie = trie
         var pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
         var parameters = Parameters()

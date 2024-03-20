@@ -15,10 +15,10 @@
 import HummingbirdCore
 
 /// URI Path Trie Builder
-struct RouterPathTrieBuilder<Value: Sendable> {
+@_spi(Internal) public struct RouterPathTrieBuilder<Value: Sendable> {
     var root: Node
 
-    init() {
+    public init() {
         self.root = Node(key: .null, output: nil)
     }
 
@@ -27,7 +27,7 @@ struct RouterPathTrieBuilder<Value: Sendable> {
     ///   - entry: Path for entry
     ///   - value: Value to add to this path if one does not exist already
     ///   - onAdd: How to edit the value at this path
-    func addEntry(_ entry: RouterPath, value: @autoclosure () -> Value, onAdd: (Node) -> Void = { _ in }) {
+    public func addEntry(_ entry: RouterPath, value: @autoclosure () -> Value, onAdd: (Node) -> Void = { _ in }) {
         var node = self.root
         for key in entry {
             node = node.addChild(key: key, output: nil)
@@ -40,7 +40,7 @@ struct RouterPathTrieBuilder<Value: Sendable> {
         }
     }
 
-    func build() -> RouterPathTrie<Value> {
+    public func build() -> RouterPathTrie<Value> {
         .init(root: self.root.build())
     }
 
@@ -49,7 +49,7 @@ struct RouterPathTrieBuilder<Value: Sendable> {
     }
 
     /// Trie Node. Each node represents one component of a URI path
-    final class Node {
+    @_spi(Internal) public final class Node {
         let key: RouterPath.Element
         var children: [Node]
         var value: Value?
@@ -135,20 +135,20 @@ public struct BinaryRouterResponder<Context: BaseRequestContext>: HTTPResponder 
     }
 }
 
-/// Trie used by Router responder
-struct RouterPathTrie<Value: Sendable>: Sendable {
-    let root: Node
+/// Triea used by Router responder
+@_spi(Internal) public struct RouterPathTrie<Value: Sendable>: Sendable {
+    public let root: Node
 
     /// Initialise RouterPathTrie
     /// - Parameter root: Root node of trie
-    init(root: Node) {
+    public init(root: Node) {
         self.root = root
     }
 
     /// Get value from trie and any parameters from capture nodes
     /// - Parameter path: Path to process
     /// - Returns: value and parameters
-    func getValueAndParameters(_ path: String) -> (value: Value, parameters: Parameters?)? {
+    @_spi(Internal) public func getValueAndParameters(_ path: String) -> (value: Value, parameters: Parameters?)? {
         let pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
         var parameters: Parameters?
         var node = self.root
@@ -179,7 +179,7 @@ struct RouterPathTrie<Value: Sendable>: Sendable {
     }
 
     /// Internally used Node to describe static trie
-    struct Node: Sendable {
+    @_spi(Internal) public struct Node: Sendable {
         let key: RouterPath.Element
         let children: [Node]
         let value: Value?
