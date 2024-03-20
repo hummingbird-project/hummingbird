@@ -15,14 +15,14 @@
 import Atomics
 
 /// Generate Unique ID for each request
-package struct RequestID: CustomStringConvertible {
+public struct RequestID: CustomStringConvertible {
     let low: UInt64
 
-    package init() {
+    public init() {
         self.low = Self.globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
     }
 
-    package var description: String {
+    public var description: String {
         Self.high + self.formatAsHexWithLeadingZeros(self.low)
     }
 
