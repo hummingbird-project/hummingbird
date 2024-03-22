@@ -15,12 +15,15 @@
 #if canImport(Network)
 import Foundation
 import Network
+import Security
 
 /// Wrapper for NIO transport services TLS options
 public struct TSTLSOptions: Sendable {
-    struct Error: Swift.Error, Equatable {
+    public struct Error: Swift.Error, Equatable {
         enum _Internal: Equatable {
             case invalidFormat
+            case interactionNotAllowed
+            case verificationFailed
         }
 
         private let value: _Internal
@@ -28,8 +31,12 @@ public struct TSTLSOptions: Sendable {
             self.value = value
         }
 
-        // static invalid conversion
-        static var invalidFormat: Self { .init(.invalidFormat) }
+        // invalid format
+        public static var invalidFormat: Self { .init(.invalidFormat) }
+        // unable to import p12 as no interaction is allowed
+        public static var interactionNotAllowed: Self { .init(.interactionNotAllowed) }
+        // MAC verification failed during PKCS12 import (wrong password?)
+        public static var verificationFailed: Self { .init(.verificationFailed) }
     }
 
     public struct Identity {
@@ -40,16 +47,25 @@ public struct TSTLSOptions: Sendable {
         }
 
         public static func p12(filename: String, password: String) throws -> Self {
-            guard let secIdentity = Self.loadP12(filename: filename, password: password) else { throw Error.invalidFormat }
+            guard let secIdentity = try Self.loadP12(filename: filename, password: password) else { throw Error.invalidFormat }
             return .init(secIdentity: secIdentity)
         }
 
-        private static func loadP12(filename: String, password: String) -> SecIdentity? {
-            guard let data = try? Data(contentsOf: URL(fileURLWithPath: filename)) else { return nil }
+        private static func loadP12(filename: String, password: String) throws -> SecIdentity? {
+            let data = try Data(contentsOf: URL(fileURLWithPath: filename))
             let options: [String: String] = [kSecImportExportPassphrase as String: password]
             var rawItems: CFArray?
             let result = SecPKCS12Import(data as CFData, options as CFDictionary, &rawItems)
-            guard result == errSecSuccess else { return nil }
+            switch result {
+            case errSecSuccess:
+                break
+            case errSecInteractionNotAllowed:
+                throw Error.interactionNotAllowed
+            case errSecPkcs12VerifyFailure:
+                throw Error.verificationFailed
+            default:
+                throw Error.invalidFormat
+            }
             let items = rawItems! as! [[String: Any]]
             let firstItem = items[0]
             return firstItem[kSecImportItemIdentity as String] as! SecIdentity?
