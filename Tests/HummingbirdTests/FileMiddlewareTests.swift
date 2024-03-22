@@ -53,6 +53,18 @@ class FileMiddlewareTests: XCTestCase {
         }
     }
 
+    func testNotAFile() async throws {
+        let router = Router()
+        router.middlewares.add(FileMiddleware("."))
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.router) { client in
+            try await client.execute(uri: "missed.jpg", method: .get) { response in
+                XCTAssertEqual(response.status, .notFound)
+            }
+        }
+    }
+
     func testReadLargeFile() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware("."))
@@ -300,6 +312,56 @@ class FileMiddlewareTests: XCTestCase {
         try await app.test(.router) { client in
             try await client.execute(uri: "/", method: .get) { response in
                 XCTAssertEqual(String(buffer: response.body), text)
+            }
+        }
+    }
+
+    func testCustomFileProvider() async throws {
+        // basic file provider
+        struct MemoryFileProvider: FileProvider {
+            struct FileAttributes: FileMiddlewareFileAttributes {
+                var isFolder: Bool { false }
+                var modificationDate: Date { .distantPast }
+                let size: Int
+            }
+
+            init() {
+                self.files = [:]
+            }
+
+            func getFullPath(_ path: String) -> String {
+                return path
+            }
+
+            func getAttributes(path: String) async throws -> FileAttributes? {
+                guard let file = files[path] else { return nil }
+                return .init(size: file.readableBytes)
+            }
+
+            func loadFile(path: String, context: some BaseRequestContext) async throws -> ResponseBody {
+                guard let file = files[path] else { throw HTTPError(.notFound) }
+                return .init(byteBuffer: file)
+            }
+
+            func loadFile(path: String, range: ClosedRange<Int>, context: some BaseRequestContext) async throws -> ResponseBody {
+                guard let file = files[path] else { throw HTTPError(.notFound) }
+                guard let slice = file.getSlice(at: range.lowerBound, length: range.count) else { throw HTTPError(.rangeNotSatisfiable) }
+                return .init(byteBuffer: slice)
+            }
+
+            var files: [String: ByteBuffer]
+        }
+
+        var fileProvider = MemoryFileProvider()
+        fileProvider.files["test"] = ByteBuffer(string: "Test this")
+
+        let router = Router()
+        router.middlewares.add(FileMiddleware(fileProvider: fileProvider))
+        let app = Application(router: router)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "test", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(String(buffer: response.body), "Test this")
             }
         }
     }
