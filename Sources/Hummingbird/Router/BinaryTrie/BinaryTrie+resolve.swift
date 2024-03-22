@@ -29,7 +29,8 @@ extension BinaryTrie {
             in: &trie,
             index: 0,
             parameters: &parameters,
-            components: &pathComponents
+            components: &pathComponents,
+            isInRecursiveWildcard: false
         )
     }
 
@@ -43,12 +44,105 @@ extension BinaryTrie {
         return nil
     }
 
+    private enum MatchResult {
+        case match, mismatch, recursivelyDiscarded, ignore, deadEnd
+    }
+
+    private func matchComponent(
+        _ component: inout Substring, 
+        withToken token: TokenKind,
+        in trie: inout ByteBuffer,
+        parameters: inout Parameters
+    ) -> MatchResult {
+        switch token {
+        case .path:
+            // The current node is a constant
+            guard
+                let length: Integer = trie.readInteger(),
+                trie.readAndCompareString(to: &component, length: length)
+            else {
+                return .mismatch
+            }
+
+            return .match
+        case .capture:
+            // The current node is a parameter
+            guard
+                let length: Integer = trie.readInteger(),
+                let parameter = trie.readString(length: Int(length))
+            else {
+                return .mismatch
+            }
+
+            parameters[Substring(parameter)] = component
+            return .match
+        case .prefixCapture:
+            guard
+                let suffixLength: Integer = trie.readInteger(),
+                let suffix = trie.readString(length: Int(suffixLength)),
+                let parameterLength: Integer = trie.readInteger(),
+                let parameter = trie.readString(length: Int(parameterLength)),
+                component.hasSuffix(suffix)
+            else {
+                return .mismatch
+            }
+
+            component.removeLast(suffix.count)
+            parameters[Substring(parameter)] = component
+            return .match
+        case .suffixCapture:
+            guard
+                let prefixLength: Integer = trie.readInteger(),
+                let prefix = trie.readString(length: Int(prefixLength)),
+                let parameterLength: Integer = trie.readInteger(),
+                let parameter = trie.readString(length: Int(parameterLength)),
+                component.hasPrefix(prefix)
+            else {
+                return .mismatch
+            }
+
+            component.removeFirst(Int(prefixLength))
+            parameters[Substring(parameter)] = component
+            return .match
+        case .wildcard:
+            // Always matches, descend
+            return .match
+        case .prefixWildcard:
+            guard
+                let suffixLength: Integer = trie.readInteger(),
+                let suffix = trie.readString(length: Int(suffixLength)),
+                component.hasSuffix(suffix)
+            else {
+                return .mismatch
+            }
+
+            return .match
+        case .suffixWildcard:
+            guard
+                let prefixLength: Integer = trie.readInteger(),
+                let prefix = trie.readString(length: Int(prefixLength)),
+                component.hasPrefix(prefix)
+            else {
+                return .mismatch
+            }
+
+            return .match
+        case .recursiveWildcard:
+            return .recursivelyDiscarded
+        case .null:
+            return .ignore
+        case .deadEnd:
+            return .deadEnd
+        }
+    }
+
     /// A function that takes a path component and descends the trie to find the value
     private func descendPath(
         in trie: inout ByteBuffer,
         index: UInt16,
         parameters: inout Parameters,
-        components: inout [Substring]
+        components: inout [Substring],
+        isInRecursiveWildcard: Bool
     ) -> (value: Value, parameters: Parameters)? {
         // If there are no more components in the path, return the value found
         if components.isEmpty {
@@ -64,103 +158,51 @@ extension BinaryTrie {
             let index = trie.readInteger(as: UInt16.self),
             let _token: Integer = trie.readInteger(),
             let token = TokenKind(rawValue: _token),
-            let nextNodeIndex: UInt32 = trie.readInteger()
+            let nextSiblingNodeIndex: UInt32 = trie.readInteger()
         {
-            switch token {
-            case .path:
-                // The current node is a constant
-                guard
-                    let length: Integer = trie.readInteger(),
-                    trie.readAndCompareString(to: &component, length: length)
-                else {
-                    // The constant's does not match the component's length
-                    // So we can skip to the next sibling
-                    trie.moveReaderIndex(to: Int(nextNodeIndex))
+            repeat {
+                // Record the current readerIndex
+                // ``matchComponent`` moves the reader index forward, so we'll need to reset it
+                // If we're in a recursiveWildcard and this component does not match
+                let readerIndex = trie.readerIndex
+                let result = matchComponent(&component, withToken: token, in: &trie, parameters: &parameters)
+
+                switch result {
+                case .match:
+                    return descendPath(
+                        in: &trie,
+                        index: index,
+                        parameters: &parameters,
+                        components: &components,
+                        isInRecursiveWildcard: false
+                    )
+                case .mismatch where isInRecursiveWildcard:
+                    if components.isEmpty {
+                        return nil
+                    }
+
+                    component = components.removeFirst()
+                    // Move back he readerIndex, so that we can retry this step again with
+                    // the next component
+                    trie.moveReaderIndex(to: readerIndex)
+                case .mismatch:
+                    // Move to the next sibling-node, not descending a level
+                    trie.moveReaderIndex(to: Int(nextSiblingNodeIndex))
                     continue
-                }
-            case .capture:
-                // The current node is a parameter
-                guard
-                    let length: Integer = trie.readInteger(),
-                    let parameter = trie.readString(length: Int(length))
-                else {
-                    // The constant's does not match the component's length
-                    // So we can skip to the next sibling
-                    trie.moveReaderIndex(to: Int(nextNodeIndex))
+                case .recursivelyDiscarded:
+                    return descendPath(
+                        in: &trie,
+                        index: index,
+                        parameters: &parameters,
+                        components: &components,
+                        isInRecursiveWildcard: true
+                    )
+                case .ignore:
+                    continue
+                case .deadEnd:
                     return nil
                 }
-
-                parameters[Substring(parameter)] = component
-            case .prefixCapture:
-                guard
-                    let suffixLength: Integer = trie.readInteger(),
-                    let suffix = trie.readString(length: Int(suffixLength)),
-                    let parameterLength: Integer = trie.readInteger(),
-                    let parameter = trie.readString(length: Int(parameterLength)),
-                    component.hasSuffix(suffix)
-                else {
-                    // The constant's does not match the component's length
-                    // So we can skip to the next sibling
-                    trie.moveReaderIndex(to: Int(nextNodeIndex))
-                    continue
-                }
-
-                component.removeLast(suffix.count)
-                parameters[Substring(parameter)] = component
-            case .suffixCapture:
-                guard
-                    let prefixLength: Integer = trie.readInteger(),
-                    trie.readAndCompareString(to: &component, length: prefixLength),
-                    let parameterLength: Integer = trie.readInteger(),
-                    let parameter = trie.readString(length: Int(parameterLength))
-                else {
-                    // The constant's does not match the component's length
-                    // So we can skip to the next sibling
-                    trie.moveReaderIndex(to: Int(nextNodeIndex))
-                    continue
-                }
-
-                component.removeFirst(Int(prefixLength))
-                parameters[Substring(parameter)] = component
-            case .wildcard:
-                // Always matches, descend
-                ()
-            case .prefixWildcard:
-                guard
-                    let suffixLength: Integer = trie.readInteger(),
-                    let suffix = trie.readString(length: Int(suffixLength)),
-                    component.hasSuffix(suffix)
-                else {
-                    // The constant's does not match the component's length
-                    // So we can skip to the next sibling
-                    trie.moveReaderIndex(to: Int(nextNodeIndex))
-                    continue
-                }
-            case .suffixWildcard:
-                guard
-                    let prefixLength: Integer = trie.readInteger(),
-                    trie.readAndCompareString(to: &component, length: prefixLength)
-                else {
-                    // The constant's does not match the component's length
-                    // So we can skip to the next sibling
-                    trie.moveReaderIndex(to: Int(nextNodeIndex))
-                    continue
-                }
-            case .recursiveWildcard:
-                fatalError()
-            case .null:
-                continue
-            case .deadEnd:
-                return nil
-            }
-
-            // This node matches!
-            return descendPath(
-                in: &trie,
-                index: index,
-                parameters: &parameters,
-                components: &components
-            )
+            } while isInRecursiveWildcard
         }
 
         return nil

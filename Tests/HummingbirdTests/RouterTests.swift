@@ -220,8 +220,6 @@ final class RouterTests: XCTestCase {
         }
     }
 
-    // TODO: No recursive wildcard test yet
-
     /// Test adding middleware to group doesn't affect middleware in parent groups
     func testGroupGroupMiddleware2() async throws {
         struct TestGroupMiddleware: RouterMiddleware {
@@ -448,6 +446,19 @@ final class RouterTests: XCTestCase {
                 XCTAssertEqual(response.status, .ok)
             }
             try await client.execute(uri: "/LOWERCASED", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+        }
+    }
+
+    func testRecursiveWildcard() async throws {
+        let router = Router()
+        router.get("/api/v1/**/greet") { _, _ in
+            return HTTPResponse.Status.ok
+        }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/api/v1/a/b/c/d/e/f/greet", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
             }
         }
