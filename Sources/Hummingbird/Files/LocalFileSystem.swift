@@ -28,7 +28,7 @@ public struct LocalFileSystem: FileProvider {
         public let modificationDate: Date
 
         /// Initialize FileAttributes
-        public init(isFolder: Bool, size: Int, modificationDate: Date) {
+        init(isFolder: Bool, size: Int, modificationDate: Date) {
             self.isFolder = isFolder
             self.size = size
             self.modificationDate = modificationDate
