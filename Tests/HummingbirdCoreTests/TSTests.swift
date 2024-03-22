@@ -48,9 +48,13 @@ class TransportServicesTests: XCTestCase {
     func testTLS() async throws {
         let eventLoopGroup = NIOTSEventLoopGroup()
         let p12Path = Bundle.module.path(forResource: "server", ofType: "p12")!
-        let tlsOptions = try XCTUnwrap(TSTLSOptions.options(
-            serverIdentity: .p12(filename: p12Path, password: "HBTests")
-        ))
+        let tlsOptions: TSTLSOptions
+        do {
+            let identity = try TSTLSOptions.Identity.p12(filename: p12Path, password: "HBTests")
+            tlsOptions = try XCTUnwrap(TSTLSOptions.options(serverIdentity: identity))
+        } catch let error as TSTLSOptions.Error where error == .interactionNotAllowed {
+            throw XCTSkip("Unable to import PKCS12 bundle: no interaction allowed")
+        }
         try await testServer(
             responder: helloResponder,
             configuration: .init(address: .hostname(port: 0), serverName: testServerName, tlsOptions: tlsOptions),
