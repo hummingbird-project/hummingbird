@@ -451,6 +451,19 @@ final class RouterTests: XCTestCase {
         }
     }
 
+    func testRecursiveWildcard() async throws {
+        let router = Router()
+        router.get("/api/v1/**/greet") { _, _ in
+            return HTTPResponse.Status.ok
+        }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/api/v1/a/b/c/d/e/f/greet", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+        }
+    }
+
     // Test auto generation of HEAD endpoints works
     func testAutoGenerateHeadEndpoints() async throws {
         let router = Router(options: .autoGenerateHeadEndpoints)
