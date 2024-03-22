@@ -62,4 +62,4 @@ And also the following are available in other repositories in this organisation
 
 ## Documentation
 
-You can find reference documentation and user guides for Hummingbird [here](https://hummingbird-project.github.io/hummingbird-docs/2.0/documentation/hummingbird/). The [hummingbird-examples](https://github.com/hummingbird-project/hummingbird-examples/tree/main) repository has a number of examples of different uses of the library.
+You can find reference documentation and user guides for Hummingbird [here](https://docs.hummingbird.codes/2.0/documentation/hummingbird/). The [hummingbird-examples](https://github.com/hummingbird-project/hummingbird-examples/tree/main) repository has a number of examples of different uses of the library.
