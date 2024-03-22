@@ -16,8 +16,25 @@ import Foundation
 import Logging
 import NIOPosix
 
-/// Local file system file provider. All file accesses are relative to a root folder
+/// Local file system file provider used by FileMiddleware. All file accesses are relative to a root folder
 public struct LocalFileSystem: FileProvider {
+    /// File attributes required by ``FileMiddleware``
+    public struct FileAttributes: Sendable, FileMiddlewareFileAttributes {
+        /// Is file a folder
+        public let isFolder: Bool
+        /// Size of file
+        public let size: Int
+        /// Last time file was modified
+        public let modificationDate: Date
+
+        /// Initialize FileAttributes
+        public init(isFolder: Bool, size: Int, modificationDate: Date) {
+            self.isFolder = isFolder
+            self.size = size
+            self.modificationDate = modificationDate
+        }
+    }
+
     let rootFolder: String
     let fileIO: FileIO
 

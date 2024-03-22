@@ -15,25 +15,11 @@
 import Foundation
 import NIOPosix
 
-/// File attributes required by ``FileMiddleware``
-public struct FileAttributes: Sendable {
-    /// Is file a folder
-    public let isFolder: Bool
-    /// Size of file
-    public let size: Int
-    /// Last time file was modified
-    public let modificationDate: Date
-
-    /// Initialize FileAttributes
-    public init(isFolder: Bool, size: Int, modificationDate: Date) {
-        self.isFolder = isFolder
-        self.size = size
-        self.modificationDate = modificationDate
-    }
-}
-
 /// Protocol for file provider type used by ``FileMiddleware``
 public protocol FileProvider: Sendable {
+    /// File attributes type
+    associatedtype FileAttributes
+
     /// Get full path name
     /// - Parameter path: path from URI
     /// - Returns: Full path

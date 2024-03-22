@@ -19,6 +19,18 @@ import Logging
 import NIOCore
 import NIOPosix
 
+/// Protocol for all the file attributes required by ``FileMiddleware``
+///
+/// Requirements for the FileAttributes  of the ``FileProvider`` you use with your FileMiddleware
+public protocol FileMiddlewareFileAttributes {
+    /// Is file a folder
+    var isFolder: Bool { get }
+    /// Size of file
+    var size: Int { get }
+    /// Last time file was modified
+    var modificationDate: Date { get }
+}
+
 /// Middleware for serving static files.
 ///
 /// If router returns a 404 ie a route was not found then this middleware will treat the request
@@ -29,7 +41,7 @@ import NIOPosix
 /// "if-modified-since", "if-none-match", "if-range" and 'range" headers. It will output "content-length",
 /// "modified-date", "eTag", "content-type", "cache-control" and "content-range" headers where
 /// they are relevant.
-public struct FileMiddleware<Context: BaseRequestContext, Provider: FileProvider>: RouterMiddleware {
+public struct FileMiddleware<Context: BaseRequestContext, Provider: FileProvider>: RouterMiddleware where Provider.FileAttributes: FileMiddlewareFileAttributes {
     struct IsDirectoryError: Error {}
 
     let cacheControl: CacheControl
@@ -133,7 +145,7 @@ extension FileMiddleware {
     }
 
     /// Return file attributes, and actual file path
-    private func getFileAttributes(path: String) async throws -> (path: String, attributes: FileAttributes) {
+    private func getFileAttributes(path: String) async throws -> (path: String, attributes: Provider.FileAttributes) {
         guard let attributes = try await self.fileProvider.getAttributes(path: path) else {
             throw HTTPError(.notFound)
         }
@@ -152,7 +164,7 @@ extension FileMiddleware {
     }
 
     /// Parse request headers and generate response headers
-    private func constructResponse(path: String, attributes: FileAttributes, request: Request) async throws -> FileResult {
+    private func constructResponse(path: String, attributes: Provider.FileAttributes, request: Request) async throws -> FileResult {
         let eTag = self.createETag([
             String(describing: attributes.modificationDate.timeIntervalSince1970),
             String(describing: attributes.size),
