@@ -4,15 +4,11 @@ on:
   push:
     branches:
     - main
+    - 1.x.x
     paths:
     - '**.swift'
     - '**.yml'
   pull_request:
-    branches:
-    - main
-    paths:
-    - '**.swift'
-    - '**.yml'
   workflow_dispatch:
 
 jobs:
