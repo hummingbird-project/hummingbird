@@ -71,6 +71,26 @@ public struct ResponseBody: Sendable {
         self.init(contentLength: contentLength, write: write)
     }
 
+    /// Create new response body that call a callback once original response body has been written
+    /// to the channel
+    ///
+    /// When you return a response from a handler, this cannot be considered to be the point the
+    /// response was written. This functions provides you a method for catching the point when the
+    /// response has been fully written. If you drop the response in a middleware run after this
+    /// point the post write closure will not get run.
+    public func withPostWriteClosure(_ postWrite: @escaping @Sendable () async -> Void) -> Self {
+        return .init(contentLength: self.contentLength) { writer in
+            do {
+                let result = try await self.write(writer)
+                await postWrite()
+                return result
+            } catch {
+                await postWrite()
+                throw error
+            }
+        }
+    }
+
     /// Initialise ResponseBody with closure writing body contents
     ///
     /// This version of init is private and only available via ``withTrailingHeaders`` because

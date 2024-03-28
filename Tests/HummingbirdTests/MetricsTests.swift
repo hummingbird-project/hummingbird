@@ -263,14 +263,14 @@ final class MetricsTests: XCTestCase {
     }
 
     func testRecordingBodyWriteTime() async throws {
-        let router = HBRouter()
-        router.middlewares.add(HBMetricsMiddleware())
-        router.get("/hello") { _, _ -> HBResponse in
-            return HBResponse(status: .ok, body: .init { _ in
+        let router = Router()
+        router.middlewares.add(MetricsMiddleware())
+        router.get("/hello") { _, _ -> Response in
+            return Response(status: .ok, body: .init { _ in
                 try await Task.sleep(for: .milliseconds(5))
             })
         }
-        let app = HBApplication(responder: router.buildResponder())
+        let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get) { _ in }
         }

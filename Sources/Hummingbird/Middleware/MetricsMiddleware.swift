@@ -27,9 +27,7 @@ public struct MetricsMiddleware<Context: BaseRequestContext>: RouterMiddleware {
 
         do {
             var response = try await next(request, context)
-            let originalBody = response.body
-            response.body = .withTrailingHeaders { writer in
-                let headers = try await originalBody.write(writer)
+            response.body = response.body.withPostWriteClosure {
                 // need to create dimensions once request has been responded to ensure
                 // we have the correct endpoint path
                 let dimensions: [(String, String)] = [
@@ -42,7 +40,6 @@ public struct MetricsMiddleware<Context: BaseRequestContext>: RouterMiddleware {
                     dimensions: dimensions,
                     preferredDisplayUnit: .seconds
                 ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
-                return headers
             }
             return response
         } catch {
