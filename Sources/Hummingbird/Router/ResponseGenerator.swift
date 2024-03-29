@@ -54,7 +54,7 @@ extension ByteBuffer: ResponseGenerator {
     }
 }
 
-/// Extend HTTPResponseStatus to conform to ResponseGenerator
+/// Extend HTTPResponse.Status to conform to ResponseGenerator
 extension HTTPResponse.Status: ResponseGenerator {
     /// Generate response with this response status code
     public func response(from request: Request, context: some BaseRequestContext) -> Response {

@@ -26,7 +26,7 @@ import NIOCore
 /// router.get("string") { _, _ -> String in
 ///     return "string"
 /// }
-/// router.post("status") { _, _ -> HTTPResponseStatus in
+/// router.post("status") { _, _ -> HTTPResponse.Status in
 ///     return .ok
 /// }
 /// router.data("data") { request, context -> ByteBuffer in

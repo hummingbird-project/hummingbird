@@ -34,7 +34,7 @@ extension Response {
         /// must be used in the second request.
         case temporary
 
-        /// Associated `HTTPResponseStatus` for this redirect type.
+        /// Associated `HTTPResponse.Status` for this redirect type.
         public var status: HTTPResponse.Status {
             switch self {
             case .permanent: return .movedPermanently
