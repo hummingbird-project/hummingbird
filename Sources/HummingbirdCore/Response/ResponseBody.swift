@@ -78,7 +78,7 @@ public struct ResponseBody: Sendable {
     /// response was written. This functions provides you a method for catching the point when the
     /// response has been fully written. If you drop the response in a middleware run after this
     /// point the post write closure will not get run.
-    public func withPostWriteClosure(_ postWrite: @escaping @Sendable () async -> Void) -> Self {
+    package func withPostWriteClosure(_ postWrite: @escaping @Sendable () async -> Void) -> Self {
         return .init(contentLength: self.contentLength) { writer in
             do {
                 let result = try await self.write(writer)
