@@ -261,4 +261,21 @@ final class MetricsTests: XCTestCase {
         XCTAssertEqual(counter.dimensions[1].0, "hb_method")
         XCTAssertEqual(counter.dimensions[1].1, "GET")
     }
+
+    func testRecordingBodyWriteTime() async throws {
+        let router = Router()
+        router.middlewares.add(MetricsMiddleware())
+        router.get("/hello") { _, _ -> Response in
+            return Response(status: .ok, body: .init { _ in
+                try await Task.sleep(for: .milliseconds(5))
+            })
+        }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/hello", method: .get) { _ in }
+        }
+
+        let timer = try XCTUnwrap(Self.testMetrics.timers["hb_request_duration"] as? TestTimer)
+        XCTAssertGreaterThan(timer.values[0].1, 5_000_000)
+    }
 }
