@@ -154,8 +154,14 @@ final class ClientTests: XCTestCase {
     func testTransportServicesTLSClient() async throws {
         let p12Path = Bundle.module.path(forResource: "client", ofType: "p12")!
         let derPath = Bundle.module.path(forResource: "ca", ofType: "der")!
+        let identity: TSTLSOptions.Identity
+        do {
+            identity = try .p12(filename: p12Path, password: "HBTests")
+        } catch let error as TSTLSOptions.Error where error == .interactionNotAllowed {
+            throw XCTSkip("Unable to import PKCS12 bundle: no interaction allowed")
+        }
         let tlsOptions = try XCTUnwrap(TSTLSOptions.options(
-            clientIdentity: .p12(filename: p12Path, password: "HBTests"),
+            clientIdentity: identity,
             trustRoots: .der(filename: derPath),
             serverName: testServerName
         ))
