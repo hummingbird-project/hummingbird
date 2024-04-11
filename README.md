@@ -39,7 +39,7 @@ let app = Application(
 try await app.runService()
 ```
 
-Hummingbird v2 is currently in development an [alpha release](https://github.com/hummingbird-project/hummingbird/releases/tag/2.0.0-alpha.1) is available if you'd like to try it out.
+Hummingbird v2 is currently in development an [beta release](https://github.com/hummingbird-project/hummingbird/releases/tag/2.0.0-beta.2) is available if you'd like to try it out.
 
 ### Hummingbird Extensions
 
