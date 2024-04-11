@@ -51,9 +51,7 @@ extension Benchmark {
                 try HTTP1Channel.Value(wrappingChannelSynchronously: channel)
             }.get()
             task = Task {
-                await withDiscardingTaskGroup { taskGroup in
-                    http1.handle(value: asyncChannel, logger: Logger(label: "Testing"), onTaskGroup: &taskGroup)
-                }
+                await http1.handle(value: asyncChannel, logger: Logger(label: "Testing"))
             }
         } teardown: {
             try await channel.close()

@@ -18,7 +18,7 @@ extension BinaryTrie {
     /// Resolve a path to a `Value` if available
     @_spi(Internal) public func resolve(_ path: String) -> (value: Value, parameters: Parameters)? {
         var trie = trie
-        var pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
+        var pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)[...]
         var parameters = Parameters()
 
         if pathComponents.isEmpty {
@@ -49,8 +49,8 @@ extension BinaryTrie {
     }
 
     private func matchComponent(
-        _ component: inout Substring, 
-        withToken token: TokenKind,
+        _ component: Substring,
+        withToken token: BinaryTrieTokenKind,
         in trie: inout ByteBuffer,
         parameters: inout Parameters
     ) -> MatchResult {
@@ -58,8 +58,10 @@ extension BinaryTrie {
         case .path:
             // The current node is a constant
             guard
-                let length: Integer = trie.readInteger(),
-                trie.readAndCompareString(to: &component, length: length)
+                trie.readAndCompareString(
+                    to: component,
+                    length: Integer.self
+                )
             else {
                 return .mismatch
             }
@@ -68,8 +70,7 @@ extension BinaryTrie {
         case .capture:
             // The current node is a parameter
             guard
-                let length: Integer = trie.readInteger(),
-                let parameter = trie.readString(length: Int(length))
+                let parameter = trie.readLengthPrefixedString(as: Integer.self)
             else {
                 return .mismatch
             }
@@ -78,39 +79,32 @@ extension BinaryTrie {
             return .match
         case .prefixCapture:
             guard
-                let suffixLength: Integer = trie.readInteger(),
-                let suffix = trie.readString(length: Int(suffixLength)),
-                let parameterLength: Integer = trie.readInteger(),
-                let parameter = trie.readString(length: Int(parameterLength)),
+                let suffix = trie.readLengthPrefixedString(as: Integer.self),
+                let parameter = trie.readLengthPrefixedString(as: Integer.self),
                 component.hasSuffix(suffix)
             else {
                 return .mismatch
             }
 
-            component.removeLast(suffix.count)
-            parameters[Substring(parameter)] = component
+            parameters[Substring(parameter)] = component.dropLast(suffix.count)
             return .match
         case .suffixCapture:
             guard
-                let prefixLength: Integer = trie.readInteger(),
-                let prefix = trie.readString(length: Int(prefixLength)),
-                let parameterLength: Integer = trie.readInteger(),
-                let parameter = trie.readString(length: Int(parameterLength)),
+                let prefix = trie.readLengthPrefixedString(as: Integer.self),
+                let parameter = trie.readLengthPrefixedString(as: Integer.self),
                 component.hasPrefix(prefix)
             else {
                 return .mismatch
             }
 
-            component.removeFirst(Int(prefixLength))
-            parameters[Substring(parameter)] = component
+            parameters[Substring(parameter)] = component.dropFirst(prefix.count)
             return .match
         case .wildcard:
             // Always matches, descend
             return .match
         case .prefixWildcard:
             guard
-                let suffixLength: Integer = trie.readInteger(),
-                let suffix = trie.readString(length: Int(suffixLength)),
+                let suffix = trie.readLengthPrefixedString(as: Integer.self),
                 component.hasSuffix(suffix)
             else {
                 return .mismatch
@@ -119,8 +113,7 @@ extension BinaryTrie {
             return .match
         case .suffixWildcard:
             guard
-                let prefixLength: Integer = trie.readInteger(),
-                let prefix = trie.readString(length: Int(prefixLength)),
+                let prefix = trie.readLengthPrefixedString(as: Integer.self),
                 component.hasPrefix(prefix)
             else {
                 return .mismatch
@@ -141,7 +134,7 @@ extension BinaryTrie {
         in trie: inout ByteBuffer,
         index: UInt16,
         parameters: inout Parameters,
-        components: inout [Substring],
+        components: inout ArraySlice<Substring>,
         isInRecursiveWildcard: Bool
     ) -> (value: Value, parameters: Parameters)? {
         // If there are no more components in the path, return the value found
@@ -154,10 +147,9 @@ extension BinaryTrie {
         
         // Check the current node type through TokenKind
         // And read the location of the _next_ node from the trie buffer
-        while 
+        while
             let index = trie.readInteger(as: UInt16.self),
-            let _token: Integer = trie.readInteger(),
-            let token = TokenKind(rawValue: _token),
+            let token = trie.readToken(),
             let nextSiblingNodeIndex: UInt32 = trie.readInteger()
         {
             repeat {
@@ -165,7 +157,7 @@ extension BinaryTrie {
                 // ``matchComponent`` moves the reader index forward, so we'll need to reset it
                 // If we're in a recursiveWildcard and this component does not match
                 let readerIndex = trie.readerIndex
-                let result = matchComponent(&component, withToken: token, in: &trie, parameters: &parameters)
+                let result = matchComponent(component, withToken: token, in: &trie, parameters: &parameters)
 
                 switch result {
                 case .match:
@@ -181,7 +173,9 @@ extension BinaryTrie {
                         return nil
                     }
 
-                    component = components.removeFirst()
+                    component = components[components.startIndex]
+                    components = components.dropFirst()
+
                     // Move back he readerIndex, so that we can retry this step again with
                     // the next component
                     trie.moveReaderIndex(to: readerIndex)
@@ -220,9 +214,19 @@ import Glibc
 #endif
 
 fileprivate extension ByteBuffer {
-    mutating func readAndCompareString<Length: FixedWidthInteger>(to string: inout Substring, length: Length) -> Bool {
-        let length = Int(length)
-        return string.withUTF8 { utf8 in
+    mutating func readAndCompareString<Length: FixedWidthInteger>(
+        to string: Substring,
+        length: Length.Type
+    ) -> Bool {
+        guard
+            let _length: Length = readInteger()
+        else {
+            return false
+        }
+
+        let length = Int(_length)
+
+        func compare(utf8: UnsafeBufferPointer<UInt8>) -> Bool {
             if utf8.count != length {
                 return false
             }
@@ -242,5 +246,53 @@ fileprivate extension ByteBuffer {
                 }
             }
         }
+
+        guard let result = string.withContiguousStorageIfAvailable({ characters in
+            characters.withMemoryRebound(to: UInt8.self) { utf8 in
+                compare(utf8: utf8)
+            }
+        }) else {
+            var string = string
+            return string.withUTF8 { utf8 in
+                compare(utf8: utf8)
+            }
+        }
+
+        return result
+    }
+
+    mutating func readLengthPrefixedString<F: FixedWidthInteger>(as integer: F.Type) -> String? {
+        guard let buffer = readLengthPrefixedSlice(as: F.self) else {
+            return nil
+        }
+
+        return String(buffer: buffer)
+    }
+
+    mutating func readToken() -> BinaryTrieTokenKind? {
+        guard
+            let _token: BinaryTrieTokenKind.RawValue = readInteger(),
+            let token = BinaryTrieTokenKind(rawValue: _token)
+        else {
+            return nil
+        }
+
+        return token
+    }
+
+    mutating func readBinaryTrieNode() -> BinaryTrieNode? {
+        guard
+            let index = readInteger(as: UInt16.self),
+            let token = readToken(),
+            let nextSiblingNodeIndex: UInt32 = readInteger()
+        else {
+            return nil
+        }
+
+        return BinaryTrieNode(
+            index: index,
+            kind: token,
+            nextSiblingNodeIndex: nextSiblingNodeIndex
+        )
     }
 }

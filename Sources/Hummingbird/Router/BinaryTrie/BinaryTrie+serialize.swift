@@ -36,7 +36,7 @@ extension BinaryTrie {
         // Serialize the node's component
         switch node.key {
         case .path(let path):
-            trie.writeInteger(TokenKind.path.rawValue)
+            trie.writeToken(.path)
             nextNodeOffsetIndex = reserveUInt32()
 
             // Serialize the path constant
@@ -44,7 +44,7 @@ extension BinaryTrie {
                 buffer.writeSubstring(path)
             }
         case .capture(let parameter):
-            trie.writeInteger(TokenKind.capture.rawValue)
+            trie.writeToken(.capture)
             nextNodeOffsetIndex = reserveUInt32()
 
             // Serialize the parameter
@@ -52,7 +52,7 @@ extension BinaryTrie {
                 buffer.writeSubstring(parameter)
             }
         case .prefixCapture(suffix: let suffix, parameter: let parameter):
-            trie.writeInteger(TokenKind.prefixCapture.rawValue)
+            trie.writeToken(.prefixCapture)
             nextNodeOffsetIndex = reserveUInt32()
 
             // Serialize the suffix and parameter
@@ -63,7 +63,7 @@ extension BinaryTrie {
                 buffer.writeSubstring(parameter)
             }
         case .suffixCapture(prefix: let prefix, parameter: let parameter):
-            trie.writeInteger(TokenKind.suffixCapture.rawValue)
+            trie.writeToken(.suffixCapture)
             nextNodeOffsetIndex = reserveUInt32()
 
             // Serialize the prefix and parameter
@@ -74,10 +74,10 @@ extension BinaryTrie {
                 buffer.writeSubstring(parameter)
             }
         case .wildcard:
-            trie.writeInteger(TokenKind.wildcard.rawValue)
+            trie.writeToken(.wildcard)
             nextNodeOffsetIndex = reserveUInt32()
         case .prefixWildcard(let suffix):
-            trie.writeInteger(TokenKind.prefixWildcard.rawValue)
+            trie.writeToken(.prefixWildcard)
             nextNodeOffsetIndex = reserveUInt32()
 
             // Serialize the suffix
@@ -85,7 +85,7 @@ extension BinaryTrie {
                 buffer.writeSubstring(suffix)
             }
         case .suffixWildcard(let prefix):
-            trie.writeInteger(TokenKind.suffixWildcard.rawValue)
+            trie.writeToken(.suffixWildcard)
             nextNodeOffsetIndex = reserveUInt32()
 
             // Serialize the prefix
@@ -93,10 +93,10 @@ extension BinaryTrie {
                 buffer.writeSubstring(prefix)
             }
         case .recursiveWildcard:
-            trie.writeInteger(TokenKind.recursiveWildcard.rawValue)
+            trie.writeToken(.recursiveWildcard)
             nextNodeOffsetIndex = reserveUInt32()
         case .null:
-            trie.writeInteger(TokenKind.null.rawValue)
+            trie.writeToken(.null)
             nextNodeOffsetIndex = reserveUInt32()
         }
 
@@ -108,7 +108,7 @@ extension BinaryTrie {
 
         // The last node in a trie is always a null token
         // Since there is no next node to check anymores
-        trie.writeInteger(TokenKind.deadEnd.rawValue)
+        trie.writeToken(.deadEnd)
 
         // Write the offset of the next node, always immediately after this node
         // Write a `deadEnd` at the end of this node, and update the current node in case
@@ -157,5 +157,11 @@ extension RouterPath.Element {
             // Least specific
             return -4
         }
+    }
+}
+
+fileprivate extension ByteBuffer {
+    mutating func writeToken(_ token: BinaryTrieTokenKind) {
+        writeInteger(token.rawValue)
     }
 }
