@@ -15,9 +15,13 @@
 import ServiceLifecycle
 
 /// Wrap another service to run after a precursor closure has completed
-struct PrecursorService<S: Service>: Service {
+struct PrecursorService<S: Service>: Service, CustomStringConvertible {
     let precursor: @Sendable () async throws -> Void
     let service: S
+
+    var description: String {
+        "PrecursorService<\(S.self)>"
+    }
 
     init(service: S, process: @escaping @Sendable () async throws -> Void) {
         self.service = service
