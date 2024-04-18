@@ -46,8 +46,9 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
             [HTTPUserEventHandler(logger: logger)]
         return channel.eventLoop.makeCompletedFuture {
             try channel.pipeline.syncOperations.configureHTTPServerPipeline(
-                withPipeliningAssistance: false,
-                withErrorHandling: true
+                withPipeliningAssistance: false, // HTTP is pipelined by NIOAsyncChannel
+                withErrorHandling: true,
+                withOutboundHeaderValidation: false // Swift HTTP Types are already doing this validation
             )
             try channel.pipeline.syncOperations.addHandlers(childChannelHandlers)
             return try NIOAsyncChannel(

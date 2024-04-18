@@ -30,7 +30,6 @@ public protocol HTTPChannelHandler: ServerChildChannel {
 @usableFromInline
 enum HTTPChannelError: Error {
     case unexpectedHTTPPart(HTTPRequestPart)
-    case closeConnection
 }
 
 enum HTTPState: Int, Sendable {
@@ -75,7 +74,7 @@ extension HTTPChannelHandler {
                                 throw error
                             }
                             if request.headers[.connection] == "close" {
-                                throw HTTPChannelError.closeConnection
+                                return
                             }
                             // set to idle unless it is cancelled then exit
                             guard processingRequest.exchange(.idle) == .processing else { break }
@@ -112,8 +111,6 @@ extension HTTPChannelHandler {
             } onCancel: {
                 asyncChannel.channel.close(mode: .input, promise: nil)
             }
-        } catch HTTPChannelError.closeConnection {
-            // channel is being closed because we received a connection: close header
         } catch {
             // we got here because we failed to either read or write to the channel
             logger.trace("Failed to read/write to Channel. Error: \(error)")
