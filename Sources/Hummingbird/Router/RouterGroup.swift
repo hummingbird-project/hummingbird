@@ -74,10 +74,4 @@ public struct RouterGroup<Context: BaseRequestContext>: RouterMethods {
         self.router.on(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         return self
     }
-
-    internal func combinePaths(_ path1: String, _ path2: String) -> String {
-        let path1 = path1.dropSuffix("/")
-        let path2 = path2.dropPrefix("/")
-        return "\(path1)/\(path2)"
-    }
 }

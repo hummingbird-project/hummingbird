@@ -96,12 +96,18 @@ extension RouterMethods {
         return self.on(path, method: .patch, use: handler)
     }
 
-    func constructResponder(
+    internal func constructResponder(
         use closure: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
     ) -> CallbackResponder<Context> {
         return CallbackResponder { request, context in
             let output = try await closure(request, context)
             return try output.response(from: request, context: context)
         }
+    }
+
+    internal func combinePaths(_ path1: String, _ path2: String) -> String {
+        let path1 = path1.dropSuffix("/")
+        let path2 = path2.dropPrefix("/")
+        return "\(path1)/\(path2)"
     }
 }

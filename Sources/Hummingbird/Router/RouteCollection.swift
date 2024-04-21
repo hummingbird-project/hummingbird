@@ -17,7 +17,7 @@ import HTTPTypes
 /// Collection of routes
 public final class RouteCollection<Context: BaseRequestContext>: RouterMethods {
     /// Initialize RouteCollection
-    public init() {
+    public init(context: Context.Type = BasicRequestContext.self) {
         self.routes = .init()
         self.middlewares = .init()
     }
@@ -40,7 +40,7 @@ public final class RouteCollection<Context: BaseRequestContext>: RouterMethods {
 
     /// Return a group inside the route collection
     /// - Parameter path: path prefix to add to routes inside this group
-    public func group(_ path: String) -> RouterGroup<Context> {
+    public func group(_ path: String = "") -> RouterGroup<Context> {
         return .init(path: path, router: self)
     }
 
@@ -62,9 +62,11 @@ public final class RouteCollection<Context: BaseRequestContext>: RouterMethods {
 extension RouterMethods {
     /// Add route collection to router
     /// - Parameter collection: Route collection
-    public func add(_ collection: RouteCollection<Context>) {
+    public func add(_ path: String = "", routes collection: RouteCollection<Context>) {
         for (definition, responder) in collection.routes {
-            self.on(definition.path, method: definition.method, responder: collection.middlewares.constructResponder(finalResponder: responder))
+            // ensure path starts with a "/" and doesn't end with a "/"
+            let path = self.combinePaths(path, definition.path)
+            self.on(path, method: definition.method, responder: collection.middlewares.constructResponder(finalResponder: responder))
         }
     }
 }
