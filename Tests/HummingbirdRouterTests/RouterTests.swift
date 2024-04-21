@@ -443,6 +443,28 @@ final class RouterTests: XCTestCase {
             }
         }
     }
+
+    func testAddRouterToBuilder() async throws {
+        let router = Router(context: BasicRouterRequestContext.self)
+        router.get("test") { _, _ in
+            return "test"
+        }
+        let routerBuilder = RouterBuilder(context: BasicRouterRequestContext.self) {
+            router.buildResponder()
+            Get("hello") { _, _ in
+                return "hello"
+            }
+        }
+        let app = Application(router: routerBuilder)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/hello", method: .get) { response in
+                XCTAssertEqual(String(buffer: response.body), "hello")
+            }
+            try await client.execute(uri: "/test", method: .get) { response in
+                XCTAssertEqual(String(buffer: response.body), "test")
+            }
+        }
+    }
 }
 
 public struct TestRouterContext2: RouterRequestContext, RequestContext {
