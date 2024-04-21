@@ -57,3 +57,14 @@ public struct RouterResponder<Context: BaseRequestContext>: HTTPResponder {
         return try await responder.respond(to: request, context: context)
     }
 }
+
+extension RouterResponder: RouterMiddleware {
+    /// Treat RouterResponder as a Middleware
+    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+        do {
+            return try await self.respond(to: request, context: context)
+        } catch let error as HTTPError where error.status == .notFound {
+            return try await next(request, context)
+        }
+    }
+}
