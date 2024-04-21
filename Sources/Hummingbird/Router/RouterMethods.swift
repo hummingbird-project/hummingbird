@@ -19,7 +19,13 @@ import NIOCore
 public protocol RouterMethods<Context> {
     associatedtype Context: BaseRequestContext
 
-    /// On path/method call responder
+    /// Add responder to call when path and method are matched
+    ///
+    /// - Parameters:
+    ///   - path: Path to match
+    ///   - method: Request method to match
+    ///   - responder: Responder to call if match is made
+    /// - Returns: self
     @discardableResult func on<Responder: HTTPResponder>(
         _ path: String,
         method: HTTPRequest.Method,

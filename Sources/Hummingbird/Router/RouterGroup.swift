@@ -32,16 +32,16 @@ import NIOCore
 /// ```
 public struct RouterGroup<Context: BaseRequestContext>: RouterMethods {
     let path: String
-    let router: Router<Context>
+    let router: any RouterMethods<Context>
     let middlewares: MiddlewareGroup<Context>
 
-    init(path: String = "", middlewares: MiddlewareGroup<Context> = .init(), router: Router<Context>) {
+    init(path: String = "", middlewares: MiddlewareGroup<Context> = .init(), router: any RouterMethods<Context>) {
         self.path = path
         self.router = router
         self.middlewares = middlewares
     }
 
-    /// Add middleware to RouterEndpoint
+    /// Add middleware to RouterGroup
     @discardableResult public func add(middleware: any RouterMiddleware<Context>) -> RouterGroup<Context> {
         self.middlewares.add(middleware)
         return self
@@ -57,7 +57,13 @@ public struct RouterGroup<Context: BaseRequestContext>: RouterMethods {
         )
     }
 
-    /// Add path for async closure
+    /// Add responder to call when path and method are matched
+    ///
+    /// - Parameters:
+    ///   - path: Path to match
+    ///   - method: Request method to match
+    ///   - responder: Responder to call if match is made
+    /// - Returns: self
     @discardableResult public func on<Responder: HTTPResponder>(
         _ path: String,
         method: HTTPRequest.Method,

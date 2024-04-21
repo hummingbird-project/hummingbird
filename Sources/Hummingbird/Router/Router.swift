@@ -69,7 +69,12 @@ public final class Router<Context: BaseRequestContext>: RouterMethods, HTTPRespo
         )
     }
 
-    /// Add path for async closure
+    /// Add responder to call when path and method are matched
+    ///
+    /// - Parameters:
+    ///   - path: Path to match
+    ///   - method: Request method to match
+    ///   - responder: Responder to call if match is made
     @discardableResult public func on<Responder: HTTPResponder>(
         _ path: String,
         method: HTTPRequest.Method,
