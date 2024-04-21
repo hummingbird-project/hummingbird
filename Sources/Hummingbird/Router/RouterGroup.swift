@@ -57,18 +57,15 @@ public struct RouterGroup<Context: BaseRequestContext>: RouterMethods {
         )
     }
 
-    /// Add path for closure returning type using async/await
-    @discardableResult public func on(
-        _ path: String = "",
+    /// Add path for async closure
+    @discardableResult public func on<Responder: HTTPResponder>(
+        _ path: String,
         method: HTTPRequest.Method,
-        use closure: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
-    ) -> Self {
-        let responder = constructResponder(use: closure)
-        var path = self.combinePaths(self.path, path)
-        if self.router.options.contains(.caseInsensitive) {
-            path = path.lowercased()
-        }
-        self.router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
+        responder: Responder
+    ) -> Self where Responder.Context == Context {
+        // ensure path starts with a "/" and doesn't end with a "/"
+        let path = self.combinePaths(self.path, path)
+        self.router.on(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         return self
     }
 
