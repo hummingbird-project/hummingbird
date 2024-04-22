@@ -34,7 +34,8 @@ public final class RouteCollection<Context: BaseRequestContext>: RouterMethods {
         method: HTTPRequest.Method,
         responder: Responder
     ) -> Self where Responder.Context == Context {
-        self.routes[.init(path: path, method: method)] = responder
+        let route = RouteDefinition(path: path, method: method, responder: responder)
+        self.routes.append(route)
         return self
     }
 
@@ -50,12 +51,13 @@ public final class RouteCollection<Context: BaseRequestContext>: RouterMethods {
         return self
     }
 
-    fileprivate struct RouteDefinition: Hashable {
+    fileprivate struct RouteDefinition {
         let path: String
         let method: HTTPRequest.Method
+        let responder: any HTTPResponder<Context>
     }
 
-    fileprivate var routes: [RouteDefinition: any HTTPResponder<Context>]
+    fileprivate var routes: [RouteDefinition]
     let middlewares: MiddlewareGroup<Context>
 }
 
@@ -63,10 +65,10 @@ extension RouterMethods {
     /// Add route collection to router
     /// - Parameter collection: Route collection
     public func add(_ path: String = "", routes collection: RouteCollection<Context>) {
-        for (definition, responder) in collection.routes {
+        for route in collection.routes {
             // ensure path starts with a "/" and doesn't end with a "/"
-            let path = self.combinePaths(path, definition.path)
-            self.on(path, method: definition.method, responder: collection.middlewares.constructResponder(finalResponder: responder))
+            let path = self.combinePaths(path, route.path)
+            self.on(path, method: route.method, responder: collection.middlewares.constructResponder(finalResponder: route.responder))
         }
     }
 }
