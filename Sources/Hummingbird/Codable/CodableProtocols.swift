@@ -15,7 +15,7 @@
 import HTTPTypes
 
 /// protocol for encoders generating a Response
-public protocol ResponseEncoder: Sendable {
+public protocol ResponseEncoder {
     /// Encode value returned by handler to request
     ///
     /// - Parameters:
@@ -25,7 +25,7 @@ public protocol ResponseEncoder: Sendable {
 }
 
 /// protocol for decoder deserializing from a Request body
-public protocol RequestDecoder: Sendable {
+public protocol RequestDecoder {
     /// Decode type from request
     /// - Parameters:
     ///   - type: type to decode to
