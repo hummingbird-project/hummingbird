@@ -17,7 +17,13 @@ import HTTPTypes
 /// Holds all the required to generate a HTTP Response
 public struct Response: Sendable {
     public var head: HTTPResponse
-    public var body: ResponseBody
+    public var body: ResponseBody {
+        didSet {
+            if let contentLength = body.contentLength {
+                self.head.headerFields[.contentLength] = String(describing: contentLength)
+            }
+        }
+    }
 
     public init(status: HTTPResponse.Status, headers: HTTPFields = .init(), body: ResponseBody = .init()) {
         self.head = .init(status: status, headerFields: headers)
@@ -35,6 +41,11 @@ public struct Response: Sendable {
     public var headers: HTTPFields {
         get { self.head.headerFields }
         set { self.head.headerFields = newValue }
+    }
+
+    /// Return HEAD response based off this response
+    public func createHeadResponse() -> Response {
+        .init(status: self.status, headers: self.headers, body: .init())
     }
 }
 

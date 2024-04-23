@@ -35,9 +35,8 @@ struct EndpointResponders<Context: BaseRequestContext>: Sendable {
     mutating func autoGenerateHeadEndpoint() {
         if self.methods[.head] == nil, let get = methods[.get] {
             self.methods[.head] = CallbackResponder { request, context in
-                var response = try await get.respond(to: request, context: context)
-                response.body = .init()
-                return response
+                let response = try await get.respond(to: request, context: context)
+                return response.createHeadResponse()
             }
         }
     }
