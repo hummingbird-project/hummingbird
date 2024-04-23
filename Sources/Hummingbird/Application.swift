@@ -44,15 +44,13 @@ public enum EventLoopGroupProvider {
 public protocol ApplicationProtocol: Service where Context: RequestContext {
     /// Responder that generates a response from a requests and context
     associatedtype Responder: HTTPResponder
-    /// Child Channel setup. This defaults to support HTTP1
-    associatedtype ChildChannel: ServerChildChannel & HTTPChannelHandler = HTTP1Channel
     /// Context passed with Request to responder
     typealias Context = Responder.Context
 
     /// Build the responder
     var responder: Responder { get async throws }
-    /// Server channel setup
-    var server: HTTPChannelBuilder<ChildChannel> { get }
+    /// Server channel builder
+    var server: HTTPChannelBuilder { get }
 
     /// event loop group used by application
     var eventLoopGroup: EventLoopGroup { get }
@@ -71,7 +69,7 @@ public protocol ApplicationProtocol: Service where Context: RequestContext {
 
 extension ApplicationProtocol {
     /// Server channel setup
-    public var server: HTTPChannelBuilder<HTTP1Channel> { .http1() }
+    public var server: HTTPChannelBuilder { .http1() }
 }
 
 extension ApplicationProtocol {
@@ -111,17 +109,16 @@ extension ApplicationProtocol {
             }
             return response
         }
-        // get channel Setup
-        let channelSetup = try self.server.build(respond)
-        // create server
-        let server = Server(
-            childChannelSetup: channelSetup,
+        // get server channel
+        let serverChannel = try self.server.build(respond)
+        // create server `Service``
+        let server = serverChannel.server(
             configuration: self.configuration.httpServer,
             onServerRunning: self.onServerRunning,
             eventLoopGroup: self.eventLoopGroup,
             logger: self.logger
         )
-        let serverService = PrecursorService(service: server) {
+        let serverService = server.withPrelude {
             for process in self.processesRunBeforeServerStart {
                 try await process()
             }
@@ -159,9 +156,8 @@ extension ApplicationProtocol {
 /// try await app.runService()
 /// ```
 /// Editing the application setup after calling `runService` will produce undefined behaviour.
-public struct Application<Responder: HTTPResponder, ChildChannel: ServerChildChannel & HTTPChannelHandler>: ApplicationProtocol where Responder.Context: RequestContext {
+public struct Application<Responder: HTTPResponder>: ApplicationProtocol where Responder.Context: RequestContext {
     public typealias Context = Responder.Context
-    public typealias ChildChannel = ChildChannel
     public typealias Responder = Responder
 
     // MARK: Member variables
@@ -177,7 +173,7 @@ public struct Application<Responder: HTTPResponder, ChildChannel: ServerChildCha
     /// on server running
     private var _onServerRunning: @Sendable (Channel) async -> Void
     /// Server channel setup
-    public let server: HTTPChannelBuilder<ChildChannel>
+    public let server: HTTPChannelBuilder
     /// services attached to the application.
     public var services: [any Service]
     /// Processes to be run before server is started
@@ -196,7 +192,7 @@ public struct Application<Responder: HTTPResponder, ChildChannel: ServerChildCha
     ///   - logger: Logger application uses
     public init(
         responder: Responder,
-        server: HTTPChannelBuilder<ChildChannel> = .http1(),
+        server: HTTPChannelBuilder = .http1(),
         configuration: ApplicationConfiguration = ApplicationConfiguration(),
         onServerRunning: @escaping @Sendable (Channel) async -> Void = { _ in },
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton,
@@ -230,7 +226,7 @@ public struct Application<Responder: HTTPResponder, ChildChannel: ServerChildCha
     ///   - logger: Logger application uses
     public init<ResponderBuilder: HTTPResponderBuilder>(
         router: ResponderBuilder,
-        server: HTTPChannelBuilder<ChildChannel> = .http1(),
+        server: HTTPChannelBuilder = .http1(),
         configuration: ApplicationConfiguration = ApplicationConfiguration(),
         onServerRunning: @escaping @Sendable (Channel) async -> Void = { _ in },
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton,

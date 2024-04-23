@@ -23,7 +23,6 @@ import ServiceLifecycle
 /// This is needed to override the `onServerRunning` function
 internal struct TestApplication<BaseApp: ApplicationProtocol>: ApplicationProtocol, Service {
     typealias Responder = BaseApp.Responder
-    typealias ChildChannel = BaseApp.ChildChannel
 
     let base: BaseApp
 
@@ -31,7 +30,7 @@ internal struct TestApplication<BaseApp: ApplicationProtocol>: ApplicationProtoc
         get async throws { try await self.base.responder }
     }
 
-    var server: HTTPChannelBuilder<ChildChannel> {
+    var server: HTTPChannelBuilder {
         self.base.server
     }
 

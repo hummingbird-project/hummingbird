@@ -14,22 +14,29 @@
 
 import ServiceLifecycle
 
-/// Wrap another service to run after a precursor closure has completed
-struct PrecursorService<S: Service>: Service, CustomStringConvertible {
-    let precursor: @Sendable () async throws -> Void
+/// Wrap another service to run after a prelude closure has completed
+struct PreludeService<S: Service>: Service, CustomStringConvertible {
+    let prelude: @Sendable () async throws -> Void
     let service: S
 
     var description: String {
-        "PrecursorService<\(S.self)>"
+        "PreludeService<\(S.self)>"
     }
 
-    init(service: S, process: @escaping @Sendable () async throws -> Void) {
+    init(service: S, prelude: @escaping @Sendable () async throws -> Void) {
         self.service = service
-        self.precursor = process
+        self.prelude = prelude
     }
 
     func run() async throws {
-        try await self.precursor()
+        try await self.prelude()
         try await self.service.run()
+    }
+}
+
+extension Service {
+    /// Build existential ``PreludeService`` from an existential `Service`
+    func withPrelude(_ prelude: @escaping @Sendable () async throws -> Void) -> Service {
+        PreludeService(service: self, prelude: prelude)
     }
 }

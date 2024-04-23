@@ -18,13 +18,13 @@ import NIOCore
 ///
 /// Used when building an ``Hummingbird/Application``. It delays the building
 /// of the ``ServerChildChannel`` until the HTTP responder has been built.
-public struct HTTPChannelBuilder<ChildChannel: ServerChildChannel>: Sendable {
+public struct HTTPChannelBuilder: Sendable {
     /// build child channel from HTTP responder
-    public let build: @Sendable (@escaping HTTPChannelHandler.Responder) throws -> ChildChannel
+    public let build: @Sendable (@escaping HTTPChannelHandler.Responder) throws -> any ServerChildChannel
 
     /// Initialize HTTPChannelBuilder
     /// - Parameter build: closure building child channel from HTTP responder
-    public init(_ build: @escaping @Sendable (@escaping HTTPChannelHandler.Responder) throws -> ChildChannel) {
+    public init(_ build: @escaping @Sendable (@escaping HTTPChannelHandler.Responder) throws -> any ServerChildChannel) {
         self.build = build
     }
 }
@@ -43,7 +43,7 @@ extension HTTPChannelBuilder {
     /// - Returns: HTTPChannelHandler builder
     public static func http1(
         additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = []
-    ) -> HTTPChannelBuilder<HTTP1Channel> {
+    ) -> HTTPChannelBuilder {
         return .init { responder in
             return HTTP1Channel(responder: responder, additionalChannelHandlers: additionalChannelHandlers)
         }

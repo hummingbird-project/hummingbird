@@ -33,7 +33,7 @@ extension HTTPChannelBuilder {
     public static func http2Upgrade(
         tlsConfiguration: TLSConfiguration,
         additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = []
-    ) throws -> HTTPChannelBuilder<HTTP2UpgradeChannel> {
+    ) throws -> HTTPChannelBuilder {
         return .init { responder in
             return try HTTP2UpgradeChannel(
                 tlsConfiguration: tlsConfiguration,

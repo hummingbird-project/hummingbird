@@ -31,18 +31,17 @@ public enum TestErrors: Error {
 }
 
 /// Helper function for testing a server
-public func testServer<ChildChannel: ServerChildChannel, Value: Sendable>(
+public func testServer<Value: Sendable>(
     responder: @escaping HTTPChannelHandler.Responder,
-    httpChannelSetup: HTTPChannelBuilder<ChildChannel>,
+    httpChannelSetup: HTTPChannelBuilder,
     configuration: ServerConfiguration,
     eventLoopGroup: EventLoopGroup,
     logger: Logger,
-    _ test: @escaping @Sendable (Server<ChildChannel>, Int) async throws -> Value
+    _ test: @escaping @Sendable (Int) async throws -> Value
 ) async throws -> Value {
     try await withThrowingTaskGroup(of: Void.self) { group in
         let promise = Promise<Int>()
-        let server = try Server(
-            childChannelSetup: httpChannelSetup.build(responder),
+        let server = try httpChannelSetup.build(responder).server(
             configuration: configuration,
             onServerRunning: { await promise.complete($0.localAddress!.port!) },
             eventLoopGroup: eventLoopGroup,
@@ -55,10 +54,11 @@ public func testServer<ChildChannel: ServerChildChannel, Value: Sendable>(
                 logger: logger
             )
         )
+
         group.addTask {
             try await serviceGroup.run()
         }
-        let value = try await test(server, promise.wait())
+        let value = try await test(promise.wait())
         await serviceGroup.triggerGracefulShutdown()
         return value
     }
@@ -68,38 +68,9 @@ public func testServer<ChildChannel: ServerChildChannel, Value: Sendable>(
 ///
 /// Creates test client, runs test function abd ensures everything is
 /// shutdown correctly
-public func testServer<ChildChannel: ServerChildChannel, Value: Sendable>(
-    responder: @escaping HTTPChannelHandler.Responder,
-    httpChannelSetup: HTTPChannelBuilder<ChildChannel>,
-    configuration: ServerConfiguration,
-    eventLoopGroup: EventLoopGroup,
-    logger: Logger,
-    clientConfiguration: TestClient.Configuration = .init(),
-    _ test: @escaping @Sendable (Server<ChildChannel>, TestClient) async throws -> Value
-) async throws -> Value {
-    try await testServer(
-        responder: responder,
-        httpChannelSetup: httpChannelSetup,
-        configuration: configuration,
-        eventLoopGroup: eventLoopGroup,
-        logger: logger
-    ) { (server: Server<ChildChannel>, port: Int) in
-        let client = TestClient(
-            host: "localhost",
-            port: port,
-            configuration: clientConfiguration,
-            eventLoopGroupProvider: .createNew
-        )
-        client.connect()
-        let value = try await test(server, client)
-        try await client.shutdown()
-        return value
-    }
-}
-
 public func testServer<Value: Sendable>(
     responder: @escaping HTTPChannelHandler.Responder,
-    httpChannelSetup: HTTPChannelBuilder<some ServerChildChannel> = .http1(),
+    httpChannelSetup: HTTPChannelBuilder = .http1(),
     configuration: ServerConfiguration,
     eventLoopGroup: EventLoopGroup,
     logger: Logger,
@@ -111,10 +82,18 @@ public func testServer<Value: Sendable>(
         httpChannelSetup: httpChannelSetup,
         configuration: configuration,
         eventLoopGroup: eventLoopGroup,
-        logger: logger,
-        clientConfiguration: clientConfiguration
-    ) { _, client in
-        try await test(client)
+        logger: logger
+    ) { port in
+        let client = TestClient(
+            host: "localhost",
+            port: port,
+            configuration: clientConfiguration,
+            eventLoopGroupProvider: .createNew
+        )
+        client.connect()
+        let value = try await test(client)
+        try await client.shutdown()
+        return value
     }
 }
 
