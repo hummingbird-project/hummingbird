@@ -309,53 +309,51 @@ class HummingBirdCoreTests: XCTestCase {
     }
 
     func testChildChannelGracefulShutdown() async throws {
-        let promise = Promise<Void>()
+        let handlerPromise = Promise<Void>()
 
-        try await testServer(
-            responder: { request, _ in
-                await promise.complete(())
-                try await Task.sleep(for: .milliseconds(500))
-                return Response(status: .ok, body: .init(asyncSequence: request.body.delayed()))
-            },
-            httpChannelSetup: .http1(),
-            configuration: .init(address: .hostname(port: 0)),
-            eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
-        ) { server, client in
-            try await withTimeout(.seconds(5)) {
-                try await withThrowingTaskGroup(of: Void.self) { group in
-                    group.addTask {
-                        do {
-                            let response = try await client.get("/")
-                            XCTAssertEqual(response.status, .ok)
-                        } catch {
-                            XCTFail("Error: \(error)")
-                        }
-                    }
-                    await promise.wait()
-                    try await server.shutdownGracefully()
-                    try await group.waitForAll()
+        let childChannel = try HTTPChannelBuilder.http1().build { request, _ in
+            await handlerPromise.complete(())
+            try await Task.sleep(for: .milliseconds(500))
+            return Response(status: .ok, body: .init(asyncSequence: request.body.delayed()))
+        }
+        await withThrowingTaskGroup(of: Void.self) { group in
+            let portPromise = Promise<Int>()
+            let logger = Logger(label: "Hummingbird")
+            let server = childChannel.server(
+                configuration: .init(address: .hostname(port: 0)),
+                onServerRunning: { await portPromise.complete($0.localAddress!.port!) },
+                eventLoopGroup: Self.eventLoopGroup,
+                logger: logger
+            )
+            let serviceGroup = ServiceGroup(
+                configuration: .init(
+                    services: [server],
+                    gracefulShutdownSignals: [.sigterm, .sigint],
+                    logger: logger
+                )
+            )
+            group.addTask {
+                try await serviceGroup.run()
+            }
+            let client = await TestClient(
+                host: "localhost",
+                port: portPromise.wait(),
+                configuration: .init(),
+                eventLoopGroupProvider: .createNew
+            )
+            group.addTask {
+                do {
+                    client.connect()
+                    let response = try await client.get("/")
+                    XCTAssertEqual(response.status, .ok)
+                } catch {
+                    XCTFail("Error: \(error)")
                 }
             }
-        }
-    }
-
-    func testIdleChildChannelGracefulShutdown() async throws {
-        try await testServer(
-            responder: { request, _ in
-                try await Task.sleep(for: .milliseconds(500))
-                return Response(status: .ok, body: .init(asyncSequence: request.body.delayed()))
-            },
-            httpChannelSetup: .http1(),
-            configuration: .init(address: .hostname(port: 0)),
-            eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
-        ) { server, client in
-            try await withTimeout(.seconds(5)) {
-                let response = try await client.get("/")
-                XCTAssertEqual(response.status, .ok)
-                try await server.shutdownGracefully()
-            }
+            // wait until we are sure handler has been called
+            await handlerPromise.wait()
+            // trigger graceful shutdown
+            await serviceGroup.triggerGracefulShutdown()
         }
     }
 }

@@ -14,6 +14,7 @@
 
 import Logging
 import NIOCore
+import ServiceLifecycle
 
 /// HTTPServer child channel setup protocol
 public protocol ServerChildChannel: Sendable {
@@ -31,4 +32,29 @@ public protocol ServerChildChannel: Sendable {
     ///   - value: Object to process input/output on child channel
     ///   - logger: Logger to use while processing messages
     func handle(value: Value, logger: Logger) async
+}
+
+extension ServerChildChannel {
+    /// Build existential ``Server`` from existential `ServerChildChannel`
+    ///
+    /// - Parameters:
+    ///   - configuration: Configuration for server
+    ///   - onServerRunning: Closure to run once server is up and running
+    ///   - eventLoopGroup: EventLoopGroup the server uses
+    ///   = logger: Logger used by server
+    /// - Returns: Server Service
+    public func server(
+        configuration: ServerConfiguration,
+        onServerRunning: (@Sendable (Channel) async -> Void)? = { _ in },
+        eventLoopGroup: EventLoopGroup,
+        logger: Logger
+    ) -> Service {
+        Server(
+            childChannelSetup: self,
+            configuration: configuration,
+            onServerRunning: onServerRunning,
+            eventLoopGroup: eventLoopGroup,
+            logger: logger
+        )
+    }
 }

@@ -62,3 +62,10 @@ extension TLSChannel: HTTPChannelHandler where BaseChannel: HTTPChannelHandler {
         baseChannel.responder
     }
 }
+
+extension ServerChildChannel {
+    /// Construct existential ``TLSChannel`` from existential `ServerChildChannel`
+    func withTLS(tlsConfiguration: TLSConfiguration) throws -> any ServerChildChannel {
+        try TLSChannel(self, tlsConfiguration: tlsConfiguration)
+    }
+}

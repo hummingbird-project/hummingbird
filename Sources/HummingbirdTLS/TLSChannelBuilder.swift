@@ -29,12 +29,12 @@ extension HTTPChannelBuilder {
     ///   - base: Base child channel to wrap with TLS
     ///   - tlsConfiguration: TLS configuration
     /// - Returns: HTTPChannelHandler builder
-    public static func tls<BaseChannel: ServerChildChannel>(
-        _ base: HTTPChannelBuilder<BaseChannel> = .http1(),
+    public static func tls(
+        _ base: HTTPChannelBuilder = .http1(),
         tlsConfiguration: TLSConfiguration
-    ) throws -> HTTPChannelBuilder<TLSChannel<BaseChannel>> {
+    ) throws -> HTTPChannelBuilder {
         return .init { responder in
-            return try TLSChannel(base.build(responder), tlsConfiguration: tlsConfiguration)
+            return try base.build(responder).withTLS(tlsConfiguration: tlsConfiguration)
         }
     }
 }
