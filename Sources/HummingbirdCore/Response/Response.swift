@@ -42,6 +42,11 @@ public struct Response: Sendable {
         get { self.head.headerFields }
         set { self.head.headerFields = newValue }
     }
+
+    /// Return HEAD response based off this response
+    public func createHeadResponse() -> Response {
+        .init(status: self.status, headers: self.headers, body: .init())
+    }
 }
 
 extension Response: CustomStringConvertible {
