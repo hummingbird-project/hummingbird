@@ -41,7 +41,7 @@ extension ServerChildChannel {
     ///   - configuration: Configuration for server
     ///   - onServerRunning: Closure to run once server is up and running
     ///   - eventLoopGroup: EventLoopGroup the server uses
-    ///   = logger: Logger used by server
+    ///   - logger: Logger used by server
     /// - Returns: Server Service
     public func server(
         configuration: ServerConfiguration,
