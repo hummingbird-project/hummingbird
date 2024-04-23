@@ -73,7 +73,7 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
     ///   - configuration: Configuration for server
     ///   - onServerRunning: Closure to run once server is up and running
     ///   - eventLoopGroup: EventLoopGroup the server uses
-    ///   = logger: Logger used by server
+    ///   - logger: Logger used by server
     public init(
         childChannelSetup: ChildChannel,
         configuration: ServerConfiguration,
