@@ -29,6 +29,7 @@ final class AsyncHTTPClientTestFramework<App: ApplicationProtocol>: ApplicationT
     struct Client: TestClientProtocol {
         let client: HTTPClient
         let urlPrefix: String
+        let port: Int?
         let timeout: TimeAmount
 
         /// Send request and call test callback on the response returned
@@ -75,7 +76,7 @@ final class AsyncHTTPClientTestFramework<App: ApplicationProtocol>: ApplicationT
                 eventLoopGroupProvider: .singleton,
                 configuration: .init(tlsConfiguration: tlsConfiguration)
             )
-            let client = Client(client: httpClient, urlPrefix: "\(self.scheme)://localhost:\(port)", timeout: self.timeout)
+            let client = Client(client: httpClient, urlPrefix: "\(self.scheme)://localhost:\(port)", port: port, timeout: self.timeout)
             do {
                 let value = try await test(client)
                 await serviceGroup.triggerGracefulShutdown()
