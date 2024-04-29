@@ -32,16 +32,16 @@ import NIOCore
 /// ```
 public struct RouterGroup<Context: BaseRequestContext>: RouterMethods {
     let path: String
-    let router: Router<Context>
+    let router: any RouterMethods<Context>
     let middlewares: MiddlewareGroup<Context>
 
-    init(path: String = "", middlewares: MiddlewareGroup<Context> = .init(), router: Router<Context>) {
+    init(path: String = "", middlewares: MiddlewareGroup<Context> = .init(), router: any RouterMethods<Context>) {
         self.path = path
         self.router = router
         self.middlewares = middlewares
     }
 
-    /// Add middleware to RouterEndpoint
+    /// Add middleware to RouterGroup
     @discardableResult public func add(middleware: any RouterMiddleware<Context>) -> RouterGroup<Context> {
         self.middlewares.add(middleware)
         return self
@@ -57,24 +57,21 @@ public struct RouterGroup<Context: BaseRequestContext>: RouterMethods {
         )
     }
 
-    /// Add path for closure returning type using async/await
-    @discardableResult public func on(
-        _ path: String = "",
+    /// Add responder to call when path and method are matched
+    ///
+    /// - Parameters:
+    ///   - path: Path to match
+    ///   - method: Request method to match
+    ///   - responder: Responder to call if match is made
+    /// - Returns: self
+    @discardableResult public func on<Responder: HTTPResponder>(
+        _ path: String,
         method: HTTPRequest.Method,
-        use closure: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
-    ) -> Self {
-        let responder = constructResponder(use: closure)
-        var path = self.combinePaths(self.path, path)
-        if self.router.options.contains(.caseInsensitive) {
-            path = path.lowercased()
-        }
-        self.router.add(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
+        responder: Responder
+    ) -> Self where Responder.Context == Context {
+        // ensure path starts with a "/" and doesn't end with a "/"
+        let path = self.combinePaths(self.path, path)
+        self.router.on(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         return self
-    }
-
-    internal func combinePaths(_ path1: String, _ path2: String) -> String {
-        let path1 = path1.dropSuffix("/")
-        let path2 = path2.dropPrefix("/")
-        return "\(path1)/\(path2)"
     }
 }

@@ -431,6 +431,75 @@ final class RouterTests: XCTestCase {
         }
     }
 
+    // Test route collection added to Router
+    func testRouteCollection() async throws {
+        let router = Router()
+        let routes = RouteCollection()
+        routes.get("that") { _, _ in
+            return HTTPResponse.Status.ok
+        }
+        router.addRoutes(routes, atPath: "/this")
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/this/that", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+        }
+    }
+
+    // Test route collection added to Router
+    func testRouteCollectionInGroup() async throws {
+        let router = Router()
+        let routes = RouteCollection()
+            .get("that") { _, _ in
+                return HTTPResponse.Status.ok
+            }
+        router.group("this").addRoutes(routes)
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/this/that", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+        }
+    }
+
+    // Test middleware in route collection
+    func testMiddlewareInRouteCollection() async throws {
+        let router = Router()
+        let routes = RouteCollection()
+            .add(middleware: TestMiddleware("Hello"))
+            .get("that") { _, _ in
+                return HTTPResponse.Status.ok
+            }
+        router.addRoutes(routes, atPath: "/this")
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/this/that", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(response.headers[.test], "Hello")
+            }
+        }
+    }
+
+    // Test group in route collection
+    func testGroupInRouteCollection() async throws {
+        let router = Router()
+        let routes = RouteCollection()
+        routes.group("2")
+            .add(middleware: TestMiddleware("Hello"))
+            .get("3") { _, _ in
+                return HTTPResponse.Status.ok
+            }
+        router.addRoutes(routes, atPath: "1")
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/1/2/3", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(response.headers[.test], "Hello")
+            }
+        }
+    }
+
     // Test case insensitive router works
     func testCaseInsensitive() async throws {
         let router = Router(options: .caseInsensitive)
@@ -440,12 +509,18 @@ final class RouterTests: XCTestCase {
         router.get("lowercased") { _, _ in
             return HTTPResponse.Status.ok
         }
+        router.group("group").get("Uppercased") { _, _ in
+            return HTTPResponse.Status.ok
+        }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/uppercased", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
             }
             try await client.execute(uri: "/LOWERCASED", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+            try await client.execute(uri: "/Group/uppercased", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
             }
         }

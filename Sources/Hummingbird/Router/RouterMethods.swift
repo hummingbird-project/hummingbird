@@ -19,25 +19,41 @@ import NIOCore
 public protocol RouterMethods<Context> {
     associatedtype Context: BaseRequestContext
 
-    /// Add path for async closure
-    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-    @discardableResult func on<Output: ResponseGenerator>(
+    /// Add responder to call when path and method are matched
+    ///
+    /// - Parameters:
+    ///   - path: Path to match
+    ///   - method: Request method to match
+    ///   - responder: Responder to call if match is made
+    /// - Returns: self
+    @discardableResult func on<Responder: HTTPResponder>(
         _ path: String,
         method: HTTPRequest.Method,
-        use: @Sendable @escaping (Request, Context) async throws -> Output
-    ) -> Self
+        responder: Responder
+    ) -> Self where Responder.Context == Context
 
     /// add group
     func group(_ path: String) -> RouterGroup<Context>
 }
 
 extension RouterMethods {
+    /// Add path for async closure
+    @discardableResult func on(
+        _ path: String,
+        method: HTTPRequest.Method,
+        use closure: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
+    ) -> Self {
+        let responder = self.constructResponder(use: closure)
+        self.on(path, method: method, responder: responder)
+        return self
+    }
+
     /// GET path for async closure returning type conforming to ResponseGenerator
     @discardableResult public func get(
         _ path: String = "",
         use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
-        return on(path, method: .get, use: handler)
+        return self.on(path, method: .get, use: handler)
     }
 
     /// PUT path for async closure returning type conforming to ResponseGenerator
@@ -45,7 +61,7 @@ extension RouterMethods {
         _ path: String = "",
         use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
-        return on(path, method: .put, use: handler)
+        return self.on(path, method: .put, use: handler)
     }
 
     /// DELETE path for async closure returning type conforming to ResponseGenerator
@@ -53,7 +69,7 @@ extension RouterMethods {
         _ path: String = "",
         use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
-        return on(path, method: .delete, use: handler)
+        return self.on(path, method: .delete, use: handler)
     }
 
     /// HEAD path for async closure returning type conforming to ResponseGenerator
@@ -61,7 +77,7 @@ extension RouterMethods {
         _ path: String = "",
         use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
-        return on(path, method: .head, use: handler)
+        return self.on(path, method: .head, use: handler)
     }
 
     /// POST path for async closure returning type conforming to ResponseGenerator
@@ -69,7 +85,7 @@ extension RouterMethods {
         _ path: String = "",
         use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
-        return on(path, method: .post, use: handler)
+        return self.on(path, method: .post, use: handler)
     }
 
     /// PATCH path for async closure returning type conforming to ResponseGenerator
@@ -77,15 +93,21 @@ extension RouterMethods {
         _ path: String = "",
         use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
-        return on(path, method: .patch, use: handler)
+        return self.on(path, method: .patch, use: handler)
     }
 
-    func constructResponder(
+    internal func constructResponder(
         use closure: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
     ) -> CallbackResponder<Context> {
         return CallbackResponder { request, context in
             let output = try await closure(request, context)
             return try output.response(from: request, context: context)
         }
+    }
+
+    internal func combinePaths(_ path1: String, _ path2: String) -> String {
+        let path1 = path1.dropSuffix("/")
+        let path2 = path2.dropPrefix("/")
+        return "\(path1)/\(path2)"
     }
 }

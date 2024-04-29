@@ -54,19 +54,6 @@ public final class Router<Context: BaseRequestContext>: RouterMethods, HTTPRespo
         self.options = options
     }
 
-    /// Add route to router
-    /// - Parameters:
-    ///   - path: URI path
-    ///   - method: http method
-    ///   - responder: handler to call
-    public func add(_ path: String, method: HTTPRequest.Method, responder: any HTTPResponder<Context>) {
-        // ensure path starts with a "/" and doesn't end with a "/"
-        let path = "/\(path.dropSuffix("/").dropPrefix("/"))"
-        self.trie.addEntry(.init(path), value: EndpointResponders(path: path)) { node in
-            node.value!.addResponder(for: method, responder: self.middlewares.constructResponder(finalResponder: responder))
-        }
-    }
-
     /// build responder from router
     public func buildResponder() -> RouterResponder<Context> {
         if self.options.contains(.autoGenerateHeadEndpoints) {
@@ -82,18 +69,25 @@ public final class Router<Context: BaseRequestContext>: RouterMethods, HTTPRespo
         )
     }
 
-    /// Add path for closure returning type conforming to ResponseGenerator
-    @discardableResult public func on(
+    /// Add responder to call when path and method are matched
+    ///
+    /// - Parameters:
+    ///   - path: Path to match
+    ///   - method: Request method to match
+    ///   - responder: Responder to call if match is made
+    @discardableResult public func on<Responder: HTTPResponder>(
         _ path: String,
         method: HTTPRequest.Method,
-        use closure: @escaping @Sendable (Request, Context) async throws -> some ResponseGenerator
-    ) -> Self {
-        let responder = constructResponder(use: closure)
-        var path = path
+        responder: Responder
+    ) -> Self where Responder.Context == Context {
+        // ensure path starts with a "/" and doesn't end with a "/"
+        var path = "/\(path.dropSuffix("/").dropPrefix("/"))"
         if self.options.contains(.caseInsensitive) {
             path = path.lowercased()
         }
-        self.add(path, method: method, responder: responder)
+        self.trie.addEntry(.init(path), value: EndpointResponders(path: path)) { node in
+            node.value!.addResponder(for: method, responder: self.middlewares.constructResponder(finalResponder: responder))
+        }
         return self
     }
 
