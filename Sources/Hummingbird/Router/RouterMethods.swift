@@ -38,7 +38,7 @@ public protocol RouterMethods<Context> {
 
 extension RouterMethods {
     /// Add path for async closure
-    @discardableResult func on(
+    @discardableResult public func on(
         _ path: String,
         method: HTTPRequest.Method,
         use closure: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
