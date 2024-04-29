@@ -438,7 +438,7 @@ final class RouterTests: XCTestCase {
         routes.get("that") { _, _ in
             return HTTPResponse.Status.ok
         }
-        router.add("this", routes: routes)
+        router.addRoutes(routes, atPath: "/this")
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/this/that", method: .get) { response in
@@ -454,7 +454,7 @@ final class RouterTests: XCTestCase {
             .get("that") { _, _ in
                 return HTTPResponse.Status.ok
             }
-        router.group("this").add(routes: routes)
+        router.group("this").addRoutes(routes)
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/this/that", method: .get) { response in
@@ -471,7 +471,7 @@ final class RouterTests: XCTestCase {
             .get("that") { _, _ in
                 return HTTPResponse.Status.ok
             }
-        router.add("this", routes: routes)
+        router.addRoutes(routes, atPath: "/this")
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/this/that", method: .get) { response in
@@ -490,7 +490,7 @@ final class RouterTests: XCTestCase {
             .get("3") { _, _ in
                 return HTTPResponse.Status.ok
             }
-        router.add("1", routes: routes)
+        router.addRoutes(routes, atPath: "1")
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/1/2/3", method: .get) { response in
