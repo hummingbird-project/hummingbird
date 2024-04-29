@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Atomics
-@testable import Hummingbird
+import Hummingbird
 import HummingbirdTesting
 import Logging
 import NIOCore
