@@ -40,6 +40,8 @@ final class LiveTestFramework<App: ApplicationProtocol>: ApplicationTestFramewor
             let response = try await client.execute(request)
             return .init(head: response.head, body: response.body ?? ByteBuffer(), trailerHeaders: response.trailerHeaders)
         }
+
+        var port: Int? { self.client.port }
     }
 
     init(app: App) {

@@ -133,6 +133,8 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
                 return try await group.next()!
             }
         }
+
+        var port: Int? { nil }
     }
 
     final class RouterResponseWriter: ResponseBodyWriter {

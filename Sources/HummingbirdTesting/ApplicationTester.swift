@@ -61,6 +61,8 @@ public protocol TestClientProtocol: Sendable {
         headers: HTTPFields,
         body: ByteBuffer?
     ) async throws -> TestResponse
+    // Port to connect to if test client is connecting to a live server
+    var port: Int? { get }
 }
 
 extension TestClientProtocol {
