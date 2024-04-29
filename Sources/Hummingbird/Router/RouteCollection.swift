@@ -64,7 +64,7 @@ public final class RouteCollection<Context: BaseRequestContext>: RouterMethods {
 extension RouterMethods {
     /// Add route collection to router
     /// - Parameter collection: Route collection
-    public func add(_ path: String = "", routes collection: RouteCollection<Context>) {
+    public func addRoutes(_ collection: RouteCollection<Context>, atPath path: String = "") {
         for route in collection.routes {
             // ensure path starts with a "/" and doesn't end with a "/"
             let path = self.combinePaths(path, route.path)
