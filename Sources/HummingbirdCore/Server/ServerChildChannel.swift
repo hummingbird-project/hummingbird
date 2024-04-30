@@ -16,12 +16,13 @@ import Logging
 import NIOCore
 import ServiceLifecycle
 
-public protocol ChildChannel: Sendable {
+public protocol ChildChannelValue: Sendable {
     var eventLoop: EventLoop { get }
 }
+
 /// HTTPServer child channel setup protocol
 public protocol ServerChildChannel: Sendable {
-    associatedtype Value: ChildChannel
+    associatedtype Value: ChildChannelValue
 
     /// Setup child channel
     /// - Parameters:
