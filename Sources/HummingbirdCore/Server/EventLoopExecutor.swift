@@ -44,4 +44,20 @@ import NIOCore
             self.eventLoop === other.eventLoop
         }
     }
+
+    struct EventLoopExecutorMap {
+        init(eventLoopGroup: EventLoopGroup) {
+            var executors: [ObjectIdentifier: EventLoopExecutor] = [:]
+            for eventLoop in eventLoopGroup.makeIterator() {
+                executors[ObjectIdentifier(eventLoop)] = EventLoopExecutor(eventLoop: eventLoop)
+            }
+            self.executors = executors
+        }
+
+        subscript(eventLoop: EventLoop) -> EventLoopExecutor? {
+            return self.executors[ObjectIdentifier(eventLoop)]
+        }
+
+        let executors: [ObjectIdentifier: EventLoopExecutor]
+    }
 #endif  // swift(>=6.0)

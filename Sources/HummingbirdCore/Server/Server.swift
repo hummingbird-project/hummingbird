@@ -114,6 +114,10 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
                         await onServerRunning?(asyncChannel.channel)
 
                         let logger = self.logger
+                        #if compiler(>=6.0)
+                            let eventLoopExecutorMap = EventLoopExecutorMap(
+                                eventLoopGroup: self.eventLoopGroup)
+                        #endif
                         // We can now start to handle our work.
                         await withDiscardingTaskGroup { group in
                             do {
@@ -121,9 +125,8 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
                                     for try await childChannel in inbound {
                                         #if compiler(>=6.0)
                                             group.addTask(
-                                                executorPreference: EventLoopExecutor(
-                                                    eventLoop: childChannel.eventLoop
-                                                )
+                                                executorPreference: eventLoopExecutorMap[
+                                                    childChannel.eventLoop]
                                             ) {
                                                 await childChannelSetup.handle(
                                                     value: childChannel, logger: logger)
