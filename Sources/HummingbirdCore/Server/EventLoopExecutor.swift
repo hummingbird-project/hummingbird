@@ -15,49 +15,49 @@
 import NIOCore
 
 #if compiler(>=6.0)
-    final class EventLoopExecutor: TaskExecutor, SerialExecutor {
-        @usableFromInline let eventLoop: EventLoop
+final class EventLoopExecutor: TaskExecutor, SerialExecutor {
+    @usableFromInline let eventLoop: EventLoop
 
-        init(eventLoop: EventLoop) {
-            self.eventLoop = eventLoop
-        }
+    init(eventLoop: EventLoop) {
+        self.eventLoop = eventLoop
+    }
 
-        func asUnownedTaskExecutor() -> UnownedTaskExecutor {
-            UnownedTaskExecutor(ordinary: self)
-        }
+    func asUnownedTaskExecutor() -> UnownedTaskExecutor {
+        UnownedTaskExecutor(ordinary: self)
+    }
 
-        @inlinable
-        func enqueue(_ job: consuming ExecutorJob) {
-            let job = UnownedJob(job)
-            self.eventLoop.execute {
-                job.runSynchronously(on: self.asUnownedTaskExecutor())
-            }
-        }
-
-        @inlinable
-        func asUnownedSerialExecutor() -> UnownedSerialExecutor {
-            UnownedSerialExecutor(complexEquality: self)
-        }
-
-        @inlinable
-        func isSameExclusiveExecutionContext(other: EventLoopExecutor) -> Bool {
-            self.eventLoop === other.eventLoop
+    @inlinable
+    func enqueue(_ job: consuming ExecutorJob) {
+        let job = UnownedJob(job)
+        self.eventLoop.execute {
+            job.runSynchronously(on: self.asUnownedTaskExecutor())
         }
     }
 
-    struct EventLoopExecutorMap {
-        init(eventLoopGroup: EventLoopGroup) {
-            var executors: [ObjectIdentifier: EventLoopExecutor] = [:]
-            for eventLoop in eventLoopGroup.makeIterator() {
-                executors[ObjectIdentifier(eventLoop)] = EventLoopExecutor(eventLoop: eventLoop)
-            }
-            self.executors = executors
-        }
-
-        subscript(eventLoop: EventLoop) -> EventLoopExecutor? {
-            return self.executors[ObjectIdentifier(eventLoop)]
-        }
-
-        let executors: [ObjectIdentifier: EventLoopExecutor]
+    @inlinable
+    func asUnownedSerialExecutor() -> UnownedSerialExecutor {
+        UnownedSerialExecutor(complexEquality: self)
     }
-#endif  // swift(>=6.0)
+
+    @inlinable
+    func isSameExclusiveExecutionContext(other: EventLoopExecutor) -> Bool {
+        self.eventLoop === other.eventLoop
+    }
+}
+
+struct EventLoopExecutorMap {
+    init(eventLoopGroup: EventLoopGroup) {
+        var executors: [ObjectIdentifier: EventLoopExecutor] = [:]
+        for eventLoop in eventLoopGroup.makeIterator() {
+            executors[ObjectIdentifier(eventLoop)] = EventLoopExecutor(eventLoop: eventLoop)
+        }
+        self.executors = executors
+    }
+
+    subscript(eventLoop: EventLoop) -> EventLoopExecutor? {
+        return self.executors[ObjectIdentifier(eventLoop)]
+    }
+
+    let executors: [ObjectIdentifier: EventLoopExecutor]
+}
+#endif // swift(>=6.0)

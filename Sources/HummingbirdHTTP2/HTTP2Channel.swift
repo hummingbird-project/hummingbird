@@ -61,7 +61,8 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
         self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
         self.additionalChannelHandlers = additionalChannelHandlers
         self.http1 = HTTP1Channel(
-            responder: responder, additionalChannelHandlers: additionalChannelHandlers)
+            responder: responder, additionalChannelHandlers: additionalChannelHandlers
+        )
     }
 
     /// Setup child channel for HTTP1 with HTTP2 upgrade
@@ -82,7 +83,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
                 http1Channel -> EventLoopFuture<HTTP1Channel.Value> in
                 let childChannelHandlers: [ChannelHandler] =
                     [HTTP1ToHTTPServerCodec(secure: false)] + self.additionalChannelHandlers() + [
-                        HTTPUserEventHandler(logger: logger)
+                        HTTPUserEventHandler(logger: logger),
                     ]
 
                 return http1Channel
@@ -100,7 +101,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
             } http2StreamInitializer: { http2ChildChannel -> EventLoopFuture<HTTP1Channel.Value> in
                 let childChannelHandlers: [ChannelHandler] =
                     self.additionalChannelHandlers() + [
-                        HTTPUserEventHandler(logger: logger)
+                        HTTPUserEventHandler(logger: logger),
                     ]
 
                 return http2ChildChannel
