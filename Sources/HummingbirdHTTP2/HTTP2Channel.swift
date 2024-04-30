@@ -40,7 +40,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
     public init(
         tlsConfiguration: TLSConfiguration,
         additionalChannelHandlers: @escaping @Sendable () -> [any RemovableChannelHandler] = { [] },
-        responder: @escaping @Sendable (Request, Channel) async throws -> Response = { _, _ in throw HTTPError(.notImplemented) }
+        responder: @escaping @Sendable (Request, Channel) async throws -> Response = { _, _ in throw HTTPError(.notFound) }
     ) throws {
         var tlsConfiguration = tlsConfiguration
         tlsConfiguration.applicationProtocols = NIOHTTP2SupportedALPNProtocols

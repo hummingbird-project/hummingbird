@@ -46,7 +46,7 @@ public extension Parameters {
     /// - Parameter s: parameter id
     func require(_ s: String) throws -> String {
         guard let param = self[s[...]].map({ String($0) }) else {
-            throw HTTPError(.badRequest)
+            throw HTTPError(.badRequest, message: "Expected parameter '\(s)' does not exist")
         }
         return param
     }
@@ -59,7 +59,7 @@ public extension Parameters {
         guard let param = self[s[...]],
               let result = T(String(param))
         else {
-            throw HTTPError(.badRequest)
+            throw HTTPError(.badRequest, message: "Parameter '\(s)' can not be converted to the expected type (\(T.self))")
         }
         return result
     }
@@ -72,7 +72,7 @@ public extension Parameters {
         guard let param = self[s[...]],
               let result = T(rawValue: String(param))
         else {
-            throw HTTPError(.badRequest)
+            throw HTTPError(.badRequest, message: "Parameter '\(s)' can not be converted to the expected type (\(T.self))")
         }
         return result
     }
@@ -107,7 +107,7 @@ public extension Parameters {
     func requireAll<T: LosslessStringConvertible>(_ s: String, as: T.Type) throws -> [T] {
         return try self[values: s[...]].map {
             guard let result = T(String($0)) else {
-                throw HTTPError(.badRequest)
+                throw HTTPError(.badRequest, message: "One of the parameters '\(s)' can not be converted to the expected type (\(T.self))")
             }
             return result
         }
@@ -120,7 +120,7 @@ public extension Parameters {
     func requireAll<T: RawRepresentable>(_ s: String, as: T.Type) throws -> [T] where T.RawValue == String {
         return try self[values: s[...]].map {
             guard let result = T(rawValue: String($0)) else {
-                throw HTTPError(.badRequest)
+                throw HTTPError(.badRequest, message: "One of the parameters '\(s)' can not be converted to the expected type (\(T.self))")
             }
             return result
         }

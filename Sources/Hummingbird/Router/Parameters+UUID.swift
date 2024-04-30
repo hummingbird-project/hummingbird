@@ -33,7 +33,7 @@ extension Parameters {
         guard let param = self[s[...]],
               let result = UUID(uuidString: String(param))
         else {
-            throw HTTPError(.badRequest)
+            throw HTTPError(.badRequest, message: "Parameter '\(s)' can not be converted to the expected type (UUID)")
         }
         return result
     }
@@ -53,7 +53,7 @@ extension Parameters {
     public func requireAll(_ s: String, as: UUID.Type) throws -> [UUID] {
         return try self[values: s[...]].map {
             guard let result = UUID(uuidString: String($0)) else {
-                throw HTTPError(.badRequest)
+                throw HTTPError(.badRequest, message: "One of the parameters '\(s)' can not be converted to the expected type (UUID)")
             }
             return result
         }
