@@ -16,11 +16,12 @@ import Logging
 import NIOCore
 import NIOExtras
 import NIOPosix
-#if canImport(Network)
-import Network
-import NIOTransportServices
-#endif
 import ServiceLifecycle
+
+#if canImport(Network)
+    import Network
+    import NIOTransportServices
+#endif
 
 /// HTTP server class
 public actor Server<ChildChannel: ServerChildChannel>: Service {
@@ -118,9 +119,21 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
                             do {
                                 try await asyncChannel.executeThenClose { inbound in
                                     for try await childChannel in inbound {
-                                        group.addTask {
-                                            await childChannelSetup.handle(value: childChannel, logger: logger)
-                                        }
+                                        #if compiler(>=6.0)
+                                            group.addTask(
+                                                executorPreference: EventLoopExecutor(
+                                                    eventLoop: childChannel.eventLoop
+                                                )
+                                            ) {
+                                                await childChannelSetup.handle(
+                                                    value: childChannel, logger: logger)
+                                            }
+                                        #else
+                                            group.addTask {
+                                                await childChannelSetup.handle(
+                                                    value: childChannel, logger: logger)
+                                            }
+                                        #endif
                                     }
                                 }
                             } catch {
@@ -179,24 +192,30 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
     /// Start server
     /// - Parameter responder: Object that provides responses to requests sent to the server
     /// - Returns: EventLoopFuture that is fulfilled when server has started
-    nonisolated func makeServer(childChannelSetup: ChildChannel, configuration: ServerConfiguration) async throws -> AsyncServerChannel {
+    nonisolated func makeServer(childChannelSetup: ChildChannel, configuration: ServerConfiguration)
+        async throws -> AsyncServerChannel
+    {
         let bootstrap: ServerBootstrapProtocol
         #if canImport(Network)
-        if let tsBootstrap = self.createTSBootstrap(configuration: configuration) {
-            bootstrap = tsBootstrap
-        } else {
-            #if os(iOS) || os(tvOS)
-            self.logger.warning("Running BSD sockets on iOS or tvOS is not recommended. Please use NIOTSEventLoopGroup, to run with the Network framework")
-            #endif
-            if configuration.tlsOptions.options != nil {
-                self.logger.warning("tlsOptions set in Configuration will not be applied to a BSD sockets server. Please use NIOTSEventLoopGroup, to run with the Network framework")
+            if let tsBootstrap = self.createTSBootstrap(configuration: configuration) {
+                bootstrap = tsBootstrap
+            } else {
+                #if os(iOS) || os(tvOS)
+                    self.logger.warning(
+                        "Running BSD sockets on iOS or tvOS is not recommended. Please use NIOTSEventLoopGroup, to run with the Network framework"
+                    )
+                #endif
+                if configuration.tlsOptions.options != nil {
+                    self.logger.warning(
+                        "tlsOptions set in Configuration will not be applied to a BSD sockets server. Please use NIOTSEventLoopGroup, to run with the Network framework"
+                    )
+                }
+                bootstrap = self.createSocketsBootstrap(configuration: configuration)
             }
-            bootstrap = self.createSocketsBootstrap(configuration: configuration)
-        }
         #else
-        bootstrap = self.createSocketsBootstrap(
-            configuration: configuration
-        )
+            bootstrap = self.createSocketsBootstrap(
+                configuration: configuration
+            )
         #endif
 
         do {
@@ -212,7 +231,9 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
                         logger: self.logger
                     )
                 }
-                self.logger.info("Server started and listening on \(host):\(asyncChannel.channel.localAddress?.port ?? port)")
+                self.logger.info(
+                    "Server started and listening on \(host):\(asyncChannel.channel.localAddress?.port ?? port)"
+                )
                 return asyncChannel
 
             case .unixDomainSocket(let path):
@@ -242,32 +263,45 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
         return ServerBootstrap(group: self.eventLoopGroup)
             // Specify backlog and enable SO_REUSEADDR for the server itself
             .serverChannelOption(ChannelOptions.backlog, value: numericCast(configuration.backlog))
-            .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: configuration.reuseAddress ? 1 : 0)
-            .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: configuration.reuseAddress ? 1 : 0)
+            .serverChannelOption(
+                ChannelOptions.socketOption(.so_reuseaddr),
+                value: configuration.reuseAddress ? 1 : 0
+            )
+            .childChannelOption(
+                ChannelOptions.socketOption(.so_reuseaddr),
+                value: configuration.reuseAddress ? 1 : 0
+            )
             .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
             .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
     }
 
     #if canImport(Network)
-    /// create a NIOTransportServices bootstrap using Network.framework
-    @available(macOS 10.14, iOS 12, tvOS 12, *)
-    private nonisolated func createTSBootstrap(
-        configuration: ServerConfiguration
-    ) -> NIOTSListenerBootstrap? {
-        guard let bootstrap = NIOTSListenerBootstrap(validatingGroup: self.eventLoopGroup)?
-            .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: configuration.reuseAddress ? 1 : 0)
-            // Set the handlers that are applied to the accepted Channels
-            .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: configuration.reuseAddress ? 1 : 0)
-            .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
-        else {
-            return nil
-        }
+        /// create a NIOTransportServices bootstrap using Network.framework
+        @available(macOS 10.14, iOS 12, tvOS 12, *)
+        private nonisolated func createTSBootstrap(
+            configuration: ServerConfiguration
+        ) -> NIOTSListenerBootstrap? {
+            guard
+                let bootstrap = NIOTSListenerBootstrap(validatingGroup: self.eventLoopGroup)?
+                    .serverChannelOption(
+                        ChannelOptions.socketOption(.so_reuseaddr),
+                        value: configuration.reuseAddress ? 1 : 0
+                    )
+                    // Set the handlers that are applied to the accepted Channels
+                    .childChannelOption(
+                        ChannelOptions.socketOption(.so_reuseaddr),
+                        value: configuration.reuseAddress ? 1 : 0
+                    )
+                    .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
+            else {
+                return nil
+            }
 
-        if let tlsOptions = configuration.tlsOptions.options {
-            return bootstrap.tlsOptions(tlsOptions)
+            if let tlsOptions = configuration.tlsOptions.options {
+                return bootstrap.tlsOptions(tlsOptions)
+            }
+            return bootstrap
         }
-        return bootstrap
-    }
     #endif
 }
 
@@ -276,14 +310,16 @@ protocol ServerBootstrapProtocol {
     func bind<Output: Sendable>(
         host: String,
         port: Int,
-        serverBackPressureStrategy: NIOAsyncSequenceProducerBackPressureStrategies.HighLowWatermark?,
+        serverBackPressureStrategy: NIOAsyncSequenceProducerBackPressureStrategies
+            .HighLowWatermark?,
         childChannelInitializer: @escaping @Sendable (Channel) -> EventLoopFuture<Output>
     ) async throws -> NIOAsyncChannel<Output, Never>
 
     func bind<Output: Sendable>(
         unixDomainSocketPath: String,
         cleanupExistingSocketFile: Bool,
-        serverBackPressureStrategy: NIOAsyncSequenceProducerBackPressureStrategies.HighLowWatermark?,
+        serverBackPressureStrategy: NIOAsyncSequenceProducerBackPressureStrategies
+            .HighLowWatermark?,
         childChannelInitializer: @escaping @Sendable (Channel) -> EventLoopFuture<Output>
     ) async throws -> NIOAsyncChannel<Output, Never>
 }
@@ -292,19 +328,20 @@ protocol ServerBootstrapProtocol {
 extension ServerBootstrap: ServerBootstrapProtocol {}
 
 #if canImport(Network)
-@available(macOS 10.14, iOS 12, tvOS 12, *)
-extension NIOTSListenerBootstrap: ServerBootstrapProtocol {
-    // need to be able to extend `NIOTSListenerBootstrap` to conform to `ServerBootstrapProtocol`
-    // before we can use TransportServices
-    func bind<Output: Sendable>(
-        unixDomainSocketPath: String,
-        cleanupExistingSocketFile: Bool,
-        serverBackPressureStrategy: NIOAsyncSequenceProducerBackPressureStrategies.HighLowWatermark?,
-        childChannelInitializer: @escaping @Sendable (Channel) -> EventLoopFuture<Output>
-    ) async throws -> NIOAsyncChannel<Output, Never> {
-        preconditionFailure("Binding to a unixDomainSocketPath is currently not available")
+    @available(macOS 10.14, iOS 12, tvOS 12, *)
+    extension NIOTSListenerBootstrap: ServerBootstrapProtocol {
+        // need to be able to extend `NIOTSListenerBootstrap` to conform to `ServerBootstrapProtocol`
+        // before we can use TransportServices
+        func bind<Output: Sendable>(
+            unixDomainSocketPath: String,
+            cleanupExistingSocketFile: Bool,
+            serverBackPressureStrategy: NIOAsyncSequenceProducerBackPressureStrategies
+                .HighLowWatermark?,
+            childChannelInitializer: @escaping @Sendable (Channel) -> EventLoopFuture<Output>
+        ) async throws -> NIOAsyncChannel<Output, Never> {
+            preconditionFailure("Binding to a unixDomainSocketPath is currently not available")
+        }
     }
-}
 #endif
 
 extension Server: CustomStringConvertible {

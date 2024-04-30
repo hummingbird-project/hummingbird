@@ -25,7 +25,19 @@ import NIOSSL
 
 /// Child channel for processing HTTP1 with the option of upgrading to HTTP2
 public struct HTTP2UpgradeChannel: HTTPChannelHandler {
-    public typealias Value = EventLoopFuture<NIONegotiatedHTTPVersion<HTTP1Channel.Value, (NIOAsyncChannel<HTTP2Frame, HTTP2Frame>, NIOHTTP2Handler.AsyncStreamMultiplexer<HTTP1Channel.Value>)>>
+    public struct Value: ChildChannel {
+        let negotiatedResult:
+            EventLoopFuture<
+                NIONegotiatedHTTPVersion<
+                    HTTP1Channel.Value,
+                    (
+                        NIOAsyncChannel<HTTP2Frame, HTTP2Frame>,
+                        NIOHTTP2Handler.AsyncStreamMultiplexer<HTTP1Channel.Value>
+                    )
+                >
+            >
+        public let eventLoop: EventLoop
+    }
 
     private let sslContext: NIOSSLContext
     private let http1: HTTP1Channel
@@ -40,13 +52,16 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
     public init(
         tlsConfiguration: TLSConfiguration,
         additionalChannelHandlers: @escaping @Sendable () -> [any RemovableChannelHandler] = { [] },
-        responder: @escaping @Sendable (Request, Channel) async throws -> Response = { _, _ in throw HTTPError(.notImplemented) }
+        responder: @escaping @Sendable (Request, Channel) async throws -> Response = { _, _ in
+            throw HTTPError(.notImplemented)
+        }
     ) throws {
         var tlsConfiguration = tlsConfiguration
         tlsConfiguration.applicationProtocols = NIOHTTP2SupportedALPNProtocols
         self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
         self.additionalChannelHandlers = additionalChannelHandlers
-        self.http1 = HTTP1Channel(responder: responder, additionalChannelHandlers: additionalChannelHandlers)
+        self.http1 = HTTP1Channel(
+            responder: responder, additionalChannelHandlers: additionalChannelHandlers)
     }
 
     /// Setup child channel for HTTP1 with HTTP2 upgrade
@@ -56,42 +71,47 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
     /// - Returns: Object to process input/output on child channel
     public func setup(channel: Channel, logger: Logger) -> EventLoopFuture<Value> {
         do {
-            try channel.pipeline.syncOperations.addHandler(NIOSSLServerHandler(context: self.sslContext))
+            try channel.pipeline.syncOperations.addHandler(
+                NIOSSLServerHandler(context: self.sslContext))
         } catch {
             return channel.eventLoop.makeFailedFuture(error)
         }
 
-        return channel.configureAsyncHTTPServerPipeline { http1Channel -> EventLoopFuture<HTTP1Channel.Value> in
-            let childChannelHandlers: [ChannelHandler] =
-                [HTTP1ToHTTPServerCodec(secure: false)] +
-                self.additionalChannelHandlers() +
-                [HTTPUserEventHandler(logger: logger)]
+        return
+            channel.configureAsyncHTTPServerPipeline {
+                http1Channel -> EventLoopFuture<HTTP1Channel.Value> in
+                let childChannelHandlers: [ChannelHandler] =
+                    [HTTP1ToHTTPServerCodec(secure: false)] + self.additionalChannelHandlers() + [
+                        HTTPUserEventHandler(logger: logger)
+                    ]
 
-            return http1Channel
-                .pipeline
-                .addHandlers(childChannelHandlers)
-                .flatMapThrowing {
-                    try HTTP1Channel.Value(wrappingChannelSynchronously: http1Channel)
+                return http1Channel
+                    .pipeline
+                    .addHandlers(childChannelHandlers)
+                    .flatMapThrowing {
+                        try HTTP1Channel.Value(wrappingChannelSynchronously: http1Channel)
+                    }
+            } http2ConnectionInitializer: {
+                http2Channel -> EventLoopFuture<NIOAsyncChannel<HTTP2Frame, HTTP2Frame>> in
+                http2Channel.eventLoop.makeCompletedFuture {
+                    try NIOAsyncChannel<HTTP2Frame, HTTP2Frame>(
+                        wrappingChannelSynchronously: http2Channel)
                 }
-        } http2ConnectionInitializer: { http2Channel -> EventLoopFuture<NIOAsyncChannel<HTTP2Frame, HTTP2Frame>> in
-            http2Channel.eventLoop.makeCompletedFuture {
-                try NIOAsyncChannel<HTTP2Frame, HTTP2Frame>(wrappingChannelSynchronously: http2Channel)
-            }
-        } http2StreamInitializer: { http2ChildChannel -> EventLoopFuture<HTTP1Channel.Value> in
-            let childChannelHandlers: [ChannelHandler] =
-                self.additionalChannelHandlers() + [
-                    HTTPUserEventHandler(logger: logger),
-                ]
+            } http2StreamInitializer: { http2ChildChannel -> EventLoopFuture<HTTP1Channel.Value> in
+                let childChannelHandlers: [ChannelHandler] =
+                    self.additionalChannelHandlers() + [
+                        HTTPUserEventHandler(logger: logger)
+                    ]
 
-            return http2ChildChannel
-                .pipeline
-                .addHandler(HTTP2FramePayloadToHTTPServerCodec())
-                .flatMap {
-                    http2ChildChannel.pipeline.addHandlers(childChannelHandlers)
-                }.flatMapThrowing {
-                    try HTTP1Channel.Value(wrappingChannelSynchronously: http2ChildChannel)
-                }
-        }
+                return http2ChildChannel
+                    .pipeline
+                    .addHandler(HTTP2FramePayloadToHTTPServerCodec())
+                    .flatMap {
+                        http2ChildChannel.pipeline.addHandlers(childChannelHandlers)
+                    }.flatMapThrowing {
+                        try HTTP1Channel.Value(wrappingChannelSynchronously: http2ChildChannel)
+                    }
+            }.map { Value(negotiatedResult: $0, eventLoop: channel.eventLoop) }
     }
 
     /// handle messages being passed down the channel pipeline
@@ -100,7 +120,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
     ///   - logger: Logger to use while processing messages
     public func handle(value: Value, logger: Logger) async {
         do {
-            let channel = try await value.get()
+            let channel = try await value.negotiatedResult.get()
             switch channel {
             case .http1_1(let http1):
                 await handleHTTP(asyncChannel: http1, logger: logger)
