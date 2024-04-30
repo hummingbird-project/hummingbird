@@ -18,7 +18,7 @@ import NIOCore
 import NIOHTTPTypes
 import NIOHTTPTypesHTTP1
 
-extension NIOAsyncChannel: ChildChannel {
+extension NIOAsyncChannel: ChildChannelValue {
     public var eventLoop: EventLoop { self.channel.eventLoop }
 }
 

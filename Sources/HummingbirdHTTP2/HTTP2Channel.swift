@@ -25,7 +25,7 @@ import NIOSSL
 
 /// Child channel for processing HTTP1 with the option of upgrading to HTTP2
 public struct HTTP2UpgradeChannel: HTTPChannelHandler {
-    public struct Value: ChildChannel {
+    public struct Value: ChildChannelValue {
         let negotiatedResult:
             EventLoopFuture<
                 NIONegotiatedHTTPVersion<
