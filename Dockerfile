@@ -1,7 +1,7 @@
 # ================================
 # Build image
 # ================================
-FROM swift:5.9 as build
+FROM swift:5.10 as build
 
 WORKDIR /build
 
@@ -15,4 +15,4 @@ RUN swift package resolve
 # Copy entire repo into container
 COPY . .
 
-RUN swift test --enable-test-discovery --sanitize=thread
+RUN swift test --sanitize=thread
