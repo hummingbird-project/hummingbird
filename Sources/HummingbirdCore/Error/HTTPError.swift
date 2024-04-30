@@ -21,7 +21,7 @@ public struct HTTPError: Error, HTTPResponseError, Sendable {
     public var status: HTTPResponse.Status
     /// any addiitional headers required
     public var headers: HTTPFields
-    /// error payload, assumed to be a string
+    /// error message
     public var body: String?
 
     /// Initialize HTTPError
@@ -39,13 +39,13 @@ public struct HTTPError: Error, HTTPResponseError, Sendable {
     ///   - message: Associated message
     public init(_ status: HTTPResponse.Status, message: String) {
         self.status = status
-        self.headers = [.contentType: "text/plain; charset=utf-8"]
+        self.headers = [.contentType: "application/json; charset=utf-8"]
         self.body = message
     }
 
     /// Get body of error as ByteBuffer
     public func body(allocator: ByteBufferAllocator) -> ByteBuffer? {
-        return self.body.map { allocator.buffer(string: $0) }
+        return self.body.map { allocator.buffer(string: "{\"error\":{\"message\":\"\($0)\"}}\n") }
     }
 }
 

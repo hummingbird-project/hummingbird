@@ -186,6 +186,28 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    func testErrorOutput() async throws {
+        /// Error message returned by Hummingbird
+        struct ErrorMessage: Codable {
+            struct Details: Codable {
+                let message: String
+            }
+
+            let error: Details
+        }
+        let router = Router()
+        router.get("error") { _, _ -> HTTPResponse.Status in
+            throw HTTPError(.badRequest, message: "BAD!")
+        }
+        let app = Application(router: router)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/error", method: .get) { response in
+                let error = try JSONDecoder().decode(ErrorMessage.self, from: response.body)
+                XCTAssertEqual(error.error.message, "BAD!")
+            }
+        }
+    }
+
     func testResponseBody() async throws {
         let router = Router()
         router
