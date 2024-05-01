@@ -42,8 +42,6 @@ public protocol FileMiddlewareFileAttributes {
 /// "modified-date", "eTag", "content-type", "cache-control" and "content-range" headers where
 /// they are relevant.
 public struct FileMiddleware<Context: BaseRequestContext, Provider: FileProvider>: RouterMiddleware where Provider.FileAttributes: FileMiddlewareFileAttributes {
-    struct IsDirectoryError: Error {}
-
     let cacheControl: CacheControl
     let searchForIndexHtml: Bool
     let fileProvider: Provider
@@ -152,7 +150,7 @@ extension FileMiddleware {
         // if file is a directory seach and `searchForIndexHtml` is set to true
         // then search for index.html in directory
         if attributes.isFolder {
-            guard self.searchForIndexHtml else { throw IsDirectoryError() }
+            guard self.searchForIndexHtml else { throw HTTPError(.notFound) }
             let indexPath = self.appendingPathComponent(path, "index.html")
             guard let indexAttributes = try await self.fileProvider.getAttributes(path: indexPath) else {
                 throw HTTPError(.notFound)

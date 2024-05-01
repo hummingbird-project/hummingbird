@@ -316,6 +316,18 @@ class FileMiddlewareTests: XCTestCase {
         }
     }
 
+    func testFolder() async throws {
+        let router = Router()
+        router.middlewares.add(FileMiddleware(".", searchForIndexHtml: false))
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/", method: .get) { response in
+                XCTAssertEqual(response.status, .notFound)
+            }
+        }
+    }
+
     func testCustomFileProvider() async throws {
         // basic file provider
         struct MemoryFileProvider: FileProvider {
