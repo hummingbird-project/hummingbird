@@ -233,13 +233,18 @@ final class MiddlewareTests: XCTestCase {
 
     func testRouteLoggingMiddleware() async throws {
         let router = Router()
-        router.middlewares.add(LogRequestsMiddleware(.debug))
+        router.middlewares.add(LogRequestsMiddleware(.info, includeHeaders: .some([.contentType])))
         router.put("/hello") { _, _ -> String in
             throw HTTPError(.badRequest)
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
-            try await client.execute(uri: "/hello", method: .put) { _ in
+            try await client.execute(
+                uri: "/hello",
+                method: .put,
+                headers: [.contentType: "application/json"],
+                body: .init(string: "{}")
+            ) { _ in
             }
         }
     }
