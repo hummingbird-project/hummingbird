@@ -22,10 +22,10 @@ extension BinaryTrie {
         var parameters = Parameters()
 
         if pathComponents.isEmpty {
-            return value(for: 0, parameters: parameters)
+            return self.value(for: 0, parameters: parameters)
         }
 
-        return descendPath(
+        return self.descendPath(
             in: &trie,
             index: 0,
             parameters: &parameters,
@@ -139,12 +139,12 @@ extension BinaryTrie {
     ) -> (value: Value, parameters: Parameters)? {
         // If there are no more components in the path, return the value found
         if components.isEmpty {
-            return value(for: index, parameters: parameters)
+            return self.value(for: index, parameters: parameters)
         }
 
         // Take the next component from the path
         var component = components.removeFirst()
-        
+
         // Check the current node type through TokenKind
         // And read the location of the _next_ node from the trie buffer
         while
@@ -157,11 +157,11 @@ extension BinaryTrie {
                 // ``matchComponent`` moves the reader index forward, so we'll need to reset it
                 // If we're in a recursiveWildcard and this component does not match
                 let readerIndex = trie.readerIndex
-                let result = matchComponent(component, withToken: token, in: &trie, parameters: &parameters)
+                let result = self.matchComponent(component, withToken: token, in: &trie, parameters: &parameters)
 
                 switch result {
                 case .match:
-                    return descendPath(
+                    return self.descendPath(
                         in: &trie,
                         index: index,
                         parameters: &parameters,
@@ -184,7 +184,7 @@ extension BinaryTrie {
                     trie.moveReaderIndex(to: Int(nextSiblingNodeIndex))
                     continue
                 case .recursivelyDiscarded:
-                    return descendPath(
+                    return self.descendPath(
                         in: &trie,
                         index: index,
                         parameters: &parameters,
@@ -203,96 +203,3 @@ extension BinaryTrie {
     }
 }
 
-#if canImport(Darwin)
-import Darwin.C
-#elseif canImport(Musl)
-import Musl
-#elseif os(Linux) || os(FreeBSD) || os(Android)
-import Glibc
-#else
-#error("unsupported os")
-#endif
-
-fileprivate extension ByteBuffer {
-    mutating func readAndCompareString<Length: FixedWidthInteger>(
-        to string: Substring,
-        length: Length.Type
-    ) -> Bool {
-        guard
-            let _length: Length = readInteger()
-        else {
-            return false
-        }
-
-        let length = Int(_length)
-
-        func compare(utf8: UnsafeBufferPointer<UInt8>) -> Bool {
-            if utf8.count != length {
-                return false
-            }
-
-            if length == 0 {
-                // Needed, because `memcmp` wants a non-null pointer on Linux
-                // and a zero-length buffer has no baseAddress
-                return true
-            }
-
-            return withUnsafeReadableBytes { buffer in
-                if memcmp(utf8.baseAddress!, buffer.baseAddress!, length) == 0 {
-                    moveReaderIndex(forwardBy: length)
-                    return true
-                } else {
-                    return false
-                }
-            }
-        }
-
-        guard let result = string.withContiguousStorageIfAvailable({ characters in
-            characters.withMemoryRebound(to: UInt8.self) { utf8 in
-                compare(utf8: utf8)
-            }
-        }) else {
-            var string = string
-            return string.withUTF8 { utf8 in
-                compare(utf8: utf8)
-            }
-        }
-
-        return result
-    }
-
-    mutating func readLengthPrefixedString<F: FixedWidthInteger>(as integer: F.Type) -> String? {
-        guard let buffer = readLengthPrefixedSlice(as: F.self) else {
-            return nil
-        }
-
-        return String(buffer: buffer)
-    }
-
-    mutating func readToken() -> BinaryTrieTokenKind? {
-        guard
-            let _token: BinaryTrieTokenKind.RawValue = readInteger(),
-            let token = BinaryTrieTokenKind(rawValue: _token)
-        else {
-            return nil
-        }
-
-        return token
-    }
-
-    mutating func readBinaryTrieNode() -> BinaryTrieNode? {
-        guard
-            let index = readInteger(as: UInt16.self),
-            let token = readToken(),
-            let nextSiblingNodeIndex: UInt32 = readInteger()
-        else {
-            return nil
-        }
-
-        return BinaryTrieNode(
-            index: index,
-            kind: token,
-            nextSiblingNodeIndex: nextSiblingNodeIndex
-        )
-    }
-}

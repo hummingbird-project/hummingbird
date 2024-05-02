@@ -74,7 +74,7 @@ public final class Router<Context: BaseRequestContext>: RouterMethods, HTTPRespo
                 node.value?.autoGenerateHeadEndpoint()
             }
         }
-        return try! .init(
+        return .init(
             context: Context.self,
             trie: self.trie.build(),
             options: self.options,

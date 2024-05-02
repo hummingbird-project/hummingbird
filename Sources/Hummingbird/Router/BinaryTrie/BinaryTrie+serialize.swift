@@ -19,7 +19,7 @@ extension BinaryTrie {
         _ node: RouterPathTrie<Value>.Node,
         trie: inout ByteBuffer,
         values: inout [Value?]
-    ) throws {
+    ) {
         // Index where `value` is located
         trie.writeInteger(UInt16(values.count))
         values.append(node.value)
@@ -40,39 +40,27 @@ extension BinaryTrie {
             nextNodeOffsetIndex = reserveUInt32()
 
             // Serialize the path constant
-            try trie.writeLengthPrefixed(as: Integer.self) { buffer in
-                buffer.writeSubstring(path)
-            }
+            trie.writeLengthPrefixedString(path, as: Integer.self)
         case .capture(let parameter):
             trie.writeToken(.capture)
             nextNodeOffsetIndex = reserveUInt32()
 
             // Serialize the parameter
-            try trie.writeLengthPrefixed(as: Integer.self) { buffer in
-                buffer.writeSubstring(parameter)
-            }
+            trie.writeLengthPrefixedString(parameter, as: Integer.self)
         case .prefixCapture(suffix: let suffix, parameter: let parameter):
             trie.writeToken(.prefixCapture)
             nextNodeOffsetIndex = reserveUInt32()
 
             // Serialize the suffix and parameter
-            try trie.writeLengthPrefixed(as: Integer.self) { buffer in
-                buffer.writeSubstring(suffix)
-            }
-            try trie.writeLengthPrefixed(as: Integer.self) { buffer in
-                buffer.writeSubstring(parameter)
-            }
+            trie.writeLengthPrefixedString(suffix, as: Integer.self)
+            trie.writeLengthPrefixedString(parameter, as: Integer.self)
         case .suffixCapture(prefix: let prefix, parameter: let parameter):
             trie.writeToken(.suffixCapture)
             nextNodeOffsetIndex = reserveUInt32()
 
             // Serialize the prefix and parameter
-            try trie.writeLengthPrefixed(as: Integer.self) { buffer in
-                buffer.writeSubstring(prefix)
-            }
-            try trie.writeLengthPrefixed(as: Integer.self) { buffer in
-                buffer.writeSubstring(parameter)
-            }
+            trie.writeLengthPrefixedString(prefix, as: Integer.self)
+            trie.writeLengthPrefixedString(parameter, as: Integer.self)
         case .wildcard:
             trie.writeToken(.wildcard)
             nextNodeOffsetIndex = reserveUInt32()
@@ -81,17 +69,13 @@ extension BinaryTrie {
             nextNodeOffsetIndex = reserveUInt32()
 
             // Serialize the suffix
-            try trie.writeLengthPrefixed(as: Integer.self) { buffer in
-                buffer.writeSubstring(suffix)
-            }
+            trie.writeLengthPrefixedString(suffix, as: Integer.self)
         case .suffixWildcard(let prefix):
             trie.writeToken(.suffixWildcard)
             nextNodeOffsetIndex = reserveUInt32()
 
             // Serialize the prefix
-            try trie.writeLengthPrefixed(as: Integer.self) { buffer in
-                buffer.writeSubstring(prefix)
-            }
+            trie.writeLengthPrefixedString(prefix, as: Integer.self)
         case .recursiveWildcard:
             trie.writeToken(.recursiveWildcard)
             nextNodeOffsetIndex = reserveUInt32()
@@ -100,7 +84,7 @@ extension BinaryTrie {
             nextNodeOffsetIndex = reserveUInt32()
         }
 
-        try serializeChildren(
+        self.serializeChildren(
             of: node,
             trie: &trie,
             values: &values
@@ -122,11 +106,11 @@ extension BinaryTrie {
         of node: RouterPathTrie<Value>.Node,
         trie: inout ByteBuffer,
         values: inout [Value?]
-    ) throws {
+    ) {
         // Serialize the child nodes in order of priority
         // That's also the order of resolution
-        for child in node.children.sorted(by: highestPriorityFirst) {
-            try serialize(child, trie: &trie, values: &values)
+        for child in node.children.sorted(by: self.highestPriorityFirst) {
+            self.serialize(child, trie: &trie, values: &values)
         }
     }
 
@@ -160,8 +144,3 @@ extension RouterPath.Element {
     }
 }
 
-fileprivate extension ByteBuffer {
-    mutating func writeToken(_ token: BinaryTrieTokenKind) {
-        writeInteger(token.rawValue)
-    }
-}

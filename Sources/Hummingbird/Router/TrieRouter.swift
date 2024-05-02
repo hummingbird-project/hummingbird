@@ -105,8 +105,8 @@ public struct BinaryRouterResponder<Context: BaseRequestContext>: HTTPResponder 
         trie: RouterPathTrie<EndpointResponders<Context>>,
         options: RouterOptions,
         notFoundResponder: any HTTPResponder<Context>
-    ) throws {
-        self.trie = try BinaryTrie(base: trie)
+    ) {
+        self.trie = BinaryTrie(base: trie)
         self.options = options
         self.notFoundResponder = notFoundResponder
     }
@@ -121,7 +121,7 @@ public struct BinaryRouterResponder<Context: BaseRequestContext>: HTTPResponder 
         } else {
             path = request.uri.path
         }
-        guard 
+        guard
             let (responderChain, parameters) = trie.resolve(path),
             let responder = responderChain.getResponder(for: request.method)
         else {
