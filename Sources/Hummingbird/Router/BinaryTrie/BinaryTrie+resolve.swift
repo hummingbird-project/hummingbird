@@ -18,8 +18,8 @@ extension BinaryTrie {
     /// Resolve a path to a `Value` if available
     @_spi(Internal) public func resolve(_ path: String) -> (value: Value, parameters: Parameters)? {
         var trie = trie
-        var pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)[...]
-        var parameters = Parameters()
+        let pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)[...]
+        let parameters = Parameters()
 
         if pathComponents.isEmpty {
             return self.value(for: 0, parameters: parameters)
@@ -28,8 +28,8 @@ extension BinaryTrie {
         return self.descendPath(
             in: &trie,
             index: 0,
-            parameters: &parameters,
-            components: &pathComponents,
+            parameters: parameters,
+            components: pathComponents,
             isInRecursiveWildcard: false
         )
     }
@@ -133,17 +133,22 @@ extension BinaryTrie {
     private func descendPath(
         in trie: inout ByteBuffer,
         index: UInt16,
-        parameters: inout Parameters,
-        components: inout ArraySlice<Substring>,
+        parameters: Parameters,
+        components: ArraySlice<Substring>,
         isInRecursiveWildcard: Bool
     ) -> (value: Value, parameters: Parameters)? {
+        var parameters = parameters
         // If there are no more components in the path, return the value found
         if components.isEmpty {
             return self.value(for: index, parameters: parameters)
         }
 
-        // Take the next component from the path
-        var component = components.removeFirst()
+        // Take the next component from the path. If there are no more components in the
+        // path, return the value found
+        guard var component = components.first else {
+            return self.value(for: index, parameters: parameters)
+        }
+        var components = components.dropFirst()
 
         // Check the current node type through TokenKind
         // And read the location of the _next_ node from the trie buffer
@@ -160,16 +165,15 @@ extension BinaryTrie {
                     return self.descendPath(
                         in: &trie,
                         index: node.index,
-                        parameters: &parameters,
-                        components: &components,
+                        parameters: parameters,
+                        components: components,
                         isInRecursiveWildcard: false
                     )
                 case .mismatch where isInRecursiveWildcard:
-                    if components.isEmpty {
+                    guard let c = components.first else {
                         return nil
                     }
-
-                    component = components[components.startIndex]
+                    component = c
                     components = components.dropFirst()
 
                     // Move back he readerIndex, so that we can retry this step again with
@@ -183,8 +187,8 @@ extension BinaryTrie {
                     return self.descendPath(
                         in: &trie,
                         index: node.index,
-                        parameters: &parameters,
-                        components: &components,
+                        parameters: parameters,
+                        components: components,
                         isInRecursiveWildcard: true
                     )
                 case .ignore:
