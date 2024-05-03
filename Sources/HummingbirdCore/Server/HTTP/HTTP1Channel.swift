@@ -18,6 +18,10 @@ import NIOCore
 import NIOHTTPTypes
 import NIOHTTPTypesHTTP1
 
+extension NIOAsyncChannel: ChildChannelValue {
+    public var eventLoop: EventLoop { self.channel.eventLoop }
+}
+
 /// Child channel for processing HTTP1
 public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
     public typealias Value = NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>
@@ -41,9 +45,9 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
     /// - Returns: Object to process input/output on child channel
     public func setup(channel: Channel, logger: Logger) -> EventLoopFuture<Value> {
         let childChannelHandlers: [any ChannelHandler] =
-            [HTTP1ToHTTPServerCodec(secure: false)] +
-            self.additionalChannelHandlers() +
-            [HTTPUserEventHandler(logger: logger)]
+            [HTTP1ToHTTPServerCodec(secure: false)] + self.additionalChannelHandlers() + [
+                HTTPUserEventHandler(logger: logger),
+            ]
         return channel.eventLoop.makeCompletedFuture {
             try channel.pipeline.syncOperations.configureHTTPServerPipeline(
                 withPipeliningAssistance: false, // HTTP is pipelined by NIOAsyncChannel
@@ -62,7 +66,10 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
     /// - Parameters:
     ///   - value: Object to process input/output on child channel
     ///   - logger: Logger to use while processing messages
-    public func handle(value asyncChannel: NIOCore.NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>, logger: Logging.Logger) async {
+    public func handle(
+        value asyncChannel: NIOCore.NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>,
+        logger: Logging.Logger
+    ) async {
         await handleHTTP(asyncChannel: asyncChannel, logger: logger)
     }
 
