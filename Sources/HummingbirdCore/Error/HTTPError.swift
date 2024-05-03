@@ -19,8 +19,18 @@ import NIOCore
 public struct HTTPError: Error, HTTPResponseError, Sendable {
     /// status code for the error
     public var status: HTTPResponse.Status
-    /// any addiitional headers required
-    public var headers: HTTPFields
+    /// internal representation of error headers without contentType
+    private var _headers: HTTPFields
+    /// headers
+    public var headers: HTTPFields {
+        get {
+            return self.body != nil ? self._headers + [.contentType: "application/json; charset=utf-8"] : self._headers
+        }
+        set {
+            self._headers = newValue
+        }
+    }
+
     /// error message
     public var body: String?
 
@@ -29,7 +39,7 @@ public struct HTTPError: Error, HTTPResponseError, Sendable {
     ///   - status: HTTP status
     public init(_ status: HTTPResponse.Status) {
         self.status = status
-        self.headers = [:]
+        self._headers = [:]
         self.body = nil
     }
 
@@ -39,7 +49,7 @@ public struct HTTPError: Error, HTTPResponseError, Sendable {
     ///   - message: Associated message
     public init(_ status: HTTPResponse.Status, message: String) {
         self.status = status
-        self.headers = [.contentType: "application/json; charset=utf-8"]
+        self._headers = [:]
         self.body = message
     }
 
