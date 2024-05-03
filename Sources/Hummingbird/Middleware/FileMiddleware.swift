@@ -103,7 +103,7 @@ public struct FileMiddleware<Context: BaseRequestContext, Provider: FileProvider
 
             // file paths that contain ".." are considered illegal
             guard !path.contains("..") else {
-                throw HTTPError(.badRequest, message: "URLs including '..' are not supported")
+                throw HTTPError(.badRequest)
             }
 
             let fullPath = self.fileProvider.getFullPath(path)
