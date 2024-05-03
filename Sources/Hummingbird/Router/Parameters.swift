@@ -46,7 +46,7 @@ public extension Parameters {
     /// - Parameter s: parameter id
     func require(_ s: String) throws -> String {
         guard let param = self[s[...]].map({ String($0) }) else {
-            throw HTTPError(.badRequest, message: "Expected parameter '\(s)' does not exist")
+            throw HTTPError(.badRequest, message: "Expected parameter does not exist")
         }
         return param
     }
@@ -56,10 +56,12 @@ public extension Parameters {
     ///   - s: parameter id
     ///   - as: type we want returned
     func require<T: LosslessStringConvertible>(_ s: String, as: T.Type) throws -> T {
-        guard let param = self[s[...]],
-              let result = T(String(param))
+        guard let param = self[s[...]] else {
+            throw HTTPError(.badRequest, message: "Expected parameter does not exist")
+        }
+        guard let result = T(String(param))
         else {
-            throw HTTPError(.badRequest, message: "Parameter '\(s)' can not be converted to the expected type (\(T.self))")
+            throw HTTPError(.badRequest, message: "Parameter '\(param)' can not be converted to the expected type (\(T.self))")
         }
         return result
     }
@@ -69,10 +71,12 @@ public extension Parameters {
     ///   - s: parameter id
     ///   - as: type we want returned
     func require<T: RawRepresentable>(_ s: String, as: T.Type) throws -> T where T.RawValue == String {
-        guard let param = self[s[...]],
-              let result = T(rawValue: String(param))
+        guard let param = self[s[...]] else {
+            throw HTTPError(.badRequest, message: "Expected parameter does not exist")
+        }
+        guard let result = T(rawValue: String(param))
         else {
-            throw HTTPError(.badRequest, message: "Parameter '\(s)' can not be converted to the expected type (\(T.self))")
+            throw HTTPError(.badRequest, message: "Parameter '\(param)' can not be converted to the expected type (\(T.self))")
         }
         return result
     }
@@ -107,7 +111,7 @@ public extension Parameters {
     func requireAll<T: LosslessStringConvertible>(_ s: String, as: T.Type) throws -> [T] {
         return try self[values: s[...]].map {
             guard let result = T(String($0)) else {
-                throw HTTPError(.badRequest, message: "One of the parameters '\(s)' can not be converted to the expected type (\(T.self))")
+                throw HTTPError(.badRequest, message: "One of the parameters '\($0)' can not be converted to the expected type (\(T.self))")
             }
             return result
         }
@@ -120,7 +124,7 @@ public extension Parameters {
     func requireAll<T: RawRepresentable>(_ s: String, as: T.Type) throws -> [T] where T.RawValue == String {
         return try self[values: s[...]].map {
             guard let result = T(rawValue: String($0)) else {
-                throw HTTPError(.badRequest, message: "One of the parameters '\(s)' can not be converted to the expected type (\(T.self))")
+                throw HTTPError(.badRequest, message: "One of the parameters '\($0)' can not be converted to the expected type (\(T.self))")
             }
             return result
         }
