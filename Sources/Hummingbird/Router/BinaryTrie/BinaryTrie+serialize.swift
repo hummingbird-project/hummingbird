@@ -16,7 +16,7 @@ import NIOCore
 
 extension BinaryTrie {
     static func serialize(
-        _ node: RouterPathTrie<Value>.Node,
+        _ node: RouterPathTrieBuilder<Value>.Node,
         trie: inout ByteBuffer,
         values: inout [Value?]
     ) {
@@ -92,6 +92,7 @@ extension BinaryTrie {
 
         // The last node in a trie is always a null token
         // Since there is no next node to check anymores
+        trie.writeInteger(UInt16(0))
         trie.writeToken(.deadEnd)
 
         // Write the offset of the next node, always immediately after this node
@@ -103,7 +104,7 @@ extension BinaryTrie {
     }
 
     static func serializeChildren(
-        of node: RouterPathTrie<Value>.Node,
+        of node: RouterPathTrieBuilder<Value>.Node,
         trie: inout ByteBuffer,
         values: inout [Value?]
     ) {
@@ -114,7 +115,7 @@ extension BinaryTrie {
         }
     }
 
-    private static func highestPriorityFirst(lhs: RouterPathTrie<Value>.Node, rhs: RouterPathTrie<Value>.Node) -> Bool {
+    private static func highestPriorityFirst(lhs: RouterPathTrieBuilder<Value>.Node, rhs: RouterPathTrieBuilder<Value>.Node) -> Bool {
         lhs.key.priority > rhs.key.priority
     }
 }
@@ -143,4 +144,3 @@ extension RouterPath.Element {
         }
     }
 }
-
