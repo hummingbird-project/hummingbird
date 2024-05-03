@@ -98,7 +98,7 @@ public struct FileMiddleware<Context: BaseRequestContext, Provider: FileProvider
 
             // Remove percent encoding from URI path
             guard let path = request.uri.path.removingPercentEncoding else {
-                throw HTTPError(.badRequest, message: "Invalid URL")
+                throw HTTPError(.badRequest, message: "Invalid percent encoding in URL")
             }
 
             // file paths that contain ".." are considered illegal
