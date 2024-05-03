@@ -17,7 +17,6 @@ import Logging
 
 /// Extend objects with additional member variables
 ///
-/// If you have only one instance of a type to attach you can extend it to conform to `StorageKey`
 /// ```
 /// struct Object {
 ///     var extensions: Extensions<Object>
