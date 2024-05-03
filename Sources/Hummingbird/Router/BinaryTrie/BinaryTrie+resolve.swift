@@ -147,23 +147,19 @@ extension BinaryTrie {
 
         // Check the current node type through TokenKind
         // And read the location of the _next_ node from the trie buffer
-        while
-            let index = trie.readInteger(as: UInt16.self),
-            let token = trie.readToken(),
-            let nextSiblingNodeIndex: UInt32 = trie.readInteger()
-        {
+        while let node = trie.readBinaryTrieNode() {
             repeat {
                 // Record the current readerIndex
                 // ``matchComponent`` moves the reader index forward, so we'll need to reset it
                 // If we're in a recursiveWildcard and this component does not match
                 let readerIndex = trie.readerIndex
-                let result = self.matchComponent(component, withToken: token, in: &trie, parameters: &parameters)
+                let result = self.matchComponent(component, withToken: node.token, in: &trie, parameters: &parameters)
 
                 switch result {
                 case .match:
                     return self.descendPath(
                         in: &trie,
-                        index: index,
+                        index: node.index,
                         parameters: &parameters,
                         components: &components,
                         isInRecursiveWildcard: false
@@ -181,12 +177,12 @@ extension BinaryTrie {
                     trie.moveReaderIndex(to: readerIndex)
                 case .mismatch:
                     // Move to the next sibling-node, not descending a level
-                    trie.moveReaderIndex(to: Int(nextSiblingNodeIndex))
+                    trie.moveReaderIndex(to: Int(node.nextSiblingNodeIndex))
                     continue
                 case .recursivelyDiscarded:
                     return self.descendPath(
                         in: &trie,
-                        index: index,
+                        index: node.index,
                         parameters: &parameters,
                         components: &components,
                         isInRecursiveWildcard: true
@@ -202,4 +198,3 @@ extension BinaryTrie {
         return nil
     }
 }
-

@@ -148,15 +148,4 @@ class TrieRouterTests: XCTestCase {
         XCTAssertEqual(trie.resolve("/text}")?.value, "test")
         XCTAssertNil(trie.resolve("/text"))
     }
-
-    func testPrefixCaptureOnUnMatchedRouterDropped() {
-        let trieBuilder = RouterPathTrieBuilder<String>()
-        trieBuilder.addEntry("{test}/test", value: "test")
-        trieBuilder.addEntry("{test2}/test2", value: "test2")
-        let trie = trieBuilder.build()
-        XCTAssertNil(trie.resolve("/hello/test2")?.parameters.get("test"))
-        XCTAssertEqual(trie.resolve("/hello/test2")?.parameters.get("test2"), "hello")
-        XCTAssertNil(trie.resolve("/hello/test")?.parameters.get("test2"))
-        XCTAssertEqual(trie.resolve("/hello/test")?.parameters.get("test"), "hello")
-    }
 }

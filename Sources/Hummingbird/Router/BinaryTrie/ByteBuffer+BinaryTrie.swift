@@ -23,11 +23,6 @@ import Glibc
 #endif
 
 internal extension ByteBuffer {
-    /// Write BinaryTrieTokenKind to ByteBuffer
-    mutating func writeToken(_ token: BinaryTrieTokenKind) {
-        writeInteger(token.rawValue)
-    }
-
     /// Write length prefixed string to ByteBuffer
     mutating func writeLengthPrefixedString<F: FixedWidthInteger>(_ string: Substring, as integer: F.Type) {
         do {
@@ -37,6 +32,36 @@ internal extension ByteBuffer {
         } catch {
             preconditionFailure("Failed to write \"\(string)\" into BinaryTrie")
         }
+    }
+
+    /// Write BinaryTrieNode into ByteBuffer at position
+    @discardableResult mutating func setBinaryTrieNode(_ node: BinaryTrieNode, at index: Int) -> Int {
+        var offset = self.setInteger(node.index, at: index)
+        offset += self.setInteger(node.token.rawValue, at: index + offset)
+        offset += self.setInteger(node.nextSiblingNodeIndex, at: index + offset)
+        return offset
+    }
+
+    /// Write BinaryTrieNode into ByteBuffer at position
+    mutating func writeBinaryTrieNode(_ node: BinaryTrieNode) {
+        let offset = self.setBinaryTrieNode(node, at: self.writerIndex)
+        self.moveWriterIndex(forwardBy: offset)
+    }
+
+    /// Reserve space for a BinaryTrieNode
+    mutating func reserveBinaryTrieNode() {
+        self.moveWriterIndex(forwardBy: BinaryTrieNode.serializedSize)
+    }
+
+    /// Read BinaryTrieNode from ByteBuffer
+    mutating func readBinaryTrieNode() -> BinaryTrieNode? {
+        guard let index = self.readInteger(as: UInt16.self),
+              let token = self.readToken(),
+              let nextSiblingNodeIndex: UInt32 = self.readInteger()
+        else {
+            return nil
+        }
+        return BinaryTrieNode(index: index, token: token, nextSiblingNodeIndex: nextSiblingNodeIndex)
     }
 
     /// Read string from ByteBuffer and compare against another string

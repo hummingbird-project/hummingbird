@@ -18,6 +18,15 @@ enum BinaryTrieTokenKind: UInt8 {
     case deadEnd
 }
 
+struct BinaryTrieNode {
+    let index: UInt16
+    let token: BinaryTrieTokenKind
+    let nextSiblingNodeIndex: UInt32
+
+    /// How many bytes a serialized BinaryTrieNode uses
+    static let serializedSize = 7
+}
+
 @_spi(Internal) public final class BinaryTrie<Value: Sendable>: Sendable {
     typealias Integer = UInt8
     let trie: ByteBuffer
