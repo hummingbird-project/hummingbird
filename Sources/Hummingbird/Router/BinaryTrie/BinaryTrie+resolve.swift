@@ -19,14 +19,26 @@ extension BinaryTrie {
     @_spi(Internal) public func resolve(_ path: String) -> (value: Value, parameters: Parameters)? {
         var trie = trie
         let pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
+        var pathComponentsIterator = pathComponents.makeIterator()
         var parameters = Parameters()
         guard var node: BinaryTrieNode = trie.readBinaryTrieNode() else { return nil }
-        for component in pathComponents {
-            if node.token != .recursiveWildcard {
-                node = self.matchComponent(component, in: &trie, parameters: &parameters)
-                if node.token == .recursiveWildcard {
-                    parameters.setCatchAll(path[component.startIndex...])
+        while let component = pathComponentsIterator.next() {
+            node = self.matchComponent(component, in: &trie, parameters: &parameters)
+            if node.token == .recursiveWildcard {
+                // we have found a recursive wildcard. Go through all the path components until we match one of them
+                // or reach the end of the path component array
+                var range = component.startIndex..<component.endIndex
+                while let component = pathComponentsIterator.next() {
+                    var recursiveTrie = trie
+                    let recursiveNode = self.matchComponent(component, in: &recursiveTrie, parameters: &parameters)
+                    if recursiveNode.token != .deadEnd {
+                        node = recursiveNode
+                        break
+                    }
+                    // extend range of catch all text
+                    range = range.lowerBound..<component.endIndex
                 }
+                parameters.setCatchAll(path[range])
             }
             if node.token == .deadEnd {
                 return nil
