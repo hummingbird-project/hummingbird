@@ -18,20 +18,21 @@ extension BinaryTrie {
     /// Resolve a path to a `Value` if available
     @_spi(Internal) public func resolve(_ path: String) -> (value: Value, parameters: Parameters)? {
         var trie = trie
-        let pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)[...]
-        let parameters = Parameters()
-
-        if pathComponents.isEmpty {
-            return self.value(for: 0, parameters: parameters)
+        let pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
+        var parameters = Parameters()
+        guard var node: BinaryTrieNode = trie.readBinaryTrieNode() else { return nil }
+        for component in pathComponents {
+            if node.token != .recursiveWildcard {
+                node = self.matchComponent(component, in: &trie, parameters: &parameters)
+                if node.token == .recursiveWildcard {
+                    parameters.setCatchAll(path[component.startIndex...])
+                }
+            }
+            if node.token == .deadEnd {
+                return nil
+            }
         }
-
-        return self.descendPath(
-            in: &trie,
-            index: 0,
-            parameters: parameters,
-            components: pathComponents,
-            isInRecursiveWildcard: false
-        )
+        return self.value(for: node.index, parameters: parameters)
     }
 
     /// If `index != nil`, resolves the `index` to a `Value`
@@ -44,8 +45,27 @@ extension BinaryTrie {
         return nil
     }
 
+    /// Match sibling node for path component
+    private func matchComponent(
+        _ component: Substring,
+        in trie: inout ByteBuffer,
+        parameters: inout Parameters
+    ) -> BinaryTrieNode {
+        while let node = trie.readBinaryTrieNode() {
+            let result = self.matchComponent(component, withToken: node.token, in: &trie, parameters: &parameters)
+            switch result {
+            case .match, .deadEnd:
+                return node
+            default:
+                trie.moveReaderIndex(to: Int(node.nextSiblingNodeIndex))
+            }
+        }
+        // should never get here
+        return .init(index: 0, token: .deadEnd, nextSiblingNodeIndex: UInt32(trie.writerIndex))
+    }
+
     private enum MatchResult {
-        case match, mismatch, recursivelyDiscarded, ignore, deadEnd
+        case match, mismatch, ignore, deadEnd
     }
 
     private func matchComponent(
@@ -121,84 +141,11 @@ extension BinaryTrie {
 
             return .match
         case .recursiveWildcard:
-            return .recursivelyDiscarded
+            return .match
         case .null:
             return .ignore
         case .deadEnd:
             return .deadEnd
         }
-    }
-
-    /// A function that takes a path component and descends the trie to find the value
-    private func descendPath(
-        in trie: inout ByteBuffer,
-        index: UInt16,
-        parameters: Parameters,
-        components: ArraySlice<Substring>,
-        isInRecursiveWildcard: Bool
-    ) -> (value: Value, parameters: Parameters)? {
-        var parameters = parameters
-        // If there are no more components in the path, return the value found
-        if components.isEmpty {
-            return self.value(for: index, parameters: parameters)
-        }
-
-        // Take the next component from the path. If there are no more components in the
-        // path, return the value found
-        guard var component = components.first else {
-            return self.value(for: index, parameters: parameters)
-        }
-        var components = components.dropFirst()
-
-        // Check the current node type through TokenKind
-        // And read the location of the _next_ node from the trie buffer
-        while let node = trie.readBinaryTrieNode() {
-            repeat {
-                // Record the current readerIndex
-                // ``matchComponent`` moves the reader index forward, so we'll need to reset it
-                // If we're in a recursiveWildcard and this component does not match
-                let readerIndex = trie.readerIndex
-                let result = self.matchComponent(component, withToken: node.token, in: &trie, parameters: &parameters)
-
-                switch result {
-                case .match:
-                    return self.descendPath(
-                        in: &trie,
-                        index: node.index,
-                        parameters: parameters,
-                        components: components,
-                        isInRecursiveWildcard: false
-                    )
-                case .mismatch where isInRecursiveWildcard:
-                    guard let c = components.first else {
-                        return nil
-                    }
-                    component = c
-                    components = components.dropFirst()
-
-                    // Move back he readerIndex, so that we can retry this step again with
-                    // the next component
-                    trie.moveReaderIndex(to: readerIndex)
-                case .mismatch:
-                    // Move to the next sibling-node, not descending a level
-                    trie.moveReaderIndex(to: Int(node.nextSiblingNodeIndex))
-                    continue
-                case .recursivelyDiscarded:
-                    return self.descendPath(
-                        in: &trie,
-                        index: node.index,
-                        parameters: parameters,
-                        components: components,
-                        isInRecursiveWildcard: true
-                    )
-                case .ignore:
-                    continue
-                case .deadEnd:
-                    return nil
-                }
-            } while isInRecursiveWildcard
-        }
-
-        return nil
     }
 }

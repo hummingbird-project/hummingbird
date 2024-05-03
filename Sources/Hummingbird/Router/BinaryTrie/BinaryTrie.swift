@@ -34,10 +34,10 @@ struct BinaryTrieNode {
 
     @_spi(Internal) public init(base: RouterPathTrieBuilder<Value>) {
         var trie = ByteBufferAllocator().buffer(capacity: 1024)
-        var values = [base.root.value]
+        var values: [Value?] = []
 
-        Self.serializeChildren(
-            of: base.root,
+        Self.serialize(
+            base.root,
             trie: &trie,
             values: &values
         )
