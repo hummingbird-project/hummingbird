@@ -23,7 +23,7 @@ enum BinaryTrieTokenKind: UInt8 {
     let trie: ByteBuffer
     let values: [Value?]
 
-    @_spi(Internal) public init(base: RouterPathTrie<Value>) {
+    @_spi(Internal) public init(base: RouterPathTrieBuilder<Value>) {
         var trie = ByteBufferAllocator().buffer(capacity: 1024)
         var values = [base.root.value]
 

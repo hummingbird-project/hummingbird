@@ -76,7 +76,7 @@ public final class Router<Context: BaseRequestContext>: RouterMethods, HTTPRespo
         }
         return .init(
             context: Context.self,
-            trie: self.trie.build(),
+            trie: self.trie,
             options: self.options,
             notFoundResponder: self.middlewares.constructResponder(finalResponder: NotFoundResponder<Context>())
         )

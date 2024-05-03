@@ -39,7 +39,7 @@ func binaryTrieRouterBenchmarks() {
         trieBuilder.addEntry("/test/:value/:value2", value: "/test/:value:/:value2")
         trieBuilder.addEntry("/api/v1/users/:id/profile", value: "/api/v1/users/:id/profile")
         trieBuilder.addEntry("/test2/*/*", value: "/test2/*/*")
-        trie = try! BinaryTrie(base: trieBuilder.build())
+        trie = BinaryTrie(base: trieBuilder)
     }
 
     var trie2: BinaryTrie<String>!
@@ -61,7 +61,7 @@ func binaryTrieRouterBenchmarks() {
         trieBuilder.addEntry("/test/:value/:value2", value: "/test/:value:/:value2")
         trieBuilder.addEntry("/test2/*/*", value: "/test2/*/*")
         trieBuilder.addEntry("/api/v1/users/:id/profile", value: "/api/v1/users/:id/profile")
-        trie2 = try! BinaryTrie(base: trieBuilder.build())
+        trie2 = BinaryTrie(base: trieBuilder)
     }
 
     var trie3: BinaryTrie<String>!
@@ -79,6 +79,6 @@ func binaryTrieRouterBenchmarks() {
         let trieBuilder = RouterPathTrieBuilder<String>()
         trieBuilder.addEntry("/api/v1/a/very/long/path/with/lots/of/segments", value: "/api/v1/a/very/long/path/with/lots/of/segments")
         trieBuilder.addEntry("/api/v1/users/:id/profile", value: "/api/v1/users/:id/profile")
-        trie3 = try! BinaryTrie(base: trieBuilder.build())
+        trie3 = BinaryTrie(base: trieBuilder)
     }
 }

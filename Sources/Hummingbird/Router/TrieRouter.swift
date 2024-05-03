@@ -40,8 +40,8 @@ import HummingbirdCore
         }
     }
 
-    public func build() -> RouterPathTrie<Value> {
-        .init(root: self.root.build())
+    @_spi(Internal) public func build() -> BinaryTrie<Value> {
+        .init(base: self)
     }
 
     func forEach(_ process: (Node) throws -> Void) rethrows {
@@ -80,10 +80,6 @@ import HummingbirdCore
             return self.children.first { $0.key ~= key }
         }
 
-        func build() -> RouterPathTrie<Value>.Node {
-            return .init(key: self.key, value: self.value, children: self.children.map { $0.build() })
-        }
-
         func forEach(_ process: (Node) throws -> Void) rethrows {
             try process(self)
             for node in self.children {
@@ -94,91 +90,92 @@ import HummingbirdCore
 }
 
 /// Triea used by Router responder
-@_spi(Internal) public struct RouterPathTrie<Value: Sendable>: Sendable {
-    public let root: Node
+/*@_spi(Internal) public struct RouterPathTrie<Value: Sendable>: Sendable {
+     public let root: Node
 
-    /// Initialise RouterPathTrie
-    /// - Parameter root: Root node of trie
-    public init(root: Node) {
-        self.root = root
-    }
+     /// Initialise RouterPathTrie
+     /// - Parameter root: Root node of trie
+     public init(root: Node) {
+         self.root = root
+     }
 
-    /// Get value from trie and any parameters from capture nodes
-    /// - Parameter path: Path to process
-    /// - Returns: value and parameters
-    @_spi(Internal) public func getValueAndParameters(_ path: String) -> (value: Value, parameters: Parameters?)? {
-        let pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
-        var parameters: Parameters?
-        var node = self.root
-        for component in pathComponents {
-            if let childNode = node.getChild(component) {
-                node = childNode
-                switch node.key {
-                case .capture(let key):
-                    parameters.set(key, value: component)
-                case .prefixCapture(let suffix, let key):
-                    parameters.set(key, value: component.dropLast(suffix.count))
-                case .suffixCapture(let prefix, let key):
-                    parameters.set(key, value: component.dropFirst(prefix.count))
-                case .recursiveWildcard:
-                    parameters.setCatchAll(path[component.startIndex..<path.endIndex])
-                default:
-                    break
-                }
-            } else if case .recursiveWildcard = node.key {
-            } else {
-                return nil
-            }
-        }
-        if let value = node.value {
-            return (value: value, parameters: parameters)
-        }
-        return nil
-    }
+     /// Get value from trie and any parameters from capture nodes
+     /// - Parameter path: Path to process
+     /// - Returns: value and parameters
+     @_spi(Internal) public func getValueAndParameters(_ path: String) -> (value: Value, parameters: Parameters?)? {
+         let pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
+         var parameters: Parameters?
+         var node = self.root
+         for component in pathComponents {
+             if let childNode = node.getChild(component) {
+                 node = childNode
+                 switch node.key {
+                 case .capture(let key):
+                     parameters.set(key, value: component)
+                 case .prefixCapture(let suffix, let key):
+                     parameters.set(key, value: component.dropLast(suffix.count))
+                 case .suffixCapture(let prefix, let key):
+                     parameters.set(key, value: component.dropFirst(prefix.count))
+                 case .recursiveWildcard:
+                     parameters.setCatchAll(path[component.startIndex..<path.endIndex])
+                 default:
+                     break
+                 }
+             } else if case .recursiveWildcard = node.key {
+             } else {
+                 return nil
+             }
+         }
+         if let value = node.value {
+             return (value: value, parameters: parameters)
+         }
+         return nil
+     }
 
-    /// Internally used Node to describe static trie
-    @_spi(Internal) public struct Node: Sendable {
-        let key: RouterPath.Element
-        let children: [Node]
-        let value: Value?
+     /// Internally used Node to describe static trie
+     @_spi(Internal) public struct Node: Sendable {
+         let key: RouterPath.Element
+         let children: [Node]
+         let value: Value?
 
-        init(key: RouterPath.Element, value: Value?, children: [Node]) {
-            self.key = key
-            self.value = value
-            self.children = children
-        }
+         init(key: RouterPath.Element, value: Value?, children: [Node]) {
+             self.key = key
+             self.value = value
+             self.children = children
+         }
 
-        func getChild(_ key: RouterPath.Element) -> Node? {
-            return self.children.first { $0.key == key }
-        }
+         func getChild(_ key: RouterPath.Element) -> Node? {
+             return self.children.first { $0.key == key }
+         }
 
-        func getChild(_ key: Substring) -> Node? {
-            if let child = self.children.first(where: { $0.key == key }) {
-                return child
-            }
-            return self.children.first { $0.key ~= key }
-        }
-    }
-}
+         func getChild(_ key: Substring) -> Node? {
+             if let child = self.children.first(where: { $0.key == key }) {
+                 return child
+             }
+             return self.children.first { $0.key ~= key }
+         }
+     }
+ }
 
-extension Optional<Parameters> {
-    fileprivate mutating func set(_ s: Substring, value: Substring) {
-        switch self {
-        case .some(var parameters):
-            parameters[s] = value
-            self = .some(parameters)
-        case .none:
-            self = .some(.init(.init([(s, value)])))
-        }
-    }
+ extension Optional<Parameters> {
+     fileprivate mutating func set(_ s: Substring, value: Substring) {
+         switch self {
+         case .some(var parameters):
+             parameters[s] = value
+             self = .some(parameters)
+         case .none:
+             self = .some(.init(.init([(s, value)])))
+         }
+     }
 
-    fileprivate mutating func setCatchAll(_ value: Substring) {
-        switch self {
-        case .some(var parameters):
-            parameters.setCatchAll(value)
-            self = .some(parameters)
-        case .none:
-            self = .some(.init(.init([(Parameters.recursiveCaptureKey, value)])))
-        }
-    }
-}
+     fileprivate mutating func setCatchAll(_ value: Substring) {
+         switch self {
+         case .some(var parameters):
+             parameters.setCatchAll(value)
+             self = .some(parameters)
+         case .none:
+             self = .some(.init(.init([(Parameters.recursiveCaptureKey, value)])))
+         }
+     }
+ }
+ */

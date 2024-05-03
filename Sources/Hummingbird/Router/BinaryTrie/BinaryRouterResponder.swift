@@ -21,7 +21,7 @@ public struct BinaryRouterResponder<Context: BaseRequestContext>: HTTPResponder 
 
     init(
         context: Context.Type,
-        trie: RouterPathTrie<EndpointResponders<Context>>,
+        trie: RouterPathTrieBuilder<EndpointResponders<Context>>,
         options: RouterOptions,
         notFoundResponder: any HTTPResponder<Context>
     ) {
