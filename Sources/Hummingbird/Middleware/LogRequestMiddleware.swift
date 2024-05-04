@@ -69,7 +69,7 @@ public struct LogRequestsMiddleware<Context: BaseRequestContext>: RouterMiddlewa
                 metadata: [
                     "hb_uri": .stringConvertible(request.uri),
                     "hb_method": .string(request.method.rawValue),
-                    "hb_headers": .string(self.allHeaders(headers: request.headers, except: except)),
+                    "hb_headers": .stringConvertible(self.allHeaders(headers: request.headers, except: except)),
                 ]
             )
         case .some(let filter):
@@ -79,44 +79,36 @@ public struct LogRequestsMiddleware<Context: BaseRequestContext>: RouterMiddlewa
                 metadata: [
                     "hb_uri": .stringConvertible(request.uri),
                     "hb_method": .string(request.method.rawValue),
-                    "hb_headers": .string(self.filterHeaders(headers: request.headers, filter: filter)),
+                    "hb_headers": .stringConvertible(self.filterHeaders(headers: request.headers, filter: filter)),
                 ]
             )
         }
         return try await next(request, context)
     }
 
-    func filterHeaders(headers: HTTPFields, filter: [HTTPField.Name]) -> String {
-        let headerString = filter
-            .compactMap { entry in
+    func filterHeaders(headers: HTTPFields, filter: [HTTPField.Name]) -> [String: String] {
+        let headers = filter
+            .compactMap { entry -> (key: String, value: String)? in
                 guard let value = headers[entry] else { return nil }
                 if self.redactHeaders.contains(entry) {
-                    return "\"\(entry.canonicalName)\":\"***\""
+                    return (key: entry.canonicalName, value: "***")
                 } else {
-                    return "\"\(entry.canonicalName)\":\"\(value)\""
+                    return (key: entry.canonicalName, value: value)
                 }
             }
-            .joined(separator: ", ")
-        return "{\(headerString)}"
+        return .init(headers) { "\($0),\($1)" }
     }
 
-    func allHeaders(headers: HTTPFields, except: [HTTPField.Name]) -> String {
-        let headerString = headers
-            .compactMap { entry -> String? in
+    func allHeaders(headers: HTTPFields, except: [HTTPField.Name]) -> [String: String] {
+        let headers = headers
+            .compactMap { entry -> (key: String, value: String)? in
                 guard except.first(where: { entry.name == $0 }) == nil else { return nil }
                 if self.redactHeaders.contains(entry.name) {
-                    return "\"\(entry.name.canonicalName)\":\"***\""
+                    return (key: entry.name.canonicalName, value: "***")
                 } else {
-                    return "\"\(entry.name.canonicalName)\":\"\(entry.value)\""
+                    return (key: entry.name.canonicalName, value: entry.value)
                 }
             }
-            .joined(separator: ", ")
-        return "{\(headerString)}"
-    }
-}
-
-extension HTTPFields {
-    private func logOutput(redacted: [HTTPField.Name]) -> String {
-        "{\(self.map { "\"\($0.name.canonicalName)\":\"\(redacted.contains($0.name) ? "***" : $0.value)\"" }.joined(separator: ", "))}"
+        return .init(headers) { "\($0),\($1)" }
     }
 }

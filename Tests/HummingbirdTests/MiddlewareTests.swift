@@ -287,7 +287,7 @@ final class MiddlewareTests: XCTestCase {
                 body: .init(string: "{}")
             ) { _ in
                 let logEntries = logAccumalator.filter { $0.metadata?["hb_uri"]?.description == "/some" }
-                XCTAssertEqual(logEntries.first?.metadata?["hb_headers"]?.description, #"{"content-type":"application/json"}"#)
+                XCTAssertEqual(logEntries.first?.metadata?["hb_headers"], .stringConvertible(["content-type": "application/json"]))
             }
             try await client.execute(
                 uri: "/none",
@@ -305,8 +305,10 @@ final class MiddlewareTests: XCTestCase {
                 body: .init(string: "{}")
             ) { _ in
                 let logEntries = logAccumalator.filter { $0.metadata?["hb_uri"]?.description == "/all" }
-                let reportedHeadersString = try XCTUnwrap(logEntries.first?.metadata?["hb_headers"]?.description)
-                let reportedHeaders = try JSONDecoder().decode([String: String].self, from: Data(reportedHeadersString.utf8))
+                guard case .stringConvertible(let headers) = logEntries.first?.metadata?["hb_headers"] else {
+                    fatalError("Should never get here")
+                }
+                let reportedHeaders = try XCTUnwrap(headers as? [String: String])
                 XCTAssertEqual(reportedHeaders["content-type"], "application/json")
                 XCTAssertEqual(reportedHeaders["content-length"], "2")
                 XCTAssertNil(reportedHeaders["connection"])
@@ -337,7 +339,7 @@ final class MiddlewareTests: XCTestCase {
                 body: .init(string: "{}")
             ) { _ in
                 let logEntries = logAccumalator.filter { $0.metadata?["hb_uri"]?.description == "/some" }
-                XCTAssertEqual(logEntries.first?.metadata?["hb_headers"]?.description, #"{"authorization":"***"}"#)
+                XCTAssertEqual(logEntries.first?.metadata?["hb_headers"], .stringConvertible(["authorization": "***"]))
             }
             try await client.execute(
                 uri: "/all",
@@ -346,8 +348,10 @@ final class MiddlewareTests: XCTestCase {
                 body: .init(string: "{}")
             ) { _ in
                 let logEntries = logAccumalator.filter { $0.metadata?["hb_uri"]?.description == "/all" }
-                let reportedHeadersString = try XCTUnwrap(logEntries.first?.metadata?["hb_headers"]?.description)
-                let reportedHeaders = try JSONDecoder().decode([String: String].self, from: Data(reportedHeadersString.utf8))
+                guard case .stringConvertible(let headers) = logEntries.first?.metadata?["hb_headers"] else {
+                    fatalError("Should never get here")
+                }
+                let reportedHeaders = try XCTUnwrap(headers as? [String: String])
                 XCTAssertEqual(reportedHeaders["authorization"], "***")
                 XCTAssertEqual(reportedHeaders["content-length"], "2")
             }
