@@ -91,6 +91,14 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareRunWhenNoRouteFound() async throws {
+        /// Error message returned by Hummingbird
+        struct ErrorMessage: Codable {
+            struct Details: Codable {
+                let message: String
+            }
+
+            let error: Details
+        }
         struct TestMiddleware<Context: BaseRequestContext>: RouterMiddleware {
             public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 do {
@@ -106,8 +114,9 @@ final class MiddlewareTests: XCTestCase {
 
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "Edited error")
                 XCTAssertEqual(response.status, .notFound)
+                let error = try JSONDecoder().decode(ErrorMessage.self, from: response.body)
+                XCTAssertEqual(error.error.message, "Edited error")
             }
         }
     }

@@ -96,7 +96,7 @@ public struct FileMiddleware<Context: BaseRequestContext, Provider: FileProvider
 
             // Remove percent encoding from URI path
             guard let path = request.uri.path.removingPercentEncoding else {
-                throw HTTPError(.badRequest)
+                throw HTTPError(.badRequest, message: "Invalid percent encoding in URL")
             }
 
             // file paths that contain ".." are considered illegal
@@ -219,7 +219,7 @@ extension FileMiddleware {
 
         if let rangeHeader = request.headers[.range] {
             guard let range = getRangeFromHeaderValue(rangeHeader) else {
-                throw HTTPError(.rangeNotSatisfiable)
+                throw HTTPError(.rangeNotSatisfiable, message: "Unable to read range requested from file")
             }
             // range request conditional on etag or modified date being equal to value in if-range
             if let ifRange = request.headers[.ifRange], ifRange != headers[.eTag], ifRange != headers[.lastModified] {
