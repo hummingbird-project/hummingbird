@@ -204,7 +204,7 @@ public struct Application<Responder: HTTPResponder>: ApplicationProtocol where R
             self.logger = logger
         } else {
             var logger = Logger(label: configuration.serverName ?? "Hummingbird")
-            logger.logLevel = Environment.shared.get("LOG_LEVEL").map { Logger.Level(rawValue: $0) ?? .info } ?? .info
+            logger.logLevel = Environment().get("LOG_LEVEL").map { Logger.Level(rawValue: $0) ?? .info } ?? .info
             self.logger = logger
         }
         self.responder = responder
