@@ -17,7 +17,15 @@ import Logging
 
 /// Middleware outputting to log for every call to server
 public struct LogRequestsMiddleware<Context: BaseRequestContext>: RouterMiddleware {
-    public enum HeaderFilter: Sendable {
+    /// Header filter
+    public enum HeaderFilter: Sendable, ExpressibleByArrayLiteral {
+        public typealias ArrayLiteralElement = HTTPField.Name
+
+        /// ExpressibleByArrayLiteral requirement
+        public init(arrayLiteral elements: ArrayLiteralElement...) {
+            self = .some(elements)
+        }
+
         case none
         case all
         case some([HTTPField.Name])
@@ -36,20 +44,31 @@ public struct LogRequestsMiddleware<Context: BaseRequestContext>: RouterMiddlewa
         case .none:
             context.logger.log(
                 level: self.logLevel,
-                "",
-                metadata: ["hb_uri": .stringConvertible(request.uri), "hb_method": .string(request.method.rawValue)]
+                "Request",
+                metadata: [
+                    "hb_uri": .stringConvertible(request.uri),
+                    "hb_method": .string(request.method.rawValue),
+                ]
             )
         case .all:
             context.logger.log(
                 level: self.logLevel,
-                "\(request.headers)",
-                metadata: ["hb_uri": .stringConvertible(request.uri), "hb_method": .string(request.method.rawValue)]
+                "Request",
+                metadata: [
+                    "hb_uri": .stringConvertible(request.uri),
+                    "hb_method": .string(request.method.rawValue),
+                    "hb_headers": .string(request.headers.logOutput),
+                ]
             )
         case .some(let filter):
             context.logger.log(
                 level: self.logLevel,
-                "\(self.filterHeaders(headers: request.headers, filter: filter))",
-                metadata: ["hb_uri": .stringConvertible(request.uri), "hb_method": .string(request.method.rawValue)]
+                "Request",
+                metadata: [
+                    "hb_uri": .stringConvertible(request.uri),
+                    "hb_method": .string(request.method.rawValue),
+                    "hb_headers": .string(self.filterHeaders(headers: request.headers, filter: filter)),
+                ]
             )
         }
         return try await next(request, context)
@@ -62,6 +81,12 @@ public struct LogRequestsMiddleware<Context: BaseRequestContext>: RouterMiddlewa
                 filteredHeaders.append((entry.canonicalName, value))
             }
         }
-        return "[\(filteredHeaders.map { "\"\($0)\":\"\($1)\"" }.joined(separator: ", "))]"
+        return "{\(filteredHeaders.map { "\"\($0)\":\"\($1)\"" }.joined(separator: ", "))}"
+    }
+}
+
+extension HTTPFields {
+    fileprivate var logOutput: String {
+        "{\(self.map { "\"\($0.name.canonicalName)\":\"\($0.value)\"" }.joined(separator: ", "))}"
     }
 }
