@@ -96,7 +96,7 @@ public struct LogRequestsMiddleware<Context: BaseRequestContext>: RouterMiddlewa
                     return (key: entry.canonicalName, value: value)
                 }
             }
-        return .init(headers) { "\($0),\($1)" }
+        return .init(headers) { "\($0), \($1)" }
     }
 
     func allHeaders(headers: HTTPFields, except: [HTTPField.Name]) -> [String: String] {
@@ -109,6 +109,6 @@ public struct LogRequestsMiddleware<Context: BaseRequestContext>: RouterMiddlewa
                     return (key: entry.name.canonicalName, value: entry.value)
                 }
             }
-        return .init(headers) { "\($0),\($1)" }
+        return .init(headers) { "\($0), \($1)" }
     }
 }

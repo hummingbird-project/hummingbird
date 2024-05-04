@@ -357,6 +357,36 @@ final class MiddlewareTests: XCTestCase {
             }
         }
     }
+
+    func testLogRequestMiddlewareMultipleHeaders() async throws {
+        let logAccumalator = TestLogHandler.LogAccumalator()
+        let router = Router()
+        router.middlewares.add(LogRequestsMiddleware(.info, includeHeaders: [.test]))
+        router.get("test") { _, _ in
+            return HTTPResponse.Status.ok
+        }
+        let app = Application(
+            responder: router.buildResponder(),
+            logger: Logger(label: "TestLogging") { label in
+                TestLogHandler(label, accumalator: logAccumalator)
+            }
+        )
+        try await app.test(.router) { client in
+            var headers = HTTPFields()
+            headers[.test] = "One"
+            headers.append(.init(name: .test, value: "Two"))
+            try await client.execute(
+                uri: "/test",
+                method: .get,
+                headers: headers,
+                body: .init(string: "{}")
+            ) { _ in
+                let logs = logAccumalator.filter { $0.metadata?["hb_uri"]?.description == "/test" }
+                let firstLog = try XCTUnwrap(logs.first)
+                XCTAssertEqual(firstLog.metadata?["hb_headers"], .stringConvertible(["hbtest": "One, Two"]))
+            }
+        }
+    }
 }
 
 /// LogHandler used in tests. Stores all log entries in provided `LogAccumalator``
