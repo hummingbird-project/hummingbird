@@ -27,16 +27,28 @@ public struct LogRequestsMiddleware<Context: BaseRequestContext>: RouterMiddlewa
         }
 
         case none
-        case all
+        case all(except: [HTTPField.Name] = [])
         case some([HTTPField.Name])
     }
 
     let logLevel: Logger.Level
     let includeHeaders: HeaderFilter
+    let redactHeaders: [HTTPField.Name]
 
-    public init(_ logLevel: Logger.Level, includeHeaders: HeaderFilter = .none) {
+    public init(_ logLevel: Logger.Level, includeHeaders: HeaderFilter = .none, redactHeaders: [HTTPField.Name] = []) {
         self.logLevel = logLevel
         self.includeHeaders = includeHeaders
+        // only include headers in the redaction list if we are outputting them
+        self.redactHeaders = switch includeHeaders {
+        case .all(let except):
+            // don't include headers in the except list
+            redactHeaders.filter { header in except.first { $0 == header } == nil }
+        case .some(let included):
+            // only include headers in the included list
+            redactHeaders.filter { header in included.first { $0 == header } != nil }
+        case .none:
+            []
+        }
     }
 
     public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
@@ -50,14 +62,14 @@ public struct LogRequestsMiddleware<Context: BaseRequestContext>: RouterMiddlewa
                     "hb_method": .string(request.method.rawValue),
                 ]
             )
-        case .all:
+        case .all(let except):
             context.logger.log(
                 level: self.logLevel,
                 "Request",
                 metadata: [
                     "hb_uri": .stringConvertible(request.uri),
                     "hb_method": .string(request.method.rawValue),
-                    "hb_headers": .string(request.headers.logOutput),
+                    "hb_headers": .string(self.allHeaders(headers: request.headers, except: except)),
                 ]
             )
         case .some(let filter):
@@ -75,18 +87,36 @@ public struct LogRequestsMiddleware<Context: BaseRequestContext>: RouterMiddlewa
     }
 
     func filterHeaders(headers: HTTPFields, filter: [HTTPField.Name]) -> String {
-        var filteredHeaders: [(String, String)] = []
-        for entry in filter {
-            if let value = headers[entry] {
-                filteredHeaders.append((entry.canonicalName, value))
+        let headerString = filter
+            .compactMap { entry in
+                guard let value = headers[entry] else { return nil }
+                if self.redactHeaders.contains(entry) {
+                    return "\"\(entry.canonicalName)\":\"***\""
+                } else {
+                    return "\"\(entry.canonicalName)\":\"\(value)\""
+                }
             }
-        }
-        return "{\(filteredHeaders.map { "\"\($0)\":\"\($1)\"" }.joined(separator: ", "))}"
+            .joined(separator: ", ")
+        return "{\(headerString)}"
+    }
+
+    func allHeaders(headers: HTTPFields, except: [HTTPField.Name]) -> String {
+        let headerString = headers
+            .compactMap { entry -> String? in
+                guard except.first(where: { entry.name == $0 }) == nil else { return nil }
+                if self.redactHeaders.contains(entry.name) {
+                    return "\"\(entry.name.canonicalName)\":\"***\""
+                } else {
+                    return "\"\(entry.name.canonicalName)\":\"\(entry.value)\""
+                }
+            }
+            .joined(separator: ", ")
+        return "{\(headerString)}"
     }
 }
 
 extension HTTPFields {
-    fileprivate var logOutput: String {
-        "{\(self.map { "\"\($0.name.canonicalName)\":\"\($0.value)\"" }.joined(separator: ", "))}"
+    private func logOutput(redacted: [HTTPField.Name]) -> String {
+        "{\(self.map { "\"\($0.name.canonicalName)\":\"\(redacted.contains($0.name) ? "***" : $0.value)\"" }.joined(separator: ", "))}"
     }
 }

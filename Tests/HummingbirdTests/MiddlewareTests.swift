@@ -265,7 +265,7 @@ final class MiddlewareTests: XCTestCase {
         let logAccumalator = TestLogHandler.LogAccumalator()
         let router = Router()
         router.group()
-            .add(middleware: LogRequestsMiddleware(.info, includeHeaders: .all))
+            .add(middleware: LogRequestsMiddleware(.info, includeHeaders: .all(except: [.connection])))
             .get("all") { _, _ in return HTTPResponse.Status.ok }
         router.group()
             .add(middleware: LogRequestsMiddleware(.info, includeHeaders: .none))
@@ -308,6 +308,47 @@ final class MiddlewareTests: XCTestCase {
                 let reportedHeadersString = try XCTUnwrap(logEntries.first?.metadata?["hb_headers"]?.description)
                 let reportedHeaders = try JSONDecoder().decode([String: String].self, from: Data(reportedHeadersString.utf8))
                 XCTAssertEqual(reportedHeaders["content-type"], "application/json")
+                XCTAssertEqual(reportedHeaders["content-length"], "2")
+                XCTAssertNil(reportedHeaders["connection"])
+            }
+        }
+    }
+
+    func testLogRequestMiddlewareHeaderRedaction() async throws {
+        let logAccumalator = TestLogHandler.LogAccumalator()
+        let router = Router()
+        router.group()
+            .add(middleware: LogRequestsMiddleware(.info, includeHeaders: .all(), redactHeaders: [.authorization]))
+            .get("all") { _, _ in return HTTPResponse.Status.ok }
+        router.group()
+            .add(middleware: LogRequestsMiddleware(.info, includeHeaders: [.authorization], redactHeaders: [.authorization]))
+            .get("some") { _, _ in return HTTPResponse.Status.ok }
+        let app = Application(
+            responder: router.buildResponder(),
+            logger: Logger(label: "TestLogging") { label in
+                TestLogHandler(label, accumalator: logAccumalator)
+            }
+        )
+        try await app.test(.live) { client in
+            try await client.execute(
+                uri: "/some",
+                method: .get,
+                headers: [.authorization: "basic okhasdf87654"],
+                body: .init(string: "{}")
+            ) { _ in
+                let logEntries = logAccumalator.filter { $0.metadata?["hb_uri"]?.description == "/some" }
+                XCTAssertEqual(logEntries.first?.metadata?["hb_headers"]?.description, #"{"authorization":"***"}"#)
+            }
+            try await client.execute(
+                uri: "/all",
+                method: .get,
+                headers: [.authorization: "basic kjhdfi7udsfkhj"],
+                body: .init(string: "{}")
+            ) { _ in
+                let logEntries = logAccumalator.filter { $0.metadata?["hb_uri"]?.description == "/all" }
+                let reportedHeadersString = try XCTUnwrap(logEntries.first?.metadata?["hb_headers"]?.description)
+                let reportedHeaders = try JSONDecoder().decode([String: String].self, from: Data(reportedHeadersString.utf8))
+                XCTAssertEqual(reportedHeaders["authorization"], "***")
                 XCTAssertEqual(reportedHeaders["content-length"], "2")
             }
         }
