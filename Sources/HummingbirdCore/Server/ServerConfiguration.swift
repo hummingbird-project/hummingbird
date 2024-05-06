@@ -22,6 +22,10 @@ public struct ServerConfiguration: Sendable {
     public let serverName: String?
     /// Defines the maximum length for the queue of pending connections
     public let backlog: Int
+    /// This will affect how many connections the server accepts at any one time
+    public let serverMaxMessagesPerRead: UInt
+    /// This will affect how much is read from a connection at any one time
+    public let childMaxMessagesPerRead: UInt
     /// Allows socket to be bound to an address that is already in use.
     public let reuseAddress: Bool
     #if canImport(Network)
@@ -35,16 +39,23 @@ public struct ServerConfiguration: Sendable {
     ///   - serverName: Server name to return in "server" header
     ///   - backlog: the maximum length for the queue of pending connections.  If a connection request arrives with the queue full,
     ///         the client may receive an error with an indication of ECONNREFUSE
+    ///   - serverMaxMessagesPerRead: This will affect how many connections the server accepts before waiting for notification of
+    ///         more. Setting this too high can flood the server with too much work.
+    ///   - childMaxMessagesPerRead: This will affect how much is read from a connection before waiting for notification of more
     ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
     public init(
         address: Address = .hostname(),
         serverName: String? = nil,
         backlog: Int = 256,
+        serverMaxMessagesPerRead: UInt = 8,
+        childMaxMessagesPerRead: UInt = 1,
         reuseAddress: Bool = true
     ) {
         self.address = address
         self.serverName = serverName
         self.backlog = backlog
+        self.serverMaxMessagesPerRead = serverMaxMessagesPerRead
+        self.childMaxMessagesPerRead = childMaxMessagesPerRead
         self.reuseAddress = reuseAddress
         #if canImport(Network)
         self.tlsOptions = .none
@@ -55,23 +66,23 @@ public struct ServerConfiguration: Sendable {
     /// - Parameters:
     ///   - address: Bind address for server
     ///   - serverName: Server name to return in "server" header
-    ///   - backlog: the maximum length for the queue of pending connections.  If a connection request arrives with the queue full,
-    ///         the client may receive an error with an indication of ECONNREFUSE
     ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
     ///   - tlsOptions: TLS options for when you are using NIOTransportServices
     #if canImport(Network)
     public init(
         address: Address = .hostname(),
         serverName: String? = nil,
-        backlog: Int = 256,
         reuseAddress: Bool = true,
         tlsOptions: TSTLSOptions
     ) {
         self.address = address
         self.serverName = serverName
-        self.backlog = backlog
         self.reuseAddress = reuseAddress
         self.tlsOptions = tlsOptions
+        // The following are unsupported by transport services
+        self.backlog = 256
+        self.serverMaxMessagesPerRead = 8
+        self.childMaxMessagesPerRead = 1
     }
     #endif
 }

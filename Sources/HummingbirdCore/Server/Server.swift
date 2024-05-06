@@ -243,8 +243,9 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
             // Specify backlog and enable SO_REUSEADDR for the server itself
             .serverChannelOption(ChannelOptions.backlog, value: numericCast(configuration.backlog))
             .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: configuration.reuseAddress ? 1 : 0)
+            .serverChannelOption(ChannelOptions.maxMessagesPerRead, value: configuration.serverMaxMessagesPerRead)
             .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: configuration.reuseAddress ? 1 : 0)
-            .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
+            .childChannelOption(ChannelOptions.maxMessagesPerRead, value: configuration.childMaxMessagesPerRead)
             .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
     }
 
