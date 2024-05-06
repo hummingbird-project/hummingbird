@@ -37,11 +37,12 @@ internal struct TestApplication<BaseApp: ApplicationProtocol>: ApplicationProtoc
     /// Event loop group used by application
     var eventLoopGroup: EventLoopGroup { self.base.eventLoopGroup }
     /// Configuration
-    var configuration: ApplicationConfiguration { 
-        var configuration = base.configuration
+    var configuration: ApplicationConfiguration {
+        var configuration = self.base.configuration
         configuration.address = .hostname("localhost", port: 0)
         return configuration
     }
+
     /// Logger
     var logger: Logger { self.base.logger }
     /// On server running
