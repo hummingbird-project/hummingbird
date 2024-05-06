@@ -97,6 +97,10 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
 
         func executeRequest(uri: String, method: HTTPRequest.Method, headers: HTTPFields, body: ByteBuffer?) async throws -> TestResponse {
             return try await withThrowingTaskGroup(of: TestResponse.self) { group in
+                var headers = headers
+                if let contentLength = body.map(\.readableBytes) {
+                    headers[.contentLength] = String(describing: contentLength)
+                }
                 let (stream, source) = RequestBody.makeStream()
                 let request = Request(
                     head: .init(method: method, scheme: "http", authority: "localhost", path: uri, headerFields: headers),
