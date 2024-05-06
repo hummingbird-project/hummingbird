@@ -14,7 +14,7 @@
 
 import NIOCore
 
-public struct BinaryRouterResponder<Context: BaseRequestContext>: HTTPResponder {
+public struct RouterResponder<Context: BaseRequestContext>: HTTPResponder {
     let trie: BinaryTrie<EndpointResponders<Context>>
     let notFoundResponder: any HTTPResponder<Context>
     let options: RouterOptions

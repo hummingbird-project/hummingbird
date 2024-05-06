@@ -68,7 +68,7 @@ public final class Router<Context: BaseRequestContext>: RouterMethods, HTTPRespo
     }
 
     /// build responder from router
-    public func buildResponder() -> BinaryRouterResponder<Context> {
+    public func buildResponder() -> RouterResponder<Context> {
         if self.options.contains(.autoGenerateHeadEndpoints) {
             self.trie.forEach { node in
                 node.value?.autoGenerateHeadEndpoint()
