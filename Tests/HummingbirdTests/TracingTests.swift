@@ -265,6 +265,76 @@ final class TracingTests: XCTestCase {
         ])
     }
 
+    /// Test span is ended even if the response body with the span end is not run
+    func testTracingMiddlewareDropResponse() async throws {
+        let expectation = expectation(description: "Expected span to be ended.")
+        struct ErrorMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+                _ = try await next(request, context)
+                throw HTTPError(.badRequest)
+            }
+        }
+
+        let tracer = TestTracer()
+        tracer.onEndSpan = { _ in
+            expectation.fulfill()
+        }
+        InstrumentationSystem.bootstrapInternal(tracer)
+
+        let router = Router()
+        router.middlewares.add(ErrorMiddleware())
+        router.middlewares.add(TracingMiddleware())
+        router.get("users/:id") { _, _ -> String in
+            return "42"
+        }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/users/42", method: .get) { response in
+                XCTAssertEqual(response.status, .badRequest)
+            }
+        }
+
+        await self.wait(for: [expectation], timeout: 1)
+
+        let span = try XCTUnwrap(tracer.spans.first)
+
+        XCTAssertEqual(span.operationName, "/users/:id")
+        XCTAssertEqual(span.kind, .server)
+        XCTAssertNil(span.status)
+        XCTAssertTrue(span.recordedErrors.isEmpty)
+    }
+
+    // Test span length is the time it takes to write the response
+    func testTracingSpanLength() async throws {
+        let expectation = expectation(description: "Expected span to be ended.")
+        let tracer = TestTracer()
+        tracer.onEndSpan = { _ in
+            expectation.fulfill()
+        }
+        InstrumentationSystem.bootstrapInternal(tracer)
+
+        let router = Router()
+        router.middlewares.add(TracingMiddleware())
+        router.get("users/:id") { _, _ -> Response in
+            return Response(
+                status: .ok,
+                body: .init { _ in try await Task.sleep(for: .milliseconds(100)) }
+            )
+        }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/users/42", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+        }
+
+        await self.wait(for: [expectation], timeout: 1)
+
+        let span = try XCTUnwrap(tracer.spans.first)
+        // Test tracer records span times in milliseconds
+        XCTAssertGreaterThanOrEqual(span.endTime! - span.startTime, 100)
+    }
+
     /// Test tracing serviceContext is attached to request when route handler is called
     func testServiceContextPropagation() async throws {
         let expectation = expectation(description: "Expected span to be ended.")

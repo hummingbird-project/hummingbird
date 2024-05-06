@@ -50,56 +50,62 @@ public struct TracingMiddleware<Context: BaseRequestContext>: RouterMiddleware {
             return endpointPath
         }()
 
-        return try await InstrumentationSystem.tracer.withSpan(operationName, context: serviceContext, ofKind: .server) { span in
-            span.updateAttributes { attributes in
-                if let staticAttributes = self.attributes {
-                    attributes.merge(staticAttributes)
-                }
-                attributes["http.method"] = request.method.rawValue
-                attributes["http.target"] = request.uri.path
-                // TODO: Get HTTP version and scheme
-                // attributes["http.flavor"] = "\(request.version.major).\(request.version.minor)"
-                // attributes["http.scheme"] = request.uri.scheme?.rawValue
-                attributes["http.user_agent"] = request.headers[.userAgent]
-                attributes["http.request_content_length"] = request.headers[.contentLength].map { Int($0) } ?? nil
-
-                if let remoteAddress = (context as? any RemoteAddressRequestContext)?.remoteAddress {
-                    attributes["net.sock.peer.port"] = remoteAddress.port
-
-                    switch remoteAddress.protocol {
-                    case .inet:
-                        attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
-                    case .inet6:
-                        attributes["net.sock.family"] = "inet6"
-                        attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
-                    case .unix:
-                        attributes["net.sock.family"] = "unix"
-                        attributes["net.sock.peer.addr"] = remoteAddress.pathname
-                    default:
-                        break
-                    }
-                }
-                attributes = self.recordHeaders(request.headers, toSpanAttributes: attributes, withPrefix: "http.request.header.")
+        let span = InstrumentationSystem.tracer.startSpan(operationName, context: serviceContext, ofKind: .server)
+        span.updateAttributes { attributes in
+            if let staticAttributes = self.attributes {
+                attributes.merge(staticAttributes)
             }
+            attributes["http.method"] = request.method.rawValue
+            attributes["http.target"] = request.uri.path
+            // TODO: Get HTTP version and scheme
+            // attributes["http.flavor"] = "\(request.version.major).\(request.version.minor)"
+            // attributes["http.scheme"] = request.uri.scheme?.rawValue
+            attributes["http.user_agent"] = request.headers[.userAgent]
+            attributes["http.request_content_length"] = request.headers[.contentLength].map { Int($0) } ?? nil
 
-            do {
-                let response = try await next(request, context)
+            if let remoteAddress = (context as? any RemoteAddressRequestContext)?.remoteAddress {
+                attributes["net.sock.peer.port"] = remoteAddress.port
+
+                switch remoteAddress.protocol {
+                case .inet:
+                    attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
+                case .inet6:
+                    attributes["net.sock.family"] = "inet6"
+                    attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
+                case .unix:
+                    attributes["net.sock.family"] = "unix"
+                    attributes["net.sock.peer.addr"] = remoteAddress.pathname
+                default:
+                    break
+                }
+            }
+            attributes = self.recordHeaders(request.headers, toSpanAttributes: attributes, withPrefix: "http.request.header.")
+        }
+
+        do {
+            return try await ServiceContext.$current.withValue(span.context) {
+                var response = try await next(request, context)
                 span.updateAttributes { attributes in
                     attributes = self.recordHeaders(response.headers, toSpanAttributes: attributes, withPrefix: "http.response.header.")
 
                     attributes["http.status_code"] = Int(response.status.code)
                     attributes["http.response_content_length"] = response.body.contentLength
                 }
-                return response
-            } catch let error as HTTPResponseError {
-                span.attributes["http.status_code"] = Int(error.status.code)
-
-                if 500..<600 ~= error.status.code {
-                    span.setStatus(.init(code: .error))
+                let spanWrapper = UnsafeTransfer(SpanWrapper(span))
+                response.body = response.body.withPostWriteClosure {
+                    spanWrapper.wrappedValue.end()
                 }
-
-                throw error
+                return response
             }
+        } catch {
+            let statusCode = (error as? HTTPResponseError)?.status.code ?? 500
+            span.attributes["http.status_code"] = statusCode
+            if 500..<600 ~= statusCode {
+                span.setStatus(.init(code: .error))
+            }
+            span.recordError(error)
+            span.end()
+            throw error
         }
     }
 
@@ -119,6 +125,40 @@ public struct TracingMiddleware<Context: BaseRequestContext>: RouterMiddleware {
         return attributes
     }
 }
+
+/// Stores a reference to a span and on release ends the span
+private class SpanWrapper {
+    var span: (any Span)?
+
+    init(_ span: any Span) {
+        self.span = span
+    }
+
+    func end() {
+        self.span?.end()
+        self.span = nil
+    }
+
+    deinit {
+        self.span?.end()
+    }
+}
+
+/// ``UnsafeTransfer`` can be used to make non-`Sendable` values `Sendable`.
+/// As the name implies, the usage of this is unsafe because it disables the sendable checking of the compiler.
+/// It can be used similar to `@unsafe Sendable` but for values instead of types.
+@usableFromInline
+struct UnsafeTransfer<Wrapped> {
+    @usableFromInline
+    var wrappedValue: Wrapped
+
+    @inlinable
+    init(_ wrappedValue: Wrapped) {
+        self.wrappedValue = wrappedValue
+    }
+}
+
+extension UnsafeTransfer: @unchecked Sendable {}
 
 /// Protocol for request context that stores the remote address of connected client.
 ///
