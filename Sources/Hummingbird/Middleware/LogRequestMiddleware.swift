@@ -40,12 +40,12 @@ public struct LogRequestsMiddleware<Context: BaseRequestContext>: RouterMiddlewa
         self.includeHeaders = includeHeaders
         // only include headers in the redaction list if we are outputting them
         self.redactHeaders = switch includeHeaders {
-        case .all(let except):
+        case .all(let exceptions):
             // don't include headers in the except list
-            redactHeaders.filter { header in except.first { $0 == header } == nil }
+            redactHeaders.filter { header in !exceptions.contains(header) }
         case .some(let included):
             // only include headers in the included list
-            redactHeaders.filter { header in included.first { $0 == header } != nil }
+            redactHeaders.filter { header in included.contains(header) }
         case .none:
             []
         }
