@@ -18,17 +18,26 @@ enum BinaryTrieTokenKind: UInt8 {
     case deadEnd
 }
 
+struct BinaryTrieNode {
+    let index: UInt16
+    let token: BinaryTrieTokenKind
+    let nextSiblingNodeIndex: UInt32
+
+    /// How many bytes a serialized BinaryTrieNode uses
+    static let serializedSize = 7
+}
+
 @_spi(Internal) public final class BinaryTrie<Value: Sendable>: Sendable {
     typealias Integer = UInt8
     let trie: ByteBuffer
     let values: [Value?]
 
-    @_spi(Internal) public init(base: RouterPathTrie<Value>) throws {
+    @_spi(Internal) public init(base: RouterPathTrieBuilder<Value>) {
         var trie = ByteBufferAllocator().buffer(capacity: 1024)
-        var values = [base.root.value]
+        var values: [Value?] = []
 
-        try Self.serializeChildren(
-            of: base.root,
+        Self.serialize(
+            base.root,
             trie: &trie,
             values: &values
         )
