@@ -187,6 +187,7 @@ public struct Application<Responder: HTTPResponder>: ApplicationProtocol where R
     ///   - responder: HTTP responder. Returns a response based off a request and context
     ///   - server: Server child channel setup (http1, http2, http1WithWebSocketUpgrade etc)
     ///   - configuration: Application configuration
+    ///   - services: List of Services for Application to add to its internal ServiceGroup
     ///   - onServerRunning: Function called once the server is running
     ///   - eventLoopGroupProvider: Where to get our EventLoopGroup
     ///   - logger: Logger application uses
@@ -194,6 +195,7 @@ public struct Application<Responder: HTTPResponder>: ApplicationProtocol where R
         responder: Responder,
         server: HTTPChannelBuilder = .http1(),
         configuration: ApplicationConfiguration = ApplicationConfiguration(),
+        services: [Service] = [],
         onServerRunning: @escaping @Sendable (Channel) async -> Void = { _ in },
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton,
         logger: Logger? = nil
@@ -211,7 +213,7 @@ public struct Application<Responder: HTTPResponder>: ApplicationProtocol where R
         self._onServerRunning = onServerRunning
 
         self.eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
-        self.services = []
+        self.services = services
         self.processesRunBeforeServerStart = []
     }
 
@@ -221,6 +223,7 @@ public struct Application<Responder: HTTPResponder>: ApplicationProtocol where R
     ///   - router: Router used to generate responses from requests
     ///   - server: Server child channel setup (http1, http2, http1WithWebSocketUpgrade etc)
     ///   - configuration: Application configuration
+    ///   - services: List of Services for Application to add to its internal ServiceGroup
     ///   - onServerRunning: Function called once the server is running
     ///   - eventLoopGroupProvider: Where to get our EventLoopGroup
     ///   - logger: Logger application uses
@@ -228,25 +231,20 @@ public struct Application<Responder: HTTPResponder>: ApplicationProtocol where R
         router: ResponderBuilder,
         server: HTTPChannelBuilder = .http1(),
         configuration: ApplicationConfiguration = ApplicationConfiguration(),
+        services: [Service] = [],
         onServerRunning: @escaping @Sendable (Channel) async -> Void = { _ in },
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton,
         logger: Logger? = nil
     ) where Responder == ResponderBuilder.Responder {
-        if let logger {
-            self.logger = logger
-        } else {
-            var logger = Logger(label: configuration.serverName ?? "Hummingbird")
-            logger.logLevel = Environment().get("LOG_LEVEL").map { Logger.Level(rawValue: $0) ?? .info } ?? .info
-            self.logger = logger
-        }
-        self.responder = router.buildResponder()
-        self.server = server
-        self.configuration = configuration
-        self._onServerRunning = onServerRunning
-
-        self.eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
-        self.services = []
-        self.processesRunBeforeServerStart = []
+        self.init(
+            responder: router.buildResponder(),
+            server: server,
+            configuration: configuration,
+            services: services,
+            onServerRunning: onServerRunning,
+            eventLoopGroupProvider: eventLoopGroupProvider,
+            logger: logger
+        )
     }
 
     // MARK: Methods
