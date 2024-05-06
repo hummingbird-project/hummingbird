@@ -18,17 +18,31 @@ import Logging
 /// Middleware outputting to log for every call to server
 public struct LogRequestsMiddleware<Context: BaseRequestContext>: RouterMiddleware {
     /// Header filter
-    public enum HeaderFilter: Sendable, ExpressibleByArrayLiteral {
+    public struct HeaderFilter: Sendable, ExpressibleByArrayLiteral {
+        fileprivate enum _Internal: Sendable {
+            case none
+            case all(except: [HTTPField.Name])
+            case some([HTTPField.Name])
+        }
+
+        fileprivate let value: _Internal
+        fileprivate init(_ value: _Internal) {
+            self.value = value
+        }
+
+        /// Don't output any headers
+        public static var none: Self { .init(.none) }
+        /// Output all headers, except the ones indicated
+        public static func all(except: [HTTPField.Name] = []) -> Self { .init(.all(except: except)) }
+        /// Output only these headers
+        public static func some(_ headers: [HTTPField.Name]) -> Self { .init(.some(headers)) }
+
         public typealias ArrayLiteralElement = HTTPField.Name
 
         /// ExpressibleByArrayLiteral requirement
         public init(arrayLiteral elements: ArrayLiteralElement...) {
-            self = .some(elements)
+            self.value = .some(elements)
         }
-
-        case none
-        case all(except: [HTTPField.Name] = [])
-        case some([HTTPField.Name])
     }
 
     let logLevel: Logger.Level
@@ -39,7 +53,7 @@ public struct LogRequestsMiddleware<Context: BaseRequestContext>: RouterMiddlewa
         self.logLevel = logLevel
         self.includeHeaders = includeHeaders
         // only include headers in the redaction list if we are outputting them
-        self.redactHeaders = switch includeHeaders {
+        self.redactHeaders = switch includeHeaders.value {
         case .all(let exceptions):
             // don't include headers in the except list
             redactHeaders.filter { header in !exceptions.contains(header) }
@@ -52,7 +66,7 @@ public struct LogRequestsMiddleware<Context: BaseRequestContext>: RouterMiddlewa
     }
 
     public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-        switch self.includeHeaders {
+        switch self.includeHeaders.value {
         case .none:
             context.logger.log(
                 level: self.logLevel,
