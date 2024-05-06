@@ -102,7 +102,7 @@ public struct LogRequestsMiddleware<Context: BaseRequestContext>: RouterMiddlewa
     func allHeaders(headers: HTTPFields, except: [HTTPField.Name]) -> [String: String] {
         let headers = headers
             .compactMap { entry -> (key: String, value: String)? in
-                guard except.first(where: { entry.name == $0 }) == nil else { return nil }
+                if except.contains(where: { entry.name == $0 }) { return nil }
                 if self.redactHeaders.contains(entry.name) {
                     return (key: entry.name.canonicalName, value: "***")
                 } else {
