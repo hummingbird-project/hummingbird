@@ -526,6 +526,25 @@ final class RouterTests: XCTestCase {
         }
     }
 
+    func testRecursiveWildcard() async throws {
+        let router = Router()
+        router.get("/api/v1/**/john") { _, context in
+            return "John \(context.parameters.getCatchAll().joined(separator: "/"))"
+        }
+        router.get("/api/v1/**/jane") { _, context in
+            return "Jane \(context.parameters.getCatchAll().joined(separator: "/"))"
+        }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/api/v1/a/b/c/d/e/f/john", method: .get) { response in
+                XCTAssertEqual(String(buffer: response.body), "John a/b/c/d/e/f")
+            }
+            try await client.execute(uri: "/api/v1/a/b/d/e/f/jane", method: .get) { response in
+                XCTAssertEqual(String(buffer: response.body), "Jane a/b/d/e/f")
+            }
+        }
+    }
+
     // Test auto generation of HEAD endpoints works
     func testAutoGenerateHeadEndpoints() async throws {
         let router = Router(options: .autoGenerateHeadEndpoints)

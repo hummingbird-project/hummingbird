@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2023 the Hummingbird authors
+// Copyright (c) 2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,23 +12,20 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// Directs requests to handlers based on the request uri and method.
-///
-/// Conforms to `Responder` so need to provide its own implementation of
-/// `func respond(to request: Request, context: Context) async throws -> Response`.
-///
+import NIOCore
+
 public struct RouterResponder<Context: BaseRequestContext>: HTTPResponder {
-    let trie: RouterPathTrie<EndpointResponders<Context>>
+    let trie: BinaryTrie<EndpointResponders<Context>>
     let notFoundResponder: any HTTPResponder<Context>
     let options: RouterOptions
 
     init(
         context: Context.Type,
-        trie: RouterPathTrie<EndpointResponders<Context>>,
+        trie: RouterPathTrieBuilder<EndpointResponders<Context>>,
         options: RouterOptions,
         notFoundResponder: any HTTPResponder<Context>
     ) {
-        self.trie = trie
+        self.trie = BinaryTrie(base: trie)
         self.options = options
         self.notFoundResponder = notFoundResponder
     }
@@ -43,17 +40,16 @@ public struct RouterResponder<Context: BaseRequestContext>: HTTPResponder {
         } else {
             path = request.uri.path
         }
-        guard let result = trie.getValueAndParameters(path),
-              let responder = result.value.getResponder(for: request.method)
+        guard
+            let (responderChain, parameters) = trie.resolve(path),
+            let responder = responderChain.getResponder(for: request.method)
         else {
             return try await self.notFoundResponder.respond(to: request, context: context)
         }
         var context = context
-        if let parameters = result.parameters {
-            context.coreContext.parameters = parameters
-        }
+        context.coreContext.parameters = parameters
         // store endpoint path in request (mainly for metrics)
-        context.coreContext.endpointPath.value = result.value.path
+        context.coreContext.endpointPath.value = responderChain.path
         return try await responder.respond(to: request, context: context)
     }
 }

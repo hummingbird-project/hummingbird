@@ -61,9 +61,9 @@ public final class Router<Context: BaseRequestContext>: RouterMethods, HTTPRespo
                 node.value?.autoGenerateHeadEndpoint()
             }
         }
-        return RouterResponder(
+        return .init(
             context: Context.self,
-            trie: self.trie.build(),
+            trie: self.trie,
             options: self.options,
             notFoundResponder: self.middlewares.constructResponder(finalResponder: NotFoundResponder<Context>())
         )

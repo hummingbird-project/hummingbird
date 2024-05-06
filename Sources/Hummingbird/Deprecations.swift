@@ -57,8 +57,6 @@ public typealias HBRouterMethods = RouterMethods
 public typealias HBRouterOptions = RouterOptions
 @_documentation(visibility: internal) @available(*, deprecated, renamed: "RouterPath")
 public typealias HBRouterPath = RouterPath
-@_documentation(visibility: internal) @available(*, deprecated, renamed: "RouterResponder")
-public typealias HBRouterResponder = RouterResponder
 
 @_documentation(visibility: internal) @available(*, deprecated, renamed: "CORSMiddleware")
 public typealias HBCORSMiddleware = CORSMiddleware

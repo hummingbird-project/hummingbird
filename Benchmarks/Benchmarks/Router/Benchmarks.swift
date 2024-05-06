@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Benchmark
-@testable import Hummingbird
+import Hummingbird
 
 let benchmarks = {
     Benchmark.defaultConfiguration = .init(
@@ -24,6 +24,6 @@ let benchmarks = {
         ],
         warmupIterations: 10
     )
-    trieRouterBenchmarks()
+    binaryTrieRouterBenchmarks()
     routerBenchmarks()
 }

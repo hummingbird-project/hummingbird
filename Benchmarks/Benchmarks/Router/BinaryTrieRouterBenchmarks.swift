@@ -13,21 +13,22 @@
 //===----------------------------------------------------------------------===//
 
 import Benchmark
-@testable import Hummingbird
+@_spi(Internal) import Hummingbird
 
-func trieRouterBenchmarks() {
-    var trie: RouterPathTrie<String>!
-    Benchmark("TrieRouter", configuration: .init(scalingFactor: .kilo)) { benchmark in
+func binaryTrieRouterBenchmarks() {
+    var trie: BinaryTrie<String>!
+    Benchmark("BinaryTrieRouter", configuration: .init(scalingFactor: .kilo)) { benchmark in
         let testValues = [
             "/test/",
             "/test/one",
             "/test/one/two",
             "/doesntExist",
+            "/api/v1/users/1/profile",
         ]
         benchmark.startMeasurement()
 
         for _ in benchmark.scaledIterations {
-            blackHole(testValues.map { trie.getValueAndParameters($0) })
+            blackHole(testValues.map { trie.resolve($0) })
         }
     } setup: {
         let trieBuilder = RouterPathTrieBuilder<String>()
@@ -36,27 +37,48 @@ func trieRouterBenchmarks() {
         trieBuilder.addEntry("/test/one/two", value: "/test/one/two")
         trieBuilder.addEntry("/test/:value", value: "/test/:value")
         trieBuilder.addEntry("/test/:value/:value2", value: "/test/:value:/:value2")
+        trieBuilder.addEntry("/api/v1/users/:id/profile", value: "/api/v1/users/:id/profile")
         trieBuilder.addEntry("/test2/*/*", value: "/test2/*/*")
-        trie = trieBuilder.build()
+        trie = BinaryTrie(base: trieBuilder)
     }
 
-    var trie2: RouterPathTrie<String>!
-    Benchmark("TrieRouterParameters", configuration: .init(scalingFactor: .kilo)) { benchmark in
+    var trie2: BinaryTrie<String>!
+    Benchmark("BinaryTrieRouterParameters", configuration: .init(scalingFactor: .kilo)) { benchmark in
         let testValues = [
             "/test/value",
             "/test/value1/value2",
             "/test2/one/two",
+            "/api/v1/users/1/profile",
         ]
         benchmark.startMeasurement()
 
         for _ in benchmark.scaledIterations {
-            blackHole(testValues.map { trie2.getValueAndParameters($0) })
+            blackHole(testValues.map { trie2.resolve($0) })
         }
     } setup: {
         let trieBuilder = RouterPathTrieBuilder<String>()
         trieBuilder.addEntry("/test/:value", value: "/test/:value")
         trieBuilder.addEntry("/test/:value/:value2", value: "/test/:value:/:value2")
         trieBuilder.addEntry("/test2/*/*", value: "/test2/*/*")
-        trie2 = trieBuilder.build()
+        trieBuilder.addEntry("/api/v1/users/:id/profile", value: "/api/v1/users/:id/profile")
+        trie2 = BinaryTrie(base: trieBuilder)
+    }
+
+    var trie3: BinaryTrie<String>!
+    Benchmark("BinaryTrie:LongPaths", configuration: .init(scalingFactor: .kilo)) { benchmark in
+        let testValues = [
+            "/api/v1/users/1/profile",
+            "/api/v1/a/very/long/path/with/lots/of/segments",
+        ]
+        benchmark.startMeasurement()
+
+        for _ in benchmark.scaledIterations {
+            blackHole(testValues.map { trie3.resolve($0) })
+        }
+    } setup: {
+        let trieBuilder = RouterPathTrieBuilder<String>()
+        trieBuilder.addEntry("/api/v1/a/very/long/path/with/lots/of/segments", value: "/api/v1/a/very/long/path/with/lots/of/segments")
+        trieBuilder.addEntry("/api/v1/users/:id/profile", value: "/api/v1/users/:id/profile")
+        trie3 = BinaryTrie(base: trieBuilder)
     }
 }

@@ -104,7 +104,7 @@ let benchmarks = {
         try await channel.writeInbound(HTTPRequestPart.body(buffer))
         try await channel.writeInbound(HTTPRequestPart.end(nil))
     } responder: { request, _ in
-        let buffer = try await request.body.collate(maxSize: .max)
+        let buffer = try await request.body.collect(upTo: .max)
         return .init(status: .ok, body: .init(byteBuffer: buffer))
     }
 }
