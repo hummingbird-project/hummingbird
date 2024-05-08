@@ -17,20 +17,22 @@ import NIOCore
 extension BinaryTrie {
     /// Resolve a path to a `Value` if available
     @_spi(Internal) public func resolve(_ path: String) -> (value: Value, parameters: Parameters)? {
-        var trie = trie
         let pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
         var pathComponentsIterator = pathComponents.makeIterator()
         var parameters = Parameters()
-        guard var node: BinaryTrieNode = trie.readBinaryTrieNode() else { return nil }
+
+        var node = trie.nodes[0]
+        var nodeIndex = 1
+
         while let component = pathComponentsIterator.next() {
-            node = self.matchComponent(component, in: &trie, parameters: &parameters)
+            node = self.matchComponent(component, atNodeIndex: &nodeIndex, parameters: &parameters)
             if node.token == .recursiveWildcard {
                 // we have found a recursive wildcard. Go through all the path components until we match one of them
                 // or reach the end of the path component array
                 var range = component.startIndex..<component.endIndex
                 while let component = pathComponentsIterator.next() {
-                    var recursiveTrie = trie
-                    let recursiveNode = self.matchComponent(component, in: &recursiveTrie, parameters: &parameters)
+                    var nodeIndex = nodeIndex
+                    let recursiveNode = self.matchComponent(component, atNodeIndex: &nodeIndex, parameters: &parameters)
                     if recursiveNode.token != .deadEnd {
                         node = recursiveNode
                         break
@@ -44,7 +46,8 @@ extension BinaryTrie {
                 return nil
             }
         }
-        return self.value(for: node.index, parameters: parameters)
+
+        return self.value(for: node.valueIndex, parameters: parameters)
     }
 
     /// If `index != nil`, resolves the `index` to a `Value`
@@ -60,20 +63,27 @@ extension BinaryTrie {
     /// Match sibling node for path component
     private func matchComponent(
         _ component: Substring,
-        in trie: inout ByteBuffer,
+        atNodeIndex nodeIndex: inout Int,
         parameters: inout Parameters
     ) -> BinaryTrieNode {
-        while let node = trie.readBinaryTrieNode() {
-            let result = self.matchComponent(component, withToken: node.token, in: &trie, parameters: &parameters)
+        while nodeIndex < trie.nodes.count {
+            let node = trie.nodes[nodeIndex]
+            let result = self.matchComponent(
+                component,
+                node: node,
+                parameters: &parameters
+            )
             switch result {
             case .match, .deadEnd:
+                nodeIndex += 1
                 return node
             default:
-                trie.moveReaderIndex(to: Int(node.nextSiblingNodeIndex))
+                nodeIndex = Int(node.nextSiblingNodeIndex)
             }
         }
+
         // should never get here
-        return .init(index: 0, token: .deadEnd, nextSiblingNodeIndex: UInt32(trie.writerIndex))
+        return BinaryTrieNode(valueIndex: 0, token: .deadEnd, nextSiblingNodeIndex: .max)
     }
 
     private enum MatchResult {
@@ -82,18 +92,15 @@ extension BinaryTrie {
 
     private func matchComponent(
         _ component: Substring,
-        withToken token: BinaryTrieTokenKind,
-        in trie: inout ByteBuffer,
+        node: BinaryTrieNode,
         parameters: inout Parameters
     ) -> MatchResult {
-        switch token {
+        switch node.token {
         case .path:
             // The current node is a constant
             guard
-                trie.readAndCompareString(
-                    to: component,
-                    length: Integer.self
-                )
+                let constant = node.constant,
+                trie.constants[Int(constant)] == component
             else {
                 return .mismatch
             }
@@ -101,43 +108,52 @@ extension BinaryTrie {
             return .match
         case .capture:
             // The current node is a parameter
-            guard
-                let parameter = trie.readLengthPrefixedString(as: Integer.self)
-            else {
+            guard let parameter = node.parameter else {
                 return .mismatch
             }
 
-            parameters[Substring(parameter)] = component
+            parameters[trie.parameters[Int(parameter)]] = component
             return .match
         case .prefixCapture:
             guard
-                let suffix = trie.readLengthPrefixedString(as: Integer.self),
-                let parameter = trie.readLengthPrefixedString(as: Integer.self),
-                component.hasSuffix(suffix)
+                let constant = node.constant,
+                let parameter = node.parameter
             else {
                 return .mismatch
             }
 
-            parameters[Substring(parameter)] = component.dropLast(suffix.count)
+            let suffix = trie.constants[Int(constant)]
+
+            guard component.hasSuffix(suffix) else {
+                return .mismatch
+            }
+
+            parameters[trie.parameters[Int(parameter)]] = component.dropLast(suffix.count)
             return .match
         case .suffixCapture:
             guard
-                let prefix = trie.readLengthPrefixedString(as: Integer.self),
-                let parameter = trie.readLengthPrefixedString(as: Integer.self),
-                component.hasPrefix(prefix)
+                let constant = node.constant,
+                let parameter = node.parameter,
+                component.hasPrefix(trie.constants[Int(constant)])
             else {
                 return .mismatch
             }
 
-            parameters[Substring(parameter)] = component.dropFirst(prefix.count)
+            let prefix = trie.constants[Int(constant)]
+
+            guard component.hasPrefix(prefix) else {
+                return .mismatch
+            }
+
+            parameters[trie.parameters[Int(parameter)]] = component.dropFirst(prefix.count)
             return .match
         case .wildcard:
             // Always matches, descend
             return .match
         case .prefixWildcard:
             guard
-                let suffix = trie.readLengthPrefixedString(as: Integer.self),
-                component.hasSuffix(suffix)
+                let constant = node.constant,
+                component.hasSuffix(trie.constants[Int(constant)])
             else {
                 return .mismatch
             }
@@ -145,8 +161,8 @@ extension BinaryTrie {
             return .match
         case .suffixWildcard:
             guard
-                let prefix = trie.readLengthPrefixedString(as: Integer.self),
-                component.hasPrefix(prefix)
+                let constant = node.constant,
+                component.hasPrefix(trie.constants[Int(constant)])
             else {
                 return .mismatch
             }
