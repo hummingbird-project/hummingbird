@@ -41,7 +41,7 @@ import HummingbirdCore
         }
     }
 
-    @_spi(Internal) public func build() -> RouterTrie<Value> {
+    internal func build() -> RouterTrie<Value> {
         .init(base: self)
     }
 

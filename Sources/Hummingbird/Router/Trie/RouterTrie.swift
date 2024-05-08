@@ -56,15 +56,15 @@ struct Trie: Sendable {
     init() {}
 }
 
-@_spi(Internal) public final class RouterTrie<Value: Sendable>: Sendable {
+@usableFromInline
+internal final class RouterTrie<Value: Sendable>: Sendable {
     @usableFromInline
     let trie: Trie
 
     @usableFromInline
     let values: [Value?]
 
-    @inlinable
-    @_spi(Internal) public init(base: RouterPathTrieBuilder<Value>) {
+    internal init(base: RouterPathTrieBuilder<Value>) {
         var trie = Trie()
         var values: [Value?] = []
 
