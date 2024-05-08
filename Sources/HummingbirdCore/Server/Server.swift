@@ -239,14 +239,19 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
     private nonisolated func createSocketsBootstrap(
         configuration: ServerConfiguration
     ) -> ServerBootstrap {
-        return ServerBootstrap(group: self.eventLoopGroup)
+        var bootstrap = ServerBootstrap(group: self.eventLoopGroup)
             // Specify backlog and enable SO_REUSEADDR for the server itself
             .serverChannelOption(ChannelOptions.backlog, value: numericCast(configuration.backlog))
             .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: configuration.reuseAddress ? 1 : 0)
-            .serverChannelOption(ChannelOptions.maxMessagesPerRead, value: configuration.serverMaxMessagesPerRead)
             .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: configuration.reuseAddress ? 1 : 0)
-            .childChannelOption(ChannelOptions.maxMessagesPerRead, value: configuration.childMaxMessagesPerRead)
             .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
+        if let serverMaxMessagesPerRead = configuration.serverMaxMessagesPerRead {
+            bootstrap = bootstrap.serverChannelOption(ChannelOptions.maxMessagesPerRead, value: serverMaxMessagesPerRead)
+        }
+        if let childMaxMessagesPerRead = configuration.childMaxMessagesPerRead {
+            bootstrap = bootstrap.serverChannelOption(ChannelOptions.maxMessagesPerRead, value: childMaxMessagesPerRead)
+        }
+        return bootstrap
     }
 
     #if canImport(Network)

@@ -17,20 +17,20 @@ import NIOCore
 /// HTTP server configuration
 public struct ServerConfiguration: Sendable {
     /// Bind address for server
-    public let address: Address
+    public var address: Address
     /// Server name to return in "server" header
-    public let serverName: String?
+    public var serverName: String?
     /// Defines the maximum length for the queue of pending connections
-    public let backlog: Int
+    public var backlog: Int
     /// This will affect how many connections the server accepts at any one time
-    public let serverMaxMessagesPerRead: UInt
+    public var serverMaxMessagesPerRead: UInt?
     /// This will affect how much is read from a connection at any one time
-    public let childMaxMessagesPerRead: UInt
+    public var childMaxMessagesPerRead: UInt?
     /// Allows socket to be bound to an address that is already in use.
-    public let reuseAddress: Bool
+    public var reuseAddress: Bool
     #if canImport(Network)
     /// TLS options for NIO Transport services
-    public let tlsOptions: TSTLSOptions
+    public var tlsOptions: TSTLSOptions
     #endif
 
     /// Initialize server configuration
@@ -40,15 +40,16 @@ public struct ServerConfiguration: Sendable {
     ///   - backlog: the maximum length for the queue of pending connections.  If a connection request arrives with the queue full,
     ///         the client may receive an error with an indication of ECONNREFUSE
     ///   - serverMaxMessagesPerRead: This will affect how many connections the server accepts before waiting for notification of
-    ///         more. Setting this too high can flood the server with too much work.
-    ///   - childMaxMessagesPerRead: This will affect how much is read from a connection before waiting for notification of more
-    ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
+    ///         more. Setting this too high can flood the server with too much work. DO NOT EDIT this unless you know what you are doing
+    ///   - childMaxMessagesPerRead: This will affect how much is read from a connection before waiting for notification of more. DO NOT 
+    ///         EDIT this unless you know what you are doing
+    ///   - reuseAddress: Allows socket to be bound to an address that is already in use. 
     public init(
         address: Address = .hostname(),
         serverName: String? = nil,
         backlog: Int = 256,
-        serverMaxMessagesPerRead: UInt = 8,
-        childMaxMessagesPerRead: UInt = 1,
+        serverMaxMessagesPerRead: UInt? = nil,
+        childMaxMessagesPerRead: UInt? = nil,
         reuseAddress: Bool = true
     ) {
         self.address = address
@@ -81,8 +82,8 @@ public struct ServerConfiguration: Sendable {
         self.tlsOptions = tlsOptions
         // The following are unsupported by transport services
         self.backlog = 256
-        self.serverMaxMessagesPerRead = 8
-        self.childMaxMessagesPerRead = 1
+        self.serverMaxMessagesPerRead = nil
+        self.childMaxMessagesPerRead = nil
     }
     #endif
 }
