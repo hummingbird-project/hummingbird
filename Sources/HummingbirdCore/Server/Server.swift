@@ -244,7 +244,6 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
             .serverChannelOption(ChannelOptions.backlog, value: numericCast(configuration.backlog))
             .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: configuration.reuseAddress ? 1 : 0)
             .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: configuration.reuseAddress ? 1 : 0)
-            .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
             .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
     }
 
