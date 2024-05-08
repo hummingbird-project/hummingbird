@@ -54,6 +54,7 @@ internal extension ByteBuffer {
     }
 
     /// Read BinaryTrieNode from ByteBuffer
+    @usableFromInline
     mutating func readBinaryTrieNode() -> BinaryTrieNode? {
         guard let index = self.readInteger(as: UInt16.self),
               let token = self.readToken(),

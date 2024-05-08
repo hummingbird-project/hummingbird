@@ -12,15 +12,22 @@
 //
 //===----------------------------------------------------------------------===//
 
+@usableFromInline
 enum BinaryTrieTokenKind: UInt8 {
     case null = 0
     case path, capture, prefixCapture, suffixCapture, wildcard, prefixWildcard, suffixWildcard, recursiveWildcard
     case deadEnd
 }
 
+@usableFromInline
 struct BinaryTrieNode {
+    @usableFromInline
     let index: UInt16
+
+    @usableFromInline
     let token: BinaryTrieTokenKind
+
+    @usableFromInline
     let nextSiblingNodeIndex: UInt32
 
     /// How many bytes a serialized BinaryTrieNode uses
@@ -28,8 +35,13 @@ struct BinaryTrieNode {
 }
 
 @_spi(Internal) public final class BinaryTrie<Value: Sendable>: Sendable {
+    @usableFromInline
     typealias Integer = UInt8
+
+    @usableFromInline
     let trie: ByteBuffer
+
+    @usableFromInline
     let values: [Value?]
 
     @_spi(Internal) public init(base: RouterPathTrieBuilder<Value>) {

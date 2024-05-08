@@ -16,6 +16,7 @@ import NIOCore
 
 extension BinaryTrie {
     /// Resolve a path to a `Value` if available
+    @inlinable
     @_spi(Internal) public func resolve(_ path: String) -> (value: Value, parameters: Parameters)? {
         var trie = trie
         let pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
@@ -49,7 +50,8 @@ extension BinaryTrie {
 
     /// If `index != nil`, resolves the `index` to a `Value`
     /// This is used as a helper in `descendPath(in:parameters:components:)`
-    private func value(for index: UInt16?, parameters: Parameters) -> (value: Value, parameters: Parameters)? {
+    @usableFromInline
+    internal func value(for index: UInt16?, parameters: Parameters) -> (value: Value, parameters: Parameters)? {
         if let index, let value = self.values[Int(index)] {
             return (value: value, parameters: parameters)
         }
@@ -58,7 +60,8 @@ extension BinaryTrie {
     }
 
     /// Match sibling node for path component
-    private func matchComponent(
+    @usableFromInline
+    internal func matchComponent(
         _ component: Substring,
         in trie: inout ByteBuffer,
         parameters: inout Parameters
@@ -76,11 +79,13 @@ extension BinaryTrie {
         return .init(index: 0, token: .deadEnd, nextSiblingNodeIndex: UInt32(trie.writerIndex))
     }
 
-    private enum MatchResult {
+    @usableFromInline
+    internal enum MatchResult {
         case match, mismatch, ignore, deadEnd
     }
 
-    private func matchComponent(
+    @usableFromInline
+    internal func matchComponent(
         _ component: Substring,
         withToken token: BinaryTrieTokenKind,
         in trie: inout ByteBuffer,
