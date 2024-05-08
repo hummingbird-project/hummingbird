@@ -16,6 +16,7 @@ import NIOCore
 
 extension RouterTrie {
     /// Resolve a path to a `Value` if available
+    @inlinable
     @_spi(Internal) public func resolve(_ path: String) -> (value: Value, parameters: Parameters)? {
         let pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
         var pathComponentsIterator = pathComponents.makeIterator()
@@ -47,21 +48,16 @@ extension RouterTrie {
             }
         }
 
-        return self.value(for: node.valueIndex, parameters: parameters)
-    }
-
-    /// If `index != nil`, resolves the `index` to a `Value`
-    /// This is used as a helper in `descendPath(in:parameters:components:)`
-    private func value(for index: UInt16?, parameters: Parameters) -> (value: Value, parameters: Parameters)? {
-        if let index, let value = self.values[Int(index)] {
+        if let value = self.values[node.valueIndex] {
             return (value: value, parameters: parameters)
+        } else {
+            return nil
         }
-
-        return nil
     }
 
     /// Match sibling node for path component
-    private func matchComponent(
+    @usableFromInline
+    internal func matchComponent(
         _ component: Substring,
         atNodeIndex nodeIndex: inout Int,
         parameters: inout Parameters
@@ -96,78 +92,48 @@ extension RouterTrie {
         parameters: inout Parameters
     ) -> MatchResult {
         switch node.token {
-        case .path:
+        case .path(let constant):
             // The current node is a constant
-            guard
-                let constant = node.constant,
-                trie.constants[Int(constant)] == component
-            else {
-                return .mismatch
+            if trie.constants[Int(constant)] == component {
+                return .match
             }
 
-            return .match
-        case .capture:
-            // The current node is a parameter
-            guard let parameter = node.parameter else {
-                return .mismatch
-            }
-
+            return .mismatch
+        case .capture(let parameter):
             parameters[trie.parameters[Int(parameter)]] = component
             return .match
-        case .prefixCapture:
-            guard
-                let constant = node.constant,
-                let parameter = node.parameter
-            else {
-                return .mismatch
+        case .prefixCapture(let parameter, let suffix):
+            let suffix = trie.constants[Int(suffix)]
+
+            if component.hasSuffix(suffix) {
+                parameters[trie.parameters[Int(parameter)]] = component.dropLast(suffix.count)
+                return .match
             }
 
-            let suffix = trie.constants[Int(constant)]
-
-            guard component.hasSuffix(suffix) else {
-                return .mismatch
+            return .mismatch
+        case .suffixCapture(let prefix, let parameter):
+            let prefix = trie.constants[Int(prefix)]
+            if component.hasPrefix(prefix) {
+                parameters[trie.parameters[Int(parameter)]] = component.dropFirst(prefix.count)
+                return .match
             }
 
-            parameters[trie.parameters[Int(parameter)]] = component.dropLast(suffix.count)
-            return .match
-        case .suffixCapture:
-            guard
-                let constant = node.constant,
-                let parameter = node.parameter,
-                component.hasPrefix(trie.constants[Int(constant)])
-            else {
-                return .mismatch
-            }
-
-            let prefix = trie.constants[Int(constant)]
-
-            guard component.hasPrefix(prefix) else {
-                return .mismatch
-            }
-
-            parameters[trie.parameters[Int(parameter)]] = component.dropFirst(prefix.count)
-            return .match
+            return .mismatch
         case .wildcard:
             // Always matches, descend
             return .match
-        case .prefixWildcard:
-            guard
-                let constant = node.constant,
-                component.hasSuffix(trie.constants[Int(constant)])
-            else {
-                return .mismatch
+        case .prefixWildcard(let suffix):
+            if component.hasSuffix(trie.constants[Int(suffix)]) {
+                return .match
             }
 
-            return .match
-        case .suffixWildcard:
-            guard
-                let constant = node.constant,
-                component.hasPrefix(trie.constants[Int(constant)])
-            else {
-                return .mismatch
+            return .mismatch
+        case .suffixWildcard(let prefix):
+            if component.hasPrefix(trie.constants[Int(prefix)]) {
+                return .match
             }
 
-            return .match
+            return .mismatch
         case .recursiveWildcard:
             return .match
         case .null:

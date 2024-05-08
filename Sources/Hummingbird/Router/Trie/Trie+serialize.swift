@@ -15,26 +15,25 @@
 import NIOCore
 
 extension RouterTrie {
+    @usableFromInline
     static func serialize(
         _ node: RouterPathTrieBuilder<Value>.Node,
         trie: inout Trie,
         values: inout [Value?]
     ) {
         // Index where `value` is located
-        let valueIndex = UInt16(values.count)
+        let valueIndex = values.count
         values.append(node.value)
 
-        let token: TrieTokenKind
-        let constant: UInt16?
-        let parameter: UInt16?
+        let token: TrieToken
 
         func setConstant(_ constant: Substring) -> UInt16 {
             if let index = trie.constants.firstIndex(of: constant) {
                 return UInt16(index)
             } else {
-                let index = UInt16(trie.constants.count)
+                let index = trie.constants.count
                 trie.constants.append(constant)
-                return index
+                return UInt16(index)
             }
         }
 
@@ -42,49 +41,37 @@ extension RouterTrie {
             if let index = trie.parameters.firstIndex(of: parameter) {
                 return UInt16(index)
             } else {
-                let index = UInt16(trie.parameters.count)
+                let index = trie.parameters.count
                 trie.parameters.append(parameter)
-                return index
+                return UInt16(index)
             }
         }
 
         switch node.key {
         case .path(let path):
-            token = .path
-            constant = setConstant(path)
-            parameter = nil
+            token = .path(constantIndex: setConstant(path))
         case .capture(let parameterName):
-            token = .capture
-            constant = nil
-            parameter = setParameter(parameterName)
+            token = .capture(parameterIndex: setParameter(parameterName))
         case .prefixCapture(suffix: let suffix, parameter: let parameterName):
-            token = .prefixCapture
-            constant = setConstant(suffix)
-            parameter = setParameter(parameterName)
+            token = .prefixCapture(
+                parameterIndex: setParameter(parameterName),
+                suffixIndex: setConstant(suffix)
+            )
         case .suffixCapture(prefix: let prefix, parameter: let parameterName):
-            token = .suffixCapture
-            constant = setConstant(prefix)
-            parameter = setParameter(parameterName)
+            token = .suffixCapture(
+                prefixIndex: setConstant(prefix),
+                parameterIndex: setParameter(parameterName)
+            )
         case .wildcard:
             token = .wildcard
-            constant = nil
-            parameter = nil
         case .prefixWildcard(let suffix):
-            token = .prefixWildcard
-            constant = setConstant(suffix)
-            parameter = nil
+            token = .prefixWildcard(suffixIndex: setConstant(suffix))
         case .suffixWildcard(let prefix):
-            token = .suffixWildcard
-            constant = setConstant(prefix)
-            parameter = nil
+            token = .suffixWildcard(prefixIndex: setConstant(prefix))
         case .recursiveWildcard:
             token = .recursiveWildcard
-            constant = nil
-            parameter = nil
         case .null:
             token = .null
-            constant = nil
-            parameter = nil
         }
 
         let nodeIndex = trie.nodes.count
@@ -92,9 +79,7 @@ extension RouterTrie {
             TrieNode(
                 valueIndex: valueIndex,
                 token: token,
-                nextSiblingNodeIndex: .max,
-                constant: constant,
-                parameter: parameter
+                nextSiblingNodeIndex: .max
             )
         )
 
@@ -104,9 +89,10 @@ extension RouterTrie {
             values: &values
         )
 
-        trie.nodes[nodeIndex].nextSiblingNodeIndex = UInt16(trie.nodes.count)
+        trie.nodes[nodeIndex].nextSiblingNodeIndex = trie.nodes.count
     }
 
+    @usableFromInline
     static func serializeChildren(
         of node: RouterPathTrieBuilder<Value>.Node,
         trie: inout Trie,
@@ -119,7 +105,8 @@ extension RouterTrie {
         }
     }
 
-    private static func highestPriorityFirst(lhs: RouterPathTrieBuilder<Value>.Node, rhs: RouterPathTrieBuilder<Value>.Node) -> Bool {
+    @usableFromInline
+    internal static func highestPriorityFirst(lhs: RouterPathTrieBuilder<Value>.Node, rhs: RouterPathTrieBuilder<Value>.Node) -> Bool {
         lhs.key.priority > rhs.key.priority
     }
 }

@@ -12,30 +12,61 @@
 //
 //===----------------------------------------------------------------------===//
 
-enum TrieTokenKind: UInt8 {
-    case null = 0
-    case path, capture, prefixCapture, suffixCapture, wildcard, prefixWildcard, suffixWildcard, recursiveWildcard
+@usableFromInline
+enum TrieToken: Equatable, Sendable {
+    case null
+    case path(constantIndex: UInt16)
+    case capture(parameterIndex: UInt16)
+    case prefixCapture(parameterIndex: UInt16, suffixIndex: UInt16)
+    case suffixCapture(prefixIndex: UInt16, parameterIndex: UInt16)
+    case prefixWildcard(suffixIndex: UInt16)
+    case suffixWildcard(prefixIndex: UInt16)
+    case wildcard, recursiveWildcard
     case deadEnd
 }
 
+@usableFromInline
 struct TrieNode: Sendable {
-    let valueIndex: UInt16
-    let token: TrieTokenKind
-    var nextSiblingNodeIndex: UInt16
-    var constant: UInt16?
-    var parameter: UInt16?
+    @usableFromInline
+    let valueIndex: Int
+
+    @usableFromInline
+    let token: TrieToken
+
+    @usableFromInline
+    var nextSiblingNodeIndex: Int
+
+    @usableFromInline
+    init(valueIndex: Int, token: TrieToken, nextSiblingNodeIndex: Int) {
+        self.valueIndex = valueIndex
+        self.token = token
+        self.nextSiblingNodeIndex = nextSiblingNodeIndex
+    }
 }
 
+@usableFromInline
 struct Trie: Sendable {
+    @usableFromInline
     var nodes = [TrieNode]()
+
+    @usableFromInline
     var parameters = [Substring]()
+
+    @usableFromInline
     var constants = [Substring]()
+
+    @usableFromInline
+    init() {}
 }
 
 @_spi(Internal) public final class RouterTrie<Value: Sendable>: Sendable {
+    @usableFromInline
     let trie: Trie
+
+    @usableFromInline
     let values: [Value?]
 
+    @inlinable
     @_spi(Internal) public init(base: RouterPathTrieBuilder<Value>) {
         var trie = Trie()
         var values: [Value?] = []

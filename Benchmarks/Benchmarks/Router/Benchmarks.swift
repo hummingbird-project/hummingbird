@@ -24,6 +24,6 @@ let benchmarks = {
         ],
         warmupIterations: 10
     )
-    binaryTrieRouterBenchmarks()
+    routerTrieRouterBenchmarks()
     routerBenchmarks()
 }
