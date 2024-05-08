@@ -44,6 +44,7 @@ struct BinaryTrieNode {
     @usableFromInline
     let values: [Value?]
 
+    @inlinable
     @_spi(Internal) public init(base: RouterPathTrieBuilder<Value>) {
         var trie = ByteBufferAllocator().buffer(capacity: 1024)
         var values: [Value?] = []

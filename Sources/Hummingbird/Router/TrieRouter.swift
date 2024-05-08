@@ -16,6 +16,7 @@ import HummingbirdCore
 
 /// URI Path Trie Builder
 @_spi(Internal) public struct RouterPathTrieBuilder<Value: Sendable> {
+    @usableFromInline
     var root: Node
 
     public init() {

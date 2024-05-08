@@ -15,6 +15,7 @@
 import NIOCore
 
 extension BinaryTrie {
+    @usableFromInline
     static func serialize(
         _ node: RouterPathTrieBuilder<Value>.Node,
         trie: inout ByteBuffer,

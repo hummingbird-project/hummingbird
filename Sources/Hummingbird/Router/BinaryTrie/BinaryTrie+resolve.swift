@@ -50,7 +50,7 @@ extension BinaryTrie {
 
     /// If `index != nil`, resolves the `index` to a `Value`
     /// This is used as a helper in `descendPath(in:parameters:components:)`
-    @usableFromInline
+    @inlinable
     internal func value(for index: UInt16?, parameters: Parameters) -> (value: Value, parameters: Parameters)? {
         if let index, let value = self.values[Int(index)] {
             return (value: value, parameters: parameters)
