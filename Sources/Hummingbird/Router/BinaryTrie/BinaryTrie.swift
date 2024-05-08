@@ -34,12 +34,61 @@ struct BinaryTrieNode {
     static let serializedSize = 7
 }
 
+@usableFromInline
+struct Trie: @unchecked Sendable {
+    @usableFromInline
+    let trie: ManagedBuffer<Void, UInt8>
+
+    @inlinable
+    init(trie: ManagedBuffer<Void, UInt8>) {
+        self.trie = trie
+    }
+
+    @usableFromInline
+    func withParsingContext<T>(
+        _ perform: (inout ParsingContext) throws -> T
+    ) rethrows -> T {
+        let byteSize = trie.capacity
+        return try trie.withUnsafeMutablePointerToElements { pointer in
+            var context = ParsingContext(
+                buffer: UnsafeRawBufferPointer(
+                    start: pointer,
+                    count: byteSize
+                ),
+                byteOffset: 0
+            )
+
+            return try perform(&context)
+        }
+    }
+
+    @usableFromInline
+    struct ParsingContext {
+        @usableFromInline
+        let buffer: UnsafeRawBufferPointer
+
+        @usableFromInline
+        var byteOffset: Int
+
+        @usableFromInline
+        init(buffer: UnsafeRawBufferPointer, byteOffset: Int) {
+            self.buffer = buffer
+            self.byteOffset = byteOffset
+        }
+
+        @usableFromInline
+        var isAtEnd: Bool {
+            byteOffset >= buffer.count
+        }
+    }
+}
+
 @_spi(Internal) public final class BinaryTrie<Value: Sendable>: Sendable {
     @usableFromInline
     typealias Integer = UInt8
 
     @usableFromInline
-    let trie: ByteBuffer
+    let trie: Trie
 
     @usableFromInline
     let values: [Value?]
@@ -55,7 +104,24 @@ struct BinaryTrieNode {
             values: &values
         )
 
-        self.trie = trie
+        let buffer = ManagedBuffer<Void, UInt8>.create(
+            minimumCapacity: trie.readableBytes
+        ) { managedBuffer in
+            return ()
+        }
+        
+        buffer.withUnsafeMutablePointerToElements { destination in
+            trie.withUnsafeReadableBytes { source in
+                _ = source.copyBytes(
+                    to: UnsafeMutableRawBufferPointer(
+                        start: destination,
+                        count: source.count
+                    )
+                )
+            }
+        }
+
+        self.trie = Trie(trie: buffer)
         self.values = values
     }
 }

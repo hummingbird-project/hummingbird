@@ -18,34 +18,35 @@ extension BinaryTrie {
     /// Resolve a path to a `Value` if available
     @inlinable
     @_spi(Internal) public func resolve(_ path: String) -> (value: Value, parameters: Parameters)? {
-        var trie = trie
-        let pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
-        var pathComponentsIterator = pathComponents.makeIterator()
-        var parameters = Parameters()
-        guard var node: BinaryTrieNode = trie.readBinaryTrieNode() else { return nil }
-        while let component = pathComponentsIterator.next() {
-            node = self.matchComponent(component, in: &trie, parameters: &parameters)
-            if node.token == .recursiveWildcard {
-                // we have found a recursive wildcard. Go through all the path components until we match one of them
-                // or reach the end of the path component array
-                var range = component.startIndex..<component.endIndex
-                while let component = pathComponentsIterator.next() {
-                    var recursiveTrie = trie
-                    let recursiveNode = self.matchComponent(component, in: &recursiveTrie, parameters: &parameters)
-                    if recursiveNode.token != .deadEnd {
-                        node = recursiveNode
-                        break
+        return trie.withParsingContext { trie in
+            let pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
+            var pathComponentsIterator = pathComponents.makeIterator()
+            var parameters = Parameters()
+            var node: BinaryTrieNode = trie.readBinaryTrieNode()
+            while let component = pathComponentsIterator.next() {
+                node = self.matchComponent(component, in: &trie, parameters: &parameters)
+                if node.token == .recursiveWildcard {
+                    // we have found a recursive wildcard. Go through all the path components until we match one of them
+                    // or reach the end of the path component array
+                    var range = component.startIndex..<component.endIndex
+                    while let component = pathComponentsIterator.next() {
+                        var recursiveTrie = trie
+                        let recursiveNode = self.matchComponent(component, in: &recursiveTrie, parameters: &parameters)
+                        if recursiveNode.token != .deadEnd {
+                            node = recursiveNode
+                            break
+                        }
+                        // extend range of catch all text
+                        range = range.lowerBound..<component.endIndex
                     }
-                    // extend range of catch all text
-                    range = range.lowerBound..<component.endIndex
+                    parameters.setCatchAll(path[range])
                 }
-                parameters.setCatchAll(path[range])
+                if node.token == .deadEnd {
+                    return nil
+                }
             }
-            if node.token == .deadEnd {
-                return nil
-            }
+            return self.value(for: node.index, parameters: parameters)
         }
-        return self.value(for: node.index, parameters: parameters)
     }
 
     /// If `index != nil`, resolves the `index` to a `Value`
@@ -63,20 +64,21 @@ extension BinaryTrie {
     @usableFromInline
     internal func matchComponent(
         _ component: Substring,
-        in trie: inout ByteBuffer,
+        in trie: inout Trie.ParsingContext,
         parameters: inout Parameters
     ) -> BinaryTrieNode {
-        while let node = trie.readBinaryTrieNode() {
+        while !trie.isAtEnd {
+            let node = trie.readBinaryTrieNode()
             let result = self.matchComponent(component, withToken: node.token, in: &trie, parameters: &parameters)
             switch result {
             case .match, .deadEnd:
                 return node
             default:
-                trie.moveReaderIndex(to: Int(node.nextSiblingNodeIndex))
+                trie.byteOffset = Int(node.nextSiblingNodeIndex)
             }
         }
         // should never get here
-        return .init(index: 0, token: .deadEnd, nextSiblingNodeIndex: UInt32(trie.writerIndex))
+        return .init(index: 0, token: .deadEnd, nextSiblingNodeIndex: UInt32(trie.buffer.count))
     }
 
     @usableFromInline
@@ -88,7 +90,7 @@ extension BinaryTrie {
     internal func matchComponent(
         _ component: Substring,
         withToken token: BinaryTrieTokenKind,
-        in trie: inout ByteBuffer,
+        in trie: inout Trie.ParsingContext,
         parameters: inout Parameters
     ) -> MatchResult {
         switch token {
@@ -107,7 +109,9 @@ extension BinaryTrie {
         case .capture:
             // The current node is a parameter
             guard
-                let parameter = trie.readLengthPrefixedString(as: Integer.self)
+                let parameter = trie.readLengthPrefixedString(
+                    as: Integer.self
+                )
             else {
                 return .mismatch
             }

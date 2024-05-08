@@ -24,9 +24,10 @@ import Glibc
 
 internal extension ByteBuffer {
     /// Write length prefixed string to ByteBuffer
+    @inlinable
     mutating func writeLengthPrefixedString<F: FixedWidthInteger>(_ string: Substring, as integer: F.Type) {
         do {
-            try self.writeLengthPrefixed(as: F.self) { buffer in
+            try self.writeLengthPrefixed(endianness: .host, as: F.self) { buffer in
                 buffer.writeSubstring(string)
             }
         } catch {
@@ -36,9 +37,9 @@ internal extension ByteBuffer {
 
     /// Write BinaryTrieNode into ByteBuffer at position
     @discardableResult mutating func setBinaryTrieNode(_ node: BinaryTrieNode, at index: Int) -> Int {
-        var offset = self.setInteger(node.index, at: index)
-        offset += self.setInteger(node.token.rawValue, at: index + offset)
-        offset += self.setInteger(node.nextSiblingNodeIndex, at: index + offset)
+        var offset = self.setInteger(node.index, at: index, endianness: .host)
+        offset += self.setInteger(node.token.rawValue, at: index + offset, endianness: .host)
+        offset += self.setInteger(node.nextSiblingNodeIndex, at: index + offset, endianness: .host)
         return offset
     }
 
@@ -52,31 +53,32 @@ internal extension ByteBuffer {
     mutating func reserveBinaryTrieNode() {
         self.moveWriterIndex(forwardBy: BinaryTrieNode.serializedSize)
     }
+}
 
+extension Trie.ParsingContext {
     /// Read BinaryTrieNode from ByteBuffer
     @usableFromInline
-    mutating func readBinaryTrieNode() -> BinaryTrieNode? {
-        guard let index = self.readInteger(as: UInt16.self),
-              let token = self.readToken(),
-              let nextSiblingNodeIndex: UInt32 = self.readInteger()
-        else {
-            return nil
-        }
+    mutating func readBinaryTrieNode() -> BinaryTrieNode {
+        let index = buffer.loadUnaligned(fromByteOffset: byteOffset, as: UInt16.self)
+        byteOffset &+= 2
+
+        let token = buffer.loadUnaligned(fromByteOffset: byteOffset, as: BinaryTrieTokenKind.self)
+        byteOffset &+= 1
+
+        let nextSiblingNodeIndex = buffer.loadUnaligned(fromByteOffset: byteOffset, as: UInt32.self)
+        byteOffset &+= 4
+
         return BinaryTrieNode(index: index, token: token, nextSiblingNodeIndex: nextSiblingNodeIndex)
     }
 
     /// Read string from ByteBuffer and compare against another string
+    @inlinable
     mutating func readAndCompareString<Length: FixedWidthInteger>(
         to string: Substring,
         length: Length.Type
     ) -> Bool {
-        guard
-            let _length: Length = readInteger()
-        else {
-            return false
-        }
-
-        let length = Int(_length)
+        let length = Int(buffer.loadUnaligned(fromByteOffset: byteOffset, as: Length.self))
+        byteOffset &+= Length.bitWidth / 8
 
         func compare(utf8: UnsafeBufferPointer<UInt8>) -> Bool {
             if utf8.count != length {
@@ -89,13 +91,15 @@ internal extension ByteBuffer {
                 return true
             }
 
-            return withUnsafeReadableBytes { buffer in
-                if memcmp(utf8.baseAddress!, buffer.baseAddress!, length) == 0 {
-                    moveReaderIndex(forwardBy: length)
-                    return true
-                } else {
-                    return false
-                }
+            if memcmp(
+                utf8.baseAddress!,
+                buffer.baseAddress!.advanced(by: byteOffset),
+                length
+            ) == 0 {
+                byteOffset &+= length
+                return true
+            } else {
+                return false
             }
         }
 
@@ -114,23 +118,22 @@ internal extension ByteBuffer {
     }
 
     /// Read length prefixed string from ByteBuffer
-    mutating func readLengthPrefixedString<F: FixedWidthInteger>(as integer: F.Type) -> String? {
-        guard let buffer = readLengthPrefixedSlice(as: F.self) else {
-            return nil
-        }
-
-        return String(buffer: buffer)
-    }
-
-    /// Read BinaryTrieTokenKind from ByteBuffer
-    mutating func readToken() -> BinaryTrieTokenKind? {
-        guard
-            let _token: BinaryTrieTokenKind.RawValue = readInteger(),
-            let token = BinaryTrieTokenKind(rawValue: _token)
-        else {
-            return nil
-        }
-
-        return token
+    @inlinable
+    mutating func readLengthPrefixedString<F: FixedWidthInteger>(
+        as integer: F.Type
+    ) -> String? {
+        let lengthPrefix = buffer.loadUnaligned(fromByteOffset: byteOffset, as: F.self)
+        byteOffset &+= (F.bitWidth / 8)
+        let string = String(
+            bytes: UnsafeRawBufferPointer(
+                start: buffer.baseAddress!.advanced(
+                    by: byteOffset
+                ),
+                count: Int(lengthPrefix)
+            ),
+            encoding: .utf8
+        )
+        byteOffset &+= Int(lengthPrefix)
+        return string
     }
 }
