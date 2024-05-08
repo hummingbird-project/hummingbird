@@ -14,7 +14,7 @@
 
 import NIOCore
 
-extension BinaryTrie {
+extension RouterTrie {
     /// Resolve a path to a `Value` if available
     @_spi(Internal) public func resolve(_ path: String) -> (value: Value, parameters: Parameters)? {
         let pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
@@ -65,7 +65,7 @@ extension BinaryTrie {
         _ component: Substring,
         atNodeIndex nodeIndex: inout Int,
         parameters: inout Parameters
-    ) -> BinaryTrieNode {
+    ) -> TrieNode {
         while nodeIndex < trie.nodes.count {
             let node = trie.nodes[nodeIndex]
             let result = self.matchComponent(
@@ -83,7 +83,7 @@ extension BinaryTrie {
         }
 
         // should never get here
-        return BinaryTrieNode(valueIndex: 0, token: .deadEnd, nextSiblingNodeIndex: .max)
+        return TrieNode(valueIndex: 0, token: .deadEnd, nextSiblingNodeIndex: .max)
     }
 
     private enum MatchResult {
@@ -92,7 +92,7 @@ extension BinaryTrie {
 
     private func matchComponent(
         _ component: Substring,
-        node: BinaryTrieNode,
+        node: TrieNode,
         parameters: inout Parameters
     ) -> MatchResult {
         switch node.token {

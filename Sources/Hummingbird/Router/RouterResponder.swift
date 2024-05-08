@@ -15,7 +15,7 @@
 import NIOCore
 
 public struct RouterResponder<Context: BaseRequestContext>: HTTPResponder {
-    let trie: BinaryTrie<EndpointResponders<Context>>
+    let trie: RouterTrie<EndpointResponders<Context>>
     let notFoundResponder: any HTTPResponder<Context>
     let options: RouterOptions
 
@@ -25,7 +25,7 @@ public struct RouterResponder<Context: BaseRequestContext>: HTTPResponder {
         options: RouterOptions,
         notFoundResponder: any HTTPResponder<Context>
     ) {
-        self.trie = BinaryTrie(base: trie)
+        self.trie = RouterTrie(base: trie)
         self.options = options
         self.notFoundResponder = notFoundResponder
     }

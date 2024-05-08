@@ -14,7 +14,7 @@
 
 import NIOCore
 
-extension BinaryTrie {
+extension RouterTrie {
     static func serialize(
         _ node: RouterPathTrieBuilder<Value>.Node,
         trie: inout Trie,
@@ -24,7 +24,7 @@ extension BinaryTrie {
         let valueIndex = UInt16(values.count)
         values.append(node.value)
 
-        let token: BinaryTrieTokenKind
+        let token: TrieTokenKind
         let constant: UInt16?
         let parameter: UInt16?
 
@@ -89,7 +89,7 @@ extension BinaryTrie {
 
         let nodeIndex = trie.nodes.count
         trie.nodes.append(
-            BinaryTrieNode(
+            TrieNode(
                 valueIndex: valueIndex,
                 token: token,
                 nextSiblingNodeIndex: .max,

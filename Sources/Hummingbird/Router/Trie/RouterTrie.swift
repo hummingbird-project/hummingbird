@@ -12,31 +12,27 @@
 //
 //===----------------------------------------------------------------------===//
 
-enum BinaryTrieTokenKind: UInt8 {
+enum TrieTokenKind: UInt8 {
     case null = 0
     case path, capture, prefixCapture, suffixCapture, wildcard, prefixWildcard, suffixWildcard, recursiveWildcard
     case deadEnd
 }
 
-struct BinaryTrieNode: Sendable {
+struct TrieNode: Sendable {
     let valueIndex: UInt16
-    let token: BinaryTrieTokenKind
+    let token: TrieTokenKind
     var nextSiblingNodeIndex: UInt16
     var constant: UInt16?
     var parameter: UInt16?
-
-    /// How many bytes a serialized BinaryTrieNode uses
-    static let serializedSize = 7
 }
 
 struct Trie: Sendable {
-    var nodes = [BinaryTrieNode]()
+    var nodes = [TrieNode]()
     var parameters = [Substring]()
     var constants = [Substring]()
 }
 
-@_spi(Internal) public final class BinaryTrie<Value: Sendable>: Sendable {
-    typealias Integer = UInt8
+@_spi(Internal) public final class RouterTrie<Value: Sendable>: Sendable {
     let trie: Trie
     let values: [Value?]
 
@@ -51,7 +47,7 @@ struct Trie: Sendable {
         )
 
         trie.nodes.append(
-            BinaryTrieNode(
+            TrieNode(
                 valueIndex: 0,
                 token: .deadEnd,
                 nextSiblingNodeIndex: .max
