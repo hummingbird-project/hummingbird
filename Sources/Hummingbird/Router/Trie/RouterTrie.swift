@@ -15,12 +15,12 @@
 @usableFromInline
 enum TrieToken: Equatable, Sendable {
     case null
-    case path(constantIndex: UInt16)
-    case capture(parameterIndex: UInt16)
-    case prefixCapture(parameterIndex: UInt16, suffixIndex: UInt16)
-    case suffixCapture(prefixIndex: UInt16, parameterIndex: UInt16)
-    case prefixWildcard(suffixIndex: UInt16)
-    case suffixWildcard(prefixIndex: UInt16)
+    case path(constantIndex: UInt32)
+    case capture(parameterIndex: UInt32)
+    case prefixCapture(parameterIndex: UInt32, suffixIndex: UInt32)
+    case suffixCapture(prefixIndex: UInt32, parameterIndex: UInt32)
+    case prefixWildcard(suffixIndex: UInt32)
+    case suffixWildcard(prefixIndex: UInt32)
     case wildcard, recursiveWildcard
     case deadEnd
 }
@@ -48,6 +48,12 @@ struct TrieNode: Sendable {
 struct Trie: Sendable {
     @usableFromInline
     var nodes = [TrieNode]()
+
+    @usableFromInline
+    var allParameters = String()
+
+    @usableFromInline
+    var allConstants = String()
 
     @usableFromInline
     var parameters = [Substring]()

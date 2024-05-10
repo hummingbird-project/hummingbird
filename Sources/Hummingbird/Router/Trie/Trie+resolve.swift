@@ -56,7 +56,7 @@ extension RouterTrie {
     }
 
     /// Match sibling node for path component
-    @usableFromInline
+    @inlinable
     internal func matchComponent(
         _ component: Substring,
         atNodeIndex nodeIndex: inout Int,
@@ -82,11 +82,13 @@ extension RouterTrie {
         return TrieNode(valueIndex: 0, token: .deadEnd, nextSiblingNodeIndex: .max)
     }
 
-    private enum MatchResult {
+    @usableFromInline
+    enum MatchResult {
         case match, mismatch, ignore, deadEnd
     }
 
-    private func matchComponent(
+    @inlinable
+    func matchComponent(
         _ component: Substring,
         node: TrieNode,
         parameters: inout Parameters

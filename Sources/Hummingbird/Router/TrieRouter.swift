@@ -51,8 +51,13 @@ import HummingbirdCore
 
     /// Trie Node. Each node represents one component of a URI path
     @_spi(Internal) public final class Node {
+        @usableFromInline
         let key: RouterPath.Element
+        
+        @usableFromInline
         var children: [Node]
+
+        @usableFromInline
         var value: Value?
 
         init(key: RouterPath.Element, output: Value?) {
