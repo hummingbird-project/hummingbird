@@ -17,7 +17,7 @@ import Benchmark
 
 func trieRouterBenchmarks() {
     var trie: RouterTrie<String>!
-    Benchmark("RouterTrieRouter", configuration: .init(scalingFactor: .kilo)) { benchmark in
+    Benchmark("TrieRouter:Routing", configuration: .init(scalingFactor: .kilo)) { benchmark in
         let testValues = [
             "/test/",
             "/test/one",
@@ -43,7 +43,7 @@ func trieRouterBenchmarks() {
     }
 
     var trie2: RouterTrie<String>!
-    Benchmark("RouterTrieRouterParameters", configuration: .init(scalingFactor: .kilo)) { benchmark in
+    Benchmark("TrieRouter:Parameters", configuration: .init(scalingFactor: .kilo)) { benchmark in
         let testValues = [
             "/test/value",
             "/test/value1/value2",
@@ -65,7 +65,7 @@ func trieRouterBenchmarks() {
     }
 
     var trie3: RouterTrie<String>!
-    Benchmark("RouterTrie:LongPaths", configuration: .init(scalingFactor: .kilo)) { benchmark in
+    Benchmark("TrieRouter:LongPaths", configuration: .init(scalingFactor: .kilo)) { benchmark in
         let testValues = [
             "/api/v1/users/1/profile",
             "/api/v1/a/very/long/path/with/lots/of/segments",
