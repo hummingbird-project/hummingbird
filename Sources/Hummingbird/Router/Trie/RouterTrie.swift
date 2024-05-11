@@ -50,16 +50,10 @@ struct Trie: Sendable {
     var nodes = [TrieNode]()
 
     @usableFromInline
-    var allParameters = String()
+    var allStringValues = String()
 
     @usableFromInline
-    var allConstants = String()
-
-    @usableFromInline
-    var parameters = [Substring]()
-
-    @usableFromInline
-    var constants = [Substring]()
+    var stringValues = [Substring]()
 
     @usableFromInline
     init() {}

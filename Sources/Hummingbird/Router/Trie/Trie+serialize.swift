@@ -27,55 +27,41 @@ extension RouterTrie {
 
         let token: TrieToken
 
-        func setConstant(_ constant: Substring) -> UInt32 {
-            if let index = trie.constants.firstIndex(of: constant) {
+        func setStringValue(_ constant: Substring) -> UInt32 {
+            if let index = trie.stringValues.firstIndex(of: constant) {
                 return UInt32(index)
             } else {
-                let startIndex = trie.allConstants.endIndex
-                trie.allConstants.append(contentsOf: constant)
-                let endIndex = trie.allConstants.endIndex
+                let startIndex = trie.allStringValues.endIndex
+                trie.allStringValues.append(contentsOf: constant)
+                let endIndex = trie.allStringValues.endIndex
 
-                let index = trie.constants.count
-                trie.constants.append(trie.allConstants[startIndex ..< endIndex])
-                return UInt32(index)
-            }
-        }
-
-        func setParameter(_ parameter: Substring) -> UInt32 {
-            if let index = trie.parameters.firstIndex(of: parameter) {
-                return UInt32(index)
-            } else {
-                let startIndex = trie.allParameters.endIndex
-                trie.allParameters.append(contentsOf: parameter)
-                let endIndex = trie.allParameters.endIndex
-
-                let index = trie.parameters.count
-                trie.parameters.append(trie.allParameters[startIndex ..< endIndex])
+                let index = trie.stringValues.count
+                trie.stringValues.append(trie.allStringValues[startIndex ..< endIndex])
                 return UInt32(index)
             }
         }
 
         switch node.key {
         case .path(let path):
-            token = .path(constantIndex: setConstant(path))
+            token = .path(constantIndex: setStringValue(path))
         case .capture(let parameterName):
-            token = .capture(parameterIndex: setParameter(parameterName))
+            token = .capture(parameterIndex: setStringValue(parameterName))
         case .prefixCapture(suffix: let suffix, parameter: let parameterName):
             token = .prefixCapture(
-                parameterIndex: setParameter(parameterName),
-                suffixIndex: setConstant(suffix)
+                parameterIndex: setStringValue(parameterName),
+                suffixIndex: setStringValue(suffix)
             )
         case .suffixCapture(prefix: let prefix, parameter: let parameterName):
             token = .suffixCapture(
-                prefixIndex: setConstant(prefix),
-                parameterIndex: setParameter(parameterName)
+                prefixIndex: setStringValue(prefix),
+                parameterIndex: setStringValue(parameterName)
             )
         case .wildcard:
             token = .wildcard
         case .prefixWildcard(let suffix):
-            token = .prefixWildcard(suffixIndex: setConstant(suffix))
+            token = .prefixWildcard(suffixIndex: setStringValue(suffix))
         case .suffixWildcard(let prefix):
-            token = .suffixWildcard(prefixIndex: setConstant(prefix))
+            token = .suffixWildcard(prefixIndex: setStringValue(prefix))
         case .recursiveWildcard:
             token = .recursiveWildcard
         case .null:

@@ -96,27 +96,27 @@ extension RouterTrie {
         switch node.token {
         case .path(let constant):
             // The current node is a constant
-            if trie.constants[Int(constant)] == component {
+            if trie.stringValues[Int(constant)] == component {
                 return .match
             }
 
             return .mismatch
         case .capture(let parameter):
-            parameters[trie.parameters[Int(parameter)]] = component
+            parameters[trie.stringValues[Int(parameter)]] = component
             return .match
         case .prefixCapture(let parameter, let suffix):
-            let suffix = trie.constants[Int(suffix)]
+            let suffix = trie.stringValues[Int(suffix)]
 
             if component.hasSuffix(suffix) {
-                parameters[trie.parameters[Int(parameter)]] = component.dropLast(suffix.count)
+                parameters[trie.stringValues[Int(parameter)]] = component.dropLast(suffix.count)
                 return .match
             }
 
             return .mismatch
         case .suffixCapture(let prefix, let parameter):
-            let prefix = trie.constants[Int(prefix)]
+            let prefix = trie.stringValues[Int(prefix)]
             if component.hasPrefix(prefix) {
-                parameters[trie.parameters[Int(parameter)]] = component.dropFirst(prefix.count)
+                parameters[trie.stringValues[Int(parameter)]] = component.dropFirst(prefix.count)
                 return .match
             }
 
@@ -125,13 +125,13 @@ extension RouterTrie {
             // Always matches, descend
             return .match
         case .prefixWildcard(let suffix):
-            if component.hasSuffix(trie.constants[Int(suffix)]) {
+            if component.hasSuffix(trie.stringValues[Int(suffix)]) {
                 return .match
             }
 
             return .mismatch
         case .suffixWildcard(let prefix):
-            if component.hasPrefix(trie.constants[Int(prefix)]) {
+            if component.hasPrefix(trie.stringValues[Int(prefix)]) {
                 return .match
             }
 

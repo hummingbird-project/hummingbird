@@ -15,7 +15,7 @@
 import Benchmark
 @_spi(Internal) import Hummingbird
 
-func routerTrieRouterBenchmarks() {
+func trieRouterBenchmarks() {
     var trie: RouterTrie<String>!
     Benchmark("RouterTrieRouter", configuration: .init(scalingFactor: .kilo)) { benchmark in
         let testValues = [
