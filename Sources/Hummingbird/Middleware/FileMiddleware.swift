@@ -291,10 +291,3 @@ extension FileMiddleware {
         }
     }
 }
-
-extension Sequence<UInt8> {
-    /// return a hexEncoded string buffer from an array of bytes
-    func hexDigest() -> String {
-        return self.map { String(format: "%02x", $0) }.joined(separator: "")
-    }
-}
