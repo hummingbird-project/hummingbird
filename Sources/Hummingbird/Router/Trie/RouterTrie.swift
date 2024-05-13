@@ -56,15 +56,16 @@ struct Trie: Sendable {
     init() {}
 }
 
-@usableFromInline
-internal final class RouterTrie<Value: Sendable>: Sendable {
+@_documentation(visibility: internal)
+public final class RouterTrie<Value: Sendable>: Sendable {
     @usableFromInline
     let trie: Trie
 
     @usableFromInline
     let values: [Value?]
 
-    internal init(base: RouterPathTrieBuilder<Value>) {
+    @_documentation(visibility: internal)
+    public init(base: RouterPathTrieBuilder<Value>) {
         var trie = Trie()
         var values: [Value?] = []
 

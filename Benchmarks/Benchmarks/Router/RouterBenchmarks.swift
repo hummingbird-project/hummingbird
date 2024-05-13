@@ -17,7 +17,7 @@ import HTTPTypes
 import Hummingbird
 import NIOEmbedded
 import NIOHTTPTypes
-@_spi(Internal) import HummingbirdCore
+import HummingbirdCore
 import Logging
 import NIOCore
 import NIOPosix

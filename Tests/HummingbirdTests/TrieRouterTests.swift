@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-@_spi(Internal) import Hummingbird
+@testable import Hummingbird
 import XCTest
 
 class TrieRouterTests: XCTestCase {
