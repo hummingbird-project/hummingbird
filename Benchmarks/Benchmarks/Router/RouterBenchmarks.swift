@@ -15,11 +15,11 @@
 import Benchmark
 import HTTPTypes
 import Hummingbird
-import NIOEmbedded
-import NIOHTTPTypes
 import HummingbirdCore
 import Logging
 import NIOCore
+import NIOEmbedded
+import NIOHTTPTypes
 import NIOPosix
 
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
