@@ -14,53 +14,64 @@
 
 import NIOCore
 
-extension BinaryTrie {
+extension RouterTrie {
+    @inlinable
     static func serialize(
         _ node: RouterPathTrieBuilder<Value>.Node,
-        trie: inout ByteBuffer,
+        trie: inout Trie,
         values: inout [Value?]
     ) {
-        let binaryTrieNodeIndex = trie.writerIndex
-        trie.reserveBinaryTrieNode()
         // Index where `value` is located
-        let index = UInt16(values.count)
+        let valueIndex = values.count
         values.append(node.value)
 
-        let token: BinaryTrieTokenKind
+        let token: TrieToken
+
+        func setStringValue(_ constant: Substring) -> UInt32 {
+            if let index = trie.stringValues.firstIndex(of: constant) {
+                return UInt32(index)
+            } else {
+                let index = trie.stringValues.count
+                trie.stringValues.append(constant)
+                return UInt32(index)
+            }
+        }
+
         switch node.key {
         case .path(let path):
-            token = .path
-            // Serialize the path constant
-            trie.writeLengthPrefixedString(path, as: Integer.self)
-        case .capture(let parameter):
-            token = .capture
-            // Serialize the parameter
-            trie.writeLengthPrefixedString(parameter, as: Integer.self)
-        case .prefixCapture(suffix: let suffix, parameter: let parameter):
-            token = .prefixCapture
-            // Serialize the suffix and parameter
-            trie.writeLengthPrefixedString(suffix, as: Integer.self)
-            trie.writeLengthPrefixedString(parameter, as: Integer.self)
-        case .suffixCapture(prefix: let prefix, parameter: let parameter):
-            token = .suffixCapture
-            // Serialize the prefix and parameter
-            trie.writeLengthPrefixedString(prefix, as: Integer.self)
-            trie.writeLengthPrefixedString(parameter, as: Integer.self)
+            token = .path(constantIndex: setStringValue(path))
+        case .capture(let parameterName):
+            token = .capture(parameterIndex: setStringValue(parameterName))
+        case .prefixCapture(suffix: let suffix, parameter: let parameterName):
+            token = .prefixCapture(
+                parameterIndex: setStringValue(parameterName),
+                suffixIndex: setStringValue(suffix)
+            )
+        case .suffixCapture(prefix: let prefix, parameter: let parameterName):
+            token = .suffixCapture(
+                prefixIndex: setStringValue(prefix),
+                parameterIndex: setStringValue(parameterName)
+            )
         case .wildcard:
             token = .wildcard
         case .prefixWildcard(let suffix):
-            token = .prefixWildcard
-            // Serialize the suffix
-            trie.writeLengthPrefixedString(suffix, as: Integer.self)
+            token = .prefixWildcard(suffixIndex: setStringValue(suffix))
         case .suffixWildcard(let prefix):
-            token = .suffixWildcard
-            // Serialize the prefix
-            trie.writeLengthPrefixedString(prefix, as: Integer.self)
+            token = .suffixWildcard(prefixIndex: setStringValue(prefix))
         case .recursiveWildcard:
             token = .recursiveWildcard
         case .null:
             token = .null
         }
+
+        let nodeIndex = trie.nodes.count
+        trie.nodes.append(
+            TrieNode(
+                valueIndex: valueIndex,
+                token: token,
+                nextSiblingNodeIndex: .max
+            )
+        )
 
         self.serializeChildren(
             of: node,
@@ -68,18 +79,13 @@ extension BinaryTrie {
             values: &values
         )
 
-        let deadEndIndex = trie.writerIndex
-        // The last node in a trie is always a deadEnd token. We reserve space for it so we
-        // get the correct writer index for the next sibling
-        trie.reserveBinaryTrieNode()
-        trie.setBinaryTrieNode(.init(index: 0, token: .deadEnd, nextSiblingNodeIndex: UInt32(trie.writerIndex)), at: deadEndIndex)
-        // Write trie node
-        trie.setBinaryTrieNode(.init(index: index, token: token, nextSiblingNodeIndex: UInt32(trie.writerIndex)), at: binaryTrieNodeIndex)
+        trie.nodes[nodeIndex].nextSiblingNodeIndex = trie.nodes.count
     }
 
+    @inlinable
     static func serializeChildren(
         of node: RouterPathTrieBuilder<Value>.Node,
-        trie: inout ByteBuffer,
+        trie: inout Trie,
         values: inout [Value?]
     ) {
         // Serialize the child nodes in order of priority
@@ -89,13 +95,15 @@ extension BinaryTrie {
         }
     }
 
-    private static func highestPriorityFirst(lhs: RouterPathTrieBuilder<Value>.Node, rhs: RouterPathTrieBuilder<Value>.Node) -> Bool {
+    @inlinable
+    internal static func highestPriorityFirst(lhs: RouterPathTrieBuilder<Value>.Node, rhs: RouterPathTrieBuilder<Value>.Node) -> Bool {
         lhs.key.priority > rhs.key.priority
     }
 }
 
 extension RouterPath.Element {
-    fileprivate var priority: Int {
+    @usableFromInline
+    var priority: Int {
         switch self {
         case .prefixCapture, .suffixCapture:
             // Most specific

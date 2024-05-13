@@ -16,6 +16,7 @@ import HummingbirdCore
 
 /// URI Path Trie Builder
 @_spi(Internal) public struct RouterPathTrieBuilder<Value: Sendable> {
+    @usableFromInline
     var root: Node
 
     public init() {
@@ -40,7 +41,7 @@ import HummingbirdCore
         }
     }
 
-    @_spi(Internal) public func build() -> BinaryTrie<Value> {
+    @_spi(Internal) public func build() -> RouterTrie<Value> {
         .init(base: self)
     }
 
@@ -50,8 +51,13 @@ import HummingbirdCore
 
     /// Trie Node. Each node represents one component of a URI path
     @_spi(Internal) public final class Node {
+        @usableFromInline
         let key: RouterPath.Element
+
+        @usableFromInline
         var children: [Node]
+
+        @usableFromInline
         var value: Value?
 
         init(key: RouterPath.Element, output: Value?) {
