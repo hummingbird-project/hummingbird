@@ -28,7 +28,9 @@ func trieRouterBenchmarks() {
         benchmark.startMeasurement()
 
         for _ in benchmark.scaledIterations {
-            blackHole(testValues.map { trie.resolve($0) })
+            for testValue in testValues {
+                blackHole(trie.resolve(testValue))
+            }
         }
     } setup: {
         let trieBuilder = RouterPathTrieBuilder<String>()
@@ -53,7 +55,9 @@ func trieRouterBenchmarks() {
         benchmark.startMeasurement()
 
         for _ in benchmark.scaledIterations {
-            blackHole(testValues.map { trie2.resolve($0) })
+            for testValue in testValues {
+                blackHole(trie2.resolve(testValue))
+            }
         }
     } setup: {
         let trieBuilder = RouterPathTrieBuilder<String>()
@@ -73,7 +77,9 @@ func trieRouterBenchmarks() {
         benchmark.startMeasurement()
 
         for _ in benchmark.scaledIterations {
-            blackHole(testValues.map { trie3.resolve($0) })
+            for testValue in testValues {
+                blackHole(trie3.resolve(testValue))
+            }
         }
     } setup: {
         let trieBuilder = RouterPathTrieBuilder<String>()
