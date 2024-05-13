@@ -33,13 +33,12 @@ extension DecodableWithUserInfoConfiguration {
 }
 
 extension CodingUserInfoKey {
-    /// Coding UserInfo key used to store DecodableWithUserInfoConfiguration configuration
+    /// ``CodingUserInfo`` key used to store ``DecodableWithUserInfoConfiguration`` configuration
     static var configuration: Self { return .init(rawValue: "_configuration_")! }
 }
 
 extension JSONDecoder {
-    /// Version of JSONDecoder that sets up configuration userInfo for the DecodableWithUserInfoConfiguration
-    /// protocol
+    /// Version of ``JSONDecoder`` that sets up configuration userInfo for the ``DecodableWithUserInfoConfiguration`` protocol
     func decode<T>(
         _ type: T.Type,
         from buffer: ByteBuffer,

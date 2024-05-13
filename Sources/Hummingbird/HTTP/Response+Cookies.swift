@@ -15,16 +15,14 @@
 import HummingbirdCore
 
 extension Response {
-    /// Set cookie on response
+    /// Sets a ``Cookie`` on the ``Response``
     public mutating func setCookie(_ cookie: Cookie) {
         self.headers[values: .setCookie].append(cookie.description)
     }
 }
 
 extension EditedResponse {
-    /// Set cookie on reponse patch
-    ///
-    /// Can be accessed via `request.response.setCookie(myCookie)`
+    /// Set ``Cookie`` on an ``EditedResponse``
     public mutating func setCookie(_ cookie: Cookie) {
         self.headers[values: .setCookie].append(cookie.description)
     }

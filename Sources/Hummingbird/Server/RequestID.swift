@@ -14,7 +14,7 @@
 
 import Atomics
 
-/// Generate Unique ID for each request
+/// A Unique ID, generated for each request.
 public struct RequestID: CustomStringConvertible, Sendable {
     let low: UInt64
 

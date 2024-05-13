@@ -15,7 +15,7 @@
 import HTTPTypes
 import NIOCore
 
-/// Conform to `RouterMethods` to add standard router verb (get, post ...) methods
+/// Conform to ``RouterMethods`` to add standard methods for HTTP verbs (get, post ...)
 public protocol RouterMethods<Context> {
     associatedtype Context: BaseRequestContext
 
@@ -48,7 +48,7 @@ extension RouterMethods {
         return self
     }
 
-    /// GET path for async closure returning type conforming to ResponseGenerator
+    /// GET path for async closure returning type conforming to ``ResponseGenerator``
     @discardableResult public func get(
         _ path: String = "",
         use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
@@ -56,7 +56,7 @@ extension RouterMethods {
         return self.on(path, method: .get, use: handler)
     }
 
-    /// PUT path for async closure returning type conforming to ResponseGenerator
+    /// PUT path for async closure returning type conforming to ``ResponseGenerator``
     @discardableResult public func put(
         _ path: String = "",
         use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
@@ -64,7 +64,7 @@ extension RouterMethods {
         return self.on(path, method: .put, use: handler)
     }
 
-    /// DELETE path for async closure returning type conforming to ResponseGenerator
+    /// DELETE path for async closure returning type conforming to ``ResponseGenerator``
     @discardableResult public func delete(
         _ path: String = "",
         use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
@@ -72,7 +72,7 @@ extension RouterMethods {
         return self.on(path, method: .delete, use: handler)
     }
 
-    /// HEAD path for async closure returning type conforming to ResponseGenerator
+    /// HEAD path for async closure returning type conforming to ``ResponseGenerator``
     @discardableResult public func head(
         _ path: String = "",
         use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
@@ -80,7 +80,7 @@ extension RouterMethods {
         return self.on(path, method: .head, use: handler)
     }
 
-    /// POST path for async closure returning type conforming to ResponseGenerator
+    /// POST path for async closure returning type conforming to ``ResponseGenerator``
     @discardableResult public func post(
         _ path: String = "",
         use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
@@ -88,7 +88,7 @@ extension RouterMethods {
         return self.on(path, method: .post, use: handler)
     }
 
-    /// PATCH path for async closure returning type conforming to ResponseGenerator
+    /// PATCH path for async closure returning type conforming to ``ResponseGenerator``
     @discardableResult public func patch(
         _ path: String = "",
         use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator

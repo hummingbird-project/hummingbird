@@ -58,8 +58,9 @@ public struct CoreRequestContext: Sendable {
     }
 }
 
-/// Protocol that all request contexts should conform to. Holds data associated with
-/// a request. Provides context for request processing
+/// Protocol that all request contexts must conform to. Holds data associated with
+/// a request. Provides context for request processing, such as the authentication state. Is passed around through
+/// ``RouterMiddleware``, which can refine the context with extra information.
 public protocol BaseRequestContext: Sendable {
     associatedtype Decoder: RequestDecoder = JSONDecoder
     associatedtype Encoder: ResponseEncoder = JSONEncoder
@@ -78,23 +79,23 @@ public protocol BaseRequestContext: Sendable {
 extension BaseRequestContext {
     @inlinable
     public var allocator: ByteBufferAllocator { coreContext.allocator }
-    /// Logger to use with Request
+    /// ``Logger`` to use with ``Request``
     @inlinable
     public var logger: Logger {
         get { coreContext.logger }
         set { coreContext.logger = newValue }
     }
 
-    /// maxUploadSize
+    /// The maximum amount of bytes that a user is allowed to upload through a ``RequestBody``.
     @inlinable
     public var maxUploadSize: Int { 2 * 1024 * 1024 }
     /// Endpoint path
     @inlinable
     public var endpointPath: String? { coreContext.endpointPath.value }
-    /// Parameters extracted from URI
+    /// Parameters extracted from ``URI``
     @inlinable
     public var parameters: Parameters { coreContext.parameters }
-    /// Request ID, extracted from Logger
+    /// Request ID, extracted from ``Logger``
     @inlinable
     public var id: String { self.logger[metadataKey: "hb_id"]!.description }
 }
@@ -124,7 +125,7 @@ public protocol RequestContext: BaseRequestContext {
     init(channel: Channel, logger: Logger)
 }
 
-/// Implementation of a basic request context that supports everything the Hummingbird library needs
+/// Implementation of a ``RequestContext`` that supports everything the Hummingbird library needs, but doesn't  add any additional information.
 public struct BasicRequestContext: RequestContext {
     /// core context
     public var coreContext: CoreRequestContext

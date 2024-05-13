@@ -47,10 +47,10 @@ public protocol PersistDriver: Service {
 }
 
 extension PersistDriver {
-    /// default implemenation of shutdown()
+    /// Default implemenation of shutdown()
     public func shutdown() async throws {}
 
-    /// create key/value pair. If key already exist throw `PersistError.duplicate` error
+    /// Creates a key/value pair. If key already exist throw `PersistError.duplicate` error
     /// - Parameters:
     ///   - key: Key to store value against
     ///   - value: Codable value to store
@@ -58,7 +58,7 @@ extension PersistDriver {
         try await self.create(key: key, value: value, expires: nil)
     }
 
-    /// set value for key. If value already exists overwrite it
+    /// Set value for key. If value already exists overwrite it
     /// - Parameters:
     ///   - key: Key to store value against
     ///   - value: Codable value to store

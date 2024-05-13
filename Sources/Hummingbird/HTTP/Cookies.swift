@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// Structure holding an array of cookies
+/// Structure holding an array of ``Cookie``s
 ///
-/// Cookies can be accessed from request via `Request.cookies`.
+/// Cookies can be accessed from request via ``Request/cookies``.
 public struct Cookies: Sendable {
     /// Construct cookies accessor from `Request`
     /// - Parameter request: request to get cookies from

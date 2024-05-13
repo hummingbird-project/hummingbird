@@ -22,23 +22,23 @@ import Foundation
 public struct URLEncodedFormDecoder: Sendable {
     /// The strategy to use for decoding `Date` values.
     public enum DateDecodingStrategy: Sendable {
-        /// Defer to `Date` for decoding. This is the default strategy.
+        /// Defer to ``Date`` for decoding. This is the default strategy.
         case deferredToDate
 
-        /// Decode the `Date` as a UNIX timestamp from a JSON number.
+        /// Decode the ``Date`` as a UNIX timestamp from a JSON number.
         case secondsSince1970
 
-        /// Decode the `Date` as UNIX millisecond timestamp from a JSON number.
+        /// Decode the ``Date`` as UNIX millisecond timestamp from a JSON number.
         case millisecondsSince1970
 
-        /// Decode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
+        /// Decode the ``Date`` as an ISO-8601-formatted string (in RFC 3339 format).
         @available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
         case iso8601
 
-        /// Decode the `Date` as a string parsed by the given formatter.
+        /// Decode the ``Date`` as a string parsed by the given ``DateFormatter``.
         case formatted(DateFormatter)
 
-        /// Decode the `Date` as a custom value encoded by the given closure.
+        /// Decode the ``Date`` as a custom value encoded by the given closure.
         case custom(@Sendable (_ decoder: Decoder) throws -> Date)
     }
 

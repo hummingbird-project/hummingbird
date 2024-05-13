@@ -15,7 +15,7 @@
 import HTTPTypes
 import NIOCore
 
-/// Middleware implementing Cross-Origin Resource Sharing (CORS) headers.
+/// ``RouterMiddleware`` implementing Cross-Origin Resource Sharing (CORS) headers.
 ///
 /// If request has "origin" header then generate CORS headers. If method is OPTIONS
 /// then return an empty body with all the standard CORS headers otherwise send

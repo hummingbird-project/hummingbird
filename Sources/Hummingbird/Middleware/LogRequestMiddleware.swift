@@ -15,7 +15,7 @@
 import HTTPTypes
 import Logging
 
-/// Middleware outputting to log for every call to server
+/// ``RouterMiddleware`` outputting every call to server as a log using ``BaseRequestContext/logger``
 public struct LogRequestsMiddleware<Context: BaseRequestContext>: RouterMiddleware {
     /// Header filter
     public struct HeaderFilter: Sendable, ExpressibleByArrayLiteral {

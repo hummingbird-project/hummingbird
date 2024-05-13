@@ -18,10 +18,10 @@ import struct Foundation.Date
 import NIOFoundationCompat
 
 extension JSONEncoder: ResponseEncoder {
-    /// Extend JSONEncoder to support encoding `Response`'s. Sets body and header values
+    /// Extend ``JSONEncoder`` to support encoding ``Response``'s. Sets the ``ResponseBody`` and ``HTTPFields``
     /// - Parameters:
     ///   - value: Value to encode
-    ///   - request: Request used to generate response
+    ///   - request: ``Request`` used to generate the ``Response``
     public func encode(_ value: some Encodable, from request: Request, context: some BaseRequestContext) throws -> Response {
         var buffer = context.allocator.buffer(capacity: 0)
         let data = try self.encode(value)
@@ -35,17 +35,17 @@ extension JSONEncoder: ResponseEncoder {
 }
 
 extension JSONDecoder: RequestDecoder {
-    /// Extend JSONDecoder to decode from `Request`.
+    /// Extend ``JSONDecoder`` to decode from ``Request``.
     /// - Parameters:
-    ///   - type: Type to decode
-    ///   - request: Request to decode from
+    ///   - type: ``Decodable`` type  to decode
+    ///   - request: ``Request`` to decode from
     public func decode<T: Decodable>(_ type: T.Type, from request: Request, context: some BaseRequestContext) async throws -> T {
         let buffer = try await request.body.collect(upTo: context.maxUploadSize)
         return try self.decode(T.self, from: buffer)
     }
 }
 
-/// `RequestDecoder` and `ResponseEncoder` both require conformance to `Sendable`. Given
+/// ``RequestDecoder`` and ``ResponseEncoder`` both require conformance to `Sendable`. Given
 /// `JSONEncoder`` and `JSONDecoder`` conform to Sendable in macOS 13+ I think I can just
 /// back date the conformance to all versions of Swift, macOS we support
 #if hasFeature(RetroactiveAttribute)

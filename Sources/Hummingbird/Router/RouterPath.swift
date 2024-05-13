@@ -12,8 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// Split router path into components
+/// An HTTP path, representing a resource, composed of multiple ``RouterPath/Element``s.
 public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConvertible {
+    /// A single path component for matching by a ``Router``
     public enum Element: Equatable, Sendable, CustomStringConvertible {
         case path(Substring)
         case capture(Substring)
