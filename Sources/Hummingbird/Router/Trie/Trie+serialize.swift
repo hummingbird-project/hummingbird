@@ -31,12 +31,8 @@ extension RouterTrie {
             if let index = trie.stringValues.firstIndex(of: constant) {
                 return UInt32(index)
             } else {
-                let startIndex = trie.allStringValues.endIndex
-                trie.allStringValues.append(contentsOf: constant)
-                let endIndex = trie.allStringValues.endIndex
-
                 let index = trie.stringValues.count
-                trie.stringValues.append(trie.allStringValues[startIndex ..< endIndex])
+                trie.stringValues.append(constant)
                 return UInt32(index)
             }
         }

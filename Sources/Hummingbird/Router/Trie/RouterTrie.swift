@@ -50,9 +50,6 @@ struct Trie: Sendable {
     var nodes = [TrieNode]()
 
     @usableFromInline
-    var allStringValues = String()
-
-    @usableFromInline
     var stringValues = [Substring]()
 
     @usableFromInline

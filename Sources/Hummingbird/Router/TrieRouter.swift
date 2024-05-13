@@ -53,7 +53,7 @@ import HummingbirdCore
     @_spi(Internal) public final class Node {
         @usableFromInline
         let key: RouterPath.Element
-        
+
         @usableFromInline
         var children: [Node]
 
