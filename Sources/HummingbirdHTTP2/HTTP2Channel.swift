@@ -105,7 +105,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
     ///   - logger: Logger to use while processing messages
     public func handle(value: Value, logger: Logger) async {
         do {
-            let channel = try await value.negociatedHTTPVersion.get()
+            let channel = try await value.negotiatedHTTPVersion.get()
             switch channel {
             case .http1_1(let http1):
                 await handleHTTP(asyncChannel: http1, logger: logger)
