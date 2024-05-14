@@ -16,7 +16,7 @@ import Logging
 import NIOCore
 import ServiceLifecycle
 
-/// HTTPServer child channel setup protocol
+/// HTTP ``Server`` child channel setup protocol
 public protocol ServerChildChannel: Sendable {
     associatedtype Value: Sendable
 

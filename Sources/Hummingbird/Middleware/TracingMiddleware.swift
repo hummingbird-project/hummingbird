@@ -16,9 +16,9 @@ import HTTPTypes
 import NIOCore
 import Tracing
 
-/// Middleware creating Distributed Tracing spans for each request.
+/// ``RouterMiddleware`` creating Distributed Tracing spans for each request.
 ///
-/// Creates a span for each request, including attributes such as the HTTP method.
+/// Creates a ``Span`` for each request, including attributes such as the HTTP method.
 ///
 /// You may opt in to recording a specific subset of HTTP request/response header values by passing
 /// a set of header names.
@@ -32,7 +32,7 @@ public struct TracingMiddleware<Context: BaseRequestContext>: RouterMiddleware {
     /// - Parameters
     ///     - recordingHeaders: A list of HTTP header names to be recorded as span attributes. By default, no headers
     ///         are being recorded.
-    ///     - parameters: A list of static parameters added to every span. These could be the "net.host.name",
+    ///     - attributes: A list of static attributes added to every span. These could be the "net.host.name",
     ///         "net.host.port" or "http.scheme"
     public init(recordingHeaders headerNamesToRecord: some Collection<HTTPField.Name> = [], attributes: SpanAttributes? = nil) {
         self.headerNamesToRecord = Set(headerNamesToRecord.map(RecordingHeader.init))
@@ -144,7 +144,7 @@ private class SpanWrapper {
     }
 }
 
-/// ``UnsafeTransfer`` can be used to make non-`Sendable` values `Sendable`.
+/// ``UnsafeTransfer`` can be used to make non-``Sendable`` values ``Sendable``.
 /// As the name implies, the usage of this is unsafe because it disables the sendable checking of the compiler.
 /// It can be used similar to `@unsafe Sendable` but for values instead of types.
 @usableFromInline
@@ -187,7 +187,7 @@ private struct HTTPHeadersExtractor: Extractor {
 }
 
 extension Span {
-    /// Update Span attributes in a block instead of individually
+    /// Update ``Span`` attributes in a block instead of individually
     ///
     /// Updating a span attribute will involve some type of thread synchronisation
     /// primitive to avoid multiple threads updating the attributes at the same

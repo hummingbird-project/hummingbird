@@ -14,7 +14,7 @@
 
 import HTTPTypes
 
-/// Stores endpoint responders for each HTTP method
+/// Stores an endpoint ``HTTPResponder`` for each HTTP method
 struct EndpointResponders<Context: BaseRequestContext>: Sendable {
     init(path: String) {
         self.path = path

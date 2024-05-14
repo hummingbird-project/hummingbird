@@ -14,7 +14,7 @@
 
 import HTTPTypes
 
-/// protocol for encoders generating a Response
+/// Protocol for ``Encoder``s  that generate a ``Response``
 public protocol ResponseEncoder {
     /// Encode value returned by handler to request
     ///
@@ -24,7 +24,7 @@ public protocol ResponseEncoder {
     func encode(_ value: some Encodable, from request: Request, context: some BaseRequestContext) throws -> Response
 }
 
-/// protocol for decoder deserializing from a Request body
+/// Protocol for ``Decoder``s deserializing from a ``Request``'s body
 public protocol RequestDecoder {
     /// Decode type from request
     /// - Parameters:

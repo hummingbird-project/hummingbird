@@ -31,8 +31,9 @@ public struct RouterResponder<Context: BaseRequestContext>: HTTPResponder {
     }
 
     /// Respond to request by calling correct handler
-    /// - Parameter request: HTTP request
-    /// - Returns: EventLoopFuture that will be fulfilled with the Response
+    /// - Parameter request: HTTP ``Request`` to respond to
+    /// - Parameter context: Information about the circumstances of this request, such as authentication or
+    /// - Returns: The ``Response`` produced in reply to the request.
     public func respond(to request: Request, context: Context) async throws -> Response {
         let path: String
         if self.options.contains(.caseInsensitive) {

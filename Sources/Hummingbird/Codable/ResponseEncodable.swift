@@ -14,34 +14,34 @@
 
 import HummingbirdCore
 
-/// Protocol for encodable object that can generate a response. The router will encode
-/// the response using the encoder stored in `Application.encoder`.
+/// Protocol for ``Encodable`` object that can generate a ``Response``. The router will encode
+/// the response using the ``ResponseEncoder`` stored in ``BaseRequestContext/responseEncoder-90wnm``.
 public protocol ResponseEncodable: Encodable, ResponseGenerator {}
 
-/// Protocol for codable object that can generate a response
+/// Protocol for ``Codable`` object that can generate a ``Response``
 public protocol ResponseCodable: ResponseEncodable, Decodable {}
 
-/// Extend ResponseEncodable to conform to ResponseGenerator
+/// Extend ``ResponseEncodable`` to conform to ``ResponseGenerator``
 extension ResponseEncodable {
     public func response(from request: Request, context: some BaseRequestContext) throws -> Response {
         return try context.responseEncoder.encode(self, from: request, context: context)
     }
 }
 
-/// Extend Array to conform to ResponseGenerator
+/// Extend Array to conform to ``ResponseGenerator``
 extension Array: ResponseGenerator where Element: Encodable {}
 
-/// Extend Array to conform to ResponseEncodable
+/// Extend Array to conform to ``ResponseEncodable``
 extension Array: ResponseEncodable where Element: Encodable {
     public func response(from request: Request, context: some BaseRequestContext) throws -> Response {
         return try context.responseEncoder.encode(self, from: request, context: context)
     }
 }
 
-/// Extend Dictionary to conform to ResponseGenerator
+/// Extend Dictionary to conform to ``ResponseGenerator``
 extension Dictionary: ResponseGenerator where Key: Encodable, Value: Encodable {}
 
-/// Extend Array to conform to ResponseEncodable
+/// Extend Array to conform to ``ResponseEncodable``
 extension Dictionary: ResponseEncodable where Key: Encodable, Value: Encodable {
     public func response(from request: Request, context: some BaseRequestContext) throws -> Response {
         return try context.responseEncoder.encode(self, from: request, context: context)

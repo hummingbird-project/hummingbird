@@ -144,7 +144,7 @@ extension ApplicationProtocol {
     }
 }
 
-/// Application class. Brings together all the components of Hummingbird together
+/// A Web Application. Brings together all the components of Hummingbird together.
 ///
 /// ```
 /// let router = Router()
@@ -155,7 +155,7 @@ extension ApplicationProtocol {
 /// let app = Application(responder: router.buildResponder())
 /// try await app.runService()
 /// ```
-/// Editing the application setup after calling `runService` will produce undefined behaviour.
+/// Editing the application setup after calling ``runService`` will produce undefined behaviour.
 public struct Application<Responder: HTTPResponder>: ApplicationProtocol where Responder.Context: RequestContext {
     public typealias Context = Responder.Context
     public typealias Responder = Responder

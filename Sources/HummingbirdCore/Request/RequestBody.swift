@@ -17,9 +17,9 @@ import NIOConcurrencyHelpers
 import NIOCore
 import NIOHTTPTypes
 
-/// Request Body
+/// The body of an HTTP ``Request``.
 ///
-/// Can be either a stream of ByteBuffers or a single ByteBuffer
+/// This can be represented as one ``ByteBuffer`` or a stream of ByteBuffers. The default Hummingbird HTTP ``Server``s start out by representing bodies as a stream.
 public struct RequestBody: Sendable, AsyncSequence {
     @usableFromInline
     internal enum _Backing: Sendable {
@@ -49,7 +49,7 @@ public struct RequestBody: Sendable, AsyncSequence {
     }
 }
 
-/// AsyncSequence protocol requirements
+/// ``AsyncSequence`` protocol requirements.
 extension RequestBody {
     public typealias Element = ByteBuffer
 
@@ -79,7 +79,7 @@ extension RequestBody {
     }
 }
 
-/// Extend RequestBody to create request body streams backed by `NIOThrowingAsyncSequenceProducer`.
+/// Extend ``RequestBody`` to create request body streams backed by ``NIOThrowingAsyncSequenceProducer``.
 extension RequestBody {
     @usableFromInline
     typealias Producer = NIOThrowingAsyncSequenceProducer<
@@ -143,7 +143,7 @@ extension RequestBody {
             self.waitForProduceMore = .init(false)
         }
 
-        /// Yields the element to the inbound stream.
+        /// Yields the element, to the inbound stream.
         ///
         /// This function implements back pressure in that it will wait if the producer
         /// sequence indicates the Source should produce more ByteBuffers.
@@ -163,13 +163,13 @@ extension RequestBody {
             }
         }
 
-        /// Finished the inbound stream.
+        /// Finishes the inbound stream.
         @inlinable
         public func finish() {
             self.source.finish()
         }
 
-        /// Finished the inbound stream.
+        /// Finishes the inbound stream with an error.
         ///
         /// - Parameter error: The error to throw
         @inlinable
@@ -179,7 +179,7 @@ extension RequestBody {
     }
 
     ///  Make a new ``RequestBody`` stream
-    /// - Returns: The new `RequestBody` and a source to yield ByteBuffers to the `RequestBody`.
+    /// - Returns: The new ``RequestBody`` and a source to yield ByteBuffers to the ``RequestBody``.
     @inlinable
     public static func makeStream() -> (RequestBody, Source) {
         let delegate = Delegate()
@@ -192,7 +192,7 @@ extension RequestBody {
     }
 }
 
-/// Request body that is a stream of ByteBuffers sourced from a NIOAsyncChannelInboundStream.
+/// ``RequestBody`` that is a stream of ``ByteBuffer``s sourced from a ``NIOAsyncChannelInboundStream``.
 ///
 /// This is a unicast async sequence that allows a single iterator to be created.
 @usableFromInline
@@ -260,7 +260,7 @@ final class NIOAsyncChannelRequestBody: Sendable, AsyncSequence {
     }
 }
 
-/// Request body stream that is a single ByteBuffer
+/// Request body stream that is a single ``ByteBuffer``
 ///
 /// This is used when converting a ByteBuffer back to a stream of ByteBuffers
 @usableFromInline

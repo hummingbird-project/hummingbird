@@ -22,7 +22,7 @@ public final class RouteCollection<Context: BaseRequestContext>: RouterMethods {
         self.middlewares = .init()
     }
 
-    /// Add responder to call when path and method are matched
+    /// Add ``HTTPResponder`` to call when path and method are matched
     ///
     /// - Parameters:
     ///   - path: Path to match
@@ -45,7 +45,7 @@ public final class RouteCollection<Context: BaseRequestContext>: RouterMethods {
         return .init(path: path, router: self)
     }
 
-    /// Add middleware to RouteCollection
+    /// Add ``RouterMiddlewares`` to ``RouteCollection``
     @discardableResult public func add(middleware: any RouterMiddleware<Context>) -> Self {
         self.middlewares.add(middleware)
         return self

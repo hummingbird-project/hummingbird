@@ -16,10 +16,10 @@ import HTTPTypes
 import HummingbirdCore
 import NIOCore
 
-/// Used to group together routes under a single path. Additional middleware can be added to the endpoint and each route can add a
+/// Used to group together routes under a single path. Additional ``RouterMiddleware`` can be added to the endpoint and each route can add a
 /// suffix to the endpoint path
 ///
-/// The code below creates an `RouterGroup`with path "todos" and adds GET and PUT routes on "todos" and adds GET, PUT and
+/// The code below creates an ``RouterGroup``with path "todos" and adds GET and PUT routes on "todos" and adds GET, PUT and
 /// DELETE routes on "todos/:id" where id is the identifier for the todo
 /// ```
 /// app.router
@@ -57,7 +57,7 @@ public struct RouterGroup<Context: BaseRequestContext>: RouterMethods {
         )
     }
 
-    /// Add responder to call when path and method are matched
+    /// Adds an ``HTTPResponder`` to call when path and method are matched
     ///
     /// - Parameters:
     ///   - path: Path to match

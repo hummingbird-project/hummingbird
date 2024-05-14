@@ -16,12 +16,12 @@ import HTTPTypes
 import HummingbirdCore
 import NIOCore
 
-/// Create rules for routing requests and then create `Responder` that will follow these rules.
+/// Create rules for routing requests and then create ``HTTPResponder`` that will follow these rules.
 ///
-/// `Router` requires an implementation of  the `on(path:method:use)` functions but because it
-/// also conforms to `RouterMethods` it is also possible to call the method specific functions `get`, `put`,
-/// `head`, `post` and `patch`.  The route handler closures all return objects conforming to
-/// `ResponseGenerator`.  This allows us to support routes which return a multitude of types eg
+/// `Router` requires an implementation of  the ``on(_:method:use:)`` functions but because it
+/// also conforms to `RouterMethods` it is also possible to call the method specific functions ``get(_:use:)``, ``put(_:use:)``,
+/// ``head(_:use:)``, ``post(_:use:)`` and ``patch(_:use:)``.  The route handler closures all return objects conforming to
+/// ``ResponseGenerator``.  This allows us to support routes which return a multitude of types eg
 /// ```
 /// router.get("string") { _, _ -> String in
 ///     return "string"
@@ -34,14 +34,14 @@ import NIOCore
 /// }
 /// ```
 ///
-/// The default `Router` setup in `Application` is the `TrieRouter` . This uses a
-/// trie to partition all the routes for faster access. It also supports wildcards and parameter extraction
+/// The default ``Router`` setup in ``Application`` is the ``RouterTrie`` . This uses a
+/// trie to partition all the routes for faster access. It also supports wildcards and ``Parameters`` extraction
 /// ```
 /// router.get("user/*", use: anyUser)
 /// router.get("user/:id", use: userWithId)
 /// ```
 /// Both of these match routes which start with "/user" and the next path segment being anything.
-/// The second version extracts the path segment out and adds it to `Request.parameters` with the
+/// The second version extracts the path segment out and adds it to ``RequestContext/parameters`` with the
 /// key "id".
 public final class Router<Context: BaseRequestContext>: RouterMethods, HTTPResponderBuilder {
     var trie: RouterPathTrieBuilder<EndpointResponders<Context>>
@@ -105,14 +105,14 @@ struct NotFoundResponder<Context: BaseRequestContext>: HTTPResponder {
     }
 }
 
-/// A type that has a single method to build a HTTPResponder
+/// A type that has a single method to build a ``HTTPResponder``
 public protocol HTTPResponderBuilder {
     associatedtype Responder: HTTPResponder
     /// build a responder
     func buildResponder() -> Responder
 }
 
-/// Router Options
+/// Router Options, allowing customization of router behaviour
 public struct RouterOptions: OptionSet, Sendable {
     public let rawValue: Int
 
@@ -122,6 +122,7 @@ public struct RouterOptions: OptionSet, Sendable {
 
     /// Router path comparisons will be case insensitive
     public static var caseInsensitive: Self { .init(rawValue: 1 << 0) }
-    /// For every GET request that does not have a HEAD request, auto generate the HEAD request
+
+    /// For every GET route that does not have a HEAD route, auto generate the HEAD route
     public static var autoGenerateHeadEndpoints: Self { .init(rawValue: 1 << 1) }
 }

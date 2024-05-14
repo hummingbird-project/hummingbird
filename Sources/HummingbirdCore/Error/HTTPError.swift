@@ -31,7 +31,7 @@ public struct HTTPError: Error, HTTPResponseError, Sendable {
         }
     }
 
-    /// error message
+    /// Error message
     public var body: String?
 
     /// Initialize HTTPError

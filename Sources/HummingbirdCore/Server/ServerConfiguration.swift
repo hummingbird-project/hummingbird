@@ -14,7 +14,7 @@
 
 import NIOCore
 
-/// HTTP server configuration
+/// An HTTP ``Server``'s configuration
 public struct ServerConfiguration: Sendable {
     /// Bind address for server
     public let address: Address

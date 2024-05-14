@@ -21,7 +21,7 @@ import NIOPosix
 
 /// Protocol for all the file attributes required by ``FileMiddleware``
 ///
-/// Requirements for the FileAttributes  of the ``FileProvider`` you use with your FileMiddleware
+/// Requirements for the FileAttributes  of the ``FileProvider`` you use with your ``FileMiddleware``
 public protocol FileMiddlewareFileAttributes {
     /// Is file a folder
     var isFolder: Bool { get }
@@ -31,7 +31,7 @@ public protocol FileMiddlewareFileAttributes {
     var modificationDate: Date { get }
 }
 
-/// Middleware for serving static files.
+/// ``RouterMiddleware`` for serving static files.
 ///
 /// If router returns a 404 ie a route was not found then this middleware will treat the request
 /// path as a filename relative to a defined rootFolder (this defaults to "public"). It checks to see if
@@ -84,7 +84,7 @@ public struct FileMiddleware<Context: BaseRequestContext, Provider: FileProvider
         self.fileProvider = fileProvider
     }
 
-    /// Handle request
+    /// Handles a ``Request``
     public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
         do {
             return try await next(request, context)
@@ -142,7 +142,7 @@ extension FileMiddleware {
         case loadFile(HTTPFields, ClosedRange<Int>?)
     }
 
-    /// Return file attributes, and actual file path
+    /// Return ``FileProvider/FileAttributes``, and actual file path
     private func getFileAttributes(path: String) async throws -> (path: String, attributes: Provider.FileAttributes) {
         guard let attributes = try await self.fileProvider.getAttributes(path: path) else {
             throw HTTPError(.notFound)
@@ -161,7 +161,7 @@ extension FileMiddleware {
         }
     }
 
-    /// Parse request headers and generate response headers
+    /// Parse a ``Request``'s ``HTTPFields`` and generate  the``Response`` headers
     private func constructResponse(path: String, attributes: Provider.FileAttributes, request: Request) async throws -> FileResult {
         let eTag = self.createETag([
             String(describing: attributes.modificationDate.timeIntervalSince1970),

@@ -287,14 +287,14 @@ protocol ServerBootstrapProtocol {
     ) async throws -> NIOAsyncChannel<Output, Never>
 }
 
-// Extend both `ServerBootstrap` and `NIOTSListenerBootstrap` to conform to `ServerBootstrapProtocol`
+/// Extend both ``ServerBootstrap`` and ``NIOTSListenerBootstrap`` to conform to ``ServerBootstrapProtocol``
 extension ServerBootstrap: ServerBootstrapProtocol {}
 
 #if canImport(Network)
 @available(macOS 10.14, iOS 12, tvOS 12, *)
 extension NIOTSListenerBootstrap: ServerBootstrapProtocol {
-    // need to be able to extend `NIOTSListenerBootstrap` to conform to `ServerBootstrapProtocol`
-    // before we can use TransportServices
+    /// need to be able to extend ``NIOTSListenerBootstrap`` to conform to ``ServerBootstrapProtocol``
+    /// before we can use TransportServices
     func bind<Output: Sendable>(
         unixDomainSocketPath: String,
         cleanupExistingSocketFile: Bool,

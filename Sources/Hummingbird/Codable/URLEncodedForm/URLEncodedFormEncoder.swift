@@ -20,25 +20,25 @@ import Foundation
 
 /// The wrapper struct for encoding Codable classes to URL encoded form data
 public struct URLEncodedFormEncoder: Sendable {
-    /// The strategy to use for encoding `Date` values.
+    /// The strategy to use for encoding ``Date`` values.
     public enum DateEncodingStrategy: Sendable {
-        /// Defer to `Date` for encoding. This is the default strategy.
+        /// Defer to ``Date`` for encoding. This is the default strategy.
         case deferredToDate
 
-        /// Encode the `Date` as a UNIX timestamp from a JSON number.
+        /// Encode the ``Date`` as a UNIX timestamp from a JSON number.
         case secondsSince1970
 
-        /// Encode the `Date` as UNIX millisecond timestamp from a JSON number.
+        /// Encode the ``Date`` as UNIX millisecond timestamp from a JSON number.
         case millisecondsSince1970
 
-        /// Encode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
+        /// Encode the ``Date`` as an ISO-8601-formatted string (in RFC 3339 format).
         @available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
         case iso8601
 
-        /// Encode the `Date` as a string parsed by the given formatter.
+        /// Encode the ``Date`` as a string parsed by the given ``DateFormatter``.
         case formatted(DateFormatter)
 
-        /// Encode the `Date` as a custom value encoded by the given closure.
+        /// Encode the ``Date`` as a custom value encoded by the given closure.
         case custom(@Sendable (Date, Encoder) throws -> Void)
     }
 

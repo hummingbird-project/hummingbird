@@ -21,7 +21,7 @@ import Network
 
 // MARK: Configuration
 
-/// Application configuration
+/// The configuration for Hummingbird's HTTP ``Server``
 public struct ApplicationConfiguration: Sendable {
     // MARK: Member variables
 
@@ -101,7 +101,7 @@ public struct ApplicationConfiguration: Sendable {
         )
     }
 
-    /// return HTTP server configuration
+    /// Return HTTP ``ServerConfiguration``
     #if canImport(Network)
     var httpServer: ServerConfiguration {
         return .init(

@@ -14,7 +14,7 @@
 
 import HTTPTypes
 
-/// Holds all the values required to process a request
+/// Holds all the values required to process an HTTP request.
 public struct Request: Sendable {
     // MARK: Member variables
 
@@ -22,11 +22,11 @@ public struct Request: Sendable {
     public let uri: URI
     /// HTTP head
     public let head: HTTPRequest
-    /// Body of HTTP request
+    /// The body of HTTP request, which defaults to streaming.
     public var body: RequestBody
-    /// Request HTTP method
+    /// Request HTTP method, indicates the desired action to be performed for a given resource.
     public var method: HTTPRequest.Method { self.head.method }
-    /// Request HTTP headers
+    /// Request HTTP headers. These headers contain additional metadata about a ``Request``. Examples include the ``MediaType`` of a body, the body's (content-)length and proof of authorization.
     public var headers: HTTPFields { self.head.headerFields }
 
     // MARK: Initialization
@@ -35,7 +35,6 @@ public struct Request: Sendable {
     /// - Parameters:
     ///   - head: HTTP head
     ///   - body: HTTP body
-    ///   - id: Unique RequestID
     public init(
         head: HTTPRequest,
         body: RequestBody
