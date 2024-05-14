@@ -95,7 +95,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
                     try HTTP1Channel.Value(wrappingChannelSynchronously: http2ChildChannel)
                 }
         }.map {
-            .init(negociatedHTTPVersion: $0, channel: channel)
+            .init(negotiatedHTTPVersion: $0, channel: channel)
         }
     }
 
