@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import struct Foundation.Date
-@_exported import class Foundation.JSONDecoder
-@_exported import class Foundation.JSONEncoder
+import class Foundation.JSONDecoder
+import class Foundation.JSONEncoder
 import NIOFoundationCompat
 
 extension JSONEncoder: ResponseEncoder {
