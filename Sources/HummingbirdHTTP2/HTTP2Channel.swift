@@ -25,7 +25,10 @@ import NIOSSL
 
 /// Child channel for processing HTTP1 with the option of upgrading to HTTP2
 public struct HTTP2UpgradeChannel: HTTPChannelHandler {
-    public typealias Value = EventLoopFuture<NIONegotiatedHTTPVersion<HTTP1Channel.Value, (NIOAsyncChannel<HTTP2Frame, HTTP2Frame>, NIOHTTP2Handler.AsyncStreamMultiplexer<HTTP1Channel.Value>)>>
+    public struct Value: ServerChildChannelValue {
+        let negotiatedHTTPVersion: EventLoopFuture<NIONegotiatedHTTPVersion<HTTP1Channel.Value, (NIOAsyncChannel<HTTP2Frame, HTTP2Frame>, NIOHTTP2Handler.AsyncStreamMultiplexer<HTTP1Channel.Value>)>>
+        public let channel: Channel
+    }
 
     private let sslContext: NIOSSLContext
     private let http1: HTTP1Channel
@@ -91,6 +94,8 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
                 }.flatMapThrowing {
                     try HTTP1Channel.Value(wrappingChannelSynchronously: http2ChildChannel)
                 }
+        }.map {
+            .init(negotiatedHTTPVersion: $0, channel: channel)
         }
     }
 
@@ -100,7 +105,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
     ///   - logger: Logger to use while processing messages
     public func handle(value: Value, logger: Logger) async {
         do {
-            let channel = try await value.get()
+            let channel = try await value.negotiatedHTTPVersion.get()
             switch channel {
             case .http1_1(let http1):
                 await handleHTTP(asyncChannel: http1, logger: logger)
