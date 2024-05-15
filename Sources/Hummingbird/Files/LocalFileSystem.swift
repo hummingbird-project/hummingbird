@@ -43,7 +43,7 @@ public struct LocalFileSystem: FileProvider {
     ///   - rootFolder: Root folder to serve files from
     ///   - threadPool: Thread pool used when loading files
     ///   - logger: Logger to output root folder information
-    init(rootFolder: String, threadPool: NIOThreadPool, logger: Logger) {
+    public init(rootFolder: String, threadPool: NIOThreadPool, logger: Logger) {
         if rootFolder.last != "/" {
             self.rootFolder = "\(rootFolder)/"
         } else {
