@@ -35,7 +35,7 @@ public final class HTTPUserEventHandler: ChannelDuplexHandler, RemovableChannelH
         let part = unwrapOutboundIn(data)
         if case .end = part {
             self.requestsInProgress -= 1
-            context.write(data, promise: promise)
+            context.writeAndFlush(data, promise: promise)
             if self.closeAfterResponseWritten {
                 context.close(promise: nil)
                 self.closeAfterResponseWritten = false
@@ -61,6 +61,15 @@ public final class HTTPUserEventHandler: ChannelDuplexHandler, RemovableChannelH
 
     public func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
         switch event {
+        case is ChannelShouldQuiesceEvent:
+            // we received a quiesce event. If we have any requests in progress we should
+            // wait for them to finish
+            if self.requestsInProgress > 0 {
+                self.closeAfterResponseWritten = true
+            } else {
+                context.close(promise: nil)
+            }
+
         case IdleStateHandler.IdleStateEvent.read:
             // if we get an idle read event and we haven't completed reading the request
             // close the connection

@@ -33,7 +33,10 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
             onServerRunning: (@Sendable (Channel) async -> Void)?
         )
         case starting
-        case running(asyncChannel: AsyncServerChannel)
+        case running(
+            asyncChannel: AsyncServerChannel,
+            quiescingHelper: ServerQuiescingHelper
+        )
         case shuttingDown(shutdownPromise: EventLoopPromise<Void>)
         case shutdown
 
@@ -96,7 +99,7 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
             self.state = .starting
 
             do {
-                let asyncChannel = try await self.makeServer(
+                let (asyncChannel, quiescingHelper) = try await self.makeServer(
                     childChannelSetup: childChannelSetup,
                     configuration: configuration
                 )
@@ -107,7 +110,7 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
                     fatalError("We should only be running once")
 
                 case .starting:
-                    self.state = .running(asyncChannel: asyncChannel)
+                    self.state = .running(asyncChannel: asyncChannel, quiescingHelper: quiescingHelper)
 
                     await withGracefulShutdownHandler {
                         await onServerRunning?(asyncChannel.channel)
@@ -138,13 +141,14 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
                     }
 
                 case .shuttingDown, .shutdown:
+                    self.logger.info("Shutting down")
                     try await asyncChannel.channel.close()
                 }
             } catch {
                 self.state = .shutdown
                 throw error
             }
-            self.state = .shutdown
+
         case .starting, .running:
             fatalError("Run should only be called once")
 
@@ -162,10 +166,20 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
         case .initial, .starting:
             self.state = .shutdown
 
-        case .running(let channel):
+        case .running(let channel, let quiescingHelper):
             let shutdownPromise = channel.channel.eventLoop.makePromise(of: Void.self)
-            channel.channel.close(promise: shutdownPromise)
             self.state = .shuttingDown(shutdownPromise: shutdownPromise)
+            quiescingHelper.initiateShutdown(promise: shutdownPromise)
+            try await shutdownPromise.futureResult.get()
+
+            // We need to check the state here again since we just awaited above
+            switch self.state {
+            case .initial, .starting, .running, .shutdown:
+                fatalError("Unexpected state \(self.state)")
+
+            case .shuttingDown:
+                self.state = .shutdown
+            }
 
         case .shuttingDown(let shutdownPromise):
             // We are just going to queue up behind the current graceful shutdown
@@ -179,8 +193,8 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
     /// Start server
     /// - Parameter responder: Object that provides responses to requests sent to the server
     /// - Returns: EventLoopFuture that is fulfilled when server has started
-    nonisolated func makeServer(childChannelSetup: ChildChannel, configuration: ServerConfiguration) async throws -> AsyncServerChannel {
-        let bootstrap: ServerBootstrapProtocol
+    nonisolated func makeServer(childChannelSetup: ChildChannel, configuration: ServerConfiguration) async throws -> (AsyncServerChannel, ServerQuiescingHelper) {
+        var bootstrap: ServerBootstrapProtocol
         #if canImport(Network)
         if let tsBootstrap = self.createTSBootstrap(configuration: configuration) {
             bootstrap = tsBootstrap
@@ -199,6 +213,11 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
         )
         #endif
 
+        let quiescingHelper = ServerQuiescingHelper(group: self.eventLoopGroup)
+        bootstrap = bootstrap.serverChannelInitializer { channel in
+            channel.pipeline.addHandler(quiescingHelper.makeServerChannelHandler(channel: channel))
+        }
+
         do {
             switch configuration.address.value {
             case .hostname(let host, let port):
@@ -213,7 +232,7 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
                     )
                 }
                 self.logger.info("Server started and listening on \(host):\(asyncChannel.channel.localAddress?.port ?? port)")
-                return asyncChannel
+                return (asyncChannel, quiescingHelper)
 
             case .unixDomainSocket(let path):
                 let asyncChannel = try await bootstrap.bind(
@@ -227,7 +246,7 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
                     )
                 }
                 self.logger.info("Server started and listening on socket path \(path)")
-                return asyncChannel
+                return (asyncChannel, quiescingHelper)
             }
         } catch {
             // should we close the channel here
@@ -271,6 +290,17 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
 
 /// Protocol for bootstrap.
 protocol ServerBootstrapProtocol {
+    /// Initialize the `ServerSocketChannel` with `initializer`. The most common task in initializer is to add
+    /// `ChannelHandler`s to the `ChannelPipeline`.
+    ///
+    /// The `ServerSocketChannel` uses the accepted `Channel`s as inbound messages.
+    ///
+    /// - note: To set the initializer for the accepted `SocketChannel`s, look at `ServerBootstrap.childChannelInitializer`.
+    ///
+    /// - parameters:
+    ///     - initializer: A closure that initializes the provided `Channel`.
+    func serverChannelInitializer(_ initializer: @escaping @Sendable (Channel) -> EventLoopFuture<Void>) -> Self
+
     func bind<Output: Sendable>(
         host: String,
         port: Int,

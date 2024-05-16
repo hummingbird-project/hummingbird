@@ -32,75 +32,55 @@ enum HTTPChannelError: Error {
     case unexpectedHTTPPart(HTTPRequestPart)
 }
 
-enum HTTPState: Int, Sendable {
-    case idle
-    case processing
-    case cancelled
-}
-
 extension HTTPChannelHandler {
     public func handleHTTP(asyncChannel: NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>, logger: Logger) async {
-        let processingRequest = NIOLockedValueBox(HTTPState.idle)
         do {
             try await withTaskCancellationHandler {
-                try await withGracefulShutdownHandler {
-                    try await asyncChannel.executeThenClose { inbound, outbound in
-                        let responseWriter = HTTPServerBodyWriter(outbound: outbound)
-                        var iterator = inbound.makeAsyncIterator()
+                try await asyncChannel.executeThenClose { inbound, outbound in
+                    let responseWriter = HTTPServerBodyWriter(outbound: outbound)
+                    var iterator = inbound.makeAsyncIterator()
 
-                        // read first part, verify it is a head
-                        guard let part = try await iterator.next() else { return }
-                        guard case .head(var head) = part else {
-                            throw HTTPChannelError.unexpectedHTTPPart(part)
-                        }
-
-                        while true {
-                            // set to processing unless it is cancelled then exit
-                            guard processingRequest.exchange(.processing) == .idle else { break }
-
-                            let bodyStream = NIOAsyncChannelRequestBody(iterator: iterator)
-                            let request = Request(head: head, body: .init(asyncSequence: bodyStream))
-                            let response: Response = await self.responder(request, asyncChannel.channel)
-                            do {
-                                try await outbound.write(.head(response.head))
-                                let tailHeaders = try await response.body.write(responseWriter)
-                                try await outbound.write(.end(tailHeaders))
-                            } catch {
-                                throw error
-                            }
-                            if request.headers[.connection] == "close" {
-                                return
-                            }
-                            // set to idle unless it is cancelled then exit
-                            guard processingRequest.exchange(.idle) == .processing else { break }
-
-                            // Flush current request
-                            // read until we don't have a body part
-                            var part: HTTPRequestPart?
-                            while true {
-                                part = try await iterator.next()
-                                guard case .body = part else { break }
-                            }
-                            // if we have an end then read the next part
-                            if case .end = part {
-                                part = try await iterator.next()
-                            }
-
-                            // if part is nil break out of loop
-                            guard let part else {
-                                break
-                            }
-
-                            // part should be a head, if not throw error
-                            guard case .head(let newHead) = part else { throw HTTPChannelError.unexpectedHTTPPart(part) }
-                            head = newHead
-                        }
+                    // read first part, verify it is a head
+                    guard let part = try await iterator.next() else { return }
+                    guard case .head(var head) = part else {
+                        throw HTTPChannelError.unexpectedHTTPPart(part)
                     }
-                } onGracefulShutdown: {
-                    // set to cancelled
-                    if processingRequest.exchange(.cancelled) == .idle {
-                        // only close the channel input if it is idle
-                        asyncChannel.channel.close(mode: .input, promise: nil)
+
+                    while true {
+                        let bodyStream = NIOAsyncChannelRequestBody(iterator: iterator)
+                        let request = Request(head: head, body: .init(asyncSequence: bodyStream))
+                        let response = await self.responder(request, asyncChannel.channel)
+                        do {
+                            try await outbound.write(.head(response.head))
+                            let tailHeaders = try await response.body.write(responseWriter)
+                            try await outbound.write(.end(tailHeaders))
+                        } catch {
+                            throw error
+                        }
+                        if request.headers[.connection] == "close" {
+                            return
+                        }
+
+                        // Flush current request
+                        // read until we don't have a body part
+                        var part: HTTPRequestPart?
+                        while true {
+                            part = try await iterator.next()
+                            guard case .body = part else { break }
+                        }
+                        // if we have an end then read the next part
+                        if case .end = part {
+                            part = try await iterator.next()
+                        }
+
+                        // if part is nil break out of loop
+                        guard let part else {
+                            break
+                        }
+
+                        // part should be a head, if not throw error
+                        guard case .head(let newHead) = part else { throw HTTPChannelError.unexpectedHTTPPart(part) }
+                        head = newHead
                     }
                 }
             } onCancel: {
