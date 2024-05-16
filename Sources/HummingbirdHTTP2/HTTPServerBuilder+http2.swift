@@ -16,7 +16,7 @@ import HummingbirdCore
 import NIOCore
 import NIOSSL
 
-extension HTTPChannelBuilder {
+extension HTTPServerBuilder {
     ///  Build HTTP channel with HTTP2 upgrade
     ///
     /// Use in ``Hummingbird/Application`` initialization.
@@ -33,7 +33,7 @@ extension HTTPChannelBuilder {
     public static func http2Upgrade(
         tlsConfiguration: TLSConfiguration,
         additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = []
-    ) throws -> HTTPChannelBuilder {
+    ) throws -> HTTPServerBuilder {
         return .init { responder in
             return try HTTP2UpgradeChannel(
                 tlsConfiguration: tlsConfiguration,

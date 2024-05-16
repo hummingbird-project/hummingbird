@@ -311,20 +311,21 @@ class HummingBirdCoreTests: XCTestCase {
     func testChildChannelGracefulShutdown() async throws {
         let handlerPromise = Promise<Void>()
 
-        let childChannel = try HTTPChannelBuilder.http1().build { request, _ in
-            await handlerPromise.complete(())
-            try await Task.sleep(for: .milliseconds(500))
-            return Response(status: .ok, body: .init(asyncSequence: request.body.delayed()))
-        }
-        await withThrowingTaskGroup(of: Void.self) { group in
+        try await withThrowingTaskGroup(of: Void.self) { group in
             let portPromise = Promise<Int>()
             let logger = Logger(label: "Hummingbird")
-            let server = childChannel.server(
+            let server = try HTTPServerBuilder.http1().buildServer(
                 configuration: .init(address: .hostname(port: 0)),
-                onServerRunning: { await portPromise.complete($0.localAddress!.port!) },
                 eventLoopGroup: Self.eventLoopGroup,
                 logger: logger
-            )
+            ) { request, _ in
+                await handlerPromise.complete(())
+                try await Task.sleep(for: .milliseconds(500))
+                return Response(status: .ok, body: .init(asyncSequence: request.body.delayed()))
+            } onServerRunning: {
+                await portPromise.complete($0.localAddress!.port!)
+            }
+
             let serviceGroup = ServiceGroup(
                 configuration: .init(
                     services: [server],

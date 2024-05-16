@@ -33,7 +33,7 @@ public enum TestErrors: Error {
 /// Helper function for testing a server
 public func testServer<Value: Sendable>(
     responder: @escaping HTTPChannelHandler.Responder,
-    httpChannelSetup: HTTPChannelBuilder,
+    httpChannelSetup: HTTPServerBuilder,
     configuration: ServerConfiguration,
     eventLoopGroup: EventLoopGroup,
     logger: Logger,
@@ -41,11 +41,12 @@ public func testServer<Value: Sendable>(
 ) async throws -> Value {
     try await withThrowingTaskGroup(of: Void.self) { group in
         let promise = Promise<Int>()
-        let server = try httpChannelSetup.build(responder).server(
+        let server = try httpChannelSetup.buildServer(
             configuration: configuration,
-            onServerRunning: { await promise.complete($0.localAddress!.port!) },
             eventLoopGroup: eventLoopGroup,
-            logger: logger
+            logger: logger,
+            responder: responder,
+            onServerRunning: { await promise.complete($0.localAddress!.port!) }
         )
         let serviceGroup = ServiceGroup(
             configuration: .init(
@@ -70,7 +71,7 @@ public func testServer<Value: Sendable>(
 /// shutdown correctly
 public func testServer<Value: Sendable>(
     responder: @escaping HTTPChannelHandler.Responder,
-    httpChannelSetup: HTTPChannelBuilder = .http1(),
+    httpChannelSetup: HTTPServerBuilder = .http1(),
     configuration: ServerConfiguration,
     eventLoopGroup: EventLoopGroup,
     logger: Logger,
