@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Address to bind server to
-public struct Address: Sendable, Equatable {
+public struct BindAddress: Sendable, Equatable {
     enum _Internal: Equatable {
         case hostname(_ host: String = "127.0.0.1", port: Int = 8080)
         case unixDomainSocket(path: String)

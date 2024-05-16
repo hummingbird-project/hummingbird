@@ -17,7 +17,7 @@ import NIOCore
 /// HTTP server configuration
 public struct ServerConfiguration: Sendable {
     /// Bind address for server
-    public let address: Address
+    public let address: BindAddress
     /// Server name to return in "server" header
     public let serverName: String?
     /// Defines the maximum length for the queue of pending connections
@@ -37,7 +37,7 @@ public struct ServerConfiguration: Sendable {
     ///         the client may receive an error with an indication of ECONNREFUSE
     ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
     public init(
-        address: Address = .hostname(),
+        address: BindAddress = .hostname(),
         serverName: String? = nil,
         backlog: Int = 256,
         reuseAddress: Bool = true
@@ -61,7 +61,7 @@ public struct ServerConfiguration: Sendable {
     ///   - tlsOptions: TLS options for when you are using NIOTransportServices
     #if canImport(Network)
     public init(
-        address: Address = .hostname(),
+        address: BindAddress = .hostname(),
         serverName: String? = nil,
         backlog: Int = 256,
         reuseAddress: Bool = true,

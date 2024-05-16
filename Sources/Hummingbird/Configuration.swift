@@ -26,7 +26,7 @@ public struct ApplicationConfiguration: Sendable {
     // MARK: Member variables
 
     /// Bind address for server
-    public var address: Address
+    public var address: BindAddress
     /// Server name to return in "server" header
     public var serverName: String?
     /// Defines the maximum length for the queue of pending connections
@@ -49,7 +49,7 @@ public struct ApplicationConfiguration: Sendable {
     ///         the client may receive an error with an indication of ECONNREFUSE
     ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
     public init(
-        address: Address = .hostname(),
+        address: BindAddress = .hostname(),
         serverName: String? = nil,
         backlog: Int = 256,
         reuseAddress: Bool = true
@@ -72,7 +72,7 @@ public struct ApplicationConfiguration: Sendable {
     ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
     ///   - tlsOptions: TLS options for when you are using NIOTransportServices
     public init(
-        address: Address = .hostname(),
+        address: BindAddress = .hostname(),
         serverName: String? = nil,
         reuseAddress: Bool = true,
         tlsOptions: TSTLSOptions
@@ -88,7 +88,7 @@ public struct ApplicationConfiguration: Sendable {
 
     /// Create new configuration struct with updated values
     public func with(
-        address: Address? = nil,
+        address: BindAddress? = nil,
         serverName: String? = nil,
         backlog: Int? = nil,
         reuseAddress: Bool? = nil
