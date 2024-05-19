@@ -23,7 +23,10 @@ extension URLEncodedFormEncoder: ResponseEncoder {
         buffer.writeString(string)
         return Response(
             status: .ok,
-            headers: [.contentType: "application/x-www-form-urlencoded"],
+            headers: [
+                .contentType: "application/x-www-form-urlencoded",
+                .contentLength: buffer.readableBytes.description,
+            ],
             body: .init(byteBuffer: buffer)
         )
     }

@@ -28,7 +28,7 @@ public struct Response: Sendable {
     public init(status: HTTPResponse.Status, headers: HTTPFields = .init(), body: ResponseBody = .init()) {
         self.head = .init(status: status, headerFields: headers)
         self.body = body
-        if let contentLength = body.contentLength, headers[.contentLength] == nil {
+        if let contentLength = body.contentLength, headers[values: .contentLength].count == 0 {
             self.head.headerFields[.contentLength] = String(describing: contentLength)
         }
     }

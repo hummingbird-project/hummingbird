@@ -30,7 +30,7 @@ extension JSONEncoder: ResponseEncoder {
             status: .ok,
             headers: [
                 .contentType: "application/json; charset=utf-8",
-                .contentLength: String(describing: data.count),
+                .contentLength: data.count.description,
             ],
             body: .init(byteBuffer: buffer)
         )

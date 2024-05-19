@@ -33,7 +33,14 @@ extension String: ResponseGenerator {
     /// Generate response holding string
     public func response(from request: Request, context: some BaseRequestContext) -> Response {
         let buffer = context.allocator.buffer(string: self)
-        return Response(status: .ok, headers: [.contentType: "text/plain; charset=utf-8"], body: .init(byteBuffer: buffer))
+        return Response(
+            status: .ok,
+            headers: [
+                .contentType: "text/plain; charset=utf-8",
+                .contentLength: buffer.readableBytes.description,
+            ],
+            body: .init(byteBuffer: buffer)
+        )
     }
 }
 
@@ -42,7 +49,14 @@ extension Substring: ResponseGenerator {
     /// Generate response holding string
     public func response(from request: Request, context: some BaseRequestContext) -> Response {
         let buffer = context.allocator.buffer(substring: self)
-        return Response(status: .ok, headers: [.contentType: "text/plain; charset=utf-8"], body: .init(byteBuffer: buffer))
+        return Response(
+            status: .ok,
+            headers: [
+                .contentType: "text/plain; charset=utf-8",
+                .contentLength: buffer.readableBytes.description,
+            ],
+            body: .init(byteBuffer: buffer)
+        )
     }
 }
 
@@ -50,7 +64,14 @@ extension Substring: ResponseGenerator {
 extension ByteBuffer: ResponseGenerator {
     /// Generate response holding bytebuffer
     public func response(from request: Request, context: some BaseRequestContext) -> Response {
-        Response(status: .ok, headers: [.contentType: "application/octet-stream"], body: .init(byteBuffer: self))
+        Response(
+            status: .ok,
+            headers: [
+                .contentType: "application/octet-stream",
+                .contentLength: self.readableBytes.description,
+            ],
+            body: .init(byteBuffer: self)
+        )
     }
 }
 
