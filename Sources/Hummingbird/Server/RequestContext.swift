@@ -21,17 +21,10 @@ import Tracing
 
 /// Endpoint path storage
 public struct EndpointPath: Sendable {
-    public init() {
-        self._value = .init(nil)
-    }
+    public init() {}
 
     /// Endpoint path
-    public var value: String? {
-        get { self._value.withLockedValue { $0 } }
-        nonmutating set { self._value.withLockedValue { $0 = newValue } }
-    }
-
-    private let _value: NIOLockedValueBox<String?>
+    public var value: String?
 }
 
 /// Request context values required by Hummingbird itself.
