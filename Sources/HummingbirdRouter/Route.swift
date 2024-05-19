@@ -80,7 +80,7 @@ public struct Route<Handler: _RouteHandlerProtocol, Context: RouterRequestContex
     ///   - next: Next middleware to call if route method and path is not matched
     /// - Returns: Response
     public func handle(_ input: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-        if input.method == self.method, let context = self.routerPath.matchAll(context) {
+        if input.method == self.method, var context = self.routerPath.matchAll(context) {
             context.coreContext.endpointPath.value = self.fullPath
             return try await self.handler.handle(input, context: context)
         }
