@@ -119,7 +119,7 @@ public struct EditedResponse<Generator: ResponseGenerator>: ResponseGenerator {
             // only add headers from generated response if they don't exist in override headers
             var headers = self.headers
             for header in response.headers {
-                if headers[header.name] == nil {
+                if !headers.contains(header.name) {
                     headers.append(header)
                 }
             }
