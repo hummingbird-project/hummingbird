@@ -15,12 +15,10 @@
 import HummingbirdCore
 
 /// URI Path Trie Builder
-@_documentation(visibility: internal)
-public struct RouterPathTrieBuilder<Value: Sendable> {
+@_spi(Internal) public struct RouterPathTrieBuilder<Value: Sendable> {
     @usableFromInline
     var root: Node
 
-    @_documentation(visibility: internal)
     public init() {
         self.root = Node(key: .null, output: nil)
     }
@@ -43,7 +41,7 @@ public struct RouterPathTrieBuilder<Value: Sendable> {
         }
     }
 
-    internal func build() -> RouterTrie<Value> {
+    @_spi(Internal) public func build() -> RouterTrie<Value> {
         .init(base: self)
     }
 
@@ -52,15 +50,11 @@ public struct RouterPathTrieBuilder<Value: Sendable> {
     }
 
     /// Trie Node. Each node represents one component of a URI path
-    @_documentation(visibility: internal)
-    public final class Node {
-        @usableFromInline
+    @_spi(Internal) public final class Node {
         let key: RouterPath.Element
 
-        @usableFromInline
         var children: [Node]
 
-        @usableFromInline
         var value: Value?
 
         init(key: RouterPath.Element, output: Value?) {

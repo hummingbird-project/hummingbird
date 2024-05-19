@@ -64,8 +64,7 @@ public final class RouterTrie<Value: Sendable>: Sendable {
     @usableFromInline
     let values: [Value?]
 
-    @_documentation(visibility: internal)
-    public init(base: RouterPathTrieBuilder<Value>) {
+    @_spi(Internal) public init(base: RouterPathTrieBuilder<Value>) {
         var trie = Trie()
         var values: [Value?] = []
 
