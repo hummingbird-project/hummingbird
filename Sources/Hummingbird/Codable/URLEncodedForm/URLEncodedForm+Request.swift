@@ -21,9 +21,13 @@ extension URLEncodedFormEncoder: ResponseEncoder {
         var buffer = context.allocator.buffer(capacity: 0)
         let string = try self.encode(value)
         buffer.writeString(string)
+
         return Response(
             status: .ok,
-            headers: [.contentType: "application/x-www-form-urlencoded"],
+            headers: HTTPFields(
+                contentType: "application/x-www-form-urlencoded",
+                contentLength: buffer.readableBytes
+            ),
             body: .init(byteBuffer: buffer)
         )
     }

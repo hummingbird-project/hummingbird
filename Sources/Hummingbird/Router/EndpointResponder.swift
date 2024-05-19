@@ -26,14 +26,14 @@ struct EndpointResponders<Context: BaseRequestContext>: Sendable {
     }
 
     mutating func addResponder(for method: HTTPRequest.Method, responder: any HTTPResponder<Context>) {
-        guard self.methods[method] == nil else {
+        guard !self.methods.keys.contains(method) else {
             preconditionFailure("\(method.rawValue) already has a handler")
         }
         self.methods[method] = responder
     }
 
     mutating func autoGenerateHeadEndpoint() {
-        if self.methods[.head] == nil, let get = methods[.get] {
+        if !self.methods.keys.contains(.head), let get = methods[.get] {
             self.methods[.head] = CallbackResponder { request, context in
                 let response = try await get.respond(to: request, context: context)
                 return response.createHeadResponse()

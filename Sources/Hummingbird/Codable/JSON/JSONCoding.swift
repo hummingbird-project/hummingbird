@@ -26,9 +26,13 @@ extension JSONEncoder: ResponseEncoder {
         var buffer = context.allocator.buffer(capacity: 0)
         let data = try self.encode(value)
         buffer.writeBytes(data)
+        
         return Response(
             status: .ok,
-            headers: [.contentType: "application/json; charset=utf-8"],
+            headers: HTTPFields(
+                contentType: "application/json; charset=utf-8",
+                contentLength: buffer.readableBytes
+            ),
             body: .init(byteBuffer: buffer)
         )
     }
