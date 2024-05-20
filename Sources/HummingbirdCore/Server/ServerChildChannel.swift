@@ -51,7 +51,7 @@ extension ServerChildChannel {
     /// - Returns: Server Service
     public func server(
         configuration: ServerConfiguration,
-        onServerRunning: (@Sendable (Channel) async -> Void)? = { _ in },
+        onServerRunning: (@Sendable (Channel) async -> Void)? = nil,
         eventLoopGroup: EventLoopGroup,
         logger: Logger
     ) -> Service {

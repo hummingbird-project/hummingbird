@@ -43,7 +43,7 @@ public struct HTTPServerBuilder: Sendable {
         eventLoopGroup: EventLoopGroup,
         logger: Logger,
         responder: @escaping HTTPChannelHandler.Responder,
-        onServerRunning: (@Sendable (Channel) async -> Void)? = { _ in }
+        onServerRunning: (@Sendable (Channel) async -> Void)? = nil
     ) throws -> Service {
         let childChannel = try buildChildChannel(responder)
         return childChannel.server(configuration: configuration, onServerRunning: onServerRunning, eventLoopGroup: eventLoopGroup, logger: logger)

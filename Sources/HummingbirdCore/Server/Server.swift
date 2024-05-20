@@ -77,7 +77,7 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
     public init(
         childChannelSetup: ChildChannel,
         configuration: ServerConfiguration,
-        onServerRunning: (@Sendable (Channel) async -> Void)? = { _ in },
+        onServerRunning: (@Sendable (Channel) async -> Void)? = nil,
         eventLoopGroup: EventLoopGroup,
         logger: Logger
     ) {
