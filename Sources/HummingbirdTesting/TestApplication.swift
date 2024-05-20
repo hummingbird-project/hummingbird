@@ -30,7 +30,7 @@ internal struct TestApplication<BaseApp: ApplicationProtocol>: ApplicationProtoc
         get async throws { try await self.base.responder }
     }
 
-    var server: HTTPChannelBuilder {
+    var server: HTTPServerBuilder {
         self.base.server
     }
 

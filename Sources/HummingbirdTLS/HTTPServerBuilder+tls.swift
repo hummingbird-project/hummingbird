@@ -15,8 +15,8 @@
 import HummingbirdCore
 import NIOSSL
 
-extension HTTPChannelBuilder {
-    ///  Build child channel supporting HTTP with TLS
+extension HTTPServerBuilder {
+    ///  Build server supporting HTTP with TLS
     ///
     /// Use in ``Hummingbird/Application`` initialization.
     /// ```
@@ -30,11 +30,11 @@ extension HTTPChannelBuilder {
     ///   - tlsConfiguration: TLS configuration
     /// - Returns: HTTPChannelHandler builder
     public static func tls(
-        _ base: HTTPChannelBuilder = .http1(),
+        _ base: HTTPServerBuilder = .http1(),
         tlsConfiguration: TLSConfiguration
-    ) throws -> HTTPChannelBuilder {
+    ) throws -> HTTPServerBuilder {
         return .init { responder in
-            return try base.build(responder).withTLS(tlsConfiguration: tlsConfiguration)
+            return try base.buildChildChannel(responder).withTLS(tlsConfiguration: tlsConfiguration)
         }
     }
 }

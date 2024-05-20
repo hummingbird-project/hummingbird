@@ -50,7 +50,7 @@ public protocol ApplicationProtocol: Service where Context: RequestContext {
     /// Build the responder
     var responder: Responder { get async throws }
     /// Server channel builder
-    var server: HTTPChannelBuilder { get }
+    var server: HTTPServerBuilder { get }
 
     /// event loop group used by application
     var eventLoopGroup: EventLoopGroup { get }
@@ -69,7 +69,7 @@ public protocol ApplicationProtocol: Service where Context: RequestContext {
 
 extension ApplicationProtocol {
     /// Server channel setup
-    public var server: HTTPChannelBuilder { .http1() }
+    public var server: HTTPServerBuilder { .http1() }
 }
 
 extension ApplicationProtocol {
@@ -94,8 +94,12 @@ extension ApplicationProtocol {
         let dateCache = DateCache()
         let responder = try await self.responder
 
-        // Function responding to HTTP request
-        @Sendable func respond(to request: Request, channel: Channel) async throws -> Response {
+        // create server `Service``
+        let server = try self.server.buildServer(
+            configuration: self.configuration.httpServer,
+            eventLoopGroup: self.eventLoopGroup,
+            logger: self.logger
+        ) { request, channel in
             let context = Self.Responder.Context(
                 channel: channel,
                 logger: self.logger.with(metadataKey: "hb_id", value: .stringConvertible(RequestID()))
@@ -108,16 +112,9 @@ extension ApplicationProtocol {
                 response.headers[.server] = serverName
             }
             return response
+        } onServerRunning: {
+            await self.onServerRunning($0)
         }
-        // get server channel
-        let serverChannel = try self.server.build(respond)
-        // create server `Service``
-        let server = serverChannel.server(
-            configuration: self.configuration.httpServer,
-            onServerRunning: self.onServerRunning,
-            eventLoopGroup: self.eventLoopGroup,
-            logger: self.logger
-        )
         let serverService = server.withPrelude {
             for process in self.processesRunBeforeServerStart {
                 try await process()
@@ -173,7 +170,7 @@ public struct Application<Responder: HTTPResponder>: ApplicationProtocol where R
     /// on server running
     private var _onServerRunning: @Sendable (Channel) async -> Void
     /// Server channel setup
-    public let server: HTTPChannelBuilder
+    public let server: HTTPServerBuilder
     /// services attached to the application.
     public var services: [any Service]
     /// Processes to be run before server is started
@@ -193,7 +190,7 @@ public struct Application<Responder: HTTPResponder>: ApplicationProtocol where R
     ///   - logger: Logger application uses
     public init(
         responder: Responder,
-        server: HTTPChannelBuilder = .http1(),
+        server: HTTPServerBuilder = .http1(),
         configuration: ApplicationConfiguration = ApplicationConfiguration(),
         services: [Service] = [],
         onServerRunning: @escaping @Sendable (Channel) async -> Void = { _ in },
@@ -229,7 +226,7 @@ public struct Application<Responder: HTTPResponder>: ApplicationProtocol where R
     ///   - logger: Logger application uses
     public init<ResponderBuilder: HTTPResponderBuilder>(
         router: ResponderBuilder,
-        server: HTTPChannelBuilder = .http1(),
+        server: HTTPServerBuilder = .http1(),
         configuration: ApplicationConfiguration = ApplicationConfiguration(),
         services: [Service] = [],
         onServerRunning: @escaping @Sendable (Channel) async -> Void = { _ in },

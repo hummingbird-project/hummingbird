@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-@_exported import struct HummingbirdCore.Address
+@_exported import struct HummingbirdCore.BindAddress
 @_exported import struct HummingbirdCore.HTTPError
 @_exported import protocol HummingbirdCore.HTTPResponseError
 @_exported import struct HummingbirdCore.Request
