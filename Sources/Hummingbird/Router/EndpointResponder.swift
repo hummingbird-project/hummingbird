@@ -15,13 +15,15 @@
 import HTTPTypes
 
 /// Stores endpoint responders for each HTTP method
+@usableFromInline
 struct EndpointResponders<Context: BaseRequestContext>: Sendable {
     init(path: String) {
         self.path = path
         self.methods = [:]
     }
 
-    public func getResponder(for method: HTTPRequest.Method) -> (any HTTPResponder<Context>)? {
+    @inlinable
+    public func getResponder(for method: __shared HTTPRequest.Method) -> (any HTTPResponder<Context>)? {
         return self.methods[method]
     }
 
@@ -41,6 +43,9 @@ struct EndpointResponders<Context: BaseRequestContext>: Sendable {
         }
     }
 
+    @usableFromInline
     var methods: [HTTPRequest.Method: any HTTPResponder<Context>]
+
+    @usableFromInline
     var path: String
 }

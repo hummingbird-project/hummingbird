@@ -15,7 +15,6 @@
 import NIOCore
 
 extension RouterTrie {
-    @inlinable
     static func serialize(
         _ node: RouterPathTrieBuilder<Value>.Node,
         trie: inout Trie,
@@ -82,7 +81,6 @@ extension RouterTrie {
         trie.nodes[nodeIndex].nextSiblingNodeIndex = trie.nodes.count
     }
 
-    @inlinable
     static func serializeChildren(
         of node: RouterPathTrieBuilder<Value>.Node,
         trie: inout Trie,
@@ -95,7 +93,6 @@ extension RouterTrie {
         }
     }
 
-    @inlinable
     internal static func highestPriorityFirst(lhs: RouterPathTrieBuilder<Value>.Node, rhs: RouterPathTrieBuilder<Value>.Node) -> Bool {
         lhs.key.priority > rhs.key.priority
     }

@@ -19,7 +19,7 @@ import HummingbirdCore
     @usableFromInline
     var root: Node
 
-    public init() {
+    @_spi(Internal) public init() {
         self.root = Node(key: .null, output: nil)
     }
 
@@ -28,7 +28,7 @@ import HummingbirdCore
     ///   - entry: Path for entry
     ///   - value: Value to add to this path if one does not exist already
     ///   - onAdd: How to edit the value at this path
-    public func addEntry(_ entry: RouterPath, value: @autoclosure () -> Value, onAdd: (Node) -> Void = { _ in }) {
+    @_spi(Internal) public func addEntry(_ entry: RouterPath, value: @autoclosure () -> Value, onAdd: (Node) -> Void = { _ in }) {
         var node = self.root
         for key in entry {
             node = node.addChild(key: key, output: nil)
@@ -51,13 +51,10 @@ import HummingbirdCore
 
     /// Trie Node. Each node represents one component of a URI path
     @_spi(Internal) public final class Node {
-        @usableFromInline
         let key: RouterPath.Element
 
-        @usableFromInline
         var children: [Node]
 
-        @usableFromInline
         var value: Value?
 
         init(key: RouterPath.Element, output: Value?) {

@@ -17,7 +17,7 @@ import NIOCore
 extension RouterTrie {
     /// Resolve a path to a `Value` if available
     @inlinable
-    @_spi(Internal) public func resolve(_ path: String) -> (value: Value, parameters: Parameters)? {
+    public func resolve(_ path: String) -> (value: Value, parameters: Parameters)? {
         let pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
         var pathComponentsIterator = pathComponents.makeIterator()
         var parameters = Parameters()

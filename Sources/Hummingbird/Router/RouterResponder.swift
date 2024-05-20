@@ -15,8 +15,13 @@
 import NIOCore
 
 public struct RouterResponder<Context: BaseRequestContext>: HTTPResponder {
+    @usableFromInline
     let trie: RouterTrie<EndpointResponders<Context>>
+
+    @usableFromInline
     let notFoundResponder: any HTTPResponder<Context>
+
+    @usableFromInline
     let options: RouterOptions
 
     init(
@@ -33,6 +38,7 @@ public struct RouterResponder<Context: BaseRequestContext>: HTTPResponder {
     /// Respond to request by calling correct handler
     /// - Parameter request: HTTP request
     /// - Returns: EventLoopFuture that will be fulfilled with the Response
+    @inlinable
     public func respond(to request: Request, context: Context) async throws -> Response {
         let path: String
         if self.options.contains(.caseInsensitive) {
