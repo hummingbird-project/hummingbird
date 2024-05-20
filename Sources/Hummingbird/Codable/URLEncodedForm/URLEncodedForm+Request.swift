@@ -19,8 +19,7 @@ extension URLEncodedFormEncoder: ResponseEncoder {
     ///   - request: Request used to generate response
     public func encode(_ value: some Encodable, from request: Request, context: some BaseRequestContext) throws -> Response {
         let string = try self.encode(value)
-        var buffer = context.allocator.buffer(capacity: string.utf8.count)
-        buffer.writeString(string)
+        let buffer = context.allocator.buffer(string: string)
         return Response(
             status: .ok,
             headers: [
