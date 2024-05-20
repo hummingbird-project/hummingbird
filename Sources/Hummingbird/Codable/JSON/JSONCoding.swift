@@ -23,12 +23,14 @@ extension JSONEncoder: ResponseEncoder {
     ///   - value: Value to encode
     ///   - request: Request used to generate response
     public func encode(_ value: some Encodable, from request: Request, context: some BaseRequestContext) throws -> Response {
-        var buffer = context.allocator.buffer(capacity: 0)
         let data = try self.encode(value)
-        buffer.writeBytes(data)
+        let buffer = context.allocator.buffer(data: data)
         return Response(
             status: .ok,
-            headers: [.contentType: "application/json; charset=utf-8"],
+            headers: [
+                .contentType: "application/json; charset=utf-8",
+                .contentLength: data.count.description,
+            ],
             body: .init(byteBuffer: buffer)
         )
     }

@@ -25,8 +25,10 @@ public struct Request: Sendable {
     /// Body of HTTP request
     public var body: RequestBody
     /// Request HTTP method
+    @inlinable
     public var method: HTTPRequest.Method { self.head.method }
     /// Request HTTP headers
+    @inlinable
     public var headers: HTTPFields { self.head.headerFields }
 
     // MARK: Initialization

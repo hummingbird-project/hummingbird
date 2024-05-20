@@ -86,7 +86,7 @@ public struct CORSMiddleware<Context: BaseRequestContext>: RouterMiddleware {
     /// apply CORS middleware
     public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
         // if no origin header then don't apply CORS
-        guard request.headers[.origin] != nil else {
+        guard request.headers.contains(.origin) else {
             return try await next(request, context)
         }
 

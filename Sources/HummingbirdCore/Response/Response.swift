@@ -16,31 +16,38 @@ import HTTPTypes
 
 /// Holds all the required to generate a HTTP Response
 public struct Response: Sendable {
-    public var head: HTTPResponse
+    /// Response status
+    public var status: HTTPResponse.Status
+    /// Response headers
+    public var headers: HTTPFields
+    /// Response head constructed from status and headers
+    @inlinable
+    public var head: HTTPResponse {
+        get { HTTPResponse(status: self.status, headerFields: self.headers) }
+        set {
+            self.status = newValue.status
+            self.headers = newValue.headerFields
+        }
+    }
+
+    /// Response body
     public var body: ResponseBody {
         didSet {
             if let contentLength = body.contentLength {
-                self.head.headerFields[.contentLength] = String(describing: contentLength)
+                self.headers[.contentLength] = String(describing: contentLength)
             }
         }
     }
 
+    /// Initialize Response
+    @inlinable
     public init(status: HTTPResponse.Status, headers: HTTPFields = .init(), body: ResponseBody = .init()) {
-        self.head = .init(status: status, headerFields: headers)
+        self.status = status
+        self.headers = headers
         self.body = body
-        if let contentLength = body.contentLength, headers[.contentLength] == nil {
-            self.head.headerFields[.contentLength] = String(describing: contentLength)
+        if let contentLength = body.contentLength, !self.headers.contains(.contentLength) {
+            self.headers[.contentLength] = String(describing: contentLength)
         }
-    }
-
-    public var status: HTTPResponse.Status {
-        get { self.head.status }
-        set { self.head.status = newValue }
-    }
-
-    public var headers: HTTPFields {
-        get { self.head.headerFields }
-        set { self.head.headerFields = newValue }
     }
 
     /// Return HEAD response based off this response

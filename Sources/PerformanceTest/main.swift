@@ -37,10 +37,14 @@ router.post { request, _ in
     return Response(status: .ok, body: .init(asyncSequence: request.body))
 }
 
+struct Object: ResponseEncodable {
+    let message: String
+}
+
 // return JSON
 // ./wrk -c 128 -d 15s -t 8 http://localhost:8080/json
 router.get("json") { _, _ in
-    return ["message": "Hello, world"]
+    return Object(message: "Hello, world")
 }
 
 // return JSON
