@@ -11,6 +11,7 @@ needs to be listed here.
 ### Contributors
 
 - Adam Fowler <adamfowler71@gmail.com>
+- Aleph Retamal <7674479+alephao@users.noreply.github.com>
 - Brian Michel <brian.michel@gmail.com>
 - Chris <4376956+SoftwareEngineerChris@users.noreply.github.com>
 - Derek Clarkson <d4rkf1br3@gmail.com>
@@ -19,11 +20,20 @@ needs to be listed here.
 - Joannis Orlandos <joannis@orlandos.nl>
 - Moritz Lang <hi@slashmo.codes>
 - Simon Leeb <52261246+sliemeobn@users.noreply.github.com>
+- Tanner Silva <t@tannersilva.com>
 - Tibor Bödecs <mail.tib@gmail.com>
+- dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+- hummingbird-automation[bot] <168462326+hummingbird-automation[bot]@users.noreply.github.com>
+- taylorswift <kelvin13ma@gmail.com>
+- 0xpablo <pablos93@gmail.com>
 - Ronald Mannak <ronaldmannak@me.com>
 - Nicholas Trienens <nick@fuzzproductions.com>
+- Gao Lei <7885834+ladiesman218@users.noreply.github.com>
+- Kanz <87kangsw@gmail.com>
+- Kia Abdi <65511468+TheeKia@users.noreply.github.com>
 - Michael Critz <github@michaelcritz.com>
 - Patrick Heneise <patrick@zentered.co>
+- Ádám Rocska <1914616+adam-rocska@users.noreply.github.com>
 
 **Updating this list**
 
