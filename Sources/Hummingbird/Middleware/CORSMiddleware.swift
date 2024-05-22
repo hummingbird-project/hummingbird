@@ -93,10 +93,12 @@ public struct CORSMiddleware<Context: BaseRequestContext>: RouterMiddleware {
         if request.method == .options {
             // if request is OPTIONS then return CORS headers and skip the rest of the middleware chain
             var headers: HTTPFields = [
-                .accessControlAllowOrigin: allowOrigin.value(for: request) ?? "",
+                .accessControlAllowHeaders: self.allowHeaders,
+                .accessControlAllowMethods: self.allowMethods,
             ]
-            headers[.accessControlAllowHeaders] = self.allowHeaders
-            headers[.accessControlAllowMethods] = self.allowMethods
+            if let allowOrigin = allowOrigin.value(for: request) {
+                headers[.accessControlAllowOrigin] = allowOrigin
+            }
             if self.allowCredentials {
                 headers[.accessControlAllowCredentials] = "true"
             }
@@ -113,15 +115,32 @@ public struct CORSMiddleware<Context: BaseRequestContext>: RouterMiddleware {
             return Response(status: .noContent, headers: headers, body: .init())
         } else {
             // if not OPTIONS then run rest of middleware chain and add origin value at the end
-            var response = try await next(request, context)
-            response.headers[.accessControlAllowOrigin] = self.allowOrigin.value(for: request) ?? ""
-            if self.allowCredentials {
-                response.headers[.accessControlAllowCredentials] = "true"
+            do {
+                var response = try await next(request, context)
+                response.headers[.accessControlAllowOrigin] = self.allowOrigin.value(for: request)
+                if self.allowCredentials {
+                    response.headers[.accessControlAllowCredentials] = "true"
+                }
+                if case .originBased = self.allowOrigin {
+                    response.headers[.vary] = "Origin"
+                }
+                return response
+            } catch {
+                // If next throws an error add headers to error
+                var additionalHeaders = HTTPFields()
+                additionalHeaders[.accessControlAllowOrigin] = self.allowOrigin.value(for: request)
+                if self.allowCredentials {
+                    additionalHeaders[.accessControlAllowCredentials] = "true"
+                }
+                if case .originBased = self.allowOrigin {
+                    additionalHeaders[.vary] = "Origin"
+                }
+                throw EditedHTTPError(
+                    originalError: error,
+                    additionalHeaders: additionalHeaders,
+                    context: context
+                )
             }
-            if case .originBased = self.allowOrigin {
-                response.headers[.vary] = "Origin"
-            }
-            return response
         }
     }
 }

@@ -242,6 +242,18 @@ final class MiddlewareTests: XCTestCase {
         }
     }
 
+    func testCORSHeadersAndErrors() async throws {
+        let router = Router()
+        router.middlewares.add(CORSMiddleware())
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/hello", method: .get, headers: [.origin: "foo.com"]) { response in
+                // headers come back in opposite order as middleware is applied to responses in that order
+                XCTAssertEqual(response.headers[.accessControlAllowOrigin], "foo.com")
+            }
+        }
+    }
+
     func testLogRequestMiddleware() async throws {
         let logAccumalator = TestLogHandler.LogAccumalator()
         let router = Router()
