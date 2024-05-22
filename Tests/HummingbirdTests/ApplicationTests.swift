@@ -208,6 +208,20 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    func testErrorHeaders() async throws {
+        let router = Router()
+        router.get("error") { _, _ -> HTTPResponse.Status in
+            throw HTTPError(.badRequest, message: "BAD!")
+        }
+        let app = Application(router: router, configuration: .init(serverName: "HB"))
+        try await app.test(.live) { client in
+            try await client.execute(uri: "/error", method: .get) { response in
+                XCTAssertEqual(response.headers[.server], "HB")
+                XCTAssertNotNil(response.headers[.date])
+            }
+        }
+    }
+
     func testResponseBody() async throws {
         let router = Router()
         router
