@@ -201,7 +201,7 @@ class HummingBirdCoreTests: XCTestCase {
             var seen: Bool = false
             func channelRead(context: ChannelHandlerContext, data: NIOAny) {
                 if case .body = self.unwrapInboundIn(data) {
-                    context.fireErrorCaught(TestChannelHandlerError())//HTTPError(.unavailableForLegalReasons))
+                    context.fireErrorCaught(TestChannelHandlerError())
                 }
                 context.fireChannelRead(data)
             }
