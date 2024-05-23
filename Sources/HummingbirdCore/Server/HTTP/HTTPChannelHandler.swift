@@ -111,20 +111,6 @@ extension HTTPChannelHandler {
             logger.trace("Failed to read/write to Channel. Error: \(error)")
         }
     }
-
-    func getErrorResponse(from error: Error, allocator: ByteBufferAllocator) -> Response {
-        switch error {
-        case let httpError as HTTPResponseError:
-            // this is a processed error so don't log as Error
-            return httpError.response(allocator: allocator)
-        default:
-            // this error has not been recognised
-            return Response(
-                status: .internalServerError,
-                body: .init()
-            )
-        }
-    }
 }
 
 /// Writes ByteBuffers to AsyncChannel outbound writer

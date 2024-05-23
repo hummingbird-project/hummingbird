@@ -194,13 +194,14 @@ class HummingBirdCoreTests: XCTestCase {
     }
 
     func testChannelHandlerErrorPropagation() async throws {
+        struct TestChannelHandlerError: Error {}
         class CreateErrorHandler: ChannelInboundHandler, RemovableChannelHandler {
             typealias InboundIn = HTTPRequestPart
 
             var seen: Bool = false
             func channelRead(context: ChannelHandlerContext, data: NIOAny) {
                 if case .body = self.unwrapInboundIn(data) {
-                    context.fireErrorCaught(HTTPError(.unavailableForLegalReasons))
+                    context.fireErrorCaught(TestChannelHandlerError())//HTTPError(.unavailableForLegalReasons))
                 }
                 context.fireChannelRead(data)
             }
@@ -209,6 +210,8 @@ class HummingBirdCoreTests: XCTestCase {
             responder: { request, _ in
                 do {
                     _ = try await request.body.collect(upTo: .max)
+                } catch is TestChannelHandlerError {
+                    return Response(status: .unavailableForLegalReasons)
                 } catch {
                     return Response(status: .contentTooLarge)
                 }

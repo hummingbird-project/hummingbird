@@ -97,3 +97,8 @@ public typealias HBMemoryPersistDriver = MemoryPersistDriver
 public typealias HBPersistDriver = PersistDriver
 @_documentation(visibility: internal) @available(*, deprecated, renamed: "PersistError")
 public typealias HBPersistError = PersistError
+
+@_documentation(visibility: internal) @available(*, deprecated, renamed: "HTTPError")
+public typealias HBHTTPError = HTTPError
+@_documentation(visibility: internal) @available(*, deprecated, renamed: "HTTPResponseError")
+public typealias HBHTTPResponseError = HTTPResponseError

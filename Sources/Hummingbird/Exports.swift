@@ -13,8 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 @_exported import struct HummingbirdCore.BindAddress
-@_exported import struct HummingbirdCore.HTTPError
-@_exported import protocol HummingbirdCore.HTTPResponseError
 @_exported import struct HummingbirdCore.Request
 @_exported import struct HummingbirdCore.RequestBody
 @_exported import struct HummingbirdCore.Response
@@ -32,8 +30,6 @@
 @_exported @_documentation(visibility: internal) import struct HTTPTypes.HTTPResponse
 
 // Temporary exports or deprecated typealiases
-@_exported import struct HummingbirdCore.HBHTTPError
-@_exported import protocol HummingbirdCore.HBHTTPResponseError
 @_exported import struct HummingbirdCore.HBRequest
 @_exported import struct HummingbirdCore.HBRequestBody
 @_exported import struct HummingbirdCore.HBResponse
