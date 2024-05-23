@@ -27,7 +27,7 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
     ///   - responder: Function returning a HTTP response for a HTTP request
     ///   - additionalChannelHandlers: Additional channel handlers to add to channel pipeline
     public init(
-        responder: @escaping @Sendable (Request, Channel) async throws -> Response,
+        responder: @escaping HTTPChannelHandler.Responder,
         additionalChannelHandlers: @escaping @Sendable () -> [any RemovableChannelHandler] = { [] }
     ) {
         self.additionalChannelHandlers = additionalChannelHandlers
@@ -66,7 +66,7 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
         await handleHTTP(asyncChannel: asyncChannel, logger: logger)
     }
 
-    public let responder: @Sendable (Request, Channel) async throws -> Response
+    public let responder: HTTPChannelHandler.Responder
     let additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
 }
 

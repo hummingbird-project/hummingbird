@@ -33,7 +33,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
     private let sslContext: NIOSSLContext
     private let http1: HTTP1Channel
     private let additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
-    public var responder: @Sendable (Request, Channel) async throws -> Response { http1.responder }
+    public var responder: HTTPChannelHandler.Responder { self.http1.responder }
 
     ///  Initialize HTTP1Channel
     /// - Parameters:
@@ -43,7 +43,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
     public init(
         tlsConfiguration: TLSConfiguration,
         additionalChannelHandlers: @escaping @Sendable () -> [any RemovableChannelHandler] = { [] },
-        responder: @escaping @Sendable (Request, Channel) async throws -> Response = { _, _ in throw HTTPError(.notFound) }
+        responder: @escaping HTTPChannelHandler.Responder
     ) throws {
         var tlsConfiguration = tlsConfiguration
         tlsConfiguration.applicationProtocols = NIOHTTP2SupportedALPNProtocols
