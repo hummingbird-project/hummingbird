@@ -35,10 +35,10 @@ extension String: ResponseGenerator {
         let buffer = context.allocator.buffer(string: self)
         return Response(
             status: .ok,
-            headers: [
-                .contentType: "text/plain; charset=utf-8",
-                .contentLength: buffer.readableBytes.description,
-            ],
+            headers: .defaultHummingbirdHeaders(
+                contentType: "text/plain; charset=utf-8",
+                contentLength: buffer.readableBytes
+            ),
             body: .init(byteBuffer: buffer)
         )
     }
@@ -51,10 +51,10 @@ extension Substring: ResponseGenerator {
         let buffer = context.allocator.buffer(substring: self)
         return Response(
             status: .ok,
-            headers: [
-                .contentType: "text/plain; charset=utf-8",
-                .contentLength: buffer.readableBytes.description,
-            ],
+            headers: .defaultHummingbirdHeaders(
+                contentType: "text/plain; charset=utf-8",
+                contentLength: buffer.readableBytes
+            ),
             body: .init(byteBuffer: buffer)
         )
     }
@@ -66,10 +66,10 @@ extension ByteBuffer: ResponseGenerator {
     public func response(from request: Request, context: some BaseRequestContext) -> Response {
         Response(
             status: .ok,
-            headers: [
-                .contentType: "application/octet-stream",
-                .contentLength: self.readableBytes.description,
-            ],
+            headers: .defaultHummingbirdHeaders(
+                contentType: "application/octet-stream",
+                contentLength: self.readableBytes
+            ),
             body: .init(byteBuffer: self)
         )
     }
@@ -126,5 +126,24 @@ public struct EditedResponse<Generator: ResponseGenerator>: ResponseGenerator {
             response.headers = headers
         }
         return response
+    }
+}
+
+extension HTTPFields {
+    /// Initialize HTTPFields with contentType and contentLength headers and also reserve
+    /// space for server and date headers which will be set later
+    /// - Parameters:
+    ///   - contentType: Content Type header
+    ///   - contentLength: Content Length
+    @inlinable
+    static func defaultHummingbirdHeaders(
+        contentType: String,
+        contentLength: Int
+    ) -> Self {
+        var headers = self.init()
+        headers.reserveCapacity(4)
+        headers.append(.init(name: .contentType, value: contentType))
+        headers.append(.init(name: .contentLength, value: contentLength.description))
+        return headers
     }
 }
