@@ -27,7 +27,7 @@ extension JSONEncoder: ResponseEncoder {
         let buffer = context.allocator.buffer(data: data)
         return Response(
             status: .ok,
-            headers: .init(
+            headers: .defaultHummingbirdHeaders(
                 contentType: "application/json; charset=utf-8",
                 contentLength: data.count
             ),

@@ -35,7 +35,7 @@ extension String: ResponseGenerator {
         let buffer = context.allocator.buffer(string: self)
         return Response(
             status: .ok,
-            headers: .init(
+            headers: .defaultHummingbirdHeaders(
                 contentType: "text/plain; charset=utf-8",
                 contentLength: buffer.readableBytes
             ),
@@ -51,7 +51,7 @@ extension Substring: ResponseGenerator {
         let buffer = context.allocator.buffer(substring: self)
         return Response(
             status: .ok,
-            headers: .init(
+            headers: .defaultHummingbirdHeaders(
                 contentType: "text/plain; charset=utf-8",
                 contentLength: buffer.readableBytes
             ),
@@ -66,7 +66,7 @@ extension ByteBuffer: ResponseGenerator {
     public func response(from request: Request, context: some BaseRequestContext) -> Response {
         Response(
             status: .ok,
-            headers: .init(
+            headers: .defaultHummingbirdHeaders(
                 contentType: "application/octet-stream",
                 contentLength: self.readableBytes
             ),
@@ -135,13 +135,15 @@ extension HTTPFields {
     /// - Parameters:
     ///   - contentType: Content Type header
     ///   - contentLength: Content Length
-    init(
+    @inlinable
+    static func defaultHummingbirdHeaders(
         contentType: String,
         contentLength: Int
-    ) {
-        self.init()
-        self.reserveCapacity(4)
-        self.append(.init(name: .contentType, value: contentType))
-        self.append(.init(name: .contentLength, value: contentLength.description))
+    ) -> Self {
+        var headers = self.init()
+        headers.reserveCapacity(4)
+        headers.append(.init(name: .contentType, value: contentType))
+        headers.append(.init(name: .contentLength, value: contentLength.description))
+        return headers
     }
 }

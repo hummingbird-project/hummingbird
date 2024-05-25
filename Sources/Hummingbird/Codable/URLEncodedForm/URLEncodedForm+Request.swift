@@ -22,7 +22,7 @@ extension URLEncodedFormEncoder: ResponseEncoder {
         let buffer = context.allocator.buffer(string: string)
         return Response(
             status: .ok,
-            headers: .init(
+            headers: .defaultHummingbirdHeaders(
                 contentType: "application/x-www-form-urlencoded",
                 contentLength: buffer.readableBytes
             ),
