@@ -22,10 +22,10 @@ extension URLEncodedFormEncoder: ResponseEncoder {
         let buffer = context.allocator.buffer(string: string)
         return Response(
             status: .ok,
-            headers: [
-                .contentType: "application/x-www-form-urlencoded",
-                .contentLength: buffer.readableBytes.description,
-            ],
+            headers: .init(
+                contentType: "application/x-www-form-urlencoded",
+                contentLength: buffer.readableBytes
+            ),
             body: .init(byteBuffer: buffer)
         )
     }
