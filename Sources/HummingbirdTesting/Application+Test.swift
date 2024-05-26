@@ -34,10 +34,13 @@ public struct TestingSetup {
 
     /// Test writing requests directly to router.
     public static var router: TestingSetup { .init(value: .router) }
-    /// Sets up a live server and execute tests using a HTTP client. Only supports HTTP1
+    /// Sets up a live server and execute tests using a HTTP client with a single connection to the
+    /// server. Only supports HTTP1. The client only supports single threaded execution. If you want
+    /// multi-threaded request execution then use `.ahc(_:)`.
     public static var live: TestingSetup { .init(value: .live) }
-    /// Sets up a live server and execute tests using a HTTP client. Does not support trailer headers
-    public static func ahc(_ scheme: TestHTTPScheme) -> TestingSetup { .init(value: .ahc(scheme)) }
+    /// Sets up a live server and execute tests using the HTTP client from
+    /// https://github.com/swift-server/async-http-client. Does not support trailer headers
+    public static func ahc(_ scheme: TestHTTPScheme = .http) -> TestingSetup { .init(value: .ahc(scheme)) }
 }
 
 /// Extends `ApplicationProtocol` to support testing of applications
