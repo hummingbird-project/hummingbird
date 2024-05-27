@@ -29,6 +29,30 @@ class TrieRouterTests: XCTestCase {
         XCTAssertEqual(trie.resolve("/Users/jane/bin")?.value, "test3")
     }
 
+    func testPathParsing() {
+        let trieBuilder = RouterPathTrieBuilder<String>()
+        func getFirstChildElement(_ path: String) -> RouterPath.Element? {
+            trieBuilder.root.children.first(where: { $0.key == path })?.children.first?.key
+        }
+        trieBuilder.addEntry("test1/:param", value: "*")
+        trieBuilder.addEntry("test2/{param}", value: "*")
+        trieBuilder.addEntry("test3/*", value: "*")
+        trieBuilder.addEntry("test4/**", value: "*")
+        trieBuilder.addEntry("test5/*.jpg", value: "*")
+        trieBuilder.addEntry("test6/test.*", value: "*")
+        trieBuilder.addEntry("test7/{image}.jpg", value: "*")
+        trieBuilder.addEntry("test8/test.{ext}", value: "*")
+
+        XCTAssertEqual(getFirstChildElement("test1"), .capture("param"))
+        XCTAssertEqual(getFirstChildElement("test2"), .capture("param"))
+        XCTAssertEqual(getFirstChildElement("test3"), .wildcard)
+        XCTAssertEqual(getFirstChildElement("test4"), .recursiveWildcard)
+        XCTAssertEqual(getFirstChildElement("test5"), .prefixWildcard(".jpg"))
+        XCTAssertEqual(getFirstChildElement("test6"), .suffixWildcard("test."))
+        XCTAssertEqual(getFirstChildElement("test7"), .prefixCapture(suffix: ".jpg", parameter: "image"))
+        XCTAssertEqual(getFirstChildElement("test8"), .suffixCapture(prefix: "test.", parameter: "ext"))
+    }
+
     func testRootNode() {
         let trieBuilder = RouterPathTrieBuilder<String>()
         trieBuilder.addEntry("", value: "test1")
@@ -147,5 +171,19 @@ class TrieRouterTests: XCTestCase {
         let trie = trieBuilder.build()
         XCTAssertEqual(trie.resolve("/text}")?.value, "test")
         XCTAssertNil(trie.resolve("/text"))
+    }
+
+    func testRoutePrecedence() {
+        let trieBuilder = RouterPathTrieBuilder<String>()
+        trieBuilder.addEntry("path.jpg", value: "path")
+        trieBuilder.addEntry("{parameter}", value: "parameter")
+        trieBuilder.addEntry("{parameter}.jpg", value: "prefixParameter")
+        trieBuilder.addEntry("*.txt", value: "prefixWildcard")
+        trieBuilder.addEntry("*", value: "wildcard")
+        let trie = trieBuilder.build()
+        XCTAssertEqual(trie.resolve("path.jpg")?.value, "path")
+        XCTAssertEqual(trie.resolve("this.jpg")?.value, "prefixParameter")
+        XCTAssertEqual(trie.resolve("this.txt")?.value, "prefixWildcard")
+        XCTAssertEqual(trie.resolve("hello")?.value, "parameter")
     }
 }
