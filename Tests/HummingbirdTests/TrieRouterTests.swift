@@ -77,11 +77,15 @@ class TrieRouterTests: XCTestCase {
         let trieBuilder = RouterPathTrieBuilder<String>()
         trieBuilder.addEntry("users/:user", value: "test1")
         trieBuilder.addEntry("users/:user/name", value: "john smith")
+        trieBuilder.addEntry("users/:user/name/{id}", value: "41D2DF67-C2C2-4842-B1DA-9F4549BED3F0")
         let trie = trieBuilder.build()
         XCTAssertNil(trie.resolve("/user/"))
         XCTAssertEqual(trie.resolve("/users/1234")?.parameters.get("user"), "1234")
         XCTAssertEqual(trie.resolve("/users/1234/name")?.parameters.get("user"), "1234")
         XCTAssertEqual(trie.resolve("/users/1234/name")?.value, "john smith")
+        XCTAssertEqual(trie.resolve("/users/1234/name/34")?.value, "41D2DF67-C2C2-4842-B1DA-9F4549BED3F0")
+        XCTAssertEqual(trie.resolve("/users/5678/name/34")?.parameters.get("user"), "5678")
+        XCTAssertEqual(trie.resolve("/users/1234/name/90")?.parameters.get("id"), "90")
     }
 
     func testRecursiveWildcard() {
