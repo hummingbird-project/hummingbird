@@ -92,7 +92,11 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConv
                 let parameter = component.dropFirst(1)
                 if let closingParethesis = parameter.firstIndex(of: "}") {
                     let charAfterClosingParethesis = parameter.index(after: closingParethesis)
-                    return .prefixCapture(suffix: parameter[charAfterClosingParethesis...], parameter: parameter[..<closingParethesis])
+                    if charAfterClosingParethesis == parameter.endIndex {
+                        return .capture(parameter[..<closingParethesis])
+                    } else {
+                        return .prefixCapture(suffix: parameter[charAfterClosingParethesis...], parameter: parameter[..<closingParethesis])
+                    }
                 } else {
                     return .path(component)
                 }

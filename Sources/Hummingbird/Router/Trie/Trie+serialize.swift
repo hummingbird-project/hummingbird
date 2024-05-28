@@ -102,24 +102,24 @@ extension RouterPath.Element {
     @usableFromInline
     var priority: Int {
         switch self {
-        case .prefixCapture, .suffixCapture:
-            // Most specific
-            return 1
         case .path, .null:
-            // Specific
+            // Most specific
             return 0
+        case .prefixCapture, .suffixCapture:
+            // specific
+            return -1
         case .prefixWildcard, .suffixWildcard:
             // Less specific
-            return -1
+            return -2
         case .capture:
             // More important than wildcards
-            return -2
+            return -3
         case .wildcard:
             // Not specific at all
-            return -3
+            return -4
         case .recursiveWildcard:
             // Least specific
-            return -4
+            return -5
         }
     }
 }
