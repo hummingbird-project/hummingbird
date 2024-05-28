@@ -105,7 +105,22 @@ extension ApplicationProtocol {
                 logger: self.logger.with(metadataKey: "hb_id", value: .stringConvertible(RequestID()))
             )
             // respond to request
-            var response = try await responder.respond(to: request, context: context)
+            var response: Response
+            do {
+                response = try await responder.respond(to: request, context: context)
+            } catch {
+                switch error {
+                case let httpError as HTTPResponseError:
+                    // this is a processed error so don't log as Error
+                    response = httpError.response(allocator: channel.allocator)
+                default:
+                    // this error has not been recognised
+                    response = Response(
+                        status: .internalServerError,
+                        body: .init()
+                    )
+                }
+            }
             response.headers[.date] = dateCache.date
             // server name header
             if let serverName = self.configuration.serverName {

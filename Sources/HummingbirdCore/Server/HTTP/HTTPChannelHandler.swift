@@ -145,13 +145,6 @@ struct HTTPServerBodyWriter: Sendable, ResponseBodyWriter {
     }
 }
 
-// If we catch a too many bytes error report that as payload too large
-extension NIOTooManyBytesError: HTTPResponseError {
-    public var status: HTTPResponse.Status { .contentTooLarge }
-    public var headers: HTTPFields { [:] }
-    public func body(allocator: ByteBufferAllocator) -> ByteBuffer? { nil }
-}
-
 extension NIOLockedValueBox {
     /// Exchange stored value for new value and return the old stored value
     func exchange(_ newValue: Value) -> Value {
