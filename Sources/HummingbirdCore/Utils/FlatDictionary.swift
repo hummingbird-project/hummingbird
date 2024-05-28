@@ -175,4 +175,5 @@ public struct FlatDictionary<Key: Hashable, Value>: Collection, ExpressibleByDic
 }
 
 // FlatDictionary is Sendable when Key and Value are Sendable
+extension FlatDictionary.Storage: Sendable where Key: Sendable, Value: Sendable {}
 extension FlatDictionary: Sendable where Key: Sendable, Value: Sendable {}
