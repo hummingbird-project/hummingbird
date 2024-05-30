@@ -115,6 +115,7 @@ extension ApplicationProtocol {
                     response = httpError.response(allocator: channel.allocator)
                 default:
                     // this error has not been recognised
+                    context.logger.debug("Unrecognised Error", metadata: ["error": "\(error)"])
                     response = Response(
                         status: .internalServerError,
                         body: .init()

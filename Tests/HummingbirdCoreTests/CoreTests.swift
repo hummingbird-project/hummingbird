@@ -70,7 +70,7 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testError() async throws {
         try await testServer(
-            responder: { _, _ in throw HTTPError(.unauthorized) },
+            responder: { _, _ in .init(status: .unauthorized) },
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
@@ -85,8 +85,12 @@ class HummingBirdCoreTests: XCTestCase {
     func testConsumeBody() async throws {
         try await testServer(
             responder: { request, _ in
-                let buffer = try await request.body.collect(upTo: .max)
-                return Response(status: .ok, body: .init(byteBuffer: buffer))
+                do {
+                    let buffer = try await request.body.collect(upTo: .max)
+                    return Response(status: .ok, body: .init(byteBuffer: buffer))
+                } catch {
+                    return Response(status: .contentTooLarge)
+                }
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
@@ -190,20 +194,27 @@ class HummingBirdCoreTests: XCTestCase {
     }
 
     func testChannelHandlerErrorPropagation() async throws {
+        struct TestChannelHandlerError: Error {}
         class CreateErrorHandler: ChannelInboundHandler, RemovableChannelHandler {
             typealias InboundIn = HTTPRequestPart
 
             var seen: Bool = false
             func channelRead(context: ChannelHandlerContext, data: NIOAny) {
                 if case .body = self.unwrapInboundIn(data) {
-                    context.fireErrorCaught(HTTPError(.unavailableForLegalReasons))
+                    context.fireErrorCaught(TestChannelHandlerError())
                 }
                 context.fireChannelRead(data)
             }
         }
         try await testServer(
             responder: { request, _ in
-                _ = try await request.body.collect(upTo: .max)
+                do {
+                    _ = try await request.body.collect(upTo: .max)
+                } catch is TestChannelHandlerError {
+                    return Response(status: .unavailableForLegalReasons)
+                } catch {
+                    return Response(status: .contentTooLarge)
+                }
                 return Response(status: .ok)
             },
             httpChannelSetup: .http1(additionalChannelHandlers: [CreateErrorHandler()]),
@@ -269,7 +280,11 @@ class HummingBirdCoreTests: XCTestCase {
         }
         try await testServer(
             responder: { request, _ in
-                _ = try await request.body.collect(upTo: .max)
+                do {
+                    _ = try await request.body.collect(upTo: .max)
+                } catch {
+                    return Response(status: .contentTooLarge)
+                }
                 return .init(status: .ok)
             },
             httpChannelSetup: .http1(additionalChannelHandlers: [HTTPServerIncompleteRequest(), IdleStateHandler(readTimeout: .seconds(1))]),
@@ -292,7 +307,11 @@ class HummingBirdCoreTests: XCTestCase {
     func testWriteIdleTimeout() async throws {
         try await testServer(
             responder: { request, _ in
-                _ = try await request.body.collect(upTo: .max)
+                do {
+                    _ = try await request.body.collect(upTo: .max)
+                } catch {
+                    return Response(status: .contentTooLarge)
+                }
                 return .init(status: .ok)
             },
             httpChannelSetup: .http1(additionalChannelHandlers: [IdleStateHandler(writeTimeout: .seconds(1))]),
@@ -320,7 +339,7 @@ class HummingBirdCoreTests: XCTestCase {
                 logger: logger
             ) { request, _ in
                 await handlerPromise.complete(())
-                try await Task.sleep(for: .milliseconds(500))
+                try? await Task.sleep(for: .milliseconds(500))
                 return Response(status: .ok, body: .init(asyncSequence: request.body.delayed()))
             } onServerRunning: {
                 await portPromise.complete($0.localAddress!.port!)

@@ -28,10 +28,6 @@ public typealias HBResponse = Response
 public typealias HBResponseBody = ResponseBody
 @_documentation(visibility: internal) @available(*, deprecated, renamed: "ResponseBodyWriter")
 public typealias HBResponseBodyWriter = ResponseBodyWriter
-@_documentation(visibility: internal) @available(*, deprecated, renamed: "HTTPError")
-public typealias HBHTTPError = HTTPError
-@_documentation(visibility: internal) @available(*, deprecated, renamed: "HTTPResponseError")
-public typealias HBHTTPResponseError = HTTPResponseError
 @_documentation(visibility: internal) @available(*, deprecated, renamed: "Server")
 public typealias HBServer = Server
 @_documentation(visibility: internal) @available(*, deprecated, renamed: "ServerConfiguration")

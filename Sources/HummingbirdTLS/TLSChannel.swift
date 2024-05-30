@@ -58,8 +58,8 @@ public struct TLSChannel<BaseChannel: ServerChildChannel>: ServerChildChannel {
 }
 
 extension TLSChannel: HTTPChannelHandler where BaseChannel: HTTPChannelHandler {
-    public var responder: @Sendable (Request, Channel) async throws -> Response {
-        baseChannel.responder
+    public var responder: HTTPChannelHandler.Responder {
+        self.baseChannel.responder
     }
 }
 
