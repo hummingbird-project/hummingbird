@@ -17,8 +17,8 @@ import HTTPTypes
 import Hummingbird
 import HummingbirdCore
 import HummingbirdHTTP2
-import HummingbirdTesting
 import HummingbirdTLS
+import HummingbirdTesting
 import Logging
 import NIOCore
 import NIOSSL
@@ -78,7 +78,8 @@ final class ApplicationTests: XCTestCase {
         router.get("/hello") { _, _ in
             return "Hello"
         }
-        let app = Application(responder: router.buildResponder(), configuration: .init(serverName: "TestServer"))
+        let app = Application(
+            responder: router.buildResponder(), configuration: .init(serverName: "TestServer"))
         try await app.test(.live) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
                 XCTAssertEqual(response.headers[.server], "TestServer")
@@ -145,12 +146,14 @@ final class ApplicationTests: XCTestCase {
     func testQueryRoute() async throws {
         let router = Router()
         router.post("/query") { request, context -> ByteBuffer in
-            return context.allocator.buffer(string: request.uri.queryParameters["test"].map { String($0) } ?? "")
+            return context.allocator.buffer(
+                string: request.uri.queryParameters["test"].map { String($0) } ?? "")
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
-            try await client.execute(uri: "/query?test=test%20data%C3%A9", method: .post) { response in
+            try await client.execute(uri: "/query?test=test%20data%C3%A9", method: .post) {
+                response in
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(String(buffer: response.body), "test dataé")
             }
@@ -160,12 +163,14 @@ final class ApplicationTests: XCTestCase {
     func testMultipleQueriesRoute() async throws {
         let router = Router()
         router.post("/add") { request, _ -> String in
-            return request.uri.queryParameters.getAll("value", as: Int.self).reduce(0,+).description
+            return request.uri.queryParameters.getAll("value", as: Int.self).reduce(0, +)
+                .description
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
-            try await client.execute(uri: "/add?value=3&value=45&value=7", method: .post) { response in
+            try await client.execute(uri: "/add?value=3&value=45&value=7", method: .post) {
+                response in
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(String(buffer: response.body), "55")
             }
@@ -295,7 +300,10 @@ final class ApplicationTests: XCTestCase {
 
     func testCollateBody() async throws {
         struct CollateMiddleware<Context: BaseRequestContext>: RouterMiddleware {
-            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+            public func handle(
+                _ request: Request, context: Context,
+                next: (Request, Context) async throws -> Response
+            ) async throws -> Response {
                 var request = request
                 _ = try await request.collateBody(context: context)
                 return try await next(request, context)
@@ -667,7 +675,8 @@ final class ApplicationTests: XCTestCase {
                 status: .ok,
                 body: .init { writer in
                     for try await buffer in request.body {
-                        let processed = context.allocator.buffer(bytes: buffer.readableBytesView.map { $0 ^ 0xFF })
+                        let processed = context.allocator.buffer(
+                            bytes: buffer.readableBytesView.map { $0 ^ 0xFF })
                         try await writer.write(processed)
                     }
                 }
@@ -676,7 +685,8 @@ final class ApplicationTests: XCTestCase {
         let app = Application(router: router)
         try await app.test(.live) { client in
             try await client.execute(uri: "/", method: .post, body: buffer) { response in
-                XCTAssertEqual(response.body, ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 0xFF }))
+                XCTAssertEqual(
+                    response.body, ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 0xFF }))
             }
         }
     }
@@ -684,10 +694,14 @@ final class ApplicationTests: XCTestCase {
     // MARK: Helper functions
 
     func getServerTLSConfiguration() throws -> TLSConfiguration {
-        let caCertificate = try NIOSSLCertificate(bytes: [UInt8](caCertificateData.utf8), format: .pem)
-        let certificate = try NIOSSLCertificate(bytes: [UInt8](serverCertificateData.utf8), format: .pem)
-        let privateKey = try NIOSSLPrivateKey(bytes: [UInt8](serverPrivateKeyData.utf8), format: .pem)
-        var tlsConfig = TLSConfiguration.makeServerConfiguration(certificateChain: [.certificate(certificate)], privateKey: .privateKey(privateKey))
+        let caCertificate = try NIOSSLCertificate(
+            bytes: [UInt8](caCertificateData.utf8), format: .pem)
+        let certificate = try NIOSSLCertificate(
+            bytes: [UInt8](serverCertificateData.utf8), format: .pem)
+        let privateKey = try NIOSSLPrivateKey(
+            bytes: [UInt8](serverPrivateKeyData.utf8), format: .pem)
+        var tlsConfig = TLSConfiguration.makeServerConfiguration(
+            certificateChain: [.certificate(certificate)], privateKey: .privateKey(privateKey))
         tlsConfig.trustRoots = .certificates([caCertificate])
         return tlsConfig
     }
