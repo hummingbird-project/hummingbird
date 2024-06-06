@@ -34,7 +34,7 @@ public final class RouteCollection<Context: BaseRequestContext>: RouterMethods {
         method: HTTPRequest.Method,
         responder: Responder
     ) -> Self where Responder.Context == Context {
-        let route = RouteDefinition(path: path, method: method, responder: responder)
+        let route = RouteDefinition(path: path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         self.routes.append(route)
         return self
     }
@@ -68,7 +68,7 @@ extension RouterMethods {
         for route in collection.routes {
             // ensure path starts with a "/" and doesn't end with a "/"
             let path = self.combinePaths(path, route.path)
-            self.on(path, method: route.method, responder: collection.middlewares.constructResponder(finalResponder: route.responder))
+            self.on(path, method: route.method, responder: route.responder)
         }
     }
 }

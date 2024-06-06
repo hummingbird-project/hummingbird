@@ -481,6 +481,31 @@ final class RouterTests: XCTestCase {
         }
     }
 
+    // Test middleware in route collection is only applied to routes after middleware
+    func testMiddlewareOrderingInRouteCollection() async throws {
+        let router = Router()
+        let routes = RouteCollection()
+            .get("this") { _, _ in
+                return HTTPResponse.Status.ok
+            }
+            .add(middleware: TestMiddleware("Hello"))
+            .get("that") { _, _ in
+                return HTTPResponse.Status.ok
+            }
+        router.addRoutes(routes, atPath: "/test")
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/test/this", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertNil(response.headers[.test])
+            }
+            try await client.execute(uri: "/test/that", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(response.headers[.test], "Hello")
+            }
+        }
+    }
+
     // Test group in route collection
     func testGroupInRouteCollection() async throws {
         let router = Router()
