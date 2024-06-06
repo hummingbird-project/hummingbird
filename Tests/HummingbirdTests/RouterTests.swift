@@ -485,7 +485,7 @@ final class RouterTests: XCTestCase {
     func testMiddlewareOrderingInRouteCollection() async throws {
         let router = Router()
         let routes = RouteCollection()
-            .get("this") { _,_ in 
+            .get("this") { _, _ in
                 return HTTPResponse.Status.ok
             }
             .add(middleware: TestMiddleware("Hello"))

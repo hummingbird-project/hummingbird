@@ -17,8 +17,8 @@ import HTTPTypes
 import Hummingbird
 import HummingbirdCore
 import HummingbirdHTTP2
-import HummingbirdTLS
 import HummingbirdTesting
+import HummingbirdTLS
 import Logging
 import NIOCore
 import NIOSSL
@@ -79,7 +79,8 @@ final class ApplicationTests: XCTestCase {
             return "Hello"
         }
         let app = Application(
-            responder: router.buildResponder(), configuration: .init(serverName: "TestServer"))
+            responder: router.buildResponder(), configuration: .init(serverName: "TestServer")
+        )
         try await app.test(.live) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
                 XCTAssertEqual(response.headers[.server], "TestServer")
@@ -686,7 +687,8 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.live) { client in
             try await client.execute(uri: "/", method: .post, body: buffer) { response in
                 XCTAssertEqual(
-                    response.body, ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 0xFF }))
+                    response.body, ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 0xFF })
+                )
             }
         }
     }
@@ -695,13 +697,17 @@ final class ApplicationTests: XCTestCase {
 
     func getServerTLSConfiguration() throws -> TLSConfiguration {
         let caCertificate = try NIOSSLCertificate(
-            bytes: [UInt8](caCertificateData.utf8), format: .pem)
+            bytes: [UInt8](caCertificateData.utf8), format: .pem
+        )
         let certificate = try NIOSSLCertificate(
-            bytes: [UInt8](serverCertificateData.utf8), format: .pem)
+            bytes: [UInt8](serverCertificateData.utf8), format: .pem
+        )
         let privateKey = try NIOSSLPrivateKey(
-            bytes: [UInt8](serverPrivateKeyData.utf8), format: .pem)
+            bytes: [UInt8](serverPrivateKeyData.utf8), format: .pem
+        )
         var tlsConfig = TLSConfiguration.makeServerConfiguration(
-            certificateChain: [.certificate(certificate)], privateKey: .privateKey(privateKey))
+            certificateChain: [.certificate(certificate)], privateKey: .privateKey(privateKey)
+        )
         tlsConfig.trustRoots = .certificates([caCertificate])
         return tlsConfig
     }
