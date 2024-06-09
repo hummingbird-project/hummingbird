@@ -21,10 +21,10 @@ extension Request {
     /// you don't need to store the collated ByteBuffer on the request then use
     /// `request.body.collate(maxSize:)`.
     ///
-    /// - Parameter context: request context
+    /// - Parameter upTo: Maxiumum size of body to collect
     /// - Returns: Collated body
-    public mutating func collateBody(context: some BaseRequestContext) async throws -> ByteBuffer {
-        let byteBuffer = try await self.body.collect(upTo: context.maxUploadSize)
+    public mutating func collectBody(upTo maxSize: Int) async throws -> ByteBuffer {
+        let byteBuffer = try await self.body.collect(upTo: maxSize)
         self.body = .init(buffer: byteBuffer)
         return byteBuffer
     }
