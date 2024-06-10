@@ -299,14 +299,14 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    func testCollateBody() async throws {
+    func testCollectBody() async throws {
         struct CollateMiddleware<Context: BaseRequestContext>: RouterMiddleware {
             public func handle(
                 _ request: Request, context: Context,
                 next: (Request, Context) async throws -> Response
             ) async throws -> Response {
                 var request = request
-                _ = try await request.collateBody(context: context)
+                _ = try await request.collectBody(upTo: context.maxUploadSize)
                 return try await next(request, context)
             }
         }
@@ -331,7 +331,7 @@ final class ApplicationTests: XCTestCase {
         let router = Router()
         router.post("size") { request, context -> String in
             var request = request
-            _ = try await request.collateBody(context: context)
+            _ = try await request.collectBody(upTo: context.maxUploadSize)
             var size = 0
             for try await buffer in request.body {
                 size += buffer.readableBytes
