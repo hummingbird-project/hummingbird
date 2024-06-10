@@ -17,8 +17,8 @@ import HTTPTypes
 import Hummingbird
 import HummingbirdCore
 import HummingbirdHTTP2
-import HummingbirdTLS
 import HummingbirdTesting
+import HummingbirdTLS
 import Logging
 import NIOCore
 import NIOSSL
