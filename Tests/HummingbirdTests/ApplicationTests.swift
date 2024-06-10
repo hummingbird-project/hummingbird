@@ -379,8 +379,8 @@ final class ApplicationTests: XCTestCase {
                 return encoder
             }
 
-            init(channel: Channel, logger: Logger) {
-                self.coreContext = .init(allocator: channel.allocator, logger: logger)
+            init(source: Source) {
+                self.coreContext = .init(source: source)
             }
         }
         struct Name: ResponseCodable {
@@ -449,8 +449,8 @@ final class ApplicationTests: XCTestCase {
 
     func testMaxUploadSize() async throws {
         struct MaxUploadRequestContext: RequestContext {
-            init(channel: Channel, logger: Logger) {
-                self.coreContext = .init(allocator: channel.allocator, logger: logger)
+            init(source: Source) {
+                self.coreContext = .init(source: source)
             }
 
             var coreContext: CoreRequestContext
@@ -486,12 +486,9 @@ final class ApplicationTests: XCTestCase {
             // socket address
             let remoteAddress: SocketAddress?
 
-            init(
-                channel: Channel,
-                logger: Logger
-            ) {
-                self.coreContext = .init(allocator: channel.allocator, logger: logger)
-                self.remoteAddress = channel.remoteAddress
+            init(source: Source) {
+                self.coreContext = .init(source: source)
+                self.remoteAddress = source.channel.remoteAddress
             }
         }
         let router = Router(context: SocketAddressRequestContext.self)

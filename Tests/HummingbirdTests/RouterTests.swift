@@ -603,8 +603,8 @@ final class RouterTests: XCTestCase {
 }
 
 struct TestRouterContext2: RequestContext {
-    init(channel: Channel, logger: Logger) {
-        self.coreContext = .init(allocator: channel.allocator, logger: logger)
+    init(source: Source) {
+        self.coreContext = .init(source: source)
         self.string = ""
     }
 

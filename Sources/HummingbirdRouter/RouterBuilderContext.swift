@@ -37,8 +37,8 @@ public struct BasicRouterRequestContext: RequestContext, RouterRequestContext {
     public var routerContext: RouterBuilderContext
     public var coreContext: CoreRequestContext
 
-    public init(channel: Channel, logger: Logger) {
-        self.coreContext = .init(allocator: channel.allocator, logger: logger)
+    public init(source: Source) {
+        self.coreContext = .init(source: source)
         self.routerContext = .init()
     }
 }

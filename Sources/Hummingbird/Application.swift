@@ -101,8 +101,10 @@ extension ApplicationProtocol {
             logger: self.logger
         ) { request, channel in
             let context = Self.Responder.Context(
-                channel: channel,
-                logger: self.logger.with(metadataKey: "hb_id", value: .stringConvertible(RequestID()))
+                source: .init(
+                    channel: channel,
+                    logger: self.logger.with(metadataKey: "hb_id", value: .stringConvertible(RequestID()))
+                )
             )
             // respond to request
             var response: Response

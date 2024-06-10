@@ -39,8 +39,10 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
         self.logger = app.logger
         self.makeContext = { logger in
             Responder.Context(
-                channel: NIOAsyncTestingChannel(),
-                logger: logger
+                source: .init(
+                    channel: NIOAsyncTestingChannel(),
+                    logger: logger
+                )
             )
         }
     }

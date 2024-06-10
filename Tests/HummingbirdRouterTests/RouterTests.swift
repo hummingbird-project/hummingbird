@@ -450,15 +450,13 @@ public struct TestRouterContext2: RouterRequestContext, RequestContext {
     public var routerContext: RouterBuilderContext
     /// core context
     public var coreContext: CoreRequestContext
-    /// Connected remote host
-    public var remoteAddress: SocketAddress? { nil }
 
     /// additional data
     public var string: String
 
-    public init(channel: Channel, logger: Logger) {
+    public init(source: Source) {
         self.routerContext = .init()
-        self.coreContext = .init(allocator: channel.allocator, logger: logger)
+        self.coreContext = .init(source: source)
         self.string = ""
     }
 }
