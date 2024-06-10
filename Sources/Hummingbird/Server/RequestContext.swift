@@ -135,11 +135,11 @@ public struct ServerRequestContextSource: RequestContextSource {
 
     public let channel: Channel
     public let logger: Logger
-    public var allocator: ByteBufferAllocator { channel.allocator }
+    public var allocator: ByteBufferAllocator { self.channel.allocator }
 }
+
 /// Protocol for a request context that can be created from a NIO Channel
-public protocol RequestContext: BaseRequestContext where Source == ServerRequestContextSource {
-}
+public protocol RequestContext: BaseRequestContext where Source == ServerRequestContextSource {}
 
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
 public struct BasicRequestContext: RequestContext {
