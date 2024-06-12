@@ -15,6 +15,7 @@
 import Hummingbird
 import HummingbirdCore
 import Logging
+import NIOConcurrencyHelpers
 import NIOCore
 import ServiceLifecycle
 
@@ -43,7 +44,7 @@ internal struct TestApplication<BaseApp: ApplicationProtocol>: ApplicationProtoc
     /// On server running
     @Sendable func onServerRunning(_ channel: Channel) async {
         await self.base.onServerRunning(channel)
-        await self.portPromise.complete(channel.localAddress!.port!)
+        self.portPromise.complete(channel.localAddress!.port!)
     }
 
     /// Services attached to the application.
@@ -56,41 +57,45 @@ internal struct TestApplication<BaseApp: ApplicationProtocol>: ApplicationProtoc
 }
 
 /// Promise type.
-actor Promise<Value> {
+final class Promise<Value: Sendable>: Sendable {
     enum State {
         case blocked([CheckedContinuation<Value, Never>])
         case unblocked(Value)
     }
 
-    var state: State
+    let state: NIOLockedValueBox<State>
 
     init() {
-        self.state = .blocked([])
+        self.state = .init(.blocked([]))
     }
 
     /// wait from promise to be completed
     func wait() async -> Value {
-        switch self.state {
-        case .blocked(var continuations):
-            return await withCheckedContinuation { cont in
-                continuations.append(cont)
-                self.state = .blocked(continuations)
+        return await withCheckedContinuation { cont in
+            self.state.withLockedValue { state in
+                switch state {
+                case .blocked(var continuations):
+                    continuations.append(cont)
+                    state = .blocked(continuations)
+                case .unblocked(let value):
+                    cont.resume(returning: value)
+                }
             }
-        case .unblocked(let value):
-            return value
         }
     }
 
     /// complete promise with value
     func complete(_ value: Value) {
-        switch self.state {
-        case .blocked(let continuations):
-            for cont in continuations {
-                cont.resume(returning: value)
+        self.state.withLockedValue { state in
+            switch state {
+            case .blocked(let continuations):
+                for cont in continuations {
+                    cont.resume(returning: value)
+                }
+                state = .unblocked(value)
+            case .unblocked:
+                break
             }
-            self.state = .unblocked(value)
-        case .unblocked:
-            break
         }
     }
 }
