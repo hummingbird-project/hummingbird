@@ -20,13 +20,11 @@ import NIOPosix
 /// Manages File reading and writing.
 public struct FileIO: Sendable {
     let fileIO: NonBlockingFileIO
-    let chunkSize: Int
 
     /// Initialize FileIO
     /// - Parameter application: application using FileIO
     public init(threadPool: NIOThreadPool = .singleton) {
         self.fileIO = .init(threadPool: threadPool)
-        self.chunkSize = NonBlockingFileIO.defaultChunkSize
     }
 
     /// Load file and return response body
@@ -36,11 +34,12 @@ public struct FileIO: Sendable {
     /// - Parameters:
     ///   - path: System file path
     ///   - context: Context this request is being called in
+    ///   - chunkLength: Size of the chunks read from disk and loaded into memory (in bytes). Defaults to the value suggested by `swift-nio`.
     /// - Returns: Response body
-    public func loadFile(path: String, context: some BaseRequestContext) async throws -> ResponseBody {
+    public func loadFile(path: String, context: some BaseRequestContext, chunkLength: Int = NonBlockingFileIO.defaultChunkSize) async throws -> ResponseBody {
         do {
             let stat = try await fileIO.lstat(path: path)
-            return self.readFile(path: path, range: 0...numericCast(stat.st_size - 1), context: context)
+            return self.readFile(path: path, range: 0...numericCast(stat.st_size - 1), context: context, chunkLength: chunkLength)
         } catch {
             throw HTTPError(.notFound)
         }
@@ -54,13 +53,14 @@ public struct FileIO: Sendable {
     ///   - path: System file path
     ///   - range:Range defining how much of the file is to be loaded
     ///   - context: Context this request is being called in
+    ///   - chunkLength: Size of the chunks read from disk and loaded into memory (in bytes). Defaults to the value suggested by `swift-nio`.
     /// - Returns: Response body plus file size
-    public func loadFile(path: String, range: ClosedRange<Int>, context: some BaseRequestContext) async throws -> ResponseBody {
+    public func loadFile(path: String, range: ClosedRange<Int>, context: some BaseRequestContext, chunkLength: Int = NonBlockingFileIO.defaultChunkSize) async throws -> ResponseBody {
         do {
             let stat = try await fileIO.lstat(path: path)
             let fileRange: ClosedRange<Int> = 0...numericCast(stat.st_size - 1)
             let range = range.clamped(to: fileRange)
-            return self.readFile(path: path, range: range, context: context)
+            return self.readFile(path: path, range: range, context: context, chunkLength: chunkLength)
         } catch {
             throw HTTPError(.notFound)
         }
@@ -103,16 +103,16 @@ public struct FileIO: Sendable {
     }
 
     /// Return response body that will read file
-    func readFile(path: String, range: ClosedRange<Int>, context: some BaseRequestContext) -> ResponseBody {
+    func readFile(path: String, range: ClosedRange<Int>, context: some BaseRequestContext, chunkLength: Int = NonBlockingFileIO.defaultChunkSize) -> ResponseBody {
         return ResponseBody(contentLength: range.count) { writer in
             try await self.fileIO.withFileHandle(path: path, mode: .read) { handle in
                 let endOffset = range.endIndex
-                let chunkSize = 8 * 1024
+                let chunkLength = chunkLength
                 var fileOffset = range.startIndex
 
                 while case .inRange(let offset) = fileOffset {
                     let bytesLeft = range.distance(from: fileOffset, to: endOffset)
-                    let bytesToRead = Swift.min(chunkSize, bytesLeft)
+                    let bytesToRead = Swift.min(chunkLength, bytesLeft)
                     let buffer = try await self.fileIO.read(
                         fileHandle: handle,
                         fromOffset: numericCast(offset),
