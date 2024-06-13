@@ -42,13 +42,13 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
     public func setup(channel: Channel, logger: Logger) -> EventLoopFuture<Value> {
         let childChannelHandlers: [any ChannelHandler] =
             [HTTP1ToHTTPServerCodec(secure: false)] + self.additionalChannelHandlers() + [
-                HTTPUserEventHandler(logger: logger)
+                HTTPUserEventHandler(logger: logger),
             ]
         return channel.eventLoop.makeCompletedFuture {
             try channel.pipeline.syncOperations.configureHTTPServerPipeline(
-                withPipeliningAssistance: false,  // HTTP is pipelined by NIOAsyncChannel
+                withPipeliningAssistance: false, // HTTP is pipelined by NIOAsyncChannel
                 withErrorHandling: true,
-                withOutboundHeaderValidation: false  // Swift HTTP Types are already doing this validation
+                withOutboundHeaderValidation: false // Swift HTTP Types are already doing this validation
             )
             try channel.pipeline.syncOperations.addHandlers(childChannelHandlers)
             return try NIOAsyncChannel(
