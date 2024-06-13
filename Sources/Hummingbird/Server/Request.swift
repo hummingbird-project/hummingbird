@@ -24,13 +24,13 @@ extension Request {
     /// - Parameter context: Request context
     /// - Returns: Collated body
     @_documentation(visibility: internal) @available(*, deprecated, message: "Use Request.collectBody(upTo:) instead")
-    public mutating func collateBody(context: some BaseRequestContext) async throws -> ByteBuffer {
+    public mutating func collateBody(context: some RequestContext) async throws -> ByteBuffer {
         try await self.collectBody(upTo: context.maxUploadSize)
     }
 
     /// Decode request using decoder stored at `Application.decoder`.
     /// - Parameter type: Type you want to decode to
-    public func decode<Type: Decodable>(as type: Type.Type, context: some BaseRequestContext) async throws -> Type {
+    public func decode<Type: Decodable>(as type: Type.Type, context: some RequestContext) async throws -> Type {
         do {
             return try await context.requestDecoder.decode(type, from: self, context: context)
         } catch DecodingError.dataCorrupted(_) {

@@ -41,7 +41,7 @@ public enum EventLoopGroupProvider {
     }
 }
 
-public protocol ApplicationProtocol: Service where Context: RequestContext {
+public protocol ApplicationProtocol: Service where Context: RequestContext, Context.Source == ServerRequestContextSource {
     /// Responder that generates a response from a requests and context
     associatedtype Responder: HTTPResponder
     /// Context passed with Request to responder
@@ -171,9 +171,7 @@ extension ApplicationProtocol {
 /// try await app.runService()
 /// ```
 /// Editing the application setup after calling `runService` will produce undefined behaviour.
-public struct Application<Responder: HTTPResponder>: ApplicationProtocol where Responder.Context: RequestContext {
-    public typealias Context = Responder.Context
-    public typealias Responder = Responder
+public struct Application<Responder: HTTPResponder>: ApplicationProtocol where Responder.Context: RequestContext, Responder.Context.Source == ServerRequestContextSource {
 
     // MARK: Member variables
 

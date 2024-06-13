@@ -17,7 +17,7 @@ extension URLEncodedFormEncoder: ResponseEncoder {
     /// - Parameters:
     ///   - value: Value to encode
     ///   - request: Request used to generate response
-    public func encode(_ value: some Encodable, from request: Request, context: some BaseRequestContext) throws -> Response {
+    public func encode(_ value: some Encodable, from request: Request, context: some RequestContext) throws -> Response {
         let string = try self.encode(value)
         let buffer = context.allocator.buffer(string: string)
         return Response(
@@ -36,7 +36,7 @@ extension URLEncodedFormDecoder: RequestDecoder {
     /// - Parameters:
     ///   - type: Type to decode
     ///   - request: Request to decode from
-    public func decode<T: Decodable>(_ type: T.Type, from request: Request, context: some BaseRequestContext) async throws -> T {
+    public func decode<T: Decodable>(_ type: T.Type, from request: Request, context: some RequestContext) async throws -> T {
         let buffer = try await request.body.collect(upTo: context.maxUploadSize)
         let string = String(buffer: buffer)
         return try self.decode(T.self, from: string)

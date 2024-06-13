@@ -19,7 +19,7 @@ import Metrics
 ///
 /// Records the number of requests, the request duration and how many errors were thrown. Each metric has additional
 /// dimensions URI and method.
-public struct MetricsMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
     public init() {}
 
     public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {

@@ -15,7 +15,7 @@
 import HTTPTypes
 
 /// Collection of routes
-public final class RouteCollection<Context: BaseRequestContext>: RouterMethods {
+public final class RouteCollection<Context: RequestContext>: RouterMethods {
     /// Initialize RouteCollection
     public init(context: Context.Type = BasicRequestContext.self) {
         self.routes = .init()

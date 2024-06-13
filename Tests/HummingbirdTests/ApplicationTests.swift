@@ -300,7 +300,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testCollectBody() async throws {
-        struct CollateMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+        struct CollateMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(
                 _ request: Request, context: Context,
                 next: (Request, Context) async throws -> Response

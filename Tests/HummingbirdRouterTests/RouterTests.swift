@@ -20,7 +20,7 @@ import NIOCore
 import XCTest
 
 final class RouterTests: XCTestCase {
-    struct TestMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+    struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
         let output: String
 
         init(_ output: String = "TestMiddleware") {
@@ -36,7 +36,7 @@ final class RouterTests: XCTestCase {
 
     /// Test endpointPath is set
     func testEndpointPath() async throws {
-        struct TestEndpointMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+        struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 _ = try await next(request, context)
                 guard let endpointPath = context.endpointPath else { return try await next(request, context) }
@@ -61,7 +61,7 @@ final class RouterTests: XCTestCase {
 
     /// Test endpointPath is prefixed with a "/"
     func testEndpointPathPrefix() async throws {
-        struct TestEndpointMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+        struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 _ = try await next(request, context)
                 guard let endpointPath = context.endpointPath else { return try await next(request, context) }
@@ -98,7 +98,7 @@ final class RouterTests: XCTestCase {
 
     /// Test endpointPath doesn't have "/" at end
     func testEndpointPathSuffix() async throws {
-        struct TestEndpointMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+        struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 guard let endpointPath = context.endpointPath else { return try await next(request, context) }
                 return .init(status: .ok, body: .init(byteBuffer: ByteBuffer(string: endpointPath)))

@@ -28,7 +28,7 @@ public struct RouterBuilderContext: Sendable {
 }
 
 /// Protocol that all request contexts used with RouterBuilder should conform to.
-public protocol RouterRequestContext: BaseRequestContext {
+public protocol RouterRequestContext: RequestContext {
     var routerContext: RouterBuilderContext { get set }
 }
 

@@ -42,6 +42,18 @@ public protocol RequestContextSource {
     var logger: Logger { get }
 }
 
+/// RequestContext source for server applications
+public struct ServerRequestContextSource: RequestContextSource {
+    public init(channel: any Channel, logger: Logger) {
+        self.channel = channel
+        self.logger = logger
+    }
+
+    public let channel: Channel
+    public let logger: Logger
+    public var allocator: ByteBufferAllocator { self.channel.allocator }
+}
+
 /// Request context values required by Hummingbird itself.
 public struct CoreRequestContext: Sendable {
     /// ByteBuffer allocator used by request
@@ -68,8 +80,8 @@ public struct CoreRequestContext: Sendable {
 
 /// Protocol that all request contexts should conform to. Holds data associated with
 /// a request. Provides context for request processing
-public protocol BaseRequestContext: Sendable {
-    associatedtype Source: RequestContextSource
+public protocol RequestContext: Sendable {
+    associatedtype Source: RequestContextSource = ServerRequestContextSource
     associatedtype Decoder: RequestDecoder = JSONDecoder
     associatedtype Encoder: ResponseEncoder = JSONEncoder
 
@@ -86,7 +98,7 @@ public protocol BaseRequestContext: Sendable {
     var responseEncoder: Encoder { get }
 }
 
-extension BaseRequestContext {
+extension RequestContext {
     @inlinable
     public var allocator: ByteBufferAllocator { coreContext.allocator }
     /// Logger to use with Request
@@ -110,7 +122,7 @@ extension BaseRequestContext {
     public var id: String { self.logger[metadataKey: "hb_id"]!.description }
 }
 
-extension BaseRequestContext where Decoder == JSONDecoder {
+extension RequestContext where Decoder == JSONDecoder {
     public var requestDecoder: Decoder {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
@@ -118,28 +130,13 @@ extension BaseRequestContext where Decoder == JSONDecoder {
     }
 }
 
-extension BaseRequestContext where Encoder == JSONEncoder {
+extension RequestContext where Encoder == JSONEncoder {
     public var responseEncoder: Encoder {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         return encoder
     }
 }
-
-/// RequestContext source for server applications
-public struct ServerRequestContextSource: RequestContextSource {
-    public init(channel: any Channel, logger: Logger) {
-        self.channel = channel
-        self.logger = logger
-    }
-
-    public let channel: Channel
-    public let logger: Logger
-    public var allocator: ByteBufferAllocator { self.channel.allocator }
-}
-
-/// Protocol for a request context that can be created from a NIO Channel
-public protocol RequestContext: BaseRequestContext where Source == ServerRequestContextSource {}
 
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
 public struct BasicRequestContext: RequestContext {

@@ -29,8 +29,8 @@ public typealias HBEnvironment = Environment
 @_documentation(visibility: internal) @available(*, deprecated, renamed: "FileIO")
 public typealias HBFileIO = FileIO
 
-@_documentation(visibility: internal) @available(*, deprecated, renamed: "BaseRequestContext")
-public typealias HBBaseRequestContext = BaseRequestContext
+@_documentation(visibility: internal) @available(*, deprecated, renamed: "RequestContext")
+public typealias HBBaseRequestContext = RequestContext
 @_documentation(visibility: internal) @available(*, deprecated, renamed: "BasicRequestContext")
 public typealias HBBasicRequestContext = BasicRequestContext
 @_documentation(visibility: internal) @available(*, deprecated, renamed: "CoreRequestContext")

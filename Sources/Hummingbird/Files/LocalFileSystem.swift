@@ -103,7 +103,7 @@ public struct LocalFileSystem: FileProvider {
     ///   - path: Full path to file
     ///   - context: Request context
     /// - Returns: Response body
-    public func loadFile(path: String, context: some BaseRequestContext) async throws -> ResponseBody {
+    public func loadFile(path: String, context: some RequestContext) async throws -> ResponseBody {
         try await self.fileIO.loadFile(path: path, context: context)
     }
 
@@ -113,7 +113,7 @@ public struct LocalFileSystem: FileProvider {
     ///   - range: Part of file to return
     ///   - context: Request context
     /// - Returns: Response body
-    public func loadFile(path: String, range: ClosedRange<Int>, context: some BaseRequestContext) async throws -> ResponseBody {
+    public func loadFile(path: String, range: ClosedRange<Int>, context: some RequestContext) async throws -> ResponseBody {
         try await self.fileIO.loadFile(path: path, range: range, context: context)
     }
 }
