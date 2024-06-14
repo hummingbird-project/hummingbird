@@ -554,6 +554,25 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    /// test we can create an application that accepts a responder with an empty context
+    func testEmptyRequestContext() async throws {
+        struct EmptyRequestContext: InstantiableRequestContext {
+            typealias Source = ServerRequestContextSource
+
+            init(source: Source) {}
+        }
+        let app = Application(
+            responder: CallbackResponder { (_: Request, _: EmptyRequestContext) in
+                return Response(status: .ok)
+            }
+        )
+        try await app.test(.live) { client in
+            try await client.execute(uri: "/hello", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+        }
+    }
+
     func testHummingbirdServices() async throws {
         struct MyService: Service {
             static let started = ManagedAtomic(false)

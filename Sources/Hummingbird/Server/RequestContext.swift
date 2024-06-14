@@ -78,15 +78,20 @@ public struct CoreRequestContext: Sendable {
     }
 }
 
+/// A RequestContext that can be built from some source
+public protocol InstantiableRequestContext: Sendable {
+    associatedtype Source
+    /// Initialise RequestContext from source
+    init(source: Source)
+}
+
 /// Protocol that all request contexts should conform to. Holds data associated with
 /// a request. Provides context for request processing
-public protocol RequestContext: Sendable {
+public protocol RequestContext: InstantiableRequestContext {
     associatedtype Source: RequestContextSource = ServerRequestContextSource
     associatedtype Decoder: RequestDecoder = JSONDecoder
     associatedtype Encoder: ResponseEncoder = JSONEncoder
 
-    /// Initialise RequestContext from source
-    init(source: Source)
     /// Core context
     var coreContext: CoreRequestContext { get set }
     /// Maximum upload size allowed for routes that don't stream the request payload. This
