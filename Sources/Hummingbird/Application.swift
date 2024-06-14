@@ -172,7 +172,6 @@ extension ApplicationProtocol {
 /// ```
 /// Editing the application setup after calling `runService` will produce undefined behaviour.
 public struct Application<Responder: HTTPResponder>: ApplicationProtocol where Responder.Context: RequestContext, Responder.Context.Source == ServerRequestContextSource {
-
     // MARK: Member variables
 
     /// event loop group used by application
