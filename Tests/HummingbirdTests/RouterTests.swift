@@ -609,7 +609,7 @@ struct TestRouterContext2: RequestContext {
     }
 
     /// parameters
-    var coreContext: CoreRequestContext
+    var coreContext: CoreRequestContextStorage
 
     /// additional data
     var string: String

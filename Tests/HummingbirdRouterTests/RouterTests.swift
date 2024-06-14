@@ -449,7 +449,7 @@ public struct TestRouterContext2: RouterRequestContext, RequestContext {
     /// router context
     public var routerContext: RouterBuilderContext
     /// core context
-    public var coreContext: CoreRequestContext
+    public var coreContext: CoreRequestContextStorage
 
     /// additional data
     public var string: String

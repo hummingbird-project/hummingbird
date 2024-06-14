@@ -26,7 +26,7 @@ class HummingBirdURLEncodedTests: XCTestCase {
     }
 
     struct URLEncodedCodingRequestContext: RequestContext {
-        var coreContext: CoreRequestContext
+        var coreContext: CoreRequestContextStorage
 
         init(source: Source) {
             self.coreContext = .init(source: source)

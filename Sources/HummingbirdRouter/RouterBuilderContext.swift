@@ -35,7 +35,7 @@ public protocol RouterRequestContext: BaseRequestContext {
 /// Basic implementation of a context that can be used with `RouterBuilder``
 public struct BasicRouterRequestContext: RequestContext, RouterRequestContext {
     public var routerContext: RouterBuilderContext
-    public var coreContext: CoreRequestContext
+    public var coreContext: CoreRequestContextStorage
 
     public init(source: Source) {
         self.coreContext = .init(source: source)

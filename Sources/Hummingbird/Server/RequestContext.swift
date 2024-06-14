@@ -43,7 +43,7 @@ public protocol RequestContextSource {
 }
 
 /// Request context values required by Hummingbird itself.
-public struct CoreRequestContext: Sendable {
+public struct CoreRequestContextStorage: Sendable {
     /// ByteBuffer allocator used by request
     @usableFromInline
     let allocator: ByteBufferAllocator
@@ -76,7 +76,7 @@ public protocol BaseRequestContext: Sendable {
     /// Initialise RequestContext from source
     init(source: Source)
     /// Core context
-    var coreContext: CoreRequestContext { get set }
+    var coreContext: CoreRequestContextStorage { get set }
     /// Maximum upload size allowed for routes that don't stream the request payload. This
     /// limits how much memory would be used for one request
     var maxUploadSize: Int { get }
@@ -144,7 +144,7 @@ public protocol RequestContext: BaseRequestContext where Source == ServerRequest
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
 public struct BasicRequestContext: RequestContext {
     /// core context
-    public var coreContext: CoreRequestContext
+    public var coreContext: CoreRequestContextStorage
 
     ///  Initialize an `RequestContext`
     /// - Parameters:

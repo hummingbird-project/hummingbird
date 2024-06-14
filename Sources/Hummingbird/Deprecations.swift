@@ -33,8 +33,10 @@ public typealias HBFileIO = FileIO
 public typealias HBBaseRequestContext = BaseRequestContext
 @_documentation(visibility: internal) @available(*, deprecated, renamed: "BasicRequestContext")
 public typealias HBBasicRequestContext = BasicRequestContext
-@_documentation(visibility: internal) @available(*, deprecated, renamed: "CoreRequestContext")
-public typealias HBCoreRequestContext = CoreRequestContext
+@_documentation(visibility: internal) @available(*, deprecated, renamed: "CoreRequestContextStorage")
+public typealias HBCoreRequestContext = CoreRequestContextStorage
+@_documentation(visibility: internal) @available(*, deprecated, renamed: "CoreRequestContextStorage")
+public typealias CoreRequestContext = CoreRequestContextStorage
 @_documentation(visibility: internal) @available(*, deprecated, renamed: "RequestContext")
 public typealias HBRequestContext = RequestContext
 @_documentation(visibility: internal) @available(*, deprecated, renamed: "RequestDecoder")

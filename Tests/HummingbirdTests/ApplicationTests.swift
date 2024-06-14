@@ -372,7 +372,7 @@ final class ApplicationTests: XCTestCase {
 
     func testOptionalCodable() async throws {
         struct SortedJSONRequestContext: RequestContext {
-            var coreContext: CoreRequestContext
+            var coreContext: CoreRequestContextStorage
             var responseEncoder: JSONEncoder {
                 let encoder = JSONEncoder()
                 encoder.outputFormatting = .sortedKeys
@@ -453,7 +453,7 @@ final class ApplicationTests: XCTestCase {
                 self.coreContext = .init(source: source)
             }
 
-            var coreContext: CoreRequestContext
+            var coreContext: CoreRequestContextStorage
             var maxUploadSize: Int { 64 * 1024 }
         }
         let router = Router(context: MaxUploadRequestContext.self)
@@ -482,7 +482,7 @@ final class ApplicationTests: XCTestCase {
         /// Implementation of a basic request context that supports everything the Hummingbird library needs
         struct SocketAddressRequestContext: RequestContext {
             /// core context
-            var coreContext: CoreRequestContext
+            var coreContext: CoreRequestContextStorage
             // socket address
             let remoteAddress: SocketAddress?
 
