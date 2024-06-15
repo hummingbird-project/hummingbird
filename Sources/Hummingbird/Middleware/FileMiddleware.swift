@@ -41,7 +41,7 @@ public protocol FileMiddlewareFileAttributes {
 /// "if-modified-since", "if-none-match", "if-range" and 'range" headers. It will output "content-length",
 /// "modified-date", "eTag", "content-type", "cache-control" and "content-range" headers where
 /// they are relevant.
-public struct FileMiddleware<Context: BaseRequestContext, Provider: FileProvider>: RouterMiddleware where Provider.FileAttributes: FileMiddlewareFileAttributes {
+public struct FileMiddleware<Context: RequestContext, Provider: FileProvider>: RouterMiddleware where Provider.FileAttributes: FileMiddlewareFileAttributes {
     let cacheControl: CacheControl
     let searchForIndexHtml: Bool
     let fileProvider: Provider

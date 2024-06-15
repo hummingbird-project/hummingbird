@@ -43,7 +43,7 @@ import NIOCore
 /// Both of these match routes which start with "/user" and the next path segment being anything.
 /// The second version extracts the path segment out and adds it to `Request.parameters` with the
 /// key "id".
-public final class Router<Context: BaseRequestContext>: RouterMethods, HTTPResponderBuilder {
+public final class Router<Context: RequestContext>: RouterMethods, HTTPResponderBuilder {
     var trie: RouterPathTrieBuilder<EndpointResponders<Context>>
     public let middlewares: MiddlewareGroup<Context>
     let options: RouterOptions
@@ -99,7 +99,7 @@ public final class Router<Context: BaseRequestContext>: RouterMethods, HTTPRespo
 }
 
 /// Responder that return a not found error
-struct NotFoundResponder<Context: BaseRequestContext>: HTTPResponder {
+struct NotFoundResponder<Context: RequestContext>: HTTPResponder {
     func respond(to request: Request, context: Context) throws -> Response {
         throw HTTPError(.notFound)
     }

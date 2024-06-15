@@ -41,7 +41,8 @@ public enum EventLoopGroupProvider {
     }
 }
 
-public protocol ApplicationProtocol: Service where Context: RequestContext {
+/// Protocol for an Application. Brings together all the components of Hummingbird together
+public protocol ApplicationProtocol: Service where Context: InstantiableRequestContext, Context.Source == ServerRequestContextSource {
     /// Responder that generates a response from a requests and context
     associatedtype Responder: HTTPResponder
     /// Context passed with Request to responder
@@ -100,10 +101,11 @@ extension ApplicationProtocol {
             eventLoopGroup: self.eventLoopGroup,
             logger: self.logger
         ) { request, channel in
+            let logger = self.logger.with(metadataKey: "hb_id", value: .stringConvertible(RequestID()))
             let context = Self.Responder.Context(
                 source: .init(
                     channel: channel,
-                    logger: self.logger.with(metadataKey: "hb_id", value: .stringConvertible(RequestID()))
+                    logger: logger
                 )
             )
             // respond to request
@@ -117,7 +119,7 @@ extension ApplicationProtocol {
                     response = httpError.response(allocator: channel.allocator)
                 default:
                     // this error has not been recognised
-                    context.logger.debug("Unrecognised Error", metadata: ["error": "\(error)"])
+                    logger.debug("Unrecognised Error", metadata: ["error": "\(error)"])
                     response = Response(
                         status: .internalServerError,
                         body: .init()
@@ -171,10 +173,7 @@ extension ApplicationProtocol {
 /// try await app.runService()
 /// ```
 /// Editing the application setup after calling `runService` will produce undefined behaviour.
-public struct Application<Responder: HTTPResponder>: ApplicationProtocol where Responder.Context: RequestContext {
-    public typealias Context = Responder.Context
-    public typealias Responder = Responder
-
+public struct Application<Responder: HTTPResponder>: ApplicationProtocol where Responder.Context: InstantiableRequestContext, Responder.Context.Source == ServerRequestContextSource {
     // MARK: Member variables
 
     /// event loop group used by application

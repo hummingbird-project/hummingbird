@@ -25,14 +25,14 @@ import NIOPosix
 import ServiceLifecycle
 
 /// Test sending requests directly to router. This does not setup a live server
-struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework where Responder.Context: BaseRequestContext {
+struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework where Responder.Context: InstantiableRequestContext {
     let responder: Responder
     let makeContext: @Sendable (Logger) -> Responder.Context
     let services: [any Service]
     let logger: Logger
     let processesRunBeforeServerStart: [@Sendable () async throws -> Void]
 
-    init<App: ApplicationProtocol>(app: App) async throws where App.Responder == Responder, Responder.Context: RequestContext {
+    init<App: ApplicationProtocol>(app: App) async throws where App.Responder == Responder, Responder.Context: InstantiableRequestContext {
         self.responder = try await app.responder
         self.processesRunBeforeServerStart = app.processesRunBeforeServerStart
         self.services = app.services

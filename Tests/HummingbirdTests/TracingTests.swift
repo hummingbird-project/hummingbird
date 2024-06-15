@@ -268,7 +268,7 @@ final class TracingTests: XCTestCase {
     /// Test span is ended even if the response body with the span end is not run
     func testTracingMiddlewareDropResponse() async throws {
         let expectation = expectation(description: "Expected span to be ended.")
-        struct ErrorMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+        struct ErrorMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 _ = try await next(request, context)
                 throw HTTPError(.badRequest)
@@ -412,7 +412,7 @@ final class TracingTests: XCTestCase {
         let expectation = expectation(description: "Expected span to be ended.")
         expectation.expectedFulfillmentCount = 2
 
-        struct SpanMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+        struct SpanMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
                 serviceContext.testID = "testMiddleware"

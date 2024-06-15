@@ -44,7 +44,7 @@ public struct TestingSetup {
 }
 
 /// Extends `ApplicationProtocol` to support testing of applications
-extension ApplicationProtocol where Responder.Context: RequestContext {
+extension ApplicationProtocol {
     // MARK: Initialization
 
     /// Test `Application`

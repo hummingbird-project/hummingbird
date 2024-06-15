@@ -21,7 +21,7 @@ struct EditedHTTPError: HTTPResponseError {
     let headers: HTTPFields
     let body: ByteBuffer?
 
-    init(originalError: Error, additionalHeaders: HTTPFields, context: some BaseRequestContext) {
+    init(originalError: Error, additionalHeaders: HTTPFields, context: some RequestContext) {
         if let httpError = originalError as? HTTPResponseError {
             self.status = httpError.status
             self.headers = httpError.headers + additionalHeaders

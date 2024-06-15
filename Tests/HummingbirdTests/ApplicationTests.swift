@@ -300,7 +300,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testCollectBody() async throws {
-        struct CollateMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+        struct CollateMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(
                 _ request: Request, context: Context,
                 next: (Request, Context) async throws -> Response
@@ -550,6 +550,25 @@ final class ApplicationTests: XCTestCase {
             try await client.execute(uri: "/hello", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(String(buffer: response.body), "GET: Hello")
+            }
+        }
+    }
+
+    /// test we can create an application that accepts a responder with an empty context
+    func testEmptyRequestContext() async throws {
+        struct EmptyRequestContext: InstantiableRequestContext {
+            typealias Source = ServerRequestContextSource
+
+            init(source: Source) {}
+        }
+        let app = Application(
+            responder: CallbackResponder { (_: Request, _: EmptyRequestContext) in
+                return Response(status: .ok)
+            }
+        )
+        try await app.test(.live) { client in
+            try await client.execute(uri: "/hello", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
             }
         }
     }

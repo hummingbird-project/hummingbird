@@ -14,7 +14,7 @@
 
 import NIOCore
 
-public struct RouterResponder<Context: BaseRequestContext>: HTTPResponder {
+public struct RouterResponder<Context: RequestContext>: HTTPResponder {
     @usableFromInline
     let trie: RouterTrie<EndpointResponders<Context>>
 

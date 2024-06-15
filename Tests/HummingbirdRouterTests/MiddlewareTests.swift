@@ -28,7 +28,7 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testMiddleware() async throws {
-        struct TestMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+        struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 var response = try await next(request, context)
                 response.headers[.middleware] = "TestMiddleware"
@@ -50,7 +50,7 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareOrder() async throws {
-        struct TestMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+        struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
             let string: String
             func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 var response = try await next(request, context)
@@ -76,7 +76,7 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareRunOnce() async throws {
-        struct TestMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+        struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 var response = try await next(request, context)
                 XCTAssertNil(response.headers[.alreadyRun])
@@ -106,7 +106,7 @@ final class MiddlewareTests: XCTestCase {
 
             let error: Details
         }
-        struct TestMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+        struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 do {
                     return try await next(request, context)
@@ -139,7 +139,7 @@ final class MiddlewareTests: XCTestCase {
                 try await self.parentWriter.write(output)
             }
         }
-        struct TransformMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+        struct TransformMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 let response = try await next(request, context)
                 var editedResponse = response

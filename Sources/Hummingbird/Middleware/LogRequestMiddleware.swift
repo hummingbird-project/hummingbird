@@ -16,7 +16,7 @@ import HTTPTypes
 import Logging
 
 /// Middleware outputting to log for every call to server
-public struct LogRequestsMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+public struct LogRequestsMiddleware<Context: RequestContext>: RouterMiddleware {
     /// Header filter
     public struct HeaderFilter: Sendable, ExpressibleByArrayLiteral {
         fileprivate enum _Internal: Sendable {

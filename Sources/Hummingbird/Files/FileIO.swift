@@ -36,7 +36,7 @@ public struct FileIO: Sendable {
     ///   - context: Context this request is being called in
     ///   - chunkLength: Size of the chunks read from disk and loaded into memory (in bytes). Defaults to the value suggested by `swift-nio`.
     /// - Returns: Response body
-    public func loadFile(path: String, context: some BaseRequestContext, chunkLength: Int = NonBlockingFileIO.defaultChunkSize) async throws -> ResponseBody {
+    public func loadFile(path: String, context: some RequestContext, chunkLength: Int = NonBlockingFileIO.defaultChunkSize) async throws -> ResponseBody {
         do {
             let stat = try await fileIO.lstat(path: path)
             return self.readFile(path: path, range: 0...numericCast(stat.st_size - 1), context: context, chunkLength: chunkLength)
@@ -55,7 +55,7 @@ public struct FileIO: Sendable {
     ///   - context: Context this request is being called in
     ///   - chunkLength: Size of the chunks read from disk and loaded into memory (in bytes). Defaults to the value suggested by `swift-nio`.
     /// - Returns: Response body plus file size
-    public func loadFile(path: String, range: ClosedRange<Int>, context: some BaseRequestContext, chunkLength: Int = NonBlockingFileIO.defaultChunkSize) async throws -> ResponseBody {
+    public func loadFile(path: String, range: ClosedRange<Int>, context: some RequestContext, chunkLength: Int = NonBlockingFileIO.defaultChunkSize) async throws -> ResponseBody {
         do {
             let stat = try await fileIO.lstat(path: path)
             let fileRange: ClosedRange<Int> = 0...numericCast(stat.st_size - 1)
@@ -75,7 +75,7 @@ public struct FileIO: Sendable {
     public func writeFile<AS: AsyncSequence>(
         contents: AS,
         path: String,
-        context: some BaseRequestContext
+        context: some RequestContext
     ) async throws where AS.Element == ByteBuffer {
         context.logger.debug("[FileIO] PUT", metadata: ["file": .string(path)])
         try await self.fileIO.withFileHandle(path: path, mode: .write, flags: .allowFileCreation()) { handle in
@@ -94,7 +94,7 @@ public struct FileIO: Sendable {
     public func writeFile(
         buffer: ByteBuffer,
         path: String,
-        context: some BaseRequestContext
+        context: some RequestContext
     ) async throws {
         context.logger.debug("[FileIO] PUT", metadata: ["file": .string(path)])
         try await self.fileIO.withFileHandle(path: path, mode: .write, flags: .allowFileCreation()) { handle in
@@ -103,7 +103,7 @@ public struct FileIO: Sendable {
     }
 
     /// Return response body that will read file
-    func readFile(path: String, range: ClosedRange<Int>, context: some BaseRequestContext, chunkLength: Int = NonBlockingFileIO.defaultChunkSize) -> ResponseBody {
+    func readFile(path: String, range: ClosedRange<Int>, context: some RequestContext, chunkLength: Int = NonBlockingFileIO.defaultChunkSize) -> ResponseBody {
         return ResponseBody(contentLength: range.count) { writer in
             try await self.fileIO.withFileHandle(path: path, mode: .read) { handle in
                 let endOffset = range.endIndex
