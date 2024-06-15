@@ -42,7 +42,7 @@ public enum EventLoopGroupProvider {
 }
 
 /// Protocol for an Application. Brings together all the components of Hummingbird together
-public protocol ApplicationProtocol: Service where Context: InitializedFrom<ServerRequestContextSource> {
+public protocol ApplicationProtocol: Service where Context: InitializedFrom<ApplicationRequestContextSource> {
     /// Responder that generates a response from a requests and context
     associatedtype Responder: HTTPResponder
     /// Context passed with Request to responder
@@ -173,7 +173,7 @@ extension ApplicationProtocol {
 /// try await app.runService()
 /// ```
 /// Editing the application setup after calling `runService` will produce undefined behaviour.
-public struct Application<Responder: HTTPResponder>: ApplicationProtocol where Responder.Context: InitializedFrom<ServerRequestContextSource> {
+public struct Application<Responder: HTTPResponder>: ApplicationProtocol where Responder.Context: InitializedFrom<ApplicationRequestContextSource> {
     // MARK: Member variables
 
     /// event loop group used by application
