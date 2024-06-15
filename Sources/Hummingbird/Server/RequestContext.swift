@@ -78,8 +78,8 @@ public struct CoreRequestContextStorage: Sendable {
     }
 }
 
-/// A RequestContext that can be built from some source
-public protocol InstantiableRequestContext: Sendable {
+/// A type that can be initialized from another type
+public protocol InitializedFrom<Source>: Sendable {
     associatedtype Source
     /// Initialise RequestContext from source
     init(source: Source)
@@ -87,7 +87,7 @@ public protocol InstantiableRequestContext: Sendable {
 
 /// Protocol that all request contexts should conform to. Holds data associated with
 /// a request. Provides context for request processing
-public protocol RequestContext: InstantiableRequestContext {
+public protocol RequestContext: InitializedFrom {
     associatedtype Source: RequestContextSource = ServerRequestContextSource
     associatedtype Decoder: RequestDecoder = JSONDecoder
     associatedtype Encoder: ResponseEncoder = JSONEncoder

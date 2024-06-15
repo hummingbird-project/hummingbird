@@ -556,9 +556,8 @@ final class ApplicationTests: XCTestCase {
 
     /// test we can create an application that accepts a responder with an empty context
     func testEmptyRequestContext() async throws {
-        struct EmptyRequestContext: InstantiableRequestContext {
+        struct EmptyRequestContext: InitializedFrom {
             typealias Source = ServerRequestContextSource
-
             init(source: Source) {}
         }
         let app = Application(
