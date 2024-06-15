@@ -30,7 +30,7 @@ import NIOCore
 /// .put(":id", use: todoController.update)
 /// .delete(":id", use: todoController.delete)
 /// ```
-public struct RouterGroup<Context: BaseRequestContext>: RouterMethods {
+public struct RouterGroup<Context: RequestContext>: RouterMethods {
     let path: String
     let router: any RouterMethods<Context>
     let middlewares: MiddlewareGroup<Context>

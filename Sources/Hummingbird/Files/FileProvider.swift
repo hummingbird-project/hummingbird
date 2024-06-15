@@ -35,7 +35,7 @@ public protocol FileProvider: Sendable {
     ///   - path: Full path to file
     ///   - context: Request context
     /// - Returns: Response body
-    func loadFile(path: String, context: some BaseRequestContext) async throws -> ResponseBody
+    func loadFile(path: String, context: some RequestContext) async throws -> ResponseBody
 
     /// Return a reponse body that will write a partial file body
     /// - Parameters:
@@ -43,5 +43,5 @@ public protocol FileProvider: Sendable {
     ///   - range: Part of file to return
     ///   - context: Request context
     /// - Returns: Response body
-    func loadFile(path: String, range: ClosedRange<Int>, context: some BaseRequestContext) async throws -> ResponseBody
+    func loadFile(path: String, range: ClosedRange<Int>, context: some RequestContext) async throws -> ResponseBody
 }

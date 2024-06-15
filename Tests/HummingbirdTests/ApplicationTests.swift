@@ -300,7 +300,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testCollectBody() async throws {
-        struct CollateMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+        struct CollateMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(
                 _ request: Request, context: Context,
                 next: (Request, Context) async throws -> Response
@@ -372,15 +372,15 @@ final class ApplicationTests: XCTestCase {
 
     func testOptionalCodable() async throws {
         struct SortedJSONRequestContext: RequestContext {
-            var coreContext: CoreRequestContext
+            var coreContext: CoreRequestContextStorage
             var responseEncoder: JSONEncoder {
                 let encoder = JSONEncoder()
                 encoder.outputFormatting = .sortedKeys
                 return encoder
             }
 
-            init(channel: Channel, logger: Logger) {
-                self.coreContext = .init(allocator: channel.allocator, logger: logger)
+            init(source: Source) {
+                self.coreContext = .init(source: source)
             }
         }
         struct Name: ResponseCodable {
@@ -449,11 +449,11 @@ final class ApplicationTests: XCTestCase {
 
     func testMaxUploadSize() async throws {
         struct MaxUploadRequestContext: RequestContext {
-            init(channel: Channel, logger: Logger) {
-                self.coreContext = .init(allocator: channel.allocator, logger: logger)
+            init(source: Source) {
+                self.coreContext = .init(source: source)
             }
 
-            var coreContext: CoreRequestContext
+            var coreContext: CoreRequestContextStorage
             var maxUploadSize: Int { 64 * 1024 }
         }
         let router = Router(context: MaxUploadRequestContext.self)
@@ -482,16 +482,13 @@ final class ApplicationTests: XCTestCase {
         /// Implementation of a basic request context that supports everything the Hummingbird library needs
         struct SocketAddressRequestContext: RequestContext {
             /// core context
-            var coreContext: CoreRequestContext
+            var coreContext: CoreRequestContextStorage
             // socket address
             let remoteAddress: SocketAddress?
 
-            init(
-                channel: Channel,
-                logger: Logger
-            ) {
-                self.coreContext = .init(allocator: channel.allocator, logger: logger)
-                self.remoteAddress = channel.remoteAddress
+            init(source: Source) {
+                self.coreContext = .init(source: source)
+                self.remoteAddress = source.channel.remoteAddress
             }
         }
         let router = Router(context: SocketAddressRequestContext.self)
@@ -553,6 +550,25 @@ final class ApplicationTests: XCTestCase {
             try await client.execute(uri: "/hello", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(String(buffer: response.body), "GET: Hello")
+            }
+        }
+    }
+
+    /// test we can create an application that accepts a responder with an empty context
+    func testEmptyRequestContext() async throws {
+        struct EmptyRequestContext: InstantiableRequestContext {
+            typealias Source = ServerRequestContextSource
+
+            init(source: Source) {}
+        }
+        let app = Application(
+            responder: CallbackResponder { (_: Request, _: EmptyRequestContext) in
+                return Response(status: .ok)
+            }
+        )
+        try await app.test(.live) { client in
+            try await client.execute(uri: "/hello", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
             }
         }
     }

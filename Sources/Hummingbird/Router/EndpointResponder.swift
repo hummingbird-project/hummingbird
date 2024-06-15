@@ -16,7 +16,7 @@ import HTTPTypes
 
 /// Stores endpoint responders for each HTTP method
 @usableFromInline
-struct EndpointResponders<Context: BaseRequestContext>: Sendable {
+struct EndpointResponders<Context>: Sendable {
     init(path: String) {
         self.path = path
         self.methods = [:]

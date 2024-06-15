@@ -28,17 +28,17 @@ public struct RouterBuilderContext: Sendable {
 }
 
 /// Protocol that all request contexts used with RouterBuilder should conform to.
-public protocol RouterRequestContext: BaseRequestContext {
+public protocol RouterRequestContext: RequestContext {
     var routerContext: RouterBuilderContext { get set }
 }
 
 /// Basic implementation of a context that can be used with `RouterBuilder``
 public struct BasicRouterRequestContext: RequestContext, RouterRequestContext {
     public var routerContext: RouterBuilderContext
-    public var coreContext: CoreRequestContext
+    public var coreContext: CoreRequestContextStorage
 
-    public init(channel: Channel, logger: Logger) {
-        self.coreContext = .init(allocator: channel.allocator, logger: logger)
+    public init(source: Source) {
+        self.coreContext = .init(source: source)
         self.routerContext = .init()
     }
 }

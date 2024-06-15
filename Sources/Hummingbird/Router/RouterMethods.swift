@@ -17,7 +17,7 @@ import NIOCore
 
 /// Conform to `RouterMethods` to add standard router verb (get, post ...) methods
 public protocol RouterMethods<Context> {
-    associatedtype Context: BaseRequestContext
+    associatedtype Context: RequestContext
 
     /// Add responder to call when path and method are matched
     ///

@@ -34,8 +34,28 @@ public struct EndpointPath: Sendable {
     private let _value: NIOLockedValueBox<String?>
 }
 
+/// Protocol for request context source
+public protocol RequestContextSource {
+    /// ByteBuffer allocator
+    var allocator: ByteBufferAllocator { get }
+    /// Request Logger
+    var logger: Logger { get }
+}
+
+/// RequestContext source for server applications
+public struct ServerRequestContextSource: RequestContextSource {
+    public init(channel: any Channel, logger: Logger) {
+        self.channel = channel
+        self.logger = logger
+    }
+
+    public let channel: Channel
+    public let logger: Logger
+    public var allocator: ByteBufferAllocator { self.channel.allocator }
+}
+
 /// Request context values required by Hummingbird itself.
-public struct CoreRequestContext: Sendable {
+public struct CoreRequestContextStorage: Sendable {
     /// ByteBuffer allocator used by request
     @usableFromInline
     let allocator: ByteBufferAllocator
@@ -49,24 +69,31 @@ public struct CoreRequestContext: Sendable {
 
     @inlinable
     public init(
-        allocator: ByteBufferAllocator,
-        logger: Logger
+        source: some RequestContextSource
     ) {
-        self.allocator = allocator
-        self.logger = logger
+        self.allocator = source.allocator
+        self.logger = source.logger
         self.endpointPath = .init()
         self.parameters = .init()
     }
 }
 
+/// A RequestContext that can be built from some source
+public protocol InstantiableRequestContext: Sendable {
+    associatedtype Source
+    /// Initialise RequestContext from source
+    init(source: Source)
+}
+
 /// Protocol that all request contexts should conform to. Holds data associated with
 /// a request. Provides context for request processing
-public protocol BaseRequestContext: Sendable {
+public protocol RequestContext: InstantiableRequestContext {
+    associatedtype Source: RequestContextSource = ServerRequestContextSource
     associatedtype Decoder: RequestDecoder = JSONDecoder
     associatedtype Encoder: ResponseEncoder = JSONEncoder
 
     /// Core context
-    var coreContext: CoreRequestContext { get set }
+    var coreContext: CoreRequestContextStorage { get set }
     /// Maximum upload size allowed for routes that don't stream the request payload. This
     /// limits how much memory would be used for one request
     var maxUploadSize: Int { get }
@@ -76,7 +103,7 @@ public protocol BaseRequestContext: Sendable {
     var responseEncoder: Encoder { get }
 }
 
-extension BaseRequestContext {
+extension RequestContext {
     @inlinable
     public var allocator: ByteBufferAllocator { coreContext.allocator }
     /// Logger to use with Request
@@ -100,7 +127,7 @@ extension BaseRequestContext {
     public var id: String { self.logger[metadataKey: "hb_id"]!.description }
 }
 
-extension BaseRequestContext where Decoder == JSONDecoder {
+extension RequestContext where Decoder == JSONDecoder {
     public var requestDecoder: Decoder {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
@@ -108,7 +135,7 @@ extension BaseRequestContext where Decoder == JSONDecoder {
     }
 }
 
-extension BaseRequestContext where Encoder == JSONEncoder {
+extension RequestContext where Encoder == JSONEncoder {
     public var responseEncoder: Encoder {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
@@ -116,28 +143,16 @@ extension BaseRequestContext where Encoder == JSONEncoder {
     }
 }
 
-/// Protocol for a request context that can be created from a NIO Channel
-public protocol RequestContext: BaseRequestContext {
-    /// initialize an `RequestContext`
-    /// - Parameters:
-    ///   - channel: Channel that initiated this request
-    ///   - logger: Logger used for this request
-    init(channel: Channel, logger: Logger)
-}
-
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
 public struct BasicRequestContext: RequestContext {
     /// core context
-    public var coreContext: CoreRequestContext
+    public var coreContext: CoreRequestContextStorage
 
     ///  Initialize an `RequestContext`
     /// - Parameters:
     ///   - allocator: Allocator
     ///   - logger: Logger
-    public init(channel: Channel, logger: Logger) {
-        self.coreContext = .init(
-            allocator: channel.allocator,
-            logger: logger
-        )
+    public init(source: Source) {
+        self.coreContext = .init(source: source)
     }
 }

@@ -350,12 +350,12 @@ class FileMiddlewareTests: XCTestCase {
                 return .init(size: file.readableBytes)
             }
 
-            func loadFile(path: String, context: some BaseRequestContext) async throws -> ResponseBody {
+            func loadFile(path: String, context: some RequestContext) async throws -> ResponseBody {
                 guard let file = files[path] else { throw HTTPError(.notFound) }
                 return .init(byteBuffer: file)
             }
 
-            func loadFile(path: String, range: ClosedRange<Int>, context: some BaseRequestContext) async throws -> ResponseBody {
+            func loadFile(path: String, range: ClosedRange<Int>, context: some RequestContext) async throws -> ResponseBody {
                 guard let file = files[path] else { throw HTTPError(.notFound) }
                 guard let slice = file.getSlice(at: range.lowerBound, length: range.count) else { throw HTTPError(.rangeNotSatisfiable) }
                 return .init(byteBuffer: slice)

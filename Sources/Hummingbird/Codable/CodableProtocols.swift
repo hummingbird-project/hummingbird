@@ -21,7 +21,7 @@ public protocol ResponseEncoder {
     /// - Parameters:
     ///   - value: value to encode
     ///   - request: request that generated this value
-    func encode(_ value: some Encodable, from request: Request, context: some BaseRequestContext) throws -> Response
+    func encode(_ value: some Encodable, from request: Request, context: some RequestContext) throws -> Response
 }
 
 /// protocol for decoder deserializing from a Request body
@@ -30,5 +30,5 @@ public protocol RequestDecoder {
     /// - Parameters:
     ///   - type: type to decode to
     ///   - request: request
-    func decode<T: Decodable>(_ type: T.Type, from request: Request, context: some BaseRequestContext) async throws -> T
+    func decode<T: Decodable>(_ type: T.Type, from request: Request, context: some RequestContext) async throws -> T
 }
