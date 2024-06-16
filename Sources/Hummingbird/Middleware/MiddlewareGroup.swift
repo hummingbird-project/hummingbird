@@ -22,7 +22,7 @@ public final class MiddlewareGroup<Context> {
     }
 
     /// Add middleware to group
-    /// 
+    ///
     /// This middleware will only be applied to endpoints added after this call.
     public func add(_ middleware: any RouterMiddleware<Context>) {
         self.middlewares.append(middleware)
