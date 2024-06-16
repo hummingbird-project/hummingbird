@@ -96,6 +96,15 @@ public final class Router<Context: RequestContext>: RouterMethods, HTTPResponder
     public func group(_ path: String = "") -> RouterGroup<Context> {
         return .init(path: path, router: self)
     }
+
+    /// Add middleware to Router
+    /// 
+    /// This middleware will only be applied to endpoints added after this call.
+    /// - Parameter middleware: Middleware we are adding
+    @discardableResult public func add(middleware: any RouterMiddleware<Context>) -> Self {
+        self.middlewares.add(middleware)
+        return self
+    }
 }
 
 /// Responder that return a not found error

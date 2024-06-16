@@ -34,6 +34,9 @@ public protocol RouterMethods<Context> {
 
     /// add group
     func group(_ path: String) -> RouterGroup<Context>
+
+    /// add middleware
+    func add(middleware: any RouterMiddleware<Context>) -> Self
 }
 
 extension RouterMethods {

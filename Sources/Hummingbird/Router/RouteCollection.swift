@@ -64,11 +64,12 @@ public final class RouteCollection<Context: RequestContext>: RouterMethods {
 extension RouterMethods {
     /// Add route collection to router
     /// - Parameter collection: Route collection
-    public func addRoutes(_ collection: RouteCollection<Context>, atPath path: String = "") {
+    @discardableResult public func addRoutes(_ collection: RouteCollection<Context>, atPath path: String = "") -> Self {
         for route in collection.routes {
             // ensure path starts with a "/" and doesn't end with a "/"
             let path = self.combinePaths(path, route.path)
             self.on(path, method: route.method, responder: route.responder)
         }
+        return self
     }
 }
