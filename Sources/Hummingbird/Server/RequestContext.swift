@@ -60,7 +60,7 @@ public struct CoreRequestContextStorage: Sendable {
 
 /// Protocol that all request contexts should conform to. Holds data associated with
 /// a request. Provides context for request processing
-public protocol RequestContext: InitializedFrom {
+public protocol RequestContext: SourceInitializable {
     associatedtype Source: RequestContextSource = ApplicationRequestContextSource
     associatedtype Decoder: RequestDecoder = JSONDecoder
     associatedtype Encoder: ResponseEncoder = JSONEncoder
