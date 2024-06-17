@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// A type that can be initialized from another type
-public protocol SourceInitializable<Source>: Sendable {
+public protocol InitializableFromSource<Source>: Sendable {
     associatedtype Source
     /// Initialise RequestContext from source
     init(source: Source)
