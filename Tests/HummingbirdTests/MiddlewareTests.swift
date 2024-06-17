@@ -34,7 +34,7 @@ final class MiddlewareTests: XCTestCase {
             }
         }
         let router = Router()
-        router.middlewares.add(TestMiddleware())
+        router.add(middleware: TestMiddleware())
         router.get("/hello") { _, _ -> String in
             return "Hello"
         }
@@ -56,8 +56,8 @@ final class MiddlewareTests: XCTestCase {
             }
         }
         let router = Router()
-        router.middlewares.add(TestMiddleware(string: "first"))
-        router.middlewares.add(TestMiddleware(string: "second"))
+        router.add(middleware: TestMiddleware(string: "first"))
+        router.add(middleware: TestMiddleware(string: "second"))
         router.get("/hello") { _, _ -> String in
             return "Hello"
         }
@@ -81,7 +81,7 @@ final class MiddlewareTests: XCTestCase {
             }
         }
         let router = Router()
-        router.middlewares.add(TestMiddleware())
+        router.add(middleware: TestMiddleware())
         router.get("/hello") { _, _ -> String in
             return "Hello"
         }
@@ -111,7 +111,7 @@ final class MiddlewareTests: XCTestCase {
             }
         }
         let router = Router()
-        router.middlewares.add(TestMiddleware())
+        router.add(middleware: TestMiddleware())
         let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
@@ -184,7 +184,7 @@ final class MiddlewareTests: XCTestCase {
 
     func testCORSUseOrigin() async throws {
         let router = Router()
-        router.middlewares.add(CORSMiddleware())
+        router.add(middleware: CORSMiddleware())
         router.get("/hello") { _, _ -> String in
             return "Hello"
         }
@@ -199,7 +199,7 @@ final class MiddlewareTests: XCTestCase {
 
     func testCORSUseAll() async throws {
         let router = Router()
-        router.middlewares.add(CORSMiddleware(allowOrigin: .all))
+        router.add(middleware: CORSMiddleware(allowOrigin: .all))
         router.get("/hello") { _, _ -> String in
             return "Hello"
         }
@@ -214,7 +214,7 @@ final class MiddlewareTests: XCTestCase {
 
     func testCORSOptions() async throws {
         let router = Router()
-        router.middlewares.add(CORSMiddleware(
+        router.add(middleware: CORSMiddleware(
             allowOrigin: .all,
             allowHeaders: [.contentType, .authorization],
             allowMethods: [.get, .put, .delete, .options],
@@ -244,7 +244,7 @@ final class MiddlewareTests: XCTestCase {
 
     func testCORSHeadersAndErrors() async throws {
         let router = Router()
-        router.middlewares.add(CORSMiddleware())
+        router.add(middleware: CORSMiddleware())
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get, headers: [.origin: "foo.com"]) { response in
@@ -257,7 +257,7 @@ final class MiddlewareTests: XCTestCase {
     func testLogRequestMiddleware() async throws {
         let logAccumalator = TestLogHandler.LogAccumalator()
         let router = Router()
-        router.middlewares.add(LogRequestsMiddleware(.info))
+        router.add(middleware: LogRequestsMiddleware(.info))
         router.get("test") { _, _ in
             return HTTPResponse.Status.ok
         }
@@ -382,7 +382,7 @@ final class MiddlewareTests: XCTestCase {
     func testLogRequestMiddlewareMultipleHeaders() async throws {
         let logAccumalator = TestLogHandler.LogAccumalator()
         let router = Router()
-        router.middlewares.add(LogRequestsMiddleware(.info, includeHeaders: [.test]))
+        router.add(middleware: LogRequestsMiddleware(.info, includeHeaders: [.test]))
         router.get("test") { _, _ in
             return HTTPResponse.Status.ok
         }
