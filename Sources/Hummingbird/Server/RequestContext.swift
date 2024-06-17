@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2023 the Hummingbird authors
+// Copyright (c) 2021-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -34,26 +34,6 @@ public struct EndpointPath: Sendable {
     private let _value: NIOLockedValueBox<String?>
 }
 
-/// Protocol for request context source
-public protocol RequestContextSource {
-    /// ByteBuffer allocator
-    var allocator: ByteBufferAllocator { get }
-    /// Request Logger
-    var logger: Logger { get }
-}
-
-/// RequestContext source for server applications
-public struct ServerRequestContextSource: RequestContextSource {
-    public init(channel: any Channel, logger: Logger) {
-        self.channel = channel
-        self.logger = logger
-    }
-
-    public let channel: Channel
-    public let logger: Logger
-    public var allocator: ByteBufferAllocator { self.channel.allocator }
-}
-
 /// Request context values required by Hummingbird itself.
 public struct CoreRequestContextStorage: Sendable {
     /// ByteBuffer allocator used by request
@@ -78,17 +58,10 @@ public struct CoreRequestContextStorage: Sendable {
     }
 }
 
-/// A RequestContext that can be built from some source
-public protocol InstantiableRequestContext: Sendable {
-    associatedtype Source
-    /// Initialise RequestContext from source
-    init(source: Source)
-}
-
 /// Protocol that all request contexts should conform to. Holds data associated with
 /// a request. Provides context for request processing
-public protocol RequestContext: InstantiableRequestContext {
-    associatedtype Source: RequestContextSource = ServerRequestContextSource
+public protocol RequestContext: InitializableFromSource {
+    associatedtype Source: RequestContextSource = ApplicationRequestContextSource
     associatedtype Decoder: RequestDecoder = JSONDecoder
     associatedtype Encoder: ResponseEncoder = JSONEncoder
 
