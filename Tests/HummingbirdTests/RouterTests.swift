@@ -91,6 +91,24 @@ final class RouterTests: XCTestCase {
         }
     }
 
+    func testConstantCapturesParameterRoute() async throws {
+        let router = Router()
+
+        router.get("/foo/bar") { _, _ in "foo-bar"}
+        router.get("/foo/{id}/baz") { _, _ in "foo-bar-baz" }
+
+        let app = Application(router: router)
+        try await app.test(.router) { client in
+            try await client.execute(
+                uri: "/foo/bar/baz",
+                method: .get
+            ) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(String(buffer: response.body), "foo-bar-baz")
+            }
+        }
+    }
+
     /// Test endpointPath doesn't have "/" at end
     func testEndpointPathSuffix() async throws {
         struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
