@@ -94,7 +94,7 @@ final class RouterTests: XCTestCase {
     func testConstantCapturesParameterRoute() async throws {
         let router = Router()
 
-        router.get("/foo/bar") { _, _ in "foo-bar"}
+        router.get("/foo/bar") { _, _ in "foo-bar" }
         router.get("/foo/{id}/baz") { _, _ in "foo-bar-baz" }
 
         let app = Application(router: router)

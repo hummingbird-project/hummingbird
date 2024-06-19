@@ -38,11 +38,11 @@ extension RouterTrie {
         }
 
         @usableFromInline func nextPathComponent(advancingIndex index: inout Int) -> Substring? {
-            if index >= pathComponents.count {
+            if index >= self.pathComponents.count {
                 return nil
             }
 
-            let component = pathComponents[index]
+            let component = self.pathComponents[index]
             index += 1
             return component
         }
@@ -54,7 +54,7 @@ extension RouterTrie {
                     return nil
                 }
 
-                return (value: value, parameters: parameters)
+                return (value: value, parameters: self.parameters)
             }
 
             var nodeIndex = 1
@@ -67,7 +67,7 @@ extension RouterTrie {
             }
 
             if let value = values[node.valueIndex] {
-                return (value: value, parameters: parameters)
+                return (value: value, parameters: self.parameters)
             } else {
                 return nil
             }
@@ -98,7 +98,7 @@ extension RouterTrie {
                     // extend range of catch all text
                     range = range.lowerBound..<component.endIndex
                 }
-                parameters.setCatchAll(path[range])
+                self.parameters.setCatchAll(self.path[range])
             }
 
             if node.token == .deadEnd {
@@ -110,7 +110,7 @@ extension RouterTrie {
                 var nextIndex = nodeIndex
 
                 // If a dead end is found, we're done
-                while trie.nodes[nextIndex].token != .deadEnd {
+                while self.trie.nodes[nextIndex].token != .deadEnd {
                     if let node = descend(
                         component: nextComponent,
                         nextPathComponentIndex: nextPathComponentIndex,
@@ -118,7 +118,7 @@ extension RouterTrie {
                     ) {
                         return node
                     }
-                    nextIndex = trie.nodes[nextIndex].nextSiblingNodeIndex
+                    nextIndex = self.trie.nodes[nextIndex].nextSiblingNodeIndex
                     nodeIndex = nextIndex
                 }
 
@@ -131,8 +131,8 @@ extension RouterTrie {
         /// Match sibling node for path component
         @inlinable
         mutating func matchComponent(_ component: Substring, atNodeIndex nodeIndex: inout Int) -> TrieNode {
-            while nodeIndex < trie.nodes.count {
-                let node = trie.nodes[nodeIndex]
+            while nodeIndex < self.trie.nodes.count {
+                let node = self.trie.nodes[nodeIndex]
                 let result = self.matchComponent(component, node: node)
                 switch result {
                 case .match, .deadEnd:
@@ -157,27 +157,27 @@ extension RouterTrie {
             switch node.token {
             case .path(let constant):
                 // The current node is a constant
-                if trie.stringValues[Int(constant)] == component {
+                if self.trie.stringValues[Int(constant)] == component {
                     return .match
                 }
 
                 return .mismatch
             case .capture(let parameter):
-                parameters[trie.stringValues[Int(parameter)]] = component
+                self.parameters[self.trie.stringValues[Int(parameter)]] = component
                 return .match
             case .prefixCapture(let parameter, let suffix):
-                let suffix = trie.stringValues[Int(suffix)]
+                let suffix = self.trie.stringValues[Int(suffix)]
 
                 if component.hasSuffix(suffix) {
-                    parameters[trie.stringValues[Int(parameter)]] = component.dropLast(suffix.count)
+                    self.parameters[self.trie.stringValues[Int(parameter)]] = component.dropLast(suffix.count)
                     return .match
                 }
 
                 return .mismatch
             case .suffixCapture(let prefix, let parameter):
-                let prefix = trie.stringValues[Int(prefix)]
+                let prefix = self.trie.stringValues[Int(prefix)]
                 if component.hasPrefix(prefix) {
-                    parameters[trie.stringValues[Int(parameter)]] = component.dropFirst(prefix.count)
+                    self.parameters[self.trie.stringValues[Int(parameter)]] = component.dropFirst(prefix.count)
                     return .match
                 }
 
@@ -186,13 +186,13 @@ extension RouterTrie {
                 // Always matches, descend
                 return .match
             case .prefixWildcard(let suffix):
-                if component.hasSuffix(trie.stringValues[Int(suffix)]) {
+                if component.hasSuffix(self.trie.stringValues[Int(suffix)]) {
                     return .match
                 }
 
                 return .mismatch
             case .suffixWildcard(let prefix):
-                if component.hasPrefix(trie.stringValues[Int(prefix)]) {
+                if component.hasPrefix(self.trie.stringValues[Int(prefix)]) {
                     return .match
                 }
 

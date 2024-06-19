@@ -25,7 +25,7 @@ import NIOPosix
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
 struct BasicBenchmarkContext: RequestContext {
     typealias Source = BenchmarkRequestContextSource
-    
+
     var coreContext: CoreRequestContextStorage
 
     init(source: Source) {
