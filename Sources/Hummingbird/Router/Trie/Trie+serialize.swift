@@ -91,6 +91,14 @@ extension RouterTrie {
         for child in node.children.sorted(by: self.highestPriorityFirst) {
             self.serialize(child, trie: &trie, values: &values)
         }
+
+        trie.nodes.append(
+            TrieNode(
+                valueIndex: -1,
+                token: .deadEnd,
+                nextSiblingNodeIndex: .max
+            )
+        )
     }
 
     internal static func highestPriorityFirst(lhs: RouterPathTrieBuilder<Value>.Node, rhs: RouterPathTrieBuilder<Value>.Node) -> Bool {

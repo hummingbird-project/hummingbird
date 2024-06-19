@@ -91,6 +91,24 @@ final class RouterTests: XCTestCase {
         }
     }
 
+    func testConstantCapturesParameterRoute() async throws {
+        let router = Router()
+
+        router.get("/foo/bar") { _, _ in "foo-bar" }
+        router.get("/foo/{id}/baz") { _, _ in "foo-bar-baz" }
+
+        let app = Application(router: router)
+        try await app.test(.router) { client in
+            try await client.execute(
+                uri: "/foo/bar/baz",
+                method: .get
+            ) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(String(buffer: response.body), "foo-bar-baz")
+            }
+        }
+    }
+
     /// Test endpointPath doesn't have "/" at end
     func testEndpointPathSuffix() async throws {
         struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
@@ -556,7 +574,7 @@ final class RouterTests: XCTestCase {
         router.get("/api/v1/**/john") { _, context in
             return "John \(context.parameters.getCatchAll().joined(separator: "/"))"
         }
-        router.get("/api/v1/**/jane") { _, context in
+        router.get("/api/v1/**/jane/subpath") { _, context in
             return "Jane \(context.parameters.getCatchAll().joined(separator: "/"))"
         }
         let app = Application(responder: router.buildResponder())
@@ -564,7 +582,7 @@ final class RouterTests: XCTestCase {
             try await client.execute(uri: "/api/v1/a/b/c/d/e/f/john", method: .get) { response in
                 XCTAssertEqual(String(buffer: response.body), "John a/b/c/d/e/f")
             }
-            try await client.execute(uri: "/api/v1/a/b/d/e/f/jane", method: .get) { response in
+            try await client.execute(uri: "/api/v1/a/b/d/e/f/jane/subpath", method: .get) { response in
                 XCTAssertEqual(String(buffer: response.body), "Jane a/b/d/e/f")
             }
         }

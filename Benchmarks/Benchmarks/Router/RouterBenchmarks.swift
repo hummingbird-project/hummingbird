@@ -24,11 +24,18 @@ import NIOPosix
 
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
 struct BasicBenchmarkContext: RequestContext {
-    var coreContext: CoreRequestContext
+    typealias Source = BenchmarkRequestContextSource
 
-    public init(channel: Channel, logger: Logger) {
-        self.coreContext = .init(allocator: channel.allocator, logger: logger)
+    var coreContext: CoreRequestContextStorage
+
+    init(source: Source) {
+        self.coreContext = CoreRequestContextStorage(source: source)
     }
+}
+
+public struct BenchmarkRequestContextSource: RequestContextSource {
+    public let allocator = ByteBufferAllocator()
+    public let logger = Logger(label: "Benchmark")
 }
 
 /// Writes ByteBuffers to AsyncChannel outbound writer
@@ -46,7 +53,7 @@ extension Benchmark {
         request: HTTPRequest,
         writeBody: @escaping @Sendable (ByteBufferWriter) async throws -> Void = { _ in },
         setupRouter: @escaping @Sendable (Router<Context>) async throws -> Void
-    ) {
+    ) where Context.Source == BenchmarkRequestContextSource {
         let router = Router(context: Context.self)
         self.init(name, configuration: configuration) { benchmark in
             let responder = router.buildResponder()
@@ -55,10 +62,7 @@ extension Benchmark {
             for _ in benchmark.scaledIterations {
                 for _ in 0..<50 {
                     try await withThrowingTaskGroup(of: Void.self) { group in
-                        let context = Context(
-                            channel: EmbeddedChannel(),
-                            logger: Logger(label: "Benchmark")
-                        )
+                        let context = Context(source: BenchmarkRequestContextSource())
                         let (requestBody, source) = RequestBody.makeStream()
                         let Request = Request(head: request, body: requestBody)
                         group.addTask {
