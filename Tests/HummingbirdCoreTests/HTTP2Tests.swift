@@ -45,9 +45,16 @@ class HummingBirdHTTP2Tests: XCTestCase {
                 eventLoopGroupProvider: .shared(eventLoopGroup),
                 configuration: .init(tlsConfiguration: tlsConfiguration)
             )
-            defer { try? httpClient.syncShutdown() }
 
-            let response = try await httpClient.get(url: "https://localhost:\(port)/").get()
+            let response: HTTPClientResponse
+            do {
+                let request = HTTPClientRequest(url: "https://localhost:\(port)/")
+                response = try await httpClient.execute(request, deadline: .now() + .seconds(30))
+            } catch {
+                try? await httpClient.shutdown()
+                throw error
+            }
+            try await httpClient.shutdown()
             XCTAssertEqual(response.status, .ok)
         }
     }
