@@ -27,7 +27,7 @@ extension Benchmark {
         name: String,
         configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
         write: @escaping @Sendable (Benchmark, NIOAsyncTestingChannel) async throws -> Void,
-        responder: @escaping @Sendable (Request, Channel) async throws -> Response
+        responder: @escaping HTTPChannelHandler.Responder
     ) {
         let http1 = HTTP1Channel(responder: responder)
         let channel = NIOAsyncTestingChannel()
@@ -104,7 +104,11 @@ let benchmarks = {
         try await channel.writeInbound(HTTPRequestPart.body(buffer))
         try await channel.writeInbound(HTTPRequestPart.end(nil))
     } responder: { request, _ in
-        let buffer = try await request.body.collect(upTo: .max)
-        return .init(status: .ok, body: .init(byteBuffer: buffer))
+        do {
+            let buffer = try await request.body.collect(upTo: .max)
+            return .init(status: .ok, body: .init(byteBuffer: buffer))
+        } catch {
+            return .init(status: .internalServerError)
+        }
     }
 }

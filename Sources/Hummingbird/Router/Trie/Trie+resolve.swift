@@ -57,11 +57,11 @@ extension RouterTrie {
                 return (value: value, parameters: parameters)
             }
 
-            var nextNodeIndex = 1
+            var nodeIndex = 1
             guard let node = descend(
                 component: component,
                 nextPathComponentIndex: 1,
-                nextNodeIndex: &nextNodeIndex
+                nodeIndex: &nodeIndex
             ) else {
                 return nil
             }
@@ -77,9 +77,9 @@ extension RouterTrie {
         mutating func descend(
             component: Substring,
             nextPathComponentIndex: Int,
-            nextNodeIndex: inout Int
+            nodeIndex: inout Int
         ) -> TrieNode? {
-            var node = self.matchComponent(component, atNodeIndex: &nextNodeIndex)
+            var node = self.matchComponent(component, atNodeIndex: &nodeIndex)
             var nextPathComponentIndex = nextPathComponentIndex
 
             if node.token == .recursiveWildcard {
@@ -88,11 +88,11 @@ extension RouterTrie {
                 var range = component.startIndex..<component.endIndex
 
                 while let component = nextPathComponent(advancingIndex: &nextPathComponentIndex) {
-                    var _nextNodeIndex = nextNodeIndex
-                    let recursiveNode = self.matchComponent(component, atNodeIndex: &_nextNodeIndex)
+                    var _nodeIndex = nodeIndex
+                    let recursiveNode = self.matchComponent(component, atNodeIndex: &_nodeIndex)
                     if recursiveNode.token != .deadEnd {
                         node = recursiveNode
-                        nextNodeIndex = _nextNodeIndex
+                        nodeIndex = _nodeIndex
                         break
                     }
                     // extend range of catch all text
@@ -107,24 +107,19 @@ extension RouterTrie {
 
             if let nextComponent = nextPathComponent(advancingIndex: &nextPathComponentIndex) {
                 // There's another component to the route
-
-                // Keep track of the nextNodeIndex known locally
-                // As we descend, this value changes. However, if descending doesn't yield a result
-                // We'll want to continue on the next path
-                let lastKnownNextNodeIndex = nextNodeIndex
-                var nextIndex = nextNodeIndex
+                var nextIndex = nodeIndex
 
                 // If a dead end is found, we're done
                 while trie.nodes[nextIndex].token != .deadEnd {
                     if let node = descend(
                         component: nextComponent,
                         nextPathComponentIndex: nextPathComponentIndex,
-                        nextNodeIndex: &nextNodeIndex
+                        nodeIndex: &nodeIndex
                     ) {
                         return node
                     }
                     nextIndex = trie.nodes[nextIndex].nextSiblingNodeIndex
-                    nextNodeIndex = nextIndex
+                    nodeIndex = nextIndex
                 }
 
                 return nil
@@ -135,16 +130,16 @@ extension RouterTrie {
 
         /// Match sibling node for path component
         @inlinable
-        mutating func matchComponent(_ component: Substring, atNodeIndex nextNodeIndex: inout Int) -> TrieNode {
-            while nextNodeIndex < trie.nodes.count {
-                let node = trie.nodes[nextNodeIndex]
+        mutating func matchComponent(_ component: Substring, atNodeIndex nodeIndex: inout Int) -> TrieNode {
+            while nodeIndex < trie.nodes.count {
+                let node = trie.nodes[nodeIndex]
                 let result = self.matchComponent(component, node: node)
                 switch result {
                 case .match, .deadEnd:
-                    nextNodeIndex += 1
+                    nodeIndex += 1
                     return node
                 default:
-                    nextNodeIndex = Int(node.nextSiblingNodeIndex)
+                    nodeIndex = Int(node.nextSiblingNodeIndex)
                 }
             }
 
