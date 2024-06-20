@@ -43,12 +43,8 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
         var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
         InstrumentationSystem.instrument.extract(request.headers, into: &serviceContext, using: HTTPHeadersExtractor())
 
-        let operationName: String = {
-            guard let endpointPath = context.endpointPath else {
-                return "HTTP \(request.method.rawValue) route not found"
-            }
-            return endpointPath
-        }()
+        // span name is updated after route has run
+        let operationName = "HTTP \(request.method.rawValue) route not found"
 
         let span = InstrumentationSystem.tracer.startSpan(operationName, context: serviceContext, ofKind: .server)
         span.updateAttributes { attributes in
@@ -85,6 +81,9 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
         do {
             return try await ServiceContext.$current.withValue(span.context) {
                 var response = try await next(request, context)
+                if let endpointPath = context.endpointPath {
+                    span.operationName = endpointPath
+                }
                 span.updateAttributes { attributes in
                     attributes = self.recordHeaders(response.headers, toSpanAttributes: attributes, withPrefix: "http.response.header.")
 
@@ -98,6 +97,9 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
                 return response
             }
         } catch {
+            if let endpointPath = context.endpointPath {
+                span.operationName = endpointPath
+            }
             let statusCode = (error as? HTTPResponseError)?.status.code ?? 500
             span.attributes["http.status_code"] = statusCode
             if 500..<600 ~= statusCode {

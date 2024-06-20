@@ -14,6 +14,7 @@
 
 import HTTPTypes
 import Hummingbird
+import HummingbirdRouter
 import HummingbirdTesting
 @testable import Instrumentation
 import Tracing
@@ -53,6 +54,44 @@ final class TracingTests: XCTestCase {
         let span = try XCTUnwrap(tracer.spans.first)
 
         XCTAssertEqual(span.operationName, "/users/:id")
+        XCTAssertEqual(span.kind, .server)
+        XCTAssertNil(span.status)
+        XCTAssertTrue(span.recordedErrors.isEmpty)
+
+        XCTAssertSpanAttributesEqual(span.attributes, [
+            "http.method": "GET",
+            "http.target": "/users/42",
+            "http.status_code": 200,
+            "http.response_content_length": 2,
+            "net.host.name": "127.0.0.1",
+            "net.host.port": 8080,
+        ])
+    }
+
+    func testTracingMiddlewareWithRouterBuilder() async throws {
+        let expectation = expectation(description: "Expected span to be ended.")
+
+        let tracer = TestTracer()
+        tracer.onEndSpan = { _ in expectation.fulfill() }
+        InstrumentationSystem.bootstrapInternal(tracer)
+
+        let router = RouterBuilder(context: BasicRouterRequestContext.self) {
+            TracingMiddleware(attributes: ["net.host.name": "127.0.0.1", "net.host.port": 8080])
+            Get("users/{id}") { _, _ in "42" }
+        }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/users/42", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(String(buffer: response.body), "42")
+            }
+        }
+
+        await self.wait(for: [expectation], timeout: 1)
+
+        let span = try XCTUnwrap(tracer.spans.first)
+
+        XCTAssertEqual(span.operationName, "/users/{id}")
         XCTAssertEqual(span.kind, .server)
         XCTAssertNil(span.status)
         XCTAssertTrue(span.recordedErrors.isEmpty)
