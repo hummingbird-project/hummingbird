@@ -135,7 +135,7 @@ final class TracingTests: XCTestCase {
 
         let span = try XCTUnwrap(tracer.spans.first)
 
-        XCTAssertEqual(span.operationName, "/\(filename)")
+        XCTAssertEqual(span.operationName, "FileMiddleware")
         XCTAssertEqual(span.kind, .server)
         XCTAssertNil(span.status)
         XCTAssertTrue(span.recordedErrors.isEmpty)
@@ -147,6 +147,49 @@ final class TracingTests: XCTestCase {
             "http.response_content_length": .int64(Int64(text.count)),
             "net.host.name": "127.0.0.1",
             "net.host.port": 8080,
+        ])
+    }
+
+    func testMiddlewareSkippingEndpoint() async throws {
+        struct DeadendMiddleware<Context: RequestContext>: RouterMiddleware {
+            func handle(_ input: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+                return .init(status: .ok)
+            }
+        }
+        let expectation = expectation(description: "Expected span to be ended.")
+
+        let tracer = TestTracer()
+        tracer.onEndSpan = { _ in expectation.fulfill() }
+        InstrumentationSystem.bootstrapInternal(tracer)
+
+        let router = RouterBuilder(context: BasicRouterRequestContext.self) {
+            TracingMiddleware()
+            RouteGroup("test") {
+                DeadendMiddleware()
+                Get("this") { _, _ in "Hello" }
+            }
+        }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/test/this", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+        }
+
+        await self.wait(for: [expectation], timeout: 1)
+
+        let span = try XCTUnwrap(tracer.spans.first)
+
+        XCTAssertEqual(span.operationName, "/test")
+        XCTAssertEqual(span.kind, .server)
+        XCTAssertNil(span.status)
+        XCTAssertTrue(span.recordedErrors.isEmpty)
+
+        XCTAssertSpanAttributesEqual(span.attributes, [
+            "http.method": "GET",
+            "http.target": "/test/this",
+            "http.status_code": 200,
+            "http.response_content_length": 0,
         ])
     }
 
