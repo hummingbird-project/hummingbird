@@ -1,7 +1,9 @@
+<p align="center">
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://opticalaberration.com/images/hummingbird-white-text@0.5x.png">
-  <img src="https://opticalaberration.com/images/hummingbird-black-text@0.5x.png">
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/hummingbird-project/hummingbird/assets/9382567/48de534f-8301-44bd-b117-dfb614909efd">
+  <img src="https://github.com/hummingbird-project/hummingbird/assets/9382567/e371ead8-7ca1-43e3-8077-61d8b5eab879">
 </picture>
+</p>  
 <p align="center">
 <a href="https://swift.org">
   <img src="https://img.shields.io/badge/swift-5.9-brightgreen.svg"/>
