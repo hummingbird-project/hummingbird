@@ -107,6 +107,8 @@ public struct FileMiddleware<Context: RequestContext, Provider: FileProvider>: R
             let fullPath = self.fileProvider.getFullPath(path)
             // get file attributes and actual file path (It might be an index.html)
             let (actualPath, attributes) = try await self.getFileAttributes(path: fullPath)
+            // we have a file so lets set the endpoint
+            context.coreContext.endpointPath.value = request.uri.path
             // get how we should respond
             let fileResult = try await self.constructResponse(path: actualPath, attributes: attributes, request: request)
 

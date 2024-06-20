@@ -106,6 +106,50 @@ final class TracingTests: XCTestCase {
         ])
     }
 
+    func testTracingMiddlewareWithFile() async throws {
+        let filename = "\(#function).jpg"
+        let text = "Test file contents"
+        let data = Data(text.utf8)
+        let fileURL = URL(fileURLWithPath: filename)
+        XCTAssertNoThrow(try data.write(to: fileURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+
+        let expectation = expectation(description: "Expected span to be ended.")
+
+        let tracer = TestTracer()
+        tracer.onEndSpan = { _ in expectation.fulfill() }
+        InstrumentationSystem.bootstrapInternal(tracer)
+
+        let router = RouterBuilder(context: BasicRouterRequestContext.self) {
+            TracingMiddleware(attributes: ["net.host.name": "127.0.0.1", "net.host.port": 8080])
+            FileMiddleware(".")
+        }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/\(filename)", method: .get) { response in
+                XCTAssertEqual(response.headers[.contentLength], text.count.description)
+            }
+        }
+
+        await self.wait(for: [expectation], timeout: 1)
+
+        let span = try XCTUnwrap(tracer.spans.first)
+
+        XCTAssertEqual(span.operationName, "/\(filename)")
+        XCTAssertEqual(span.kind, .server)
+        XCTAssertNil(span.status)
+        XCTAssertTrue(span.recordedErrors.isEmpty)
+
+        XCTAssertSpanAttributesEqual(span.attributes, [
+            "http.method": "GET",
+            "http.target": "/\(filename)",
+            "http.status_code": 200,
+            "http.response_content_length": .int64(Int64(text.count)),
+            "net.host.name": "127.0.0.1",
+            "net.host.port": 8080,
+        ])
+    }
+
     func testTracingMiddlewareServerError() async throws {
         let expectation = expectation(description: "Expected span to be ended.")
 
