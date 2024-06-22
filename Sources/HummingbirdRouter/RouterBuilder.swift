@@ -13,6 +13,19 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
+import ServiceContextModule
+
+/// Router Options
+public struct RouterBuilderOptions: OptionSet, Sendable {
+    public let rawValue: Int
+
+    public init(rawValue: Int) {
+        self.rawValue = rawValue
+    }
+
+    /// Router path comparisons will be case insensitive
+    public static var caseInsensitive: Self { .init(rawValue: 1 << 0) }
+}
 
 /// Router built using a result builder
 public struct RouterBuilder<Context: RouterRequestContext, Handler: MiddlewareProtocol>: MiddlewareProtocol where Handler.Input == Request, Handler.Output == Response, Handler.Context == Context
@@ -21,13 +34,23 @@ public struct RouterBuilder<Context: RouterRequestContext, Handler: MiddlewarePr
     public typealias Output = Response
 
     let handler: Handler
+    let options: RouterBuilderOptions
 
     /// Initialize RouterBuilder with contents of result builder
     /// - Parameters:
     ///   - context: Request context used by router
     ///   - builder: Result builder for router
-    public init(context: Context.Type = Context.self, @MiddlewareFixedTypeBuilder<Input, Output, Context> builder: () -> Handler) {
-        self.handler = builder()
+    public init(
+        context: Context.Type = Context.self,
+        options: RouterBuilderOptions = [],
+        @MiddlewareFixedTypeBuilder<Input, Output, Context> builder: () -> Handler
+    ) {
+        var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
+        serviceContext.routerBuildState = .init(options: options)
+        self.options = options
+        self.handler = ServiceContext.$current.withValue(serviceContext) {
+            builder()
+        }
     }
 
     /// Process HTTP request and return an HTTP response
@@ -38,7 +61,11 @@ public struct RouterBuilder<Context: RouterRequestContext, Handler: MiddlewarePr
     /// - Returns: HTTP Response
     public func handle(_ input: Input, context: Context, next: (Input, Context) async throws -> Output) async throws -> Output {
         var context = context
-        context.routerContext.remainingPathComponents = input.uri.path.split(separator: "/")[...]
+        var path = input.uri.path
+        if self.options.contains(.caseInsensitive) {
+            path = path.lowercased()
+        }
+        context.routerContext.remainingPathComponents = path.split(separator: "/")[...]
         return try await self.handler.handle(input, context: context, next: next)
     }
 }

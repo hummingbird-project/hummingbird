@@ -79,6 +79,19 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConv
                 return false
             }
         }
+
+        public func lowercased() -> Self {
+            switch self {
+            case .path(let path):
+                .path(path.lowercased()[...])
+            case .prefixCapture(let suffix, let parameter):
+                .prefixCapture(suffix: suffix.lowercased()[...], parameter: parameter)
+            case .suffixCapture(let prefix, let parameter):
+                .suffixCapture(prefix: prefix.lowercased()[...], parameter: parameter)
+            default:
+                self
+            }
+        }
     }
 
     public let components: [Element]
@@ -125,8 +138,16 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConv
         self.init(value)
     }
 
+    internal init(components: [Element]) {
+        self.components = components
+    }
+
     public var description: String {
         self.components.map(\.description).joined(separator: "/")
+    }
+
+    public func lowercased() -> Self {
+        .init(components: self.map { $0.lowercased() })
     }
 }
 

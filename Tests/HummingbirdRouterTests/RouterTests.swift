@@ -443,6 +443,35 @@ final class RouterTests: XCTestCase {
             }
         }
     }
+
+    // Test case insensitive router works
+    func testCaseInsensitive() async throws {
+        let router = RouterBuilder(context: BasicRouterRequestContext.self, options: .caseInsensitive) {
+            Get("Uppercased") { _, _ in
+                return HTTPResponse.Status.ok
+            }
+            Get("lowercased") { _, _ in
+                return HTTPResponse.Status.ok
+            }
+            RouteGroup("group") {
+                Get("Uppercased") { _, _ in
+                    return HTTPResponse.Status.ok
+                }
+            }
+        }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/uppercased", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+            try await client.execute(uri: "/LOWERCASED", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+            try await client.execute(uri: "/Group/uppercased", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+        }
+    }
 }
 
 public struct TestRouterContext2: RouterRequestContext, RequestContext {
