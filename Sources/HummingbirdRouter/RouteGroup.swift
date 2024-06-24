@@ -15,23 +15,6 @@
 import Hummingbird
 import ServiceContextModule
 
-extension ServiceContext {
-    enum RouteGroupPathKey: ServiceContextKey {
-        typealias Value = String
-    }
-
-    /// Current RouteGroup path. This is used to propagate the route path down
-    /// through the Router result builder
-    public internal(set) var routeGroupPath: String? {
-        get {
-            self[RouteGroupPathKey.self]
-        }
-        set {
-            self[RouteGroupPathKey.self] = newValue
-        }
-    }
-}
-
 /// Router middleware that applies a middleware chain to URIs with a specified prefix
 public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProtocol>: RouterMiddleware where Handler.Input == Request, Handler.Output == Response, Handler.Context == Context {
     public typealias Input = Request
@@ -55,14 +38,26 @@ public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProto
         _ routerPath: RouterPath,
         @MiddlewareFixedTypeBuilder<Request, Response, Context> builder: () -> Handler
     ) {
-        self.routerPath = routerPath
+        var routerPath = routerPath
+        // Get builder state from service context
         var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
-        let parentGroupPath = serviceContext.routeGroupPath ?? ""
-        self.fullPath = "\(parentGroupPath)/\(self.routerPath)"
-        serviceContext.routeGroupPath = self.fullPath
+        var routerBuildState: RouterBuilderState
+        if let state = serviceContext.routerBuildState {
+            routerBuildState = state
+        } else {
+            routerBuildState = .init(options: [])
+        }
+        if routerBuildState.options.contains(.caseInsensitive) {
+            routerPath = routerPath.lowercased()
+        }
+        let parentGroupPath = routerBuildState.routeGroupPath
+        self.fullPath = "\(parentGroupPath)/\(routerPath)"
+        routerBuildState.routeGroupPath = self.fullPath
+        serviceContext.routerBuildState = routerBuildState
         self.handler = ServiceContext.$current.withValue(serviceContext) {
             builder()
         }
+        self.routerPath = routerPath
     }
 
     /// Process HTTP request and return an HTTP response

@@ -33,6 +33,12 @@ public struct Route<Handler: _RouteHandlerProtocol, Context: RouterRequestContex
     ///   - routerPath: Route path, relative to group route is defined in
     ///   - handler: Route handler
     init(_ method: HTTPRequest.Method, _ routerPath: RouterPath = "", handler: Handler) {
+        let serviceContext = ServiceContext.current ?? ServiceContext.topLevel
+        let options = serviceContext.routerBuildState?.options ?? []
+        var routerPath = routerPath
+        if options.contains(.caseInsensitive) {
+            routerPath = routerPath.lowercased()
+        }
         self.method = method
         self.routerPath = routerPath
         self.handler = handler
@@ -89,7 +95,7 @@ public struct Route<Handler: _RouteHandlerProtocol, Context: RouterRequestContex
 
     /// Return full path of route, using Task local stored `routeGroupPath`.
     static func getFullPath(from path: RouterPath) -> String {
-        let parentGroupPath = ServiceContext.current?.routeGroupPath ?? ""
+        let parentGroupPath = ServiceContext.current?.routerBuildState?.routeGroupPath ?? ""
         if path.count > 0 || parentGroupPath.count == 0 {
             return "\(parentGroupPath)/\(path)"
         } else {
