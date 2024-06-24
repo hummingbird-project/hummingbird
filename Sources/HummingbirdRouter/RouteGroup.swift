@@ -37,12 +37,15 @@ public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProto
     public typealias Input = Request
     public typealias Output = Response
 
+    @usableFromInline
+    /// Full URI path to route
+    let fullPath: String
     /// Path local to group route this group is defined in.
     @usableFromInline
-    var routerPath: RouterPath
+    let routerPath: RouterPath
     /// Group handler
     @usableFromInline
-    var handler: Handler
+    let handler: Handler
 
     /// Create RouteGroup from result builder
     /// - Parameters:
@@ -55,7 +58,8 @@ public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProto
         self.routerPath = routerPath
         var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
         let parentGroupPath = serviceContext.routeGroupPath ?? ""
-        serviceContext.routeGroupPath = "\(parentGroupPath)/\(self.routerPath)"
+        self.fullPath = "\(parentGroupPath)/\(self.routerPath)"
+        serviceContext.routeGroupPath = self.fullPath
         self.handler = ServiceContext.$current.withValue(serviceContext) {
             builder()
         }
@@ -70,6 +74,7 @@ public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProto
     @inlinable
     public func handle(_ input: Input, context: Context, next: (Input, Context) async throws -> Output) async throws -> Output {
         if let updatedContext = self.routerPath.matchPrefix(context) {
+            context.coreContext.endpointPath.value = self.fullPath
             return try await self.handler.handle(input, context: updatedContext) { input, _ in
                 try await next(input, context)
             }
