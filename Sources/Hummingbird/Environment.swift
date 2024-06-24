@@ -39,9 +39,6 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
         public static var dotEnvParseError: Self { .init(.dotEnvParseError) }
     }
 
-    // shared environment
-    public static let shared: Environment = .init()
-
     var values: [String: String]
 
     /// initialize from environment variables
