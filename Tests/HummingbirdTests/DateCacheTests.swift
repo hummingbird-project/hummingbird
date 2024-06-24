@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import Hummingbird
+@testable import Hummingbird
 import HummingbirdTesting
 import XCTest
 

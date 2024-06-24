@@ -18,8 +18,9 @@ import NIOCore
 import NIOPosix
 
 // get environment
-let hostname = Environment.shared.get("SERVER_HOSTNAME") ?? "127.0.0.1"
-let port = Environment.shared.get("SERVER_PORT", as: Int.self) ?? 8080
+let env = Environment()
+let hostname = env.get("SERVER_HOSTNAME") ?? "127.0.0.1"
+let port = env.get("SERVER_PORT", as: Int.self) ?? 8080
 
 // create app
 let elg = MultiThreadedEventLoopGroup(numberOfThreads: 4)
