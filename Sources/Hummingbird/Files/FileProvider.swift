@@ -19,29 +19,38 @@ import NIOPosix
 public protocol FileProvider: Sendable {
     /// File attributes type
     associatedtype FileAttributes
+    /// File identifier
+    associatedtype FileIdentifier
 
-    /// Get full path name
+    /// Get file identifier
     /// - Parameter path: path from URI
-    /// - Returns: Full path
-    func getFullPath(_ path: String) -> String
+    /// - Returns: File Identifier
+    func getFileIdentifier(_ path: String) throws -> FileIdentifier
+
+    /// Append a file name component to a file identifier
+    /// - Parameter
+    ///   - filename: File name to append
+    ///   - path: File Identifier
+    /// - Returns: Resulting file identifier
+    func appendFilenameComponent(_ filename: String, to path: FileIdentifier) -> FileIdentifier?
 
     /// Get file attributes
-    /// - Parameter path: Full path to file
+    /// - Parameter id: File identifier
     /// - Returns: File attributes
-    func getAttributes(path: String) async throws -> FileAttributes?
+    func getAttributes(id: FileIdentifier) async throws -> FileAttributes?
 
     /// Return a reponse body that will write the file body
     /// - Parameters:
-    ///   - path: Full path to file
+    ///   - id: File identifier
     ///   - context: Request context
     /// - Returns: Response body
-    func loadFile(path: String, context: some RequestContext) async throws -> ResponseBody
+    func loadFile(id: FileIdentifier, context: some RequestContext) async throws -> ResponseBody
 
     /// Return a reponse body that will write a partial file body
     /// - Parameters:
-    ///   - path: Full path to file
+    ///   - id: File identifier
     ///   - range: Part of file to return
     ///   - context: Request context
     /// - Returns: Response body
-    func loadFile(path: String, range: ClosedRange<Int>, context: some RequestContext) async throws -> ResponseBody
+    func loadFile(id: FileIdentifier, range: ClosedRange<Int>, context: some RequestContext) async throws -> ResponseBody
 }
