@@ -28,10 +28,3 @@
 @_exported @_documentation(visibility: internal) import struct HTTPTypes.HTTPFields
 @_exported @_documentation(visibility: internal) import struct HTTPTypes.HTTPRequest
 @_exported @_documentation(visibility: internal) import struct HTTPTypes.HTTPResponse
-
-// Temporary exports or deprecated typealiases
-@_exported import struct HummingbirdCore.HBRequest
-@_exported import struct HummingbirdCore.HBRequestBody
-@_exported import struct HummingbirdCore.HBResponse
-@_exported import struct HummingbirdCore.HBResponseBody
-@_exported import protocol HummingbirdCore.HBResponseBodyWriter
