@@ -13,7 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 import HTTPTypes
+import Foundation
 import NIOCore
+import NIOFoundationCompat
 
 /// Default HTTP error. Provides an HTTP status and a message
 public struct HTTPError: Error, HTTPResponseError, Sendable {
@@ -55,7 +57,18 @@ public struct HTTPError: Error, HTTPResponseError, Sendable {
 
     /// Get body of error as ByteBuffer
     public func body(allocator: ByteBufferAllocator) -> ByteBuffer? {
-        return self.body.map { allocator.buffer(string: "{\"error\":{\"message\":\"\($0)\"}}\n") }
+        do {
+            if let body {
+                var buffer = allocator.buffer(string: "{\"error\":{\"message\":")
+                try JSONEncoder().encode(body, into: &buffer)
+                buffer.writeString("}}\n")
+                return buffer
+            }
+
+            return nil
+        } catch {
+            return nil
+        }
     }
 }
 

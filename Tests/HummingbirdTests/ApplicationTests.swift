@@ -726,6 +726,32 @@ final class ApplicationTests: XCTestCase {
         tlsConfig.trustRoots = .certificates([caCertificate])
         return tlsConfig
     }
+
+    func testHTTPError() throws {
+        let messages = [
+            "basic-message",
+            "String\"with\"escaping",
+            "String\non\nnewlines"
+        ]
+
+        for message in messages {
+            let error = HTTPError(.internalServerError, message: message)
+            guard let body = error.body(allocator: ByteBufferAllocator()) else {
+                return XCTFail()
+            }
+
+            let format = try JSONDecoder().decode(HTTPErrorFormat.self, from: body)
+            XCTAssertEqual(format.error.message, message)
+        }
+    }
+}
+
+struct HTTPErrorFormat: Decodable {
+    struct ErrorFormat: Decodable {
+        let message: String
+    }
+
+    let error: ErrorFormat
 }
 
 /// HTTPField used during tests
