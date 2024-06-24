@@ -137,8 +137,7 @@ public struct CORSMiddleware<Context: RequestContext>: RouterMiddleware {
                 }
                 throw EditedHTTPError(
                     originalError: error,
-                    additionalHeaders: additionalHeaders,
-                    context: context
+                    additionalHeaders: additionalHeaders
                 )
             }
         }

@@ -55,19 +55,35 @@ public struct HTTPError: Error, HTTPResponseError, Sendable {
         self.body = message
     }
 
-    /// Get body of error as ByteBuffer
-    public func body(allocator: ByteBufferAllocator) -> ByteBuffer? {
-        do {
-            if let body {
-                var buffer = allocator.buffer(string: "{\"error\":{\"message\":")
-                try JSONEncoder().encode(body, into: &buffer)
-                buffer.writeString("}}\n")
-                return buffer
-            }
+    fileprivate struct CodableFormat: Encodable {
+        struct ErrorFormat: Encodable {
+            let message: String
+        }
 
+        let error: ErrorFormat
+    }
+
+    /// Get body of error as ByteBuffer
+    public func body(from request: Request, context: some RequestContext) throws -> Response? {
+        guard let body else {
             return nil
-        } catch {
-            return nil
+        }
+
+        let codable = CodableFormat(error: .init(message: body))
+        return try context.responseEncoder.encode(codable, from: request, context: context)
+    }
+
+    public func response(from request: Request, context: some RequestContext) throws -> Response {
+        if let body {
+            let codable = CodableFormat(error: CodableFormat.ErrorFormat(message: body))
+            var response = try context.responseEncoder.encode(codable, from: request, context: context)
+
+            response.status = status
+            response.headers.append(contentsOf: headers)
+
+            return response
+        } else {
+            return Response(status: status, headers: headers)
         }
     }
 }

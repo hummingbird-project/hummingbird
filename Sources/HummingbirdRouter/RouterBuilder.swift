@@ -46,8 +46,12 @@ public struct RouterBuilder<Context: RouterRequestContext, Handler: MiddlewarePr
 /// extend Router to conform to Responder so we can use it to process `Request``
 extension RouterBuilder: HTTPResponder, HTTPResponderBuilder {
     public func respond(to request: Input, context: Context) async throws -> Output {
-        try await self.handle(request, context: context) { _, _ in
-            throw HTTPError(.notFound)
+        do {
+            return try await self.handle(request, context: context) { _, _ in
+                throw HTTPError(.notFound)
+            }
+        } catch let error as HTTPResponseError {
+            return try error.response(from: request, context: context)
         }
     }
 

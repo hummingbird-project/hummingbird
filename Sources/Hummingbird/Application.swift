@@ -113,18 +113,11 @@ extension ApplicationProtocol {
             do {
                 response = try await responder.respond(to: request, context: context)
             } catch {
-                switch error {
-                case let httpError as HTTPResponseError:
-                    // this is a processed error so don't log as Error
-                    response = httpError.response(allocator: channel.allocator)
-                default:
-                    // this error has not been recognised
-                    logger.debug("Unrecognised Error", metadata: ["error": "\(error)"])
-                    response = Response(
-                        status: .internalServerError,
-                        body: .init()
-                    )
-                }
+                logger.debug("Unrecognised Error", metadata: ["error": "\(error)"])
+                response = Response(
+                    status: .internalServerError,
+                    body: .init()
+                )
             }
             response.headers[.date] = dateCache.date
             // server name header

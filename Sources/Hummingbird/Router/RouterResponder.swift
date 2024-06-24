@@ -40,22 +40,26 @@ public struct RouterResponder<Context: RequestContext>: HTTPResponder {
     /// - Returns: EventLoopFuture that will be fulfilled with the Response
     @inlinable
     public func respond(to request: Request, context: Context) async throws -> Response {
-        let path: String
-        if self.options.contains(.caseInsensitive) {
-            path = request.uri.path.lowercased()
-        } else {
-            path = request.uri.path
+        do {
+            let path: String
+            if self.options.contains(.caseInsensitive) {
+                path = request.uri.path.lowercased()
+            } else {
+                path = request.uri.path
+            }
+            guard
+                let (responderChain, parameters) = trie.resolve(path),
+                let responder = responderChain.getResponder(for: request.method)
+            else {
+                return try await self.notFoundResponder.respond(to: request, context: context)
+            }
+            var context = context
+            context.coreContext.parameters = parameters
+            // store endpoint path in request (mainly for metrics)
+            context.coreContext.endpointPath.value = responderChain.path
+            return try await responder.respond(to: request, context: context)
+        } catch let error as HTTPResponseError {
+            return try error.response(from: request, context: context)
         }
-        guard
-            let (responderChain, parameters) = trie.resolve(path),
-            let responder = responderChain.getResponder(for: request.method)
-        else {
-            return try await self.notFoundResponder.respond(to: request, context: context)
-        }
-        var context = context
-        context.coreContext.parameters = parameters
-        // store endpoint path in request (mainly for metrics)
-        context.coreContext.endpointPath.value = responderChain.path
-        return try await responder.respond(to: request, context: context)
     }
 }

@@ -115,9 +115,6 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
                     let response: Response
                     do {
                         response = try await self.responder.respond(to: request, context: context)
-                    } catch let error as HTTPResponseError {
-                        let httpResponse = error.response(allocator: ByteBufferAllocator())
-                        response = Response(status: httpResponse.status, headers: httpResponse.headers, body: httpResponse.body)
                     } catch {
                         response = Response(status: .internalServerError)
                     }

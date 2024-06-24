@@ -19,5 +19,8 @@ import NIOCore
 extension NIOTooManyBytesError: HTTPResponseError {
     public var status: HTTPResponse.Status { .contentTooLarge }
     public var headers: HTTPFields { [:] }
-    public func body(allocator: ByteBufferAllocator) -> ByteBuffer? { nil }
+
+    public func response(from request: Request, context: some RequestContext) throws -> Response {
+        Response(status: status)
+    }
 }

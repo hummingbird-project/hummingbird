@@ -21,6 +21,8 @@ import HummingbirdTesting
 import HummingbirdTLS
 import Logging
 import NIOCore
+import NIOConcurrencyHelpers
+import NIOEmbedded
 import NIOSSL
 import ServiceLifecycle
 import XCTest
@@ -727,31 +729,55 @@ final class ApplicationTests: XCTestCase {
         return tlsConfig
     }
 
-    func testHTTPError() throws {
+    func testHTTPError() async throws {
+        struct HTTPErrorFormat: Decodable {
+            struct ErrorFormat: Decodable {
+                let message: String
+            }
+
+            let error: ErrorFormat
+        }
+
+        final class CollatedResponseWriter: ResponseBodyWriter {
+            let collated: NIOLockedValueBox<ByteBuffer>
+
+            init() {
+                self.collated = .init(.init())
+            }
+
+            func write(_ buffer: ByteBuffer) async throws {
+                _ = self.collated.withLockedValue { collated in
+                    collated.writeImmutableBuffer(buffer)
+                }
+            }
+        }
+
         let messages = [
             "basic-message",
             "String\"with\"escaping",
             "String\non\nnewlines"
         ]
 
+        let request = Request(
+            head: .init(method: .get, scheme: nil, authority: "example.com", path: "/"),
+            body: .init(buffer: ByteBuffer())
+        )
+        let context = BasicRequestContext(
+            source: ApplicationRequestContextSource(
+                channel: EmbeddedChannel(),
+                logger: Logger(label: #function)
+            )
+        )
+
         for message in messages {
             let error = HTTPError(.internalServerError, message: message)
-            guard let body = error.body(allocator: ByteBufferAllocator()) else {
-                return XCTFail()
-            }
-
-            let format = try JSONDecoder().decode(HTTPErrorFormat.self, from: body)
+            let response = try error.response(from: request, context: context)
+            let writer = CollatedResponseWriter()
+            _ = try await response.body.write(writer)
+            let format = try JSONDecoder().decode(HTTPErrorFormat.self, from: writer.collated.withLockedValue { $0 })
             XCTAssertEqual(format.error.message, message)
         }
     }
-}
-
-struct HTTPErrorFormat: Decodable {
-    struct ErrorFormat: Decodable {
-        let message: String
-    }
-
-    let error: ErrorFormat
 }
 
 /// HTTPField used during tests
