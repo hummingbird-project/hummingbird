@@ -17,7 +17,7 @@ import HummingbirdTesting
 import XCTest
 
 final class PersistTests: XCTestCase {
-    static let redisHostname = Environment.shared.get("REDIS_HOSTNAME") ?? "localhost"
+    static let redisHostname = Environment().get("REDIS_HOSTNAME") ?? "localhost"
 
     func createRouter() throws -> (Router<BasicRequestContext>, PersistDriver) {
         let router = Router()
