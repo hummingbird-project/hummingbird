@@ -31,7 +31,7 @@ import ServiceLifecycle
 ///
 /// Getting the current date formatted is an expensive operation. This creates a task that will
 /// update a cached version of the date in the format as detailed in RFC1123 once every second.
-public final class DateCache: Service {
+final class DateCache: Service {
     final class DateContainer: AtomicReference, Sendable {
         let date: String
 
