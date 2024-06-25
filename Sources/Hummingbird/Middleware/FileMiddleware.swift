@@ -104,13 +104,12 @@ public struct FileMiddleware<Context: RequestContext, Provider: FileProvider>: R
                 throw HTTPError(.badRequest)
             }
 
-            let id = try self.fileProvider.getFileIdentifier(path)
-            // get file attributes and actual file path (It might be an index.html)
-            let (actualID, attributes) = try await self.getFileAttributes(id: id)
+            // get file attributes and actual file path and ID (It might be an index.html)
+            let (actualPath, actualID, attributes) = try await self.getFileAttributes(path)
             // we have a file so indicate it came from the FileMiddleware
             context.coreContext.endpointPath.value = "FileMiddleware"
             // get how we should respond
-            let fileResult = try await self.constructResponse(path: actualID, attributes: attributes, request: request)
+            let fileResult = try await self.constructResponse(path: actualPath, attributes: attributes, request: request)
 
             switch fileResult {
             case .notModified(let headers):
@@ -145,22 +144,25 @@ extension FileMiddleware {
     }
 
     /// Return file attributes, and actual file path
-    private func getFileAttributes(id: Provider.FileIdentifier) async throws -> (id: Provider.FileIdentifier, attributes: Provider.FileAttributes) {
-        guard let attributes = try await self.fileProvider.getAttributes(id: id) else {
+    private func getFileAttributes(_ path: String) async throws -> (path: String, id: Provider.FileIdentifier, attributes: Provider.FileAttributes) {
+        guard let id = self.fileProvider.getFileIdentifier(path),
+              let attributes = try await self.fileProvider.getAttributes(id: id)
+        else {
             throw HTTPError(.notFound)
         }
         // if file is a directory seach and `searchForIndexHtml` is set to true
         // then search for index.html in directory
         if attributes.isFolder {
             guard self.searchForIndexHtml else { throw HTTPError(.notFound) }
-            guard let indexID = self.fileProvider.appendFilenameComponent("index.html", to: id),
+            let indexPath = self.appendingPathComponent(path, "index.html")
+            guard let indexID = self.fileProvider.getFileIdentifier(indexPath),
                   let indexAttributes = try await self.fileProvider.getAttributes(id: indexID)
             else {
                 throw HTTPError(.notFound)
             }
-            return (id: indexID, attributes: indexAttributes)
+            return (path: indexPath, id: indexID, attributes: indexAttributes)
         } else {
-            return (id: id, attributes: attributes)
+            return (path: path, id: id, attributes: attributes)
         }
     }
 
@@ -183,9 +185,7 @@ extension FileMiddleware {
         headers[.eTag] = eTag
 
         // content-type
-        if let extPointIndex = path.lastIndex(of: ".") {
-            let extIndex = path.index(after: extPointIndex)
-            let ext = String(path.suffix(from: extIndex))
+        if let ext = self.fileExtension(for: path) {
             if let contentType = MediaType.getMediaType(forExtension: ext) {
                 headers[.contentType] = contentType.description
             }
@@ -284,5 +284,21 @@ extension FileMiddleware {
         }
 
         return "W/\"\(buffer.hexDigest())\""
+    }
+
+    private func appendingPathComponent(_ root: String, _ component: String) -> String {
+        if root.last == "/" {
+            return "\(root)\(component)"
+        } else {
+            return "\(root)/\(component)"
+        }
+    }
+
+    private func fileExtension(for path: String) -> String? {
+        if let extPointIndex = path.lastIndex(of: ".") {
+            let extIndex = path.index(after: extPointIndex)
+            return .init(path.suffix(from: extIndex))
+        }
+        return nil
     }
 }

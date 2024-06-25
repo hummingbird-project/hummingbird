@@ -71,24 +71,11 @@ public struct LocalFileSystem: FileProvider {
     /// Get full path name with local file system root prefixed
     /// - Parameter path: path from URI
     /// - Returns: Full path
-    public func getFileIdentifier(_ path: String) throws -> FileIdentifier {
+    public func getFileIdentifier(_ path: String) -> FileIdentifier? {
         if path.first == "/" {
             return "\(self.rootFolder)\(path.dropFirst())"
         } else {
             return "\(self.rootFolder)\(path)"
-        }
-    }
-
-    /// Append a file name component to a file identifier
-    /// - Parameter
-    ///   - filename: File name to append
-    ///   - path: File Identifier
-    /// - Returns: Resulting file identifier
-    func appendingFilenameComponent(_ filename: String, to path: FileIdentifier) -> FileIdentifier? {
-        if path.last == "/" {
-            return "\(path)\(filename)"
-        } else {
-            return "\(path)/\(filename)"
         }
     }
 

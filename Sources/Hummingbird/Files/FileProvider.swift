@@ -25,14 +25,7 @@ public protocol FileProvider: Sendable {
     /// Get file identifier
     /// - Parameter path: path from URI
     /// - Returns: File Identifier
-    func getFileIdentifier(_ path: String) throws -> FileIdentifier
-
-    /// Append a file name component to a file identifier
-    /// - Parameter
-    ///   - filename: File name to append
-    ///   - path: File Identifier
-    /// - Returns: Resulting file identifier
-    func appendFilenameComponent(_ filename: String, to path: FileIdentifier) -> FileIdentifier?
+    func getFileIdentifier(_ path: String) -> FileIdentifier?
 
     /// Get file attributes
     /// - Parameter id: File identifier
