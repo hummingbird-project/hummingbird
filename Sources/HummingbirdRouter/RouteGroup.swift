@@ -39,7 +39,7 @@ public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProto
     ) {
         var routerPath = routerPath
         // Get builder state from service context
-        var routerBuildState: RouterBuilderState = RouterBuilderState.current ?? .init(options: [])
+        var routerBuildState = RouterBuilderState.current ?? .init(options: [])
         if routerBuildState.options.contains(.caseInsensitive) {
             routerPath = routerPath.lowercased()
         }
