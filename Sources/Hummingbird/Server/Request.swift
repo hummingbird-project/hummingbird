@@ -15,6 +15,19 @@
 import HummingbirdCore
 
 extension Request {
+    /// Collapse body into one ByteBuffer.
+    ///
+    /// This will store the collated ByteBuffer back into the request so is a mutating method. If
+    /// you don't need to store the collated ByteBuffer on the request then use
+    /// `request.body.collate(maxSize:)`.
+    ///
+    /// - Parameter context: Request context
+    /// - Returns: Collated body
+    @_documentation(visibility: internal) @available(*, unavailable, message: "Use Request.collectBody(upTo:) instead")
+    public mutating func collateBody(context: some RequestContext) async throws -> ByteBuffer {
+        try await self.collectBody(upTo: context.maxUploadSize)
+    }
+
     /// Decode request using decoder stored at `Application.decoder`.
     /// - Parameter type: Type you want to decode to
     public func decode<Type: Decodable>(as type: Type.Type, context: some RequestContext) async throws -> Type {
