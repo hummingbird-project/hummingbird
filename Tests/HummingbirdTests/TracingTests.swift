@@ -578,9 +578,6 @@ final class TracingTests: XCTestCase {
     }
 }
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension TracingTests {
     /// Test tracing middleware serviceContext is propagated to async route handlers
     func testServiceContextPropagationAsync() async throws {
@@ -615,8 +612,6 @@ extension TracingTests {
         XCTAssertEqual(span2.context.traceID, span.context.traceID)
     }
 }
-
-#endif // compiler(>=5.5.2) && canImport(_Concurrency)
 
 /// TestID Key used in tests
 internal enum TestIDKey: ServiceContextKey {

@@ -249,7 +249,6 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
 
     #if canImport(Network)
     /// create a NIOTransportServices bootstrap using Network.framework
-    @available(macOS 10.14, iOS 12, tvOS 12, *)
     private nonisolated func createTSBootstrap(
         configuration: ServerConfiguration
     ) -> NIOTSListenerBootstrap? {
@@ -291,7 +290,6 @@ protocol ServerBootstrapProtocol {
 extension ServerBootstrap: ServerBootstrapProtocol {}
 
 #if canImport(Network)
-@available(macOS 10.14, iOS 12, tvOS 12, *)
 extension NIOTSListenerBootstrap: ServerBootstrapProtocol {
     // need to be able to extend `NIOTSListenerBootstrap` to conform to `ServerBootstrapProtocol`
     // before we can use TransportServices
