@@ -31,12 +31,10 @@ class TransportServicesTests: XCTestCase {
     }
 
     func testConnect() async throws {
-        let eventLoopGroup = NIOTSEventLoopGroup()
-        defer { try? eventLoopGroup.syncShutdownGracefully() }
         try await testServer(
             responder: helloResponder,
             configuration: .init(address: .hostname(port: 0)),
-            eventLoopGroup: eventLoopGroup,
+            eventLoopGroup: NIOSingletons.transportServicesEventLoopGroup,
             logger: Logger(label: "Hummingbird")
         ) { client in
             let response = try await client.get("/")
@@ -46,7 +44,6 @@ class TransportServicesTests: XCTestCase {
     }
 
     func testTLS() async throws {
-        let eventLoopGroup = NIOTSEventLoopGroup()
         let p12Path = Bundle.module.path(forResource: "server", ofType: "p12")!
         let tlsOptions: TSTLSOptions
         do {
@@ -58,7 +55,7 @@ class TransportServicesTests: XCTestCase {
         try await testServer(
             responder: helloResponder,
             configuration: .init(address: .hostname(port: 0), serverName: testServerName, tlsOptions: tlsOptions),
-            eventLoopGroup: eventLoopGroup,
+            eventLoopGroup: NIOSingletons.transportServicesEventLoopGroup,
             logger: Logger(label: "Hummingbird"),
             clientConfiguration: .init(tlsConfiguration: self.getClientTLSConfiguration(), serverName: testServerName)
         ) { client in
