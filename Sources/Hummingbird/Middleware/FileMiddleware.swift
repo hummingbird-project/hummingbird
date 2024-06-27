@@ -104,9 +104,8 @@ public struct FileMiddleware<Context: RequestContext, Provider: FileProvider>: R
                 throw HTTPError(.badRequest)
             }
 
-            let fullPath = self.fileProvider.getFullPath(path)
-            // get file attributes and actual file path (It might be an index.html)
-            let (actualPath, attributes) = try await self.getFileAttributes(path: fullPath)
+            // get file attributes and actual file path and ID (It might be an index.html)
+            let (actualPath, actualID, attributes) = try await self.getFileAttributes(path)
             // we have a file so indicate it came from the FileMiddleware
             context.coreContext.endpointPath.value = "FileMiddleware"
             // get how we should respond
@@ -119,11 +118,11 @@ public struct FileMiddleware<Context: RequestContext, Provider: FileProvider>: R
                 switch request.method {
                 case .get:
                     if let range {
-                        let body = try await self.fileProvider.loadFile(path: actualPath, range: range, context: context)
+                        let body = try await self.fileProvider.loadFile(id: actualID, range: range, context: context)
                         return Response(status: .partialContent, headers: headers, body: body)
                     }
 
-                    let body = try await self.fileProvider.loadFile(path: actualPath, context: context)
+                    let body = try await self.fileProvider.loadFile(id: actualID, context: context)
                     return Response(status: .ok, headers: headers, body: body)
 
                 case .head:
@@ -145,8 +144,10 @@ extension FileMiddleware {
     }
 
     /// Return file attributes, and actual file path
-    private func getFileAttributes(path: String) async throws -> (path: String, attributes: Provider.FileAttributes) {
-        guard let attributes = try await self.fileProvider.getAttributes(path: path) else {
+    private func getFileAttributes(_ path: String) async throws -> (path: String, id: Provider.FileIdentifier, attributes: Provider.FileAttributes) {
+        guard let id = self.fileProvider.getFileIdentifier(path),
+              let attributes = try await self.fileProvider.getAttributes(id: id)
+        else {
             throw HTTPError(.notFound)
         }
         // if file is a directory seach and `searchForIndexHtml` is set to true
@@ -154,12 +155,14 @@ extension FileMiddleware {
         if attributes.isFolder {
             guard self.searchForIndexHtml else { throw HTTPError(.notFound) }
             let indexPath = self.appendingPathComponent(path, "index.html")
-            guard let indexAttributes = try await self.fileProvider.getAttributes(path: indexPath) else {
+            guard let indexID = self.fileProvider.getFileIdentifier(indexPath),
+                  let indexAttributes = try await self.fileProvider.getAttributes(id: indexID)
+            else {
                 throw HTTPError(.notFound)
             }
-            return (path: indexPath, attributes: indexAttributes)
+            return (path: indexPath, id: indexID, attributes: indexAttributes)
         } else {
-            return (path: path, attributes: attributes)
+            return (path: path, id: id, attributes: attributes)
         }
     }
 
@@ -182,9 +185,7 @@ extension FileMiddleware {
         headers[.eTag] = eTag
 
         // content-type
-        if let extPointIndex = path.lastIndex(of: ".") {
-            let extIndex = path.index(after: extPointIndex)
-            let ext = String(path.suffix(from: extIndex))
+        if let ext = self.fileExtension(for: path) {
             if let contentType = MediaType.getMediaType(forExtension: ext) {
                 headers[.contentType] = contentType.description
             }
@@ -291,5 +292,13 @@ extension FileMiddleware {
         } else {
             return "\(root)/\(component)"
         }
+    }
+
+    private func fileExtension(for path: String) -> String? {
+        if let extPointIndex = path.lastIndex(of: ".") {
+            let extIndex = path.index(after: extPointIndex)
+            return .init(path.suffix(from: extIndex))
+        }
+        return nil
     }
 }

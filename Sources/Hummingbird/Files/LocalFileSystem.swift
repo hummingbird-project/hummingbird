@@ -35,6 +35,9 @@ public struct LocalFileSystem: FileProvider {
         }
     }
 
+    /// File Identifier (Fully qualified path)
+    public typealias FileIdentifier = String
+
     let rootFolder: String
     let fileIO: FileIO
 
@@ -68,7 +71,7 @@ public struct LocalFileSystem: FileProvider {
     /// Get full path name with local file system root prefixed
     /// - Parameter path: path from URI
     /// - Returns: Full path
-    public func getFullPath(_ path: String) -> String {
+    public func getFileIdentifier(_ path: String) -> FileIdentifier? {
         if path.first == "/" {
             return "\(self.rootFolder)\(path.dropFirst())"
         } else {
@@ -77,9 +80,9 @@ public struct LocalFileSystem: FileProvider {
     }
 
     /// Get file attributes
-    /// - Parameter path: Full path to file
+    /// - Parameter id: FileIdentifier
     /// - Returns: File attributes
-    public func getAttributes(path: String) async throws -> FileAttributes? {
+    public func getAttributes(id path: FileIdentifier) async throws -> FileAttributes? {
         do {
             let lstat = try await self.fileIO.fileIO.lstat(path: path)
             let isFolder = (lstat.st_mode & S_IFMT) == S_IFDIR
@@ -100,20 +103,20 @@ public struct LocalFileSystem: FileProvider {
 
     /// Return a reponse body that will write the file body
     /// - Parameters:
-    ///   - path: Full path to file
+    ///   - id: FileIdentifier
     ///   - context: Request context
     /// - Returns: Response body
-    public func loadFile(path: String, context: some RequestContext) async throws -> ResponseBody {
+    public func loadFile(id path: FileIdentifier, context: some RequestContext) async throws -> ResponseBody {
         try await self.fileIO.loadFile(path: path, context: context)
     }
 
     /// Return a reponse body that will write a partial file body
     /// - Parameters:
-    ///   - path: Full path to file
+    ///   - id: FileIdentifier
     ///   - range: Part of file to return
     ///   - context: Request context
     /// - Returns: Response body
-    public func loadFile(path: String, range: ClosedRange<Int>, context: some RequestContext) async throws -> ResponseBody {
+    public func loadFile(id path: FileIdentifier, range: ClosedRange<Int>, context: some RequestContext) async throws -> ResponseBody {
         try await self.fileIO.loadFile(path: path, range: range, context: context)
     }
 }

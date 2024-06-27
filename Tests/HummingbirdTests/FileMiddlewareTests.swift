@@ -341,21 +341,21 @@ class FileMiddlewareTests: XCTestCase {
                 self.files = [:]
             }
 
-            func getFullPath(_ path: String) -> String {
+            func getFileIdentifier(_ path: String) -> String? {
                 return path
             }
 
-            func getAttributes(path: String) async throws -> FileAttributes? {
+            func getAttributes(id path: String) async throws -> FileAttributes? {
                 guard let file = files[path] else { return nil }
                 return .init(size: file.readableBytes)
             }
 
-            func loadFile(path: String, context: some RequestContext) async throws -> ResponseBody {
+            func loadFile(id path: String, context: some RequestContext) async throws -> ResponseBody {
                 guard let file = files[path] else { throw HTTPError(.notFound) }
                 return .init(byteBuffer: file)
             }
 
-            func loadFile(path: String, range: ClosedRange<Int>, context: some RequestContext) async throws -> ResponseBody {
+            func loadFile(id path: String, range: ClosedRange<Int>, context: some RequestContext) async throws -> ResponseBody {
                 guard let file = files[path] else { throw HTTPError(.notFound) }
                 guard let slice = file.getSlice(at: range.lowerBound, length: range.count) else { throw HTTPError(.rangeNotSatisfiable) }
                 return .init(byteBuffer: slice)
