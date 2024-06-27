@@ -40,7 +40,7 @@ extension RouterPath {
         var pathIterator = context.routerContext.remainingPathComponents.makeIterator()
         var context = context
         for component in self.components {
-            switch component {
+            switch component.value {
             case .path(let lhs):
                 if lhs != pathIterator.next()! {
                     return nil

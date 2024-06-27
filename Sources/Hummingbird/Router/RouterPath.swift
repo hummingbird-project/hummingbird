@@ -14,16 +14,23 @@
 
 /// Split router path into components
 public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConvertible {
-    public enum Element: Equatable, Sendable, CustomStringConvertible {
-        case path(Substring)
-        case capture(Substring)
-        case prefixCapture(suffix: Substring, parameter: Substring) // *.jpg
-        case suffixCapture(prefix: Substring, parameter: Substring) // file.*
-        case wildcard
-        case prefixWildcard(Substring) // *.jpg
-        case suffixWildcard(Substring) // file.*
-        case recursiveWildcard
-        case null
+    public struct Element: Equatable, Sendable, CustomStringConvertible {
+        package enum _Internal: Equatable, Sendable {
+            case path(Substring)
+            case capture(Substring)
+            case prefixCapture(suffix: Substring, parameter: Substring) // *.jpg
+            case suffixCapture(prefix: Substring, parameter: Substring) // file.*
+            case wildcard
+            case prefixWildcard(Substring) // *.jpg
+            case suffixWildcard(Substring) // file.*
+            case recursiveWildcard
+            case null
+        }
+
+        package let value: _Internal
+        init(_ value: _Internal) {
+            self.value = value
+        }
 
         init(_ string: Substring) {
             if string.first == ":" {
@@ -59,11 +66,36 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConv
             } else {
                 self = .path(string)
             }
-
         }
 
+        /// Match to string
+        public static func path(_ path: Substring) -> Self { .init(.path(path)) }
+        /// Store parameter
+        public static func capture(_ parameter: Substring) -> Self { .init(.capture(parameter)) }
+        /// Match suffix and capture prefix eg *.jpg
+        public static func prefixCapture(suffix: Substring, parameter: Substring) -> Self {
+            .init(.prefixCapture(suffix: suffix, parameter: parameter))
+        }
+
+        /// Match prefix and capture suffix eg file.*
+        public static func suffixCapture(prefix: Substring, parameter: Substring) -> Self {
+            .init(.suffixCapture(prefix: prefix, parameter: parameter))
+        }
+
+        /// Always match
+        public static var wildcard: Self { .init(.wildcard) }
+        /// Match suffix eg *.jpg
+        public static func prefixWildcard(_ suffix: Substring) -> Self { .init(.prefixWildcard(suffix)) }
+        /// Match prefix eg file.*
+        public static func suffixWildcard(_ prefix: Substring) -> Self { .init(.suffixWildcard(prefix)) }
+        /// Always match and everything after
+        public static var recursiveWildcard: Self { .init(.recursiveWildcard) }
+        ///
+        public static var null: Self { .init(.null) }
+
+        /// A textual representation of the RouterPath component
         public var description: String {
-            switch self {
+            switch self.value {
             case .path(let path):
                 return String(path)
             case .capture(let parameter):
@@ -85,8 +117,9 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConv
             }
         }
 
+        /// Match element with string
         static func ~= (lhs: Element, rhs: some StringProtocol) -> Bool {
-            switch lhs {
+            switch lhs.value {
             case .path(let lhs):
                 return lhs == rhs
             case .capture:
@@ -108,8 +141,9 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConv
             }
         }
 
+        /// Element a path String
         static func == (lhs: Element, rhs: some StringProtocol) -> Bool {
-            switch lhs {
+            switch lhs.value {
             case .path(let lhs):
                 return lhs == rhs
             default:
@@ -117,21 +151,28 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConv
             }
         }
 
+        /// Return lowercased version of RouterPath component
         public func lowercased() -> Self {
-            switch self {
+            switch self.value {
             case .path(let path):
                 .path(path.lowercased()[...])
             case .prefixCapture(let suffix, let parameter):
                 .prefixCapture(suffix: suffix.lowercased()[...], parameter: parameter)
             case .suffixCapture(let prefix, let parameter):
                 .suffixCapture(prefix: prefix.lowercased()[...], parameter: parameter)
+            case .prefixWildcard(let suffix):
+                .prefixWildcard(suffix)
+            case .suffixWildcard(let prefix):
+                .suffixWildcard(prefix)
             default:
                 self
             }
         }
     }
 
+    /// Array of RouterPath elements
     public let components: [Element]
+    /// A textual representation of the RouterPath
     public let description: String
 
     internal init(components: [Element]) {
@@ -139,19 +180,23 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConv
         self.description = "/\(self.components.map(\.description).joined(separator: "/"))"
     }
 
+    /// Initialize RouterPath from URI string
     public init(_ value: String) {
         let split = value.split(separator: "/", omittingEmptySubsequences: true)
         self.init(components: split.map { .init($0) })
     }
 
+    /// Initialize RouterPath from String literal
     public init(stringLiteral value: String) {
         self.init(value)
     }
 
+    /// Return lowercased version of RouterPath
     public func lowercased() -> Self {
         .init(components: self.map { $0.lowercased() })
     }
 
+    /// Combine two RouterPaths
     public func appendPath(_ path: RouterPath) -> Self {
         .init(components: self.components + path.components)
     }
