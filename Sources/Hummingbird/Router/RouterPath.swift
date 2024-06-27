@@ -25,6 +25,43 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConv
         case recursiveWildcard
         case null
 
+        init(_ string: Substring) {
+            if string.first == ":" {
+                self = .capture(string.dropFirst())
+            } else if string.first == "{" {
+                let parameter = string.dropFirst(1)
+                if let closingParethesis = parameter.firstIndex(of: "}") {
+                    let charAfterClosingParethesis = parameter.index(after: closingParethesis)
+                    if charAfterClosingParethesis == parameter.endIndex {
+                        self = .capture(parameter[..<closingParethesis])
+                    } else {
+                        self = .prefixCapture(suffix: parameter[charAfterClosingParethesis...], parameter: parameter[..<closingParethesis])
+                    }
+                } else {
+                    self = .path(string)
+                }
+            } else if string.last == "}" {
+                let parameter = string.dropLast()
+                if let openingParenthesis = parameter.lastIndex(of: "{"), openingParenthesis != parameter.startIndex {
+                    let charAfterOpeningParenthesis = parameter.index(after: openingParenthesis)
+                    self = .suffixCapture(prefix: parameter[..<openingParenthesis], parameter: parameter[charAfterOpeningParenthesis...])
+                } else {
+                    self = .path(string)
+                }
+            } else if string == "*" {
+                self = .wildcard
+            } else if string == "**" {
+                self = .recursiveWildcard
+            } else if string.first == "*" {
+                self = .prefixWildcard(string.dropFirst())
+            } else if string.last == "*" {
+                self = .suffixWildcard(string.dropLast())
+            } else {
+                self = .path(string)
+            }
+
+        }
+
         public var description: String {
             switch self {
             case .path(let path):
@@ -97,52 +134,18 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConv
     public let components: [Element]
     public let description: String
 
+    internal init(components: [Element]) {
+        self.components = components
+        self.description = "/\(self.components.map(\.description).joined(separator: "/"))"
+    }
+
     public init(_ value: String) {
         let split = value.split(separator: "/", omittingEmptySubsequences: true)
-        self.components = split.map { component in
-            if component.first == ":" {
-                return .capture(component.dropFirst())
-            } else if component.first == "{" {
-                let parameter = component.dropFirst(1)
-                if let closingParethesis = parameter.firstIndex(of: "}") {
-                    let charAfterClosingParethesis = parameter.index(after: closingParethesis)
-                    if charAfterClosingParethesis == parameter.endIndex {
-                        return .capture(parameter[..<closingParethesis])
-                    } else {
-                        return .prefixCapture(suffix: parameter[charAfterClosingParethesis...], parameter: parameter[..<closingParethesis])
-                    }
-                } else {
-                    return .path(component)
-                }
-            } else if component.last == "}" {
-                let parameter = component.dropLast()
-                if let openingParenthesis = parameter.lastIndex(of: "{"), openingParenthesis != parameter.startIndex {
-                    let charAfterOpeningParenthesis = parameter.index(after: openingParenthesis)
-                    return .suffixCapture(prefix: parameter[..<openingParenthesis], parameter: parameter[charAfterOpeningParenthesis...])
-                }
-                return .path(component)
-            } else if component == "*" {
-                return .wildcard
-            } else if component == "**" {
-                return .recursiveWildcard
-            } else if component.first == "*" {
-                return .prefixWildcard(component.dropFirst())
-            } else if component.last == "*" {
-                return .suffixWildcard(component.dropLast())
-            } else {
-                return .path(component)
-            }
-        }
-        self.description = "/\(self.components.map(\.description).joined(separator: "/"))"
+        self.init(components: split.map { .init($0) })
     }
 
     public init(stringLiteral value: String) {
         self.init(value)
-    }
-
-    internal init(components: [Element]) {
-        self.components = components
-        self.description = "/\(self.components.map(\.description).joined(separator: "/"))"
     }
 
     public func lowercased() -> Self {
