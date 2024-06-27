@@ -80,8 +80,6 @@ public final class Router<Context: RequestContext>: RouterMethods, HTTPResponder
         method: HTTPRequest.Method,
         responder: Responder
     ) -> Self where Responder.Context == Context {
-        // ensure path starts with a "/" and doesn't end with a "/"
-        //var path = "/\(path.dropSuffix("/").dropPrefix("/"))"
         var path = path
         if self.options.contains(.caseInsensitive) {
             path = path.lowercased()
