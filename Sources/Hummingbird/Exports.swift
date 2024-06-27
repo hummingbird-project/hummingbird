@@ -29,7 +29,7 @@
 @_exported @_documentation(visibility: internal) import struct HTTPTypes.HTTPRequest
 @_exported @_documentation(visibility: internal) import struct HTTPTypes.HTTPResponse
 
-// Temporary exports or deprecated typealiases
+// Temporary exports of unavailable typealiases
 @_exported import struct HummingbirdCore.HBRequest
 @_exported import struct HummingbirdCore.HBRequestBody
 @_exported import struct HummingbirdCore.HBResponse

@@ -23,7 +23,7 @@ extension Request {
     ///
     /// - Parameter context: Request context
     /// - Returns: Collated body
-    @_documentation(visibility: internal) @available(*, deprecated, message: "Use Request.collectBody(upTo:) instead")
+    @_documentation(visibility: internal) @available(*, unavailable, message: "Use Request.collectBody(upTo:) instead")
     public mutating func collateBody(context: some RequestContext) async throws -> ByteBuffer {
         try await self.collectBody(upTo: context.maxUploadSize)
     }

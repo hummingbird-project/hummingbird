@@ -12,17 +12,17 @@
 //
 //===----------------------------------------------------------------------===//
 
-// Below is a list of deprecated symbols with the "HB" prefix. These are available
+// Below is a list of unavailable symbols with the "HB" prefix. These are available
 // temporarily to ease transition from the old symbols that included the "HB"
 // prefix to the new ones.
 //
 // This file will be removed before we do a 2.0 release
 
-@_documentation(visibility: internal) @available(*, deprecated, renamed: "RouterBuilder")
+@_documentation(visibility: internal) @available(*, unavailable, renamed: "RouterBuilder")
 public typealias HBRouterBuilder = RouterBuilder
-@_documentation(visibility: internal) @available(*, deprecated, renamed: "RouterBuilderContext")
+@_documentation(visibility: internal) @available(*, unavailable, renamed: "RouterBuilderContext")
 public typealias HBRouterBuilderContext = RouterBuilderContext
-@_documentation(visibility: internal) @available(*, deprecated, renamed: "RouterRequestContext")
+@_documentation(visibility: internal) @available(*, unavailable, renamed: "RouterRequestContext")
 public typealias HBRouterRequestContext = RouterRequestContext
-@_documentation(visibility: internal) @available(*, deprecated, renamed: "BasicRouterRequestContext")
+@_documentation(visibility: internal) @available(*, unavailable, renamed: "BasicRouterRequestContext")
 public typealias HBBasicRouterRequestContext = BasicRouterRequestContext
