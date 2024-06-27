@@ -17,23 +17,31 @@ import HummingbirdCore
 
 /// Error generated from another error that adds additional headers to the response
 struct EditedHTTPError: HTTPResponseError {
-    let status: HTTPResponse.Status
-    let headers: HTTPFields
-    let body: ByteBuffer?
-
-    init(originalError: Error, additionalHeaders: HTTPFields, context: some RequestContext) {
-        if let httpError = originalError as? HTTPResponseError {
-            self.status = httpError.status
-            self.headers = httpError.headers + additionalHeaders
-            self.body = httpError.body(allocator: context.allocator)
-        } else {
-            self.status = .internalServerError
-            self.headers = additionalHeaders
-            self.body = nil
-        }
+    let originalError: Error
+    var status: HTTPResponse.Status {
+        (self.originalError as? HTTPResponseError)?.status ?? .internalServerError
     }
 
-    func body(allocator: NIOCore.ByteBufferAllocator) -> NIOCore.ByteBuffer? {
-        return self.body
+    var headers: HTTPFields {
+        var headers = (originalError as? HTTPResponseError)?.headers ?? [:]
+        headers.append(contentsOf: self.additionalHeaders)
+        return headers
+    }
+
+    let additionalHeaders: HTTPFields
+
+    init(originalError: Error, additionalHeaders: HTTPFields) {
+        self.originalError = originalError
+        self.additionalHeaders = additionalHeaders
+    }
+
+    func response(from request: Request, context: some RequestContext) throws -> Response {
+        if let originalError = originalError as? HTTPResponseError {
+            var response = try originalError.response(from: request, context: context)
+            response.headers.append(contentsOf: self.additionalHeaders)
+            return response
+        }
+
+        return Response(status: .internalServerError, headers: self.additionalHeaders)
     }
 }

@@ -19,26 +19,9 @@ import NIOCore
 ///
 /// By conforming to `HTTPResponseError` you can control how your error will be presented to
 /// the client. Errors not conforming to this will be returned with status internalServerError.
-public protocol HTTPResponseError: Error {
+public protocol HTTPResponseError: Error, ResponseGenerator {
     /// status code for the error
     var status: HTTPResponse.Status { get }
     /// any addiitional headers required
     var headers: HTTPFields { get }
-    /// return error payload.
-    func body(allocator: ByteBufferAllocator) -> ByteBuffer?
-}
-
-extension HTTPResponseError {
-    /// Generate response from error
-    /// - Parameter allocator: Byte buffer allocator used to allocate message body
-    /// - Returns: Response
-    public func response(allocator: ByteBufferAllocator) -> Response {
-        let body: ResponseBody
-        if let buffer = self.body(allocator: allocator) {
-            body = .init(byteBuffer: buffer)
-        } else {
-            body = .init()
-        }
-        return .init(status: status, headers: headers, body: body)
-    }
 }
