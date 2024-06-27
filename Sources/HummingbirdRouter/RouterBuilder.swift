@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
-import ServiceContextModule
 
 /// Router Options
 public struct RouterBuilderOptions: OptionSet, Sendable {
@@ -45,10 +44,8 @@ public struct RouterBuilder<Context: RouterRequestContext, Handler: MiddlewarePr
         options: RouterBuilderOptions = [],
         @MiddlewareFixedTypeBuilder<Input, Output, Context> builder: () -> Handler
     ) {
-        var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
-        serviceContext.routerBuildState = .init(options: options)
         self.options = options
-        self.handler = ServiceContext.$current.withValue(serviceContext) {
+        self.handler = RouterBuilderState.$current.withValue(.init(options: options)) {
             builder()
         }
     }

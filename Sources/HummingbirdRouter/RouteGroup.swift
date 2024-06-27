@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
-import ServiceContextModule
 
 /// Router middleware that applies a middleware chain to URIs with a specified prefix
 public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProtocol>: RouterMiddleware where Handler.Input == Request, Handler.Output == Response, Handler.Context == Context {
@@ -40,21 +39,14 @@ public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProto
     ) {
         var routerPath = routerPath
         // Get builder state from service context
-        var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
-        var routerBuildState: RouterBuilderState
-        if let state = serviceContext.routerBuildState {
-            routerBuildState = state
-        } else {
-            routerBuildState = .init(options: [])
-        }
+        var routerBuildState = RouterBuilderState.current ?? .init(options: [])
         if routerBuildState.options.contains(.caseInsensitive) {
             routerPath = routerPath.lowercased()
         }
         let parentGroupPath = routerBuildState.routeGroupPath
         self.fullPath = "\(parentGroupPath)/\(routerPath)"
         routerBuildState.routeGroupPath = self.fullPath
-        serviceContext.routerBuildState = routerBuildState
-        self.handler = ServiceContext.$current.withValue(serviceContext) {
+        self.handler = RouterBuilderState.$current.withValue(routerBuildState) {
             builder()
         }
         self.routerPath = routerPath

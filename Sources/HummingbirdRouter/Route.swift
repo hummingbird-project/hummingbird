@@ -14,7 +14,6 @@
 
 import HTTPTypes
 import Hummingbird
-import ServiceContextModule
 
 /// Route definition
 public struct Route<Handler: _RouteHandlerProtocol, Context: RouterRequestContext>: RouterMiddleware where Handler.Context == Context {
@@ -33,8 +32,7 @@ public struct Route<Handler: _RouteHandlerProtocol, Context: RouterRequestContex
     ///   - routerPath: Route path, relative to group route is defined in
     ///   - handler: Route handler
     init(_ method: HTTPRequest.Method, _ routerPath: RouterPath = "", handler: Handler) {
-        let serviceContext = ServiceContext.current ?? ServiceContext.topLevel
-        let options = serviceContext.routerBuildState?.options ?? []
+        let options = RouterBuilderState.current?.options ?? []
         var routerPath = routerPath
         if options.contains(.caseInsensitive) {
             routerPath = routerPath.lowercased()
@@ -95,7 +93,7 @@ public struct Route<Handler: _RouteHandlerProtocol, Context: RouterRequestContex
 
     /// Return full path of route, using Task local stored `routeGroupPath`.
     static func getFullPath(from path: RouterPath) -> String {
-        let parentGroupPath = ServiceContext.current?.routerBuildState?.routeGroupPath ?? ""
+        let parentGroupPath = RouterBuilderState.current?.routeGroupPath ?? ""
         if path.count > 0 || parentGroupPath.count == 0 {
             return "\(parentGroupPath)/\(path)"
         } else {
