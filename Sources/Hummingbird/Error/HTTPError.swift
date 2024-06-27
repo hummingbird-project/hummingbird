@@ -63,16 +63,6 @@ public struct HTTPError: Error, HTTPResponseError, Sendable {
         let error: ErrorFormat
     }
 
-    /// Get body of error as ByteBuffer
-    public func body(from request: Request, context: some RequestContext) throws -> Response? {
-        guard let body else {
-            return nil
-        }
-
-        let codable = CodableFormat(error: .init(message: body))
-        return try context.responseEncoder.encode(codable, from: request, context: context)
-    }
-
     public func response(from request: Request, context: some RequestContext) throws -> Response {
         if let body {
             let codable = CodableFormat(error: CodableFormat.ErrorFormat(message: body))
