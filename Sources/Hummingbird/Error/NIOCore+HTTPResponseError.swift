@@ -21,6 +21,6 @@ extension NIOTooManyBytesError: HTTPResponseError {
     public var headers: HTTPFields { [:] }
 
     public func response(from request: Request, context: some RequestContext) throws -> Response {
-        Response(status: status)
+        Response(status: self.status)
     }
 }

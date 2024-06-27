@@ -19,13 +19,15 @@ import HummingbirdCore
 struct EditedHTTPError: HTTPResponseError {
     let originalError: Error
     var status: HTTPResponse.Status {
-        (originalError as? HTTPResponseError)?.status ?? .internalServerError
+        (self.originalError as? HTTPResponseError)?.status ?? .internalServerError
     }
+
     var headers: HTTPFields {
         var headers = (originalError as? HTTPResponseError)?.headers ?? [:]
-        headers.append(contentsOf: additionalHeaders)
+        headers.append(contentsOf: self.additionalHeaders)
         return headers
     }
+
     let additionalHeaders: HTTPFields
 
     init(originalError: Error, additionalHeaders: HTTPFields) {
@@ -36,10 +38,10 @@ struct EditedHTTPError: HTTPResponseError {
     func response(from request: Request, context: some RequestContext) throws -> Response {
         if let originalError = originalError as? HTTPResponseError {
             var response = try originalError.response(from: request, context: context)
-            response.headers.append(contentsOf: additionalHeaders)
+            response.headers.append(contentsOf: self.additionalHeaders)
             return response
         }
 
-        return Response(status: .internalServerError, headers: additionalHeaders)
+        return Response(status: .internalServerError, headers: self.additionalHeaders)
     }
 }

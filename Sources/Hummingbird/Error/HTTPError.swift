@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
 import Foundation
+import HTTPTypes
 import NIOCore
 import NIOFoundationCompat
 
@@ -68,12 +68,12 @@ public struct HTTPError: Error, HTTPResponseError, Sendable {
             let codable = CodableFormat(error: CodableFormat.ErrorFormat(message: body))
             var response = try context.responseEncoder.encode(codable, from: request, context: context)
 
-            response.status = status
-            response.headers.append(contentsOf: headers)
+            response.status = self.status
+            response.headers.append(contentsOf: self.headers)
 
             return response
         } else {
-            return Response(status: status, headers: headers)
+            return Response(status: self.status, headers: self.headers)
         }
     }
 }

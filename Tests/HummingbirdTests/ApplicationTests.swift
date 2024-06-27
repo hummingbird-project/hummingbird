@@ -20,8 +20,8 @@ import HummingbirdHTTP2
 import HummingbirdTesting
 import HummingbirdTLS
 import Logging
-import NIOCore
 import NIOConcurrencyHelpers
+import NIOCore
 import NIOEmbedded
 import NIOSSL
 import ServiceLifecycle
@@ -755,7 +755,7 @@ final class ApplicationTests: XCTestCase {
         let messages = [
             "basic-message",
             "String\"with\"escaping",
-            "String\non\nnewlines"
+            "String\non\nnewlines",
         ]
 
         let request = Request(
