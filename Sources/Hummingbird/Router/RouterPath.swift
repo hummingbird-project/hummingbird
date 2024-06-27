@@ -118,7 +118,7 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConv
         }
 
         /// Match element with string
-        static func ~= (lhs: Element, rhs: some StringProtocol) -> Bool {
+        public static func ~= (lhs: Element, rhs: some StringProtocol) -> Bool {
             switch lhs.value {
             case .path(let lhs):
                 return lhs == rhs
@@ -142,7 +142,7 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConv
         }
 
         /// Element a path String
-        static func == (lhs: Element, rhs: some StringProtocol) -> Bool {
+        public static func == (lhs: Element, rhs: some StringProtocol) -> Bool {
             switch lhs.value {
             case .path(let lhs):
                 return lhs == rhs
