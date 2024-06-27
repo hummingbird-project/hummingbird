@@ -56,7 +56,7 @@ public struct RouterResponder<Context: RequestContext>: HTTPResponder {
             var context = context
             context.coreContext.parameters = parameters
             // store endpoint path in request (mainly for metrics)
-            context.coreContext.endpointPath.value = responderChain.path
+            context.coreContext.endpointPath.value = responderChain.path.description
             return try await responder.respond(to: request, context: context)
         } catch let error as HTTPResponseError {
             return try error.response(from: request, context: context)

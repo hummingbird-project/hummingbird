@@ -76,16 +76,17 @@ public final class Router<Context: RequestContext>: RouterMethods, HTTPResponder
     ///   - method: Request method to match
     ///   - responder: Responder to call if match is made
     @discardableResult public func on<Responder: HTTPResponder>(
-        _ path: String,
+        _ path: RouterPath,
         method: HTTPRequest.Method,
         responder: Responder
     ) -> Self where Responder.Context == Context {
         // ensure path starts with a "/" and doesn't end with a "/"
-        var path = "/\(path.dropSuffix("/").dropPrefix("/"))"
+        //var path = "/\(path.dropSuffix("/").dropPrefix("/"))"
+        var path = path
         if self.options.contains(.caseInsensitive) {
             path = path.lowercased()
         }
-        self.trie.addEntry(.init(path), value: EndpointResponders(path: path)) { node in
+        self.trie.addEntry(path, value: EndpointResponders(path: path)) { node in
             node.value!.addResponder(for: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         }
         return self
@@ -93,7 +94,7 @@ public final class Router<Context: RequestContext>: RouterMethods, HTTPResponder
 
     /// return new `RouterGroup`
     /// - Parameter path: prefix to add to paths inside the group
-    public func group(_ path: String = "") -> RouterGroup<Context> {
+    public func group(_ path: RouterPath = "") -> RouterGroup<Context> {
         return .init(path: path, router: self)
     }
 

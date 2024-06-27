@@ -95,6 +95,7 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConv
     }
 
     public let components: [Element]
+    public let description: String
 
     public init(_ value: String) {
         let split = value.split(separator: "/", omittingEmptySubsequences: true)
@@ -132,6 +133,7 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConv
                 return .path(component)
             }
         }
+        self.description = "/\(self.components.map(\.description).joined(separator: "/"))"
     }
 
     public init(stringLiteral value: String) {
@@ -140,14 +142,15 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConv
 
     internal init(components: [Element]) {
         self.components = components
-    }
-
-    public var description: String {
-        self.components.map(\.description).joined(separator: "/")
+        self.description = "/\(self.components.map(\.description).joined(separator: "/"))"
     }
 
     public func lowercased() -> Self {
         .init(components: self.map { $0.lowercased() })
+    }
+
+    public func appendPath(_ path: RouterPath) -> Self {
+        .init(components: self.components + path.components)
     }
 }
 

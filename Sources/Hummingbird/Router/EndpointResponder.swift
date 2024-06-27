@@ -17,7 +17,7 @@ import HTTPTypes
 /// Stores endpoint responders for each HTTP method
 @usableFromInline
 struct EndpointResponders<Context>: Sendable {
-    init(path: String) {
+    init(path: RouterPath) {
         self.path = path
         self.methods = [:]
     }
@@ -47,5 +47,5 @@ struct EndpointResponders<Context>: Sendable {
     var methods: [HTTPRequest.Method: any HTTPResponder<Context>]
 
     @usableFromInline
-    var path: String
+    var path: RouterPath
 }

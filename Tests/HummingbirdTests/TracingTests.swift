@@ -38,7 +38,7 @@ final class TracingTests: XCTestCase {
 
         let router = Router()
         router.middlewares.add(TracingMiddleware(attributes: ["net.host.name": "127.0.0.1", "net.host.port": 8080]))
-        router.get("users/:id") { _, _ -> String in
+        router.get("users/{id}") { _, _ -> String in
             return "42"
         }
         let app = Application(responder: router.buildResponder())
@@ -53,7 +53,7 @@ final class TracingTests: XCTestCase {
 
         let span = try XCTUnwrap(tracer.spans.first)
 
-        XCTAssertEqual(span.operationName, "/users/:id")
+        XCTAssertEqual(span.operationName, "/users/{id}")
         XCTAssertEqual(span.kind, .server)
         XCTAssertNil(span.status)
         XCTAssertTrue(span.recordedErrors.isEmpty)
@@ -243,7 +243,7 @@ final class TracingTests: XCTestCase {
         router.middlewares.add(TracingMiddleware(recordingHeaders: [
             .accept, .contentType, .cacheControl, .test,
         ]))
-        router.get("users/:id") { _, _ -> Response in
+        router.get("users/{id}") { _, _ -> Response in
             var headers = HTTPFields()
             headers[values: .cacheControl] = ["86400", "public"]
             headers[.contentType] = "text/plain"
@@ -268,7 +268,7 @@ final class TracingTests: XCTestCase {
 
         let span = try XCTUnwrap(tracer.spans.first)
 
-        XCTAssertEqual(span.operationName, "/users/:id")
+        XCTAssertEqual(span.operationName, "/users/{id}")
         XCTAssertEqual(span.kind, .server)
         XCTAssertNil(span.status)
         XCTAssertTrue(span.recordedErrors.isEmpty)
@@ -424,7 +424,7 @@ final class TracingTests: XCTestCase {
 
         let span = try XCTUnwrap(tracer.spans.first)
 
-        XCTAssertEqual(span.operationName, "/users/:id")
+        XCTAssertEqual(span.operationName, "/users/{id}")
         XCTAssertEqual(span.kind, .server)
         XCTAssertNil(span.status)
         XCTAssertTrue(span.recordedErrors.isEmpty)

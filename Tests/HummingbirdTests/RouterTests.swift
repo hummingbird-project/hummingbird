@@ -46,12 +46,12 @@ final class RouterTests: XCTestCase {
 
         let router = Router()
         router.middlewares.add(TestEndpointMiddleware())
-        router.get("/test/:number") { _, _ in return "xxx" }
+        router.get("/test/{number}") { _, _ in return "xxx" }
         let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
             try await client.execute(uri: "/test/1", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "/test/:number")
+                XCTAssertEqual(String(buffer: response.body), "/test/{number}")
             }
         }
     }

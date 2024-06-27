@@ -31,11 +31,11 @@ import NIOCore
 /// .delete(":id", use: todoController.delete)
 /// ```
 public struct RouterGroup<Context: RequestContext>: RouterMethods {
-    let path: String
+    let path: RouterPath
     let router: any RouterMethods<Context>
     let middlewares: MiddlewareGroup<Context>
 
-    init(path: String = "", middlewares: MiddlewareGroup<Context> = .init(), router: any RouterMethods<Context>) {
+    init(path: RouterPath = "", middlewares: MiddlewareGroup<Context> = .init(), router: any RouterMethods<Context>) {
         self.path = path
         self.router = router
         self.middlewares = middlewares
@@ -49,9 +49,9 @@ public struct RouterGroup<Context: RequestContext>: RouterMethods {
 
     /// Return a group inside the current group
     /// - Parameter path: path prefix to add to routes inside this group
-    @discardableResult public func group(_ path: String = "") -> RouterGroup<Context> {
+    @discardableResult public func group(_ path: RouterPath = "") -> RouterGroup<Context> {
         return RouterGroup(
-            path: self.combinePaths(self.path, path),
+            path: self.path.appendPath(path),
             middlewares: .init(middlewares: self.middlewares.middlewares),
             router: self.router
         )
@@ -65,12 +65,12 @@ public struct RouterGroup<Context: RequestContext>: RouterMethods {
     ///   - responder: Responder to call if match is made
     /// - Returns: self
     @discardableResult public func on<Responder: HTTPResponder>(
-        _ path: String,
+        _ path: RouterPath,
         method: HTTPRequest.Method,
         responder: Responder
     ) -> Self where Responder.Context == Context {
         // ensure path starts with a "/" and doesn't end with a "/"
-        let path = self.combinePaths(self.path, path)
+        let path = self.path.appendPath(path)
         self.router.on(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         return self
     }
