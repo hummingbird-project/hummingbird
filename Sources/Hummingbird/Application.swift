@@ -272,7 +272,7 @@ public struct Application<Responder: HTTPResponder>: ApplicationProtocol where R
     /// before starting the server service.
     ///
     /// - Parameter process: Process to run before server is started
-    public mutating func runBeforeServerStart(_ process: @escaping @Sendable () async throws -> Void) {
+    public mutating func beforeServerStarts(perform process: @escaping @Sendable () async throws -> Void) {
         self.processesRunBeforeServerStart.append(process)
     }
 

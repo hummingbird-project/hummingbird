@@ -621,7 +621,7 @@ final class ApplicationTests: XCTestCase {
                 XCTAssertEqual(runBeforeServer.load(ordering: .relaxed), true)
             }
         )
-        app.runBeforeServerStart {
+        app.beforeServerStarts {
             runBeforeServer.store(true, ordering: .relaxed)
         }
         try await app.test(.live) { _ in
