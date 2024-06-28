@@ -13,7 +13,6 @@ let package = Package(
         .library(name: "HummingbirdCore", targets: ["HummingbirdCore"]),
         .library(name: "HummingbirdHTTP2", targets: ["HummingbirdHTTP2"]),
         .library(name: "HummingbirdTLS", targets: ["HummingbirdTLS"]),
-        .library(name: "HummingbirdJobs", targets: ["HummingbirdJobs"]),
         .library(name: "HummingbirdRouter", targets: ["HummingbirdRouter"]),
         .library(name: "HummingbirdTesting", targets: ["HummingbirdTesting"]),
         .executable(name: "PerformanceTest", targets: ["PerformanceTest"]),
@@ -65,18 +64,6 @@ let package = Package(
                 .product(name: "NIOExtras", package: "swift-nio-extras"),
                 .product(name: "NIOPosix", package: "swift-nio"),
                 .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
-                .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
-            ],
-            swiftSettings: swiftSettings
-        ),
-        .target(
-            name: "HummingbirdJobs",
-            dependencies: [
-                .product(name: "Collections", package: "swift-collections"),
-                .product(name: "Logging", package: "swift-log"),
-                .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
-                .product(name: "NIOCore", package: "swift-nio"),
-                .product(name: "NIOFoundationCompat", package: "swift-nio"),
                 .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
             ],
             swiftSettings: swiftSettings
@@ -140,11 +127,6 @@ let package = Package(
             .byName(name: "HummingbirdTLS"),
             .byName(name: "HummingbirdHTTP2"),
             .byName(name: "HummingbirdTesting"),
-        ]),
-        .testTarget(name: "HummingbirdJobsTests", dependencies: [
-            .byName(name: "HummingbirdJobs"),
-            .byName(name: "HummingbirdTesting"),
-            .product(name: "Atomics", package: "swift-atomics"),
         ]),
         .testTarget(name: "HummingbirdRouterTests", dependencies: [
             .byName(name: "HummingbirdRouter"),
