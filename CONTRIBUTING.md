@@ -22,8 +22,6 @@ Please ensure to include the following in your Pull Request
 - Documentation on how these changes are being tested
 - Additional tests to show your code working and to ensure future changes don't break your code.
 
-Remember the requirements for Hummingbird and HummingbirdCore (No Foundation and no new dependencies). If you are submitting a large change to a module (or bringing in a new dependency) please consider making these changes in a separate repository. The idea is that Hummingbird/HummingbirdCore are kept as slimline as possible. These concerns can be discussed in a Github Issue.
-
 Please keep your PRs to a minimal number of changes. If a PR is large try to split it up into smaller PRs. Don't move code around unnecessarily it makes comparing old with new very hard.
 
 The main development branch of the repository is  `main`.
