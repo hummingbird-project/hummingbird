@@ -36,7 +36,7 @@ extension RouterTrie {
             }
         }
 
-        switch node.key {
+        switch node.key.value {
         case .path(let path):
             token = .path(constantIndex: setStringValue(path))
         case .capture(let parameterName):
@@ -109,7 +109,7 @@ extension RouterTrie {
 extension RouterPath.Element {
     @usableFromInline
     var priority: Int {
-        switch self {
+        switch self.value {
         case .path, .null:
             // Most specific
             return 0

@@ -40,7 +40,7 @@ public struct Route<Handler: _RouteHandlerProtocol, Context: RouterRequestContex
         self.method = method
         self.routerPath = routerPath
         self.handler = handler
-        self.fullPath = Self.getFullPath(from: routerPath)
+        self.fullPath = Self.getFullPath(from: routerPath).description
     }
 
     /// Initialize Route with a closure
@@ -92,13 +92,11 @@ public struct Route<Handler: _RouteHandlerProtocol, Context: RouterRequestContex
     }
 
     /// Return full path of route, using Task local stored `routeGroupPath`.
-    static func getFullPath(from path: RouterPath) -> String {
-        let parentGroupPath = RouterBuilderState.current?.routeGroupPath ?? ""
-        if path.count > 0 || parentGroupPath.count == 0 {
-            return "\(parentGroupPath)/\(path)"
-        } else {
-            return parentGroupPath
+    static func getFullPath(from path: RouterPath) -> RouterPath {
+        if let parentGroupPath = RouterBuilderState.current?.routeGroupPath {
+            return parentGroupPath.appendPath(path)
         }
+        return path
     }
 }
 

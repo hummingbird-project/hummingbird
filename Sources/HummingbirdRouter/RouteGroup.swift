@@ -21,7 +21,7 @@ public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProto
 
     @usableFromInline
     /// Full URI path to route
-    let fullPath: String
+    let fullPath: RouterPath
     /// Path local to group route this group is defined in.
     @usableFromInline
     let routerPath: RouterPath
@@ -44,7 +44,7 @@ public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProto
             routerPath = routerPath.lowercased()
         }
         let parentGroupPath = routerBuildState.routeGroupPath
-        self.fullPath = "\(parentGroupPath)/\(routerPath)"
+        self.fullPath = parentGroupPath.appendPath(routerPath)
         routerBuildState.routeGroupPath = self.fullPath
         self.handler = RouterBuilderState.$current.withValue(routerBuildState) {
             builder()
@@ -61,7 +61,7 @@ public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProto
     @inlinable
     public func handle(_ input: Input, context: Context, next: (Input, Context) async throws -> Output) async throws -> Output {
         if let updatedContext = self.routerPath.matchPrefix(context) {
-            context.coreContext.endpointPath.value = self.fullPath
+            context.coreContext.endpointPath.value = self.fullPath.description
             return try await self.handler.handle(input, context: updatedContext) { input, _ in
                 try await next(input, context)
             }

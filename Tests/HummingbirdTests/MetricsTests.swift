@@ -257,7 +257,7 @@ final class MetricsTests: XCTestCase {
         XCTAssertEqual(counter.values[0].1, 1)
         XCTAssertEqual(counter.dimensions.count, 2)
         XCTAssertEqual(counter.dimensions[0].0, "hb_uri")
-        XCTAssertEqual(counter.dimensions[0].1, "/user/:id")
+        XCTAssertEqual(counter.dimensions[0].1, "/user/{id}")
         XCTAssertEqual(counter.dimensions[1].0, "hb_method")
         XCTAssertEqual(counter.dimensions[1].1, "GET")
     }

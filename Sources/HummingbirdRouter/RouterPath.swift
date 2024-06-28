@@ -12,12 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-@_spi(Internal) import Hummingbird
+import Hummingbird
 
 extension RouterPath {
     func matchAll<Context: RouterRequestContext>(_ context: Context) -> Context? {
         if self.components.count != context.routerContext.remainingPathComponents.count {
-            if case .recursiveWildcard = self.components.last {
+            if case .recursiveWildcard = self.components.last?.value {
                 if self.components.count > context.routerContext.remainingPathComponents.count + 1 {
                     return nil
                 }
@@ -40,7 +40,7 @@ extension RouterPath {
         var pathIterator = context.routerContext.remainingPathComponents.makeIterator()
         var context = context
         for component in self.components {
-            switch component {
+            switch component.value {
             case .path(let lhs):
                 if lhs != pathIterator.next()! {
                     return nil

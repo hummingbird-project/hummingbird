@@ -12,11 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-import ServiceContextModule
+import Hummingbird
 
 /// Router builder state used when building Router
 internal struct RouterBuilderState {
     @TaskLocal static var current: RouterBuilderState?
-    var routeGroupPath: String = ""
+    var routeGroupPath: RouterPath = ""
     let options: RouterBuilderOptions
 }
