@@ -47,7 +47,6 @@ Hummingbird v2 is currently in development an [beta release](https://github.com/
 
 Hummingbird is designed to require the least number of dependencies possible, but this means many features are unavailable to the core libraries. Additional features are provided through extensions. The Hummingbird repository comes with additional modules 
 
-- `HummingbirdJobs`: framework for pushing work onto a queue to be processed outside of a request (possibly by another server instance).
 - `HummingbirdRouter`: an alternative router that uses a resultbuilder.
 - `HummingbirdTLS`: TLS support.
 - `HummingbirdHTTP2`: Support for HTTP2 upgrades.
@@ -56,6 +55,7 @@ Hummingbird is designed to require the least number of dependencies possible, bu
 And also the following are available in other repositories in this organisation
 
 - [`HummingbirdAuth`](https://github.com/hummingbird-project/hummingbird-auth/tree/main): Authentication framework
+- [`Jobs`](https://github.com/hummingbird-project/swift-jobs/tree/main): Job Queue Framework
 - [`HummingbirdFluent`](https://github.com/hummingbird-project/hummingbird-fluent/tree/main): Integration with Vapor's database ORM [FluentKit](https://github.com/Vapor/fluent-kit).
 - [`HummingbirdLambda`](https://github.com/hummingbird-project/hummingbird-lambda/tree/main): Framework for running Hummingbird on AWS Lambdas.
 - [`HummingbirdMustache`](https://github.com/hummingbird-project/hummingbird-mustache): Mustache templating engine.
