@@ -17,25 +17,24 @@ import Atomics
 import NIOCore
 
 /// In memory driver for persist system for storing persistent cross request key/value pairs
-public actor MemoryPersistDriver<C: Clock>: PersistDriver where C.Duration == Duration {
-    public init(_ clock: C = .suspending) {
+public actor MemoryPersistDriver: PersistDriver {
+    public init() {
         self.values = [:]
-        self.clock = clock
     }
 
     public func create(key: String, value: some Codable & Sendable, expires: Duration?) async throws {
         guard self.values[key] == nil else { throw PersistError.duplicate }
-        self.values[key] = .init(value: value, expires: expires.map { self.clock.now.advanced(by: $0) })
+        self.values[key] = .init(value: value, expires: expires.map { ContinuousClock.now.advanced(by: $0) })
     }
 
     public func set(key: String, value: some Codable & Sendable, expires: Duration?) async throws {
-        self.values[key] = .init(value: value, expires: expires.map { self.clock.now.advanced(by: $0) })
+        self.values[key] = .init(value: value, expires: expires.map { ContinuousClock.now.advanced(by: $0) })
     }
 
     public func get<Object: Codable & Sendable>(key: String, as: Object.Type) async throws -> Object? {
         guard let item = self.values[key] else { return nil }
         guard let expires = item.expires else { return item.value as? Object }
-        guard self.clock.now <= expires else { return nil }
+        guard ContinuousClock.now <= expires else { return nil }
         return item.value as? Object
     }
 
@@ -45,7 +44,7 @@ public actor MemoryPersistDriver<C: Clock>: PersistDriver where C.Duration == Du
 
     /// Delete any values that have expired
     private func tidy() {
-        let now = self.clock.now
+        let now = ContinuousClock.now
         self.values = self.values.compactMapValues {
             if let expires = $0.expires {
                 if expires > now {
@@ -60,9 +59,9 @@ public actor MemoryPersistDriver<C: Clock>: PersistDriver where C.Duration == Du
         /// value stored
         let value: Codable & Sendable
         /// time when item expires
-        let expires: C.Instant?
+        let expires: ContinuousClock.Instant?
 
-        init(value: Codable & Sendable, expires: C.Instant?) {
+        init(value: Codable & Sendable, expires: ContinuousClock.Instant?) {
             self.value = value
             self.expires = expires
         }
@@ -77,5 +76,4 @@ public actor MemoryPersistDriver<C: Clock>: PersistDriver where C.Duration == Du
     }
 
     var values: [String: Item]
-    let clock: C
 }
