@@ -55,6 +55,7 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
                 Counter(label: "hb_requests", dimensions: dimensions).increment()
             } else {
                 dimensions = [
+                    ("hb_uri", "NotFound"),
                     ("hb_method", request.method.rawValue),
                 ]
             }
