@@ -43,7 +43,7 @@ try await app.runService()
 
 Hummingbird v2 is currently in development an [beta release](https://github.com/hummingbird-project/hummingbird/releases/tag/2.0.0-beta.2) is available if you'd like to try it out.
 
-### Hummingbird Extensions
+### Extending Hummingbird
 
 Hummingbird is designed to require the least number of dependencies possible, but this means many features are unavailable to the core libraries. Additional features are provided through extensions. The Hummingbird repository comes with additional modules 
 
@@ -55,12 +55,12 @@ Hummingbird is designed to require the least number of dependencies possible, bu
 And also the following are available in other repositories in this organisation
 
 - [`HummingbirdAuth`](https://github.com/hummingbird-project/hummingbird-auth/tree/main): Authentication framework
-- [`Jobs`](https://github.com/hummingbird-project/swift-jobs/tree/main): Job Queue Framework
 - [`HummingbirdFluent`](https://github.com/hummingbird-project/hummingbird-fluent/tree/main): Integration with Vapor's database ORM [FluentKit](https://github.com/Vapor/fluent-kit).
-- [`HummingbirdLambda`](https://github.com/hummingbird-project/hummingbird-lambda/tree/main): Framework for running Hummingbird on AWS Lambdas.
-- [`HummingbirdMustache`](https://github.com/hummingbird-project/hummingbird-mustache): Mustache templating engine.
 - [`HummingbirdRedis`](https://github.com/hummingbird-project/hummingbird-redis/tree/main): Redis support via [RediStack](https://github.com/swift-server/RediStack).
 - [`HummingbirdWebSocket`](https://github.com/hummingbird-project/hummingbird-websocket/tree/main): Support for WebSockets (Currently work in progess).
+- [`HummingbirdLambda`](https://github.com/hummingbird-project/hummingbird-lambda/tree/main): Framework for running Hummingbird on AWS Lambdas.
+- [`Jobs`](https://github.com/hummingbird-project/swift-jobs/tree/main): Job Queue Framework
+- [`Mustache`](https://github.com/hummingbird-project/swift-mustache): Mustache templating engine.
 
 ## Documentation
 
