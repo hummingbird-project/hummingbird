@@ -236,9 +236,11 @@ final class MetricsTests: XCTestCase {
         let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
         XCTAssertEqual(counter.values.count, 1)
         XCTAssertEqual(counter.values[0].1, 1)
-        XCTAssertEqual(counter.dimensions.count, 1)
-        XCTAssertEqual(counter.dimensions[0].0, "hb_method")
-        XCTAssertEqual(counter.dimensions[0].1, "GET")
+        XCTAssertEqual(counter.dimensions.count, 2)
+        XCTAssertEqual(counter.dimensions[0].0, "hb_uri")
+        XCTAssertEqual(counter.dimensions[0].1, "NotFound")
+        XCTAssertEqual(counter.dimensions[1].0, "hb_method")
+        XCTAssertEqual(counter.dimensions[1].1, "GET")
     }
 
     func testParameterEndpoint() async throws {
