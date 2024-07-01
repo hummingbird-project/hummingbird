@@ -188,17 +188,17 @@ public struct MediaType: Sendable, CustomStringConvertible {
             self.value.rawValue
         }
 
-        static var application: Self { .init(value: .application) }
-        static var audio: Self { .init(value: .audio) }
-        static var example: Self { .init(value: .example) }
-        static var font: Self { .init(value: .font) }
-        static var image: Self { .init(value: .image) }
-        static var message: Self { .init(value: .message) }
-        static var model: Self { .init(value: .model) }
-        static var multipart: Self { .init(value: .multipart) }
-        static var text: Self { .init(value: .text) }
-        static var video: Self { .init(value: .video) }
-        static var any: Self { .init(value: .any) }
+        public static var application: Self { .init(value: .application) }
+        public static var audio: Self { .init(value: .audio) }
+        public static var example: Self { .init(value: .example) }
+        public static var font: Self { .init(value: .font) }
+        public static var image: Self { .init(value: .image) }
+        public static var message: Self { .init(value: .message) }
+        public static var model: Self { .init(value: .model) }
+        public static var multipart: Self { .init(value: .multipart) }
+        public static var text: Self { .init(value: .text) }
+        public static var video: Self { .init(value: .video) }
+        public static var any: Self { .init(value: .any) }
     }
 
     static let tSpecial = Set<Unicode.Scalar>(["(", ")", "<", ">", "@", ",", ";", ":", "\\", "\"", "/", "[", "]", "?", ".", "="])
