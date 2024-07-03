@@ -24,4 +24,22 @@ public protocol HTTPResponseError: Error, ResponseGenerator {
     var status: HTTPResponse.Status { get }
     /// any addiitional headers required
     var headers: HTTPFields { get }
+    /// return error payload.
+    func body(allocator: ByteBufferAllocator) -> ByteBuffer?
+}
+
+extension HTTPResponseError {
+    public func body(allocator: ByteBufferAllocator) -> ByteBuffer? {
+        return nil
+    }
+
+    public func response(from request: Request, context: some RequestContext) throws -> Response {
+        let body: ResponseBody
+        if let buffer = self.body(allocator: context.allocator) {
+            body = .init(byteBuffer: buffer)
+        } else {
+            body = .init()
+        }
+        return .init(status: status, headers: headers, body: body)
+    }
 }
