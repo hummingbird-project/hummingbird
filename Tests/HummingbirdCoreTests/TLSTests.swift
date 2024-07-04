@@ -41,7 +41,7 @@ class HummingBirdTLSTests: XCTestCase {
         }
     }
 
-    func testGracefulShutdown() async throws {
+    func testGracefulShutdownWithDanglingConnection() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
         let clientChannel: NIOLockedValueBox<Channel?> = .init(nil)
