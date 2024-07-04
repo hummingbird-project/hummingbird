@@ -72,12 +72,12 @@ final class LiveTestFramework<App: ApplicationProtocol>: ApplicationTestFramewor
             client.connect()
             do {
                 let value = try await test(Client(client: client))
-                await serviceGroup.triggerGracefulShutdown()
                 try await client.shutdown()
+                await serviceGroup.triggerGracefulShutdown()
                 return value
             } catch {
-                await serviceGroup.triggerGracefulShutdown()
                 try await client.shutdown()
+                await serviceGroup.triggerGracefulShutdown()
                 throw error
             }
         }

@@ -28,6 +28,8 @@ class HummingBirdHTTP2Tests: XCTestCase {
     func testConnect() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        var logger = Logger(label: "Hummingbird")
+        logger.logLevel = .trace
         try await testServer(
             responder: { _, _ in
                 .init(status: .ok)
@@ -35,7 +37,7 @@ class HummingBirdHTTP2Tests: XCTestCase {
             httpChannelSetup: .http2Upgrade(tlsConfiguration: getServerTLSConfiguration()),
             configuration: .init(address: .hostname(port: 0), serverName: testServerName),
             eventLoopGroup: eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
+            logger: logger
         ) { port in
             var tlsConfiguration = try getClientTLSConfiguration()
             // no way to override the SSL server name with AsyncHTTPClient so need to set

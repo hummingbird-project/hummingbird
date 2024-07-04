@@ -262,7 +262,7 @@ class HummingBirdCoreTests: XCTestCase {
         }
     }
 
-    func testReadIdleHandler() async throws {
+    func testUnfinishedReadIdleHandler() async throws {
         /// Channel Handler for serializing request header and data
         final class HTTPServerIncompleteRequest: ChannelInboundHandler, RemovableChannelHandler {
             typealias InboundIn = HTTPRequestPart
@@ -304,7 +304,14 @@ class HummingBirdCoreTests: XCTestCase {
         }
     }
 
-    func testWriteIdleTimeout() async throws {
+    func testUninitiatedReadIdleHandler() async throws {
+        /// Channel Handler for serializing request header and data
+        final class HTTPServerIncompleteRequest: ChannelInboundHandler, RemovableChannelHandler {
+            typealias InboundIn = HTTPRequestPart
+            typealias InboundOut = HTTPRequestPart
+
+            func channelRead(context: ChannelHandlerContext, data: NIOAny) {}
+        }
         try await testServer(
             responder: { request, _ in
                 do {
@@ -314,7 +321,49 @@ class HummingBirdCoreTests: XCTestCase {
                 }
                 return .init(status: .ok)
             },
-            httpChannelSetup: .http1(additionalChannelHandlers: [IdleStateHandler(writeTimeout: .seconds(1))]),
+            httpChannelSetup: .http1(additionalChannelHandlers: [HTTPServerIncompleteRequest(), IdleStateHandler(readTimeout: .seconds(1))]),
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
+            logger: Logger(label: "Hummingbird")
+        ) { client in
+            try await withTimeout(.seconds(5)) {
+                do {
+                    _ = try await client.get("/", headers: [.connection: "keep-alive"])
+                    XCTFail("Should not get here")
+                } catch TestClient.Error.connectionClosing {
+                } catch {
+                    XCTFail("Unexpected error: \(error)")
+                }
+            }
+        }
+    }
+
+    func testLeftOpenReadIdleHandler() async throws {
+        /// Channel Handler for serializing request header and data
+        final class HTTPServerIncompleteRequest: ChannelInboundHandler, RemovableChannelHandler {
+            typealias InboundIn = HTTPRequestPart
+            typealias InboundOut = HTTPRequestPart
+            var readOneRequest = false
+            func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+                let part = self.unwrapInboundIn(data)
+                if !self.readOneRequest {
+                    context.fireChannelRead(data)
+                }
+                if case .end = part {
+                    self.readOneRequest = true
+                }
+            }
+        }
+        try await testServer(
+            responder: { request, _ in
+                do {
+                    _ = try await request.body.collect(upTo: .max)
+                } catch {
+                    return Response(status: .contentTooLarge)
+                }
+                return .init(status: .ok)
+            },
+            httpChannelSetup: .http1(additionalChannelHandlers: [HTTPServerIncompleteRequest(), IdleStateHandler(readTimeout: .seconds(1))]),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "Hummingbird")

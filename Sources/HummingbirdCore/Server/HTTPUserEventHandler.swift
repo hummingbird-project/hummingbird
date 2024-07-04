@@ -35,7 +35,7 @@ public final class HTTPUserEventHandler: ChannelDuplexHandler, RemovableChannelH
         let part = unwrapOutboundIn(data)
         if case .end = part {
             self.requestsInProgress -= 1
-            context.write(data, promise: promise)
+            context.writeAndFlush(data, promise: promise)
             if self.closeAfterResponseWritten {
                 context.close(promise: nil)
                 self.closeAfterResponseWritten = false
@@ -61,19 +61,21 @@ public final class HTTPUserEventHandler: ChannelDuplexHandler, RemovableChannelH
 
     public func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
         switch event {
-        case IdleStateHandler.IdleStateEvent.read:
-            // if we get an idle read event and we haven't completed reading the request
-            // close the connection
-            if self.requestsBeingRead > 0 {
-                self.logger.trace("Idle read timeout, so close channel")
+        case is ChannelShouldQuiesceEvent:
+            // we received a quiesce event. If we have any requests in progress we should
+            // wait for them to finish
+            if self.requestsInProgress > 0 {
+                self.closeAfterResponseWritten = true
+            } else {
                 context.close(promise: nil)
             }
 
-        case IdleStateHandler.IdleStateEvent.write:
-            // if we get an idle write event and are not currently processing a request
-            if self.requestsInProgress == 0 {
-                self.logger.trace("Idle write timeout, so close channel")
-                context.close(mode: .input, promise: nil)
+        case IdleStateHandler.IdleStateEvent.read:
+            // if we get an idle read event and we haven't completed reading the request
+            // close the connection, or a request hasnt been initiated
+            if self.requestsBeingRead > 0 || self.requestsInProgress == 0 {
+                self.logger.trace("Idle read timeout, so close channel")
+                context.close(promise: nil)
             }
 
         default:
