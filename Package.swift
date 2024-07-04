@@ -127,6 +127,7 @@ let package = Package(
             .byName(name: "HummingbirdTLS"),
             .byName(name: "HummingbirdHTTP2"),
             .byName(name: "HummingbirdTesting"),
+			.byName(name: "HummingbirdRouter"),
         ]),
         .testTarget(name: "HummingbirdRouterTests", dependencies: [
             .byName(name: "HummingbirdRouter"),
