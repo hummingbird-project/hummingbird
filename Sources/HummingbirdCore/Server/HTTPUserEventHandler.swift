@@ -73,16 +73,9 @@ public final class HTTPUserEventHandler: ChannelDuplexHandler, RemovableChannelH
         case IdleStateHandler.IdleStateEvent.read:
             // if we get an idle read event and we haven't completed reading the request
             // close the connection
-            if self.requestsBeingRead > 0 {
+            if self.requestsBeingRead > 0 || self.requestsInProgress == 0 {
                 self.logger.trace("Idle read timeout, so close channel")
                 context.close(promise: nil)
-            }
-
-        case IdleStateHandler.IdleStateEvent.write:
-            // if we get an idle write event and are not currently processing a request
-            if self.requestsInProgress == 0 {
-                self.logger.trace("Idle write timeout, so close channel")
-                context.close(mode: .input, promise: nil)
             }
 
         default:
