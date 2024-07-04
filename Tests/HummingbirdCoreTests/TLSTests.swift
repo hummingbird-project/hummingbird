@@ -16,6 +16,7 @@ import HummingbirdCore
 import HummingbirdTesting
 import HummingbirdTLS
 import Logging
+import NIOConcurrencyHelpers
 import NIOCore
 import NIOPosix
 import NIOSSL
@@ -38,5 +39,25 @@ class HummingBirdTLSTests: XCTestCase {
             var body = try XCTUnwrap(response.body)
             XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
         }
+    }
+
+    func testGracefulShutdown() async throws {
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
+        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        let clientChannel: NIOLockedValueBox<Channel?> = .init(nil)
+        try await testServer(
+            responder: helloResponder,
+            httpChannelSetup: .tls(tlsConfiguration: getServerTLSConfiguration()),
+            configuration: .init(address: .hostname(port: 0), serverName: testServerName),
+            eventLoopGroup: eventLoopGroup,
+            logger: Logger(label: "Hummingbird")
+        ) { port in
+            let channel = try await ClientBootstrap(group: eventLoopGroup)
+                .connect(host: "127.0.0.1", port: port).get()
+            clientChannel.withLockedValue { $0 = channel }
+        }
+        // test channel has been closed
+        let channel = try clientChannel.withLockedValue { try XCTUnwrap($0) }
+        try await channel.closeFuture.get()
     }
 }
