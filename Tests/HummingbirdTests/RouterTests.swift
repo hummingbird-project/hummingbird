@@ -618,6 +618,21 @@ final class RouterTests: XCTestCase {
             }
         }
     }
+
+    func testRouterPathStringInterpolation() async throws {
+        let route = "/test"
+        let router = Router()
+        router.get("\(route)") { _, _ in
+            return "TestString"
+        }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/test", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(response.headers[.contentLength], "10")
+            }
+        }
+    }
 }
 
 struct TestRouterContext2: RequestContext {
