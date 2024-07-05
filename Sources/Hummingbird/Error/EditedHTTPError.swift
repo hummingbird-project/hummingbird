@@ -22,12 +22,6 @@ struct EditedHTTPError: HTTPResponseError {
         (self.originalError as? HTTPResponseError)?.status ?? .internalServerError
     }
 
-    var headers: HTTPFields {
-        var headers = (originalError as? HTTPResponseError)?.headers ?? [:]
-        headers.append(contentsOf: self.additionalHeaders)
-        return headers
-    }
-
     let additionalHeaders: HTTPFields
 
     init(originalError: Error, additionalHeaders: HTTPFields) {

@@ -22,6 +22,4 @@ import NIOCore
 public protocol HTTPResponseError: Error, ResponseGenerator {
     /// status code for the error
     var status: HTTPResponse.Status { get }
-    /// any addiitional headers required
-    var headers: HTTPFields { get }
 }
