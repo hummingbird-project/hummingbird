@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Split router path into components
-public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConvertible {
+public struct RouterPath: Sendable, ExpressibleByStringLiteral, ExpressibleByStringInterpolation, CustomStringConvertible {
     public struct Element: Equatable, Sendable, CustomStringConvertible {
         package enum _Internal: Equatable, Sendable {
             case path(Substring)
@@ -175,7 +175,7 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, CustomStringConv
     /// A textual representation of the RouterPath
     public let description: String
 
-    internal init(components: [Element]) {
+    init(components: [Element]) {
         self.components = components
         self.description = "/\(self.components.map(\.description).joined(separator: "/"))"
     }
