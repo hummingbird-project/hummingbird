@@ -293,6 +293,8 @@ extension MediaType {
     public static var applicationZip: Self { .init(type: .application, subType: "zip") }
     /// 7-zip archive
     public static var application7z: Self { .init(type: .application, subType: "x-7z-compressed") }
+    /// Manifest
+    public static var applicationManifest: Self { .init(type: .application, subType: "manifest+json") }
 
     // text
 
@@ -447,6 +449,7 @@ extension MediaType {
         "weba": .audioWebm,
         "webm": .videoWebm,
         "webp": .imageWebp,
+        "webmanifest": .applicationManifest,
         "woff": .fontWoff,
         "woff2": .fontWoff2,
         "xhtml": .applicationXhtml,
