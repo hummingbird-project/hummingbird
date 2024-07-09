@@ -627,7 +627,7 @@ extension Parser {
                     return try _percentDecode(self.buffer[self.index..<range.endIndex], bytes)
                 }
             } else {
-                let newBuffer = try [UInt8].init(unsafeUninitializedCapacity: self.range.endIndex - self.index) { bytes, count in
+                let newBuffer = try [UInt8](unsafeUninitializedCapacity: self.range.endIndex - self.index) { bytes, count in
                     try count = _percentDecode(self.buffer[self.index..<self.range.endIndex], bytes)
                 }
                 return self.makeString(newBuffer)
