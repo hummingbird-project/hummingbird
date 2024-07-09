@@ -268,7 +268,7 @@ extension FileMiddleware {
 
     private func createETag(_ strings: [String]) -> String {
         let string = strings.joined(separator: "-")
-        let buffer = Array<UInt8>.init(unsafeUninitializedCapacity: 16) { bytes, size in
+        let buffer = Array<UInt8>(unsafeUninitializedCapacity: 16) { bytes, size in
             var index = 0
             for i in 0..<16 {
                 bytes[i] = 0

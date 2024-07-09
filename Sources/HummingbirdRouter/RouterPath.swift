@@ -47,7 +47,6 @@ extension RouterPath {
                 }
             case .capture(let key):
                 context.coreContext.parameters[key] = pathIterator.next()!
-
             case .prefixCapture(let suffix, let key):
                 let pathComponent = pathIterator.next()!
                 if pathComponent.hasSuffix(suffix) {
