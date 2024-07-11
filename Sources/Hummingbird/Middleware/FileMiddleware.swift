@@ -44,17 +44,20 @@ public protocol FileMiddlewareFileAttributes {
 public struct FileMiddleware<Context: RequestContext, Provider: FileProvider>: RouterMiddleware where Provider.FileAttributes: FileMiddlewareFileAttributes {
     let cacheControl: CacheControl
     let searchForIndexHtml: Bool
+    let pathPrefixToRemove: String?
     let fileProvider: Provider
 
     /// Create FileMiddleware
     /// - Parameters:
     ///   - rootFolder: Root folder to look for files
+    ///   - pathPrefixToRemove: Prefix to remove from request URL
     ///   - cacheControl: What cache control headers to include in response
     ///   - searchForIndexHtml: Should we look for index.html in folders
     ///   - threadPool: ThreadPool used by file loading
     ///   - logger: Logger used to output file information
     public init(
         _ rootFolder: String = "public",
+        pathPrefixToRemove: String? = nil,
         cacheControl: CacheControl = .init([]),
         searchForIndexHtml: Bool = false,
         threadPool: NIOThreadPool = NIOThreadPool.singleton,
@@ -62,6 +65,7 @@ public struct FileMiddleware<Context: RequestContext, Provider: FileProvider>: R
     ) where Provider == LocalFileSystem {
         self.cacheControl = cacheControl
         self.searchForIndexHtml = searchForIndexHtml
+        self.pathPrefixToRemove = pathPrefixToRemove.map { String($0.dropSuffix("/")) }
         self.fileProvider = LocalFileSystem(
             rootFolder: rootFolder,
             threadPool: threadPool,
@@ -72,15 +76,18 @@ public struct FileMiddleware<Context: RequestContext, Provider: FileProvider>: R
     /// Create FileMiddleware using custom ``FileProvider``.
     /// - Parameters:
     ///   - fileProvider: File provider
+    ///   - pathPrefixToRemove: Prefix to remove from request URL
     ///   - cacheControl: What cache control headers to include in response
     ///   - indexHtml: Should we look for index.html in folders
     public init(
         fileProvider: Provider,
+        pathPrefixToRemove: String? = nil,
         cacheControl: CacheControl = .init([]),
         searchForIndexHtml: Bool = false
     ) {
         self.cacheControl = cacheControl
         self.searchForIndexHtml = searchForIndexHtml
+        self.pathPrefixToRemove = pathPrefixToRemove.map { String($0.dropSuffix("/")) }
         self.fileProvider = fileProvider
     }
 
@@ -95,7 +102,7 @@ public struct FileMiddleware<Context: RequestContext, Provider: FileProvider>: R
             }
 
             // Remove percent encoding from URI path
-            guard let path = request.uri.path.removingPercentEncoding else {
+            guard var path = request.uri.path.removingPercentEncoding else {
                 throw HTTPError(.badRequest, message: "Invalid percent encoding in URL")
             }
 
@@ -104,6 +111,16 @@ public struct FileMiddleware<Context: RequestContext, Provider: FileProvider>: R
                 throw HTTPError(.badRequest)
             }
 
+            // Do we have a prefix to remove from the path
+            if let pathPrefixToRemove {
+                // If path has the prefix then remove it
+                let pathWithDroppedPrefix = path.dropPrefix(pathPrefixToRemove)
+                if pathWithDroppedPrefix.first == nil {
+                    path = "/"
+                } else if pathWithDroppedPrefix.first == "/" {
+                    path = String(pathWithDroppedPrefix)
+                }
+            }
             // get file attributes and actual file path and ID (It might be an index.html)
             let (actualPath, actualID, attributes) = try await self.getFileAttributes(path)
             // we have a file so indicate it came from the FileMiddleware
