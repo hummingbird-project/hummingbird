@@ -331,6 +331,7 @@ class FileMiddlewareTests: XCTestCase {
     func testPathPrefix() async throws {
         // echo file provider. Returns file name as contents of file
         struct MemoryFileProvider: FileProvider {
+            let prefix: String
             struct FileAttributes: FileMiddlewareFileAttributes {
                 var isFolder: Bool
                 var modificationDate: Date { .distantPast }
@@ -349,38 +350,48 @@ class FileMiddlewareTests: XCTestCase {
             }
 
             func loadFile(id path: String, context: some RequestContext) async throws -> ResponseBody {
-                let buffer = context.allocator.buffer(string: path)
+                let buffer = context.allocator.buffer(string: self.prefix + path)
                 return .init(byteBuffer: buffer)
             }
 
             func loadFile(id path: String, range: ClosedRange<Int>, context: some RequestContext) async throws -> ResponseBody {
-                let buffer = context.allocator.buffer(string: path)
+                let buffer = context.allocator.buffer(string: self.prefix + path)
                 guard let slice = buffer.getSlice(at: range.lowerBound, length: range.count) else { throw HTTPError(.rangeNotSatisfiable) }
                 return .init(byteBuffer: slice)
             }
         }
         let router = Router()
-        router.add(middleware: FileMiddleware(fileProvider: MemoryFileProvider(), pathPrefixToRemove: "/test", searchForIndexHtml: true))
+        router.add(middleware: FileMiddleware(fileProvider: MemoryFileProvider(prefix: "memory:/"), urlBasePath: "/test", searchForIndexHtml: true))
+        router.add(middleware: FileMiddleware(fileProvider: MemoryFileProvider(prefix: "memory2:/"), urlBasePath: "/test2", searchForIndexHtml: true))
         let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
             try await client.execute(uri: "/test/hello", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "/hello")
+                XCTAssertEqual(String(buffer: response.body), "memory://hello")
             }
             try await client.execute(uri: "/test/hello/", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "/hello/index.html")
+                XCTAssertEqual(String(buffer: response.body), "memory://hello/index.html")
             }
             try await client.execute(uri: "/test", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "/index.html")
+                XCTAssertEqual(String(buffer: response.body), "memory://index.html")
             }
             try await client.execute(uri: "/test/", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "/index.html")
+                XCTAssertEqual(String(buffer: response.body), "memory://index.html")
             }
             try await client.execute(uri: "/goodbye", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "/goodbye")
+                XCTAssertEqual(response.status, .notFound)
             }
             try await client.execute(uri: "/testHello", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "/testHello")
+                XCTAssertEqual(response.status, .notFound)
+            }
+            try await client.execute(uri: "/test2/hello", method: .get) { response in
+                XCTAssertEqual(String(buffer: response.body), "memory2://hello")
+            }
+            try await client.execute(uri: "/test2/hello/", method: .get) { response in
+                XCTAssertEqual(String(buffer: response.body), "memory2://hello/index.html")
+            }
+            try await client.execute(uri: "/test2", method: .get) { response in
+                XCTAssertEqual(String(buffer: response.body), "memory2://index.html")
             }
         }
     }
