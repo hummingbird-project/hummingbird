@@ -408,6 +408,33 @@ final class MiddlewareTests: XCTestCase {
             }
         }
     }
+
+    func testMiddlewareResultBuilder() async throws {
+        struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
+            let string: String
+            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+                var response = try await next(request, context)
+                response.headers[values: .test].append(self.string)
+                return response
+            }
+        }
+        let router = Router()
+        router.add {
+            TestMiddleware(string: "first")
+            TestMiddleware(string: "second")
+        }
+        router.get("/hello") { _, _ -> String in
+            return "Hello"
+        }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/hello", method: .get) { response in
+                // headers come back in opposite order as middleware is applied to responses in that order
+                XCTAssertEqual(response.headers[values: .test].first, "second")
+                XCTAssertEqual(response.headers[values: .test].last, "first")
+            }
+        }
+    }
 }
 
 /// LogHandler used in tests. Stores all log entries in provided `LogAccumalator``

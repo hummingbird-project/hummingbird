@@ -42,7 +42,7 @@ public struct RouterGroup<Context: RequestContext>: RouterMethods {
     }
 
     /// Add middleware to RouterGroup
-    @discardableResult public func add(middleware: any RouterMiddleware<Context>) -> RouterGroup<Context> {
+    @discardableResult public func add(middleware: any MiddlewareProtocol<Request, Response, Context>) -> RouterGroup<Context> {
         self.middlewares.add(middleware)
         return self
     }

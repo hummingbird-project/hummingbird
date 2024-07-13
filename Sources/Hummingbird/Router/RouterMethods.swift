@@ -36,7 +36,7 @@ public protocol RouterMethods<Context> {
     func group(_ path: RouterPath) -> RouterGroup<Context>
 
     /// add middleware
-    func add(middleware: any RouterMiddleware<Context>) -> Self
+    func add(middleware: any MiddlewareProtocol<Request, Response, Context>) -> Self
 }
 
 extension RouterMethods {
@@ -97,6 +97,12 @@ extension RouterMethods {
         use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
         return self.on(path, method: .patch, use: handler)
+    }
+
+    @discardableResult public func add(
+        @MiddlewareFixedTypeBuilder<Request, Response, Context> middleware: () -> some MiddlewareProtocol<Request, Response, Context>
+    ) -> Self {
+        return self.add(middleware: middleware())
     }
 
     internal func constructResponder(

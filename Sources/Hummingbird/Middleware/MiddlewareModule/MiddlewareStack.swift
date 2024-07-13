@@ -11,7 +11,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 //===----------------------------------------------------------------------===//
-import Hummingbird
 
 public struct _Middleware2<M0: MiddlewareProtocol, M1: MiddlewareProtocol>: MiddlewareProtocol where M0.Input == M1.Input, M0.Context == M1.Context, M0.Output == M1.Output {
     public typealias Input = M0.Input
