@@ -94,7 +94,7 @@ public struct Route<Handler: _RouteHandlerProtocol, Context: RouterRequestContex
     /// Return full path of route, using Task local stored `routeGroupPath`.
     static func getFullPath(from path: RouterPath) -> RouterPath {
         if let parentGroupPath = RouterBuilderState.current?.routeGroupPath {
-            return parentGroupPath.appendPath(path)
+            return parentGroupPath.appendingPath(path)
         }
         return path
     }

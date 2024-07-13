@@ -44,7 +44,7 @@ public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProto
             routerPath = routerPath.lowercased()
         }
         let parentGroupPath = routerBuildState.routeGroupPath
-        self.fullPath = parentGroupPath.appendPath(routerPath)
+        self.fullPath = parentGroupPath.appendingPath(routerPath)
         routerBuildState.routeGroupPath = self.fullPath
         self.handler = RouterBuilderState.$current.withValue(routerBuildState) {
             builder()
