@@ -197,7 +197,7 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, ExpressibleByStr
     }
 
     /// Combine two RouterPaths
-    public func appendPath(_ path: RouterPath) -> Self {
+    public func appendingPath(_ path: RouterPath) -> Self {
         .init(components: self.components + path.components)
     }
 }

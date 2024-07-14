@@ -67,7 +67,7 @@ extension RouterMethods {
     @discardableResult public func addRoutes(_ collection: RouteCollection<Context>, atPath path: RouterPath = "") -> Self {
         for route in collection.routes {
             // ensure path starts with a "/" and doesn't end with a "/"
-            let path = path.appendPath(route.path)
+            let path = path.appendingPath(route.path)
             self.on(path, method: route.method, responder: route.responder)
         }
         return self

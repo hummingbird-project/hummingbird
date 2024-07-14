@@ -51,7 +51,7 @@ public struct RouterGroup<Context: RequestContext>: RouterMethods {
     /// - Parameter path: path prefix to add to routes inside this group
     @discardableResult public func group(_ path: RouterPath = "") -> RouterGroup<Context> {
         return RouterGroup(
-            path: self.path.appendPath(path),
+            path: self.path.appendingPath(path),
             middlewares: .init(middlewares: self.middlewares.middlewares),
             router: self.router
         )
@@ -70,7 +70,7 @@ public struct RouterGroup<Context: RequestContext>: RouterMethods {
         responder: Responder
     ) -> Self where Responder.Context == Context {
         // ensure path starts with a "/" and doesn't end with a "/"
-        let path = self.path.appendPath(path)
+        let path = self.path.appendingPath(path)
         self.router.on(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         return self
     }
