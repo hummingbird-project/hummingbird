@@ -61,14 +61,13 @@ extension RouterMethods {
     /// - Parameters
     ///   - path: path prefix to add to routes inside this group
     ///   - convertContext: Function converting context
-    @discardableResult public func transformingGroup<TargetContext>(
+    @discardableResult public func group<TargetContext>(
         _ path: RouterPath,
         context: TargetContext.Type
-    ) -> TransformingRouterGroup<Context, TargetContext> where TargetContext.Source == Context {
-        return TransformingRouterGroup(
+    ) -> RouterGroup<TargetContext> where TargetContext.Source == Context {
+        return RouterGroup(
             path: path,
-            parent: self,
-            convertContext: { TargetContext(source: $0) }
+            parent: TransformingRouterGroup(parent: self)
         )
     }
 

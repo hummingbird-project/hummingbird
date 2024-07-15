@@ -299,7 +299,7 @@ final class RouterTests: XCTestCase {
         let router = Router()
         router
             .group("/test")
-            .transformingGroup("/group", context: TestRouterContext2.self)
+            .group("/group", context: TestRouterContext2.self)
             .add(middleware: TestTransformMiddleware())
             .get { _, context in
                 return EditedResponse(headers: [.test: context.string], response: "hello")
