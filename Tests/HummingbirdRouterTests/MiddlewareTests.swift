@@ -174,5 +174,6 @@ final class MiddlewareTests: XCTestCase {
 /// HTTPField used during tests
 extension HTTPField.Name {
     static let middleware = Self("middleware")!
+    static let middleware2 = Self("middleware2")!
     static let alreadyRun = Self("already-run")!
 }

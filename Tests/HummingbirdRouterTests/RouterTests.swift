@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import Hummingbird
 import HummingbirdRouter
 import HummingbirdTesting
@@ -265,6 +266,51 @@ final class RouterTests: XCTestCase {
             }
             try await client.execute(uri: "/test", method: .get) { response in
                 XCTAssertEqual(String(buffer: response.body), "route1")
+            }
+        }
+    }
+
+    /// Test middleware in parent group is applied to routes in child group
+    func testGroupTransformingGroupMiddleware() async throws {
+        struct TestRouterContext2: RequestContext, RouterRequestContext {
+            /// router context
+            var routerContext: RouterBuilderContext
+            /// parameters
+            var coreContext: CoreRequestContextStorage
+            /// additional data
+            var string: String
+
+            typealias Source = BasicRouterRequestContext
+            init(source: Source) {
+                self.coreContext = .init(source: source)
+                self.string = ""
+                self.routerContext = source.routerContext
+            }
+        }
+        struct TestTransformMiddleware: RouterMiddleware {
+            typealias Context = TestRouterContext2
+            func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+                var context = context
+                context.string = request.headers[.middleware2] ?? ""
+                return try await next(request, context)
+            }
+        }
+        let router = RouterBuilder(context: BasicRouterRequestContext.self) {
+            RouteGroup("/test") {
+                TestMiddleware()
+                TransformingRouteGroup("/group", context: TestRouterContext2.self) {
+                    TestTransformMiddleware()
+                    Get { _, context in
+                        return Response(status: .ok, headers: [.middleware2: context.string])
+                    }
+                }
+            }
+        }
+        let app = Application(responder: router)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/test/group", method: .get, headers: [.middleware2: "Transforming"]) { response in
+                XCTAssertEqual(response.headers[.middleware], "TestMiddleware")
+                XCTAssertEqual(response.headers[.middleware2], "Transforming")
             }
         }
     }
