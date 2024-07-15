@@ -36,8 +36,8 @@ struct TransformingRouterGroup<InputContext: RequestContext, Context: RequestCon
     }
 
     /// Add middleware (Stub function as it isn't used)
-    @discardableResult func add(middleware: any RouterMiddleware<Context>) -> Self {
-        preconditionFailure("Cannot add middleware to context transform")
+    @discardableResult func add(middleware: any MiddlewareProtocol<Request, Response, Context>) -> Self {
+        preconditionFailure("Cannot add middleware to TransformingRouterGroup")
     }
 
     /// Add responder to call when path and method are matched

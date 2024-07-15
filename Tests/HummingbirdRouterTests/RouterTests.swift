@@ -298,10 +298,12 @@ final class RouterTests: XCTestCase {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             RouteGroup("/test") {
                 TestMiddleware()
-                TransformingRouteGroup("/group", context: TestRouterContext2.self) {
-                    TestTransformMiddleware()
-                    Get { _, context in
-                        return Response(status: .ok, headers: [.middleware2: context.string])
+                RouteGroup("/group") {
+                    ContextTransform(context: TestRouterContext2.self) {
+                        TestTransformMiddleware()
+                        Get { _, context in
+                            return Response(status: .ok, headers: [.middleware2: context.string])
+                        }
                     }
                 }
             }
