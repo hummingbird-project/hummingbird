@@ -32,13 +32,13 @@ import NIOCore
 /// ```
 public struct RouterGroup<Context: RequestContext>: RouterMethods {
     let path: RouterPath
-    let router: any RouterMethods<Context>
+    let parent: any RouterMethods<Context>
     let middlewares: MiddlewareGroup<Context>
 
-    init(path: RouterPath = "", middlewares: MiddlewareGroup<Context> = .init(), router: any RouterMethods<Context>) {
+    init(path: RouterPath = "", parent: any RouterMethods<Context>) {
         self.path = path
-        self.router = router
-        self.middlewares = middlewares
+        self.parent = parent
+        self.middlewares = .init()
     }
 
     /// Add middleware to RouterGroup
@@ -49,11 +49,10 @@ public struct RouterGroup<Context: RequestContext>: RouterMethods {
 
     /// Return a group inside the current group
     /// - Parameter path: path prefix to add to routes inside this group
-    @discardableResult public func group(_ path: RouterPath = "") -> RouterGroup<Context> {
+    @discardableResult public func group(_ path: RouterPath = "") -> any RouterMethods<Context> {
         return RouterGroup(
-            path: self.path.appendingPath(path),
-            middlewares: .init(middlewares: self.middlewares.middlewares),
-            router: self.router
+            path: path,
+            parent: self
         )
     }
 
@@ -69,9 +68,8 @@ public struct RouterGroup<Context: RequestContext>: RouterMethods {
         method: HTTPRequest.Method,
         responder: Responder
     ) -> Self where Responder.Context == Context {
-        // ensure path starts with a "/" and doesn't end with a "/"
         let path = self.path.appendingPath(path)
-        self.router.on(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
+        self.parent.on(path, method: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         return self
     }
 }

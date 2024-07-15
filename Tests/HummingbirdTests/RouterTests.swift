@@ -238,6 +238,45 @@ final class RouterTests: XCTestCase {
         }
     }
 
+    /// Test middleware in parent group is applied to routes in child group
+    func testTransformingGroupMiddleware() async throws {
+        struct TestRouterContext2: RequestContext {
+            typealias Source = BasicRequestContext
+            init(source: Source) {
+                self.coreContext = .init(source: source)
+                self.string = ""
+            }
+
+            /// parameters
+            var coreContext: CoreRequestContextStorage
+
+            /// additional data
+            var string: String
+        }
+        struct TestTransformMiddleware: RouterMiddleware {
+            typealias Context = TestRouterContext2
+            func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+                var context = context
+                context.string = request.headers[.test] ?? ""
+                return try await next(request, context)
+            }
+        }
+        let router = Router()
+        router
+            .group("/test")
+            .transformingGroup("/group", context: TestRouterContext2.self)
+            .add(middleware: TestTransformMiddleware())
+            .get { _, context in
+                return EditedResponse(headers: [.test: context.string], response: "hello")
+            }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/test/group", method: .get, headers: [.test: "test"]) { response in
+                XCTAssertEqual(response.headers[.test], "test")
+            }
+        }
+    }
+
     /// Test adding middleware to group doesn't affect middleware in parent groups
     func testGroupGroupMiddleware2() async throws {
         struct TestGroupMiddleware: RouterMiddleware {
