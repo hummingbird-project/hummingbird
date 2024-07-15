@@ -32,9 +32,6 @@ public protocol RouterMethods<Context> {
         responder: Responder
     ) -> Self where Responder.Context == Context
 
-    /// Return a group inside the current group
-    func group(_ path: RouterPath) -> RouterGroup<Context>
-
     /// add middleware
     func add(middleware: any MiddlewareProtocol<Request, Response, Context>) -> Self
 }

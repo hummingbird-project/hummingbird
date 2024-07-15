@@ -47,15 +47,6 @@ public struct RouterGroup<Context: RequestContext>: RouterMethods {
         return self
     }
 
-    /// Return a group inside the current group
-    /// - Parameter path: path prefix to add to routes inside this group
-    @discardableResult public func group(_ path: RouterPath = "") -> any RouterMethods<Context> {
-        return RouterGroup(
-            path: path,
-            parent: self
-        )
-    }
-
     /// Add responder to call when path and method are matched
     ///
     /// - Parameters:
