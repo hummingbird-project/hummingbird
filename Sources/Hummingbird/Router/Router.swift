@@ -100,7 +100,7 @@ public final class Router<Context: RequestContext>: RouterMethods, HTTPResponder
     ///
     /// This middleware will only be applied to endpoints added after this call.
     /// - Parameter middleware: Middleware we are adding
-    @discardableResult public func add(middleware: any RouterMiddleware<Context>) -> Self {
+    @discardableResult public func add(middleware: any MiddlewareProtocol<Request, Response, Context>) -> Self {
         self.middlewares.add(middleware)
         return self
     }

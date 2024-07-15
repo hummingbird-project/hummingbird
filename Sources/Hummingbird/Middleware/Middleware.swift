@@ -53,7 +53,7 @@ public protocol MiddlewareProtocol<Input, Output, Context>: Sendable {
 public protocol RouterMiddleware<Context>: MiddlewareProtocol where Input == Request, Output == Response {}
 
 struct MiddlewareResponder<Context>: HTTPResponder {
-    let middleware: any RouterMiddleware<Context>
+    let middleware: any MiddlewareProtocol<Request, Response, Context>
     let next: @Sendable (Request, Context) async throws -> Response
 
     func respond(to request: Request, context: Context) async throws -> Response {

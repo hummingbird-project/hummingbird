@@ -14,17 +14,17 @@
 
 /// Group of middleware that can be used to create a responder chain. Each middleware calls the next one
 public final class MiddlewareGroup<Context> {
-    var middlewares: [any RouterMiddleware<Context>]
+    var middlewares: [any MiddlewareProtocol<Request, Response, Context>]
 
     /// Initialize `MiddlewareGroup`
-    init(middlewares: [any RouterMiddleware<Context>] = []) {
+    init(middlewares: [any MiddlewareProtocol<Request, Response, Context>] = []) {
         self.middlewares = middlewares
     }
 
     /// Add middleware to group
     ///
     /// This middleware will only be applied to endpoints added after this call.
-    @discardableResult public func add(_ middleware: any RouterMiddleware<Context>) -> Self {
+    @discardableResult public func add(_ middleware: any MiddlewareProtocol<Request, Response, Context>) -> Self {
         self.middlewares.append(middleware)
         return self
     }
