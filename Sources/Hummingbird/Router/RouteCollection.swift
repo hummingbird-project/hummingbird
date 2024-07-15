@@ -39,12 +39,6 @@ public final class RouteCollection<Context: RequestContext>: RouterMethods {
         return self
     }
 
-    /// Return a group inside the route collection
-    /// - Parameter path: path prefix to add to routes inside this group
-    public func group(_ path: RouterPath = "") -> RouterGroup<Context> {
-        return .init(path: path, router: self)
-    }
-
     /// Add middleware to RouteCollection
     @discardableResult public func add(middleware: any MiddlewareProtocol<Request, Response, Context>) -> Self {
         self.middlewares.add(middleware)

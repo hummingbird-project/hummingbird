@@ -32,9 +32,6 @@ public protocol RouterMethods<Context> {
         responder: Responder
     ) -> Self where Responder.Context == Context
 
-    /// add group
-    func group(_ path: RouterPath) -> RouterGroup<Context>
-
     /// add middleware
     func add(middleware: any MiddlewareProtocol<Request, Response, Context>) -> Self
 }
@@ -49,6 +46,41 @@ extension RouterMethods {
         let responder = self.constructResponder(use: closure)
         self.on(path, method: method, responder: responder)
         return self
+    }
+
+    /// Return a group inside the current group
+    /// - Parameter path: path prefix to add to routes inside this group
+    @discardableResult public func group(_ path: RouterPath = "") -> RouterGroup<Context> {
+        return RouterGroup(
+            path: path,
+            parent: self
+        )
+    }
+
+    /// Return a group inside the current group that transforms the ``RequestContext``
+    ///
+    /// For the transform to work the `Source` of the transformed `RequestContext` needs
+    /// to be the original `RequestContext` eg
+    /// ```
+    /// struct TransformedRequestContext {
+    ///     typealias Source = BasicRequestContext
+    ///     var coreContext: CoreRequestContextStorage
+    ///     init(source: Source) {
+    ///         self.coreContext = .init(source: source)
+    ///     }
+    /// }
+    /// ```
+    /// - Parameters
+    ///   - path: path prefix to add to routes inside this group
+    ///   - convertContext: Function converting context
+    @discardableResult public func group<TargetContext>(
+        _ path: RouterPath,
+        context: TargetContext.Type
+    ) -> RouterGroup<TargetContext> where TargetContext.Source == Context {
+        return RouterGroup(
+            path: path,
+            parent: TransformingRouterGroup(parent: self)
+        )
     }
 
     /// GET path for async closure returning type conforming to ResponseGenerator

@@ -90,12 +90,6 @@ public final class Router<Context: RequestContext>: RouterMethods, HTTPResponder
         return self
     }
 
-    /// return new `RouterGroup`
-    /// - Parameter path: prefix to add to paths inside the group
-    public func group(_ path: RouterPath = "") -> RouterGroup<Context> {
-        return .init(path: path, router: self)
-    }
-
     /// Add middleware to Router
     ///
     /// This middleware will only be applied to endpoints added after this call.
