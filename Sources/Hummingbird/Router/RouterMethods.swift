@@ -57,7 +57,19 @@ extension RouterMethods {
         )
     }
 
-    /// Return a group inside the current group that transforms the request context
+    /// Return a group inside the current group that transforms the ``RequestContext``
+    ///
+    /// For the transform to work the `Source` of the transformed `RequestContext` needs
+    /// to be the original `RequestContext` eg
+    /// ```
+    /// struct TransformedRequestContext {
+    ///     typealias Source = BasicRequestContext
+    ///     var coreContext: CoreRequestContextStorage
+    ///     init(source: Source) {
+    ///         self.coreContext = .init(source: source)
+    ///     }
+    /// }
+    /// ```
     /// - Parameters
     ///   - path: path prefix to add to routes inside this group
     ///   - convertContext: Function converting context
