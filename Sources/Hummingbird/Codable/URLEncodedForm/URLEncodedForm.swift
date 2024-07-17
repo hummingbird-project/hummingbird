@@ -12,7 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if os(Linux)
+@preconcurrency import Foundation
+#else
 import Foundation
+#endif
 
 internal enum URLEncodedForm {
     /// CodingKey used by URLEncodedFormEncoder and URLEncodedFormDecoder
@@ -44,7 +48,8 @@ internal enum URLEncodedForm {
     }
 
     /// ASCII characters that will not be percent encoded in URL encoded form data
-    static let unreservedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~")
+    static let unreservedCharacters = CharacterSet(
+        charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~")
 
     /// ISO8601 data formatter used throughout URL encoded form code
     static var iso8601Formatter: ISO8601DateFormatter {
