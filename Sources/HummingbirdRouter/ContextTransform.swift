@@ -14,7 +14,7 @@
 
 import Hummingbird
 
-/// Router middleware that transforms the ``RequestContext`` and uses it with the contained
+/// Router middleware that transforms the ``Hummingbird/RequestContext`` and uses it with the contained
 /// Middleware chain
 ///
 /// For the transform to work the `Source` of the transformed `RequestContext`` needs to be
