@@ -83,7 +83,7 @@ extension RouterMethods {
         )
     }
 
-    /// Add middleware stack to Router
+    /// Add middleware stack to router
     ///
     /// This gives a slight performance boost over adding them individually.
     /// ```swift
