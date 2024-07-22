@@ -41,7 +41,7 @@ public struct ContextTransform<Context: RouterRequestContext, HandlerContext: Ro
     ///   - routerPath: Path local to group route this group is defined in
     ///   - builder: RouteGroup builder
     public init(
-        context: HandlerContext.Type,
+        to context: HandlerContext.Type,
         @MiddlewareFixedTypeBuilder<Request, Response, HandlerContext> builder: () -> Handler
     ) {
         self.handler = builder()

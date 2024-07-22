@@ -281,7 +281,7 @@ final class RouterTests: XCTestCase {
             var string: String
 
             typealias Source = BasicRouterRequestContext
-            init(source: Source) {
+            init(source: BasicRouterRequestContext) {
                 self.coreContext = .init(source: source)
                 self.string = ""
                 self.routerContext = source.routerContext
@@ -299,7 +299,7 @@ final class RouterTests: XCTestCase {
             RouteGroup("/test") {
                 TestMiddleware()
                 RouteGroup("/group") {
-                    ContextTransform(context: TestRouterContext2.self) {
+                    ContextTransform(to: TestRouterContext2.self) {
                         TestTransformMiddleware()
                         Get { _, context in
                             return Response(status: .ok, headers: [.middleware2: context.string])
