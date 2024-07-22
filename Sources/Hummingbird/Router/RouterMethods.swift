@@ -85,14 +85,18 @@ extension RouterMethods {
 
     /// Add middleware stack to router
     ///
-    /// This gives a slight performance boost over adding them individually.
+    /// Add multiple middleware to the router using the middleware stack result builder
+    /// ``MiddlewareFixedTypeBuilder``.
+    ///
     /// ```swift
     /// router.add {
     ///     LogRequestsMiddleware()
     ///     MetricsMiddleware()
     /// }
     /// ```
-    /// - Parameter middleware: Middleware stack result builder
+    /// This gives a slight performance boost over adding them individually.
+    ///
+    /// - Parameter middlewareStack: Middleware stack result builder
     /// - Returns: router
     @discardableResult public func add(
         @MiddlewareFixedTypeBuilder<Request, Response, Context> middlewareStack: () -> some MiddlewareProtocol<Request, Response, Context>
