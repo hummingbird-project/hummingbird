@@ -83,6 +83,27 @@ extension RouterMethods {
         )
     }
 
+    /// Add middleware stack to router
+    ///
+    /// Add multiple middleware to the router using the middleware stack result builder
+    /// ``MiddlewareFixedTypeBuilder``.
+    ///
+    /// ```swift
+    /// router.add {
+    ///     LogRequestsMiddleware()
+    ///     MetricsMiddleware()
+    /// }
+    /// ```
+    /// This gives a slight performance boost over adding them individually.
+    ///
+    /// - Parameter middlewareStack: Middleware stack result builder
+    /// - Returns: router
+    @discardableResult public func add(
+        @MiddlewareFixedTypeBuilder<Request, Response, Context> middlewareStack: () -> some MiddlewareProtocol<Request, Response, Context>
+    ) -> Self {
+        return self.add(middleware: middlewareStack())
+    }
+
     /// GET path for async closure returning type conforming to ResponseGenerator
     @discardableResult public func get(
         _ path: RouterPath = "",
@@ -129,12 +150,6 @@ extension RouterMethods {
         use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
         return self.on(path, method: .patch, use: handler)
-    }
-
-    @discardableResult public func add(
-        @MiddlewareFixedTypeBuilder<Request, Response, Context> middleware: () -> some MiddlewareProtocol<Request, Response, Context>
-    ) -> Self {
-        return self.add(middleware: middleware())
     }
 
     internal func constructResponder(

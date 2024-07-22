@@ -14,7 +14,7 @@
 
 import Hummingbird
 
-/// Router middleware that transforms the ``RequestContext`` and uses it with the contained
+/// Router middleware that transforms the ``Hummingbird/RequestContext`` and uses it with the contained
 /// Middleware chain
 ///
 /// For the transform to work the `Source` of the transformed `RequestContext`` needs to be
@@ -41,7 +41,7 @@ public struct ContextTransform<Context: RouterRequestContext, HandlerContext: Ro
     ///   - routerPath: Path local to group route this group is defined in
     ///   - builder: RouteGroup builder
     public init(
-        context: HandlerContext.Type,
+        to context: HandlerContext.Type,
         @MiddlewareFixedTypeBuilder<Request, Response, HandlerContext> builder: () -> Handler
     ) {
         self.handler = builder()
