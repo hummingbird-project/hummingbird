@@ -83,6 +83,23 @@ extension RouterMethods {
         )
     }
 
+    /// Add middleware stack to Router
+    ///
+    /// This gives a slight performance boost over adding them individually.
+    /// ```swift
+    /// router.add {
+    ///     LogRequestsMiddleware()
+    ///     MetricsMiddleware()
+    /// }
+    /// ```
+    /// - Parameter middleware: Middleware stack result builder
+    /// - Returns: router
+    @discardableResult public func add(
+        @MiddlewareFixedTypeBuilder<Request, Response, Context> middleware: () -> some MiddlewareProtocol<Request, Response, Context>
+    ) -> Self {
+        return self.add(middleware: middleware())
+    }
+
     /// GET path for async closure returning type conforming to ResponseGenerator
     @discardableResult public func get(
         _ path: RouterPath = "",
@@ -129,12 +146,6 @@ extension RouterMethods {
         use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
         return self.on(path, method: .patch, use: handler)
-    }
-
-    @discardableResult public func add(
-        @MiddlewareFixedTypeBuilder<Request, Response, Context> middleware: () -> some MiddlewareProtocol<Request, Response, Context>
-    ) -> Self {
-        return self.add(middleware: middleware())
     }
 
     internal func constructResponder(
