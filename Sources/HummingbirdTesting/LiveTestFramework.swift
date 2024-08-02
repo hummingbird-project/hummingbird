@@ -20,7 +20,6 @@ import NIOCore
 import NIOPosix
 import NIOTransportServices
 import ServiceLifecycle
-import XCTest
 
 /// Test using a live server
 final class LiveTestFramework<App: ApplicationProtocol>: ApplicationTestFramework {

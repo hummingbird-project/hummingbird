@@ -107,7 +107,11 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
     static func getEnvironment() -> [String: String] {
         var values: [String: String] = [:]
         let equalSign = Character("=")
+#if canImport(Musl)
+        guard let envp = environ else { return [:] }
+#else
         let envp = environ
+#endif
         var idx = 0
 
         while let entry = envp.advanced(by: idx).pointee {
