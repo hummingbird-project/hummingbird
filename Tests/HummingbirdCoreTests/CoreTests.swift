@@ -68,6 +68,70 @@ class HummingBirdCoreTests: XCTestCase {
         }
     }
 
+    func testMultipleConnections() async throws {
+        try await testServer(
+            responder: helloResponder,
+            httpChannelSetup: .http1(),
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
+            logger: Logger(label: "Hummingbird")
+        ) { port in
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                for _ in 0..<100 {
+                    group.addTask {
+                        let client = TestClient(
+                            host: "localhost",
+                            port: port,
+                            configuration: .init(),
+                            eventLoopGroupProvider: .createNew
+                        )
+                        client.connect()
+                        let response = try await client.post("/", body: ByteBuffer(string: "Hello"))
+                        var body = try XCTUnwrap(response.body)
+                        XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
+                        try await client.close()
+                    }
+                }
+                try await group.waitForAll()
+            }
+        }
+    }
+
+    func testMaxConnections() async throws {
+        /// Basic responder that waits 10 milliseconds and returns "Hello" in body
+        @Sendable func helloResponder(to request: Request, channel: Channel) async -> Response {
+            try? await Task.sleep(for: .milliseconds(10))
+            let responseBody = channel.allocator.buffer(string: "Hello")
+            return Response(status: .ok, body: .init(byteBuffer: responseBody))
+        }
+        try await testServer(
+            responder: helloResponder,
+            httpChannelSetup: .http1(),
+            configuration: .init(address: .hostname(port: 0), maxActiveConnections: 10),
+            eventLoopGroup: Self.eventLoopGroup,
+            logger: Logger(label: "Hummingbird")
+        ) { port in
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                for _ in 0..<100 {
+                    group.addTask {
+                        let client = TestClient(
+                            host: "localhost",
+                            port: port,
+                            configuration: .init(),
+                            eventLoopGroupProvider: .createNew
+                        )
+                        client.connect()
+                        let response = try await client.post("/", body: ByteBuffer(string: "Hello"))
+                        var body = try XCTUnwrap(response.body)
+                        XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
+                        try await client.close()
+                    }
+                }
+                try await group.waitForAll()
+            }
+        }
+    }
+
     func testError() async throws {
         try await testServer(
             responder: { _, _ in .init(status: .unauthorized) },

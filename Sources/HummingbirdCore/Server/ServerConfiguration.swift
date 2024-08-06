@@ -24,6 +24,8 @@ public struct ServerConfiguration: Sendable {
     public let backlog: Int
     /// Allows socket to be bound to an address that is already in use.
     public let reuseAddress: Bool
+    /// Maximum active connections
+    public let maxActiveConnections: Int?
     #if canImport(Network)
     /// TLS options for NIO Transport services
     public let tlsOptions: TSTLSOptions
@@ -36,16 +38,19 @@ public struct ServerConfiguration: Sendable {
     ///   - backlog: the maximum length for the queue of pending connections.  If a connection request arrives with the queue full,
     ///         the client may receive an error with an indication of ECONNREFUSE
     ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
+    ///   - maxActiveConnections: Maximum number of active connections
     public init(
         address: BindAddress = .hostname(),
         serverName: String? = nil,
         backlog: Int = 256,
-        reuseAddress: Bool = true
+        reuseAddress: Bool = true,
+        maxActiveConnections: Int? = nil
     ) {
         self.address = address
         self.serverName = serverName
         self.backlog = backlog
         self.reuseAddress = reuseAddress
+        self.maxActiveConnections = maxActiveConnections
         #if canImport(Network)
         self.tlsOptions = .none
         #endif
@@ -58,6 +63,7 @@ public struct ServerConfiguration: Sendable {
     ///   - backlog: the maximum length for the queue of pending connections.  If a connection request arrives with the queue full,
     ///         the client may receive an error with an indication of ECONNREFUSE
     ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
+    ///   - maxActiveConnections: Maximum number of active connections
     ///   - tlsOptions: TLS options for when you are using NIOTransportServices
     #if canImport(Network)
     public init(
@@ -65,12 +71,14 @@ public struct ServerConfiguration: Sendable {
         serverName: String? = nil,
         backlog: Int = 256,
         reuseAddress: Bool = true,
+        maxActiveConnections: Int? = nil,
         tlsOptions: TSTLSOptions
     ) {
         self.address = address
         self.serverName = serverName
         self.backlog = backlog
         self.reuseAddress = reuseAddress
+        self.maxActiveConnections = maxActiveConnections
         self.tlsOptions = tlsOptions
     }
     #endif
