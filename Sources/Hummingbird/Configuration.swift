@@ -34,7 +34,7 @@ public struct ApplicationConfiguration: Sendable {
     /// Allows socket to be bound to an address that is already in use.
     public var reuseAddress: Bool
     /// Maximum active connections
-    public let maxActiveConnections: Int?
+    public let availableConnectionDelegate: AvailableConnectionsDelegate?
     #if canImport(Network)
     /// TLS options for NIO Transport services
     public var tlsOptions: TSTLSOptions
@@ -55,13 +55,13 @@ public struct ApplicationConfiguration: Sendable {
         serverName: String? = nil,
         backlog: Int = 256,
         reuseAddress: Bool = true,
-        maxActiveConnections: Int? = nil
+        availableConnectionDelegate: AvailableConnectionsDelegate? = nil
     ) {
         self.address = address
         self.serverName = serverName
         self.backlog = backlog
         self.reuseAddress = reuseAddress
-        self.maxActiveConnections = maxActiveConnections
+        self.availableConnectionDelegate = availableConnectionDelegate
         #if canImport(Network)
         self.tlsOptions = .none
         #endif
@@ -79,14 +79,14 @@ public struct ApplicationConfiguration: Sendable {
         address: BindAddress = .hostname(),
         serverName: String? = nil,
         reuseAddress: Bool = true,
-        maxActiveConnections: Int? = nil,
+        availableConnectionDelegate: AvailableConnectionsDelegate? = nil,
         tlsOptions: TSTLSOptions
     ) {
         self.address = address
         self.serverName = serverName
         self.backlog = 256 // not used by Network framework
         self.reuseAddress = reuseAddress
-        self.maxActiveConnections = maxActiveConnections
+        self.availableConnectionDelegate = availableConnectionDelegate
         self.tlsOptions = tlsOptions
     }
 
@@ -115,7 +115,7 @@ public struct ApplicationConfiguration: Sendable {
             serverName: self.serverName,
             backlog: self.backlog,
             reuseAddress: self.reuseAddress,
-            maxActiveConnections: self.maxActiveConnections,
+            availableConnectionDelegate: self.availableConnectionDelegate,
             tlsOptions: self.tlsOptions
         )
     }
@@ -126,7 +126,7 @@ public struct ApplicationConfiguration: Sendable {
             serverName: self.serverName,
             backlog: self.backlog,
             reuseAddress: self.reuseAddress,
-            maxActiveConnections: self.maxActiveConnections
+            availableConnectionDelegate: self.availableConnectionDelegate
         )
     }
     #endif

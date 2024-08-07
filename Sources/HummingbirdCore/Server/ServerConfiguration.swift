@@ -24,8 +24,8 @@ public struct ServerConfiguration: Sendable {
     public let backlog: Int
     /// Allows socket to be bound to an address that is already in use.
     public let reuseAddress: Bool
-    /// Maximum active connections
-    public let maxActiveConnections: Int?
+    /// object deciding on when we should accept new connection
+    public let availableConnectionDelegate: AvailableConnectionsDelegate?
     #if canImport(Network)
     /// TLS options for NIO Transport services
     public let tlsOptions: TSTLSOptions
@@ -44,13 +44,13 @@ public struct ServerConfiguration: Sendable {
         serverName: String? = nil,
         backlog: Int = 256,
         reuseAddress: Bool = true,
-        maxActiveConnections: Int? = nil
+        availableConnectionDelegate: AvailableConnectionsDelegate? = nil
     ) {
         self.address = address
         self.serverName = serverName
         self.backlog = backlog
         self.reuseAddress = reuseAddress
-        self.maxActiveConnections = maxActiveConnections
+        self.availableConnectionDelegate = availableConnectionDelegate
         #if canImport(Network)
         self.tlsOptions = .none
         #endif
@@ -71,14 +71,14 @@ public struct ServerConfiguration: Sendable {
         serverName: String? = nil,
         backlog: Int = 256,
         reuseAddress: Bool = true,
-        maxActiveConnections: Int? = nil,
+        availableConnectionDelegate: AvailableConnectionsDelegate? = nil,
         tlsOptions: TSTLSOptions
     ) {
         self.address = address
         self.serverName = serverName
         self.backlog = backlog
         self.reuseAddress = reuseAddress
-        self.maxActiveConnections = maxActiveConnections
+        self.availableConnectionDelegate = availableConnectionDelegate
         self.tlsOptions = tlsOptions
     }
     #endif
