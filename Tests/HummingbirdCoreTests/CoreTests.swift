@@ -68,6 +68,97 @@ class HummingBirdCoreTests: XCTestCase {
         }
     }
 
+    func testMultipleConnections() async throws {
+        try await testServer(
+            responder: helloResponder,
+            httpChannelSetup: .http1(),
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
+            logger: Logger(label: "Hummingbird")
+        ) { port in
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                for _ in 0..<100 {
+                    group.addTask {
+                        let client = TestClient(
+                            host: "localhost",
+                            port: port,
+                            configuration: .init(),
+                            eventLoopGroupProvider: .createNew
+                        )
+                        client.connect()
+                        let response = try await client.post("/", body: ByteBuffer(string: "Hello"))
+                        var body = try XCTUnwrap(response.body)
+                        XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
+                        try await client.close()
+                    }
+                }
+                try await group.waitForAll()
+            }
+        }
+    }
+
+    func testMaxConnections() async throws {
+        final class TestMaximumAvailableConnections: AvailableConnectionsDelegate, @unchecked Sendable {
+            let maxConnections: Int
+            var connectionCount: Int
+            var maxConnectionCountRecorded: Int
+
+            init(_ maxConnections: Int) {
+                self.maxConnections = maxConnections
+                self.maxConnectionCountRecorded = 0
+                self.connectionCount = 0
+            }
+
+            func connectionOpened() {
+                self.connectionCount += 1
+                self.maxConnectionCountRecorded = max(self.connectionCount, self.maxConnectionCountRecorded)
+            }
+
+            func connectionClosed() {
+                self.connectionCount -= 1
+            }
+
+            func isAcceptingNewConnections() -> Bool {
+                self.connectionCount < self.maxConnections
+            }
+        }
+        /// Basic responder that waits 10 milliseconds and returns "Hello" in body
+        @Sendable func helloResponder(to request: Request, channel: Channel) async -> Response {
+            try? await Task.sleep(for: .milliseconds(10))
+            let responseBody = channel.allocator.buffer(string: "Hello")
+            return Response(status: .ok, body: .init(byteBuffer: responseBody))
+        }
+        let availableConnectionsDelegate = TestMaximumAvailableConnections(10)
+        try await testServer(
+            responder: helloResponder,
+            httpChannelSetup: .http1(),
+            configuration: .init(address: .hostname(port: 0), availableConnectionsDelegate: availableConnectionsDelegate),
+            eventLoopGroup: Self.eventLoopGroup,
+            logger: Logger(label: "Hummingbird")
+        ) { port in
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                for _ in 0..<100 {
+                    group.addTask {
+                        let client = TestClient(
+                            host: "localhost",
+                            port: port,
+                            configuration: .init(),
+                            eventLoopGroupProvider: .createNew
+                        )
+                        client.connect()
+                        let response = try await client.post("/", body: ByteBuffer(string: "Hello"))
+                        var body = try XCTUnwrap(response.body)
+                        XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
+                        try await client.close()
+                    }
+                }
+                try await group.waitForAll()
+            }
+        }
+        // connections are read 4 at a time, so max count can be slightly higher
+        XCTAssertLessThan(availableConnectionsDelegate.maxConnectionCountRecorded, 14)
+    }
+
     func testError() async throws {
         try await testServer(
             responder: { _, _ in .init(status: .unauthorized) },
