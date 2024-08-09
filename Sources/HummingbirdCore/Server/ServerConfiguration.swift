@@ -26,8 +26,8 @@ public struct ServerConfiguration: Sendable {
     public let reuseAddress: Bool
     /// Object deciding on when we should accept new connection. Use ``MaximumAvailableConnections``
     /// to set the maximum allowed connections.
-    /// 
-    /// If we are not accepting connections the requests will be added to the backlog until the 
+    ///
+    /// If we are not accepting connections the requests will be added to the backlog until the
     /// server is accepting connections again. If the backlog fills up then the server will start
     /// refusing requests.
     public let availableConnectionsDelegate: AvailableConnectionsDelegate?
