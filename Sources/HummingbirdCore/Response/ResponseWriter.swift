@@ -15,15 +15,20 @@
 import NIOCore
 import NIOHTTPTypes
 
+/// ResponseWriter that writes directly to AsyncChannel
 public struct ResponseWriter {
     @usableFromInline
     let outbound: NIOAsyncChannelOutboundWriter<HTTPResponsePart>
 
+    ///  Write single response part
+    /// - Parameter part: response part
     @inlinable
     public func write(_ part: HTTPResponsePart) async throws {
         try await self.outbound.write(part)
     }
 
+    ///  Write sequence of response parts
+    /// - Parameter parts: response parts sequence
     @inlinable
     public func write(_ parts: some Sequence<HTTPResponsePart>) async throws {
         for part in parts {
@@ -31,6 +36,8 @@ public struct ResponseWriter {
         }
     }
 
+    ///  Write AsyncSequence of response parts
+    /// - Parameter parts: response parts AsyncSequence
     @inlinable
     public func write<AsyncSeq: AsyncSequence>(_ parts: AsyncSeq) async throws where AsyncSeq.Element == HTTPResponsePart {
         for try await part in parts {
