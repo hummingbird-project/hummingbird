@@ -216,8 +216,8 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
         let quiescingHelper = ServerQuiescingHelper(group: self.eventLoopGroup)
         bootstrap = bootstrap.serverChannelInitializer { channel in
             channel.eventLoop.makeCompletedFuture {
-                if let availableConnectionDelegate = configuration.availableConnectionDelegate {
-                    let handler = availableConnectionDelegate.availableConnectionsChannelHandler
+                if let availableConnectionsDelegate = configuration.availableConnectionsDelegate {
+                    let handler = availableConnectionsDelegate.availableConnectionsChannelHandler
                     try channel.pipeline.syncOperations.addHandler(handler)
                 }
                 try channel.pipeline.syncOperations.addHandler(quiescingHelper.makeServerChannelHandler(channel: channel))

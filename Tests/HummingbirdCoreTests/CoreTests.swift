@@ -128,11 +128,11 @@ class HummingBirdCoreTests: XCTestCase {
             let responseBody = channel.allocator.buffer(string: "Hello")
             return Response(status: .ok, body: .init(byteBuffer: responseBody))
         }
-        let availableConnectionDelegate = TestMaximumAvailableConnections(10)
+        let availableConnectionsDelegate = TestMaximumAvailableConnections(10)
         try await testServer(
             responder: helloResponder,
             httpChannelSetup: .http1(),
-            configuration: .init(address: .hostname(port: 0), availableConnectionDelegate: availableConnectionDelegate),
+            configuration: .init(address: .hostname(port: 0), availableConnectionsDelegate: availableConnectionsDelegate),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "Hummingbird")
         ) { port in
@@ -156,7 +156,7 @@ class HummingBirdCoreTests: XCTestCase {
             }
         }
         // connections are read 4 at a time, so max count can be slightly higher
-        XCTAssertLessThan(availableConnectionDelegate.maxConnectionCountRecorded, 14)
+        XCTAssertLessThan(availableConnectionsDelegate.maxConnectionCountRecorded, 14)
     }
 
     func testError() async throws {

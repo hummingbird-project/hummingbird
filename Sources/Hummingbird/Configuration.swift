@@ -33,8 +33,8 @@ public struct ApplicationConfiguration: Sendable {
     public var backlog: Int
     /// Allows socket to be bound to an address that is already in use.
     public var reuseAddress: Bool
-    /// Maximum active connections
-    public let availableConnectionDelegate: AvailableConnectionsDelegate?
+    /// object deciding on when we should accept new connection
+    public var availableConnectionsDelegate: AvailableConnectionsDelegate?
     #if canImport(Network)
     /// TLS options for NIO Transport services
     public var tlsOptions: TSTLSOptions
@@ -50,18 +50,19 @@ public struct ApplicationConfiguration: Sendable {
     ///   - backlog: the maximum length for the queue of pending connections.  If a connection request arrives with the queue full,
     ///         the client may receive an error with an indication of ECONNREFUSE
     ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
+    ///   - availableConnectionsDelegate: object deciding on when we should accept new connection
     public init(
         address: BindAddress = .hostname(),
         serverName: String? = nil,
         backlog: Int = 256,
         reuseAddress: Bool = true,
-        availableConnectionDelegate: AvailableConnectionsDelegate? = nil
+        availableConnectionsDelegate: AvailableConnectionsDelegate? = nil
     ) {
         self.address = address
         self.serverName = serverName
         self.backlog = backlog
         self.reuseAddress = reuseAddress
-        self.availableConnectionDelegate = availableConnectionDelegate
+        self.availableConnectionsDelegate = availableConnectionsDelegate
         #if canImport(Network)
         self.tlsOptions = .none
         #endif
@@ -74,19 +75,20 @@ public struct ApplicationConfiguration: Sendable {
     ///   - address: Bind address for server
     ///   - serverName: Server name to return in "server" header
     ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
+    ///   - availableConnectionsDelegate: object deciding on when we should accept new connection
     ///   - tlsOptions: TLS options for when you are using NIOTransportServices
     public init(
         address: BindAddress = .hostname(),
         serverName: String? = nil,
         reuseAddress: Bool = true,
-        availableConnectionDelegate: AvailableConnectionsDelegate? = nil,
+        availableConnectionsDelegate: AvailableConnectionsDelegate? = nil,
         tlsOptions: TSTLSOptions
     ) {
         self.address = address
         self.serverName = serverName
         self.backlog = 256 // not used by Network framework
         self.reuseAddress = reuseAddress
-        self.availableConnectionDelegate = availableConnectionDelegate
+        self.availableConnectionsDelegate = availableConnectionsDelegate
         self.tlsOptions = tlsOptions
     }
 
@@ -115,7 +117,7 @@ public struct ApplicationConfiguration: Sendable {
             serverName: self.serverName,
             backlog: self.backlog,
             reuseAddress: self.reuseAddress,
-            availableConnectionDelegate: self.availableConnectionDelegate,
+            availableConnectionsDelegate: self.availableConnectionsDelegate,
             tlsOptions: self.tlsOptions
         )
     }
@@ -126,7 +128,7 @@ public struct ApplicationConfiguration: Sendable {
             serverName: self.serverName,
             backlog: self.backlog,
             reuseAddress: self.reuseAddress,
-            availableConnectionDelegate: self.availableConnectionDelegate
+            availableConnectionsDelegate: self.availableConnectionsDelegate
         )
     }
     #endif
