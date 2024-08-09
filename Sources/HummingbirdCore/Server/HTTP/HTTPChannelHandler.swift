@@ -21,7 +21,7 @@ import ServiceLifecycle
 
 /// Protocol for HTTP channels
 public protocol HTTPChannelHandler: ServerChildChannel {
-    typealias Responder = @Sendable (Request, Channel) async -> Response
+    typealias Responder = @Sendable (Request, ResponseWriter, Channel) async throws -> Void
     var responder: Responder { get }
 }
 
@@ -37,7 +37,6 @@ extension HTTPChannelHandler {
         do {
             try await withTaskCancellationHandler {
                 try await asyncChannel.executeThenClose { inbound, outbound in
-                    let responseWriter = HTTPServerBodyWriter(outbound: outbound)
                     var iterator = inbound.makeAsyncIterator()
 
                     // read first part, verify it is a head
@@ -49,11 +48,9 @@ extension HTTPChannelHandler {
                     while true {
                         let bodyStream = NIOAsyncChannelRequestBody(iterator: iterator)
                         let request = Request(head: head, body: .init(asyncSequence: bodyStream))
-                        let response = await self.responder(request, asyncChannel.channel)
+                        let responseWriter = ResponseWriter(outbound: outbound)
                         do {
-                            try await outbound.write(.head(response.head))
-                            let tailHeaders = try await response.body.write(responseWriter)
-                            try await outbound.write(.end(tailHeaders))
+                            try await self.responder(request, responseWriter, asyncChannel.channel)
                         } catch {
                             throw error
                         }
