@@ -15,6 +15,7 @@
 import HTTPTypes
 import NIOCore
 
+/// Protocol for response body data writer
 public protocol ResponseBodyWriter {
     func write(_ buffer: ByteBuffer) async throws
 }
