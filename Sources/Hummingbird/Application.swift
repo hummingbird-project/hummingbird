@@ -125,8 +125,9 @@ extension ApplicationProtocol {
             if let serverName = self.configuration.serverName {
                 response.headers[.server] = serverName
             }
+            // Write response
             try await responseWriter.write(.head(response.head))
-            let tailHeaders = try await response.body.write(ChannelResponseBodyWriter(writer: responseWriter))
+            let tailHeaders = try await response.body.write(RootResponseBodyWriter(writer: responseWriter))
             try await responseWriter.write(.end(tailHeaders))
         } onServerRunning: {
             await self.onServerRunning($0)
@@ -305,7 +306,8 @@ extension Logger {
     }
 }
 
-struct ChannelResponseBodyWriter: ResponseBodyWriter {
+/// Response body writer that writes body directly to the AsyncChannel ResponseWriter
+struct RootResponseBodyWriter: ResponseBodyWriter {
     let writer: ResponseWriter
 
     func write(_ buffer: ByteBuffer) async throws {
