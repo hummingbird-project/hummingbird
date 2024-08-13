@@ -36,9 +36,6 @@ public struct EndpointPath: Sendable {
 
 /// Request context values required by Hummingbird itself.
 public struct CoreRequestContextStorage: Sendable {
-    /// ByteBuffer allocator used by request
-    @usableFromInline
-    let allocator: ByteBufferAllocator
     /// Logger to use with Request
     @usableFromInline
     var logger: Logger
@@ -51,7 +48,6 @@ public struct CoreRequestContextStorage: Sendable {
     public init(
         source: some RequestContextSource
     ) {
-        self.allocator = source.allocator
         self.logger = source.logger
         self.endpointPath = .init()
         self.parameters = .init()
@@ -77,8 +73,6 @@ public protocol RequestContext: InitializableFromSource, RequestContextSource {
 }
 
 extension RequestContext {
-    @inlinable
-    public var allocator: ByteBufferAllocator { coreContext.allocator }
     /// Logger to use with Request
     @inlinable
     public var logger: Logger {

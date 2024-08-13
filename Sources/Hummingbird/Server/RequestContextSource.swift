@@ -17,8 +17,6 @@ import NIOCore
 
 /// Protocol for source of request contexts
 public protocol RequestContextSource {
-    /// ByteBuffer allocator
-    var allocator: ByteBufferAllocator { get }
     /// Request Logger
     var logger: Logger { get }
 }
@@ -32,5 +30,4 @@ public struct ApplicationRequestContextSource: RequestContextSource {
 
     public let channel: Channel
     public let logger: Logger
-    public var allocator: ByteBufferAllocator { self.channel.allocator }
 }
