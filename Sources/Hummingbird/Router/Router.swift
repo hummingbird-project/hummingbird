@@ -30,7 +30,7 @@ import NIOCore
 ///     return .ok
 /// }
 /// router.data("data") { request, context -> ByteBuffer in
-///     return context.allocator.buffer(string: "buffer")
+///     return ByteBuffer(string: "buffer")
 /// }
 /// ```
 ///
