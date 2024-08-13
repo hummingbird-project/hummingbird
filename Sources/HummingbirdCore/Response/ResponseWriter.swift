@@ -39,7 +39,7 @@ public struct ResponseWriter {
     ///  Write AsyncSequence of response parts
     /// - Parameter parts: response parts AsyncSequence
     @inlinable
-    public func write<AsyncSeq: AsyncSequence>(_ parts: AsyncSeq) async throws where AsyncSeq.Element == HTTPResponsePart {
+    public func write<Parts: AsyncSequence>(_ parts: Parts) async throws where Parts.Element == HTTPResponsePart {
         for try await part in parts {
             try await self.outbound.write(part)
         }
