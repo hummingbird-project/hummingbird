@@ -24,7 +24,7 @@ extension JSONEncoder: ResponseEncoder {
     ///   - request: Request used to generate response
     public func encode(_ value: some Encodable, from request: Request, context: some RequestContext) throws -> Response {
         let data = try self.encode(value)
-        let buffer = context.allocator.buffer(data: data)
+        let buffer = ByteBuffer(data: data)
         return Response(
             status: .ok,
             headers: .defaultHummingbirdHeaders(

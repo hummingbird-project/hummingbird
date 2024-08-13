@@ -36,7 +36,7 @@ final class ApplicationTests: XCTestCase {
 
     func testGetRoute() async throws {
         let router = Router()
-        router.get("/hello") { _, context -> ByteBuffer in
+        router.get("/hello") { _, _ -> ByteBuffer in
             return ByteBuffer(string: "GET: Hello")
         }
         let app = Application(responder: router.buildResponder())
@@ -148,7 +148,7 @@ final class ApplicationTests: XCTestCase {
 
     func testQueryRoute() async throws {
         let router = Router()
-        router.post("/query") { request, context -> ByteBuffer in
+        router.post("/query") { request, _ -> ByteBuffer in
             return ByteBuffer(
                 string: request.uri.queryParameters["test"].map { String($0) } ?? "")
         }
@@ -520,7 +520,7 @@ final class ApplicationTests: XCTestCase {
     func testApplicationProtocolReturnValue() async throws {
         func createApplication() -> some ApplicationProtocol {
             let router = Router()
-            router.get("/hello") { _, context -> ByteBuffer in
+            router.get("/hello") { _, _ -> ByteBuffer in
                 return ByteBuffer(string: "GET: Hello")
             }
             return Application(responder: router.buildResponder())
@@ -541,7 +541,7 @@ final class ApplicationTests: XCTestCase {
 
             var responder: some HTTPResponder<Context> {
                 let router = Router(context: Context.self)
-                router.get("/hello") { _, context -> ByteBuffer in
+                router.get("/hello") { _, _ -> ByteBuffer in
                     return ByteBuffer(string: "GET: Hello")
                 }
                 return router.buildResponder()
@@ -688,7 +688,7 @@ final class ApplicationTests: XCTestCase {
     func testBidirectionalStreaming() async throws {
         let buffer = self.randomBuffer(size: 1024 * 1024)
         let router = Router()
-        router.post("/") { request, context -> Response in
+        router.post("/") { request, _ -> Response in
             .init(
                 status: .ok,
                 body: .init { writer in
