@@ -32,7 +32,7 @@ extension Response: ResponseGenerator {
 extension String: ResponseGenerator {
     /// Generate response holding string
     public func response(from request: Request, context: some RequestContext) -> Response {
-        let buffer = context.allocator.buffer(string: self)
+        let buffer = ByteBuffer(string: self)
         return Response(
             status: .ok,
             headers: .defaultHummingbirdHeaders(
@@ -48,7 +48,7 @@ extension String: ResponseGenerator {
 extension Substring: ResponseGenerator {
     /// Generate response holding string
     public func response(from request: Request, context: some RequestContext) -> Response {
-        let buffer = context.allocator.buffer(substring: self)
+        let buffer = ByteBuffer(substring: self)
         return Response(
             status: .ok,
             headers: .defaultHummingbirdHeaders(

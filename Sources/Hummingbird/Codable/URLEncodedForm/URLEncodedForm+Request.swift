@@ -19,7 +19,7 @@ extension URLEncodedFormEncoder: ResponseEncoder {
     ///   - request: Request used to generate response
     public func encode(_ value: some Encodable, from request: Request, context: some RequestContext) throws -> Response {
         let string = try self.encode(value)
-        let buffer = context.allocator.buffer(string: string)
+        let buffer = ByteBuffer(string: string)
         return Response(
             status: .ok,
             headers: .defaultHummingbirdHeaders(

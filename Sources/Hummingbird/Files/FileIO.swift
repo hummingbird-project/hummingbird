@@ -109,6 +109,7 @@ public struct FileIO: Sendable {
                 let endOffset = range.endIndex
                 let chunkLength = chunkLength
                 var fileOffset = range.startIndex
+                let allocator = ByteBufferAllocator()
 
                 while case .inRange(let offset) = fileOffset {
                     let bytesLeft = range.distance(from: fileOffset, to: endOffset)
@@ -117,7 +118,7 @@ public struct FileIO: Sendable {
                         fileHandle: handle,
                         fromOffset: numericCast(offset),
                         byteCount: bytesToRead,
-                        allocator: context.allocator
+                        allocator: allocator
                     )
                     fileOffset = range.index(fileOffset, offsetBy: bytesToRead)
                     try await writer.write(buffer)
