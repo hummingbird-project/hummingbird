@@ -21,7 +21,7 @@ import NIOCore
 import XCTest
 
 final class MiddlewareTests: XCTestCase {
-    func randomBuffer(size: Int) -> ByteBuffer {
+    static func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
         data = data.map { _ in UInt8.random(in: 0...255) }
         return ByteBufferAllocator().buffer(bytes: data)
@@ -161,7 +161,7 @@ final class MiddlewareTests: XCTestCase {
         let app = Application(responder: router)
 
         try await app.test(.router) { client in
-            let buffer = self.randomBuffer(size: 64000)
+            let buffer = Self.randomBuffer(size: 64000)
             try await client.execute(uri: "/test", method: .get, body: buffer) { response in
                 let expectedOutput = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
                 XCTAssertEqual(expectedOutput, response.body)

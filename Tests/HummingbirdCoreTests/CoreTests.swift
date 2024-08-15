@@ -33,7 +33,7 @@ class HummingBirdCoreTests: XCTestCase {
         #endif
     }()
 
-    func randomBuffer(size: Int) -> ByteBuffer {
+    static func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
         data = data.map { _ in UInt8.random(in: 0...255) }
         return ByteBufferAllocator().buffer(bytes: data)
@@ -187,7 +187,7 @@ class HummingBirdCoreTests: XCTestCase {
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "Hummingbird")
         ) { client in
-            let buffer = self.randomBuffer(size: 1_140_000)
+            let buffer = Self.randomBuffer(size: 1_140_000)
             let response = try await client.post("/", body: buffer)
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(body, buffer)
@@ -197,7 +197,7 @@ class HummingBirdCoreTests: XCTestCase {
     func testWriteBody() async throws {
         try await testServer(
             responder: { _, _ in
-                let buffer = self.randomBuffer(size: 1_140_000)
+                let buffer = Self.randomBuffer(size: 1_140_000)
                 return Response(status: .ok, body: .init(byteBuffer: buffer))
             },
             configuration: .init(address: .hostname(port: 0)),
@@ -219,7 +219,7 @@ class HummingBirdCoreTests: XCTestCase {
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "Hummingbird")
         ) { client in
-            let buffer = self.randomBuffer(size: 1_140_000)
+            let buffer = Self.randomBuffer(size: 1_140_000)
             let response = try await client.post("/", body: buffer)
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(body, buffer)
@@ -235,7 +235,7 @@ class HummingBirdCoreTests: XCTestCase {
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "Hummingbird")
         ) { client in
-            let buffer = self.randomBuffer(size: 1_140_000)
+            let buffer = Self.randomBuffer(size: 1_140_000)
             let response = try await client.post("/", body: buffer)
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(body, buffer)
@@ -264,7 +264,7 @@ class HummingBirdCoreTests: XCTestCase {
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "Hummingbird")
         ) { client in
-            let buffer = self.randomBuffer(size: 1_140_000)
+            let buffer = Self.randomBuffer(size: 1_140_000)
             let response = try await client.post("/", body: buffer)
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(body, buffer)
@@ -313,7 +313,7 @@ class HummingBirdCoreTests: XCTestCase {
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "Hummingbird")
         ) { client in
-            let buffer = self.randomBuffer(size: 32)
+            let buffer = Self.randomBuffer(size: 32)
             let response = try await client.post("/", body: buffer)
             XCTAssertEqual(response.status, .unavailableForLegalReasons)
         }
@@ -329,7 +329,7 @@ class HummingBirdCoreTests: XCTestCase {
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "Hummingbird")
         ) { client in
-            let buffer = self.randomBuffer(size: 16384)
+            let buffer = Self.randomBuffer(size: 16384)
             let response = try await client.post("/", body: buffer)
             XCTAssertEqual(response.status, .accepted)
             let response2 = try await client.post("/", body: buffer)
@@ -535,6 +535,8 @@ struct DelayAsyncSequence<CoreSequence: AsyncSequence>: AsyncSequence {
         .init(iterator: self.seq.makeAsyncIterator())
     }
 }
+
+extension DelayAsyncSequence: Sendable where CoreSequence: Sendable {}
 
 extension AsyncSequence {
     func delayed() -> DelayAsyncSequence<Self> {
