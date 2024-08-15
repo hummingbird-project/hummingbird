@@ -254,7 +254,7 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
                 self.logger.info("Server started and listening on socket path \(path)")
                 return (asyncChannel, quiescingHelper)
 
-#if canImport(Network)
+            #if canImport(Network)
             case .nwEndpoint(let endpoint):
                 guard let tsBootstrap = bootstrap as? NIOTSListenerBootstrap else {
                     preconditionFailure("Binding to a NWEndpoint is not available for ServerBootstrap. Please use NIOTSListenerBootstrap.")
@@ -270,7 +270,7 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
                 }
                 self.logger.info("Server started and listening on endpoint")
                 return (asyncChannel, quiescingHelper)
-#endif
+            #endif
             }
         } catch {
             // should we close the channel here
