@@ -253,6 +253,24 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
                 }
                 self.logger.info("Server started and listening on socket path \(path)")
                 return (asyncChannel, quiescingHelper)
+
+#if canImport(Network)
+            case .nwEndpoint(let endpoint):
+                guard let tsBootstrap = bootstrap as? NIOTSListenerBootstrap else {
+                    preconditionFailure("Binding to a NWEndpoint is not available for ServerBootstrap. Please use NIOTSListenerBootstrap.")
+                }
+                let asyncChannel = try await tsBootstrap.bind(
+                    endpoint: endpoint,
+                    serverBackPressureStrategy: nil
+                ) { channel in
+                    childChannelSetup.setup(
+                        channel: channel,
+                        logger: self.logger
+                    )
+                }
+                self.logger.info("Server started and listening on endpoint")
+                return (asyncChannel, quiescingHelper)
+#endif
             }
         } catch {
             // should we close the channel here
@@ -335,7 +353,7 @@ extension NIOTSListenerBootstrap: ServerBootstrapProtocol {
         serverBackPressureStrategy: NIOAsyncSequenceProducerBackPressureStrategies.HighLowWatermark?,
         childChannelInitializer: @escaping @Sendable (Channel) -> EventLoopFuture<Output>
     ) async throws -> NIOAsyncChannel<Output, Never> {
-        preconditionFailure("Binding to a unixDomainSocketPath is currently not available")
+        preconditionFailure("Binding to a unixDomainSocketPath is currently not available with NIOTSListenerBootstrap.")
     }
 }
 #endif
