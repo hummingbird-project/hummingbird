@@ -104,15 +104,10 @@ class URLEncodedFormNodeTests: XCTestCase {
     }
 }
 
-#if hasFeature(RetroactiveAttribute)
-extension URLEncodedFormNode: @retroactive ExpressibleByStringLiteral {}
-extension URLEncodedFormNode: @retroactive ExpressibleByDictionaryLiteral {}
-extension URLEncodedFormNode: @retroactive ExpressibleByArrayLiteral {}
-#else
 extension URLEncodedFormNode: ExpressibleByStringLiteral {}
 extension URLEncodedFormNode: ExpressibleByDictionaryLiteral {}
 extension URLEncodedFormNode: ExpressibleByArrayLiteral {}
-#endif
+
 extension URLEncodedFormNode {
     public typealias Key = String
     public typealias Value = URLEncodedFormNode

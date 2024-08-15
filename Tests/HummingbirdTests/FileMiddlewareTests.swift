@@ -19,13 +19,13 @@ import HummingbirdTesting
 import XCTest
 
 class FileMiddlewareTests: XCTestCase {
-    func randomBuffer(size: Int) -> ByteBuffer {
+    static func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
         data = data.map { _ in UInt8.random(in: 0...255) }
         return ByteBufferAllocator().buffer(bytes: data)
     }
 
-    var rfc1123Formatter: DateFormatter {
+    static var rfc1123Formatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "EEE, d MMM yyy HH:mm:ss z"
@@ -71,7 +71,7 @@ class FileMiddlewareTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
 
         let filename = "\(#function).txt"
-        let buffer = self.randomBuffer(size: 380_000)
+        let buffer = Self.randomBuffer(size: 380_000)
         let data = Data(buffer: buffer)
         let fileURL = URL(fileURLWithPath: filename)
         XCTAssertNoThrow(try data.write(to: fileURL))
@@ -90,7 +90,7 @@ class FileMiddlewareTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
 
         let filename = "\(#function).txt"
-        let buffer = self.randomBuffer(size: 326_000)
+        let buffer = Self.randomBuffer(size: 326_000)
         let data = Data(buffer: buffer)
         let fileURL = URL(fileURLWithPath: filename)
         XCTAssertNoThrow(try data.write(to: fileURL))
@@ -135,7 +135,7 @@ class FileMiddlewareTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
 
         let filename = "\(#function).txt"
-        let buffer = self.randomBuffer(size: 10000)
+        let buffer = Self.randomBuffer(size: 10000)
         let data = Data(buffer: buffer)
         let fileURL = URL(fileURLWithPath: filename)
         XCTAssertNoThrow(try data.write(to: fileURL))
@@ -183,7 +183,7 @@ class FileMiddlewareTests: XCTestCase {
                 XCTAssertEqual(response.headers[.contentLength], text.utf8.count.description)
                 XCTAssertEqual(response.headers[.contentType], "text/plain")
                 let responseDateString = try XCTUnwrap(response.headers[.lastModified])
-                let responseDate = try XCTUnwrap(self.rfc1123Formatter.date(from: responseDateString))
+                let responseDate = try XCTUnwrap(Self.rfc1123Formatter.date(from: responseDateString))
                 XCTAssert(date < responseDate + 2 && date > responseDate - 2)
             }
         }
@@ -195,7 +195,7 @@ class FileMiddlewareTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
 
         let filename = "\(#function).txt"
-        let buffer = self.randomBuffer(size: 16200)
+        let buffer = Self.randomBuffer(size: 16200)
         let data = Data(buffer: buffer)
         let fileURL = URL(fileURLWithPath: filename)
         XCTAssertNoThrow(try data.write(to: fileURL))
@@ -218,7 +218,7 @@ class FileMiddlewareTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
 
         let filename = "\(#function).txt"
-        let buffer = self.randomBuffer(size: 16200)
+        let buffer = Self.randomBuffer(size: 16200)
         let data = Data(buffer: buffer)
         let fileURL = URL(fileURLWithPath: filename)
         XCTAssertNoThrow(try data.write(to: fileURL))
@@ -248,7 +248,7 @@ class FileMiddlewareTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
 
         let filename = "\(#function).txt"
-        let buffer = self.randomBuffer(size: 16200)
+        let buffer = Self.randomBuffer(size: 16200)
         let data = Data(buffer: buffer)
         let fileURL = URL(fileURLWithPath: filename)
         XCTAssertNoThrow(try data.write(to: fileURL))
@@ -262,7 +262,7 @@ class FileMiddlewareTests: XCTestCase {
                 XCTAssertEqual(response.status, .notModified)
             }
             // one minute before current date
-            let date = try XCTUnwrap(self.rfc1123Formatter.string(from: Date(timeIntervalSinceNow: -60)))
+            let date = try XCTUnwrap(Self.rfc1123Formatter.string(from: Date(timeIntervalSinceNow: -60)))
             try await client.execute(uri: filename, method: .get, headers: [.ifModifiedSince: date]) { response in
                 XCTAssertEqual(response.status, .ok)
             }

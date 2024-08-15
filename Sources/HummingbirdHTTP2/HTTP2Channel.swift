@@ -81,16 +81,19 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
                 try NIOAsyncChannel<HTTP2Frame, HTTP2Frame>(wrappingChannelSynchronously: http2Channel)
             }
         } http2StreamInitializer: { http2ChildChannel -> EventLoopFuture<HTTP1Channel.Value> in
-            let childChannelHandlers: [ChannelHandler] =
-                self.additionalChannelHandlers() + [
-                    HTTPUserEventHandler(logger: logger),
-                ]
+            let childChannelHandlers: NIOLoopBound<[ChannelHandler]> =
+                .init(
+                    self.additionalChannelHandlers() + [
+                        HTTPUserEventHandler(logger: logger),
+                    ],
+                    eventLoop: channel.eventLoop
+                )
 
             return http2ChildChannel
                 .pipeline
                 .addHandler(HTTP2FramePayloadToHTTPServerCodec())
                 .flatMap {
-                    http2ChildChannel.pipeline.addHandlers(childChannelHandlers)
+                    http2ChildChannel.pipeline.addHandlers(childChannelHandlers.value)
                 }.flatMapThrowing {
                     try HTTP1Channel.Value(wrappingChannelSynchronously: http2ChildChannel)
                 }

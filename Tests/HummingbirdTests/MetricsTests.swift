@@ -14,65 +14,73 @@
 
 import Hummingbird
 import HummingbirdTesting
-import Metrics
+@preconcurrency import Metrics
 import NIOConcurrencyHelpers
 import XCTest
 
 final class TestMetrics: MetricsFactory {
     private let lock = NIOLock()
-    var counters = [String: CounterHandler]()
-    var recorders = [String: RecorderHandler]()
-    var timers = [String: TimerHandler]()
+    let counters = NIOLockedValueBox([String: CounterHandler]())
+    let recorders = NIOLockedValueBox([String: RecorderHandler]())
+    let timers = NIOLockedValueBox([String: TimerHandler]())
 
     public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
-        return self.make(label: label, dimensions: dimensions, registry: &self.counters, maker: TestCounter.init)
+        self.counters.withLockedValue { counters in
+            return self.make(label: label, dimensions: dimensions, registry: &counters, maker: TestCounter.init)
+        }
     }
 
     public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
         let maker = { (label: String, dimensions: [(String, String)]) -> RecorderHandler in
             TestRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
         }
-        return self.make(label: label, dimensions: dimensions, registry: &self.recorders, maker: maker)
+        return self.recorders.withLockedValue { recorders in
+            self.make(label: label, dimensions: dimensions, registry: &recorders, maker: maker)
+        }
     }
 
     public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
-        return self.make(label: label, dimensions: dimensions, registry: &self.timers, maker: TestTimer.init)
+        self.timers.withLockedValue { timers in
+            self.make(label: label, dimensions: dimensions, registry: &timers, maker: TestTimer.init)
+        }
     }
 
     private func make<Item>(label: String, dimensions: [(String, String)], registry: inout [String: Item], maker: (String, [(String, String)]) -> Item) -> Item {
-        return self.lock.withLock {
-            let item = maker(label, dimensions)
-            registry[label] = item
-            return item
-        }
+        let item = maker(label, dimensions)
+        registry[label] = item
+        return item
     }
 
     func destroyCounter(_ handler: CounterHandler) {
         if let testCounter = handler as? TestCounter {
-            self.counters.removeValue(forKey: testCounter.label)
+            _ = self.counters.withLockedValue { counters in
+                counters.removeValue(forKey: testCounter.label)
+            }
         }
     }
 
     func destroyRecorder(_ handler: RecorderHandler) {
         if let testRecorder = handler as? TestRecorder {
-            self.recorders.removeValue(forKey: testRecorder.label)
+            _ = self.recorders.withLockedValue { recorders in
+                recorders.removeValue(forKey: testRecorder.label)
+            }
         }
     }
 
     func destroyTimer(_ handler: TimerHandler) {
         if let testTimer = handler as? TestTimer {
-            self.timers.removeValue(forKey: testTimer.label)
+            _ = self.timers.withLockedValue { timers in
+                timers.removeValue(forKey: testTimer.label)
+            }
         }
     }
 }
 
-internal class TestCounter: CounterHandler, Equatable {
+internal final class TestCounter: CounterHandler, Equatable {
     let id: String
     let label: String
     let dimensions: [(String, String)]
-
-    let lock = NIOLock()
-    var values = [(Date, Int64)]()
+    let values = NIOLockedValueBox([(Date, Int64)]())
 
     init(label: String, dimensions: [(String, String)]) {
         self.id = NSUUID().uuidString
@@ -81,15 +89,15 @@ internal class TestCounter: CounterHandler, Equatable {
     }
 
     func increment(by amount: Int64) {
-        self.lock.withLock {
-            self.values.append((Date(), amount))
+        self.values.withLockedValue { values in
+            values.append((Date(), amount))
         }
         print("adding \(amount) to \(self.label)")
     }
 
     func reset() {
-        self.lock.withLock {
-            self.values = []
+        self.values.withLockedValue { values in
+            values = []
         }
         print("reseting \(self.label)")
     }
@@ -99,14 +107,12 @@ internal class TestCounter: CounterHandler, Equatable {
     }
 }
 
-internal class TestRecorder: RecorderHandler, Equatable {
+internal final class TestRecorder: RecorderHandler, Equatable {
     let id: String
     let label: String
     let dimensions: [(String, String)]
     let aggregate: Bool
-
-    let lock = NIOLock()
-    var values = [(Date, Double)]()
+    let values = NIOLockedValueBox([(Date, Double)]())
 
     init(label: String, dimensions: [(String, String)], aggregate: Bool) {
         self.id = NSUUID().uuidString
@@ -120,9 +126,9 @@ internal class TestRecorder: RecorderHandler, Equatable {
     }
 
     func record(_ value: Double) {
-        self.lock.withLock {
+        self.values.withLockedValue { values in
             // this may loose precision but good enough as an example
-            self.values.append((Date(), Double(value)))
+            values.append((Date(), Double(value)))
         }
         print("recording \(value) in \(self.label)")
     }
@@ -132,41 +138,41 @@ internal class TestRecorder: RecorderHandler, Equatable {
     }
 }
 
-internal class TestTimer: TimerHandler, Equatable {
+internal final class TestTimer: TimerHandler, Equatable {
     let id: String
     let label: String
-    var displayUnit: TimeUnit?
+    let displayUnit: NIOLockedValueBox<TimeUnit?>
     let dimensions: [(String, String)]
-
-    let lock = NIOLock()
-    var values = [(Date, Int64)]()
+    let values = NIOLockedValueBox([(Date, Int64)]())
 
     init(label: String, dimensions: [(String, String)]) {
         self.id = NSUUID().uuidString
         self.label = label
-        self.displayUnit = nil
+        self.displayUnit = .init(nil)
         self.dimensions = dimensions
     }
 
     func preferDisplayUnit(_ unit: TimeUnit) {
-        self.lock.withLock {
-            self.displayUnit = unit
+        self.displayUnit.withLockedValue { displayUnit in
+            displayUnit = unit
         }
     }
 
     func retriveValueInPreferredUnit(atIndex i: Int) -> Double {
-        return self.lock.withLock {
-            let value = self.values[i].1
-            guard let displayUnit = self.displayUnit else {
-                return Double(value)
+        return self.values.withLockedValue { values in
+            let value = values[i].1
+            return self.displayUnit.withLockedValue { displayUnit in
+                guard let displayUnit else {
+                    return Double(value)
+                }
+                return Double(value) / Double(displayUnit.scaleFromNanoseconds)
             }
-            return Double(value) / Double(displayUnit.scaleFromNanoseconds)
         }
     }
 
     func recordNanoseconds(_ duration: Int64) {
-        self.lock.withLock {
-            self.values.append((Date(), duration))
+        self.values.withLockedValue { values in
+            values.append((Date(), duration))
         }
         print("recording \(duration) \(self.label)")
     }
@@ -177,7 +183,7 @@ internal class TestTimer: TimerHandler, Equatable {
 }
 
 final class MetricsTests: XCTestCase {
-    static var testMetrics = TestMetrics()
+    static let testMetrics = TestMetrics()
 
     override class func setUp() {
         MetricsSystem.bootstrap(self.testMetrics)
@@ -194,8 +200,8 @@ final class MetricsTests: XCTestCase {
             try await client.execute(uri: "/hello", method: .get) { _ in }
         }
 
-        let counter = try XCTUnwrap(Self.testMetrics.counters["hb_requests"] as? TestCounter)
-        XCTAssertEqual(counter.values[0].1, 1)
+        let counter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb_requests"] as? TestCounter)
+        XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
         XCTAssertEqual(counter.dimensions[0].0, "hb_uri")
         XCTAssertEqual(counter.dimensions[0].1, "/hello")
         XCTAssertEqual(counter.dimensions[1].0, "hb_method")
@@ -213,9 +219,9 @@ final class MetricsTests: XCTestCase {
             try await client.execute(uri: "/hello", method: .get) { _ in }
         }
 
-        let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
-        XCTAssertEqual(counter.values.count, 1)
-        XCTAssertEqual(counter.values[0].1, 1)
+        let counter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb_errors"] as? TestCounter)
+        XCTAssertEqual(counter.values.withLockedValue { $0 }.count, 1)
+        XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
         XCTAssertEqual(counter.dimensions[0].0, "hb_uri")
         XCTAssertEqual(counter.dimensions[0].1, "/hello")
         XCTAssertEqual(counter.dimensions[1].0, "hb_method")
@@ -233,9 +239,9 @@ final class MetricsTests: XCTestCase {
             try await client.execute(uri: "/hello2", method: .get) { _ in }
         }
 
-        let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
-        XCTAssertEqual(counter.values.count, 1)
-        XCTAssertEqual(counter.values[0].1, 1)
+        let counter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb_errors"] as? TestCounter)
+        XCTAssertEqual(counter.values.withLockedValue { $0 }.count, 1)
+        XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
         XCTAssertEqual(counter.dimensions.count, 2)
         XCTAssertEqual(counter.dimensions[0].0, "hb_uri")
         XCTAssertEqual(counter.dimensions[0].1, "NotFound")
@@ -254,9 +260,9 @@ final class MetricsTests: XCTestCase {
             try await client.execute(uri: "/user/765", method: .get) { _ in }
         }
 
-        let counter = try XCTUnwrap(Self.testMetrics.counters["hb_errors"] as? TestCounter)
-        XCTAssertEqual(counter.values.count, 1)
-        XCTAssertEqual(counter.values[0].1, 1)
+        let counter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb_errors"] as? TestCounter)
+        XCTAssertEqual(counter.values.withLockedValue { $0 }.count, 1)
+        XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
         XCTAssertEqual(counter.dimensions.count, 2)
         XCTAssertEqual(counter.dimensions[0].0, "hb_uri")
         XCTAssertEqual(counter.dimensions[0].1, "/user/{id}")
@@ -277,7 +283,7 @@ final class MetricsTests: XCTestCase {
             try await client.execute(uri: "/hello", method: .get) { _ in }
         }
 
-        let timer = try XCTUnwrap(Self.testMetrics.timers["hb_request_duration"] as? TestTimer)
-        XCTAssertGreaterThan(timer.values[0].1, 5_000_000)
+        let timer = try XCTUnwrap(Self.testMetrics.timers.withLockedValue { $0 }["hb_request_duration"] as? TestTimer)
+        XCTAssertGreaterThan(timer.values.withLockedValue { $0 }[0].1, 5_000_000)
     }
 }

@@ -17,7 +17,7 @@ import HummingbirdTesting
 import XCTest
 
 class FileIOTests: XCTestCase {
-    func randomBuffer(size: Int) -> ByteBuffer {
+    static func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
         data = data.map { _ in UInt8.random(in: 0...255) }
         return ByteBufferAllocator().buffer(bytes: data)
@@ -30,7 +30,7 @@ class FileIOTests: XCTestCase {
             let body = try await fileIO.loadFile(path: "test.jpg", context: context)
             return .init(status: .ok, headers: [:], body: body)
         }
-        let buffer = self.randomBuffer(size: 320_003)
+        let buffer = Self.randomBuffer(size: 320_003)
         let data = Data(buffer: buffer)
         let fileURL = URL(fileURLWithPath: "test.jpg")
         XCTAssertNoThrow(try data.write(to: fileURL))
@@ -79,7 +79,7 @@ class FileIOTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
 
         try await app.test(.live) { client in
-            let buffer = self.randomBuffer(size: 400_000)
+            let buffer = Self.randomBuffer(size: 400_000)
             try await client.execute(uri: "/store", method: .put, body: buffer) { response in
                 XCTAssertEqual(response.status, .ok)
             }

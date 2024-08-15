@@ -117,7 +117,7 @@ public func withTimeout(_ timeout: TimeAmount, _ process: @escaping @Sendable ()
 }
 
 /// Promise type.
-actor Promise<Value> {
+actor Promise<Value: Sendable> {
     enum State {
         case blocked([CheckedContinuation<Value, Never>])
         case unblocked(Value)

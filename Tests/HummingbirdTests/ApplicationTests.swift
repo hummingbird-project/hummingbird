@@ -28,7 +28,7 @@ import ServiceLifecycle
 import XCTest
 
 final class ApplicationTests: XCTestCase {
-    func randomBuffer(size: Int) -> ByteBuffer {
+    static func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
         data = data.map { _ in UInt8.random(in: 0...255) }
         return ByteBufferAllocator().buffer(bytes: data)
@@ -241,7 +241,7 @@ final class ApplicationTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
-            let buffer = self.randomBuffer(size: 1_140_000)
+            let buffer = Self.randomBuffer(size: 1_140_000)
             try await client.execute(uri: "/echo-body", method: .post, body: buffer) { response in
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(response.body, buffer)
@@ -266,7 +266,7 @@ final class ApplicationTests: XCTestCase {
 
         try await app.test(.router) { client in
 
-            let buffer = self.randomBuffer(size: 640_001)
+            let buffer = Self.randomBuffer(size: 640_001)
             try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(response.body, buffer)
@@ -289,7 +289,7 @@ final class ApplicationTests: XCTestCase {
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
-            let buffer = self.randomBuffer(size: 64)
+            let buffer = Self.randomBuffer(size: 64)
             try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(response.body, buffer)
@@ -321,7 +321,7 @@ final class ApplicationTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
-            let buffer = self.randomBuffer(size: 512_000)
+            let buffer = Self.randomBuffer(size: 512_000)
             try await client.execute(uri: "/hello", method: .put, body: buffer) { response in
                 XCTAssertEqual(String(buffer: response.body), "512000")
                 XCTAssertEqual(response.status, .ok)
@@ -343,7 +343,7 @@ final class ApplicationTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
-            let buffer = self.randomBuffer(size: 100_000)
+            let buffer = Self.randomBuffer(size: 100_000)
             try await client.execute(uri: "/size", method: .post, body: buffer) { response in
                 XCTAssertEqual(String(buffer: response.body), "100000")
             }
@@ -361,7 +361,7 @@ final class ApplicationTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
-            let buffer = self.randomBuffer(size: 64)
+            let buffer = Self.randomBuffer(size: 64)
             try await client.execute(uri: "/echo-body", method: .post, body: buffer) { response in
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(response.body, buffer)
@@ -468,7 +468,7 @@ final class ApplicationTests: XCTestCase {
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.live) { client in
-            let buffer = self.randomBuffer(size: 128 * 1024)
+            let buffer = Self.randomBuffer(size: 128 * 1024)
             // check non streamed route throws an error
             try await client.execute(uri: "/upload", method: .post, body: buffer) { response in
                 XCTAssertEqual(response.status, .contentTooLarge)
@@ -686,7 +686,7 @@ final class ApplicationTests: XCTestCase {
 
     /// test we can create out own application type conforming to ApplicationProtocol
     func testBidirectionalStreaming() async throws {
-        let buffer = self.randomBuffer(size: 1024 * 1024)
+        let buffer = Self.randomBuffer(size: 1024 * 1024)
         let router = Router()
         router.post("/") { request, _ -> Response in
             .init(
