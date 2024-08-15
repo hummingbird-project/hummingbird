@@ -162,7 +162,7 @@ internal final class TestTimer: TimerHandler, Equatable {
         return self.values.withLockedValue { values in
             let value = values[i].1
             return self.displayUnit.withLockedValue { displayUnit in
-                guard let displayUnit = displayUnit else {
+                guard let displayUnit else {
                     return Double(value)
                 }
                 return Double(value) / Double(displayUnit.scaleFromNanoseconds)
@@ -200,7 +200,6 @@ final class MetricsTests: XCTestCase {
             try await client.execute(uri: "/hello", method: .get) { _ in }
         }
 
-        
         let counter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb_requests"] as? TestCounter)
         XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
         XCTAssertEqual(counter.dimensions[0].0, "hb_uri")
