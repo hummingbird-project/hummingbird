@@ -21,14 +21,6 @@ import Tracing
 import XCTest
 
 final class TracingTests: XCTestCase {
-    func wait(for expectations: [XCTestExpectation], timeout: TimeInterval) async {
-        #if (os(Linux) && swift(<5.10)) || swift(<5.8)
-        super.wait(for: expectations, timeout: timeout)
-        #else
-        await fulfillment(of: expectations, timeout: timeout)
-        #endif
-    }
-
     func testTracingMiddleware() async throws {
         let expectation = expectation(description: "Expected span to be ended.")
 
@@ -49,7 +41,7 @@ final class TracingTests: XCTestCase {
             }
         }
 
-        await self.wait(for: [expectation], timeout: 1)
+        await fulfillment(of: [expectation], timeout: 1)
 
         let span = try XCTUnwrap(tracer.spans.first)
 
@@ -87,7 +79,7 @@ final class TracingTests: XCTestCase {
             }
         }
 
-        await self.wait(for: [expectation], timeout: 1)
+        await fulfillment(of: [expectation], timeout: 1)
 
         let span = try XCTUnwrap(tracer.spans.first)
 
@@ -131,7 +123,7 @@ final class TracingTests: XCTestCase {
             }
         }
 
-        await self.wait(for: [expectation], timeout: 1)
+        await fulfillment(of: [expectation], timeout: 1)
 
         let span = try XCTUnwrap(tracer.spans.first)
 
@@ -176,7 +168,7 @@ final class TracingTests: XCTestCase {
             }
         }
 
-        await self.wait(for: [expectation], timeout: 1)
+        await fulfillment(of: [expectation], timeout: 1)
 
         let span = try XCTUnwrap(tracer.spans.first)
 
@@ -212,7 +204,7 @@ final class TracingTests: XCTestCase {
             }
         }
 
-        await self.wait(for: [expectation], timeout: 1)
+        await fulfillment(of: [expectation], timeout: 1)
 
         let span = try XCTUnwrap(tracer.spans.first)
 
@@ -264,7 +256,7 @@ final class TracingTests: XCTestCase {
             }
         }
 
-        await self.wait(for: [expectation], timeout: 1)
+        await fulfillment(of: [expectation], timeout: 1)
 
         let span = try XCTUnwrap(tracer.spans.first)
 
@@ -304,7 +296,7 @@ final class TracingTests: XCTestCase {
             }
         }
 
-        await self.wait(for: [expectation], timeout: 1)
+        await fulfillment(of: [expectation], timeout: 1)
 
         let span = try XCTUnwrap(tracer.spans.first)
 
@@ -340,7 +332,7 @@ final class TracingTests: XCTestCase {
             }
         }
 
-        await self.wait(for: [expectation], timeout: 1)
+        await fulfillment(of: [expectation], timeout: 1)
 
         let span = try XCTUnwrap(tracer.spans.first)
 
@@ -372,7 +364,7 @@ final class TracingTests: XCTestCase {
                 XCTAssertEqual(response.status, .notFound)
             }
         }
-        await self.wait(for: [expectation], timeout: 1)
+        await fulfillment(of: [expectation], timeout: 1)
 
         let span = try XCTUnwrap(tracer.spans.first)
 
@@ -420,7 +412,7 @@ final class TracingTests: XCTestCase {
             }
         }
 
-        await self.wait(for: [expectation], timeout: 1)
+        await fulfillment(of: [expectation], timeout: 1)
 
         let span = try XCTUnwrap(tracer.spans.first)
 
@@ -454,7 +446,7 @@ final class TracingTests: XCTestCase {
             }
         }
 
-        await self.wait(for: [expectation], timeout: 1)
+        await fulfillment(of: [expectation], timeout: 1)
 
         let span = try XCTUnwrap(tracer.spans.first)
         // Test tracer records span times in milliseconds
@@ -485,7 +477,7 @@ final class TracingTests: XCTestCase {
                 XCTAssertEqual(response.status, .ok)
             }
         }
-        await self.wait(for: [expectation], timeout: 1)
+        await fulfillment(of: [expectation], timeout: 1)
 
         XCTAssertEqual(tracer.spans.count, 2)
         let span = tracer.spans[0]
@@ -521,7 +513,7 @@ final class TracingTests: XCTestCase {
             }
         }
 
-        await self.wait(for: [expectation], timeout: 1)
+        await fulfillment(of: [expectation], timeout: 1)
 
         XCTAssertEqual(tracer.spans.count, 2)
         let span = tracer.spans[0]
@@ -569,7 +561,7 @@ final class TracingTests: XCTestCase {
             }
         }
 
-        await self.wait(for: [expectation], timeout: 1)
+        await fulfillment(of: [expectation], timeout: 1)
 
         XCTAssertEqual(tracer.spans.count, 2)
         let span2 = tracer.spans[1]
@@ -603,7 +595,7 @@ extension TracingTests {
             }
         }
 
-        await self.wait(for: [expectation], timeout: 1)
+        await fulfillment(of: [expectation], timeout: 1)
 
         XCTAssertEqual(tracer.spans.count, 2)
         let span = tracer.spans[0]
