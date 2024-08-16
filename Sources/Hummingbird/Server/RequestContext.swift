@@ -63,8 +63,9 @@ public protocol RequestContext: InitializableFromSource, RequestContextSource {
 
     /// Core context
     var coreContext: CoreRequestContextStorage { get set }
-    /// Maximum upload size allowed for routes that don't stream the request payload. This
-    /// limits how much memory would be used for one request
+    /// Maximum size of request body allowed when decoding requests. If a request body
+    /// that needs decoding is greater than this size then a Content Too Large (413)
+    /// response is returned. This only applies to decoding requests.
     var maxUploadSize: Int { get }
     /// Request decoder
     var requestDecoder: Decoder { get }
@@ -80,7 +81,7 @@ extension RequestContext {
         set { coreContext.logger = newValue }
     }
 
-    /// maxUploadSize
+    /// Maximum size of request body allowed when decoding requests.
     @inlinable
     public var maxUploadSize: Int { 2 * 1024 * 1024 }
     /// Endpoint path
