@@ -93,7 +93,7 @@ extension HTTPChannelHandler {
     }
 }
 
-/// Writes ByteBuffers to AsyncChannel outbound writer
+/// ResponseBodyWriter that writes ByteBuffers to AsyncChannel outbound writer
 struct HTTPServerBodyWriter: Sendable, ResponseBodyWriter {
     typealias Out = HTTPResponsePart
     /// The components of a HTTP response from the view of a HTTP server.
@@ -101,18 +101,15 @@ struct HTTPServerBodyWriter: Sendable, ResponseBodyWriter {
 
     let outbound: OutboundWriter
 
+    /// Write a single ByteBuffer
+    /// - Parameter buffer: single buffer to write
     func write(_ buffer: ByteBuffer) async throws {
         try await self.outbound.write(.body(buffer))
     }
-}
 
-extension NIOLockedValueBox {
-    /// Exchange stored value for new value and return the old stored value
-    func exchange(_ newValue: Value) -> Value {
-        self.withLockedValue { value in
-            let prevValue = value
-            value = newValue
-            return prevValue
-        }
+    /// Write a sequence of ByteBuffers
+    /// - Parameter buffers: Sequence of buffers
+    func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws {
+        try await self.outbound.write(contentsOf: buffers.map { .body($0) })
     }
 }

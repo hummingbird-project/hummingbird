@@ -15,10 +15,6 @@
 import HTTPTypes
 import NIOCore
 
-public protocol ResponseBodyWriter {
-    func write(_ buffer: ByteBuffer) async throws
-}
-
 /// Response body
 public struct ResponseBody: Sendable {
     public let write: @Sendable (any ResponseBodyWriter) async throws -> HTTPFields?
@@ -69,6 +65,18 @@ public struct ResponseBody: Sendable {
         _ write: @Sendable @escaping (any ResponseBodyWriter) async throws -> HTTPFields?
     ) -> Self {
         self.init(contentLength: contentLength, write: write)
+    }
+
+    /// Returns a ResponseBody containing the results of mapping the given closure over the sequence of
+    /// ByteBuffers written.
+    /// - Parameter transform: A mapping closure applied to every ByteBuffer in ResponseBody
+    /// - Returns: The transformed ResponseBody
+    public consuming func map(_ transform: @escaping @Sendable (ByteBuffer) async throws -> ByteBuffer) -> ResponseBody {
+        let body = self
+        return Self.withTrailingHeaders { writer in
+            let tailHeaders = try await body.write(writer.map(transform))
+            return tailHeaders
+        }
     }
 
     /// Create new response body that call a callback once original response body has been written
