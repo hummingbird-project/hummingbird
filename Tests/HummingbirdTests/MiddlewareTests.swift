@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2023 the Hummingbird authors
+// Copyright (c) 2021-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -160,6 +160,42 @@ final class MiddlewareTests: XCTestCase {
                     let transformWriter = TransformWriter(parentWriter: writer)
                     let tailHeaders = try await response.body.write(transformWriter)
                     return tailHeaders
+                }
+                return editedResponse
+            }
+        }
+        let router = Router()
+        router.group()
+            .add(middleware: TransformMiddleware())
+            .get("test") { request, _ in
+                return Response(status: .ok, body: .init(asyncSequence: request.body))
+            }
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.router) { client in
+            let buffer = Self.randomBuffer(size: 64000)
+            try await client.execute(uri: "/test", method: .get, body: buffer) { response in
+                let expectedOutput = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
+                XCTAssertEqual(expectedOutput, response.body)
+            }
+        }
+    }
+
+    func testMappedResponseBodyWriter() async throws {
+        struct TransformWriter: ResponseBodyWriter {
+            let parentWriter: any ResponseBodyWriter
+
+            func write(_ buffer: ByteBuffer) async throws {
+                let output = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
+                try await self.parentWriter.write(output)
+            }
+        }
+        struct TransformMiddleware<Context: RequestContext>: RouterMiddleware {
+            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+                let response = try await next(request, context)
+                var editedResponse = response
+                editedResponse.body = editedResponse.body.map {
+                    return ByteBuffer(bytes: $0.readableBytesView.map { $0 ^ 255 })
                 }
                 return editedResponse
             }
