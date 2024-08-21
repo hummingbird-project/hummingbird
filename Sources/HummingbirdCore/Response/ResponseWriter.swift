@@ -37,7 +37,7 @@ public struct ResponseWriter: ~Copyable {
     /// - Parameter head: Informational response head
     @inlinable
     public func writeInformationalHead(_ head: HTTPResponse) async throws {
-        precondition((100..<200).contains(head.status.code), "Informational HTTP responses require a status code between 100 and 199")
+        precondition((100..<200).contains(head.status.code), "Informational HTTP responses require a status code in the range of 100 through 199")
         try await self.outbound.write(.head(head))
     }
 
