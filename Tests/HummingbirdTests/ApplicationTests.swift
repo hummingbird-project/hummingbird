@@ -697,6 +697,7 @@ final class ApplicationTests: XCTestCase {
                             bytes: buffer.readableBytesView.map { $0 ^ 0xFF })
                         try await writer.write(processed)
                     }
+                    try await writer.finish(nil)
                 }
             )
         }

@@ -28,14 +28,15 @@ public struct ResponseBody: Sendable {
     public init(contentLength: Int? = nil, _ write: @Sendable @escaping (any ResponseBodyWriter) async throws -> Void) {
         self._write = { writer in
             try await write(writer)
-            try await writer.finish(nil)
         }
         self.contentLength = contentLength
     }
 
     /// Initialise empty ResponseBody
     public init() {
-        self.init(contentLength: 0) { _ in }
+        self.init(contentLength: 0) { writer in
+            try await writer.finish(nil)
+        }
     }
 
     /// Initialise ResponseBody that contains a single ByteBuffer
@@ -43,6 +44,7 @@ public struct ResponseBody: Sendable {
     public init(byteBuffer: ByteBuffer) {
         self.init(contentLength: byteBuffer.readableBytes) { writer in
             try await writer.write(byteBuffer)
+            try await writer.finish(nil)
         }
     }
 
@@ -53,22 +55,8 @@ public struct ResponseBody: Sendable {
             for try await buffer in asyncSequence {
                 try await writer.write(buffer)
             }
-            return
+            try await writer.finish(nil)
         }
-    }
-
-    /// Create ResponseBody that returns trailing headers from its closure once all the
-    /// body parts have been written
-    /// - Parameters:
-    ///   - contentLength: Optional length of body
-    ///   - write: closure provided with `writer` type that can be used to write to response body
-    ///         trailing headers are returned from the closure after all the body parts have been
-    ///         written
-    public static func withTrailingHeaders(
-        contentLength: Int? = nil,
-        _ write: @Sendable @escaping (any ResponseBodyWriter) async throws -> HTTPFields?
-    ) -> Self {
-        self.init(contentLength: contentLength, write: write)
     }
 
     @inlinable
@@ -105,17 +93,5 @@ public struct ResponseBody: Sendable {
             }
             return
         }
-    }
-
-    /// Initialise ResponseBody with closure writing body contents
-    ///
-    /// This version of init is private and only available via ``withTrailingHeaders`` because
-    /// if it is public the compiler gets confused when a complex closure is provided.
-    private init(contentLength: Int? = nil, write: @Sendable @escaping (any ResponseBodyWriter) async throws -> HTTPFields?) {
-        self._write = {
-            let trailingHeaders = try await write($0)
-            try await $0.finish(trailingHeaders)
-        }
-        self.contentLength = contentLength
     }
 }

@@ -139,6 +139,8 @@ final class MiddlewareTests: XCTestCase {
             }
 
             func finish(_ trailingHeaders: HTTPFields?) async throws {
+                var trailingHeaders = trailingHeaders ?? [:]
+                trailingHeaders[.middleware2] = "test2"
                 try await self.parentWriter.finish(trailingHeaders)
             }
         }
@@ -157,7 +159,10 @@ final class MiddlewareTests: XCTestCase {
             RouteGroup("") {
                 TransformMiddleware()
                 Get("test") { request, _ in
-                    return Response(status: .ok, body: .init(asyncSequence: request.body))
+                    Response(status: .ok, body: .init { writer in
+                        try await writer.write(request.body)
+                        try await writer.finish([.middleware: "test"])
+                    })
                 }
             }
         }
@@ -166,6 +171,8 @@ final class MiddlewareTests: XCTestCase {
         try await app.test(.router) { client in
             let buffer = Self.randomBuffer(size: 64000)
             try await client.execute(uri: "/test", method: .get, body: buffer) { response in
+                XCTAssertEqual(response.trailerHeaders?[.middleware], "test")
+                XCTAssertEqual(response.trailerHeaders?[.middleware2], "test2")
                 let expectedOutput = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
                 XCTAssertEqual(expectedOutput, response.body)
             }
