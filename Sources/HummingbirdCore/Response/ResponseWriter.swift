@@ -21,18 +21,29 @@ public struct ResponseWriter {
     @usableFromInline
     let outbound: NIOAsyncChannelOutboundWriter<HTTPResponsePart>
 
+    /// Write HTTP head part and return ``ResponseBodyWriter`` to write response body
+    ///
+    /// - Parameter head: Response head
+    /// - Returns: Response body writer used to write HTTP response body
     @inlinable
     public consuming func writeHead(_ head: HTTPResponse) async throws -> some ResponseBodyWriter {
         try await self.outbound.write(.head(head))
         return RootResponseBodyWriter(outbound: self.outbound)
     }
 
+    /// Write Informational HTTP head part
+    ///
+    /// Calling this with a non informational HTTP response head will cause a precondition error
+    /// - Parameter head: Informational response head
     @inlinable
-    public consuming func writeInformationalHead(_ head: HTTPResponse) async throws {
+    public func writeInformationalHead(_ head: HTTPResponse) async throws {
         precondition((100..<200).contains(head.status.code), "Informational HTTP responses require a status code between 100 and 199")
         try await self.outbound.write(.head(head))
     }
 
+    /// Write full HTTP response that doesn't include a body
+    ///
+    /// - Parameter head: Response head
     @inlinable
     public consuming func writeResponse(_ head: HTTPResponse) async throws {
         try await self.outbound.write(contentsOf: [.head(head), .end(nil)])
