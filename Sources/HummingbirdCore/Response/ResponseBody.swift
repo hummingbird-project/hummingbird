@@ -21,7 +21,17 @@ public struct ResponseBody: Sendable {
     let _write: @Sendable (any ResponseBodyWriter) async throws -> Void
     public let contentLength: Int?
 
-    /// Initialise ResponseBody with closure writing body contents
+    /// Initialise ResponseBody with closure writing body contents.
+    /// 
+    /// When you have finished writing the response body you need to indicate you 
+    /// have finished by calling ``ResponseBodyWriter.finish``. At this point you can also
+    /// send trailing headers by including them as a parameter in the finsh() call. 
+    /// ```
+    /// let responseBody = ResponseBody(contentLength: contentLength) { writer in
+    ///     try await writer.write(buffer)
+    ///     try await writer.finish()
+    /// }
+    /// ```
     /// - Parameters:
     ///   - contentLength: Optional length of body
     ///   - write: closure provided with `writer` type that can be used to write to response body
@@ -75,7 +85,7 @@ public struct ResponseBody: Sendable {
         }
     }
 
-    /// Create new response body that call a callback once original response body has been written
+    /// Create new response body that calls a closure once original response body has been written
     /// to the channel
     ///
     /// When you return a response from a handler, this cannot be considered to be the point the
