@@ -126,9 +126,9 @@ class HummingBirdCoreTests: XCTestCase {
         @Sendable func helloResponder(to request: Request, responseWriter: ResponseWriter, channel: Channel) async throws {
             try? await Task.sleep(for: .milliseconds(10))
             let responseBody = channel.allocator.buffer(string: "Hello")
-            try await responseWriter.write(.head(.init(status: .ok)))
-            try await responseWriter.write(.body(responseBody))
-            try await responseWriter.write(.end(nil))
+            let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+            try await bodyWriter.write(responseBody)
+            try await bodyWriter.finish(nil)
         }
         let availableConnectionsDelegate = TestMaximumAvailableConnections(10)
         try await testServer(
@@ -166,11 +166,11 @@ class HummingBirdCoreTests: XCTestCase {
             responder: { request, responseWriter, _ in
                 do {
                     let buffer = try await request.body.collect(upTo: .max)
-                    try await responseWriter.write(.head(.init(status: .ok)))
-                    try await responseWriter.write(.body(buffer))
-                    try await responseWriter.write(.end(nil))
+                    let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                    try await bodyWriter.write(buffer)
+                    try await bodyWriter.finish(nil)
                 } catch {
-                    try await responseWriter.write([.head(.init(status: .contentTooLarge)), .end(nil)])
+                    try await responseWriter.writeResponse(.init(status: .contentTooLarge))
                 }
             },
             configuration: .init(address: .hostname(port: 0)),
@@ -188,9 +188,9 @@ class HummingBirdCoreTests: XCTestCase {
         try await testServer(
             responder: { _, responseWriter, _ in
                 let buffer = Self.randomBuffer(size: 1_140_000)
-                try await responseWriter.write(.head(.init(status: .ok)))
-                try await responseWriter.write(.body(buffer))
-                try await responseWriter.write(.end(nil))
+                let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                try await bodyWriter.write(buffer)
+                try await bodyWriter.finish(nil)
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
@@ -205,9 +205,9 @@ class HummingBirdCoreTests: XCTestCase {
     func testStreamBody() async throws {
         try await testServer(
             responder: { request, responseWriter, _ in
-                try await responseWriter.write(.head(.init(status: .ok)))
-                try await responseWriter.write(request.body.map { .body($0) })
-                try await responseWriter.write(.end(nil))
+                let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                try await bodyWriter.write(request.body)
+                try await bodyWriter.finish(nil)
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
@@ -223,9 +223,9 @@ class HummingBirdCoreTests: XCTestCase {
     func testStreamBodyWriteSlow() async throws {
         try await testServer(
             responder: { request, responseWriter, _ in
-                try await responseWriter.write(.head(.init(status: .ok)))
-                try await responseWriter.write(request.body.delayed().map { .body($0) })
-                try await responseWriter.write(.end(nil))
+                let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                try await bodyWriter.write(request.body.delayed())
+                try await bodyWriter.finish(nil)
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
@@ -253,9 +253,9 @@ class HummingBirdCoreTests: XCTestCase {
         }
         try await testServer(
             responder: { request, responseWriter, _ in
-                try await responseWriter.write(.head(.init(status: .ok)))
-                try await responseWriter.write(request.body.delayed().map { .body($0) })
-                try await responseWriter.write(.end(nil))
+                let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                try await bodyWriter.write(request.body.delayed())
+                try await bodyWriter.finish(nil)
             },
             httpChannelSetup: .http1(additionalChannelHandlers: [SlowInputChannelHandler()]),
             configuration: .init(address: .hostname(port: 0)),
@@ -272,7 +272,8 @@ class HummingBirdCoreTests: XCTestCase {
     func testTrailerHeaders() async throws {
         try await testServer(
             responder: { _, responseWriter, _ in
-                try await responseWriter.write([.head(.init(status: .ok)), .end([.contentType: "text"])])
+                let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                try await bodyWriter.finish([.contentType: "text"])
             },
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
@@ -302,13 +303,13 @@ class HummingBirdCoreTests: XCTestCase {
                 do {
                     _ = try await request.body.collect(upTo: .max)
                 } catch is TestChannelHandlerError {
-                    try await responseWriter.write([.head(.init(status: .unavailableForLegalReasons)), .end(nil)])
+                    try await responseWriter.writeResponse(.init(status: .unavailableForLegalReasons))
                     return
                 } catch {
-                    try await responseWriter.write([.head(.init(status: .contentTooLarge)), .end(nil)])
+                    try await responseWriter.writeResponse(.init(status: .contentTooLarge))
                     return
                 }
-                try await responseWriter.write([.head(.init(status: .ok)), .end(nil)])
+                try await responseWriter.writeResponse(.init(status: .ok))
             },
             httpChannelSetup: .http1(additionalChannelHandlers: [CreateErrorHandler()]),
             configuration: .init(address: .hostname(port: 0)),
@@ -325,7 +326,7 @@ class HummingBirdCoreTests: XCTestCase {
         try await testServer(
             responder: { _, responseWriter, _ in
                 // ignore request body
-                try await responseWriter.write([.head(.init(status: .accepted)), .end(nil)])
+                try await responseWriter.writeResponse(.init(status: .accepted))
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
@@ -376,10 +377,10 @@ class HummingBirdCoreTests: XCTestCase {
                 do {
                     _ = try await request.body.collect(upTo: .max)
                 } catch {
-                    try await responseWriter.write([.head(.init(status: .contentTooLarge)), .end(nil)])
+                    try await responseWriter.writeResponse(.init(status: .contentTooLarge))
                     return
                 }
-                try await responseWriter.write([.head(.init(status: .ok)), .end(nil)])
+                try await responseWriter.writeResponse(.init(status: .ok))
             },
             httpChannelSetup: .http1(additionalChannelHandlers: [HTTPServerIncompleteRequest(), IdleStateHandler(readTimeout: .seconds(1))]),
             configuration: .init(address: .hostname(port: 0)),
@@ -411,10 +412,10 @@ class HummingBirdCoreTests: XCTestCase {
                 do {
                     _ = try await request.body.collect(upTo: .max)
                 } catch {
-                    try await responseWriter.write([.head(.init(status: .contentTooLarge)), .end(nil)])
+                    try await responseWriter.writeResponse(.init(status: .contentTooLarge))
                     return
                 }
-                try await responseWriter.write([.head(.init(status: .ok)), .end(nil)])
+                try await responseWriter.writeResponse(.init(status: .ok))
             },
             httpChannelSetup: .http1(additionalChannelHandlers: [HTTPServerIncompleteRequest(), IdleStateHandler(readTimeout: .seconds(1))]),
             configuration: .init(address: .hostname(port: 0)),
@@ -454,10 +455,10 @@ class HummingBirdCoreTests: XCTestCase {
                 do {
                     _ = try await request.body.collect(upTo: .max)
                 } catch {
-                    try await responseWriter.write([.head(.init(status: .contentTooLarge)), .end(nil)])
+                    try await responseWriter.writeResponse(.init(status: .contentTooLarge))
                     return
                 }
-                try await responseWriter.write([.head(.init(status: .ok)), .end(nil)])
+                try await responseWriter.writeResponse(.init(status: .ok))
             },
             httpChannelSetup: .http1(additionalChannelHandlers: [HTTPServerIncompleteRequest(), IdleStateHandler(readTimeout: .seconds(1))]),
             configuration: .init(address: .hostname(port: 0)),
@@ -485,9 +486,9 @@ class HummingBirdCoreTests: XCTestCase {
             ) { request, responseWriter, _ in
                 await handlerPromise.complete(())
                 try? await Task.sleep(for: .milliseconds(500))
-                try await responseWriter.write(.head(.init(status: .ok)))
-                try await responseWriter.write(request.body.delayed().map { .body($0) })
-                try await responseWriter.write(.end(nil))
+                let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                try await bodyWriter.write(request.body.delayed())
+                try await bodyWriter.finish(nil)
             } onServerRunning: {
                 await portPromise.complete($0.localAddress!.port!)
             }

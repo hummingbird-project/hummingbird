@@ -126,9 +126,8 @@ extension ApplicationProtocol {
                 response.headers[.server] = serverName
             }
             // Write response
-            try await responseWriter.write(.head(response.head))
-            let tailHeaders = try await response.body.write(RootResponseBodyWriter(writer: responseWriter))
-            try await responseWriter.write(.end(tailHeaders))
+            let bodyWriter = try await responseWriter.writeHead(response.head)
+            try await response.body.write(bodyWriter)
         } onServerRunning: {
             await self.onServerRunning($0)
         }
@@ -303,14 +302,5 @@ extension Logger {
         var logger = self
         logger[metadataKey: metadataKey] = value
         return logger
-    }
-}
-
-/// Response body writer that writes body directly to the AsyncChannel ResponseWriter
-struct RootResponseBodyWriter: ResponseBodyWriter {
-    let writer: ResponseWriter
-
-    func write(_ buffer: ByteBuffer) async throws {
-        try await self.writer.write(.body(buffer))
     }
 }

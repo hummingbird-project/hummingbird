@@ -750,6 +750,8 @@ final class ApplicationTests: XCTestCase {
                     collated.writeImmutableBuffer(buffer)
                 }
             }
+
+            func finish(_: HTTPFields?) async throws {}
         }
 
         let messages = [
