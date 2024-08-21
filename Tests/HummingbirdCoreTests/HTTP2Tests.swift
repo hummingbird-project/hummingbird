@@ -31,7 +31,7 @@ class HummingBirdHTTP2Tests: XCTestCase {
         var logger = Logger(label: "Hummingbird")
         logger.logLevel = .trace
         try await testServer(
-            responder: { _, responseWriter, _ in
+            responder: { (_, responseWriter: consuming ResponseWriter, _) in
                 try await responseWriter.writeResponse(.init(status: .ok))
             },
             httpChannelSetup: .http2Upgrade(tlsConfiguration: getServerTLSConfiguration()),

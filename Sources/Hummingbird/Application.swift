@@ -101,7 +101,7 @@ extension ApplicationProtocol {
             configuration: self.configuration.httpServer,
             eventLoopGroup: self.eventLoopGroup,
             logger: self.logger
-        ) { request, responseWriter, channel in
+        ) { (request, responseWriter: consuming ResponseWriter, channel) in
             let logger = self.logger.with(metadataKey: "hb_id", value: .stringConvertible(RequestID()))
             let context = Self.Responder.Context(
                 source: .init(

@@ -123,7 +123,7 @@ class HummingBirdCoreTests: XCTestCase {
             }
         }
         /// Basic responder that waits 10 milliseconds and returns "Hello" in body
-        @Sendable func helloResponder(to request: Request, responseWriter: ResponseWriter, channel: Channel) async throws {
+        @Sendable func helloResponder(to request: Request, responseWriter: consuming ResponseWriter, channel: Channel) async throws {
             try? await Task.sleep(for: .milliseconds(10))
             let responseBody = channel.allocator.buffer(string: "Hello")
             let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
@@ -163,15 +163,17 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testConsumeBody() async throws {
         try await testServer(
-            responder: { request, responseWriter, _ in
+            responder: { (request, responseWriter: consuming ResponseWriter, _) in
+                let buffer: ByteBuffer
                 do {
-                    let buffer = try await request.body.collect(upTo: .max)
-                    let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
-                    try await bodyWriter.write(buffer)
-                    try await bodyWriter.finish(nil)
+                    buffer = try await request.body.collect(upTo: .max)
                 } catch {
                     try await responseWriter.writeResponse(.init(status: .contentTooLarge))
+                    return
                 }
+                let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                try await bodyWriter.write(buffer)
+                try await bodyWriter.finish(nil)
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
@@ -186,7 +188,7 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testWriteBody() async throws {
         try await testServer(
-            responder: { _, responseWriter, _ in
+            responder: { (_, responseWriter: consuming ResponseWriter, _) in
                 let buffer = Self.randomBuffer(size: 1_140_000)
                 let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
                 try await bodyWriter.write(buffer)
@@ -204,7 +206,7 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testStreamBody() async throws {
         try await testServer(
-            responder: { request, responseWriter, _ in
+            responder: { (request, responseWriter: consuming ResponseWriter, _) in
                 let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
                 try await bodyWriter.write(request.body)
                 try await bodyWriter.finish(nil)
@@ -222,7 +224,7 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testStreamBodyWriteSlow() async throws {
         try await testServer(
-            responder: { request, responseWriter, _ in
+            responder: { (request, responseWriter: consuming ResponseWriter, _) in
                 let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
                 try await bodyWriter.write(request.body.delayed())
                 try await bodyWriter.finish(nil)
@@ -252,7 +254,7 @@ class HummingBirdCoreTests: XCTestCase {
             }
         }
         try await testServer(
-            responder: { request, responseWriter, _ in
+            responder: { (request, responseWriter: consuming ResponseWriter, _) in
                 let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
                 try await bodyWriter.write(request.body.delayed())
                 try await bodyWriter.finish(nil)
@@ -271,7 +273,7 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testTrailerHeaders() async throws {
         try await testServer(
-            responder: { _, responseWriter, _ in
+            responder: { (_, responseWriter: consuming ResponseWriter, _) in
                 let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
                 try await bodyWriter.finish([.contentType: "text"])
             },
@@ -299,7 +301,7 @@ class HummingBirdCoreTests: XCTestCase {
             }
         }
         try await testServer(
-            responder: { request, responseWriter, _ in
+            responder: { (request, responseWriter: consuming ResponseWriter, _) in
                 do {
                     _ = try await request.body.collect(upTo: .max)
                 } catch is TestChannelHandlerError {
@@ -324,7 +326,7 @@ class HummingBirdCoreTests: XCTestCase {
 
     func testDropRequestBody() async throws {
         try await testServer(
-            responder: { _, responseWriter, _ in
+            responder: { (_, responseWriter: consuming ResponseWriter, _) in
                 // ignore request body
                 try await responseWriter.writeResponse(.init(status: .accepted))
             },
@@ -373,7 +375,7 @@ class HummingBirdCoreTests: XCTestCase {
             }
         }
         try await testServer(
-            responder: { request, responseWriter, _ in
+            responder: { (request, responseWriter: consuming ResponseWriter, _) in
                 do {
                     _ = try await request.body.collect(upTo: .max)
                 } catch {
@@ -382,7 +384,10 @@ class HummingBirdCoreTests: XCTestCase {
                 }
                 try await responseWriter.writeResponse(.init(status: .ok))
             },
-            httpChannelSetup: .http1(additionalChannelHandlers: [HTTPServerIncompleteRequest(), IdleStateHandler(readTimeout: .seconds(1))]),
+            httpChannelSetup: .http1(additionalChannelHandlers: [
+                HTTPServerIncompleteRequest(),
+                IdleStateHandler(readTimeout: .seconds(1)),
+            ]),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "Hummingbird")
@@ -408,7 +413,7 @@ class HummingBirdCoreTests: XCTestCase {
             func channelRead(context: ChannelHandlerContext, data: NIOAny) {}
         }
         try await testServer(
-            responder: { request, responseWriter, _ in
+            responder: { (request, responseWriter: consuming ResponseWriter, _) in
                 do {
                     _ = try await request.body.collect(upTo: .max)
                 } catch {
@@ -417,7 +422,10 @@ class HummingBirdCoreTests: XCTestCase {
                 }
                 try await responseWriter.writeResponse(.init(status: .ok))
             },
-            httpChannelSetup: .http1(additionalChannelHandlers: [HTTPServerIncompleteRequest(), IdleStateHandler(readTimeout: .seconds(1))]),
+            httpChannelSetup: .http1(additionalChannelHandlers: [
+                HTTPServerIncompleteRequest(),
+                IdleStateHandler(readTimeout: .seconds(1)),
+            ]),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "Hummingbird")
@@ -451,7 +459,7 @@ class HummingBirdCoreTests: XCTestCase {
             }
         }
         try await testServer(
-            responder: { request, responseWriter, _ in
+            responder: { (request, responseWriter: consuming ResponseWriter, _) in
                 do {
                     _ = try await request.body.collect(upTo: .max)
                 } catch {
@@ -460,7 +468,10 @@ class HummingBirdCoreTests: XCTestCase {
                 }
                 try await responseWriter.writeResponse(.init(status: .ok))
             },
-            httpChannelSetup: .http1(additionalChannelHandlers: [HTTPServerIncompleteRequest(), IdleStateHandler(readTimeout: .seconds(1))]),
+            httpChannelSetup: .http1(additionalChannelHandlers: [
+                HTTPServerIncompleteRequest(),
+                IdleStateHandler(readTimeout: .seconds(1)),
+            ]),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "Hummingbird")
@@ -483,7 +494,7 @@ class HummingBirdCoreTests: XCTestCase {
                 configuration: .init(address: .hostname(port: 0)),
                 eventLoopGroup: Self.eventLoopGroup,
                 logger: logger
-            ) { request, responseWriter, _ in
+            ) { (request, responseWriter: consuming ResponseWriter, _) in
                 await handlerPromise.complete(())
                 try? await Task.sleep(for: .milliseconds(500))
                 let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
