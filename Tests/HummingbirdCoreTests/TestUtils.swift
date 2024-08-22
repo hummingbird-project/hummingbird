@@ -25,9 +25,11 @@ public enum TestErrors: Error {
 }
 
 /// Basic responder that just returns "Hello" in body
-@Sendable public func helloResponder(to request: Request, channel: Channel) async -> Response {
+@Sendable public func helloResponder(to request: Request, responseWriter: consuming ResponseWriter, channel: Channel) async throws {
     let responseBody = channel.allocator.buffer(string: "Hello")
-    return Response(status: .ok, body: .init(byteBuffer: responseBody))
+    let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+    try await bodyWriter.write(responseBody)
+    try await bodyWriter.finish(nil)
 }
 
 /// Helper function for testing a server

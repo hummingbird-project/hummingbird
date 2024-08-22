@@ -119,9 +119,9 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
                         response = Response(status: .internalServerError)
                     }
                     let responseWriter = RouterResponseWriter()
-                    let trailerHeaders = try await response.body.write(responseWriter)
-                    return responseWriter.collated.withLockedValue { collated in
-                        TestResponse(head: response.head, body: collated, trailerHeaders: trailerHeaders)
+                    try await response.body.write(responseWriter)
+                    return responseWriter.values.withLockedValue { values in
+                        TestResponse(head: response.head, body: values.body, trailerHeaders: values.trailingHeaders)
                     }
                 }
 
@@ -141,15 +141,21 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
     }
 
     final class RouterResponseWriter: ResponseBodyWriter {
-        let collated: NIOLockedValueBox<ByteBuffer>
+        let values: NIOLockedValueBox<(body: ByteBuffer, trailingHeaders: HTTPFields?)>
 
         init() {
-            self.collated = .init(.init())
+            self.values = .init((body: .init(), trailingHeaders: nil))
         }
 
         func write(_ buffer: ByteBuffer) async throws {
-            _ = self.collated.withLockedValue { collated in
-                collated.writeImmutableBuffer(buffer)
+            _ = self.values.withLockedValue { values in
+                values.body.writeImmutableBuffer(buffer)
+            }
+        }
+
+        func finish(_ headers: HTTPTypes.HTTPFields?) async throws {
+            self.values.withLockedValue { values in
+                values.trailingHeaders = headers
             }
         }
     }

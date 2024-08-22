@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import NIOCore
 
 /// HTTP Response Body part writer
@@ -22,6 +23,9 @@ public protocol ResponseBodyWriter {
     /// Write a sequence of ByteBuffers
     /// - Parameter buffers: Sequence of buffers
     func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws
+    /// Finish writing body
+    /// - Parameter trailingHeaders: Any trailing headers you want to include at end
+    consuming func finish(_ trailingHeaders: HTTPFields?) async throws
 }
 
 extension ResponseBodyWriter {
@@ -30,6 +34,15 @@ extension ResponseBodyWriter {
     public func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws {
         for part in buffers {
             try await self.write(part)
+        }
+    }
+
+    ///  Write AsyncSequence of ByteBuffers
+    /// - Parameter buffers: ByteBuffer AsyncSequence
+    @inlinable
+    public func write<BufferSequence: AsyncSequence>(_ buffers: BufferSequence) async throws where BufferSequence.Element == ByteBuffer {
+        for try await buffer in buffers {
+            try await self.write(buffer)
         }
     }
 }
@@ -50,6 +63,12 @@ struct MappedResponseBodyWriter<ParentWriter: ResponseBodyWriter>: ResponseBodyW
         for part in buffers {
             try await self.parentWriter.write(self.transform(part))
         }
+    }
+
+    /// Finish writing body
+    /// - Parameter trailingHeaders: Any trailing headers you want to include at end
+    consuming func finish(_ trailingHeaders: HTTPFields?) async throws {
+        try await self.parentWriter.finish(trailingHeaders)
     }
 }
 

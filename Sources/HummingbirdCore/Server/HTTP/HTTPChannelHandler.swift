@@ -21,7 +21,7 @@ import ServiceLifecycle
 
 /// Protocol for HTTP channels
 public protocol HTTPChannelHandler: ServerChildChannel {
-    typealias Responder = @Sendable (Request, Channel) async -> Response
+    typealias Responder = @Sendable (Request, consuming ResponseWriter, Channel) async throws -> Void
     var responder: Responder { get }
 }
 
@@ -37,7 +37,6 @@ extension HTTPChannelHandler {
         do {
             try await withTaskCancellationHandler {
                 try await asyncChannel.executeThenClose { inbound, outbound in
-                    let responseWriter = HTTPServerBodyWriter(outbound: outbound)
                     var iterator = inbound.makeAsyncIterator()
 
                     // read first part, verify it is a head
@@ -49,11 +48,9 @@ extension HTTPChannelHandler {
                     while true {
                         let bodyStream = NIOAsyncChannelRequestBody(iterator: iterator)
                         let request = Request(head: head, body: .init(asyncSequence: bodyStream))
-                        let response = await self.responder(request, asyncChannel.channel)
+                        let responseWriter = ResponseWriter(outbound: outbound)
                         do {
-                            try await outbound.write(.head(response.head))
-                            let tailHeaders = try await response.body.write(responseWriter)
-                            try await outbound.write(.end(tailHeaders))
+                            try await self.responder(request, responseWriter, asyncChannel.channel)
                         } catch {
                             throw error
                         }
@@ -90,26 +87,5 @@ extension HTTPChannelHandler {
             // we got here because we failed to either read or write to the channel
             logger.trace("Failed to read/write to Channel. Error: \(error)")
         }
-    }
-}
-
-/// ResponseBodyWriter that writes ByteBuffers to AsyncChannel outbound writer
-struct HTTPServerBodyWriter: Sendable, ResponseBodyWriter {
-    typealias Out = HTTPResponsePart
-    /// The components of a HTTP response from the view of a HTTP server.
-    public typealias OutboundWriter = NIOAsyncChannelOutboundWriter<Out>
-
-    let outbound: OutboundWriter
-
-    /// Write a single ByteBuffer
-    /// - Parameter buffer: single buffer to write
-    func write(_ buffer: ByteBuffer) async throws {
-        try await self.outbound.write(.body(buffer))
-    }
-
-    /// Write a sequence of ByteBuffers
-    /// - Parameter buffers: Sequence of buffers
-    func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws {
-        try await self.outbound.write(contentsOf: buffers.map { .body($0) })
     }
 }

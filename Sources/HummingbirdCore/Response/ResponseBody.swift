@@ -17,21 +17,36 @@ import NIOCore
 
 /// Response body
 public struct ResponseBody: Sendable {
-    public let write: @Sendable (any ResponseBodyWriter) async throws -> HTTPFields?
+    @usableFromInline
+    let _write: @Sendable (any ResponseBodyWriter) async throws -> Void
     public let contentLength: Int?
 
-    /// Initialise ResponseBody with closure writing body contents
+    /// Initialise ResponseBody with closure writing body contents.
+    ///
+    /// When you have finished writing the response body you need to indicate you
+    /// have finished by calling ``ResponseBodyWriter.finish``. At this point you can also
+    /// send trailing headers by including them as a parameter in the finsh() call.
+    /// ```
+    /// let responseBody = ResponseBody(contentLength: contentLength) { writer in
+    ///     try await writer.write(buffer)
+    ///     try await writer.finish()
+    /// }
+    /// ```
     /// - Parameters:
     ///   - contentLength: Optional length of body
     ///   - write: closure provided with `writer` type that can be used to write to response body
     public init(contentLength: Int? = nil, _ write: @Sendable @escaping (any ResponseBodyWriter) async throws -> Void) {
-        self.write = { try await write($0); return nil }
+        self._write = { writer in
+            try await write(writer)
+        }
         self.contentLength = contentLength
     }
 
     /// Initialise empty ResponseBody
     public init() {
-        self.init(contentLength: 0) { _ in }
+        self.init(contentLength: 0) { writer in
+            try await writer.finish(nil)
+        }
     }
 
     /// Initialise ResponseBody that contains a single ByteBuffer
@@ -39,6 +54,7 @@ public struct ResponseBody: Sendable {
     public init(byteBuffer: ByteBuffer) {
         self.init(contentLength: byteBuffer.readableBytes) { writer in
             try await writer.write(byteBuffer)
+            try await writer.finish(nil)
         }
     }
 
@@ -49,22 +65,13 @@ public struct ResponseBody: Sendable {
             for try await buffer in asyncSequence {
                 try await writer.write(buffer)
             }
-            return
+            try await writer.finish(nil)
         }
     }
 
-    /// Create ResponseBody that returns trailing headers from its closure once all the
-    /// body parts have been written
-    /// - Parameters:
-    ///   - contentLength: Optional length of body
-    ///   - write: closure provided with `writer` type that can be used to write to response body
-    ///         trailing headers are returned from the closure after all the body parts have been
-    ///         written
-    public static func withTrailingHeaders(
-        contentLength: Int? = nil,
-        _ write: @Sendable @escaping (any ResponseBodyWriter) async throws -> HTTPFields?
-    ) -> Self {
-        self.init(contentLength: contentLength, write: write)
+    @inlinable
+    public consuming func write(_ writer: any ResponseBodyWriter) async throws {
+        try await self._write(writer)
     }
 
     /// Returns a ResponseBody containing the results of mapping the given closure over the sequence of
@@ -73,13 +80,12 @@ public struct ResponseBody: Sendable {
     /// - Returns: The transformed ResponseBody
     public consuming func map(_ transform: @escaping @Sendable (ByteBuffer) async throws -> ByteBuffer) -> ResponseBody {
         let body = self
-        return Self.withTrailingHeaders { writer in
-            let tailHeaders = try await body.write(writer.map(transform))
-            return tailHeaders
+        return Self.init { writer in
+            try await body.write(writer.map(transform))
         }
     }
 
-    /// Create new response body that call a callback once original response body has been written
+    /// Create new response body that calls a closure once original response body has been written
     /// to the channel
     ///
     /// When you return a response from a handler, this cannot be considered to be the point the
@@ -89,22 +95,13 @@ public struct ResponseBody: Sendable {
     package func withPostWriteClosure(_ postWrite: @escaping @Sendable () async -> Void) -> Self {
         return .init(contentLength: self.contentLength) { writer in
             do {
-                let result = try await self.write(writer)
+                try await self.write(writer)
                 await postWrite()
-                return result
             } catch {
                 await postWrite()
                 throw error
             }
+            return
         }
-    }
-
-    /// Initialise ResponseBody with closure writing body contents
-    ///
-    /// This version of init is private and only available via ``withTrailingHeaders`` because
-    /// if it is public the compiler gets confused when a complex closure is provided.
-    private init(contentLength: Int? = nil, write: @Sendable @escaping (any ResponseBodyWriter) async throws -> HTTPFields?) {
-        self.write = { return try await write($0) }
-        self.contentLength = contentLength
     }
 }

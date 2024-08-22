@@ -15,6 +15,7 @@
 import HummingbirdCore
 import Logging
 import NIOCore
+import NIOHTTPTypes
 import NIOPosix
 import NIOTransportServices
 import ServiceLifecycle
@@ -100,7 +101,7 @@ extension ApplicationProtocol {
             configuration: self.configuration.httpServer,
             eventLoopGroup: self.eventLoopGroup,
             logger: self.logger
-        ) { request, channel in
+        ) { (request, responseWriter: consuming ResponseWriter, channel) in
             let logger = self.logger.with(metadataKey: "hb_id", value: .stringConvertible(RequestID()))
             let context = Self.Responder.Context(
                 source: .init(
@@ -124,7 +125,9 @@ extension ApplicationProtocol {
             if let serverName = self.configuration.serverName {
                 response.headers[.server] = serverName
             }
-            return response
+            // Write response
+            let bodyWriter = try await responseWriter.writeHead(response.head)
+            try await response.body.write(bodyWriter)
         } onServerRunning: {
             await self.onServerRunning($0)
         }
