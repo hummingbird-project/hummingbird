@@ -22,10 +22,10 @@ public struct ResponseBody: Sendable {
     public let contentLength: Int?
 
     /// Initialise ResponseBody with closure writing body contents.
-    /// 
-    /// When you have finished writing the response body you need to indicate you 
+    ///
+    /// When you have finished writing the response body you need to indicate you
     /// have finished by calling ``ResponseBodyWriter.finish``. At this point you can also
-    /// send trailing headers by including them as a parameter in the finsh() call. 
+    /// send trailing headers by including them as a parameter in the finsh() call.
     /// ```
     /// let responseBody = ResponseBody(contentLength: contentLength) { writer in
     ///     try await writer.write(buffer)
