@@ -3,7 +3,7 @@ name: API breaking changes
 on:
   pull_request:
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-apibreakage
+  group: ${{ github.workflow }}-${{ github.ref }}-api-breakage
   cancel-in-progress: true
 
 jobs:
