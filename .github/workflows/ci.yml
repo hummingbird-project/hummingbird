@@ -10,7 +10,7 @@ on:
   pull_request:
   workflow_dispatch:
 concurrency:
-  group: $-$-ci
+  group: ${{ github.workflow }}-${{ github.ref }}-ci
   cancel-in-progress: true
 
 jobs:
