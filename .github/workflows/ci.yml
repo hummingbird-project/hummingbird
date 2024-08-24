@@ -9,6 +9,9 @@ on:
     - '**.yml'
   pull_request:
   workflow_dispatch:
+concurrency:
+  group: $-$-ci
+  cancel-in-progress: true
 
 jobs:
   linux:

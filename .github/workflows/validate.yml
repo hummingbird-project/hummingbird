@@ -2,6 +2,9 @@ name: Validity Check
 
 on:
   pull_request:
+concurrency:
+  group: $-$-validate
+  cancel-in-progress: true
 
 jobs:
   validate:
