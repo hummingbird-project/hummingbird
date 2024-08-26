@@ -123,6 +123,7 @@ public struct FileIO: Sendable {
                     fileOffset = range.index(fileOffset, offsetBy: bytesToRead)
                     try await writer.write(buffer)
                 }
+                try await writer.finish(nil)
             }
         }
     }
