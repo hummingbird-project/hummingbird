@@ -131,14 +131,14 @@ final class MiddlewareTests: XCTestCase {
 
     func testMiddlewareResponseBodyWriter() async throws {
         struct TransformWriter: ResponseBodyWriter {
-            let parentWriter: any ResponseBodyWriter
+            var parentWriter: any ResponseBodyWriter
 
-            func write(_ buffer: ByteBuffer) async throws {
+            mutating func write(_ buffer: ByteBuffer) async throws {
                 let output = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
                 try await self.parentWriter.write(output)
             }
 
-            func finish(_ trailingHeaders: HTTPFields?) async throws {
+            consuming func finish(_ trailingHeaders: HTTPFields?) async throws {
                 var trailingHeaders = trailingHeaders ?? [:]
                 trailingHeaders[.middleware2] = "test2"
                 try await self.parentWriter.finish(trailingHeaders)

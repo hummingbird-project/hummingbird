@@ -140,7 +140,7 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
         var port: Int? { nil }
     }
 
-    final class RouterResponseWriter: ResponseBodyWriter {
+    struct RouterResponseWriter: ResponseBodyWriter {
         let values: NIOLockedValueBox<(body: ByteBuffer, trailingHeaders: HTTPFields?)>
 
         init() {

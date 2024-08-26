@@ -19,10 +19,10 @@ import NIOCore
 public protocol ResponseBodyWriter {
     /// Write a single ByteBuffer
     /// - Parameter buffer: single buffer to write
-    func write(_ buffer: ByteBuffer) async throws
+    mutating func write(_ buffer: ByteBuffer) async throws
     /// Write a sequence of ByteBuffers
     /// - Parameter buffers: Sequence of buffers
-    func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws
+    mutating func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws
     /// Finish writing body
     /// - Parameter trailingHeaders: Any trailing headers you want to include at end
     consuming func finish(_ trailingHeaders: HTTPFields?) async throws
@@ -31,7 +31,7 @@ public protocol ResponseBodyWriter {
 extension ResponseBodyWriter {
     /// Default implementation of writing a sequence of ByteBuffers
     @inlinable
-    public func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws {
+    public mutating func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws {
         for part in buffers {
             try await self.write(part)
         }
@@ -40,7 +40,7 @@ extension ResponseBodyWriter {
     ///  Write AsyncSequence of ByteBuffers
     /// - Parameter buffers: ByteBuffer AsyncSequence
     @inlinable
-    public func write<BufferSequence: AsyncSequence>(_ buffers: BufferSequence) async throws where BufferSequence.Element == ByteBuffer {
+    public mutating func write<BufferSequence: AsyncSequence>(_ buffers: BufferSequence) async throws where BufferSequence.Element == ByteBuffer {
         for try await buffer in buffers {
             try await self.write(buffer)
         }
@@ -48,18 +48,18 @@ extension ResponseBodyWriter {
 }
 
 struct MappedResponseBodyWriter<ParentWriter: ResponseBodyWriter>: ResponseBodyWriter {
-    fileprivate let parentWriter: ParentWriter
+    fileprivate var parentWriter: ParentWriter
     fileprivate let transform: @Sendable (ByteBuffer) async throws -> ByteBuffer
 
     /// Write a single ByteBuffer
     /// - Parameter buffer: single buffer to write
-    func write(_ buffer: ByteBuffer) async throws {
+    mutating func write(_ buffer: ByteBuffer) async throws {
         try await self.parentWriter.write(self.transform(buffer))
     }
 
     /// Write a sequence of ByteBuffers
     /// - Parameter buffers: Sequence of buffers
-    func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws {
+    mutating func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws {
         for part in buffers {
             try await self.parentWriter.write(self.transform(part))
         }

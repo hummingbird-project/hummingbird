@@ -18,7 +18,7 @@ import NIOCore
 /// Response body
 public struct ResponseBody: Sendable {
     @usableFromInline
-    let _write: @Sendable (any ResponseBodyWriter) async throws -> Void
+    let _write: @Sendable (inout any ResponseBodyWriter) async throws -> Void
     public let contentLength: Int?
 
     /// Initialise ResponseBody with closure writing body contents.
@@ -35,9 +35,9 @@ public struct ResponseBody: Sendable {
     /// - Parameters:
     ///   - contentLength: Optional length of body
     ///   - write: closure provided with `writer` type that can be used to write to response body
-    public init(contentLength: Int? = nil, _ write: @Sendable @escaping (any ResponseBodyWriter) async throws -> Void) {
+    public init(contentLength: Int? = nil, _ write: @Sendable @escaping (inout any ResponseBodyWriter) async throws -> Void) {
         self._write = { writer in
-            try await write(writer)
+            try await write(&writer)
         }
         self.contentLength = contentLength
     }
@@ -70,8 +70,8 @@ public struct ResponseBody: Sendable {
     }
 
     @inlinable
-    public consuming func write(_ writer: any ResponseBodyWriter) async throws {
-        try await self._write(writer)
+    public consuming func write(_ writer: consuming any ResponseBodyWriter) async throws {
+        try await self._write(&writer)
     }
 
     /// Returns a ResponseBody containing the results of mapping the given closure over the sequence of
