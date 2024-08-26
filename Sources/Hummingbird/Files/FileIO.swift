@@ -39,6 +39,7 @@ public struct FileIO: Sendable {
     public func loadFile(path: String, context: some RequestContext, chunkLength: Int = NonBlockingFileIO.defaultChunkSize) async throws -> ResponseBody {
         do {
             let stat = try await fileIO.lstat(path: path)
+            guard stat.st_size > 0 else { return .init() }
             return self.readFile(path: path, range: 0...numericCast(stat.st_size - 1), context: context, chunkLength: chunkLength)
         } catch {
             throw HTTPError(.notFound)
@@ -58,6 +59,7 @@ public struct FileIO: Sendable {
     public func loadFile(path: String, range: ClosedRange<Int>, context: some RequestContext, chunkLength: Int = NonBlockingFileIO.defaultChunkSize) async throws -> ResponseBody {
         do {
             let stat = try await fileIO.lstat(path: path)
+            guard stat.st_size > 0 else { return .init() }
             let fileRange: ClosedRange<Int> = 0...numericCast(stat.st_size - 1)
             let range = range.clamped(to: fileRange)
             return self.readFile(path: path, range: range, context: context, chunkLength: chunkLength)

@@ -90,4 +90,46 @@ class FileIOTests: XCTestCase {
             XCTAssertEqual(Data(buffer: buffer), data)
         }
     }
+
+    func testReadEmptyFile() async throws {
+        let router = Router()
+        router.get("empty.txt") { _, context -> Response in
+            let fileIO = FileIO(threadPool: .singleton)
+            let body = try await fileIO.loadFile(path: "empty.txt", context: context)
+            return .init(status: .ok, headers: [:], body: body)
+        }
+        let data = Data()
+        let fileURL = URL(fileURLWithPath: "empty.txt")
+        XCTAssertNoThrow(try data.write(to: fileURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+        
+        let app = Application(responder: router.buildResponder())
+        
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/empty.txt", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+        }
+    }
+
+    func testReadEmptyFilePart() async throws {
+        let router = Router()
+        router.get("empty.txt") { _, context -> Response in
+            let fileIO = FileIO(threadPool: .singleton)
+            let body = try await fileIO.loadFile(path: "empty.txt", range: 0...10, context: context)
+            return .init(status: .ok, headers: [:], body: body)
+        }
+        let data = Data()
+        let fileURL = URL(fileURLWithPath: "empty.txt")
+        XCTAssertNoThrow(try data.write(to: fileURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/empty.txt", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+        }
+    }
 }
