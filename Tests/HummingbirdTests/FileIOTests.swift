@@ -102,9 +102,9 @@ class FileIOTests: XCTestCase {
         let fileURL = URL(fileURLWithPath: "empty.txt")
         XCTAssertNoThrow(try data.write(to: fileURL))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
-        
+
         let app = Application(responder: router.buildResponder())
-        
+
         try await app.test(.router) { client in
             try await client.execute(uri: "/empty.txt", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
