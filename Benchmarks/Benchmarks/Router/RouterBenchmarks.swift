@@ -128,6 +128,7 @@ func routerBenchmarks() {
                 for try await buffer in request.body {
                     try await writer.write(buffer)
                 }
+                try await writer.finish(nil)
             })
         }
     }
