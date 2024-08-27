@@ -249,6 +249,29 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    func testResponseBodySequence() async throws {
+        let router = Router()
+        router
+            .group("/echo-body")
+            .post { request, _ -> Response in
+                var buffers: [ByteBuffer] = []
+                for try await buffer in request.body {
+                    buffers.append(buffer)
+                }
+                return .init(status: .ok, headers: [:], body: .init(contentsOf: buffers))
+            }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+
+            let buffer = Self.randomBuffer(size: 400_000)
+            try await client.execute(uri: "/echo-body", method: .post, body: buffer) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(response.headers[.contentLength], "400000")
+                XCTAssertEqual(response.body, buffer)
+            }
+        }
+    }
+
     /// Test streaming of requests and streaming of responses by streaming the request body into a response streamer
     func testStreaming() async throws {
         let router = Router()

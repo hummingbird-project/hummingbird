@@ -23,13 +23,14 @@ public struct ResponseBody: Sendable {
 
     /// Initialise ResponseBody with closure writing body contents.
     ///
-    /// When you have finished writing the response body you need to indicate you
-    /// have finished by calling ``ResponseBodyWriter.finish``. At this point you can also
-    /// send trailing headers by including them as a parameter in the finsh() call.
+    /// When you have finished writing the response body you need to indicate you have
+    /// finished by calling ``ResponseBodyWriter/finish(_:)``. At this
+    /// point you can also send trailing headers by including them as a parameter in
+    /// the finsh() call.
     /// ```
     /// let responseBody = ResponseBody(contentLength: contentLength) { writer in
     ///     try await writer.write(buffer)
-    ///     try await writer.finish()
+    ///     try await writer.finish(nil)
     /// }
     /// ```
     /// - Parameters:
@@ -58,13 +59,20 @@ public struct ResponseBody: Sendable {
         }
     }
 
+    /// Initialise ResponseBody that contains a sequence of ByteBuffers
+    /// - Parameter byteBuffers: Sequence of ByteBuffers to write
+    public init<BufferSequence: Sequence & Sendable>(contentsOf byteBuffers: BufferSequence) where BufferSequence.Element == ByteBuffer {
+        self.init(contentLength: byteBuffers.map { $0.readableBytes }.reduce(0, +)) { writer in
+            try await writer.write(contentsOf: byteBuffers)
+            try await writer.finish(nil)
+        }
+    }
+
     /// Initialise ResponseBody with an AsyncSequence of ByteBuffers
     /// - Parameter asyncSequence: ByteBuffer AsyncSequence
     public init<BufferSequence: AsyncSequence & Sendable>(asyncSequence: BufferSequence) where BufferSequence.Element == ByteBuffer {
         self.init { writer in
-            for try await buffer in asyncSequence {
-                try await writer.write(buffer)
-            }
+            try await writer.write(asyncSequence)
             try await writer.finish(nil)
         }
     }
