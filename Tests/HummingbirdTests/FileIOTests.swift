@@ -27,18 +27,43 @@ class FileIOTests: XCTestCase {
         let router = Router()
         router.get("test.jpg") { _, context -> Response in
             let fileIO = FileIO(threadPool: .singleton)
-            let body = try await fileIO.loadFile(path: "test.jpg", context: context)
+            let body = try await fileIO.loadFile(path: "testReadFileIO.jpg", context: context)
             return .init(status: .ok, headers: [:], body: body)
         }
         let buffer = Self.randomBuffer(size: 320_003)
         let data = Data(buffer: buffer)
-        let fileURL = URL(fileURLWithPath: "test.jpg")
+        let fileURL = URL(fileURLWithPath: "testReadFileIO.jpg")
         XCTAssertNoThrow(try data.write(to: fileURL))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
         let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
+            try await client.execute(uri: "/test.jpg", method: .get) { response in
+                XCTAssertEqual(response.body, buffer)
+            }
+        }
+    }
+
+    func testReadMultipleFilesOnSameConnection() async throws {
+        let router = Router()
+        router.get("test.jpg") { _, context -> Response in
+            let fileIO = FileIO(threadPool: .singleton)
+            let body = try await fileIO.loadFile(path: "testReadMultipleFilesOnSameConnection.jpg", context: context)
+            return .init(status: .ok, headers: [:], body: body)
+        }
+        let buffer = Self.randomBuffer(size: 54003)
+        let data = Data(buffer: buffer)
+        let fileURL = URL(fileURLWithPath: "testReadMultipleFilesOnSameConnection.jpg")
+        XCTAssertNoThrow(try data.write(to: fileURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.live) { client in
+            try await client.execute(uri: "/test.jpg", method: .get) { response in
+                XCTAssertEqual(response.body, buffer)
+            }
             try await client.execute(uri: "/test.jpg", method: .get) { response in
                 XCTAssertEqual(response.body, buffer)
             }
