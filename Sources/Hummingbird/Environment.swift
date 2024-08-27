@@ -127,13 +127,13 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
     }
 
     /// Create Environment initialised from the `.env` file
-    public static func dotEnv(_ dovEnvPath: String = ".env") async throws -> Self {
-        guard let dotEnv = await loadDotEnv(dovEnvPath) else { return [:] }
+    public static func dotEnv(_ dovEnvPath: String = ".env") throws -> Self {
+        guard let dotEnv = loadDotEnv(dovEnvPath) else { return [:] }
         return try .init(rawValues: self.parseDotEnv(dotEnv))
     }
 
     /// Load `.env` file into string
-    internal static func loadDotEnv(_ dovEnvPath: String = ".env") async -> String? {
+    internal static func loadDotEnv(_ dovEnvPath: String = ".env") -> String? {
         do {
             let fileHandle = try NIOFileHandle(path: dovEnvPath)
             defer {
