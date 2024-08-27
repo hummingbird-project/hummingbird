@@ -12,11 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if os(Linux)
-@preconcurrency import Foundation
-#else
 import Foundation
-#endif
 
 internal enum URLEncodedForm {
     /// CodingKey used by URLEncodedFormEncoder and URLEncodedFormDecoder

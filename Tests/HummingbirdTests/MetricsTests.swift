@@ -14,7 +14,7 @@
 
 import Hummingbird
 import HummingbirdTesting
-@preconcurrency import Metrics
+import Metrics
 import NIOConcurrencyHelpers
 import XCTest
 
