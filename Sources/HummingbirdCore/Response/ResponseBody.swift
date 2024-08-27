@@ -61,7 +61,7 @@ public struct ResponseBody: Sendable {
 
     /// Initialise ResponseBody that contains a sequence of ByteBuffers
     /// - Parameter byteBuffers: Sequence of ByteBuffers to write
-    public init<BufferSequence: Sequence & Sendable>(contentsOf byteBuffers: BufferSequence) async throws where BufferSequence.Element == ByteBuffer {
+    public init<BufferSequence: Sequence & Sendable>(contentsOf byteBuffers: BufferSequence) where BufferSequence.Element == ByteBuffer {
         self.init(contentLength: byteBuffers.map { $0.readableBytes }.reduce(0, +)) { writer in
             try await writer.write(contentsOf: byteBuffers)
             try await writer.finish(nil)
