@@ -36,7 +36,7 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
                 ]
                 Counter(label: "hb_requests", dimensions: dimensions).increment()
                 Metrics.Timer(
-                    label: "hb_request_duration",
+                    label: "hb_request_duration_seconds",
                     dimensions: dimensions,
                     preferredDisplayUnit: .seconds
                 ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)

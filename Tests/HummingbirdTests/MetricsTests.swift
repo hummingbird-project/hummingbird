@@ -14,7 +14,7 @@
 
 import Hummingbird
 import HummingbirdTesting
-@preconcurrency import Metrics
+import Metrics
 import NIOConcurrencyHelpers
 import XCTest
 
@@ -283,7 +283,7 @@ final class MetricsTests: XCTestCase {
             try await client.execute(uri: "/hello", method: .get) { _ in }
         }
 
-        let timer = try XCTUnwrap(Self.testMetrics.timers.withLockedValue { $0 }["hb_request_duration"] as? TestTimer)
+        let timer = try XCTUnwrap(Self.testMetrics.timers.withLockedValue { $0 }["hb_request_duration_seconds"] as? TestTimer)
         XCTAssertGreaterThan(timer.values.withLockedValue { $0 }[0].1, 5_000_000)
     }
 }
