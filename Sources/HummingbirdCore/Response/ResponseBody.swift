@@ -18,7 +18,7 @@ import NIOCore
 /// Response body
 public struct ResponseBody: Sendable {
     @usableFromInline
-    let _write: @Sendable (inout any ResponseBodyWriter) async throws -> Void
+    let _write: @Sendable (inout ResponseBodyWriter) async throws -> Void
     public let contentLength: Int?
 
     /// Initialise ResponseBody with closure writing body contents.
@@ -36,7 +36,7 @@ public struct ResponseBody: Sendable {
     /// - Parameters:
     ///   - contentLength: Optional length of body
     ///   - write: closure provided with `writer` type that can be used to write to response body
-    public init(contentLength: Int? = nil, _ write: @Sendable @escaping (inout any ResponseBodyWriter) async throws -> Void) {
+    public init(contentLength: Int? = nil, _ write: @Sendable @escaping (inout ResponseBodyWriter) async throws -> Void) {
         self._write = { writer in
             try await write(&writer)
         }
@@ -62,7 +62,7 @@ public struct ResponseBody: Sendable {
     /// Initialise ResponseBody that contains a sequence of ByteBuffers
     /// - Parameter byteBuffers: Sequence of ByteBuffers to write
     public init<BufferSequence: Sequence & Sendable>(contentsOf byteBuffers: BufferSequence) where BufferSequence.Element == ByteBuffer {
-        self.init(contentLength: byteBuffers.map { $0.readableBytes }.reduce(0, +)) { writer in
+        self.init(contentLength: byteBuffers.map(\.readableBytes).reduce(0, +)) { writer in
             try await writer.write(contentsOf: byteBuffers)
             try await writer.finish(nil)
         }
@@ -78,7 +78,7 @@ public struct ResponseBody: Sendable {
     }
 
     @inlinable
-    public consuming func write(_ writer: consuming any ResponseBodyWriter) async throws {
+    public consuming func write(_ writer: consuming ResponseBodyWriter) async throws {
         try await self._write(&writer)
     }
 

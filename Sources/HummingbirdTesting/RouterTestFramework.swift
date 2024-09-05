@@ -119,7 +119,7 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
                         response = Response(status: .internalServerError)
                     }
                     let responseWriter = RouterResponseWriter()
-                    try await response.body.write(responseWriter)
+                    try await response.body.write(.init(responseWriter))
                     return responseWriter.values.withLockedValue { values in
                         TestResponse(head: response.head, body: values.body, trailerHeaders: values.trailingHeaders)
                     }
@@ -140,7 +140,7 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
         var port: Int? { nil }
     }
 
-    struct RouterResponseWriter: ResponseBodyWriter {
+    struct RouterResponseWriter: ResponseBodyWriterProtocol {
         let values: NIOLockedValueBox<(body: ByteBuffer, trailingHeaders: HTTPFields?)>
 
         init() {

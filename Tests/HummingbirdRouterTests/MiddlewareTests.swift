@@ -14,6 +14,7 @@
 
 import HTTPTypes
 import Hummingbird
+import HummingbirdCore
 import HummingbirdRouter
 import HummingbirdTesting
 import Logging
@@ -130,8 +131,8 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareResponseBodyWriter() async throws {
-        struct TransformWriter: ResponseBodyWriter {
-            var parentWriter: any ResponseBodyWriter
+        struct TransformWriter: ResponseBodyWriterProtocol {
+            var parentWriter: any ResponseBodyWriterProtocol
 
             mutating func write(_ buffer: ByteBuffer) async throws {
                 let output = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
@@ -150,7 +151,7 @@ final class MiddlewareTests: XCTestCase {
                 var editedResponse = response
                 editedResponse.body = .init { writer in
                     let transformWriter = TransformWriter(parentWriter: writer)
-                    try await response.body.write(transformWriter)
+                    try await response.body.write(.init(transformWriter))
                 }
                 return editedResponse
             }

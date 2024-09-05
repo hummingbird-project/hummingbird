@@ -17,7 +17,8 @@
 @_exported import struct HummingbirdCore.RequestBody
 @_exported import struct HummingbirdCore.Response
 @_exported import struct HummingbirdCore.ResponseBody
-@_exported import protocol HummingbirdCore.ResponseBodyWriter
+@_exported import struct HummingbirdCore.ResponseBodyWriter
+@_exported import protocol HummingbirdCore.ResponseBodyWriterProtocol
 #if canImport(Network)
 @_exported import struct HummingbirdCore.TSTLSOptions
 #endif

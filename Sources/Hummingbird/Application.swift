@@ -127,7 +127,7 @@ extension ApplicationProtocol {
             }
             // Write response
             let bodyWriter = try await responseWriter.writeHead(response.head)
-            try await response.body.write(bodyWriter)
+            try await response.body.write(.init(bodyWriter))
         } onServerRunning: {
             await self.onServerRunning($0)
         }

@@ -26,8 +26,8 @@ public typealias HBRequestBody = RequestBody
 public typealias HBResponse = Response
 @_documentation(visibility: internal) @available(*, unavailable, renamed: "ResponseBody")
 public typealias HBResponseBody = ResponseBody
-@_documentation(visibility: internal) @available(*, unavailable, renamed: "ResponseBodyWriter")
-public typealias HBResponseBodyWriter = ResponseBodyWriter
+@_documentation(visibility: internal) @available(*, unavailable, renamed: "ResponseBodyWriterProtocol")
+public typealias HBResponseBodyWriter = ResponseBodyWriterProtocol
 @_documentation(visibility: internal) @available(*, unavailable, renamed: "Server")
 public typealias HBServer = Server
 @_documentation(visibility: internal) @available(*, unavailable, renamed: "ServerConfiguration")

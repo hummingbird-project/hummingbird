@@ -26,9 +26,9 @@ public struct ResponseWriter: ~Copyable {
     /// - Parameter head: Response head
     /// - Returns: Response body writer used to write HTTP response body
     @inlinable
-    public consuming func writeHead(_ head: HTTPResponse) async throws -> some ResponseBodyWriter {
+    public consuming func writeHead(_ head: HTTPResponse) async throws -> ResponseBodyWriter {
         try await self.outbound.write(.head(head))
-        return RootResponseBodyWriter(outbound: self.outbound)
+        return .init(RootResponseBodyWriter(outbound: self.outbound))
     }
 
     /// Write Informational HTTP head part
@@ -52,7 +52,7 @@ public struct ResponseWriter: ~Copyable {
 
 /// ResponseBodyWriter that writes ByteBuffers to AsyncChannel outbound writer
 @usableFromInline
-struct RootResponseBodyWriter: Sendable, ResponseBodyWriter {
+struct RootResponseBodyWriter: Sendable, ResponseBodyWriterProtocol {
     typealias Out = HTTPResponsePart
     /// The components of a HTTP response from the view of a HTTP server.
     public typealias OutboundWriter = NIOAsyncChannelOutboundWriter<Out>

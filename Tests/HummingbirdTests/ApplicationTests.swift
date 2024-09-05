@@ -762,7 +762,7 @@ final class ApplicationTests: XCTestCase {
             let error: ErrorFormat
         }
 
-        final class CollatedResponseWriter: ResponseBodyWriter {
+        final class CollatedResponseWriter: ResponseBodyWriterProtocol {
             let collated: NIOLockedValueBox<ByteBuffer>
 
             init() {
@@ -799,7 +799,7 @@ final class ApplicationTests: XCTestCase {
             let error = HTTPError(.internalServerError, message: message)
             let response = try error.response(from: request, context: context)
             let writer = CollatedResponseWriter()
-            _ = try await response.body.write(writer)
+            _ = try await response.body.write(.init(writer))
             let format = try JSONDecoder().decode(HTTPErrorFormat.self, from: writer.collated.withLockedValue { $0 })
             XCTAssertEqual(format.error.message, message)
         }
