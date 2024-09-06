@@ -89,7 +89,7 @@ extension RouterMethods {
     /// ``MiddlewareFixedTypeBuilder``.
     ///
     /// ```swift
-    /// router.add {
+    /// router.addMiddleware {
     ///     LogRequestsMiddleware()
     ///     MetricsMiddleware()
     /// }
@@ -98,7 +98,7 @@ extension RouterMethods {
     ///
     /// - Parameter middlewareStack: Middleware stack result builder
     /// - Returns: router
-    @discardableResult public func add(
+    @discardableResult public func addMiddleware(
         @MiddlewareFixedTypeBuilder<Request, Response, Context> middlewareStack: () -> some MiddlewareProtocol<Request, Response, Context>
     ) -> Self {
         return self.add(middleware: middlewareStack())
