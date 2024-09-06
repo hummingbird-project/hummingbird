@@ -99,9 +99,9 @@ extension RouterMethods {
     /// - Parameter middlewareStack: Middleware stack result builder
     /// - Returns: router
     @discardableResult public func addMiddleware(
-        @MiddlewareFixedTypeBuilder<Request, Response, Context> middlewareStack: () -> some MiddlewareProtocol<Request, Response, Context>
+        @MiddlewareFixedTypeBuilder<Request, Response, Context> buildMiddlewareStack: () -> some MiddlewareProtocol<Request, Response, Context>
     ) -> Self {
-        return self.add(middleware: middlewareStack())
+        return self.add(middleware: buildMiddlewareStack())
     }
 
     /// GET path for async closure returning type conforming to ResponseGenerator
