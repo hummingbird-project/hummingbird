@@ -79,7 +79,7 @@ public struct FileIO: Sendable {
         path: String,
         context: some RequestContext
     ) async throws where AS.Element == ByteBuffer {
-        context.logger.debug("[FileIO] PUT", metadata: ["file": .string(path)])
+        context.logger.debug("[FileIO] PUT", metadata: ["hb.file": .string(path)])
         try await self.fileIO.withFileHandle(path: path, mode: .write, flags: .allowFileCreation()) { handle in
             for try await buffer in contents {
                 try await self.fileIO.write(fileHandle: handle, buffer: buffer)
@@ -98,7 +98,7 @@ public struct FileIO: Sendable {
         path: String,
         context: some RequestContext
     ) async throws {
-        context.logger.debug("[FileIO] PUT", metadata: ["file": .string(path)])
+        context.logger.debug("[FileIO] PUT", metadata: ["hb.file": .string(path)])
         try await self.fileIO.withFileHandle(path: path, mode: .write, flags: .allowFileCreation()) { handle in
             try await self.fileIO.write(fileHandle: handle, buffer: buffer)
         }

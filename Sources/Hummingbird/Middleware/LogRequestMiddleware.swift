@@ -72,8 +72,8 @@ public struct LogRequestsMiddleware<Context: RequestContext>: RouterMiddleware {
                 level: self.logLevel,
                 "Request",
                 metadata: [
-                    "hb_uri": .stringConvertible(request.uri),
-                    "hb_method": .string(request.method.rawValue),
+                    "hb.uri": .stringConvertible(request.uri),
+                    "hb.method": .string(request.method.rawValue),
                 ]
             )
         case .all(let except):
@@ -81,9 +81,9 @@ public struct LogRequestsMiddleware<Context: RequestContext>: RouterMiddleware {
                 level: self.logLevel,
                 "Request",
                 metadata: [
-                    "hb_uri": .stringConvertible(request.uri),
-                    "hb_method": .string(request.method.rawValue),
-                    "hb_headers": .stringConvertible(self.allHeaders(headers: request.headers, except: except)),
+                    "hb.uri": .stringConvertible(request.uri),
+                    "hb.method": .string(request.method.rawValue),
+                    "hb.headers": .stringConvertible(self.allHeaders(headers: request.headers, except: except)),
                 ]
             )
         case .some(let filter):
@@ -91,9 +91,9 @@ public struct LogRequestsMiddleware<Context: RequestContext>: RouterMiddleware {
                 level: self.logLevel,
                 "Request",
                 metadata: [
-                    "hb_uri": .stringConvertible(request.uri),
-                    "hb_method": .string(request.method.rawValue),
-                    "hb_headers": .stringConvertible(self.filterHeaders(headers: request.headers, filter: filter)),
+                    "hb.uri": .stringConvertible(request.uri),
+                    "hb.method": .string(request.method.rawValue),
+                    "hb.headers": .stringConvertible(self.filterHeaders(headers: request.headers, filter: filter)),
                 ]
             )
         }

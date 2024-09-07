@@ -102,7 +102,7 @@ extension ApplicationProtocol {
             eventLoopGroup: self.eventLoopGroup,
             logger: self.logger
         ) { (request, responseWriter: consuming ResponseWriter, channel) in
-            let logger = self.logger.with(metadataKey: "hb_id", value: .stringConvertible(RequestID()))
+            let logger = self.logger.with(metadataKey: "hb.id", value: .stringConvertible(RequestID()))
             let context = Self.Responder.Context(
                 source: .init(
                     channel: channel,
@@ -114,7 +114,7 @@ extension ApplicationProtocol {
             do {
                 response = try await responder.respond(to: request, context: context)
             } catch {
-                logger.debug("Unrecognised Error", metadata: ["error": "\(error)"])
+                logger.debug("Unrecognised Error", metadata: ["hb.error": "\(error)"])
                 response = Response(
                     status: .internalServerError,
                     body: .init()

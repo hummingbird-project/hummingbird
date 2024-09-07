@@ -31,12 +31,12 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
                 // need to create dimensions once request has been responded to ensure
                 // we have the correct endpoint path
                 let dimensions: [(String, String)] = [
-                    ("hb_uri", context.endpointPath ?? request.uri.path),
-                    ("hb_method", request.method.rawValue),
+                    ("uri", context.endpointPath ?? request.uri.path),
+                    ("method", request.method.rawValue),
                 ]
-                Counter(label: "hb_requests", dimensions: dimensions).increment()
+                Counter(label: "hb.requests", dimensions: dimensions).increment()
                 Metrics.Timer(
-                    label: "hb_request_duration",
+                    label: "hb.request_duration",
                     dimensions: dimensions,
                     preferredDisplayUnit: .seconds
                 ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
@@ -49,17 +49,17 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
             // Don't record uri in 404 errors, to avoid spamming of metrics
             if let endpointPath = context.endpointPath {
                 dimensions = [
-                    ("hb_uri", endpointPath),
-                    ("hb_method", request.method.rawValue),
+                    ("uri", endpointPath),
+                    ("method", request.method.rawValue),
                 ]
-                Counter(label: "hb_requests", dimensions: dimensions).increment()
+                Counter(label: "hb.requests", dimensions: dimensions).increment()
             } else {
                 dimensions = [
-                    ("hb_uri", "NotFound"),
-                    ("hb_method", request.method.rawValue),
+                    ("uri", "NotFound"),
+                    ("method", request.method.rawValue),
                 ]
             }
-            Counter(label: "hb_errors", dimensions: dimensions).increment()
+            Counter(label: "hb.errors", dimensions: dimensions).increment()
             throw error
         }
     }
