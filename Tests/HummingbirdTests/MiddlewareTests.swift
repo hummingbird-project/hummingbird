@@ -461,7 +461,7 @@ final class MiddlewareTests: XCTestCase {
             }
         }
         let router = Router()
-        router.add {
+        router.addMiddleware {
             TestMiddleware(string: "first")
             TestMiddleware(string: "second")
         }
