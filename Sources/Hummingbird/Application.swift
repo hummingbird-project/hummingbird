@@ -114,7 +114,7 @@ extension ApplicationProtocol {
             do {
                 response = try await responder.respond(to: request, context: context)
             } catch {
-                logger.debug("Unrecognised Error", metadata: ["hb.responder.error": "\(error)"])
+                logger.debug("Unrecognised Error", metadata: ["error.type": "\(error)"])
                 response = Response(
                     status: .internalServerError,
                     body: .init()

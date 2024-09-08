@@ -24,7 +24,7 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
 
     public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
         let startTime = DispatchTime.now().uptimeNanoseconds
-        let activeRequestMeter = Meter(label: "http.server.active_requests", dimensions: [("http.request.method", request.method.description)])
+        let activeRequestMeter = Meter(label: "cod", dimensions: [("http.request.method", request.method.description)])
         activeRequestMeter.increment()
         do {
             var response = try await next(request, context)

@@ -349,8 +349,8 @@ final class MiddlewareTests: XCTestCase {
                 headers: [.contentType: "application/json"],
                 body: .init(string: "{}")
             ) { _ in
-                let logEntries = logAccumalator.filter { $0.metadata?["hb.uri"]?.description == "/some" }
-                XCTAssertEqual(logEntries.first?.metadata?["hb.headers"], .stringConvertible(["content-type": "application/json"]))
+                let logEntries = logAccumalator.filter { $0.metadata?["hb.request.path"]?.description == "/some" }
+                XCTAssertEqual(logEntries.first?.metadata?["hb.request.headers"], .stringConvertible(["content-type": "application/json"]))
             }
             try await client.execute(
                 uri: "/none",
@@ -358,8 +358,8 @@ final class MiddlewareTests: XCTestCase {
                 headers: [.contentType: "application/json"],
                 body: .init(string: "{}")
             ) { _ in
-                let logEntries = logAccumalator.filter { $0.metadata?["hb.uri"]?.description == "/none" }
-                XCTAssertNil(logEntries.first?.metadata?["hb.headers"])
+                let logEntries = logAccumalator.filter { $0.metadata?["hb.request.path"]?.description == "/none" }
+                XCTAssertNil(logEntries.first?.metadata?["hb.request.headers"])
             }
             try await client.execute(
                 uri: "/all",
@@ -367,8 +367,8 @@ final class MiddlewareTests: XCTestCase {
                 headers: [.contentType: "application/json"],
                 body: .init(string: "{}")
             ) { _ in
-                let logEntries = logAccumalator.filter { $0.metadata?["hb.uri"]?.description == "/all" }
-                guard case .stringConvertible(let headers) = logEntries.first?.metadata?["hb.headers"] else {
+                let logEntries = logAccumalator.filter { $0.metadata?["hb.request.path"]?.description == "/all" }
+                guard case .stringConvertible(let headers) = logEntries.first?.metadata?["hb.request.headers"] else {
                     fatalError("Should never get here")
                 }
                 let reportedHeaders = try XCTUnwrap(headers as? [String: String])
@@ -401,8 +401,8 @@ final class MiddlewareTests: XCTestCase {
                 headers: [.authorization: "basic okhasdf87654"],
                 body: .init(string: "{}")
             ) { _ in
-                let logEntries = logAccumalator.filter { $0.metadata?["hb.uri"]?.description == "/some" }
-                XCTAssertEqual(logEntries.first?.metadata?["hb.headers"], .stringConvertible(["authorization": "***"]))
+                let logEntries = logAccumalator.filter { $0.metadata?["hb.request.path"]?.description == "/some" }
+                XCTAssertEqual(logEntries.first?.metadata?["hb.request.headers"], .stringConvertible(["authorization": "***"]))
             }
             try await client.execute(
                 uri: "/all",
@@ -410,8 +410,8 @@ final class MiddlewareTests: XCTestCase {
                 headers: [.authorization: "basic kjhdfi7udsfkhj"],
                 body: .init(string: "{}")
             ) { _ in
-                let logEntries = logAccumalator.filter { $0.metadata?["hb.uri"]?.description == "/all" }
-                guard case .stringConvertible(let headers) = logEntries.first?.metadata?["hb.headers"] else {
+                let logEntries = logAccumalator.filter { $0.metadata?["hb.request.path"]?.description == "/all" }
+                guard case .stringConvertible(let headers) = logEntries.first?.metadata?["hb.request.headers"] else {
                     fatalError("Should never get here")
                 }
                 let reportedHeaders = try XCTUnwrap(headers as? [String: String])
@@ -444,9 +444,9 @@ final class MiddlewareTests: XCTestCase {
                 headers: headers,
                 body: .init(string: "{}")
             ) { _ in
-                let logs = logAccumalator.filter { $0.metadata?["hb.uri"]?.description == "/test" }
+                let logs = logAccumalator.filter { $0.metadata?["hb.request.path"]?.description == "/test" }
                 let firstLog = try XCTUnwrap(logs.first)
-                XCTAssertEqual(firstLog.metadata?["hb.headers"], .stringConvertible(["hbtest": "One, Two"]))
+                XCTAssertEqual(firstLog.metadata?["hb.request.headers"], .stringConvertible(["hbtest": "One, Two"]))
             }
         }
     }
