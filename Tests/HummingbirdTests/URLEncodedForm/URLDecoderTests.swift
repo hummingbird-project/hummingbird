@@ -155,6 +155,18 @@ class URLDecodedFormDecoderTests: XCTestCase {
         self.testForm(test, query: "a=VGVzdGluZw%3D%3D")
     }
 
+    func testIndexOutOfRange() {
+        struct Test: Codable, Equatable {
+            let a: ClosedRange<Int>
+        }
+        XCTAssertThrowsError(try URLEncodedFormDecoder().decode(Test.self, from: "a[]=4")) { error in
+            if case DecodingError.valueNotFound = error {
+            } else {
+                XCTFail("\(error)")
+            }
+        }
+    }
+
     func testNestedKeyDecode() {
         struct Test: Decodable, Equatable {
             let forename: String

@@ -276,102 +276,87 @@ private class _URLEncodedFormDecoder: Decoder {
             self.currentIndex = 0
         }
 
+        mutating func decodeNextNode<T: Decodable>(as: T.Type = T.self) throws -> T {
+            guard !self.isAtEnd else {
+                throw DecodingError.valueNotFound(
+                    T.self,
+                    .init(codingPath: self.codingPath, debugDescription: "Unkeyed container index out of range")
+                )
+            }
+            let node = self.container.values[self.currentIndex]
+            self.currentIndex += 1
+            return try self.decoder.unbox(node, as: T.self)
+        }
+
         mutating func decodeNil() throws -> Bool {
             let node = self.container.values[self.currentIndex]
             return try self.decoder.unboxNil(node)
         }
 
         mutating func decode(_: Bool.Type) throws -> Bool {
-            let node = self.container.values[self.currentIndex]
-            self.currentIndex += 1
-            return try self.decoder.unbox(node, as: Bool.self)
+            try self.decodeNextNode()
         }
 
         mutating func decode(_: String.Type) throws -> String {
-            let node = self.container.values[self.currentIndex]
-            self.currentIndex += 1
-            return try self.decoder.unbox(node, as: String.self)
+            try self.decodeNextNode()
         }
 
         mutating func decode(_: Double.Type) throws -> Double {
-            let node = self.container.values[self.currentIndex]
-            self.currentIndex += 1
-            return try self.decoder.unbox(node, as: Double.self)
+            try self.decodeNextNode()
         }
 
         mutating func decode(_: Float.Type) throws -> Float {
-            let node = self.container.values[self.currentIndex]
-            self.currentIndex += 1
-            return try self.decoder.unbox(node, as: Float.self)
+            try self.decodeNextNode()
         }
 
         mutating func decode(_: Int.Type) throws -> Int {
-            let node = self.container.values[self.currentIndex]
-            self.currentIndex += 1
-            return try self.decoder.unbox(node, as: Int.self)
+            try self.decodeNextNode()
         }
 
         mutating func decode(_: Int8.Type) throws -> Int8 {
-            let node = self.container.values[self.currentIndex]
-            self.currentIndex += 1
-            return try self.decoder.unbox(node, as: Int8.self)
+            try self.decodeNextNode()
         }
 
         mutating func decode(_: Int16.Type) throws -> Int16 {
-            let node = self.container.values[self.currentIndex]
-            self.currentIndex += 1
-            return try self.decoder.unbox(node, as: Int16.self)
+            try self.decodeNextNode()
         }
 
         mutating func decode(_: Int32.Type) throws -> Int32 {
-            let node = self.container.values[self.currentIndex]
-            self.currentIndex += 1
-            return try self.decoder.unbox(node, as: Int32.self)
+            try self.decodeNextNode()
         }
 
         mutating func decode(_: Int64.Type) throws -> Int64 {
-            let node = self.container.values[self.currentIndex]
-            self.currentIndex += 1
-            return try self.decoder.unbox(node, as: Int64.self)
+            try self.decodeNextNode()
         }
 
         mutating func decode(_: UInt.Type) throws -> UInt {
-            let node = self.container.values[self.currentIndex]
-            self.currentIndex += 1
-            return try self.decoder.unbox(node, as: UInt.self)
+            try self.decodeNextNode()
         }
 
         mutating func decode(_: UInt8.Type) throws -> UInt8 {
-            let node = self.container.values[self.currentIndex]
-            self.currentIndex += 1
-            return try self.decoder.unbox(node, as: UInt8.self)
+            try self.decodeNextNode()
         }
 
         mutating func decode(_: UInt16.Type) throws -> UInt16 {
-            let node = self.container.values[self.currentIndex]
-            self.currentIndex += 1
-            return try self.decoder.unbox(node, as: UInt16.self)
+            try self.decodeNextNode()
         }
 
         mutating func decode(_: UInt32.Type) throws -> UInt32 {
-            let node = self.container.values[self.currentIndex]
-            self.currentIndex += 1
-            return try self.decoder.unbox(node, as: UInt32.self)
+            try self.decodeNextNode()
         }
 
         mutating func decode(_: UInt64.Type) throws -> UInt64 {
-            let node = self.container.values[self.currentIndex]
-            self.currentIndex += 1
-            return try self.decoder.unbox(node, as: UInt64.self)
+            try self.decodeNextNode()
         }
 
         mutating func decode<T>(_: T.Type) throws -> T where T: Decodable {
-            let node = self.container.values[self.currentIndex]
-            self.currentIndex += 1
-            return try self.decoder.unbox(node, as: T.self)
+            try self.decodeNextNode()
         }
 
         mutating func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> where NestedKey: CodingKey {
+            guard !self.isAtEnd else {
+                throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Unkeyed container index out of range"))
+            }
             let node = container.values[self.currentIndex]
             self.currentIndex += 1
             guard case .map(let map) = node else {
@@ -382,10 +367,13 @@ private class _URLEncodedFormDecoder: Decoder {
         }
 
         mutating func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
+            guard !self.isAtEnd else {
+                throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Unkeyed container index out of range"))
+            }
             let node = self.container.values[self.currentIndex]
             self.currentIndex += 1
             guard case .array(let array) = node else {
-                throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected a dictionary"))
+                throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected an array"))
             }
             return UKDC(container: array, decoder: self.decoder)
         }
