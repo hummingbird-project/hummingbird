@@ -79,6 +79,41 @@ class URLDecodedFormDecoderTests: XCTestCase {
         self.testForm(test, query: "b[]=true&b[]=false&i[]=34&i8[]=23&i16[]=9&i32[]=-6872&i64[]=23&u[]=0&u8[]=255&u16[]=7673&u32[]=88222&u64[]=234&f[]=-1.1&d[]=8")
     }
 
+    func testArraysWithIndices() {
+        struct Test: Codable, Equatable {
+            let arr: [Int]
+        }
+        let test = Test(arr: [12, 45, 54, 55, -5, 5])
+        self.testForm(test, query: "arr[0]=12&arr[1]=45&arr[2]=54&arr[3]=55&arr[4]=-5&arr[5]=5")
+
+        let test2 = Test(arr: [12, 45, 54, 55, -5, 5, 9, 33, 0, 9, 4, 33])
+        let query = """
+        arr[0]=12\
+        &arr[1]=45\
+        &arr[2]=54\
+        &arr[3]=55\
+        &arr[4]=-5\
+        &arr[5]=5\
+        &arr[6]=9\
+        &arr[7]=33\
+        &arr[8]=0\
+        &arr[9]=9\
+        &arr[10]=4\
+        &arr[11]=33
+        """
+        self.testForm(test2, query: query)
+    }
+
+    func testArrayWithIndicesThrows() {
+        struct Test: Codable, Equatable {
+            let arr: [Int]
+        }
+        let decoder = URLEncodedFormDecoder()
+        // incorrect indices
+        let query = "arr[0]=2?arr[2]=4"
+        XCTAssertThrowsError(try decoder.decode(Test.self, from: query))
+    }
+
     func testStringSpecialCharactersDecode() {
         struct Test: Codable, Equatable {
             let a: String

@@ -51,7 +51,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
         /// function for create `URLEncodedFormNode` from `KeyParser.Key.Type`
         func createNode(from key: KeyParser.KeyType) -> URLEncodedFormNode {
             switch key {
-            case .array:
+            case .array, .arrayWithIndices:
                 return .array(.init())
             case .map:
                 return .map(.init())
@@ -84,6 +84,11 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
                 // currently don't support arrays and maps inside arrays
                 throw Error.notSupported
             }
+        case (.array(let array), .arrayWithIndices(let index)):
+            guard keys.count == 0, array.values.count == index else {
+                throw Error.notSupported
+            }
+            array.values.append(.leaf(value))
         default:
             throw Error.failedToDecode()
         }
@@ -168,7 +173,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
 
 /// Parse URL encoded key
 enum KeyParser {
-    enum KeyType: Equatable { case map(Substring), array }
+    enum KeyType: Equatable { case map(Substring), array, arrayWithIndices(Int) }
 
     static func parse(_ key: String) -> [KeyType]? {
         var index = key.startIndex
@@ -186,8 +191,25 @@ enum KeyParser {
             index = key.index(after: index)
             // an open bracket is unexpected
             guard index != key.endIndex else { return nil }
+
+            // support for arrays with indexes e.g ?arr[0]=24&arr[1]=8
+            var arrayIndex: Int?
+            while key[index].isASCIINumber {
+                guard let number = key[index].asciiNumberValue else { return nil }
+                if let unwrapedArrayIndex = arrayIndex {
+                    arrayIndex = unwrapedArrayIndex * 10 + number
+                } else {
+                    arrayIndex = number
+                }
+                index = key.index(after: index)
+            }
+
             if key[index] == "]" {
-                values.append(.array)
+                if let arrayIndex {
+                    values.append(.arrayWithIndices(arrayIndex))
+                } else {
+                    values.append(.array)
+                }
                 index = key.index(after: index)
             } else {
                 // an open bracket is unexpected
