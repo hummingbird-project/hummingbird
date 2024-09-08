@@ -108,7 +108,7 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
                     head: .init(method: method, scheme: "http", authority: "localhost", path: uri, headerFields: headers),
                     body: stream
                 )
-                let logger = self.logger.with(metadataKey: "hb.id", value: .stringConvertible(RequestID()))
+                let logger = self.logger.with(metadataKey: "hb.request.id", value: .stringConvertible(RequestID()))
                 let context = self.makeContext(logger)
 
                 group.addTask {

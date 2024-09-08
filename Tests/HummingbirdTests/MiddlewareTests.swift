@@ -316,10 +316,10 @@ final class MiddlewareTests: XCTestCase {
                 headers: [.contentType: "application/json"],
                 body: .init(string: "{}")
             ) { _ in
-                let logs = logAccumalator.filter { $0.metadata?["hb.uri"]?.description == "/test" }
+                let logs = logAccumalator.filter { $0.metadata?["hb.request.path"]?.description == "/test" }
                 let firstLog = try XCTUnwrap(logs.first)
-                XCTAssertEqual(firstLog.metadata?["hb.method"]?.description, "GET")
-                XCTAssertNotNil(firstLog.metadata?["hb.id"])
+                XCTAssertEqual(firstLog.metadata?["hb.request.method"]?.description, "GET")
+                XCTAssertNotNil(firstLog.metadata?["hb.request.id"])
             }
         }
     }

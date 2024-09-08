@@ -25,6 +25,10 @@ let port = env.get("SERVER_PORT", as: Int.self) ?? 8080
 // create app
 let elg = MultiThreadedEventLoopGroup(numberOfThreads: 4)
 var router = Router()
+router.addMiddleware {
+    LogRequestsMiddleware(.info)
+}
+
 // number of raw requests
 // ./wrk -c 128 -d 15s -t 8 http://localhost:8080
 router.get { _, _ in
