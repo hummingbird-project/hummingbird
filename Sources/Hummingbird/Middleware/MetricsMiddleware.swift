@@ -24,15 +24,18 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
 
     public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
         let startTime = DispatchTime.now().uptimeNanoseconds
-
+        let activeRequestMeter = Meter(label: "http.server.active_requests", dimensions: [("http.request.method", request.method.description)])
+        activeRequestMeter.increment()
         do {
             var response = try await next(request, context)
+            let responseStatus = response.status
             response.body = response.body.withPostWriteClosure {
                 // need to create dimensions once request has been responded to ensure
                 // we have the correct endpoint path
                 let dimensions: [(String, String)] = [
                     ("http.route", context.endpointPath ?? request.uri.path),
                     ("http.request.method", request.method.rawValue),
+                    ("http.response.status_code", responseStatus.code.description),
                 ]
                 Counter(label: "hb.requests", dimensions: dimensions).increment()
                 Metrics.Timer(
@@ -40,14 +43,15 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
                     dimensions: dimensions,
                     preferredDisplayUnit: .seconds
                 ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
+                activeRequestMeter.decrement()
             }
             return response
         } catch {
             let errorType: String
             if let httpError = error as? HTTPResponseError {
-                errorType = httpError.status.description
+                errorType = httpError.status.code.description
             } else {
-                errorType = HTTPResponse.Status.internalServerError.description
+                errorType = "500"
             }
             // need to create dimensions once request has been responded to ensure
             // we have the correct endpoint path
@@ -67,6 +71,7 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
                 ]
             }
             Counter(label: "hb.request.errors", dimensions: dimensions).increment()
+            activeRequestMeter.decrement()
             throw error
         }
     }
