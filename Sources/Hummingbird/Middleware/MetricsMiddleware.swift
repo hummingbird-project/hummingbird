@@ -66,7 +66,7 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
                     ("error.type", errorType),
                 ]
             }
-            Counter(label: "hb.errors", dimensions: dimensions).increment()
+            Counter(label: "hb.request.errors", dimensions: dimensions).increment()
             throw error
         }
     }
