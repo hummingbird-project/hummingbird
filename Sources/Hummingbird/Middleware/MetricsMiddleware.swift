@@ -31,32 +31,39 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
                 // need to create dimensions once request has been responded to ensure
                 // we have the correct endpoint path
                 let dimensions: [(String, String)] = [
-                    ("uri", context.endpointPath ?? request.uri.path),
-                    ("method", request.method.rawValue),
+                    ("http.route", context.endpointPath ?? request.uri.path),
+                    ("http.request.method", request.method.rawValue),
                 ]
                 Counter(label: "hb.requests", dimensions: dimensions).increment()
                 Metrics.Timer(
-                    label: "hb.request_duration",
+                    label: "http.server.request.duration",
                     dimensions: dimensions,
                     preferredDisplayUnit: .seconds
                 ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
             }
             return response
         } catch {
+            let errorType: String
+            if let httpError = error as? HTTPResponseError {
+                errorType = httpError.status.description
+            } else {
+                errorType = HTTPResponse.Status.internalServerError.description
+            }
             // need to create dimensions once request has been responded to ensure
             // we have the correct endpoint path
             let dimensions: [(String, String)]
             // Don't record uri in 404 errors, to avoid spamming of metrics
             if let endpointPath = context.endpointPath {
                 dimensions = [
-                    ("uri", endpointPath),
-                    ("method", request.method.rawValue),
+                    ("http.route", endpointPath),
+                    ("http.request.method", request.method.rawValue),
+                    ("error.type", errorType),
                 ]
                 Counter(label: "hb.requests", dimensions: dimensions).increment()
             } else {
                 dimensions = [
-                    ("uri", "NotFound"),
-                    ("method", request.method.rawValue),
+                    ("http.request.method", request.method.rawValue),
+                    ("error.type", errorType),
                 ]
             }
             Counter(label: "hb.errors", dimensions: dimensions).increment()
