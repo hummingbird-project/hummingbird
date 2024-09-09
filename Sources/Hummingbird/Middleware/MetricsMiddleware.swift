@@ -24,42 +24,54 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
 
     public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
         let startTime = DispatchTime.now().uptimeNanoseconds
-
+        let activeRequestMeter = Meter(label: "cod", dimensions: [("http.request.method", request.method.description)])
+        activeRequestMeter.increment()
         do {
             var response = try await next(request, context)
+            let responseStatus = response.status
             response.body = response.body.withPostWriteClosure {
                 // need to create dimensions once request has been responded to ensure
                 // we have the correct endpoint path
                 let dimensions: [(String, String)] = [
-                    ("hb_uri", context.endpointPath ?? request.uri.path),
-                    ("hb_method", request.method.rawValue),
+                    ("http.route", context.endpointPath ?? request.uri.path),
+                    ("http.request.method", request.method.rawValue),
+                    ("http.response.status_code", responseStatus.code.description),
                 ]
-                Counter(label: "hb_requests", dimensions: dimensions).increment()
+                Counter(label: "hb.requests", dimensions: dimensions).increment()
                 Metrics.Timer(
-                    label: "hb_request_duration",
+                    label: "http.server.request.duration",
                     dimensions: dimensions,
                     preferredDisplayUnit: .seconds
                 ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
+                activeRequestMeter.decrement()
             }
             return response
         } catch {
+            let errorType: String
+            if let httpError = error as? HTTPResponseError {
+                errorType = httpError.status.code.description
+            } else {
+                errorType = "500"
+            }
             // need to create dimensions once request has been responded to ensure
             // we have the correct endpoint path
             let dimensions: [(String, String)]
             // Don't record uri in 404 errors, to avoid spamming of metrics
             if let endpointPath = context.endpointPath {
                 dimensions = [
-                    ("hb_uri", endpointPath),
-                    ("hb_method", request.method.rawValue),
+                    ("http.route", endpointPath),
+                    ("http.request.method", request.method.rawValue),
+                    ("error.type", errorType),
                 ]
-                Counter(label: "hb_requests", dimensions: dimensions).increment()
+                Counter(label: "hb.requests", dimensions: dimensions).increment()
             } else {
                 dimensions = [
-                    ("hb_uri", "NotFound"),
-                    ("hb_method", request.method.rawValue),
+                    ("http.request.method", request.method.rawValue),
+                    ("error.type", errorType),
                 ]
             }
-            Counter(label: "hb_errors", dimensions: dimensions).increment()
+            Counter(label: "hb.request.errors", dimensions: dimensions).increment()
+            activeRequestMeter.decrement()
             throw error
         }
     }

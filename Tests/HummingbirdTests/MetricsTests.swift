@@ -200,11 +200,11 @@ final class MetricsTests: XCTestCase {
             try await client.execute(uri: "/hello", method: .get) { _ in }
         }
 
-        let counter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb_requests"] as? TestCounter)
+        let counter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb.requests"] as? TestCounter)
         XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
-        XCTAssertEqual(counter.dimensions[0].0, "hb_uri")
+        XCTAssertEqual(counter.dimensions[0].0, "http.route")
         XCTAssertEqual(counter.dimensions[0].1, "/hello")
-        XCTAssertEqual(counter.dimensions[1].0, "hb_method")
+        XCTAssertEqual(counter.dimensions[1].0, "http.request.method")
         XCTAssertEqual(counter.dimensions[1].1, "GET")
     }
 
@@ -219,12 +219,12 @@ final class MetricsTests: XCTestCase {
             try await client.execute(uri: "/hello", method: .get) { _ in }
         }
 
-        let counter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb_errors"] as? TestCounter)
+        let counter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb.request.errors"] as? TestCounter)
         XCTAssertEqual(counter.values.withLockedValue { $0 }.count, 1)
         XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
-        XCTAssertEqual(counter.dimensions[0].0, "hb_uri")
+        XCTAssertEqual(counter.dimensions[0].0, "http.route")
         XCTAssertEqual(counter.dimensions[0].1, "/hello")
-        XCTAssertEqual(counter.dimensions[1].0, "hb_method")
+        XCTAssertEqual(counter.dimensions[1].0, "http.request.method")
         XCTAssertEqual(counter.dimensions[1].1, "GET")
     }
 
@@ -239,14 +239,14 @@ final class MetricsTests: XCTestCase {
             try await client.execute(uri: "/hello2", method: .get) { _ in }
         }
 
-        let counter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb_errors"] as? TestCounter)
+        let counter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb.request.errors"] as? TestCounter)
         XCTAssertEqual(counter.values.withLockedValue { $0 }.count, 1)
         XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
         XCTAssertEqual(counter.dimensions.count, 2)
-        XCTAssertEqual(counter.dimensions[0].0, "hb_uri")
-        XCTAssertEqual(counter.dimensions[0].1, "NotFound")
-        XCTAssertEqual(counter.dimensions[1].0, "hb_method")
-        XCTAssertEqual(counter.dimensions[1].1, "GET")
+        XCTAssertEqual(counter.dimensions[0].0, "http.request.method")
+        XCTAssertEqual(counter.dimensions[0].1, "GET")
+        XCTAssertEqual(counter.dimensions[1].0, "error.type")
+        XCTAssertEqual(counter.dimensions[1].1, "404")
     }
 
     func testParameterEndpoint() async throws {
@@ -260,14 +260,16 @@ final class MetricsTests: XCTestCase {
             try await client.execute(uri: "/user/765", method: .get) { _ in }
         }
 
-        let counter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb_errors"] as? TestCounter)
+        let counter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb.request.errors"] as? TestCounter)
         XCTAssertEqual(counter.values.withLockedValue { $0 }.count, 1)
         XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
-        XCTAssertEqual(counter.dimensions.count, 2)
-        XCTAssertEqual(counter.dimensions[0].0, "hb_uri")
+        XCTAssertEqual(counter.dimensions.count, 3)
+        XCTAssertEqual(counter.dimensions[0].0, "http.route")
         XCTAssertEqual(counter.dimensions[0].1, "/user/{id}")
-        XCTAssertEqual(counter.dimensions[1].0, "hb_method")
+        XCTAssertEqual(counter.dimensions[1].0, "http.request.method")
         XCTAssertEqual(counter.dimensions[1].1, "GET")
+        XCTAssertEqual(counter.dimensions[2].0, "error.type")
+        XCTAssertEqual(counter.dimensions[2].1, "400")
     }
 
     func testRecordingBodyWriteTime() async throws {
@@ -283,7 +285,7 @@ final class MetricsTests: XCTestCase {
             try await client.execute(uri: "/hello", method: .get) { _ in }
         }
 
-        let timer = try XCTUnwrap(Self.testMetrics.timers.withLockedValue { $0 }["hb_request_duration"] as? TestTimer)
+        let timer = try XCTUnwrap(Self.testMetrics.timers.withLockedValue { $0 }["http.server.request.duration"] as? TestTimer)
         XCTAssertGreaterThan(timer.values.withLockedValue { $0 }[0].1, 5_000_000)
     }
 }
