@@ -7,9 +7,10 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
     /// holds an array of nodes
     case array(Array)
 
-    enum Error: Swift.Error {
+    enum Error: Swift.Error, Equatable {
         case failedToDecode(String? = nil)
         case notSupported
+        case invalidArrayIndex(Int)
     }
 
     /// Initialize node from URL encoded form data
@@ -86,7 +87,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
             }
         case (.array(let array), .arrayWithIndices(let index)):
             guard keys.count == 0, array.values.count == index else {
-                throw Error.notSupported
+                throw Error.invalidArrayIndex(index)
             }
             array.values.append(.leaf(value))
         default:
@@ -192,29 +193,18 @@ enum KeyParser {
             // an open bracket is unexpected
             guard index != key.endIndex else { return nil }
 
-            // support for arrays with indexes e.g ?arr[0]=24&arr[1]=8
-            var arrayIndex: Int?
-            while key[index].isASCIINumber {
-                guard let number = key[index].asciiNumberValue else { return nil }
-                if let unwrapedArrayIndex = arrayIndex {
-                    arrayIndex = unwrapedArrayIndex * 10 + number
-                } else {
-                    arrayIndex = number
-                }
-                index = key.index(after: index)
-            }
-
             if key[index] == "]" {
-                if let arrayIndex {
-                    values.append(.arrayWithIndices(arrayIndex))
-                } else {
-                    values.append(.array)
-                }
+                values.append(.array)
                 index = key.index(after: index)
             } else {
                 // an open bracket is unexpected
                 guard let bracketIndex = key[index...].firstIndex(of: "]") else { return nil }
-                values.append(.map(key[index..<bracketIndex]))
+                // If key can convert to an integer assume it is an array index
+                if let index = Int(key[index..<bracketIndex]) {
+                    values.append(.arrayWithIndices(index))
+                } else {
+                    values.append(.map(key[index..<bracketIndex]))
+                }
                 index = bracketIndex
                 index = key.index(after: index)
             }

@@ -46,6 +46,11 @@ class URLEncodedFormNodeTests: XCTestCase {
         XCTAssertEqual(values, [.map("array"), .array])
     }
 
+    func testKeyParserArrayWithIndices() {
+        let values = KeyParser.parse("array[0]")
+        XCTAssertEqual(values, [.map("array"), .arrayWithIndices(0)])
+    }
+
     func testKeyParserMap() {
         let values = KeyParser.parse("array[object]")
         XCTAssertEqual(values, [.map("array"), .map("object")])

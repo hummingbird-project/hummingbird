@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Hummingbird
+@testable import Hummingbird
 import XCTest
 
 class URLDecodedFormDecoderTests: XCTestCase {
@@ -110,8 +110,10 @@ class URLDecodedFormDecoderTests: XCTestCase {
         }
         let decoder = URLEncodedFormDecoder()
         // incorrect indices
-        let query = "arr[0]=2?arr[2]=4"
-        XCTAssertThrowsError(try decoder.decode(Test.self, from: query))
+        let query = "arr[0]=2&arr[2]=4"
+        XCTAssertThrowsError(try decoder.decode(Test.self, from: query)) { error in
+            XCTAssertEqual(error as? URLEncodedFormNode.Error, URLEncodedFormNode.Error.invalidArrayIndex(2))
+        }
     }
 
     func testStringSpecialCharactersDecode() {
