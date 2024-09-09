@@ -7,9 +7,10 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
     /// holds an array of nodes
     case array(Array)
 
-    enum Error: Swift.Error {
+    enum Error: Swift.Error, Equatable {
         case failedToDecode(String? = nil)
         case notSupported
+        case invalidArrayIndex(Int)
     }
 
     /// Initialize node from URL encoded form data
@@ -51,7 +52,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
         /// function for create `URLEncodedFormNode` from `KeyParser.Key.Type`
         func createNode(from key: KeyParser.KeyType) -> URLEncodedFormNode {
             switch key {
-            case .array:
+            case .array, .arrayWithIndices:
                 return .array(.init())
             case .map:
                 return .map(.init())
@@ -84,6 +85,11 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
                 // currently don't support arrays and maps inside arrays
                 throw Error.notSupported
             }
+        case (.array(let array), .arrayWithIndices(let index)):
+            guard keys.count == 0, array.values.count == index else {
+                throw Error.invalidArrayIndex(index)
+            }
+            array.values.append(.leaf(value))
         default:
             throw Error.failedToDecode()
         }
@@ -168,7 +174,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
 
 /// Parse URL encoded key
 enum KeyParser {
-    enum KeyType: Equatable { case map(Substring), array }
+    enum KeyType: Equatable { case map(Substring), array, arrayWithIndices(Int) }
 
     static func parse(_ key: String) -> [KeyType]? {
         var index = key.startIndex
@@ -186,13 +192,19 @@ enum KeyParser {
             index = key.index(after: index)
             // an open bracket is unexpected
             guard index != key.endIndex else { return nil }
+
             if key[index] == "]" {
                 values.append(.array)
                 index = key.index(after: index)
             } else {
                 // an open bracket is unexpected
                 guard let bracketIndex = key[index...].firstIndex(of: "]") else { return nil }
-                values.append(.map(key[index..<bracketIndex]))
+                // If key can convert to an integer assume it is an array index
+                if let index = Int(key[index..<bracketIndex]) {
+                    values.append(.arrayWithIndices(index))
+                } else {
+                    values.append(.map(key[index..<bracketIndex]))
+                }
                 index = bracketIndex
                 index = key.index(after: index)
             }
