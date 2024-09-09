@@ -12,13 +12,19 @@ needs to be listed here.
 
 - Adam Fowler <adamfowler71@gmail.com>
 - Aleph Retamal <7674479+alephao@users.noreply.github.com>
+- Andreas Ley <andreas@andreasley.ch>
 - Brian Michel <brian.michel@gmail.com>
+- Callum Todd <c@callumtodd.uk>
 - Chris <4376956+SoftwareEngineerChris@users.noreply.github.com>
 - Derek Clarkson <d4rkf1br3@gmail.com>
 - Florion <florion@lilo.org>
 - Iceman <side.junktown@gmail.com>
 - Joannis Orlandos <joannis@orlandos.nl>
+- Jonathan Pulfer <JonPulfer@users.noreply.github.com>
+- Lorenzo Fiamingo <personal@lorenzofiamingo.com>
+- Mirza Učanbarlić <56406159+supersonicbyte@users.noreply.github.com>
 - Moritz Lang <hi@slashmo.codes>
+- Runar Hummelsund <runhum@users.noreply.github.com>
 - Simon Leeb <52261246+sliemeobn@users.noreply.github.com>
 - Tanner Silva <t@tannersilva.com>
 - Tibor Bödecs <mail.tib@gmail.com>
@@ -26,8 +32,14 @@ needs to be listed here.
 - hummingbird-automation[bot] <168462326+hummingbird-automation[bot]@users.noreply.github.com>
 - taylorswift <kelvin13ma@gmail.com>
 - 0xpablo <pablos93@gmail.com>
+- Michael Stegeman <michael@stegeman.me>
 - Ronald Mannak <ronaldmannak@me.com>
+- adam-fowler <adam-fowler@users.noreply.github.com>
 - Nicholas Trienens <nick@fuzzproductions.com>
+- Mahdi Bahrami <github@mahdibm.com>
+- Joseph Heck <heckj@mac.com>
+- Stevenson Michel <130018170+thoven87@users.noreply.github.com>
+- Thomas Krajacic <tkrajacic@users.noreply.github.com>
 - Gao Lei <7885834+ladiesman218@users.noreply.github.com>
 - Kanz <87kangsw@gmail.com>
 - Kia Abdi <65511468+TheeKia@users.noreply.github.com>
