@@ -24,7 +24,7 @@ import NIOPosix
 import ServiceLifecycle
 import XCTest
 
-class HummingBirdCoreTests: XCTestCase {
+final class HummingBirdCoreTests: XCTestCase {
     static let eventLoopGroup: EventLoopGroup = {
         #if os(iOS)
         NIOTSEventLoopGroup.singleton

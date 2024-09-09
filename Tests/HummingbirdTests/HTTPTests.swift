@@ -16,7 +16,7 @@ import Hummingbird
 import HummingbirdCore
 import XCTest
 
-class HTTPTests: XCTestCase {
+final class HTTPTests: XCTestCase {
     func testURI<T: Equatable>(_ uri: URI, _ component: KeyPath<URI, T>, _ value: T) {
         XCTAssertEqual(uri[keyPath: component], value)
     }

@@ -24,7 +24,7 @@ import NIOSSL
 import NIOTransportServices
 import XCTest
 
-class HummingBirdHTTP2Tests: XCTestCase {
+final class HummingBirdHTTP2Tests: XCTestCase {
     func testConnect() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
