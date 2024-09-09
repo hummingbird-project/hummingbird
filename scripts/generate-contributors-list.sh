@@ -45,7 +45,10 @@ get_contributors hummingbird-fluent
 get_contributors hummingbird-lambda
 get_contributors hummingbird-mustache
 get_contributors hummingbird-redis
+get_contributors hummingbird-postgres
+get_contributors hummingbird-websocket
 get_contributors hummingbird-examples
+
 
 CONTRIBUTORS=$(awk '!a[$0]++' <<< """$CONTRIBUTORS""")
 
