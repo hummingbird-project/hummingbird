@@ -15,7 +15,7 @@
 @testable @_spi(Internal) import Hummingbird
 import XCTest
 
-class TrieRouterTests: XCTestCase {
+final class TrieRouterTests: XCTestCase {
     func testPathComponentsTrie() {
         let trieBuilder = RouterPathTrieBuilder<String>()
         trieBuilder.addEntry("/usr/local/bin", value: "test1")

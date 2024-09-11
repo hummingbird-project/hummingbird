@@ -15,7 +15,7 @@
 import HummingbirdCore
 import XCTest
 
-class FlatDictionaryTests: XCTestCase {
+final class FlatDictionaryTests: XCTestCase {
     func testLiteralInit() {
         let a: FlatDictionary<String, String> = ["test": "value", "key2": "value2"]
         XCTAssertEqual(a["test"], "value")

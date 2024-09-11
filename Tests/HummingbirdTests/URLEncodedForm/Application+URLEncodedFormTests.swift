@@ -18,7 +18,7 @@ import Logging
 import NIOCore
 import XCTest
 
-class HummingBirdURLEncodedTests: XCTestCase {
+final class HummingBirdURLEncodedTests: XCTestCase {
     struct User: ResponseCodable {
         let name: String
         let email: String

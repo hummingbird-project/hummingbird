@@ -16,7 +16,7 @@
 import HummingbirdTesting
 import XCTest
 
-class CookieTests: XCTestCase {
+final class CookieTests: XCTestCase {
     func testNameValue() {
         let cookie = Cookie(from: "name=value")
         XCTAssertEqual(cookie?.name, "name")

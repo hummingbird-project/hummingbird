@@ -16,7 +16,7 @@ import Hummingbird
 import HummingbirdTesting
 import XCTest
 
-class FileIOTests: XCTestCase {
+final class FileIOTests: XCTestCase {
     static func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
         data = data.map { _ in UInt8.random(in: 0...255) }

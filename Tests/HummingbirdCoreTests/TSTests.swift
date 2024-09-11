@@ -23,7 +23,7 @@ import NIOSSL
 import NIOTransportServices
 import XCTest
 
-class TransportServicesTests: XCTestCase {
+final class TransportServicesTests: XCTestCase {
     func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
         data = data.map { _ in UInt8.random(in: 0...255) }

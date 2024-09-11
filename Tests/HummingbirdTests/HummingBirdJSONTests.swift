@@ -17,7 +17,7 @@ import HummingbirdTesting
 import Logging
 import XCTest
 
-class HummingbirdJSONTests: XCTestCase {
+final class HummingbirdJSONTests: XCTestCase {
     struct User: ResponseCodable {
         let name: String
         let email: String

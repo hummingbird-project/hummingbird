@@ -15,7 +15,7 @@
 @testable import Hummingbird
 import XCTest
 
-class URLDecodedFormDecoderTests: XCTestCase {
+final class URLDecodedFormDecoderTests: XCTestCase {
     func testForm<Input: Decodable & Equatable>(_ value: Input, query: String, decoder: URLEncodedFormDecoder = .init()) {
         do {
             let value2 = try decoder.decode(Input.self, from: query)

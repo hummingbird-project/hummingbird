@@ -15,7 +15,7 @@
 @testable import Hummingbird
 import XCTest
 
-class URLEncodedFormNodeTests: XCTestCase {
+final class URLEncodedFormNodeTests: XCTestCase {
     static func XCTAssertEncodedEqual(_ lhs: String, _ rhs: String) {
         let lhs = lhs.split(separator: "&")
             .sorted { $0 < $1 }
