@@ -62,7 +62,6 @@ extension PersistDriver {
     /// - Parameters:
     ///   - key: Key to store value against
     ///   - value: Codable value to store
-    ///   - expires: If non-nil defines time that value will expire
     public func set(key: String, value: some Codable & Sendable) async throws {
         try await self.set(key: key, value: value, expires: nil)
     }

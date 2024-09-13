@@ -21,6 +21,7 @@ public protocol ResponseEncoder {
     /// - Parameters:
     ///   - value: value to encode
     ///   - request: request that generated this value
+    ///   - context: Request context
     func encode(_ value: some Encodable, from request: Request, context: some RequestContext) throws -> Response
 }
 
@@ -30,5 +31,6 @@ public protocol RequestDecoder {
     /// - Parameters:
     ///   - type: type to decode to
     ///   - request: request
+    ///   - context: Request context
     func decode<T: Decodable>(_ type: T.Type, from request: Request, context: some RequestContext) async throws -> T
 }

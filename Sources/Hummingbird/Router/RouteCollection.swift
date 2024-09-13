@@ -57,7 +57,9 @@ public final class RouteCollection<Context: RequestContext>: RouterMethods {
 
 extension RouterMethods {
     /// Add route collection to router
-    /// - Parameter collection: Route collection
+    /// - Parameters
+    ///   - collection: Route collection
+    ///   - path: Root path to add routes to
     @discardableResult public func addRoutes(_ collection: RouteCollection<Context>, atPath path: RouterPath = "") -> Self {
         for route in collection.routes {
             // ensure path starts with a "/" and doesn't end with a "/"

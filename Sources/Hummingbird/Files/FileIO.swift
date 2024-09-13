@@ -22,7 +22,7 @@ public struct FileIO: Sendable {
     let fileIO: NonBlockingFileIO
 
     /// Initialize FileIO
-    /// - Parameter application: application using FileIO
+    /// - Parameter threadPool: ThreadPool to use for file operations
     public init(threadPool: NIOThreadPool = .singleton) {
         self.fileIO = .init(threadPool: threadPool)
     }
@@ -73,7 +73,7 @@ public struct FileIO: Sendable {
     /// - Parameters:
     ///   - contents: AsyncSequence of buffers to write.
     ///   - path: Path to write to
-    ///   - logger: Logger
+    ///   - context: Request Context
     public func writeFile<AS: AsyncSequence>(
         contents: AS,
         path: String,
@@ -90,9 +90,9 @@ public struct FileIO: Sendable {
     /// Write contents of buffer to file
     ///
     /// - Parameters:
-    ///   - contents: ByteBuffer to write.
+    ///   - buffer: ByteBuffer to write.
     ///   - path: Path to write to
-    ///   - logger: Logger
+    ///   - context: Request Context
     public func writeFile(
         buffer: ByteBuffer,
         path: String,

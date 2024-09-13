@@ -36,8 +36,10 @@ public struct RouterResponder<Context: RequestContext>: HTTPResponder {
     }
 
     /// Respond to request by calling correct handler
-    /// - Parameter request: HTTP request
-    /// - Returns: EventLoopFuture that will be fulfilled with the Response
+    /// - Parameters
+    ///   - request: HTTP request
+    ///   - context: Request context
+    /// - Returns: Response
     @inlinable
     public func respond(to request: Request, context: Context) async throws -> Response {
         do {

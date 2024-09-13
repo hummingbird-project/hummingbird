@@ -55,7 +55,7 @@ public struct TestClient: Sendable {
     /// - Parameters:
     ///   - host: host to connect
     ///   - port: port to connect to
-    ///   - tlsConfiguration: TLS configuration if required
+    ///   - configuration: Client configuration
     ///   - eventLoopGroupProvider: EventLoopGroup to use
     public init(
         host: String,

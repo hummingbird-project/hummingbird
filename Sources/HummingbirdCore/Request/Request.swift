@@ -38,7 +38,6 @@ public struct Request: Sendable {
     /// - Parameters:
     ///   - head: HTTP head
     ///   - body: HTTP body
-    ///   - id: Unique RequestID
     public init(
         head: HTTPRequest,
         body: RequestBody
@@ -54,7 +53,7 @@ public struct Request: Sendable {
     /// you don't need to store the collated ByteBuffer on the request then use
     /// `request.body.collect(maxSize:)`.
     ///
-    /// - Parameter upTo: Maxiumum size of body to collect
+    /// - Parameter maxSize: Maxiumum size of body to collect
     /// - Returns: Collated body
     public mutating func collectBody(upTo maxSize: Int) async throws -> ByteBuffer {
         let byteBuffer = try await self.body.collect(upTo: maxSize)

@@ -65,6 +65,7 @@ public struct URLEncodedFormEncoder: Sendable {
     /// - Parameters:
     ///   - dateEncodingStrategy: date encoding strategy
     ///   - userInfo: user info to supply to encoder
+    ///   - additionalKeys: Deprecated variable
     public init(
         dateEncodingStrategy: URLEncodedFormEncoder.DateEncodingStrategy = .deferredToDate,
         userInfo: [CodingUserInfoKey: Sendable] = [:],
