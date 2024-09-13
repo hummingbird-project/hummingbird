@@ -60,7 +60,7 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
 
     /// handle HTTP messages being passed down the channel pipeline
     /// - Parameters:
-    ///   - value: Object to process input/output on child channel
+    ///   - asyncChannel: NIOAsyncChannel handling HTTP parts
     ///   - logger: Logger to use while processing messages
     public func handle(
         value asyncChannel: NIOCore.NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>,

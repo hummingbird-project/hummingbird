@@ -141,8 +141,8 @@ public struct MediaType: Sendable, CustomStringConvertible {
     /// Get media type from a file extension
     /// - Parameter extension: file extension
     /// - Returns: media type
-    public static func getMediaType(forExtension: String) -> MediaType? {
-        return extensionMediaTypeMap[forExtension]
+    public static func getMediaType(forExtension extension: String) -> MediaType? {
+        return extensionMediaTypeMap[`extension`]
     }
 
     /// Media type categories

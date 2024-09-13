@@ -55,7 +55,6 @@ public struct Cookie: Sendable, CustomStringConvertible {
     ///   - path: The scope of each cookie is limited to a set of paths, controlled by the Path attribute
     ///   - secure: The Secure attribute limits the scope of the cookie to "secure" channels
     ///   - httpOnly: The HttpOnly attribute limits the scope of the cookie to HTTP requests
-    ///   - sameSite: The SameSite attribute lets servers specify whether/when cookies are sent with cross-origin requests
     public init(
         name: String,
         value: String,

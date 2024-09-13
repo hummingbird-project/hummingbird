@@ -38,7 +38,7 @@ public struct ContextTransform<Context: RouterRequestContext, HandlerContext: Ro
 
     /// Create RouteGroup from result builder
     /// - Parameters:
-    ///   - routerPath: Path local to group route this group is defined in
+    ///   - context: RequestContext to convert to
     ///   - builder: RouteGroup builder
     public init(
         to context: HandlerContext.Type,

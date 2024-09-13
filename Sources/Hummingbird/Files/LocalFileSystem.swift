@@ -80,7 +80,7 @@ public struct LocalFileSystem: FileProvider {
     }
 
     /// Get file attributes
-    /// - Parameter id: FileIdentifier
+    /// - Parameter path: FileIdentifier
     /// - Returns: File attributes
     public func getAttributes(id path: FileIdentifier) async throws -> FileAttributes? {
         do {
@@ -103,7 +103,7 @@ public struct LocalFileSystem: FileProvider {
 
     /// Return a reponse body that will write the file body
     /// - Parameters:
-    ///   - id: FileIdentifier
+    ///   - path: FileIdentifier
     ///   - context: Request context
     /// - Returns: Response body
     public func loadFile(id path: FileIdentifier, context: some RequestContext) async throws -> ResponseBody {
@@ -112,7 +112,7 @@ public struct LocalFileSystem: FileProvider {
 
     /// Return a reponse body that will write a partial file body
     /// - Parameters:
-    ///   - id: FileIdentifier
+    ///   - path: FileIdentifier
     ///   - range: Part of file to return
     ///   - context: Request context
     /// - Returns: Response body

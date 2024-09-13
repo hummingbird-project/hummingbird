@@ -37,6 +37,7 @@ public struct RouterBuilder<Context: RouterRequestContext, Handler: MiddlewarePr
     /// Initialize RouterBuilder with contents of result builder
     /// - Parameters:
     ///   - context: Request context used by router
+    ///   - options: Router options
     ///   - builder: Result builder for router
     public init(
         context: Context.Type = Context.self,

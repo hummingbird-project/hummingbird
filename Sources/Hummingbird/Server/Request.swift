@@ -29,7 +29,9 @@ extension Request {
     }
 
     /// Decode request using decoder stored at `Application.decoder`.
-    /// - Parameter type: Type you want to decode to
+    /// - Parameters
+    ///   - type: Type you want to decode to
+    ///   - context: Request context
     public func decode<Type: Decodable>(as type: Type.Type, context: some RequestContext) async throws -> Type {
         do {
             return try await context.requestDecoder.decode(type, from: self, context: context)

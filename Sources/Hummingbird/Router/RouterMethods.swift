@@ -96,7 +96,7 @@ extension RouterMethods {
     /// ```
     /// This gives a slight performance boost over adding them individually.
     ///
-    /// - Parameter middlewareStack: Middleware stack result builder
+    /// - Parameter buildMiddlewareStack: Middleware stack result builder
     /// - Returns: router
     @discardableResult public func addMiddleware(
         @MiddlewareFixedTypeBuilder<Request, Response, Context> buildMiddlewareStack: () -> some MiddlewareProtocol<Request, Response, Context>

@@ -72,8 +72,8 @@ extension ApplicationProtocol {
     /// ```
     ///
     /// - Parameters:
-    ///   - testing: indicates which type of testing framework we want
-    ///   - configuration: configuration of application
+    ///   - testingSetup: indicates which type of testing framework we want
+    ///   - test: test function
     public func test<Value>(
         _ testingSetup: TestingSetup,
         _ test: @escaping @Sendable (any TestClientProtocol) async throws -> Value

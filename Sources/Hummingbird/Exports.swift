@@ -12,14 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-@_exported import struct HummingbirdCore.BindAddress
-@_exported import struct HummingbirdCore.Request
-@_exported import struct HummingbirdCore.RequestBody
-@_exported import struct HummingbirdCore.Response
-@_exported import struct HummingbirdCore.ResponseBody
-@_exported import protocol HummingbirdCore.ResponseBodyWriter
+@_exported @_documentation(visibility: internal) import struct HummingbirdCore.BindAddress
+@_exported @_documentation(visibility: internal) import struct HummingbirdCore.Request
+@_exported @_documentation(visibility: internal) import struct HummingbirdCore.RequestBody
+@_exported @_documentation(visibility: internal) import struct HummingbirdCore.Response
+@_exported @_documentation(visibility: internal) import struct HummingbirdCore.ResponseBody
+@_exported @_documentation(visibility: internal) import protocol HummingbirdCore.ResponseBodyWriter
 #if canImport(Network)
-@_exported import struct HummingbirdCore.TSTLSOptions
+@_exported @_documentation(visibility: internal) import struct HummingbirdCore.TSTLSOptions
 #endif
 
 @_exported @_documentation(visibility: internal) import struct NIOCore.ByteBuffer
@@ -30,8 +30,8 @@
 @_exported @_documentation(visibility: internal) import struct HTTPTypes.HTTPResponse
 
 // Temporary exports of unavailable typealiases
-@_exported import struct HummingbirdCore.HBRequest
-@_exported import struct HummingbirdCore.HBRequestBody
-@_exported import struct HummingbirdCore.HBResponse
-@_exported import struct HummingbirdCore.HBResponseBody
-@_exported import protocol HummingbirdCore.HBResponseBodyWriter
+@_exported @_documentation(visibility: internal) import struct HummingbirdCore.HBRequest
+@_exported @_documentation(visibility: internal) import struct HummingbirdCore.HBRequestBody
+@_exported @_documentation(visibility: internal) import struct HummingbirdCore.HBResponse
+@_exported @_documentation(visibility: internal) import struct HummingbirdCore.HBResponseBody
+@_exported @_documentation(visibility: internal) import protocol HummingbirdCore.HBResponseBodyWriter

@@ -78,7 +78,7 @@ public struct FileMiddleware<Context: RequestContext, Provider: FileProvider>: R
     ///   - fileProvider: File provider
     ///   - urlBasePath: Prefix to remove from request URL
     ///   - cacheControl: What cache control headers to include in response
-    ///   - indexHtml: Should we look for index.html in folders
+    ///   - searchForIndexHtml: Should we look for index.html in folders
     public init(
         fileProvider: Provider,
         urlBasePath: String? = nil,
