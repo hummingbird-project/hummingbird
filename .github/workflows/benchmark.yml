@@ -8,6 +8,9 @@ on:
     paths:
     - '**.swift'
     - '**.yml'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-apibreakage
+  cancel-in-progress: true
     
 jobs:
   benchmark-delta:
