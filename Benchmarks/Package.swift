@@ -11,24 +11,13 @@ let package = Package(
         .package(path: "../../hummingbird"),
     ],
     targets: [
-        // HTTP1 benchmarks
-        .executableTarget(
-            name: "HTTP1",
-            dependencies: [
-                .product(name: "Benchmark", package: "package-benchmark"),
-                .product(name: "Hummingbird", package: "hummingbird"),
-            ],
-            path: "Benchmarks/HTTP1",
-            plugins: [
-                .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
-            ]
-        ),
         // Router benchmarks
         .executableTarget(
             name: "Router",
             dependencies: [
                 .product(name: "Benchmark", package: "package-benchmark"),
                 .product(name: "Hummingbird", package: "hummingbird"),
+                .product(name: "HummingbirdRouter", package: "hummingbird"),
             ],
             path: "Benchmarks/Router",
             plugins: [
