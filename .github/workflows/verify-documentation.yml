@@ -17,7 +17,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        path: "test"
+        path: "package"
     - name: Checkout
       uses: actions/checkout@v4
       with:
@@ -27,6 +27,6 @@ jobs:
     - name: Verify
       run: |
         cd documentation
-        swift package edit hummingbird --folder ../test
+        swift package edit hummingbird --path ../package
         ./scripts/build-docc.sh -e
       
