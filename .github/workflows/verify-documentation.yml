@@ -27,6 +27,6 @@ jobs:
     - name: Verify
       run: |
         cd documentation
-        swift package edit hummingbird --path ../package
+        swift package edit ${GITHUB_REPOSITORY#*/} --path ../package
         ./scripts/build-docc.sh -e
       
