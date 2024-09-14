@@ -1,6 +1,7 @@
 name: Benchmark PR vs main
 
 on:
+  workflow_dispatch:
   pull_request:
     branches:
       - main
