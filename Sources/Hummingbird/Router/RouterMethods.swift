@@ -86,7 +86,7 @@ extension RouterMethods {
     /// Add middleware stack to router
     ///
     /// Add multiple middleware to the router using the middleware stack result builder
-    /// ``MiddlewareFixedTypeBuilder``.
+    /// ``MiddlewareFixedTypeBuilder2``.
     ///
     /// ```swift
     /// router.addMiddleware {
