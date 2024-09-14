@@ -1,0 +1,32 @@
+name: Verify Documentation
+
+on:
+  pull_request:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-apibreakage
+  cancel-in-progress: true
+  
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: swift:5.10
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        path: "test"
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        repository: "hummingbird-project/hummingbird-docs"
+        fetch-depth: 0
+        path: "documentation"
+    - name: Verify
+      run: |
+        cd documentation
+        swift package edit hummingbird --folder ../test
+        ./scripts/build-docc.sh -e
+      
