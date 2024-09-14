@@ -13,29 +13,23 @@
 //===----------------------------------------------------------------------===//
 
 import Benchmark
+import Foundation
 import Hummingbird
 
 let benchmarks = {
-#if CI
     Benchmark.defaultConfiguration = .init(
-        metrics: [
-            .instructions,
-            .mallocCountTotal,
-        ],
+        metrics: ProcessInfo.processInfo.environment["CI"] != nil ?
+            [
+                .instructions,
+                .mallocCountTotal,
+            ] :
+            [
+                .cpuTotal,
+                .instructions,
+                .mallocCountTotal,
+            ],
         warmupIterations: 10
     )
     trieRouterBenchmarks()
     routerBenchmarks()
-#else
-    Benchmark.defaultConfiguration = .init(
-        metrics: [
-            .cpuTotal,
-            .instructions,
-            .mallocCountTotal,
-        ],
-        warmupIterations: 10
-    )
-    trieRouterBenchmarks()
-    routerBenchmarks()
-#endif
 }
