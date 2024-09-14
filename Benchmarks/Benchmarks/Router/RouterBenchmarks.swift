@@ -40,7 +40,7 @@ public struct BenchmarkRequestContextSource: RequestContextSource {
 
 /// Writes ByteBuffers to AsyncChannel outbound writer
 struct BenchmarkBodyWriter: Sendable, ResponseBodyWriter {
-    func finish(_ trailingHeaders: HTTPFields?) async throws {}
+    func finish(_: HTTPFields?) async throws {}
     func write(_: ByteBuffer) async throws {}
 }
 
@@ -110,7 +110,6 @@ struct EmptyMiddleware<Context>: RouterMiddleware {
     }
 }
 
-
 extension HTTPField.Name {
     static let test = Self("Test")!
 }
@@ -168,7 +167,7 @@ func routerBenchmarks() {
         try await write(buffer)
         try await write(buffer)
         try await write(buffer)
-    } createRouter: { 
+    } createRouter: {
         let router = Router(context: BasicBenchmarkContext.self)
         router.post { request, _ in
             Response(status: .ok, headers: [:], body: .init { writer in
@@ -185,7 +184,7 @@ func routerBenchmarks() {
         "Router:Middleware",
         configuration: .init(warmupIterations: 10),
         request: .init(method: .get, scheme: "http", authority: "localhost", path: "/")
-    ) { 
+    ) {
         let router = Router(context: BasicBenchmarkContext.self)
         router.middlewares.add(EmptyMiddleware())
         router.middlewares.add(EmptyMiddleware())
@@ -207,7 +206,7 @@ func routerBenchmarks() {
             EmptyMiddleware()
             EmptyMiddleware()
             EmptyMiddleware()
-            Get { _,_ -> HTTPResponse.Status in
+            Get { _, _ -> HTTPResponse.Status in
                 .ok
             }
         }

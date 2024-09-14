@@ -19,15 +19,15 @@ import Hummingbird
 let benchmarks = {
     Benchmark.defaultConfiguration = .init(
         metrics: ProcessInfo.processInfo.environment["CI"] != nil ?
-        [
-            .instructions,
-            .mallocCountTotal,
-        ] : 
-        [
-            .cpuTotal,
-            .instructions,
-            .mallocCountTotal,
-        ],
+            [
+                .instructions,
+                .mallocCountTotal,
+            ] :
+            [
+                .cpuTotal,
+                .instructions,
+                .mallocCountTotal,
+            ],
         warmupIterations: 10
     )
     trieRouterBenchmarks()
