@@ -1,0 +1,35 @@
+name: Verify Documentation
+
+on:
+  pull_request:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-verifydocs
+  cancel-in-progress: true
+  
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: swift:latest
+    steps:
+    - name: Install rsync 📚
+      run: |
+        apt-get update && apt-get install -y rsync bc
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        path: "package"
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        repository: "hummingbird-project/hummingbird-docs"
+        fetch-depth: 0
+        path: "documentation"
+    - name: Verify
+      run: |
+        cd documentation
+        swift package edit ${GITHUB_REPOSITORY#*/} --path ../package
+        ./scripts/build-docc.sh -e
+      

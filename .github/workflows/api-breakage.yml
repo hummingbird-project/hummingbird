@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     container:
-      image: swift:5.10
+      image: swift:latest
     steps:
     - name: Checkout
       uses: actions/checkout@v4
