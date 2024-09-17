@@ -18,6 +18,7 @@ import HTTPTypes
 import HummingbirdCore
 import HummingbirdTesting
 import Logging
+import NIOConcurrencyHelpers
 import NIOCore
 import NIOHTTPTypes
 import NIOPosix
@@ -98,28 +99,36 @@ final class HummingBirdCoreTests: XCTestCase {
     }
 
     func testMaxConnections() async throws {
-        final class TestMaximumAvailableConnections: AvailableConnectionsDelegate, @unchecked Sendable {
+        final class TestMaximumAvailableConnections: AvailableConnectionsDelegate {
             let maxConnections: Int
-            var connectionCount: Int
-            var maxConnectionCountRecorded: Int
+            let connections: NIOLockedValueBox<(count: Int, max: Int)>
 
             init(_ maxConnections: Int) {
                 self.maxConnections = maxConnections
-                self.maxConnectionCountRecorded = 0
-                self.connectionCount = 0
+                self.connections = .init((count: 0, max: 0))
             }
 
             func connectionOpened() {
-                self.connectionCount += 1
-                self.maxConnectionCountRecorded = max(self.connectionCount, self.maxConnectionCountRecorded)
+                connections.withLockedValue { connections in
+                    connections.count += 1
+                    connections.max = max(connections.count, connections.max)
+                }
             }
 
             func connectionClosed() {
-                self.connectionCount -= 1
+                connections.withLockedValue { connections in
+                    connections.count -= 1
+                }
             }
 
             func isAcceptingNewConnections() -> Bool {
-                self.connectionCount < self.maxConnections
+                connections.withLockedValue { connections in
+                    connections.count < connections.max
+                }
+            }
+
+            var maxRecorded: Int {
+                connections.withLockedValue { $0.max }
             }
         }
         /// Basic responder that waits 10 milliseconds and returns "Hello" in body
@@ -158,7 +167,7 @@ final class HummingBirdCoreTests: XCTestCase {
             }
         }
         // connections are read 4 at a time, so max count can be slightly higher
-        XCTAssertLessThan(availableConnectionsDelegate.maxConnectionCountRecorded, 14)
+        XCTAssertLessThan(availableConnectionsDelegate.maxRecorded, 14)
     }
 
     func testConsumeBody() async throws {
