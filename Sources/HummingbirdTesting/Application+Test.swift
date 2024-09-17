@@ -76,7 +76,7 @@ extension ApplicationProtocol {
     ///   - test: test function
     public func test<Value>(
         _ testingSetup: TestingSetup,
-        _ test: @escaping @Sendable (any TestClientProtocol) async throws -> Value
+        _ test: @Sendable (any TestClientProtocol) async throws -> Value
     ) async throws -> Value {
         let app: any ApplicationTestFramework = switch testingSetup.value {
         case .router: try await RouterTestFramework(app: self)
