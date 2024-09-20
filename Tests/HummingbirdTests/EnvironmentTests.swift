@@ -41,8 +41,16 @@ final class EnvironmentTests: XCTestCase {
         XCTAssertEqual(env.get("TEST_VAR"), "testSet")
     }
 
+    func testSetForAllEnvironments() {
+        var env = Environment()
+        env.set("TEST_VAR", value: "testSet")
+        let env2 = Environment()
+        XCTAssertEqual(env2.get("TEST_VAR"), "testSet")
+    }
+
     func testLogLevel() {
-        setenv("LOG_LEVEL", "trace", 1)
+        var env = Environment()
+        env.set("LOG_LEVEL", value: "trace")
         let router = Router()
         let app = Application(responder: router.buildResponder())
         XCTAssertEqual(app.logger.logLevel, .trace)
