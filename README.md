@@ -6,13 +6,16 @@
 </p>  
 <p align="center">
 <a href="https://swift.org">
-  <img src="https://img.shields.io/badge/swift-5.9-brightgreen.svg"/>
+  <img src="https://img.shields.io/badge/swift-6.0-f05138.svg"/>
+</a>
+<a href="https://swift.org">
+  <img src="https://img.shields.io/badge/swift-5.9+-f05138.svg"/>
 </a>
 <a href="https://github.com/hummingbird-project/hummingbird/actions?query=workflow%3ACI">
   <img src="https://github.com/hummingbird-project/hummingbird/actions/workflows/ci.yml/badge.svg?branch=main"/>
 </a>
 <a href="https://discord.gg/7ME3nZ7mP2">
-  <img src="https://img.shields.io/badge/chat-discord-brightgreen.svg"/>
+  <img src="https://img.shields.io/badge/chat-discord-7289da.svg?logo=discord&logoColor=white"/>
 </a>
 </p>
 
@@ -40,8 +43,6 @@ let app = Application(
 // run hummingbird application
 try await app.runService()
 ```
-
-Hummingbird v2 is currently in development an [beta release](https://github.com/hummingbird-project/hummingbird/releases/tag/2.0.0-beta.2) is available if you'd like to try it out.
 
 ### Extending Hummingbird
 
