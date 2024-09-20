@@ -92,6 +92,11 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
     ///   - value: Environment variable name value
     public mutating func set(_ s: String, value: String?) {
         self.values[s.lowercased()] = value
+        if let value {
+            setenv(s, value, 1)
+        } else {
+            unsetenv(s)
+        }
     }
 
     /// Merge two environment variable sets together and return result
