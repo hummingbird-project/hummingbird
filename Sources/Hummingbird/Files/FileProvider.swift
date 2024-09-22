@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import NIOPosix
 
 /// Protocol for file provider type used by ``FileMiddleware``
