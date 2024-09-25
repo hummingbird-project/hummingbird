@@ -17,22 +17,35 @@ import HummingbirdCore
 import NIOCore
 
 /// Internally used to transform RequestContext
-struct TransformingRouterGroup<InputContext: RequestContext, Context: RequestContext>: RouterMethods where Context.Source == InputContext {
+struct TransformingRouterGroup<InputContext: RequestContext, Context: RequestContext>: RouterMethods {
     typealias TransformContext = Context
     let parent: any RouterMethods<InputContext>
+    let transform: @Sendable (Request, InputContext) async throws -> TransformContext
 
     struct ContextTransformingResponder: HTTPResponder {
         typealias Context = InputContext
         let responder: any HTTPResponder<TransformContext>
+        let transform: @Sendable (Request, InputContext) async throws -> TransformContext
 
         func respond(to request: Request, context: InputContext) async throws -> Response {
-            let newContext = TransformContext(source: context)
+            let newContext = try await transform(request, context)
             return try await self.responder.respond(to: request, context: newContext)
         }
     }
 
-    init(parent: any RouterMethods<InputContext>) {
+    init(parent: any RouterMethods<InputContext>) where Context.Source == InputContext {
         self.parent = parent
+        self.transform = { _, context in
+            TransformContext(source: context)
+        }
+    }
+
+    init(
+        parent: any RouterMethods<InputContext>,
+        transform: @escaping @Sendable (Request, InputContext) async throws -> TransformContext
+    ) {
+        self.parent = parent
+        self.transform = transform
     }
 
     /// Add middleware (Stub function as it isn't used)
@@ -52,7 +65,10 @@ struct TransformingRouterGroup<InputContext: RequestContext, Context: RequestCon
         method: HTTPRequest.Method,
         responder: Responder
     ) -> Self where Responder.Context == Context {
-        let transformResponder = ContextTransformingResponder(responder: responder)
+        let transformResponder = ContextTransformingResponder(
+            responder: responder,
+            transform: transform
+        )
         self.parent.on(path, method: method, responder: transformResponder)
         return self
     }

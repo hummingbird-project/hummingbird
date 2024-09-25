@@ -73,6 +73,18 @@ public protocol RequestContext: InitializableFromSource, RequestContextSource {
     var responseEncoder: Encoder { get }
 }
 
+extension Never: RequestContextSource {
+    public var logger: Logger {
+        fatalError("This can never be reached")
+    }
+}
+
+extension RequestContext where Source == Never {
+    public init(source: Source) {
+        fatalError("This can never be reached")
+    }
+}
+
 extension RequestContext {
     /// Logger to use with Request
     @inlinable

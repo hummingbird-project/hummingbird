@@ -72,14 +72,36 @@ extension RouterMethods {
     /// ```
     /// - Parameters
     ///   - path: path prefix to add to routes inside this group
-    ///   - convertContext: Function converting context
     @discardableResult public func group<TargetContext>(
-        _ path: RouterPath,
+        _ path: RouterPath = "",
         context: TargetContext.Type
     ) -> RouterGroup<TargetContext> where TargetContext.Source == Context {
         return RouterGroup(
             path: path,
             parent: TransformingRouterGroup(parent: self)
+        )
+    }
+
+    /// Return a group inside the current group that transforms the ``RequestContext``
+    ///
+    /// To transform the context, a function that maps between the two types is provided.
+    /// ```
+    /// router.group { request, oldContext -> NewContext in
+    ///     NewContext(
+    ///         coreContext: oldContext.coreContext
+    ///     )
+    /// }
+    /// ```
+    /// - Parameters
+    ///   - path: path prefix to add to routes inside this group
+    ///   - mapContext: Function converting context
+    @discardableResult public func group<TargetContext>(
+        _ path: RouterPath = "",
+        mapContext: @escaping @Sendable (Request, Context) async throws -> TargetContext
+    ) -> RouterGroup<TargetContext> {
+        return RouterGroup(
+            path: path,
+            parent: TransformingRouterGroup(parent: self, transform: mapContext)
         )
     }
 
