@@ -54,6 +54,17 @@ public struct HTTPError: Error, HTTPResponseError, Sendable {
         self.body = message
     }
 
+    /// Initialize HTTPError
+    /// - Parameters:
+    ///   - status: HTTP status
+    ///   - headers: Headers to include in error
+    ///   - message: Optional associated message
+    public init(_ status: HTTPResponse.Status, headers: HTTPFields, message: String? = nil) {
+        self.status = status
+        self._headers = headers
+        self.body = message
+    }
+
     fileprivate struct CodableFormat: Encodable {
         struct ErrorFormat: Encodable {
             let message: String
