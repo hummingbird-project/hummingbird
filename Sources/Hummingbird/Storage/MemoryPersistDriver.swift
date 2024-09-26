@@ -29,7 +29,8 @@ public actor MemoryPersistDriver<C: Clock>: PersistDriver where C.Duration == Du
     }
 
     public func set(key: String, value: some Codable & Sendable, expires: Duration?) async throws {
-        self.values[key] = .init(value: value, expires: expires.map { self.clock.now.advanced(by: $0) })
+        let expiresAt = expires.map { self.clock.now.advanced(by: $0) } ?? self.values[key]?.expires
+        self.values[key] = .init(value: value, expires: expiresAt)
     }
 
     public func get<Object: Codable & Sendable>(key: String, as: Object.Type) async throws -> Object? {
