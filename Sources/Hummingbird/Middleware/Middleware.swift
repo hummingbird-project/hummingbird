@@ -14,13 +14,18 @@
 
 import NIOCore
 
-/// Middleware protocol with generic input, context and output types
-public protocol MiddlewareProtocol<Input, Output, Context>: Sendable {
+public protocol ContextTransformingMiddlewareProtocol<Input, Output, InputContext, OutputContext>: Sendable {
     associatedtype Input
     associatedtype Output
-    associatedtype Context
+    associatedtype InputContext
+    associatedtype OutputContext
 
-    func handle(_ input: Input, context: Context, next: (Input, Context) async throws -> Output) async throws -> Output
+    func handle(_ input: Input, context: InputContext, next: (Input, OutputContext) async throws -> Output) async throws -> Output
+}
+
+/// Middleware protocol with generic input, context and output types
+public protocol MiddlewareProtocol<Input, Output, Context>: ContextTransformingMiddlewareProtocol where InputContext == OutputContext, Context == InputContext {
+    associatedtype Context
 }
 
 /// Applied to `Request` before it is dealt with by the router. Middleware passes the processed request onto the next responder

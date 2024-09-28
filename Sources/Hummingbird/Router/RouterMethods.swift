@@ -94,14 +94,14 @@ extension RouterMethods {
     /// ```
     /// - Parameters
     ///   - path: path prefix to add to routes inside this group
-    ///   - mapContext: Function converting context
+    ///   - middleware: A middleware that can transform the context
     @discardableResult public func group<TargetContext>(
         _ path: RouterPath = "",
-        mapContext: @escaping @Sendable (Request, Context) async throws -> TargetContext
+        middleware: some ContextTransformingMiddlewareProtocol<Request, Response, Context, TargetContext>
     ) -> RouterGroup<TargetContext> {
         return RouterGroup(
             path: path,
-            parent: TransformingRouterGroup(parent: self, transform: mapContext)
+            parent: TransformingRouterGroup(parent: self, middleware: middleware)
         )
     }
 
