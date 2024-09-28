@@ -71,4 +71,19 @@ final class HummingBirdURLEncodedTests: XCTestCase {
             }
         }
     }
+
+    func testError() async throws {
+        let router = Router(context: URLEncodedCodingRequestContext.self)
+        router.get("/error") { _, _ -> User in
+            throw HTTPError(.badRequest, message: "Bad Request")
+        }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/error", method: .get) { response in
+                XCTAssertEqual(response.status, .badRequest)
+                XCTAssertEqual(response.headers[.contentType], "application/x-www-form-urlencoded")
+                XCTAssertEqual(String(buffer: response.body), "error[message]=Bad%20Request")
+            }
+        }
+    }
 }
