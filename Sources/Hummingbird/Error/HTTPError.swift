@@ -20,17 +20,8 @@ import NIOFoundationCompat
 public struct HTTPError: Error, HTTPResponseError, Sendable {
     /// status code for the error
     public var status: HTTPResponse.Status
-    /// internal representation of error headers without contentType
-    private var _headers: HTTPFields
-    /// headers
-    public var headers: HTTPFields {
-        get {
-            return self.body != nil ? self._headers + [.contentType: "application/json; charset=utf-8"] : self._headers
-        }
-        set {
-            self._headers = newValue
-        }
-    }
+    /// response headers
+    public var headers: HTTPFields
 
     /// error message
     public var body: String?
@@ -40,7 +31,7 @@ public struct HTTPError: Error, HTTPResponseError, Sendable {
     ///   - status: HTTP status
     public init(_ status: HTTPResponse.Status) {
         self.status = status
-        self._headers = [:]
+        self.headers = [:]
         self.body = nil
     }
 
@@ -50,7 +41,18 @@ public struct HTTPError: Error, HTTPResponseError, Sendable {
     ///   - message: Associated message
     public init(_ status: HTTPResponse.Status, message: String) {
         self.status = status
-        self._headers = [:]
+        self.headers = [:]
+        self.body = message
+    }
+
+    /// Initialize HTTPError
+    /// - Parameters:
+    ///   - status: HTTP status
+    ///   - headers: Headers to include in error
+    ///   - message: Optional associated message
+    public init(_ status: HTTPResponse.Status, headers: HTTPFields, message: String? = nil) {
+        self.status = status
+        self.headers = headers
         self.body = message
     }
 
