@@ -55,7 +55,7 @@ public protocol MiddlewareProtocol<Input, Output, Context>: ContextTransformingM
 /// ```
 
 /// Middleware protocol with Request as input and Response as output
-public protocol RouterMiddleware<Context>: MiddlewareProtocol where Input == Request, Output == Response {}
+public protocol RouterMiddleware<Context>: MiddlewareProtocol where Input == Request, Output == Response, InputContext == Context, OutputContext == Context {}
 
 struct MiddlewareResponder<Context>: HTTPResponder {
     let middleware: any MiddlewareProtocol<Request, Response, Context>
