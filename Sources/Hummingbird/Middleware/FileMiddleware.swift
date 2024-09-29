@@ -97,7 +97,7 @@ public struct FileMiddleware<Context: RequestContext, Provider: FileProvider>: R
             return try await next(request, context)
         } catch {
             // Guard that error is HTTP error notFound
-            guard let httpError = error as? HTTPError, httpError.status == .notFound else {
+            guard let httpError = error as? HTTPResponseError, httpError.status == .notFound else {
                 throw error
             }
 

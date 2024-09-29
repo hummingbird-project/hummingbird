@@ -42,11 +42,11 @@ public struct TLSChannel<BaseChannel: ServerChildChannel>: ServerChildChannel {
         }
     }
 
-    @inlinable
     /// handle messages being passed down the channel pipeline
     /// - Parameters:
     ///   - value: Object to process input/output on child channel
     ///   - logger: Logger to use while processing messages
+    @inlinable
     public func handle(value: BaseChannel.Value, logger: Logging.Logger) async {
         await self.baseChannel.handle(value: value, logger: logger)
     }

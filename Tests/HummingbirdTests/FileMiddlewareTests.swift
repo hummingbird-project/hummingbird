@@ -316,6 +316,34 @@ final class FileMiddlewareTests: XCTestCase {
         }
     }
 
+    func testOnThrowCustom404() async throws {
+        let router = Router()
+        router.middlewares.add(FileMiddleware(".", searchForIndexHtml: true))
+        struct Custom404Error: HTTPResponseError {
+            var status: HTTPResponse.Status { .notFound }
+
+            func response(from request: Request, context: some RequestContext) throws -> Response {
+                Response(status: self.status)
+            }
+        }
+        router.get { _, _ -> String in
+            throw Custom404Error()
+        }
+        let app = Application(responder: router.buildResponder())
+
+        let text = "Test file contents"
+        let data = Data(text.utf8)
+        let fileURL = URL(fileURLWithPath: "index.html")
+        XCTAssertNoThrow(try data.write(to: fileURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/", method: .get) { response in
+                XCTAssertEqual(String(buffer: response.body), text)
+            }
+        }
+    }
+
     func testFolder() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware(".", searchForIndexHtml: false))
