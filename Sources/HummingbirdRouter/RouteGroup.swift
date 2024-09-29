@@ -19,8 +19,8 @@ public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProto
     public typealias Input = Request
     public typealias Output = Response
 
-    @usableFromInline
     /// Full URI path to route
+    @usableFromInline
     let fullPath: RouterPath
     /// Path local to group route this group is defined in.
     @usableFromInline
