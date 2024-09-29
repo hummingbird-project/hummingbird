@@ -26,6 +26,8 @@ public protocol ContextTransformingMiddlewareProtocol<Input, Output, InputContex
 /// Middleware protocol with generic input, context and output types
 public protocol MiddlewareProtocol<Input, Output, Context>: ContextTransformingMiddlewareProtocol where InputContext == OutputContext, Context == InputContext {
     associatedtype Context
+    associatedtype InputContext = Context
+    associatedtype OutputContext = Context
 }
 
 /// Applied to `Request` before it is dealt with by the router. Middleware passes the processed request onto the next responder
