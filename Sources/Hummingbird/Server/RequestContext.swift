@@ -63,7 +63,8 @@ public struct CoreRequestContextStorage: Sendable {
 /// - The origin that sent the request (IP address or otherwise)
 /// - The identity, such as a user, that is associated with this request
 ///
-/// The context is a statically typed metadata container for the duration of a single request. It's used to store values between middleware and routes such as the user's identity.
+/// The context is a statically typed metadata container for the duration of a single request.
+/// It's used to store values between middleware and routes such as the user's identity.
 ///
 /// The lifetime of a RequestContext should not exceed that of the request.
 public protocol RequestContext: InitializableFromSource, RequestContextSource {
