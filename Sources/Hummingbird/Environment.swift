@@ -112,8 +112,8 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
     /// Construct environment variable map
     static func getEnvironment() -> [String: String] {
         var values: [String: String] = [:]
-        for key in ProcessInfo.processInfo.environment.keys {
-            values[key.lowercased()] = ProcessInfo.processInfo.environment[key]
+        for item in ProcessInfo.processInfo.environment {
+            values[item.key.lowercased()] = item.value
         }
         return values
     }
