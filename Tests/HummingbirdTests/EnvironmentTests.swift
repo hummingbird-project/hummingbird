@@ -63,7 +63,7 @@ final class EnvironmentTests: XCTestCase {
         XCTAssertEqual(env.get("test_var"), "testSetFromEnvironment")
     }
 
-    func testDotEnvLoading() async throws {
+    func testDotEnvLoading() throws {
         let dotenv = """
         TEST=this
         CREDENTIALS=sdkfjh
@@ -75,7 +75,7 @@ final class EnvironmentTests: XCTestCase {
             try? FileManager.default.removeItem(at: envURL)
         }
 
-        let result = try await Environment.dotEnv()
+        let result = try Environment.dotEnv()
         XCTAssertEqual(result.get("test"), "this")
         XCTAssertEqual(result.get("credentials"), "sdkfjh")
     }
@@ -157,7 +157,7 @@ final class EnvironmentTests: XCTestCase {
         }
         XCTAssertEqual(setenv("TEST_VAR", "testSetFromEnvironment", 1), 0)
         XCTAssertEqual(setenv("TEST_VAR2", "testSetFromEnvironment2", 1), 0)
-        let env = try await Environment().merging(with: .dotEnv(".override.env"))
+        let env = try Environment().merging(with: .dotEnv(".override.env"))
         XCTAssertEqual(env.get("TEST_VAR"), "testDotEnvOverridingEnvironment")
         XCTAssertEqual(env.get("TEST_VAR2"), "testSetFromEnvironment2")
     }
