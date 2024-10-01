@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+// MARK: - Middleware2
+
 public struct _Middleware2<M0: MiddlewareProtocol, M1: MiddlewareProtocol>: MiddlewareProtocol where M0.Input == M1.Input, M0.Context == M1.Context, M0.Output == M1.Output {
     public typealias Input = M0.Input
     public typealias Output = M0.Output
@@ -33,6 +35,10 @@ public struct _Middleware2<M0: MiddlewareProtocol, M1: MiddlewareProtocol>: Midd
         }
     }
 }
+
+extension _Middleware2: RouterMiddleware where M0.Input == Request, M0.Output == Response {}
+
+// MARK: - MiddlewareFixedTypeBuilder
 
 /// Middleware stack result builder
 ///
