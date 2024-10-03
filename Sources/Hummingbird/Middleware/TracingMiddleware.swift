@@ -23,6 +23,11 @@ import Tracing
 ///
 /// You may opt in to recording a specific subset of HTTP request/response header values by passing
 /// a set of header names.
+///
+/// Uses [Swift-Distributed-Tracing](https://github.com/apple/swift-distributed-tracing) for recording the traces.
+/// Swift-Distributed-Tracing has a flexible backend, which will need to be initialized before any traces are recorded.
+///
+/// A list of implementations is available in the swift-distributed-tracing repository's README.
 public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
     private let headerNamesToRecord: Set<RecordingHeader>
     private let attributes: SpanAttributes?

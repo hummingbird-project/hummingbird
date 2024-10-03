@@ -15,7 +15,12 @@
 import HTTPTypes
 import Logging
 
-/// Middleware outputting to log for every call to server
+/// Middleware outputting to log for every call to server.
+///
+/// Uses [Swift-Log](https://github.com/apple/swift-log) for logging the output.
+/// Swift-Log has a flexible backend, and will output to console by default.
+/// You can replace the Logging backend with other implementations.
+/// A list of implementations is available in the swift-log repository's README.
 public struct LogRequestsMiddleware<Context: RequestContext>: RouterMiddleware {
     /// Header filter
     public struct HeaderFilter: Sendable, ExpressibleByArrayLiteral {
