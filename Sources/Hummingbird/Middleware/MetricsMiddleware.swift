@@ -19,6 +19,11 @@ import Metrics
 ///
 /// Records the number of requests, the request duration and how many errors were thrown. Each metric has additional
 /// dimensions URI and method.
+///
+/// Uses [Swift-Metrics](https://github.com/apple/swift-metrics) for recording the metrics.
+/// Swift-Metrics has a flexible backend, which will need to be initialized before any metrics are recorded.
+///
+/// A list of implementations is available in the swift-log repository's README.
 public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
     public init() {}
 
