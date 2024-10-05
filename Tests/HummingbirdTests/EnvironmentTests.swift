@@ -43,9 +43,9 @@ final class EnvironmentTests: XCTestCase {
 
     func testSetForAllEnvironments() {
         var env = Environment()
-        env.set("TEST_VAR", value: "testSet")
+        env.set("TEST_VAR_E1", value: "testSet")
         let env2 = Environment()
-        XCTAssertEqual(env2.get("TEST_VAR"), "testSet")
+        XCTAssertEqual(env2.get("TEST_VAR_E1"), "testSet")
     }
 
     func testLogLevel() {

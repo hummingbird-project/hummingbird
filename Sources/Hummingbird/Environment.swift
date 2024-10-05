@@ -21,6 +21,7 @@ import Darwin.C
 #else
 #error("Unsupported platform")
 #endif
+import Foundation
 import HummingbirdCore
 import NIOCore
 
@@ -111,22 +112,8 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
     /// Construct environment variable map
     static func getEnvironment() -> [String: String] {
         var values: [String: String] = [:]
-        let equalSign = Character("=")
-        #if canImport(Musl)
-        guard let envp = environ else { return [:] }
-        #else
-        let envp = environ
-        #endif
-        var idx = 0
-
-        while let entry = envp.advanced(by: idx).pointee {
-            let entry = String(cString: entry)
-            if let i = entry.firstIndex(of: equalSign) {
-                let key = String(entry.prefix(upTo: i))
-                let value = String(entry.suffix(from: i).dropFirst())
-                values[key.lowercased()] = value
-            }
-            idx += 1
+        for item in ProcessInfo.processInfo.environment {
+            values[item.key.lowercased()] = item.value
         }
         return values
     }
