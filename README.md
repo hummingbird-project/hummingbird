@@ -14,7 +14,7 @@
 <a href="https://github.com/hummingbird-project/hummingbird/actions?query=workflow%3ACI">
   <img src="https://github.com/hummingbird-project/hummingbird/actions/workflows/ci.yml/badge.svg?branch=main"/>
 </a>
-<a href="https://discord.gg/7ME3nZ7mP2">
+<a href="https://discord.gg/hummingbird">
   <img src="https://img.shields.io/badge/chat-discord-7289da.svg?logo=discord&logoColor=white"/>
 </a>
 </p>
