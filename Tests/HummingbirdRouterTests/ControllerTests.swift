@@ -100,4 +100,49 @@ final class ControllerTests: XCTestCase {
             }
         }
     }
+
+    func testRouterControllerWithMiddleware() async throws {
+        struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
+            func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+                var response = try await next(request, context)
+                response.headers[.middleware] = "TestMiddleware"
+                return response
+            }
+        }
+
+        struct ChildController: RouterController {
+            typealias Context = BasicRouterRequestContext
+            var body: some RouterMiddleware<Context> {
+                Get("foo") { _,_ in "foo" }
+            }
+        }
+
+        struct ParentController: RouterController {
+            typealias Context = BasicRouterRequestContext
+            var body: some RouterMiddleware<Context> {
+                RouteGroup("parent") {
+                    TestMiddleware()
+                    ChildController()
+                    Get("bar") { _,_ in "bar" }
+                }
+            }
+        }
+
+        let router = RouterBuilder(context: BasicRouterRequestContext.self) {
+            ParentController()
+        }
+
+        let app = Application(responder: router)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/parent/foo", method: .get) {
+                XCTAssertEqual($0.headers[.middleware], "TestMiddleware")
+                XCTAssertEqual(String(buffer: $0.body), "foo")
+            }
+
+            try await client.execute(uri: "/parent/bar", method: .get) {
+                XCTAssertEqual($0.headers[.middleware], "TestMiddleware")
+                XCTAssertEqual(String(buffer: $0.body), "bar")
+            }
+        }
+    }
 }
