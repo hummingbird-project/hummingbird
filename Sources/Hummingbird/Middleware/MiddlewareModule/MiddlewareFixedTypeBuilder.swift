@@ -37,24 +37,20 @@ public enum MiddlewareFixedTypeBuilder<Input, Output, Context> {
         _Middleware2(m0, m1)
     }
 
-    public static func buildOptional<M0: MiddlewareProtocol>(_ component: M0?) -> _ConditionalMiddleware<M0, _EmptyMiddleware<M0>> {
-        if let component {
-            .first(component)
-        } else {
-            .second(_EmptyMiddleware())
-        }
+    public static func buildOptional<M0: MiddlewareProtocol>(_ component: M0?) -> _OptionalMiddleware<M0> {
+        _OptionalMiddleware(middleware: component)
     }
 
-    public static func buildEither<M0: MiddlewareProtocol, M1: MiddlewareProtocol>(
+    public static func buildEither<M0: MiddlewareProtocol>(
         first content: M0
-    ) -> _ConditionalMiddleware<M0, M1> {
-        .first(content)
+    ) -> M0 {
+        content
     }
 
-    public static func buildEither<M0: MiddlewareProtocol, M1: MiddlewareProtocol>(
-        second content: M1
-    ) -> _ConditionalMiddleware<M0, M1> {
-        .second(content)
+    public static func buildEither<M0: MiddlewareProtocol>(
+        second content: M0
+    ) -> M0 {
+        content
     }
 
     public static func buildArray<M0: MiddlewareProtocol>(_ components: [M0]) -> _SpreadMiddleware<M0> {
