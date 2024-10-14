@@ -58,24 +58,25 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
             } else {
                 errorType = "500"
             }
-            // need to create dimensions once request has been responded to ensure
-            // we have the correct endpoint path
-            let dimensions: [(String, String)]
-            // Don't record uri in 404 errors, to avoid spamming of metrics
-            if let endpointPath = context.endpointPath {
-                dimensions = [
+            let endpointPath = context.endpointPath ?? "NotFound"
+            // increment requests
+            Counter(
+                label: "hb.requests",
+                dimensions: [
+                    ("http.route", endpointPath),
+                    ("http.request.method", request.method.rawValue),
+                    ("http.response.status_code", errorType),
+                ]
+            ).increment()
+            // increment errors
+            Counter(
+                label: "hb.request.errors",
+                dimensions: [
                     ("http.route", endpointPath),
                     ("http.request.method", request.method.rawValue),
                     ("error.type", errorType),
                 ]
-                Counter(label: "hb.requests", dimensions: dimensions).increment()
-            } else {
-                dimensions = [
-                    ("http.request.method", request.method.rawValue),
-                    ("error.type", errorType),
-                ]
-            }
-            Counter(label: "hb.request.errors", dimensions: dimensions).increment()
+            ).increment()
             activeRequestMeter.decrement()
             throw error
         }
