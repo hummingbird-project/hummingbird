@@ -145,5 +145,6 @@ let package = Package(
             ],
             resources: [.process("Certificates")]
         ),
-    ]
+    ],
+    swiftLanguageVersions: [.v5, .version("6")]
 )
