@@ -15,7 +15,6 @@
 import struct Foundation.Date
 import class Foundation.JSONDecoder
 import class Foundation.JSONEncoder
-import NIOFoundationCompat
 
 extension JSONEncoder: ResponseEncoder {
     /// Extend JSONEncoder to support encoding `Response`'s. Sets body and header values
