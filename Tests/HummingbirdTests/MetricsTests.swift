@@ -219,13 +219,21 @@ final class MetricsTests: XCTestCase {
             try await client.execute(uri: "/hello", method: .get) { _ in }
         }
 
-        let counter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb.request.errors"] as? TestCounter)
-        XCTAssertEqual(counter.values.withLockedValue { $0 }.count, 1)
+        let counter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb.requests"] as? TestCounter)
         XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
         XCTAssertEqual(counter.dimensions[0].0, "http.route")
         XCTAssertEqual(counter.dimensions[0].1, "/hello")
         XCTAssertEqual(counter.dimensions[1].0, "http.request.method")
         XCTAssertEqual(counter.dimensions[1].1, "GET")
+        XCTAssertEqual(counter.dimensions[2].0, "http.response.status_code")
+        XCTAssertEqual(counter.dimensions[2].1, "400")
+        let errorCounter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb.request.errors"] as? TestCounter)
+        XCTAssertEqual(errorCounter.values.withLockedValue { $0 }.count, 1)
+        XCTAssertEqual(errorCounter.values.withLockedValue { $0 }[0].1, 1)
+        XCTAssertEqual(errorCounter.dimensions[0].0, "http.route")
+        XCTAssertEqual(errorCounter.dimensions[0].1, "/hello")
+        XCTAssertEqual(errorCounter.dimensions[1].0, "http.request.method")
+        XCTAssertEqual(errorCounter.dimensions[1].1, "GET")
     }
 
     func testNotFoundError() async throws {
@@ -239,14 +247,24 @@ final class MetricsTests: XCTestCase {
             try await client.execute(uri: "/hello2", method: .get) { _ in }
         }
 
-        let counter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb.request.errors"] as? TestCounter)
-        XCTAssertEqual(counter.values.withLockedValue { $0 }.count, 1)
+        let counter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb.requests"] as? TestCounter)
         XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
-        XCTAssertEqual(counter.dimensions.count, 2)
-        XCTAssertEqual(counter.dimensions[0].0, "http.request.method")
-        XCTAssertEqual(counter.dimensions[0].1, "GET")
-        XCTAssertEqual(counter.dimensions[1].0, "error.type")
-        XCTAssertEqual(counter.dimensions[1].1, "404")
+        XCTAssertEqual(counter.dimensions[0].0, "http.route")
+        XCTAssertEqual(counter.dimensions[0].1, "NotFound")
+        XCTAssertEqual(counter.dimensions[1].0, "http.request.method")
+        XCTAssertEqual(counter.dimensions[1].1, "GET")
+        XCTAssertEqual(counter.dimensions[2].0, "http.response.status_code")
+        XCTAssertEqual(counter.dimensions[2].1, "404")
+        let errorCounter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb.request.errors"] as? TestCounter)
+        XCTAssertEqual(errorCounter.values.withLockedValue { $0 }.count, 1)
+        XCTAssertEqual(errorCounter.values.withLockedValue { $0 }[0].1, 1)
+        XCTAssertEqual(errorCounter.dimensions.count, 3)
+        XCTAssertEqual(errorCounter.dimensions[0].0, "http.route")
+        XCTAssertEqual(errorCounter.dimensions[0].1, "NotFound")
+        XCTAssertEqual(errorCounter.dimensions[1].0, "http.request.method")
+        XCTAssertEqual(errorCounter.dimensions[1].1, "GET")
+        XCTAssertEqual(errorCounter.dimensions[2].0, "error.type")
+        XCTAssertEqual(errorCounter.dimensions[2].1, "404")
     }
 
     func testParameterEndpoint() async throws {
