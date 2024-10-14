@@ -19,7 +19,7 @@ extension URI {
     /// - Parameters
     ///   - type: Type you want to decode to
     ///   - context: Request context
-    public func decodeQuery<Type: Decodable>(as type: Type.Type, context: some RequestContext) throws -> Type {
+    public func decodeQuery<Type: Decodable>(as type: Type.Type = Type.self, context: some RequestContext) throws -> Type {
         do {
             return try URLEncodedFormDecoder().decode(Type.self, from: self.query ?? "")
         } catch DecodingError.dataCorrupted(_) {
