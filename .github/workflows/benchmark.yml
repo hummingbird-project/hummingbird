@@ -91,7 +91,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           message: ${{ env.PRTEST }}
-          comment_tag: benchmark
+          comment-tag: benchmark
       - name: Exit with correct status
         run: |
           exit ${{ env.exitStatus }}
