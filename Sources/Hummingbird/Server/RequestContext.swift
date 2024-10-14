@@ -55,7 +55,7 @@ public struct CoreRequestContextStorage: Sendable {
 }
 
 /// Protocol that all request contexts should conform to. A RequestContext is a statically typed metadata container for information
-/// that is associated with a ``Request``, and is therefore instantiated alongside the request.
+/// that is associated with a ``HummingbirdCore/Request``, and is therefore instantiated alongside the request.
 ///
 /// It's passed along the whole middleware chain through to the route. This allows middleware and the route to share this metadata.
 ///

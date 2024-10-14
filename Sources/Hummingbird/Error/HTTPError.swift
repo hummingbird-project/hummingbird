@@ -14,7 +14,6 @@
 
 import HTTPTypes
 import NIOCore
-import NIOFoundationCompat
 
 /// Default HTTP error. Provides an HTTP status and a message
 public struct HTTPError: Error, HTTPResponseError, Sendable {

@@ -46,6 +46,7 @@ let package = Package(
                 .product(name: "Metrics", package: "swift-metrics"),
                 .product(name: "Tracing", package: "swift-distributed-tracing"),
                 .product(name: "NIOCore", package: "swift-nio"),
+                .product(name: "NIOFoundationCompat", package: "swift-nio"),
                 .product(name: "NIOPosix", package: "swift-nio"),
             ],
             swiftSettings: swiftSettings
@@ -145,5 +146,6 @@ let package = Package(
             ],
             resources: [.process("Certificates")]
         ),
-    ]
+    ],
+    swiftLanguageVersions: [.v5, .version("6")]
 )
