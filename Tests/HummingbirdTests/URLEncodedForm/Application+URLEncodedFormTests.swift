@@ -76,7 +76,7 @@ final class HummingBirdURLEncodedTests: XCTestCase {
     func testDecodeQuery() async throws {
         let router = Router()
         router.post("/user") { request, context -> User in
-            let user = try request.decodeQuery(as: User.self, context: context)
+            let user = try request.uri.decodeQuery(as: User.self, context: context)
             return user
         }
         let app = Application(responder: router.buildResponder())

@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2023-2024 the Hummingbird authors
+// Copyright (c) 2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -14,27 +14,14 @@
 
 import HummingbirdCore
 
-extension Request {
-    /// Collapse body into one ByteBuffer.
-    ///
-    /// This will store the collated ByteBuffer back into the request so is a mutating method. If
-    /// you don't need to store the collated ByteBuffer on the request then use
-    /// `request.body.collate(maxSize:)`.
-    ///
-    /// - Parameter context: Request context
-    /// - Returns: Collated body
-    @_documentation(visibility: internal) @available(*, unavailable, message: "Use Request.collectBody(upTo:) instead")
-    public mutating func collateBody(context: some RequestContext) async throws -> ByteBuffer {
-        try await self.collectBody(upTo: context.maxUploadSize)
-    }
-
-    /// Decode request using decoder stored at `Application.decoder`.
+extension URI {
+    /// Decode request query using ``URLEncodedFormDecoder``.
     /// - Parameters
     ///   - type: Type you want to decode to
     ///   - context: Request context
-    public func decode<Type: Decodable>(as type: Type.Type, context: some RequestContext) async throws -> Type {
+    public func decodeQuery<Type: Decodable>(as type: Type.Type, context: some RequestContext) throws -> Type {
         do {
-            return try await context.requestDecoder.decode(type, from: self, context: context)
+            return try URLEncodedFormDecoder().decode(Type.self, from: self.query ?? "")
         } catch DecodingError.dataCorrupted(_) {
             let message = "The given data was not valid input."
             throw HTTPError(.badRequest, message: message)
@@ -54,22 +41,5 @@ extension Request {
             context.logger.debug("Decode Error: \(error)")
             throw error
         }
-    }
-}
-
-internal extension CodingKey {
-    /// returns a coding key as a path key string
-    var pathKeyValue: String {
-        if let value = intValue {
-            return String(value)
-        }
-        return stringValue
-    }
-}
-
-internal extension Array<CodingKey> {
-    /// returns a path key using a dot character as a separator
-    var pathKeyValue: String {
-        map(\.pathKeyValue).joined(separator: ".")
     }
 }
