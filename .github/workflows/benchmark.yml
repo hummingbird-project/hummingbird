@@ -89,7 +89,7 @@ jobs:
         if: ${{ env.hasBenchmark == '1' }}
         uses: thollander/actions-comment-pull-request@v3
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           message: ${{ env.PRTEST }}
           comment_tag: benchmark
       - name: Exit with correct status
