@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import Hummingbird
 import HummingbirdTesting
 import Logging
@@ -65,6 +66,23 @@ final class HummingBirdURLEncodedTests: XCTestCase {
         try await app.test(.router) { client in
             try await client.execute(uri: "/user", method: .get) { response in
                 let user = try URLEncodedFormDecoder().decode(User.self, from: String(buffer: response.body))
+                XCTAssertEqual(user.name, "John Smith")
+                XCTAssertEqual(user.email, "john.smith@email.com")
+                XCTAssertEqual(user.age, 25)
+            }
+        }
+    }
+
+    func testDecodeQuery() async throws {
+        let router = Router()
+        router.post("/user") { request, context -> User in
+            let user = try request.uri.decodeQuery(as: User.self, context: context)
+            return user
+        }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/user?name=John%20Smith&email=john.smith@email.com&age=25", method: .post) { response in
+                let user = try JSONDecoder().decode(User.self, from: Data(buffer: response.body))
                 XCTAssertEqual(user.name, "John Smith")
                 XCTAssertEqual(user.email, "john.smith@email.com")
                 XCTAssertEqual(user.age, 25)
