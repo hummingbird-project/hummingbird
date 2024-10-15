@@ -15,7 +15,7 @@
 import HummingbirdCore
 
 extension URI {
-    /// Decode request query using ``URLEncodedFormDecoder``.
+    /// Decode request query using ``Hummingbird/URLEncodedFormDecoder``.
     /// - Parameters
     ///   - type: Type you want to decode to
     ///   - context: Request context
