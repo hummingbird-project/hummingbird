@@ -27,6 +27,7 @@
 ///   ...
 /// }
 /// ```
+@_documentation(visibility: internal)
 public struct _OptionalMiddleware<M0: MiddlewareProtocol>: MiddlewareProtocol {
     public typealias Input = M0.Input
     public typealias Output = M0.Output
