@@ -17,22 +17,41 @@ import HummingbirdCore
 import NIOCore
 
 /// Internally used to transform RequestContext
-struct TransformingRouterGroup<InputContext: RequestContext, Context: RequestContext>: RouterMethods where Context.Source == InputContext {
+struct TransformingRouterGroup<InputContext: RequestContext, Context: RequestContext>: RouterMethods {
     typealias TransformContext = Context
     let parent: any RouterMethods<InputContext>
+    let transform: @Sendable (Request, InputContext, (Request, TransformContext) async throws -> Response) async throws -> Response
 
     struct ContextTransformingResponder: HTTPResponder {
         typealias Context = InputContext
         let responder: any HTTPResponder<TransformContext>
+        let transform: @Sendable (
+            Request,
+            InputContext,
+            (Request, TransformContext) async throws -> Response
+        ) async throws -> Response
 
         func respond(to request: Request, context: InputContext) async throws -> Response {
-            let newContext = TransformContext(source: context)
-            return try await self.responder.respond(to: request, context: newContext)
+            try await transform(request, context) { req, context in
+                try await self.responder.respond(to: request, context: context)
+            }
         }
     }
 
-    init(parent: any RouterMethods<InputContext>) {
+    init(parent: any RouterMethods<InputContext>) where Context.Source == InputContext {
         self.parent = parent
+        self.transform = { req, context, next in
+            let context = TransformContext(source: context)
+            return try await next(req, context)
+        }
+    }
+
+    init(
+        parent: any RouterMethods<InputContext>,
+        middleware: some ContextTransformingMiddlewareProtocol<Request, Response, InputContext, Context>
+    ) {
+        self.parent = parent
+        self.transform = middleware.handle
     }
 
     /// Add middleware (Stub function as it isn't used)
@@ -52,7 +71,10 @@ struct TransformingRouterGroup<InputContext: RequestContext, Context: RequestCon
         method: HTTPRequest.Method,
         responder: Responder
     ) -> Self where Responder.Context == Context {
-        let transformResponder = ContextTransformingResponder(responder: responder)
+        let transformResponder = ContextTransformingResponder(
+            responder: responder,
+            transform: transform
+        )
         self.parent.on(path, method: method, responder: transformResponder)
         return self
     }
