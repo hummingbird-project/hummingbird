@@ -46,23 +46,59 @@ try await app.runService()
 
 ### Extending Hummingbird
 
-Hummingbird is designed to require the least number of dependencies possible, but this means many features are unavailable to the core libraries. Additional features are provided through extensions. The Hummingbird repository comes with additional modules 
+Hummingbird's core is designed to be minimal, with additional features provided through extensions. Here are some official extensions:
 
-- `HummingbirdRouter`: an alternative router that uses a resultbuilder.
-- `HummingbirdTLS`: TLS support.
-- `HummingbirdHTTP2`: Support for HTTP2 upgrades.
-- `HummingbirdTesting`: helper functions to aid testing Hummingbird projects.
+### Built-in Extensions
 
-And also the following are available in other repositories in this organisation
+- `HummingbirdRouter`: An alternative router using result builders
+- `HummingbirdTLS`: TLS support
+- `HummingbirdHTTP2`: HTTP2 upgrade support
+- `HummingbirdTesting`: Helper functions for testing Hummingbird projects
 
-- [`HummingbirdAuth`](https://github.com/hummingbird-project/hummingbird-auth/tree/main): Authentication framework
-- [`HummingbirdFluent`](https://github.com/hummingbird-project/hummingbird-fluent/tree/main): Integration with Vapor's database ORM [FluentKit](https://github.com/Vapor/fluent-kit).
-- [`HummingbirdRedis`](https://github.com/hummingbird-project/hummingbird-redis/tree/main): Redis support via [RediStack](https://github.com/swift-server/RediStack).
-- [`HummingbirdWebSocket`](https://github.com/hummingbird-project/hummingbird-websocket/tree/main): Support for WebSockets (Currently work in progess).
-- [`HummingbirdLambda`](https://github.com/hummingbird-project/hummingbird-lambda/tree/main): Framework for running Hummingbird on AWS Lambdas.
-- [`Jobs`](https://github.com/hummingbird-project/swift-jobs/tree/main): Job Queue Framework
-- [`Mustache`](https://github.com/hummingbird-project/swift-mustache): Mustache templating engine.
+### Additional Extensions
+
+The following extensions are available in separate repositories:
+
+- [HummingbirdAuth](https://github.com/hummingbird-project/hummingbird-auth): Authentication framework
+- [HummingbirdFluent](https://github.com/hummingbird-project/hummingbird-fluent): Integration with Vapor's FluentKit ORM
+- [HummingbirdRedis](https://github.com/hummingbird-project/hummingbird-redis): Redis support via RediStack
+- [HummingbirdWebSocket](https://github.com/hummingbird-project/hummingbird-websocket): WebSocket support (work in progress)
+- [HummingbirdLambda](https://github.com/hummingbird-project/hummingbird-lambda): Run Hummingbird on AWS Lambda
+- [Jobs](https://github.com/hummingbird-project/swift-jobs): Job Queue Framework
+- [Mustache](https://github.com/hummingbird-project/swift-mustache): Mustache templating engine
 
 ## Documentation
 
 You can find reference documentation and user guides for Hummingbird [here](https://docs.hummingbird.codes/2.0/documentation/hummingbird/). The [hummingbird-examples](https://github.com/hummingbird-project/hummingbird-examples/tree/main) repository has a number of examples of different uses of the library.
+
+## Installation
+
+Add the following to your `Package.swift` file:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0")
+],
+targets: [
+  .executableTarget(
+    name: "MyApp",
+    dependencies: [
+        .target(name: "Hummingbird"),
+    ]),
+]
+```
+
+Or run the following commands on your package using SwiftPM, replacing `MyApp` with the name of your target:
+
+```swift
+swift package add-dependency https://github.com/hummingbird-project/hummingbird.git --from 2.0.0
+swift package add-target-dependency Hummingbird MyApp
+```
+
+## Contributing
+
+We welcome contributions to Hummingbird! Please read our [contributing guidelines](CONTRIBUTING.md) before submitting a pull request.
+
+## License
+
+Hummingbird is released under the [Apache 2.0 license](LICENSE.txt).
