@@ -62,7 +62,7 @@ The following extensions are available in separate repositories:
 - [HummingbirdAuth](https://github.com/hummingbird-project/hummingbird-auth): Authentication framework
 - [HummingbirdFluent](https://github.com/hummingbird-project/hummingbird-fluent): Integration with Vapor's FluentKit ORM
 - [HummingbirdRedis](https://github.com/hummingbird-project/hummingbird-redis): Redis support via RediStack
-- [HummingbirdWebSocket](https://github.com/hummingbird-project/hummingbird-websocket): WebSocket support (work in progress)
+- [HummingbirdWebSocket](https://github.com/hummingbird-project/hummingbird-websocket): WebSocket support
 - [HummingbirdLambda](https://github.com/hummingbird-project/hummingbird-lambda): Run Hummingbird on AWS Lambda
 - [Jobs](https://github.com/hummingbird-project/swift-jobs): Job Queue Framework
 - [Mustache](https://github.com/hummingbird-project/swift-mustache): Mustache templating engine
