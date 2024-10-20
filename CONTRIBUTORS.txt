@@ -16,8 +16,10 @@ needs to be listed here.
 - Brian Michel <brian.michel@gmail.com>
 - Callum Todd <c@callumtodd.uk>
 - Chris <4376956+SoftwareEngineerChris@users.noreply.github.com>
+- Connor Ricks <connor.ricks@gmail.com>
 - Derek Clarkson <d4rkf1br3@gmail.com>
 - Florion <florion@lilo.org>
+- Garrett Moseke <gmosedev@proton.me>
 - Iceman <side.junktown@gmail.com>
 - Joannis Orlandos <joannis@orlandos.nl>
 - Jonathan Pulfer <JonPulfer@users.noreply.github.com>
@@ -32,6 +34,7 @@ needs to be listed here.
 - 0xpablo <pablos93@gmail.com>
 - Michael Stegeman <michael@stegeman.me>
 - Ronald Mannak <ronaldmannak@me.com>
+- Carl Downing <200629+ckd@users.noreply.github.com>
 - Nicholas Trienens <nick@fuzzproductions.com>
 - Mahdi Bahrami <github@mahdibm.com>
 - Joseph Heck <heckj@mac.com>
@@ -40,8 +43,10 @@ needs to be listed here.
 - Gao Lei <7885834+ladiesman218@users.noreply.github.com>
 - Kanz <87kangsw@gmail.com>
 - Kia Abdi <65511468+TheeKia@users.noreply.github.com>
+- Michael <juniper.fife_0b@icloud.com>
 - Michael Critz <github@michaelcritz.com>
 - Patrick Heneise <patrick@zentered.co>
+- xavgru12 <117173294+xavgru12@users.noreply.github.com>
 - Ádám Rocska <1914616+adam-rocska@users.noreply.github.com>
 
 **Updating this list**

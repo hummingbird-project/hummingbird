@@ -452,14 +452,6 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareResultBuilder() async throws {
-        struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
-            let string: String
-            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-                var response = try await next(request, context)
-                response.headers[values: .test].append(self.string)
-                return response
-            }
-        }
         let router = Router()
         router.addMiddleware {
             TestMiddleware(string: "first")
@@ -476,6 +468,129 @@ final class MiddlewareTests: XCTestCase {
                 XCTAssertEqual(response.headers[values: .test].last, "first")
             }
         }
+    }
+
+    func testMiddlewareEitherResultBuilder() async throws {
+        func test(shouldUseFirst: Bool) async throws {
+            let router = Router()
+            router.addMiddleware {
+                if shouldUseFirst {
+                    TestMiddleware(string: "first")
+                } else {
+                    TestMiddleware(string: "second")
+                }
+            }
+            router.get("/hello") { _, _ in "Hello" }
+            let app = Application(responder: router.buildResponder())
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/hello", method: .get) { response in
+                    XCTAssertEqual(response.headers[values: .test].first, shouldUseFirst ? "first" : "second")
+                    XCTAssertEqual(response.headers[values: .test].count, 1)
+                }
+            }
+        }
+
+        /// The first middleware should be the only middleware.
+        try await test(shouldUseFirst: true)
+        /// The second middleware should be the only middleware.
+        try await test(shouldUseFirst: false)
+    }
+
+    func testMiddlewareOptionalIfResultBuilder() async throws {
+        func test(shouldUseFirst: Bool) async throws {
+            let router = Router()
+            router.addMiddleware {
+                if shouldUseFirst {
+                    TestMiddleware(string: "first")
+                }
+
+                TestMiddleware(string: "second")
+            }
+            router.get("/hello") { _, _ in "Hello" }
+            let app = Application(responder: router.buildResponder())
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/hello", method: .get) { response in
+                    // headers come back in opposite order as middleware is applied to responses in that order
+                    XCTAssertEqual(response.headers[values: .test].first, "second")
+
+                    if shouldUseFirst {
+                        XCTAssertEqual(response.headers[values: .test].last, "first")
+                        XCTAssertEqual(response.headers[values: .test].count, 2)
+                    } else {
+                        XCTAssertEqual(response.headers[values: .test].count, 1)
+                    }
+                }
+            }
+        }
+
+        /// The first middleware should be included along with the second middleware.
+        try await test(shouldUseFirst: true)
+
+        /// The first middleware should be excluded, leaving only the second middleware.
+        try await test(shouldUseFirst: false)
+    }
+
+    func testMiddlewareOptionalUnwrapResultBuilder() async throws {
+        func test<M: RouterMiddleware>(middleware: M?) async throws where M.Context == BasicRequestContext {
+            let router = Router()
+            router.addMiddleware {
+                if let middleware {
+                    middleware
+                }
+
+                TestMiddleware(string: "second")
+            }
+            router.get("/hello") { _, _ in "Hello" }
+            let app = Application(responder: router.buildResponder())
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/hello", method: .get) { response in
+                    // headers come back in opposite order as middleware is applied to responses in that order
+                    XCTAssertEqual(response.headers[values: .test].first, "second")
+
+                    if middleware != nil {
+                        XCTAssertEqual(response.headers[values: .test].last, "first")
+                        XCTAssertEqual(response.headers[values: .test].count, 2)
+                    } else {
+                        XCTAssertEqual(response.headers[values: .test].count, 1)
+                    }
+                }
+            }
+        }
+
+        /// The first middleware should be included along with the second middleware.
+        try await test(middleware: TestMiddleware(string: "first"))
+
+        /// The first middleware should be excluded, leaving only the second middleware.
+        try await test(middleware: Optional<TestMiddleware>.none)
+    }
+
+    func testMiddlewareArrayResultBuilder() async throws {
+        let limit = 5
+        let router = Router()
+        router.addMiddleware {
+            for i in 0..<limit {
+                TestMiddleware(string: String(i))
+            }
+        }
+        router.get("/hello") { _, _ in "Hello" }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/hello", method: .get) { response in
+                XCTAssertEqual(response.headers[values: .test], (0..<limit).reversed().map {
+                    String($0)
+                })
+            }
+        }
+    }
+}
+
+/// Middleware used in tests. Adds the provided `String` to the header's `.test` value.
+struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
+    let string: String
+    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+        var response = try await next(request, context)
+        response.headers[values: .test].append(self.string)
+        return response
     }
 }
 
