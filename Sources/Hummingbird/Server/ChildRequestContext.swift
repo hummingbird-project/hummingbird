@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 import Logging
 
-/// A RequestContext that can be initialized from another RequestContext but
-/// the initialization might fail
+/// A RequestContext that can be initialized from another RequestContext where initialization
+/// can throw errors which will be passed back up the middleware stack
 public protocol ChildRequestContext<ParentContext>: RequestContext where Source == Never {
     associatedtype ParentContext: RequestContext
     /// Initialise RequestContext from source
