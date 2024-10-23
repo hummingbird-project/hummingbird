@@ -76,7 +76,7 @@ public struct ThrowingContextTransform<Context: RouterRequestContext, Handler: M
     /// - Parameters:
     ///   - context: RequestContext to convert to
     ///   - builder: RouteGroup builder
-    init(
+    public init(
         to context: Handler.Context.Type,
         @MiddlewareFixedTypeBuilder<Request, Response, Handler.Context> builder: () -> Handler
     ) {

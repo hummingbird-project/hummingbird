@@ -57,7 +57,7 @@ public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProto
     ///   - routerPath: Path local to group route this group is defined in
     ///   - context: RequestContext to convert to
     ///   - builder: RouteGroup builder
-    /// 
+    ///
     /// The RequestContext that the group uses must conform to ``Hummingbird/ChildRequestContext`` eg
     /// ```
     /// struct TransformedRequestContext: ChildRequestContext {
@@ -83,7 +83,7 @@ public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProto
         self.fullPath = parentGroupPath.appendingPath(routerPath)
         routerBuildState.routeGroupPath = self.fullPath
         self.handler = RouterBuilderState.$current.withValue(routerBuildState) {
-            ThrowingContextTransform(to: ChildHandler.Context.self, builder: builder) 
+            ThrowingContextTransform(to: ChildHandler.Context.self, builder: builder)
         }
         self.routerPath = routerPath
     }
