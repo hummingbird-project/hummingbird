@@ -72,7 +72,7 @@ public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProto
         _ routerPath: RouterPath,
         context: ChildContext.Type,
         @MiddlewareFixedTypeBuilder<Request, Response, ChildContext> builder: () -> ChildHandler
-    ) where ChildHandler.Context == ChildContext, Handler == ThrowingContextTransform<Context, ChildHandler> {
+    ) where ChildContext == ChildContext, Handler == ThrowingContextTransform<Context, ChildContext, ChildHandler> {
         var routerPath = routerPath
         // Get builder state from service context
         var routerBuildState = RouterBuilderState.current ?? .init(options: [])
