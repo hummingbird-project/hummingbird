@@ -17,10 +17,10 @@ import HummingbirdCore
 import NIOCore
 
 /// Internally used to transform RequestContext
-struct TransformingRouterGroup<Context: RequestContext>: RouterMethods {
+struct TransformingRouterGroup<Context: RequestContext, Parent: RouterMethods<Context.Source>>: RouterMethods {
     typealias TransformContext = Context
     typealias InputContext = Context.Source
-    let parent: any RouterMethods<InputContext>
+    let parent: Parent
 
     struct ContextTransformingResponder: HTTPResponder {
         typealias Context = InputContext
@@ -32,7 +32,7 @@ struct TransformingRouterGroup<Context: RequestContext>: RouterMethods {
         }
     }
 
-    init(parent: any RouterMethods<InputContext>) {
+    init(parent: Parent) {
         self.parent = parent
     }
 
@@ -60,10 +60,10 @@ struct TransformingRouterGroup<Context: RequestContext>: RouterMethods {
 }
 
 /// Internally used to transform RequestContext
-struct ThrowingTransformingRouterGroup<Context: ChildRequestContext>: RouterMethods {
+struct ThrowingTransformingRouterGroup<Context: ChildRequestContext, Parent: RouterMethods<Context.ParentContext>>: RouterMethods {
     typealias TransformContext = Context
     typealias InputContext = Context.ParentContext
-    let parent: any RouterMethods<InputContext>
+    let parent: Parent
 
     struct ContextTransformingResponder: HTTPResponder {
         typealias Context = InputContext
@@ -75,7 +75,7 @@ struct ThrowingTransformingRouterGroup<Context: ChildRequestContext>: RouterMeth
         }
     }
 
-    init(parent: any RouterMethods<InputContext>) {
+    init(parent: Parent) {
         self.parent = parent
     }
 
