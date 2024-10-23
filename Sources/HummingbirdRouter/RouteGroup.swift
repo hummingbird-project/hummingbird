@@ -52,6 +52,42 @@ public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProto
         self.routerPath = routerPath
     }
 
+    /// Create RouteGroup that transforms the RequestContext from result builder
+    /// - Parameters:
+    ///   - routerPath: Path local to group route this group is defined in
+    ///   - context: RequestContext to convert to
+    ///   - builder: RouteGroup builder
+    /// 
+    /// The RequestContext that the group uses must conform to ``Hummingbird/ChildRequestContext`` eg
+    /// ```
+    /// struct TransformedRequestContext: ChildRequestContext {
+    ///     typealias ParentContext = BasicRequestContext
+    ///     var coreContext: CoreRequestContextStorage
+    ///     init(context: ParentContext) throws {
+    ///         self.coreContext = .init(source: context)
+    ///     }
+    /// }
+    /// ```
+    public init<ChildHandler: MiddlewareProtocol, ChildContext: ChildRequestContext & RouterRequestContext>(
+        _ routerPath: RouterPath,
+        context: ChildContext.Type,
+        @MiddlewareFixedTypeBuilder<Request, Response, ChildContext> builder: () -> ChildHandler
+    ) where ChildHandler.Context == ChildContext, Handler == ThrowingContextTransform<Context, ChildHandler> {
+        var routerPath = routerPath
+        // Get builder state from service context
+        var routerBuildState = RouterBuilderState.current ?? .init(options: [])
+        if routerBuildState.options.contains(.caseInsensitive) {
+            routerPath = routerPath.lowercased()
+        }
+        let parentGroupPath = routerBuildState.routeGroupPath
+        self.fullPath = parentGroupPath.appendingPath(routerPath)
+        routerBuildState.routeGroupPath = self.fullPath
+        self.handler = RouterBuilderState.$current.withValue(routerBuildState) {
+            ThrowingContextTransform(to: ChildHandler.Context.self, builder: builder) 
+        }
+        self.routerPath = routerPath
+    }
+
     /// Process HTTP request and return an HTTP response
     /// - Parameters:
     ///   - input: Request
