@@ -312,6 +312,58 @@ final class RouterTests: XCTestCase {
         }
     }
 
+    /// Test middleware in parent group is applied to routes in child group
+    func testThrowingTransformingGroupMiddleware() async throws {
+        struct TestRouterContext: RequestContext {
+            init(source: Source) {
+                self.coreContext = .init(source: source)
+                self.string = nil
+            }
+
+            /// parameters
+            var coreContext: CoreRequestContextStorage
+            /// additional data
+            var string: String?
+        }
+        struct TestRouterContext2: ChildRequestContext {
+            typealias ParentContext = TestRouterContext
+            init(context: ParentContext) throws {
+                self.coreContext = .init(source: context)
+                guard let string = context.string else { throw HTTPError(.badRequest) }
+                self.string = string
+            }
+
+            /// parameters
+            var coreContext: CoreRequestContextStorage
+            /// additional data
+            var string: String
+        }
+        struct TestTransformMiddleware: RouterMiddleware {
+            typealias Context = TestRouterContext
+            func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+                var context = context
+                context.string = request.headers[.test]
+                return try await next(request, context)
+            }
+        }
+        let router = Router(context: TestRouterContext.self)
+        router
+            .add(middleware: TestTransformMiddleware())
+            .group("/group", context: TestRouterContext2.self)
+            .get { _, context in
+                return EditedResponse(headers: [.test: context.string], response: "hello")
+            }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/group", method: .get, headers: [.test: "test"]) { response in
+                XCTAssertEqual(response.headers[.test], "test")
+            }
+            try await client.execute(uri: "/group", method: .get) { response in
+                XCTAssertEqual(response.status, .badRequest)
+            }
+        }
+    }
+
     func testParameters() async throws {
         let router = Router()
         router

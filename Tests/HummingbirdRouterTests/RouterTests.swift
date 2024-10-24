@@ -270,7 +270,7 @@ final class RouterTests: XCTestCase {
         }
     }
 
-    /// Test middleware in parent group is applied to routes in child group
+    /// Test context transform
     func testGroupTransformingGroupMiddleware() async throws {
         struct TestRouterContext2: RequestContext, RouterRequestContext {
             /// router context
@@ -313,6 +313,64 @@ final class RouterTests: XCTestCase {
             try await client.execute(uri: "/test/group", method: .get, headers: [.middleware2: "Transforming"]) { response in
                 XCTAssertEqual(response.headers[.middleware], "TestMiddleware")
                 XCTAssertEqual(response.headers[.middleware2], "Transforming")
+            }
+        }
+    }
+
+    /// Test throwing context transform
+    func testThrowingTransformingGroupMiddleware() async throws {
+        struct TestRouterContext: RequestContext, RouterRequestContext {
+            /// router context
+            var routerContext: RouterBuilderContext
+            /// parameters
+            var coreContext: CoreRequestContextStorage
+            /// additional data
+            var string: String?
+
+            init(source: Source) {
+                self.coreContext = .init(source: source)
+                self.routerContext = .init()
+                self.string = nil
+            }
+        }
+        struct TestRouterContext2: RequestContext, RouterRequestContext, ChildRequestContext {
+            /// router context
+            var routerContext: RouterBuilderContext
+            /// parameters
+            var coreContext: CoreRequestContextStorage
+            /// additional data
+            var string: String
+
+            init(context: TestRouterContext) throws {
+                self.coreContext = .init(source: context)
+                self.routerContext = context.routerContext
+                guard let string = context.string else { throw HTTPError(.badRequest) }
+                self.string = string
+            }
+        }
+        struct TestTransformMiddleware: RouterMiddleware {
+            typealias Context = TestRouterContext
+            func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+                var context = context
+                context.string = request.headers[.middleware2]
+                return try await next(request, context)
+            }
+        }
+        let router = RouterBuilder(context: TestRouterContext.self) {
+            TestTransformMiddleware()
+            RouteGroup("/group", context: TestRouterContext2.self) {
+                Get { _, context in
+                    return Response(status: .ok, headers: [.middleware2: context.string])
+                }
+            }
+        }
+        let app = Application(responder: router)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/group", method: .get, headers: [.middleware2: "Transforming"]) { response in
+                XCTAssertEqual(response.headers[.middleware2], "Transforming")
+            }
+            try await client.execute(uri: "/group", method: .get) { response in
+                XCTAssertEqual(response.status, .badRequest)
             }
         }
     }
