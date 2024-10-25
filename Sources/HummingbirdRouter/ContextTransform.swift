@@ -63,7 +63,7 @@ public struct ContextTransform<Context: RouterRequestContext, HandlerContext: Ro
 }
 
 /// Router middleware that transforms the ``Hummingbird/RequestContext`` and uses it with the contained
-/// Middleware chain. ``Used by RouteGroup/init(_:context:builder:)``
+/// Middleware chain. Used by ``HummingbirdRouter/RouteGroup/init(_:context:builder:)``
 public struct ThrowingContextTransform<Context: RouterRequestContext, HandlerContext: RouterRequestContext & ChildRequestContext, Handler: MiddlewareProtocol>: RouterMiddleware where Handler.Input == Request, Handler.Output == Response, Handler.Context == HandlerContext, HandlerContext.ParentContext == Context {
     public typealias Input = Request
     public typealias Output = Response
@@ -76,7 +76,7 @@ public struct ThrowingContextTransform<Context: RouterRequestContext, HandlerCon
     /// - Parameters:
     ///   - context: RequestContext to convert to
     ///   - builder: RouteGroup builder
-    public init(
+    init(
         to context: HandlerContext.Type,
         @MiddlewareFixedTypeBuilder<Request, Response, HandlerContext> builder: () -> Handler
     ) {
