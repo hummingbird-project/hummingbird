@@ -74,12 +74,38 @@ extension RouterMethods {
     ///   - path: path prefix to add to routes inside this group
     ///   - convertContext: Function converting context
     @discardableResult public func group<TargetContext>(
-        _ path: RouterPath,
+        _ path: RouterPath = "",
         context: TargetContext.Type
     ) -> RouterGroup<TargetContext> where TargetContext.Source == Context {
         return RouterGroup(
             path: path,
             parent: TransformingRouterGroup(parent: self)
+        )
+    }
+
+    /// Return a group inside the current group that transforms the ``RequestContext``
+    ///
+    /// For the transform to work the `Source` of the transformed `RequestContext` needs
+    /// to be the original `RequestContext` eg
+    /// ```
+    /// struct TransformedRequestContext: ChildRequestContext {
+    ///     typealias ParentContext = BasicRequestContext
+    ///     var coreContext: CoreRequestContextStorage
+    ///     init(context: ParentContext) throws {
+    ///         self.coreContext = .init(source: source)
+    ///     }
+    /// }
+    /// ```
+    /// - Parameters
+    ///   - path: path prefix to add to routes inside this group
+    ///   - convertContext: Function converting context
+    @discardableResult public func group<TargetContext: ChildRequestContext>(
+        _ path: RouterPath = "",
+        context: TargetContext.Type
+    ) -> RouterGroup<TargetContext> where TargetContext.ParentContext == Context {
+        return RouterGroup(
+            path: path,
+            parent: ThrowingTransformingRouterGroup(parent: self)
         )
     }
 
