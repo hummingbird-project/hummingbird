@@ -74,7 +74,7 @@ extension RouterMethods {
     ///   - path: path prefix to add to routes inside this group
     ///   - convertContext: Function converting context
     @discardableResult public func group<TargetContext>(
-        _ path: RouterPath,
+        _ path: RouterPath = "",
         context: TargetContext.Type
     ) -> RouterGroup<TargetContext> where TargetContext.Source == Context {
         return RouterGroup(
@@ -100,7 +100,7 @@ extension RouterMethods {
     ///   - path: path prefix to add to routes inside this group
     ///   - convertContext: Function converting context
     @discardableResult public func group<TargetContext: ChildRequestContext>(
-        _ path: RouterPath,
+        _ path: RouterPath = "",
         context: TargetContext.Type
     ) -> RouterGroup<TargetContext> where TargetContext.ParentContext == Context {
         return RouterGroup(
