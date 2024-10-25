@@ -503,6 +503,23 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    func testChunkedTransferEncoding() async throws {
+        let router = Router()
+            .get("chunked") { _, _ in
+                Response(status: .ok, body: .init { writer in
+                    try await writer.write(ByteBuffer(string: "Testing"))
+                    try await writer.finish(nil)
+                })
+            }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.live) { client in
+            // check streamed route doesn't
+            try await client.execute(uri: "/chunked", method: .get) { response in
+                XCTAssertEqual(response.headers[.transferEncoding], "chunked")
+            }
+        }
+    }
+
     func testRemoteAddress() async throws {
         /// Implementation of a basic request context that supports everything the Hummingbird library needs
         struct SocketAddressRequestContext: RequestContext {
