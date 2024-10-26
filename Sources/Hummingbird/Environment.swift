@@ -42,12 +42,12 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
 
     var values: [String: String]
 
-    /// initialize from environment variables
+    /// Initialize from environment variables
     public init() {
         self.values = Self.getEnvironment()
     }
 
-    /// initialize from dictionary
+    /// Initialize from dictionary
     public init(values: [String: String]) {
         self.values = Self.getEnvironment()
         for (key, value) in values {
@@ -55,7 +55,7 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
         }
     }
 
-    /// initialize from dictionary literal
+    /// Initialize from dictionary literal
     public init(dictionaryLiteral elements: (String, String)...) {
         self.values = Self.getEnvironment()
         for element in elements {
@@ -88,6 +88,9 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
     }
 
     /// Set environment variable
+    ///
+    /// This sets the variable within this type and also calls `setenv` so future versions
+    /// of this type will also have this variable set.
     /// - Parameters:
     ///   - s: Environment variable name
     ///   - value: Environment variable name value
