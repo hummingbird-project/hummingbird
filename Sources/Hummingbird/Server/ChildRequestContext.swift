@@ -14,15 +14,15 @@
 import Logging
 
 /// A RequestContext that can be initialized from another RequestContext.
-/// 
+///
 /// The init for the context is marked throwing as it is allowed to fail. If
 /// it fails then the error is passed back up the middleware stack
-/// 
+///
 /// ```
 /// struct MyRequestContext: ChildRequestContext {
 ///     init(context: MyParentRequestContext) throws {
 ///         self.coreContext = context.coreContext
-///     } 
+///     }
 /// }
 /// ```
 public protocol ChildRequestContext<ParentContext>: RequestContext where Source == Never {
