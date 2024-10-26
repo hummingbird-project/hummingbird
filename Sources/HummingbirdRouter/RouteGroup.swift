@@ -52,13 +52,15 @@ public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProto
         self.routerPath = routerPath
     }
 
-    /// Create RouteGroup that transforms the RequestContext from result builder
+    /// Create RouteGroup from RequestContext transform and result builder
     /// - Parameters:
     ///   - routerPath: Path local to group route this group is defined in
     ///   - context: RequestContext to convert to
     ///   - builder: RouteGroup builder
     ///
-    /// The RequestContext that the group uses must conform to ``Hummingbird/ChildRequestContext`` eg
+    /// The ``Hummingbird/RequestContext`` that the group uses must conform to ``Hummingbird/ChildRequestContext``
+    /// and the `ParentContext` of that `RequestContext` be the `RequestContext` we are transforming
+    /// from eg
     /// ```
     /// struct TransformedRequestContext: ChildRequestContext {
     ///     typealias ParentContext = BasicRequestContext
