@@ -259,7 +259,7 @@ final class HummingBirdCoreTests: XCTestCase {
                 try await bodyWriter.write(request.body.delayed())
                 try await bodyWriter.finish(nil)
             },
-            httpChannelSetup: .http1(additionalChannelHandlers: [SlowInputChannelHandler()]),
+            httpChannelSetup: .http1(configuration: .init(additionalChannelHandlers: [SlowInputChannelHandler()])),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "Hummingbird")
@@ -313,7 +313,7 @@ final class HummingBirdCoreTests: XCTestCase {
                 }
                 try await responseWriter.writeResponse(.init(status: .ok))
             },
-            httpChannelSetup: .http1(additionalChannelHandlers: [CreateErrorHandler()]),
+            httpChannelSetup: .http1(configuration: .init(additionalChannelHandlers: [CreateErrorHandler()])),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "Hummingbird")
@@ -384,10 +384,10 @@ final class HummingBirdCoreTests: XCTestCase {
                 }
                 try await responseWriter.writeResponse(.init(status: .ok))
             },
-            httpChannelSetup: .http1(additionalChannelHandlers: [
-                HTTPServerIncompleteRequest(),
-                IdleStateHandler(readTimeout: .seconds(1)),
-            ]),
+            httpChannelSetup: .http1(configuration: .init(
+                additionalChannelHandlers: [HTTPServerIncompleteRequest()],
+                idleTimeout: .seconds(1)
+            )),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "Hummingbird")
@@ -422,10 +422,10 @@ final class HummingBirdCoreTests: XCTestCase {
                 }
                 try await responseWriter.writeResponse(.init(status: .ok))
             },
-            httpChannelSetup: .http1(additionalChannelHandlers: [
-                HTTPServerIncompleteRequest(),
-                IdleStateHandler(readTimeout: .seconds(1)),
-            ]),
+            httpChannelSetup: .http1(configuration: .init(
+                additionalChannelHandlers: [HTTPServerIncompleteRequest()],
+                idleTimeout: .seconds(1)
+            )),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "Hummingbird")
@@ -468,10 +468,12 @@ final class HummingBirdCoreTests: XCTestCase {
                 }
                 try await responseWriter.writeResponse(.init(status: .ok))
             },
-            httpChannelSetup: .http1(additionalChannelHandlers: [
-                HTTPServerIncompleteRequest(),
-                IdleStateHandler(readTimeout: .seconds(1)),
-            ]),
+            httpChannelSetup: .http1(
+                configuration: .init(
+                    additionalChannelHandlers: [HTTPServerIncompleteRequest()],
+                    idleTimeout: .seconds(1)
+                )
+            ),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "Hummingbird")
