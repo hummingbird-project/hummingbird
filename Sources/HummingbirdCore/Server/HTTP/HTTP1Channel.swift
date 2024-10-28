@@ -24,9 +24,15 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
 
     /// HTTP1Channel configuration
     public struct Configuration: Sendable {
+        /// Additional channel handlers to add to channel
         public var additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
+        /// Time before closing an idle channel
         public var idleTimeout: TimeAmount?
 
+        ///  Initialize HTTP1Channel.Configuration
+        /// - Parameters:
+        ///   - additionalChannelHandlers: Additional channel handlers to add to channel
+        ///   - idleTimeout: Time before closing an idle channel
         public init(
             additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = [],
             idleTimeout: TimeAmount? = nil
