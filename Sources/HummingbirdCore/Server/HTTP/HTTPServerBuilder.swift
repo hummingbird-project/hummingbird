@@ -80,7 +80,7 @@ extension HTTPServerBuilder {
     ///     server: .http1()
     /// )
     /// ```
-    /// - Parameter additionalChannelHandlers: Additional channel handlers to add to channel pipeline
+    /// - Parameter configuration: HTTP1 channel configuration
     /// - Returns: HTTPServerBuilder builder
     public static func http1(
         configuration: HTTP1Channel.Configuration = .init()
