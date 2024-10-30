@@ -102,19 +102,25 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
         return channel.configureHTTP2AsyncSecureUpgrade { channel in
             self.http1.setup(channel: channel, logger: logger)
         } http2ConnectionInitializer: { channel in
-            channel.configureAsyncHTTP2Pipeline(
-                mode: .server,
-                configuration: .init()
-            ) { http2ChildChannel in
-                http2ChildChannel.eventLoop.makeCompletedFuture {
-                    try http2ChildChannel.pipeline.syncOperations.addHandler(HTTP2FramePayloadToHTTPServerCodec())
-                    try http2ChildChannel.pipeline.syncOperations.addHandlers(self.http1.configuration.additionalChannelHandlers())
-                    if let idleTimeout = self.http1.configuration.idleTimeout {
-                        try http2ChildChannel.pipeline.syncOperations.addHandler(IdleStateHandler(readTimeout: idleTimeout))
+            channel.eventLoop.makeCompletedFuture {
+                let connectionManager = HTTP2ServerConnectionManager(eventLoop: channel.eventLoop)
+                let handler: HTTP2ConnectionOutput = try channel.pipeline.syncOperations.configureAsyncHTTP2Pipeline(
+                    mode: .server,
+                    streamDelegate: connectionManager.streamDelegate,
+                    configuration: .init()
+                ) { http2ChildChannel in
+                    http2ChildChannel.eventLoop.makeCompletedFuture {
+                        try http2ChildChannel.pipeline.syncOperations.addHandler(HTTP2FramePayloadToHTTPServerCodec())
+                        try http2ChildChannel.pipeline.syncOperations.addHandlers(self.http1.configuration.additionalChannelHandlers())
+                        if let idleTimeout = self.http1.configuration.idleTimeout {
+                            try http2ChildChannel.pipeline.syncOperations.addHandler(IdleStateHandler(readTimeout: idleTimeout))
+                        }
+                        try http2ChildChannel.pipeline.syncOperations.addHandler(HTTPUserEventHandler(logger: logger))
+                        return try HTTP1Channel.Value(wrappingChannelSynchronously: http2ChildChannel)
                     }
-                    try http2ChildChannel.pipeline.syncOperations.addHandler(HTTPUserEventHandler(logger: logger))
-                    return try HTTP1Channel.Value(wrappingChannelSynchronously: http2ChildChannel)
                 }
+                try channel.pipeline.syncOperations.addHandler(connectionManager)
+                return handler
             }
         }
         .map {
