@@ -60,4 +60,41 @@ final class HummingBirdHTTP2Tests: XCTestCase {
             XCTAssertEqual(response.status, .ok)
         }
     }
+
+    func testHTTP1Connect() async throws {
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
+        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        var logger = Logger(label: "Hummingbird")
+        logger.logLevel = .trace
+        try await testServer(
+            responder: { (_, responseWriter: consuming ResponseWriter, _) in
+                try await responseWriter.writeResponse(.init(status: .ok))
+            },
+            httpChannelSetup: .http2Upgrade(tlsConfiguration: getServerTLSConfiguration()),
+            configuration: .init(address: .hostname(port: 0), serverName: testServerName),
+            eventLoopGroup: eventLoopGroup,
+            logger: logger
+        ) { port in
+            var tlsConfiguration = try getClientTLSConfiguration()
+            // no way to override the SSL server name with AsyncHTTPClient so need to set
+            // hostname verification off
+            tlsConfiguration.certificateVerification = .noHostnameVerification
+            let client = TestClient(
+                host: "localhost",
+                port: port,
+                configuration: .init(tlsConfiguration: tlsConfiguration),
+                eventLoopGroupProvider: .shared(eventLoopGroup)
+            )
+            client.connect()
+            let response: TestClient.Response
+            do {
+                response = try await client.get("/")
+            } catch {
+                try? await client.shutdown()
+                throw error
+            }
+            try await client.shutdown()
+            XCTAssertEqual(response.status, .ok)
+        }
+    }
 }

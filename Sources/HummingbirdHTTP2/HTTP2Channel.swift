@@ -16,17 +16,21 @@ import HTTPTypes
 import HummingbirdCore
 import Logging
 import NIOCore
+import NIOHTTP1
 import NIOHTTP2
 import NIOHTTPTypes
 import NIOHTTPTypesHTTP1
 import NIOHTTPTypesHTTP2
 import NIOPosix
 import NIOSSL
+import NIOTLS
 
 /// Child channel for processing HTTP1 with the option of upgrading to HTTP2
 public struct HTTP2UpgradeChannel: HTTPChannelHandler {
+    typealias HTTP1ConnectionOutput = HTTP1Channel.Value
+    typealias HTTP2ConnectionOutput = NIOHTTP2Handler.AsyncStreamMultiplexer<HTTP1Channel.Value>
     public struct Value: ServerChildChannelValue {
-        let negotiatedHTTPVersion: EventLoopFuture<NIONegotiatedHTTPVersion<HTTP1Channel.Value, (NIOAsyncChannel<HTTP2Frame, HTTP2Frame>, NIOHTTP2Handler.AsyncStreamMultiplexer<HTTP1Channel.Value>)>>
+        let negotiatedHTTPVersion: EventLoopFuture<NIONegotiatedHTTPVersion<HTTP1ConnectionOutput, HTTP2ConnectionOutput>>
         public let channel: Channel
     }
 
@@ -95,31 +99,25 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
             return channel.eventLoop.makeFailedFuture(error)
         }
 
-        return channel.configureAsyncHTTPServerPipeline { http1Channel -> EventLoopFuture<HTTP1Channel.Value> in
-            return http1Channel.eventLoop.makeCompletedFuture {
-                try http1Channel.pipeline.syncOperations.addHandler(HTTP1ToHTTPServerCodec(secure: true))
-                try http1Channel.pipeline.syncOperations.addHandlers(self.http1.configuration.additionalChannelHandlers())
-                if let idleTimeout = self.http1.configuration.idleTimeout {
-                    try http1Channel.pipeline.syncOperations.addHandler(IdleStateHandler(readTimeout: idleTimeout))
+        return channel.configureHTTP2AsyncSecureUpgrade { channel in
+            self.http1.setup(channel: channel, logger: logger)
+        } http2ConnectionInitializer: { channel in
+            channel.configureAsyncHTTP2Pipeline(
+                mode: .server,
+                configuration: .init()
+            ) { http2ChildChannel in
+                http2ChildChannel.eventLoop.makeCompletedFuture {
+                    try http2ChildChannel.pipeline.syncOperations.addHandler(HTTP2FramePayloadToHTTPServerCodec())
+                    try http2ChildChannel.pipeline.syncOperations.addHandlers(self.http1.configuration.additionalChannelHandlers())
+                    if let idleTimeout = self.http1.configuration.idleTimeout {
+                        try http2ChildChannel.pipeline.syncOperations.addHandler(IdleStateHandler(readTimeout: idleTimeout))
+                    }
+                    try http2ChildChannel.pipeline.syncOperations.addHandler(HTTPUserEventHandler(logger: logger))
+                    return try HTTP1Channel.Value(wrappingChannelSynchronously: http2ChildChannel)
                 }
-                try http1Channel.pipeline.syncOperations.addHandler(HTTPUserEventHandler(logger: logger))
-                return try HTTP1Channel.Value(wrappingChannelSynchronously: http1Channel)
             }
-        } http2ConnectionInitializer: { http2Channel -> EventLoopFuture<NIOAsyncChannel<HTTP2Frame, HTTP2Frame>> in
-            http2Channel.eventLoop.makeCompletedFuture {
-                try NIOAsyncChannel<HTTP2Frame, HTTP2Frame>(wrappingChannelSynchronously: http2Channel)
-            }
-        } http2StreamInitializer: { http2ChildChannel -> EventLoopFuture<HTTP1Channel.Value> in
-            return http2ChildChannel.eventLoop.makeCompletedFuture {
-                try http2ChildChannel.pipeline.syncOperations.addHandler(HTTP2FramePayloadToHTTPServerCodec())
-                try http2ChildChannel.pipeline.syncOperations.addHandlers(self.http1.configuration.additionalChannelHandlers())
-                if let idleTimeout = self.http1.configuration.idleTimeout {
-                    try http2ChildChannel.pipeline.syncOperations.addHandler(IdleStateHandler(readTimeout: idleTimeout))
-                }
-                try http2ChildChannel.pipeline.syncOperations.addHandler(HTTPUserEventHandler(logger: logger))
-                return try HTTP1Channel.Value(wrappingChannelSynchronously: http2ChildChannel)
-            }
-        }.map {
+        }
+        .map {
             .init(negotiatedHTTPVersion: $0, channel: channel)
         }
     }
@@ -134,7 +132,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
             switch channel {
             case .http1_1(let http1):
                 await handleHTTP(asyncChannel: http1, logger: logger)
-            case .http2((let http2, let multiplexer)):
+            case .http2(let multiplexer):
                 do {
                     try await withThrowingDiscardingTaskGroup { group in
                         for try await client in multiplexer.inbound.cancelOnGracefulShutdown() {
@@ -146,11 +144,67 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
                 } catch {
                     logger.error("Error handling inbound connection for HTTP2 handler: \(error)")
                 }
-                // have to run this to ensure http2 channel outbound writer is closed
-                try await http2.executeThenClose { _, _ in }
             }
         } catch {
             logger.error("Error getting HTTP2 upgrade negotiated value: \(error)")
         }
+    }
+}
+
+// Code taken from NIOHTTP2
+extension Channel {
+    /// Configures a channel to perform an HTTP/2 secure upgrade with typed negotiation results.
+    ///
+    /// HTTP/2 secure upgrade uses the Application Layer Protocol Negotiation TLS extension to
+    /// negotiate the inner protocol as part of the TLS handshake. For this reason, until the TLS
+    /// handshake is complete, the ultimate configuration of the channel pipeline cannot be known.
+    ///
+    /// This function configures the channel with a pair of callbacks that will handle the result
+    /// of the negotiation. It explicitly **does not** configure a TLS handler to actually attempt
+    /// to negotiate ALPN. The supported ALPN protocols are provided in
+    /// `NIOHTTP2SupportedALPNProtocols`: please ensure that the TLS handler you are using for your
+    /// pipeline is appropriately configured to perform this protocol negotiation.
+    ///
+    /// If negotiation results in an unexpected protocol, the pipeline will close the connection
+    /// and no callback will fire.
+    ///
+    /// This configuration is acceptable for use on both client and server channel pipelines.
+    ///
+    /// - Parameters:
+    ///   - http1ConnectionInitializer: A callback that will be invoked if HTTP/1.1 has been explicitly
+    ///         negotiated, or if no protocol was negotiated. Must return a future that completes when the
+    ///         channel has been fully mutated.
+    ///   - http2ConnectionInitializer: A callback that will be invoked if HTTP/2 has been negotiated, and that
+    ///         should configure the channel for HTTP/2 use. Must return a future that completes when the
+    ///         channel has been fully mutated.
+    /// - Returns: An `EventLoopFuture` of an `EventLoopFuture` containing the `NIOProtocolNegotiationResult` that completes when the channel
+    ///     is ready to negotiate.
+    @inlinable
+    internal func configureHTTP2AsyncSecureUpgrade<HTTP1Output: Sendable, HTTP2Output: Sendable>(
+        http1ConnectionInitializer: @escaping NIOChannelInitializerWithOutput<HTTP1Output>,
+        http2ConnectionInitializer: @escaping NIOChannelInitializerWithOutput<HTTP2Output>
+    ) -> EventLoopFuture<EventLoopFuture<NIONegotiatedHTTPVersion<HTTP1Output, HTTP2Output>>> {
+        let alpnHandler = NIOTypedApplicationProtocolNegotiationHandler<NIONegotiatedHTTPVersion<HTTP1Output, HTTP2Output>>() { result in
+            switch result {
+            case .negotiated("h2"):
+                // Successful upgrade to HTTP/2. Let the user configure the pipeline.
+                return http2ConnectionInitializer(self).map { http2Output in .http2(http2Output) }
+            case .negotiated("http/1.1"), .fallback:
+                // Explicit or implicit HTTP/1.1 choice.
+                return http1ConnectionInitializer(self).map { http1Output in .http1_1(http1Output) }
+            case .negotiated:
+                // We negotiated something that isn't HTTP/1.1. This is a bad scene, and is a good indication
+                // of a user configuration error. We're going to close the connection directly.
+                return self.close().flatMap { self.eventLoop.makeFailedFuture(NIOHTTP2Errors.invalidALPNToken()) }
+            }
+        }
+
+        return self.pipeline
+            .addHandler(alpnHandler)
+            .flatMap { _ in
+                self.pipeline.handler(type: NIOTypedApplicationProtocolNegotiationHandler<NIONegotiatedHTTPVersion<HTTP1Output, HTTP2Output>>.self).map { alpnHandler in
+                    alpnHandler.protocolNegotiationResult
+                }
+            }
     }
 }
