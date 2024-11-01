@@ -38,15 +38,19 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
     public struct Configuration: Sendable {
         /// Idle timeout, how long connection is kept idle before closing
         public var idleTimeout: Duration?
+        /// Maximum amount of time to wait before all streams are closed after second GOAWAY
+        public var maxGraceCloseTimeout: Duration?
         /// Configuration applieds to HTTP2 stream channels
         public var streamConfiguration: HTTP1Channel.Configuration
 
         ///  Initialize HTTP2UpgradeChannel.Configuration
         /// - Parameters:
-        ///   - additionalChannelHandlers: Additional channel handlers to add to HTTP2 connection channel
-        ///   - streamConfiguration: Configuration applied to HTTP2 stream channels
+        ///   - idleTimeout: How long connection is kept idle before closing
+        ///   - maxGraceCloseTimeout: Maximum amount of time to wait before all streams are closed after second GOAWAY
+        ///   - streamConfiguration: Configuration applieds to HTTP2 stream channels
         public init(
             idleTimeout: Duration? = nil,
+            maxGraceCloseTimeout: Duration? = nil,
             streamConfiguration: HTTP1Channel.Configuration = .init()
         ) {
             self.idleTimeout = idleTimeout
@@ -112,7 +116,8 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
             channel.eventLoop.makeCompletedFuture {
                 let connectionManager = HTTP2ServerConnectionManager(
                     eventLoop: channel.eventLoop,
-                    idleTimeout: self.configuration.idleTimeout.map { TimeAmount($0) }
+                    idleTimeout: self.configuration.idleTimeout,
+                    maxGraceCloseTimeout: self.configuration.maxGraceCloseTimeout
                 )
                 let handler: HTTP2ConnectionOutput = try channel.pipeline.syncOperations.configureAsyncHTTP2Pipeline(
                     mode: .server,

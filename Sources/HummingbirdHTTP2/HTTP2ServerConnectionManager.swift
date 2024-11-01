@@ -48,15 +48,24 @@ final class HTTP2ServerConnectionManager: ChannelDuplexHandler {
     var state: StateMachine
     /// Idle timer
     var idleTimer: Timer?
+    /// Maximum amount of time we wait before closing the connection
+    var maxGraceCloseTimer: Timer?
     /// EventLoop connection manager running on
     var eventLoop: EventLoop
     /// Channel handler context
     var channelHandlerContext: ChannelHandlerContext?
+    /// Are we reading
+    var inReadLoop: Bool
+    /// flush pending when read completes
+    var flushPending: Bool
 
-    init(eventLoop: EventLoop, idleTimeout: TimeAmount?) {
+    init(eventLoop: EventLoop, idleTimeout: Duration?, maxGraceCloseTimeout: Duration?) {
         self.eventLoop = eventLoop
         self.state = .init()
-        self.idleTimer = idleTimeout.map { Timer(delay: $0) }
+        self.inReadLoop = false
+        self.flushPending = false
+        self.idleTimer = idleTimeout.map { Timer(delay: .init($0)) }
+        self.maxGraceCloseTimer = idleTimeout.map { Timer(delay: .init($0)) }
     }
 
     func channelActive(context: ChannelHandlerContext) {
@@ -65,14 +74,127 @@ final class HTTP2ServerConnectionManager: ChannelDuplexHandler {
         self.idleTimer?.schedule(on: self.eventLoop) {
             loopBoundHandler.triggerGracefulShutdown()
         }
+        context.fireChannelActive()
     }
 
     func channelInactive(context: ChannelHandlerContext) {
         self.channelHandlerContext = nil
         self.idleTimer?.cancel()
+        self.maxGraceCloseTimer?.cancel()
+        context.fireChannelInactive()
+    }
+
+    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+        self.inReadLoop = true
+
+        let frame = self.unwrapInboundIn(data)
+        switch frame.payload {
+        case .ping(let data, let ack):
+            if ack {
+                self.handlePingAck(context: context, data: data)
+            } else {
+                self.handlePing(context: context, data: data)
+            }
+
+        case .goAway:
+            break
+
+        default:
+            break // Only interested in PING frames, ignore the rest.
+        }
+
+        context.fireChannelRead(data)
+    }
+
+    func channelReadComplete(context: ChannelHandlerContext) {
+        self.inReadLoop = false
+        if self.flushPending {
+            context.flush()
+            self.flushPending = false
+        }
+        context.fireChannelReadComplete()
+    }
+
+    func optionallyFlush(context: ChannelHandlerContext) {
+        if self.inReadLoop {
+            self.flushPending = true
+        } else {
+            context.flush()
+        }
+    }
+
+    func handlePing(context: ChannelHandlerContext, data: HTTP2PingData) {
+        switch self.state.receivedPing(atTime: .now(), data: data) {
+        case .sendPingAck:
+            break // ping acks are sent by NIOHTTP2 channel handler
+
+        case .enhanceYouCalmAndClose(let lastStreamId):
+            let goAway = HTTP2Frame(
+                streamID: .rootStream,
+                payload: .goAway(
+                    lastStreamID: lastStreamId,
+                    errorCode: .enhanceYourCalm,
+                    opaqueData: context.channel.allocator.buffer(string: "too_many_pings")
+                )
+            )
+
+            context.write(self.wrapOutboundOut(goAway), promise: nil)
+            self.optionallyFlush(context: context)
+            context.close(promise: nil)
+
+        case .none:
+            break
+        }
+    }
+
+    func handlePingAck(context: ChannelHandlerContext, data: HTTP2PingData) {
+        switch self.state.receivedPingAck(data: data) {
+        case .sendGoAway(let lastStreamId, let close):
+            let goAway = HTTP2Frame(
+                streamID: .rootStream,
+                payload: .goAway(
+                    lastStreamID: lastStreamId,
+                    errorCode: .noError,
+                    opaqueData: nil
+                )
+            )
+            context.write(self.wrapOutboundOut(goAway), promise: nil)
+            self.optionallyFlush(context: context)
+
+            if close {
+                context.close(promise: nil)
+            } else {
+                // RPCs may have a grace period for finishing once the second GOAWAY frame has finished.
+                // If this is set close the connection abruptly once the grace period passes.
+                let loopBound = NIOLoopBound(context, eventLoop: context.eventLoop)
+                self.maxGraceCloseTimer?.schedule(on: context.eventLoop) {
+                    loopBound.value.close(promise: nil)
+                }
+            }
+        case .none:
+            break
+        }
     }
 
     func triggerGracefulShutdown(context: ChannelHandlerContext) {
+        switch self.state.triggerGracefulShutdown() {
+        case .sendGoAway(let pingData):
+            let goAway = HTTP2Frame(
+                streamID: .rootStream,
+                payload: .goAway(
+                    lastStreamID: .maxID,
+                    errorCode: .noError,
+                    opaqueData: nil
+                )
+            )
+            let ping = HTTP2Frame(streamID: .rootStream, payload: .ping(pingData, ack: false))
+            context.write(self.wrapOutboundOut(goAway), promise: nil)
+            context.write(self.wrapOutboundOut(ping), promise: nil)
+            self.optionallyFlush(context: context)
+
+        case .none:
+            break
+        }
         // This is not graceful at the moment
         context.close(mode: .all, promise: nil)
     }
@@ -127,14 +249,14 @@ extension HTTP2ServerConnectionManager {
 
     /// A new HTTP/2 stream was created with the given ID.
     func _streamCreated(_ id: HTTP2StreamID, channel: Channel) {
-        self.state.streamOpened(id, channel: channel)
+        self.state.streamOpened(id)
         self.idleTimer?.cancel()
     }
 
     /// An HTTP/2 stream with the given ID was closed.
     func _streamClosed(_ id: HTTP2StreamID, channel: Channel) {
-        switch self.state.streamClosed(id, channel: channel) {
-        case .stateIdleTimer:
+        switch self.state.streamClosed(id) {
+        case .startIdleTimer:
             let loopBoundHandler = LoopBoundHandler(self)
             self.idleTimer?.schedule(on: self.eventLoop) {
                 loopBoundHandler.triggerGracefulShutdown()

@@ -23,15 +23,15 @@ extension HTTP2ServerConnectionManager {
             self.state = .active(.init())
         }
 
-        mutating func streamOpened(_ id: HTTP2StreamID, channel: Channel) {
+        mutating func streamOpened(_ id: HTTP2StreamID) {
             switch self.state {
             case .active(var activeState):
-                activeState.openStreams[id] = channel
+                activeState.openStreams.insert(id)
                 activeState.lastStreamId = id
                 self.state = .active(activeState)
 
             case .closing(var closingState):
-                closingState.openStreams[id] = channel
+                closingState.openStreams.insert(id)
                 closingState.lastStreamId = id
                 self.state = .closing(closingState)
 
@@ -40,25 +40,25 @@ extension HTTP2ServerConnectionManager {
             }
         }
 
-        enum ClosedResult {
-            case stateIdleTimer
+        enum StreamClosedResult {
+            case startIdleTimer
             case close
             case none
         }
 
-        mutating func streamClosed(_ id: HTTP2StreamID, channel: Channel) -> ClosedResult {
+        mutating func streamClosed(_ id: HTTP2StreamID) -> StreamClosedResult {
             switch self.state {
             case .active(var activeState):
-                activeState.openStreams[id] = nil
+                activeState.openStreams.remove(id)
                 self.state = .active(activeState)
                 if activeState.openStreams.isEmpty {
-                    return .stateIdleTimer
+                    return .startIdleTimer
                 } else {
                     return .none
                 }
 
             case .closing(var closingState):
-                closingState.openStreams[id] = nil
+                closingState.openStreams.remove(id)
                 self.state = .closing(closingState)
                 if closingState.openStreams.isEmpty, closingState.sentSecondGoAway == true {
                     return .close
@@ -71,12 +71,12 @@ extension HTTP2ServerConnectionManager {
             }
         }
 
-        enum StartGracefulShutdownResult {
+        enum TriggerGracefulShutdownResult {
             case sendGoAway(pingData: HTTP2PingData)
             case none
         }
 
-        mutating func startGracefulShutdown() -> StartGracefulShutdownResult {
+        mutating func triggerGracefulShutdown() -> TriggerGracefulShutdownResult {
             switch self.state {
             case .active(let activeState):
                 let closingState = State.ClosingState(from: activeState)
@@ -93,7 +93,7 @@ extension HTTP2ServerConnectionManager {
 
         enum ReceivedPingResult {
             case sendPingAck(pingData: HTTP2PingData)
-            case close(lastStreamId: HTTP2StreamID)
+            case enhanceYouCalmAndClose(lastStreamId: HTTP2StreamID)
             case none
         }
 
@@ -103,7 +103,7 @@ extension HTTP2ServerConnectionManager {
                 let tooManyPings = activeState.keepalive.receivedPing(atTime: time, hasOpenStreams: activeState.openStreams.count > 0)
                 if tooManyPings {
                     self.state = .closed
-                    return .close(lastStreamId: activeState.lastStreamId)
+                    return .enhanceYouCalmAndClose(lastStreamId: activeState.lastStreamId)
                 } else {
                     self.state = .active(activeState)
                     return .sendPingAck(pingData: data)
@@ -113,7 +113,7 @@ extension HTTP2ServerConnectionManager {
                 let tooManyPings = closingState.keepalive.receivedPing(atTime: time, hasOpenStreams: closingState.openStreams.count > 0)
                 if tooManyPings {
                     self.state = .closed
-                    return .close(lastStreamId: closingState.lastStreamId)
+                    return .enhanceYouCalmAndClose(lastStreamId: closingState.lastStreamId)
                 } else {
                     self.state = .closing(closingState)
                     return .sendPingAck(pingData: data)
@@ -157,19 +157,19 @@ extension HTTP2ServerConnectionManager {
 extension HTTP2ServerConnectionManager.StateMachine {
     enum State {
         struct ActiveState {
-            var openStreams: [HTTP2StreamID: Channel]
+            var openStreams: Set<HTTP2StreamID>
             var lastStreamId: HTTP2StreamID
             var keepalive: Keepalive
 
             init() {
-                self.openStreams = [:]
+                self.openStreams = .init()
                 self.lastStreamId = .rootStream
                 self.keepalive = .init(allowWithoutCalls: true, minPingReceiveIntervalWithoutCalls: .seconds(30))
             }
         }
 
         struct ClosingState {
-            var openStreams: [HTTP2StreamID: Channel]
+            var openStreams: Set<HTTP2StreamID>
             var lastStreamId: HTTP2StreamID
             var keepalive: Keepalive
             var sentSecondGoAway: Bool
