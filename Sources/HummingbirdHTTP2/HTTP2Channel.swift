@@ -36,7 +36,9 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
 
     /// HTTP2 Upgrade configuration
     public struct Configuration: Sendable {
-        /// Configuration applied to HTTP2 stream channels
+        /// Idle timeout, how long connection is kept idle before closing
+        public var idleTimeout: Duration?
+        /// Configuration applieds to HTTP2 stream channels
         public var streamConfiguration: HTTP1Channel.Configuration
 
         ///  Initialize HTTP2UpgradeChannel.Configuration
@@ -44,14 +46,17 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
         ///   - additionalChannelHandlers: Additional channel handlers to add to HTTP2 connection channel
         ///   - streamConfiguration: Configuration applied to HTTP2 stream channels
         public init(
+            idleTimeout: Duration? = nil,
             streamConfiguration: HTTP1Channel.Configuration = .init()
         ) {
+            self.idleTimeout = idleTimeout
             self.streamConfiguration = streamConfiguration
         }
     }
 
     private let sslContext: NIOSSLContext
     private let http1: HTTP1Channel
+    let configuration: Configuration
     public var responder: HTTPChannelHandler.Responder { self.http1.responder }
 
     ///  Initialize HTTP2Channel
@@ -68,6 +73,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
         var tlsConfiguration = tlsConfiguration
         tlsConfiguration.applicationProtocols = NIOHTTP2SupportedALPNProtocols
         self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
+        self.configuration = .init()
         self.http1 = HTTP1Channel(responder: responder, configuration: .init(additionalChannelHandlers: additionalChannelHandlers()))
     }
 
@@ -84,6 +90,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
         var tlsConfiguration = tlsConfiguration
         tlsConfiguration.applicationProtocols = NIOHTTP2SupportedALPNProtocols
         self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
+        self.configuration = configuration
         self.http1 = HTTP1Channel(responder: responder, configuration: configuration.streamConfiguration)
     }
 
@@ -103,7 +110,10 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
             self.http1.setup(channel: channel, logger: logger)
         } http2ConnectionInitializer: { channel in
             channel.eventLoop.makeCompletedFuture {
-                let connectionManager = HTTP2ServerConnectionManager(eventLoop: channel.eventLoop)
+                let connectionManager = HTTP2ServerConnectionManager(
+                    eventLoop: channel.eventLoop,
+                    idleTimeout: self.configuration.idleTimeout.map { TimeAmount($0) }
+                )
                 let handler: HTTP2ConnectionOutput = try channel.pipeline.syncOperations.configureAsyncHTTP2Pipeline(
                     mode: .server,
                     streamDelegate: connectionManager.streamDelegate,
