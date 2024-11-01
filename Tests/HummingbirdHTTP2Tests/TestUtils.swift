@@ -12,10 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AsyncHTTPClient
 import HummingbirdCore
 import HummingbirdTesting
 import Logging
 import NIOCore
+import NIOPosix
 import NIOSSL
 import ServiceLifecycle
 import XCTest
@@ -67,37 +69,24 @@ public func testServer<Value: Sendable>(
     }
 }
 
-/// Helper function for test a server
-///
-/// Creates test client, runs test function abd ensures everything is
-/// shutdown correctly
-public func testServer<Value: Sendable>(
-    responder: @escaping HTTPChannelHandler.Responder,
-    httpChannelSetup: HTTPServerBuilder = .http1(),
-    configuration: ServerConfiguration,
-    eventLoopGroup: EventLoopGroup,
-    logger: Logger,
-    clientConfiguration: TestClient.Configuration = .init(),
-    _ test: @escaping @Sendable (TestClient) async throws -> Value
+func withHTTPClient<Value>(
+    _ configuration: HTTPClient.Configuration,
+    eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
+    _ process: (HTTPClient) async throws -> Value
 ) async throws -> Value {
-    try await testServer(
-        responder: responder,
-        httpChannelSetup: httpChannelSetup,
-        configuration: configuration,
-        eventLoopGroup: eventLoopGroup,
-        logger: logger
-    ) { port in
-        let client = TestClient(
-            host: "localhost",
-            port: port,
-            configuration: clientConfiguration,
-            eventLoopGroupProvider: .createNew
-        )
-        client.connect()
-        let value = try await test(client)
-        try await client.shutdown()
-        return value
+    let httpClient = HTTPClient(
+        eventLoopGroupProvider: .shared(eventLoopGroup),
+        configuration: configuration
+    )
+    let value: Value
+    do {
+        value = try await process(httpClient)
+    } catch {
+        try? await httpClient.shutdown()
+        throw error
     }
+    try await httpClient.shutdown()
+    return value
 }
 
 /// Run process with a timeout

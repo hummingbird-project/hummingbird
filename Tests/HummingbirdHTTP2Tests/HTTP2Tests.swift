@@ -27,37 +27,30 @@ import XCTest
 final class HummingBirdHTTP2Tests: XCTestCase {
     func testConnect() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        defer {
+            XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+        }
         var logger = Logger(label: "Hummingbird")
         logger.logLevel = .trace
-        try await testServer(
-            responder: { (_, responseWriter: consuming ResponseWriter, _) in
-                try await responseWriter.writeResponse(.init(status: .ok))
-            },
-            httpChannelSetup: .http2Upgrade(tlsConfiguration: getServerTLSConfiguration()),
-            configuration: .init(address: .hostname(port: 0), serverName: testServerName),
-            eventLoopGroup: eventLoopGroup,
-            logger: logger
-        ) { port in
-            var tlsConfiguration = try getClientTLSConfiguration()
-            // no way to override the SSL server name with AsyncHTTPClient so need to set
-            // hostname verification off
-            tlsConfiguration.certificateVerification = .noHostnameVerification
-            let httpClient = HTTPClient(
-                eventLoopGroupProvider: .shared(eventLoopGroup),
-                configuration: .init(tlsConfiguration: tlsConfiguration)
-            )
 
-            let response: HTTPClientResponse
-            do {
+        var tlsConfiguration = try getClientTLSConfiguration()
+        // no way to override the SSL server name with AsyncHTTPClient so need to set
+        // hostname verification off
+        tlsConfiguration.certificateVerification = .noHostnameVerification
+        try await withHTTPClient(.init(tlsConfiguration: tlsConfiguration)) { httpClient in
+            try await testServer(
+                responder: { (_, responseWriter: consuming ResponseWriter, _) in
+                    try await responseWriter.writeResponse(.init(status: .ok))
+                },
+                httpChannelSetup: .http2Upgrade(tlsConfiguration: getServerTLSConfiguration()),
+                configuration: .init(address: .hostname(port: 0), serverName: testServerName),
+                eventLoopGroup: eventLoopGroup,
+                logger: logger
+            ) { port in
                 let request = HTTPClientRequest(url: "https://localhost:\(port)/")
-                response = try await httpClient.execute(request, deadline: .now() + .seconds(30))
-            } catch {
-                try? await httpClient.shutdown()
-                throw error
+                let response = try await httpClient.execute(request, deadline: .now() + .seconds(30))
+                XCTAssertEqual(response.status, .ok)
             }
-            try await httpClient.shutdown()
-            XCTAssertEqual(response.status, .ok)
         }
     }
 

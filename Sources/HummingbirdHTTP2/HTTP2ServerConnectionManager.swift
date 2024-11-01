@@ -68,8 +68,15 @@ final class HTTP2ServerConnectionManager: ChannelDuplexHandler {
         self.maxGraceCloseTimer = idleTimeout.map { Timer(delay: .init($0)) }
     }
 
-    func channelActive(context: ChannelHandlerContext) {
+    func handlerAdded(context: ChannelHandlerContext) {
         self.channelHandlerContext = context
+    }
+
+    func handlerRemoved(context: ChannelHandlerContext) {
+        self.channelHandlerContext = nil
+    }
+
+    func channelActive(context: ChannelHandlerContext) {
         let loopBoundHandler = LoopBoundHandler(self)
         self.idleTimer?.schedule(on: self.eventLoop) {
             loopBoundHandler.triggerGracefulShutdown()
@@ -78,7 +85,6 @@ final class HTTP2ServerConnectionManager: ChannelDuplexHandler {
     }
 
     func channelInactive(context: ChannelHandlerContext) {
-        self.channelHandlerContext = nil
         self.idleTimer?.cancel()
         self.maxGraceCloseTimer?.cancel()
         context.fireChannelInactive()
@@ -113,6 +119,20 @@ final class HTTP2ServerConnectionManager: ChannelDuplexHandler {
             self.flushPending = false
         }
         context.fireChannelReadComplete()
+    }
+
+    func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
+        switch event {
+        case is ChannelShouldQuiesceEvent:
+            self.triggerGracefulShutdown(context: context)
+        default:
+            break
+        }
+        context.fireUserInboundEventTriggered(event)
+    }
+
+    func errorCaught(context: ChannelHandlerContext, error: any Error) {
+        context.close(mode: .all, promise: nil)
     }
 
     func optionallyFlush(context: ChannelHandlerContext) {
@@ -164,7 +184,7 @@ final class HTTP2ServerConnectionManager: ChannelDuplexHandler {
             if close {
                 context.close(promise: nil)
             } else {
-                // RPCs may have a grace period for finishing once the second GOAWAY frame has finished.
+                // May have a grace period for finishing once the second GOAWAY frame has finished.
                 // If this is set close the connection abruptly once the grace period passes.
                 let loopBound = NIOLoopBound(context, eventLoop: context.eventLoop)
                 self.maxGraceCloseTimer?.schedule(on: context.eventLoop) {
@@ -232,10 +252,10 @@ extension HTTP2ServerConnectionManager {
         /// An HTTP/2 stream with the given ID was closed.
         func streamClosed(_ id: HTTP2StreamID, channel: Channel) {
             if self.handler.eventLoop.inEventLoop {
-                self.handler._streamCreated(id, channel: channel)
+                self.handler._streamClosed(id, channel: channel)
             } else {
                 self.handler.eventLoop.execute {
-                    self.handler._streamCreated(id, channel: channel)
+                    self.handler._streamClosed(id, channel: channel)
                 }
             }
         }

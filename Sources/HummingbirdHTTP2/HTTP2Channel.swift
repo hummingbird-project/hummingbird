@@ -156,7 +156,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
             case .http2(let multiplexer):
                 do {
                     try await withThrowingDiscardingTaskGroup { group in
-                        for try await client in multiplexer.inbound.cancelOnGracefulShutdown() {
+                        for try await client in multiplexer.inbound {
                             group.addTask {
                                 await handleHTTP(asyncChannel: client, logger: logger)
                             }
