@@ -195,8 +195,6 @@ final class HTTP2ServerConnectionManager: ChannelDuplexHandler {
         case .none:
             break
         }
-        // This is not graceful at the moment
-        context.close(mode: .all, promise: nil)
     }
 }
 
