@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2023 the Hummingbird authors
+// Copyright (c) 2023-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -26,7 +26,7 @@ import NIOSSL
 import NIOTLS
 
 /// Child channel for processing HTTP1 with the option of upgrading to HTTP2
-public struct HTTP2UpgradeChannel: HTTPChannelHandler {
+public struct HTTP2UpgradeChannel: ServerChildChannel {
     typealias HTTP1ConnectionOutput = HTTP1Channel.Value
     typealias HTTP2ConnectionOutput = NIOHTTP2Handler.AsyncStreamMultiplexer<HTTP1Channel.Value>
     public struct Value: ServerChildChannelValue {
@@ -60,8 +60,8 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
 
     private let sslContext: NIOSSLContext
     private let http1: HTTP1Channel
+    private let http2Stream: HTTP2StreamChannel
     let configuration: Configuration
-    public var responder: HTTPChannelHandler.Responder { self.http1.responder }
 
     ///  Initialize HTTP2Channel
     /// - Parameters:
@@ -78,7 +78,14 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
         tlsConfiguration.applicationProtocols = NIOHTTP2SupportedALPNProtocols
         self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
         self.configuration = .init()
-        self.http1 = HTTP1Channel(responder: responder, configuration: .init(additionalChannelHandlers: additionalChannelHandlers()))
+        self.http1 = HTTP1Channel(
+            responder: responder,
+            configuration: .init(additionalChannelHandlers: additionalChannelHandlers())
+        )
+        self.http2Stream = HTTP2StreamChannel(
+            responder: responder,
+            configuration: .init(additionalChannelHandlers: additionalChannelHandlers())
+        )
     }
 
     ///  Initialize HTTP2Channel
@@ -96,6 +103,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
         self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
         self.configuration = configuration
         self.http1 = HTTP1Channel(responder: responder, configuration: configuration.streamConfiguration)
+        self.http2Stream = HTTP2StreamChannel(responder: responder, configuration: configuration.streamConfiguration)
     }
 
     /// Setup child channel for HTTP1 with HTTP2 upgrade
@@ -124,15 +132,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
                     streamDelegate: connectionManager.streamDelegate,
                     configuration: .init()
                 ) { http2ChildChannel in
-                    http2ChildChannel.eventLoop.makeCompletedFuture {
-                        try http2ChildChannel.pipeline.syncOperations.addHandler(HTTP2FramePayloadToHTTPServerCodec())
-                        try http2ChildChannel.pipeline.syncOperations.addHandlers(self.http1.configuration.additionalChannelHandlers())
-                        if let idleTimeout = self.http1.configuration.idleTimeout {
-                            try http2ChildChannel.pipeline.syncOperations.addHandler(IdleStateHandler(readTimeout: idleTimeout))
-                        }
-                        try http2ChildChannel.pipeline.syncOperations.addHandler(HTTPUserEventHandler(logger: logger))
-                        return try HTTP1Channel.Value(wrappingChannelSynchronously: http2ChildChannel)
-                    }
+                    self.http2Stream.setup(channel: http2ChildChannel, logger: logger)
                 }
                 try channel.pipeline.syncOperations.addHandler(connectionManager)
                 return handler
@@ -152,13 +152,13 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
             let channel = try await value.negotiatedHTTPVersion.get()
             switch channel {
             case .http1_1(let http1):
-                await handleHTTP(asyncChannel: http1, logger: logger)
+                await self.http1.handle(value: http1, logger: logger)
             case .http2(let multiplexer):
                 do {
                     try await withThrowingDiscardingTaskGroup { group in
                         for try await client in multiplexer.inbound {
                             group.addTask {
-                                await handleHTTP(asyncChannel: client, logger: logger)
+                                await self.http2Stream.handle(value: client, logger: logger)
                             }
                         }
                     }

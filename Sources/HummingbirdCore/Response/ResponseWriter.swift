@@ -21,6 +21,10 @@ public struct ResponseWriter: ~Copyable {
     @usableFromInline
     let outbound: NIOAsyncChannelOutboundWriter<HTTPResponsePart>
 
+    public init(outbound: NIOAsyncChannelOutboundWriter<HTTPResponsePart>) {
+        self.outbound = outbound
+    }
+
     /// Write HTTP head part and return ``ResponseBodyWriter`` to write response body
     ///
     /// - Parameter head: Response head

@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2023 the Hummingbird authors
+// Copyright (c) 2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -59,10 +59,11 @@ extension HTTP2ServerConnectionManager {
 
             case .closing(var closingState):
                 closingState.openStreams.remove(id)
-                self.state = .closing(closingState)
                 if closingState.openStreams.isEmpty, closingState.sentSecondGoAway == true {
+                    self.state = .closed
                     return .close
                 } else {
+                    self.state = .closing(closingState)
                     return .none
                 }
 
