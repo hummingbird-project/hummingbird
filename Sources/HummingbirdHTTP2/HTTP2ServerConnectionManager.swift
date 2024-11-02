@@ -15,26 +15,6 @@
 import NIOCore
 import NIOHTTP2
 
-struct Timer {
-    var scheduled: Scheduled<Void>?
-    let delay: TimeAmount
-
-    init(delay: TimeAmount) {
-        self.delay = delay
-        self.scheduled = nil
-    }
-
-    mutating func schedule(on eventLoop: EventLoop, _ task: @escaping @Sendable () throws -> Void) {
-        self.cancel()
-        self.scheduled = eventLoop.scheduleTask(in: self.delay, task)
-    }
-
-    mutating func cancel() {
-        self.scheduled?.cancel()
-        self.scheduled = nil
-    }
-}
-
 /// HTTP2 server connection manager
 ///
 /// This is heavily based off the ServerConnectionManagementHandler from https://github.com/grpc/grpc-swift-nio-transport
@@ -280,5 +260,25 @@ extension HTTP2ServerConnectionManager {
         case .none:
             break
         }
+    }
+}
+
+struct Timer {
+    var scheduled: Scheduled<Void>?
+    let delay: TimeAmount
+
+    init(delay: TimeAmount) {
+        self.delay = delay
+        self.scheduled = nil
+    }
+
+    mutating func schedule(on eventLoop: EventLoop, _ task: @escaping @Sendable () throws -> Void) {
+        self.cancel()
+        self.scheduled = eventLoop.scheduleTask(in: self.delay, task)
+    }
+
+    mutating func cancel() {
+        self.scheduled?.cancel()
+        self.scheduled = nil
     }
 }
