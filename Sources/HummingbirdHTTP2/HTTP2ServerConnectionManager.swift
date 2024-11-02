@@ -49,7 +49,7 @@ final class HTTP2ServerConnectionManager: ChannelDuplexHandler {
     /// Idle timer
     var idleTimer: Timer?
     /// Maximum amount of time we wait before closing the connection
-    var maxGraceCloseTimer: Timer?
+    var gracefulCloseTimer: Timer?
     /// EventLoop connection manager running on
     var eventLoop: EventLoop
     /// Channel handler context
@@ -59,34 +59,34 @@ final class HTTP2ServerConnectionManager: ChannelDuplexHandler {
     /// flush pending when read completes
     var flushPending: Bool
 
-    init(eventLoop: EventLoop, idleTimeout: Duration?, maxGraceCloseTimeout: Duration?) {
+    init(eventLoop: EventLoop, idleTimeout: Duration?, gracefulCloseTimeout: Duration?) {
         self.eventLoop = eventLoop
         self.state = .init()
         self.inReadLoop = false
         self.flushPending = false
         self.idleTimer = idleTimeout.map { Timer(delay: .init($0)) }
-        self.maxGraceCloseTimer = idleTimeout.map { Timer(delay: .init($0)) }
+        self.gracefulCloseTimer = gracefulCloseTimeout.map { Timer(delay: .init($0)) }
     }
 
     func handlerAdded(context: ChannelHandlerContext) {
         self.channelHandlerContext = context
-    }
-
-    func handlerRemoved(context: ChannelHandlerContext) {
-        self.channelHandlerContext = nil
-    }
-
-    func channelActive(context: ChannelHandlerContext) {
         let loopBoundHandler = LoopBoundHandler(self)
         self.idleTimer?.schedule(on: self.eventLoop) {
             loopBoundHandler.triggerGracefulShutdown()
         }
+    }
+
+    func handlerRemoved(context: ChannelHandlerContext) {
+        self.idleTimer?.cancel()
+        self.gracefulCloseTimer?.cancel()
+        self.channelHandlerContext = nil
+    }
+
+    func channelActive(context: ChannelHandlerContext) {
         context.fireChannelActive()
     }
 
     func channelInactive(context: ChannelHandlerContext) {
-        self.idleTimer?.cancel()
-        self.maxGraceCloseTimer?.cancel()
         context.fireChannelInactive()
     }
 
@@ -101,9 +101,6 @@ final class HTTP2ServerConnectionManager: ChannelDuplexHandler {
             } else {
                 self.handlePing(context: context, data: data)
             }
-
-        case .goAway:
-            break
 
         default:
             break // Only interested in PING frames, ignore the rest.
@@ -183,13 +180,6 @@ final class HTTP2ServerConnectionManager: ChannelDuplexHandler {
 
             if close {
                 context.close(promise: nil)
-            } else {
-                // May have a grace period for finishing once the second GOAWAY frame has finished.
-                // If this is set close the connection abruptly once the grace period passes.
-                let loopBound = NIOLoopBound(context, eventLoop: context.eventLoop)
-                self.maxGraceCloseTimer?.schedule(on: context.eventLoop) {
-                    loopBound.value.close(promise: nil)
-                }
             }
         case .none:
             break
@@ -211,6 +201,12 @@ final class HTTP2ServerConnectionManager: ChannelDuplexHandler {
             context.write(self.wrapOutboundOut(goAway), promise: nil)
             context.write(self.wrapOutboundOut(ping), promise: nil)
             self.optionallyFlush(context: context)
+
+            // Setup grace period for closing. Close the connection abruptly once the grace period passes.
+            let loopBound = NIOLoopBound(context, eventLoop: context.eventLoop)
+            self.gracefulCloseTimer?.schedule(on: context.eventLoop) {
+                loopBound.value.close(promise: nil)
+            }
 
         case .none:
             break

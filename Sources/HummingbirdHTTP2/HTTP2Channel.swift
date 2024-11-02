@@ -28,7 +28,7 @@ import NIOTLS
 /// Child channel for processing HTTP1 with the option of upgrading to HTTP2
 public struct HTTP2UpgradeChannel: ServerChildChannel {
     typealias HTTP1ConnectionOutput = HTTP1Channel.Value
-    typealias HTTP2ConnectionOutput = NIOHTTP2Handler.AsyncStreamMultiplexer<HTTP1Channel.Value>
+    typealias HTTP2ConnectionOutput = NIOHTTP2Handler.AsyncStreamMultiplexer<HTTP2StreamChannel.Value>
     public struct Value: ServerChildChannelValue {
         let negotiatedHTTPVersion: EventLoopFuture<NIONegotiatedHTTPVersion<HTTP1ConnectionOutput, HTTP2ConnectionOutput>>
         public let channel: Channel
@@ -39,7 +39,7 @@ public struct HTTP2UpgradeChannel: ServerChildChannel {
         /// Idle timeout, how long connection is kept idle before closing
         public var idleTimeout: Duration?
         /// Maximum amount of time to wait before all streams are closed after second GOAWAY
-        public var maxGraceCloseTimeout: Duration?
+        public var gracefulCloseTimeout: Duration?
         /// Configuration applieds to HTTP2 stream channels
         public var streamConfiguration: HTTP1Channel.Configuration
 
@@ -50,10 +50,11 @@ public struct HTTP2UpgradeChannel: ServerChildChannel {
         ///   - streamConfiguration: Configuration applieds to HTTP2 stream channels
         public init(
             idleTimeout: Duration? = nil,
-            maxGraceCloseTimeout: Duration? = nil,
+            gracefulCloseTimeout: Duration? = nil,
             streamConfiguration: HTTP1Channel.Configuration = .init()
         ) {
             self.idleTimeout = idleTimeout
+            self.gracefulCloseTimeout = gracefulCloseTimeout
             self.streamConfiguration = streamConfiguration
         }
     }
@@ -125,7 +126,7 @@ public struct HTTP2UpgradeChannel: ServerChildChannel {
                 let connectionManager = HTTP2ServerConnectionManager(
                     eventLoop: channel.eventLoop,
                     idleTimeout: self.configuration.idleTimeout,
-                    maxGraceCloseTimeout: self.configuration.maxGraceCloseTimeout
+                    gracefulCloseTimeout: self.configuration.gracefulCloseTimeout
                 )
                 let handler: HTTP2ConnectionOutput = try channel.pipeline.syncOperations.configureAsyncHTTP2Pipeline(
                     mode: .server,
