@@ -40,6 +40,8 @@ public struct HTTP2UpgradeChannel: ServerChildChannel {
         public var idleTimeout: Duration?
         /// Maximum amount of time to wait before all streams are closed after second GOAWAY
         public var gracefulCloseTimeout: Duration?
+        /// Maximum amount of time a connection can be open
+        public var maxAgeTimeout: Duration?
         /// Configuration applieds to HTTP2 stream channels
         public var streamConfiguration: HTTP1Channel.Configuration
 
@@ -51,6 +53,7 @@ public struct HTTP2UpgradeChannel: ServerChildChannel {
         public init(
             idleTimeout: Duration? = nil,
             gracefulCloseTimeout: Duration? = nil,
+            maxAgeTimeout: Duration? = nil,
             streamConfiguration: HTTP1Channel.Configuration = .init()
         ) {
             self.idleTimeout = idleTimeout
@@ -126,6 +129,7 @@ public struct HTTP2UpgradeChannel: ServerChildChannel {
                 let connectionManager = HTTP2ServerConnectionManager(
                     eventLoop: channel.eventLoop,
                     idleTimeout: self.configuration.idleTimeout,
+                    maxAgeTimeout: self.configuration.maxAgeTimeout,
                     gracefulCloseTimeout: self.configuration.gracefulCloseTimeout
                 )
                 let handler: HTTP2ConnectionOutput = try channel.pipeline.syncOperations.configureAsyncHTTP2Pipeline(

@@ -152,6 +152,29 @@ extension HTTP2ServerConnectionManager {
                 return .none
             }
         }
+
+        enum InputClosedResult {
+            case closeWithGoAway(lastStreamId: HTTP2StreamID)
+            case close
+            case none
+        }
+
+        mutating func inputClosed() -> InputClosedResult {
+            switch self.state {
+            case .active(let activeState):
+                return .closeWithGoAway(lastStreamId: activeState.lastStreamId)
+
+            case .closing(let closeState):
+                if closeState.sentSecondGoAway {
+                    return .close
+                } else {
+                    return .closeWithGoAway(lastStreamId: closeState.lastStreamId)
+                }
+
+            case .closed:
+                return .none
+            }
+        }
     }
 }
 
