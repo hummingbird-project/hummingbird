@@ -38,7 +38,7 @@ public struct HTTP2UpgradeChannel: ServerChildChannel {
     public struct Configuration: Sendable {
         /// Idle timeout, how long connection is kept idle before closing
         public var idleTimeout: Duration?
-        /// Maximum amount of time to wait before all streams are closed after second GOAWAY
+        /// Maximum amount of time to wait for client response before all streams are closed after second GOAWAY has been sent
         public var gracefulCloseTimeout: Duration?
         /// Maximum amount of time a connection can be open
         public var maxAgeTimeout: Duration?
@@ -48,7 +48,7 @@ public struct HTTP2UpgradeChannel: ServerChildChannel {
         ///  Initialize HTTP2UpgradeChannel.Configuration
         /// - Parameters:
         ///   - idleTimeout: How long connection is kept idle before closing
-        ///   - maxGraceCloseTimeout: Maximum amount of time to wait before all streams are closed after second GOAWAY
+        ///   - maxGraceCloseTimeout: Maximum amount of time to wait for client response before all streams are closed after second GOAWAY
         ///   - streamConfiguration: Configuration applieds to HTTP2 stream channels
         public init(
             idleTimeout: Duration? = nil,
@@ -65,7 +65,7 @@ public struct HTTP2UpgradeChannel: ServerChildChannel {
     private let sslContext: NIOSSLContext
     private let http1: HTTP1Channel
     private let http2Stream: HTTP2StreamChannel
-    let configuration: Configuration
+    public let configuration: Configuration
 
     ///  Initialize HTTP2Channel
     /// - Parameters:

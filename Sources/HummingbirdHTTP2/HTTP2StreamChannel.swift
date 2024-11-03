@@ -19,15 +19,15 @@ import NIOCore
 import NIOHTTPTypes
 import NIOHTTPTypesHTTP2
 
-/// Child channel for processing HTTP1
+/// HTTP2 Child channel for processing an HTTP2 stream
 struct HTTP2StreamChannel: ServerChildChannel, HTTPChannelHandler {
     typealias Value = NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>
     typealias Configuration = HTTP1Channel.Configuration
 
-    ///  Initialize HTTP1Channel
+    ///  Initialize HTTP2StreamChannel
     /// - Parameters:
     ///   - responder: Function returning a HTTP response for a HTTP request
-    ///   - configuration: HTTP1 channel configuration
+    ///   - configuration: HTTP2 stream channel configuration
     init(
         responder: @escaping HTTPChannelHandler.Responder,
         configuration: Configuration = .init()
@@ -36,7 +36,7 @@ struct HTTP2StreamChannel: ServerChildChannel, HTTPChannelHandler {
         self.responder = responder
     }
 
-    /// Setup child channel for HTTP1
+    /// Setup child channel for HTTP2 stream
     /// - Parameters:
     ///   - channel: Child channel
     ///   - logger: Logger used during setup
