@@ -162,10 +162,12 @@ extension HTTP2ServerConnectionManager {
         mutating func inputClosed() -> InputClosedResult {
             switch self.state {
             case .active(let activeState):
+                self.state = .closed
                 return .closeWithGoAway(lastStreamId: activeState.lastStreamId)
 
             case .closing(let closeState):
                 if closeState.sentSecondGoAway {
+                    self.state = .closed
                     return .close
                 } else {
                     return .closeWithGoAway(lastStreamId: closeState.lastStreamId)
