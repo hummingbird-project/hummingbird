@@ -26,7 +26,7 @@ import NIOSSL
 import NIOTLS
 
 /// Child channel for processing HTTP1 with the option of upgrading to HTTP2
-public struct HTTP2UpgradeChannel: ServerChildChannel {
+public struct HTTP2UpgradeChannel: HTTPChannelHandler {
     typealias HTTP1ConnectionOutput = HTTP1Channel.Value
     typealias HTTP2ConnectionOutput = NIOHTTP2Handler.AsyncStreamMultiplexer<HTTP2StreamChannel.Value>
     public struct Value: ServerChildChannelValue {
@@ -66,6 +66,9 @@ public struct HTTP2UpgradeChannel: ServerChildChannel {
     private let http1: HTTP1Channel
     private let http2Stream: HTTP2StreamChannel
     public let configuration: Configuration
+    public var responder: Responder {
+        self.http2Stream.responder
+    }
 
     ///  Initialize HTTP2Channel
     /// - Parameters:
