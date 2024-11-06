@@ -38,7 +38,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
         ///  Initialize HTTP2UpgradeChannel.Configuration
         /// - Parameters:
         ///   - additionalChannelHandlers: Additional channel handlers to add to HTTP2 connection channel
-        ///   - streamConfiguration: Configuration applieds to HTTP2 stream channels
+        ///   - streamConfiguration: Configuration applied to HTTP2 stream channels
         public init(
             streamConfiguration: HTTP1Channel.Configuration = .init()
         ) {
