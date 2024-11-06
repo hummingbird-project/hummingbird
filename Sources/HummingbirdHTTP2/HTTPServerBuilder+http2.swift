@@ -30,14 +30,40 @@ extension HTTPServerBuilder {
     ///   - tlsConfiguration: TLS configuration
     ///   - additionalChannelHandlers: Additional channel handlers to call before handling HTTP
     /// - Returns: HTTPChannelHandler builder
+    @available(*, deprecated, renamed: "http2Upgrade(tlsConfiguration:configuration:)")
     public static func http2Upgrade(
         tlsConfiguration: TLSConfiguration,
-        additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = []
+        additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler]
     ) throws -> HTTPServerBuilder {
         return .init { responder in
             return try HTTP2UpgradeChannel(
                 tlsConfiguration: tlsConfiguration,
                 additionalChannelHandlers: additionalChannelHandlers,
+                responder: responder
+            )
+        }
+    }
+
+    ///  Build HTTP channel with HTTP2 upgrade
+    ///
+    /// Use in ``Hummingbird/Application`` initialization.
+    /// ```
+    /// let app = Application(
+    ///     router: router,
+    ///     server: .http2Upgrade(configuration: .init(tlsConfiguration: tlsConfiguration))
+    /// )
+    /// ```
+    /// - Parameters:
+    ///   - configuration: HTTP2 Upgrade channel configuration
+    /// - Returns: HTTPChannelHandler builder
+    public static func http2Upgrade(
+        tlsConfiguration: TLSConfiguration,
+        configuration: HTTP2UpgradeChannel.Configuration = .init()
+    ) throws -> HTTPServerBuilder {
+        return .init { responder in
+            return try HTTP2UpgradeChannel(
+                tlsConfiguration: tlsConfiguration,
+                configuration: configuration,
                 responder: responder
             )
         }

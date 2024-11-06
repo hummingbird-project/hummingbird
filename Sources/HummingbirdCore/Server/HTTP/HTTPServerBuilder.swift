@@ -60,13 +60,34 @@ extension HTTPServerBuilder {
     ///     server: .http1()
     /// )
     /// ```
-    /// - Parameter additionalChannelHandlers: Additional channel handlers to add to channel pipeline
+    /// - Parameter additionalChannelHandlers: Additional channel handlers to add to channel pipeline after HTTP part decoding and
+    ///     before HTTP request processing
     /// - Returns: HTTPServerBuilder builder
+    @available(*, deprecated, renamed: "http1(configuration:)")
     public static func http1(
-        additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = []
+        additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler]
     ) -> HTTPServerBuilder {
         return .init { responder in
             return HTTP1Channel(responder: responder, additionalChannelHandlers: additionalChannelHandlers)
+        }
+    }
+
+    ///  Return a `HTTPServerBuilder` that will build a HTTP1 server
+    ///
+    /// Use in ``Hummingbird/Application`` initialization.
+    /// ```
+    /// let app = Application(
+    ///     router: router,
+    ///     server: .http1(configuration: .init(idleTimeout: .seconds(30)))
+    /// )
+    /// ```
+    /// - Parameter configuration: HTTP1 channel configuration
+    /// - Returns: HTTPServerBuilder builder
+    public static func http1(
+        configuration: HTTP1Channel.Configuration = .init()
+    ) -> HTTPServerBuilder {
+        return .init { responder in
+            return HTTP1Channel(responder: responder, configuration: configuration)
         }
     }
 }

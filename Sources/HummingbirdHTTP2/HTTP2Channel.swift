@@ -30,26 +30,57 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
         public let channel: Channel
     }
 
+    /// HTTP2 Upgrade configuration
+    public struct Configuration: Sendable {
+        /// Configuration applied to HTTP2 stream channels
+        public var streamConfiguration: HTTP1Channel.Configuration
+
+        ///  Initialize HTTP2UpgradeChannel.Configuration
+        /// - Parameters:
+        ///   - additionalChannelHandlers: Additional channel handlers to add to HTTP2 connection channel
+        ///   - streamConfiguration: Configuration applied to HTTP2 stream channels
+        public init(
+            streamConfiguration: HTTP1Channel.Configuration = .init()
+        ) {
+            self.streamConfiguration = streamConfiguration
+        }
+    }
+
     private let sslContext: NIOSSLContext
     private let http1: HTTP1Channel
-    private let additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
     public var responder: HTTPChannelHandler.Responder { self.http1.responder }
 
-    ///  Initialize HTTP1Channel
+    ///  Initialize HTTP2Channel
+    /// - Parameters:
+    ///   - tlsConfiguration: TLS configuration
+    ///   - additionalChannelHandlers: Additional channel handlers to add to channel pipeline
+    ///   - responder: Function returning a HTTP response for a HTTP request
+    @available(*, deprecated, renamed: "HTTP1Channel(tlsConfiguration:configuration:responder:)")
+    public init(
+        tlsConfiguration: TLSConfiguration,
+        additionalChannelHandlers: @escaping @Sendable () -> [any RemovableChannelHandler],
+        responder: @escaping HTTPChannelHandler.Responder
+    ) throws {
+        var tlsConfiguration = tlsConfiguration
+        tlsConfiguration.applicationProtocols = NIOHTTP2SupportedALPNProtocols
+        self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
+        self.http1 = HTTP1Channel(responder: responder, configuration: .init(additionalChannelHandlers: additionalChannelHandlers()))
+    }
+
+    ///  Initialize HTTP2Channel
     /// - Parameters:
     ///   - tlsConfiguration: TLS configuration
     ///   - additionalChannelHandlers: Additional channel handlers to add to channel pipeline
     ///   - responder: Function returning a HTTP response for a HTTP request
     public init(
         tlsConfiguration: TLSConfiguration,
-        additionalChannelHandlers: @escaping @Sendable () -> [any RemovableChannelHandler] = { [] },
+        configuration: Configuration = .init(),
         responder: @escaping HTTPChannelHandler.Responder
     ) throws {
         var tlsConfiguration = tlsConfiguration
         tlsConfiguration.applicationProtocols = NIOHTTP2SupportedALPNProtocols
         self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
-        self.additionalChannelHandlers = additionalChannelHandlers
-        self.http1 = HTTP1Channel(responder: responder, additionalChannelHandlers: additionalChannelHandlers)
+        self.http1 = HTTP1Channel(responder: responder, configuration: configuration.streamConfiguration)
     }
 
     /// Setup child channel for HTTP1 with HTTP2 upgrade
@@ -65,38 +96,29 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
         }
 
         return channel.configureAsyncHTTPServerPipeline { http1Channel -> EventLoopFuture<HTTP1Channel.Value> in
-            let childChannelHandlers: [ChannelHandler] =
-                [HTTP1ToHTTPServerCodec(secure: false)] +
-                self.additionalChannelHandlers() +
-                [HTTPUserEventHandler(logger: logger)]
-
-            return http1Channel
-                .pipeline
-                .addHandlers(childChannelHandlers)
-                .flatMapThrowing {
-                    try HTTP1Channel.Value(wrappingChannelSynchronously: http1Channel)
+            return http1Channel.eventLoop.makeCompletedFuture {
+                try http1Channel.pipeline.syncOperations.addHandler(HTTP1ToHTTPServerCodec(secure: true))
+                try http1Channel.pipeline.syncOperations.addHandlers(self.http1.configuration.additionalChannelHandlers())
+                if let idleTimeout = self.http1.configuration.idleTimeout {
+                    try http1Channel.pipeline.syncOperations.addHandler(IdleStateHandler(readTimeout: idleTimeout))
                 }
+                try http1Channel.pipeline.syncOperations.addHandler(HTTPUserEventHandler(logger: logger))
+                return try HTTP1Channel.Value(wrappingChannelSynchronously: http1Channel)
+            }
         } http2ConnectionInitializer: { http2Channel -> EventLoopFuture<NIOAsyncChannel<HTTP2Frame, HTTP2Frame>> in
             http2Channel.eventLoop.makeCompletedFuture {
                 try NIOAsyncChannel<HTTP2Frame, HTTP2Frame>(wrappingChannelSynchronously: http2Channel)
             }
         } http2StreamInitializer: { http2ChildChannel -> EventLoopFuture<HTTP1Channel.Value> in
-            let childChannelHandlers: NIOLoopBound<[ChannelHandler]> =
-                .init(
-                    self.additionalChannelHandlers() + [
-                        HTTPUserEventHandler(logger: logger),
-                    ],
-                    eventLoop: channel.eventLoop
-                )
-
-            return http2ChildChannel
-                .pipeline
-                .addHandler(HTTP2FramePayloadToHTTPServerCodec())
-                .flatMap {
-                    http2ChildChannel.pipeline.addHandlers(childChannelHandlers.value)
-                }.flatMapThrowing {
-                    try HTTP1Channel.Value(wrappingChannelSynchronously: http2ChildChannel)
+            return http2ChildChannel.eventLoop.makeCompletedFuture {
+                try http2ChildChannel.pipeline.syncOperations.addHandler(HTTP2FramePayloadToHTTPServerCodec())
+                try http2ChildChannel.pipeline.syncOperations.addHandlers(self.http1.configuration.additionalChannelHandlers())
+                if let idleTimeout = self.http1.configuration.idleTimeout {
+                    try http2ChildChannel.pipeline.syncOperations.addHandler(IdleStateHandler(readTimeout: idleTimeout))
                 }
+                try http2ChildChannel.pipeline.syncOperations.addHandler(HTTPUserEventHandler(logger: logger))
+                return try HTTP1Channel.Value(wrappingChannelSynchronously: http2ChildChannel)
+            }
         }.map {
             .init(negotiatedHTTPVersion: $0, channel: channel)
         }
