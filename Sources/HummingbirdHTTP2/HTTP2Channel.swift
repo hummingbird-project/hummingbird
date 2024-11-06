@@ -32,7 +32,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
 
     /// HTTP2 Upgrade configuration
     public struct Configuration: Sendable {
-        /// Configuration applieds to HTTP2 stream channels
+        /// Configuration applied to HTTP2 stream channels
         public var streamConfiguration: HTTP1Channel.Configuration
 
         ///  Initialize HTTP2UpgradeChannel.Configuration
