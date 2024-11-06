@@ -70,7 +70,7 @@ final class HTTP2ServerConnectionManagerStateMachineTests: XCTestCase {
         pingResult = stateMachine.receivedPing(atTime: now + .seconds(1), data: pingData)
         guard case .sendPingAck = pingResult else { XCTFail(); return }
         pingResult = stateMachine.receivedPing(atTime: now + .seconds(2), data: pingData)
-        guard case .enhanceYouCalmAndClose(let id) = pingResult else { XCTFail(); return }
+        guard case .enhanceYourCalmAndClose(let id) = pingResult else { XCTFail(); return }
         XCTAssertEqual(id, 4)
         guard case .closed = stateMachine.state else { XCTFail(); return }
     }

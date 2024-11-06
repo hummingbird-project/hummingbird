@@ -94,7 +94,7 @@ extension HTTP2ServerConnectionManager {
 
         enum ReceivedPingResult {
             case sendPingAck(pingData: HTTP2PingData)
-            case enhanceYouCalmAndClose(lastStreamId: HTTP2StreamID) // Sent when client sends too many pings
+            case enhanceYourCalmAndClose(lastStreamId: HTTP2StreamID) // Sent when client sends too many pings
             case none
         }
 
@@ -104,7 +104,7 @@ extension HTTP2ServerConnectionManager {
                 let tooManyPings = activeState.keepalive.receivedPing(atTime: time, hasOpenStreams: activeState.openStreams.count > 0)
                 if tooManyPings {
                     self.state = .closed
-                    return .enhanceYouCalmAndClose(lastStreamId: activeState.lastStreamId)
+                    return .enhanceYourCalmAndClose(lastStreamId: activeState.lastStreamId)
                 } else {
                     self.state = .active(activeState)
                     return .sendPingAck(pingData: data)
@@ -114,7 +114,7 @@ extension HTTP2ServerConnectionManager {
                 let tooManyPings = closingState.keepalive.receivedPing(atTime: time, hasOpenStreams: closingState.openStreams.count > 0)
                 if tooManyPings {
                     self.state = .closed
-                    return .enhanceYouCalmAndClose(lastStreamId: closingState.lastStreamId)
+                    return .enhanceYourCalmAndClose(lastStreamId: closingState.lastStreamId)
                 } else {
                     self.state = .closing(closingState)
                     return .sendPingAck(pingData: data)

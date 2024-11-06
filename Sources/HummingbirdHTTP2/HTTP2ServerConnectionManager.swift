@@ -138,7 +138,7 @@ final class HTTP2ServerConnectionManager: ChannelDuplexHandler {
         case .sendPingAck:
             break // ping acks are sent by NIOHTTP2 channel handler
 
-        case .enhanceYouCalmAndClose(let lastStreamId):
+        case .enhanceYourCalmAndClose(let lastStreamId):
             let goAway = HTTP2Frame(
                 streamID: .rootStream,
                 payload: .goAway(
