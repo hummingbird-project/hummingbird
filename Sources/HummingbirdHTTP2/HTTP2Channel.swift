@@ -70,7 +70,8 @@ public struct HTTP2UpgradeChannel: ServerChildChannel {
     ///  Initialize HTTP2Channel
     /// - Parameters:
     ///   - tlsConfiguration: TLS configuration
-    ///   - additionalChannelHandlers: Additional channel handlers to add to channel pipeline
+    ///   - additionalChannelHandlers: Additional channel handlers to add to stream channel pipeline after HTTP part decoding and
+    ///       before HTTP request handling
     ///   - responder: Function returning a HTTP response for a HTTP request
     @available(*, deprecated, renamed: "HTTP1Channel(tlsConfiguration:configuration:responder:)")
     public init(
@@ -95,7 +96,7 @@ public struct HTTP2UpgradeChannel: ServerChildChannel {
     ///  Initialize HTTP2Channel
     /// - Parameters:
     ///   - tlsConfiguration: TLS configuration
-    ///   - additionalChannelHandlers: Additional channel handlers to add to channel pipeline
+    ///   - configuration: HTTP2 channel configuration
     ///   - responder: Function returning a HTTP response for a HTTP request
     public init(
         tlsConfiguration: TLSConfiguration,
