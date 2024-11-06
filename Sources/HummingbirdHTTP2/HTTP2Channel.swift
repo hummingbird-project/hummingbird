@@ -42,7 +42,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
         public var gracefulCloseTimeout: Duration?
         /// Maximum amount of time a connection can be open
         public var maxAgeTimeout: Duration?
-        /// Configuration applieds to HTTP2 stream channels
+        /// Configuration applied to HTTP2 stream channels
         public var streamConfiguration: HTTP1Channel.Configuration
 
         ///  Initialize HTTP2UpgradeChannel.Configuration

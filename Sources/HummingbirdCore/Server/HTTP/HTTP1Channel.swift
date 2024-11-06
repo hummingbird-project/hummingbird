@@ -98,6 +98,7 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
     /// - Parameters:
     ///   - asyncChannel: NIOAsyncChannel handling HTTP parts
     ///   - logger: Logger to use while processing messages
+    @inlinable
     public func handle(
         value asyncChannel: NIOCore.NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>,
         logger: Logging.Logger
