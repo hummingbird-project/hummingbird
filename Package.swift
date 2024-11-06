@@ -139,12 +139,21 @@ let package = Package(
             dependencies:
             [
                 .byName(name: "HummingbirdCore"),
-                .byName(name: "HummingbirdHTTP2"),
                 .byName(name: "HummingbirdTLS"),
                 .byName(name: "HummingbirdTesting"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
             ],
             resources: [.process("Certificates")]
+        ),
+        .testTarget(
+            name: "HummingbirdHTTP2Tests",
+            dependencies:
+            [
+                .byName(name: "HummingbirdCore"),
+                .byName(name: "HummingbirdHTTP2"),
+                .byName(name: "HummingbirdTesting"),
+                .product(name: "AsyncHTTPClient", package: "async-http-client"),
+            ]
         ),
     ],
     swiftLanguageVersions: [.v5, .version("6")]

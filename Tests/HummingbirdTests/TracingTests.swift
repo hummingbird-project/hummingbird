@@ -568,9 +568,7 @@ final class TracingTests: XCTestCase {
 
         XCTAssertEqual(span2.context.testID, "testMiddleware")
     }
-}
 
-extension TracingTests {
     /// Test tracing middleware serviceContext is propagated to async route handlers
     func testServiceContextPropagationAsync() async throws {
         let expectation = expectation(description: "Expected span to be ended.")

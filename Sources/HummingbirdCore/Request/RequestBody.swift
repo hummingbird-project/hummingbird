@@ -195,12 +195,9 @@ extension RequestBody {
 /// Request body that is a stream of ByteBuffers sourced from a NIOAsyncChannelInboundStream.
 ///
 /// This is a unicast async sequence that allows a single iterator to be created.
-@usableFromInline
-final class NIOAsyncChannelRequestBody: Sendable, AsyncSequence {
-    @usableFromInline
-    typealias Element = ByteBuffer
-    @usableFromInline
-    typealias InboundStream = NIOAsyncChannelInboundStream<HTTPRequestPart>
+public final class NIOAsyncChannelRequestBody: Sendable, AsyncSequence {
+    public typealias Element = ByteBuffer
+    public typealias InboundStream = NIOAsyncChannelInboundStream<HTTPRequestPart>
 
     @usableFromInline
     internal let underlyingIterator: UnsafeTransfer<NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator>
@@ -209,7 +206,7 @@ final class NIOAsyncChannelRequestBody: Sendable, AsyncSequence {
 
     /// Initialize NIOAsyncChannelRequestBody from AsyncIterator of a NIOAsyncChannelInboundStream
     @inlinable
-    init(iterator: InboundStream.AsyncIterator) {
+    public init(iterator: InboundStream.AsyncIterator) {
         self.underlyingIterator = .init(iterator)
         self.alreadyIterated = .init(false)
     }
@@ -228,7 +225,7 @@ final class NIOAsyncChannelRequestBody: Sendable, AsyncSequence {
         }
 
         @inlinable
-        mutating func next() async throws -> ByteBuffer? {
+        public mutating func next() async throws -> ByteBuffer? {
             if self.done { return nil }
             // if we are still expecting parts and the iterator finishes.
             // In this case I think we can just assume we hit an .end
@@ -246,7 +243,7 @@ final class NIOAsyncChannelRequestBody: Sendable, AsyncSequence {
     }
 
     @inlinable
-    func makeAsyncIterator() -> AsyncIterator {
+    public func makeAsyncIterator() -> AsyncIterator {
         // verify if an iterator has already been created. If it has then create an
         // iterator that returns nothing. This could be a precondition failure (currently
         // an assert) as you should not be allowed to do this.

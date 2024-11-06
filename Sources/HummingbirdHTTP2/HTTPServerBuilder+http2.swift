@@ -28,7 +28,8 @@ extension HTTPServerBuilder {
     /// ```
     /// - Parameters:
     ///   - tlsConfiguration: TLS configuration
-    ///   - additionalChannelHandlers: Additional channel handlers to call before handling HTTP
+    ///   - additionalChannelHandlers: Additional channel handlers to add to stream channel pipeline after HTTP part decoding and
+    ///       before HTTP request handling
     /// - Returns: HTTPChannelHandler builder
     @available(*, deprecated, renamed: "http2Upgrade(tlsConfiguration:configuration:)")
     public static func http2Upgrade(
@@ -54,6 +55,7 @@ extension HTTPServerBuilder {
     /// )
     /// ```
     /// - Parameters:
+    ///   - tlsConfiguration: TLS configuration
     ///   - configuration: HTTP2 Upgrade channel configuration
     /// - Returns: HTTPChannelHandler builder
     public static func http2Upgrade(

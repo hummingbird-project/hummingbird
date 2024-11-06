@@ -28,7 +28,7 @@ public protocol HTTPChannelHandler: ServerChildChannel {
 /// Internal error thrown when an unexpected HTTP part is received eg we didn't receive
 /// a head part when we expected one
 @usableFromInline
-enum HTTPChannelError: Error {
+package enum HTTPChannelError: Error {
     case unexpectedHTTPPart(HTTPRequestPart)
 }
 

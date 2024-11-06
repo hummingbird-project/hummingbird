@@ -24,7 +24,7 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
 
     /// HTTP1Channel configuration
     public struct Configuration: Sendable {
-        /// Additional channel handlers to add to channel after HTTP part decoding and before HTTP request processing
+        /// Additional channel handlers to add to channel pipeline after HTTP part decoding and before HTTP request handling
         public var additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
         /// Time before closing an idle channel
         public var idleTimeout: TimeAmount?
@@ -98,6 +98,7 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
     /// - Parameters:
     ///   - asyncChannel: NIOAsyncChannel handling HTTP parts
     ///   - logger: Logger to use while processing messages
+    @inlinable
     public func handle(
         value asyncChannel: NIOCore.NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>,
         logger: Logging.Logger
