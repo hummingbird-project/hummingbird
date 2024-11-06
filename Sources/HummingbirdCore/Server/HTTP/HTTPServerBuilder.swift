@@ -60,7 +60,8 @@ extension HTTPServerBuilder {
     ///     server: .http1()
     /// )
     /// ```
-    /// - Parameter additionalChannelHandlers: Additional channel handlers to add to channel pipeline
+    /// - Parameter additionalChannelHandlers: Additional channel handlers to add to channel pipeline after HTTP part decoding and
+    ///     before HTTP request processing
     /// - Returns: HTTPServerBuilder builder
     @available(*, deprecated, renamed: "http1(configuration:)")
     public static func http1(
@@ -77,7 +78,7 @@ extension HTTPServerBuilder {
     /// ```
     /// let app = Application(
     ///     router: router,
-    ///     server: .http1()
+    ///     server: .http1(configuration: .init(idleTimeout: .seconds(30)))
     /// )
     /// ```
     /// - Parameter configuration: HTTP1 channel configuration

@@ -24,14 +24,15 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
 
     /// HTTP1Channel configuration
     public struct Configuration: Sendable {
-        /// Additional channel handlers to add to channel
+        /// Additional channel handlers to add to channel after HTTP part decoding and before HTTP request processing
         public var additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
         /// Time before closing an idle channel
         public var idleTimeout: TimeAmount?
 
         ///  Initialize HTTP1Channel.Configuration
         /// - Parameters:
-        ///   - additionalChannelHandlers: Additional channel handlers to add to channel
+        ///   - additionalChannelHandlers: Additional channel handlers to add to channel pipeline after HTTP part decoding and
+        ///         before HTTP request processing
         ///   - idleTimeout: Time before closing an idle channel
         public init(
             additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = [],
@@ -45,7 +46,8 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
     ///  Initialize HTTP1Channel
     /// - Parameters:
     ///   - responder: Function returning a HTTP response for a HTTP request
-    ///   - additionalChannelHandlers: Additional channel handlers to add to channel pipeline
+    ///   - additionalChannelHandlers: Additional channel handlers to add to channel pipeline after HTTP part decoding and
+    ///         before HTTP request processing
     @available(*, deprecated, renamed: "HTTP1Channel(responder:configuration:)")
     public init(
         responder: @escaping HTTPChannelHandler.Responder,
