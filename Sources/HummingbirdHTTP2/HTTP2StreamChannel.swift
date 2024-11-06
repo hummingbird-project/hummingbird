@@ -20,7 +20,7 @@ import NIOHTTPTypes
 import NIOHTTPTypesHTTP2
 
 /// HTTP2 Child channel for processing an HTTP2 stream
-struct HTTP2StreamChannel: ServerChildChannel, HTTPChannelHandler {
+struct HTTP2StreamChannel: ServerChildChannel {
     typealias Value = NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>
     typealias Configuration = HTTP1Channel.Configuration
 
@@ -85,6 +85,6 @@ struct HTTP2StreamChannel: ServerChildChannel, HTTPChannelHandler {
         }
     }
 
-    public let responder: HTTPChannelHandler.Responder
-    public let configuration: Configuration
+    let responder: HTTPChannelHandler.Responder
+    let configuration: Configuration
 }
