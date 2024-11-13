@@ -83,14 +83,14 @@ public struct TestClient: Sendable {
                 .channelOption(ChannelOptions.socket(SocketOptionLevel(IPPROTO_TCP), TCP_NODELAY), value: 1)
                 .channelInitializer { channel in
                     return channel.pipeline.addHTTPClientHandlers()
-                        .flatMap {
+                        .flatMapThrowing {
                             let handlers: [ChannelHandler] = [
                                 HTTP1ToHTTPClientCodec(),
                                 HTTPClientRequestSerializer(),
                                 HTTPClientResponseHandler(),
                                 HTTPTaskHandler(),
                             ]
-                            return channel.pipeline.addHandlers(handlers)
+                            return try channel.pipeline.syncOperations.addHandlers(handlers)
                         }
                 }
                 .connectTimeout(.seconds(5))
