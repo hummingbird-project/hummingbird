@@ -16,7 +16,7 @@ import Foundation
 
 /// Structure holding a single cookie
 public struct Cookie: Sendable, CustomStringConvertible {
-    public enum SameSite: String {
+    public enum SameSite: String, Sendable {
         case lax = "Lax"
         case secure = "Secure"
         case none = "None"
