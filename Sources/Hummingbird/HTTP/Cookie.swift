@@ -18,8 +18,11 @@ import Foundation
 public struct Cookie: Sendable, CustomStringConvertible {
     public enum SameSite: String, Sendable {
         case lax = "Lax"
-        case secure = "Secure"
+        case strict = "Strict"
         case none = "None"
+
+        @available(*, deprecated, renamed: "strict", message: "Secure is not a valid value for SameSite, use strict instead")
+        static var secure: Self { .strict }
     }
 
     /// Cookie name

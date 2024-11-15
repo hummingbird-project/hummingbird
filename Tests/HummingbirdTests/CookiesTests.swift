@@ -60,8 +60,8 @@ final class CookieTests: XCTestCase {
     }
 
     func testSameSite() {
-        let cookie = Cookie(from: "name=value; SameSite=Secure")
-        XCTAssertEqual(cookie?.sameSite, .secure)
+        let cookie = Cookie(from: "name=value; SameSite=Strict")
+        XCTAssertEqual(cookie?.sameSite, .strict)
     }
 
     func testSetCookie() async throws {
