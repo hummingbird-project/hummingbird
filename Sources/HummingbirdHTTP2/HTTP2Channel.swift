@@ -215,27 +215,26 @@ extension Channel {
         http1ConnectionInitializer: @escaping NIOChannelInitializerWithOutput<HTTP1Output>,
         http2ConnectionInitializer: @escaping NIOChannelInitializerWithOutput<HTTP2Output>
     ) -> EventLoopFuture<EventLoopFuture<NIONegotiatedHTTPVersion<HTTP1Output, HTTP2Output>>> {
-        let alpnHandler = NIOTypedApplicationProtocolNegotiationHandler<NIONegotiatedHTTPVersion<HTTP1Output, HTTP2Output>>() { result in
-            switch result {
-            case .negotiated("h2"):
-                // Successful upgrade to HTTP/2. Let the user configure the pipeline.
-                return http2ConnectionInitializer(self).map { http2Output in .http2(http2Output) }
-            case .negotiated("http/1.1"), .fallback:
-                // Explicit or implicit HTTP/1.1 choice.
-                return http1ConnectionInitializer(self).map { http1Output in .http1_1(http1Output) }
-            case .negotiated:
-                // We negotiated something that isn't HTTP/1.1. This is a bad scene, and is a good indication
-                // of a user configuration error. We're going to close the connection directly.
-                return self.close().flatMap { self.eventLoop.makeFailedFuture(NIOHTTP2Errors.invalidALPNToken()) }
-            }
-        }
-
-        return self.pipeline
-            .addHandler(alpnHandler)
-            .flatMap { _ in
-                self.pipeline.handler(type: NIOTypedApplicationProtocolNegotiationHandler<NIONegotiatedHTTPVersion<HTTP1Output, HTTP2Output>>.self).map { alpnHandler in
-                    alpnHandler.protocolNegotiationResult
+        return self.eventLoop.makeCompletedFuture {
+            let alpnHandler = NIOTypedApplicationProtocolNegotiationHandler<NIONegotiatedHTTPVersion<HTTP1Output, HTTP2Output>>() { result in
+                switch result {
+                case .negotiated("h2"):
+                    // Successful upgrade to HTTP/2. Let the user configure the pipeline.
+                    return http2ConnectionInitializer(self).map { http2Output in .http2(http2Output) }
+                case .negotiated("http/1.1"), .fallback:
+                    // Explicit or implicit HTTP/1.1 choice.
+                    return http1ConnectionInitializer(self).map { http1Output in .http1_1(http1Output) }
+                case .negotiated:
+                    // We negotiated something that isn't HTTP/1.1. This is a bad scene, and is a good indication
+                    // of a user configuration error. We're going to close the connection directly.
+                    return self.close().flatMap { self.eventLoop.makeFailedFuture(NIOHTTP2Errors.invalidALPNToken()) }
                 }
             }
+            try self.pipeline.syncOperations.addHandler(alpnHandler)
+        }.flatMap { _ in
+            self.pipeline.handler(type: NIOTypedApplicationProtocolNegotiationHandler<NIONegotiatedHTTPVersion<HTTP1Output, HTTP2Output>>.self).map { alpnHandler in
+                alpnHandler.protocolNegotiationResult
+            }
+        }
     }
 }
