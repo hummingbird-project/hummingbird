@@ -26,7 +26,7 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
     public struct Configuration: Sendable {
         /// Additional channel handlers to add to channel pipeline after HTTP part decoding and before HTTP request handling
         public var additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
-        /// Time before closing an idle channel
+        /// Time before closing an idle channel.
         public var idleTimeout: TimeAmount?
 
         ///  Initialize HTTP1Channel.Configuration
