@@ -47,8 +47,9 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
 
         ///  Initialize HTTP2UpgradeChannel.Configuration
         /// - Parameters:
-        ///   - idleTimeout: How long connection is kept idle before closing
+        ///   - idleTimeout: How long connection is kept idle before closing. A connection is considered idle when it has no open streams
         ///   - maxGraceCloseTimeout: Maximum amount of time to wait for client response before all streams are closed after second GOAWAY
+        ///   - maxAgeTimeout: Maximum amount of time for a connection to be open.
         ///   - streamConfiguration: Configuration applieds to HTTP2 stream channels
         public init(
             idleTimeout: Duration? = nil,
