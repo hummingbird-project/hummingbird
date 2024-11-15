@@ -38,4 +38,4 @@ jobs:
     - name: Upload to codecov.io
       uses: codecov/codecov-action@v5
       with:
-        file: info.lcov
+        files: info.lcov
