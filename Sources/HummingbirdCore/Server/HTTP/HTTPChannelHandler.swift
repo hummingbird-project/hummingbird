@@ -47,7 +47,7 @@ extension HTTPChannelHandler {
 
                     while true {
                         let bodyStream = NIOAsyncChannelRequestBody(iterator: iterator)
-                        let request = Request(head: head, body: .init(asyncSequence: bodyStream))
+                        let request = Request(head: head, body: .init(nioAsyncChannelInbound: bodyStream))
                         let responseWriter = ResponseWriter(outbound: outbound)
                         do {
                             try await self.responder(request, responseWriter, asyncChannel.channel)
