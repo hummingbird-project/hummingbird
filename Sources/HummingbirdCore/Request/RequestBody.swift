@@ -24,7 +24,7 @@ public struct RequestBody: Sendable, AsyncSequence {
     @usableFromInline
     internal enum _Backing: Sendable {
         case byteBuffer(ByteBuffer)
-        case nioAsyncChannelInboundStream(NIOAsyncChannelRequestBody)
+        case nioAsyncChannelRequestBody(NIOAsyncChannelRequestBody)
         case anyAsyncSequence(AnyAsyncSequence<ByteBuffer>)
     }
 
@@ -46,8 +46,8 @@ public struct RequestBody: Sendable, AsyncSequence {
     ///  Initialise ``RequestBody`` from AsyncSequence of ByteBuffers
     /// - Parameter asyncSequence: AsyncSequence
     @inlinable
-    public init(nioAsyncChannelInbound: NIOAsyncChannelRequestBody) {
-        self.init(.nioAsyncChannelInboundStream(nioAsyncChannelInbound))
+    package init(nioAsyncChannelInbound: NIOAsyncChannelRequestBody) {
+        self.init(.nioAsyncChannelRequestBody(nioAsyncChannelInbound))
     }
 
     ///  Initialise ``RequestBody`` from AsyncSequence of ByteBuffers
@@ -66,7 +66,7 @@ extension RequestBody {
         @usableFromInline
         internal enum _Backing {
             case byteBuffer(ByteBuffer)
-            case nioAsyncChannelInboundStream(NIOAsyncChannelRequestBody.AsyncIterator)
+            case nioAsyncChannelRequestBody(NIOAsyncChannelRequestBody.AsyncIterator)
             case anyAsyncSequence(AnyAsyncSequence<ByteBuffer>.AsyncIterator)
             case done
         }
@@ -86,9 +86,9 @@ extension RequestBody {
                 self._backing = .done
                 return buffer
 
-            case .nioAsyncChannelInboundStream(var iterator):
+            case .nioAsyncChannelRequestBody(var iterator):
                 let next = try await iterator.next()
-                self._backing = .nioAsyncChannelInboundStream(iterator)
+                self._backing = .nioAsyncChannelRequestBody(iterator)
                 return next
 
             case .anyAsyncSequence(let iterator):
@@ -105,8 +105,8 @@ extension RequestBody {
         switch self._backing {
         case .byteBuffer(let buffer):
             return .init(.byteBuffer(buffer))
-        case .nioAsyncChannelInboundStream(let requestBody):
-            return .init(.nioAsyncChannelInboundStream(requestBody.makeAsyncIterator()))
+        case .nioAsyncChannelRequestBody(let requestBody):
+            return .init(.nioAsyncChannelRequestBody(requestBody.makeAsyncIterator()))
         case .anyAsyncSequence(let stream):
             return .init(.anyAsyncSequence(stream.makeAsyncIterator()))
         }
@@ -229,7 +229,8 @@ extension RequestBody {
 /// Request body that is a stream of ByteBuffers sourced from a NIOAsyncChannelInboundStream.
 ///
 /// This is a unicast async sequence that allows a single iterator to be created.
-public struct NIOAsyncChannelRequestBody: Sendable, AsyncSequence {
+@usableFromInline
+package struct NIOAsyncChannelRequestBody: Sendable, AsyncSequence {
     public typealias Element = ByteBuffer
     public typealias InboundStream = NIOAsyncChannelInboundStream<HTTPRequestPart>
 
