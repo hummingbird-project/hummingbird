@@ -72,7 +72,7 @@ struct HTTP2StreamChannel: ServerChildChannel {
                         throw HTTPChannelError.unexpectedHTTPPart(part)
                     }
                     let bodyStream = NIOAsyncChannelRequestBody(iterator: iterator)
-                    let request = Request(head: head, body: .init(asyncSequence: bodyStream))
+                    let request = Request(head: head, body: .init(nioAsyncChannelInbound: bodyStream))
                     let responseWriter = ResponseWriter(outbound: outbound)
                     try await self.responder(request, responseWriter, asyncChannel.channel)
                 }
