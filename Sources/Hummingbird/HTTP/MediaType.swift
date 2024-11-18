@@ -281,6 +281,8 @@ extension MediaType {
     public static var applicationTar: Self { .init(type: .application, subType: "x-tar") }
     /// Microsoft Visio
     public static var applicationVsd: Self { .init(type: .application, subType: "vnd.visio") }
+    /// WebAssembly
+    public static var applicationWasm: Self { .init(type: .application, subType: "wasm") }
     /// XHTML
     public static var applicationXhtml: Self { .init(type: .application, subType: "xhtml+xml") }
     /// Microsoft Excel
@@ -445,6 +447,7 @@ extension MediaType {
         "ttf": .fontTtf,
         "txt": .textPlain,
         "vsd": .applicationVsd,
+        "wasm": .applicationWasm,
         "wav": .audioWave,
         "weba": .audioWebm,
         "webm": .videoWebm,
