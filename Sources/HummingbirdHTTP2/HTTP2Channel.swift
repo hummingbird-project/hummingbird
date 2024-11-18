@@ -21,7 +21,7 @@ import NIOHTTPTypesHTTP2
 import NIOSSL
 
 /// Child channel for processing HTTP2
-public struct HTTP2Channel: ServerChildChannel {
+internal struct HTTP2Channel: ServerChildChannel {
     typealias HTTP2Connection = NIOHTTP2Handler.AsyncStreamMultiplexer<HTTP2StreamChannel.Value>
     public struct Value: ServerChildChannelValue {
         let http2Connection: HTTP2Connection
