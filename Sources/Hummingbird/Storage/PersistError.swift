@@ -16,7 +16,7 @@
 public struct PersistError: Error, Equatable {
     private enum Internal {
         case duplicate
-        case invalidType
+        case invalidConversion
     }
 
     private let value: Internal
@@ -27,5 +27,5 @@ public struct PersistError: Error, Equatable {
     /// Failed to creating a persist entry as it already exists
     public static var duplicate: Self { .init(value: .duplicate) }
     /// Failed to convert a persist value to the requested type
-    public static var invalidType: Self { .init(value: .invalidType) }
+    public static var invalidConversion: Self { .init(value: .invalidConversion) }
 }

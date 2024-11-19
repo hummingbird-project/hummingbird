@@ -38,7 +38,7 @@ public actor MemoryPersistDriver<C: Clock>: PersistDriver where C.Duration == Du
         if let expires = item.expires {
             guard self.clock.now <= expires else { return nil }
         }
-        guard let object = item.value as? Object else { throw PersistError.invalidType }
+        guard let object = item.value as? Object else { throw PersistError.invalidConversion }
         return object
     }
 

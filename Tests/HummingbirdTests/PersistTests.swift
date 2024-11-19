@@ -179,7 +179,7 @@ final class PersistTests: XCTestCase {
         router.get("/invalid") { _, _ -> String? in
             do {
                 return try await persist.get(key: "test", as: String.self)
-            } catch let error as PersistError where error == .invalidType {
+            } catch let error as PersistError where error == .invalidConversion {
                 throw HTTPError(.badRequest)
             }
         }
