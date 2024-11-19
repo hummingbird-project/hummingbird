@@ -20,41 +20,42 @@ import NIOHTTP2
 import NIOHTTPTypesHTTP2
 import NIOSSL
 
+/// HTTP2 configuration
+public struct HTTP2ChannelConfiguration: Sendable {
+    /// Idle timeout, how long connection is kept idle before closing
+    public var idleTimeout: Duration?
+    /// Maximum amount of time to wait for client response before all streams are closed after second GOAWAY has been sent
+    public var gracefulCloseTimeout: Duration?
+    /// Maximum amount of time a connection can be open
+    public var maxAgeTimeout: Duration?
+    /// Configuration applied to HTTP2 stream channels
+    public var streamConfiguration: HTTP1Channel.Configuration
+
+    ///  Initialize HTTP2UpgradeChannel.Configuration
+    /// - Parameters:
+    ///   - idleTimeout: How long connection is kept idle before closing. A connection is considered idle when it has no open streams
+    ///   - maxGraceCloseTimeout: Maximum amount of time to wait for client response before all streams are closed after second GOAWAY
+    ///   - maxAgeTimeout: Maximum amount of time for a connection to be open.
+    ///   - streamConfiguration: Configuration applieds to HTTP2 stream channels
+    public init(
+        idleTimeout: Duration? = nil,
+        gracefulCloseTimeout: Duration? = nil,
+        maxAgeTimeout: Duration? = nil,
+        streamConfiguration: HTTP1Channel.Configuration = .init()
+    ) {
+        self.idleTimeout = idleTimeout
+        self.gracefulCloseTimeout = gracefulCloseTimeout
+        self.streamConfiguration = streamConfiguration
+    }
+}
+
 /// Child channel for processing HTTP2
 internal struct HTTP2Channel: ServerChildChannel {
+    public typealias Configuration = HTTP2ChannelConfiguration
     typealias HTTP2Connection = NIOHTTP2Handler.AsyncStreamMultiplexer<HTTP2StreamChannel.Value>
     public struct Value: ServerChildChannelValue {
         let http2Connection: HTTP2Connection
         public let channel: Channel
-    }
-
-    /// HTTP2 configuration
-    public struct Configuration: Sendable {
-        /// Idle timeout, how long connection is kept idle before closing
-        public var idleTimeout: Duration?
-        /// Maximum amount of time to wait for client response before all streams are closed after second GOAWAY has been sent
-        public var gracefulCloseTimeout: Duration?
-        /// Maximum amount of time a connection can be open
-        public var maxAgeTimeout: Duration?
-        /// Configuration applied to HTTP2 stream channels
-        public var streamConfiguration: HTTP1Channel.Configuration
-
-        ///  Initialize HTTP2UpgradeChannel.Configuration
-        /// - Parameters:
-        ///   - idleTimeout: How long connection is kept idle before closing. A connection is considered idle when it has no open streams
-        ///   - maxGraceCloseTimeout: Maximum amount of time to wait for client response before all streams are closed after second GOAWAY
-        ///   - maxAgeTimeout: Maximum amount of time for a connection to be open.
-        ///   - streamConfiguration: Configuration applieds to HTTP2 stream channels
-        public init(
-            idleTimeout: Duration? = nil,
-            gracefulCloseTimeout: Duration? = nil,
-            maxAgeTimeout: Duration? = nil,
-            streamConfiguration: HTTP1Channel.Configuration = .init()
-        ) {
-            self.idleTimeout = idleTimeout
-            self.gracefulCloseTimeout = gracefulCloseTimeout
-            self.streamConfiguration = streamConfiguration
-        }
     }
 
     private let http2Stream: HTTP2StreamChannel

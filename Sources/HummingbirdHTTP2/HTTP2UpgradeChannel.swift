@@ -24,7 +24,7 @@ import NIOTLS
 
 /// Child channel for processing HTTP1 with the option of upgrading to HTTP2 via ALPN
 public struct HTTP2UpgradeChannel: HTTPChannelHandler {
-    public typealias Configuration = HTTP2Channel.Configuration
+    public typealias Configuration = HTTP2ChannelConfiguration
     typealias HTTP1Connection = HTTP1Channel.Value
     typealias HTTP2Connection = HTTP2Channel.Value
     public struct Value: ServerChildChannelValue {
