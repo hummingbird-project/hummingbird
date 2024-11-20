@@ -35,9 +35,11 @@ public actor MemoryPersistDriver<C: Clock>: PersistDriver where C.Duration == Du
 
     public func get<Object: Codable & Sendable>(key: String, as: Object.Type) async throws -> Object? {
         guard let item = self.values[key] else { return nil }
-        guard let expires = item.expires else { return item.value as? Object }
-        guard self.clock.now <= expires else { return nil }
-        return item.value as? Object
+        if let expires = item.expires {
+            guard self.clock.now <= expires else { return nil }
+        }
+        guard let object = item.value as? Object else { throw PersistError.invalidConversion }
+        return object
     }
 
     public func remove(key: String) async throws {

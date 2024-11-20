@@ -140,10 +140,6 @@ final class PersistTests: XCTestCase {
     }
 
     func testCodable() async throws {
-        #if os(macOS)
-        // disable macOS tests in CI. GH Actions are currently running this when they shouldn't
-        guard Environment().get("CI") != "true" else { throw XCTSkip() }
-        #endif
         struct TestCodable: Codable {
             let buffer: String
         }
@@ -167,6 +163,31 @@ final class PersistTests: XCTestCase {
             try await client.execute(uri: "/codable/\(tag)", method: .put, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
             try await client.execute(uri: "/codable/\(tag)", method: .get) { response in
                 XCTAssertEqual(String(buffer: response.body), "Persist")
+            }
+        }
+    }
+
+    func testInvalidGetAs() async throws {
+        struct TestCodable: Codable {
+            let buffer: String
+        }
+        let (router, persist) = try createRouter()
+        router.put("/invalid") { _, _ -> HTTPResponse.Status in
+            try await persist.set(key: "test", value: TestCodable(buffer: "hello"))
+            return .ok
+        }
+        router.get("/invalid") { _, _ -> String? in
+            do {
+                return try await persist.get(key: "test", as: String.self)
+            } catch let error as PersistError where error == .invalidConversion {
+                throw HTTPError(.badRequest)
+            }
+        }
+        let app = Application(router: router)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/invalid", method: .put)
+            try await client.execute(uri: "/invalid", method: .get) { response in
+                XCTAssertEqual(response.status, .badRequest)
             }
         }
     }
