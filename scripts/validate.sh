@@ -59,18 +59,18 @@ for language in swift-or-c; do
   matching_files=( -name '*' )
   case "$language" in
       swift-or-c)
-        exceptions=( -path '*Sources/INIParser/*' -o -path '*Sources/CSotoExpat/*' -o -path '*Benchmark/.build/*' -o -name Package.swift)
+        exceptions=( -path '*/Benchmarks/.build/*' -o -name Package.swift)
         matching_files=( -name '*.swift' -o -name '*.c' -o -name '*.h' )
         cat > "$tmp" <<"EOF"
 //===----------------------------------------------------------------------===//
 //
-// This source file is part of the Hummingbird open source project
+// This source file is part of the Hummingbird server framework project
 //
 // Copyright (c) YEARS the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
-// See CONTRIBUTORS.txt for the list of Hummingbird authors
+// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -82,13 +82,13 @@ EOF
         cat > "$tmp" <<"EOF"
 ##===----------------------------------------------------------------------===##
 ##
-## This source file is part of the Hummingbird open source project
+## This source file is part of the Hummingbird server framework project
 ##
 ## Copyright (c) YEARS the Hummingbird authors
 ## Licensed under Apache License v2.0
 ##
 ## See LICENSE.txt for license information
-## See CONTRIBUTORS.txt for the list of Hummingbird authors
+## See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
 ##
 ## SPDX-License-Identifier: Apache-2.0
 ##
