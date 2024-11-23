@@ -48,7 +48,7 @@ final class RouterTests: XCTestCase {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             TestEndpointMiddleware()
             Get("/test/{number}") { _, _ in
-                return "xxx"
+                "xxx"
             }
         }
         let app = Application(responder: router)
@@ -73,13 +73,13 @@ final class RouterTests: XCTestCase {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             TestEndpointMiddleware()
             Get("test") { _, context in
-                return context.endpointPath
+                context.endpointPath
             }
             Get { _, context in
-                return context.endpointPath
+                context.endpointPath
             }
             Post("/test2") { _, context in
-                return context.endpointPath
+                context.endpointPath
             }
         }
         let app = Application(responder: router)
@@ -109,19 +109,19 @@ final class RouterTests: XCTestCase {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             TestEndpointMiddleware()
             Get("test/") { _, context in
-                return context.endpointPath
+                context.endpointPath
             }
             Post("test2") { _, context in
-                return context.endpointPath
+                context.endpointPath
             }
             RouteGroup("testGroup") {
                 Get { _, context in
-                    return context.endpointPath
+                    context.endpointPath
                 }
             }
             RouteGroup("testGroup2") {
                 Get("/") { _, context in
-                    return context.endpointPath
+                    context.endpointPath
                 }
             }
         }
@@ -150,10 +150,10 @@ final class RouterTests: XCTestCase {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             RouteGroup("/endpoint") {
                 Get { _, _ in
-                    return "GET"
+                    "GET"
                 }
                 Put { _, _ in
-                    return "PUT"
+                    "PUT"
                 }
             }
         }
@@ -176,11 +176,11 @@ final class RouterTests: XCTestCase {
             RouteGroup("/group") {
                 TestMiddleware()
                 Get { _, _ in
-                    return "hello"
+                    "hello"
                 }
             }
             Get("/not-group") { _, _ in
-                return "hello"
+                "hello"
             }
         }
         let app = Application(responder: router)
@@ -200,7 +200,7 @@ final class RouterTests: XCTestCase {
             RouteGroup("/group") {
                 TestMiddleware()
                 Head { _, _ in
-                    return "hello"
+                    "hello"
                 }
             }
         }
@@ -219,7 +219,7 @@ final class RouterTests: XCTestCase {
                 TestMiddleware()
                 RouteGroup("/group") {
                     Get { _, _ in
-                        return "hello"
+                        "hello"
                     }
                 }
             }
@@ -249,12 +249,12 @@ final class RouterTests: XCTestCase {
             RouteGroup("/test") {
                 TestGroupMiddleware(output: "route1")
                 Get { _, context in
-                    return context.string
+                    context.string
                 }
                 RouteGroup("/group") {
                     TestGroupMiddleware(output: "route2")
                     Get { _, context in
-                        return context.string
+                        context.string
                     }
                 }
             }
@@ -302,7 +302,7 @@ final class RouterTests: XCTestCase {
                     ContextTransform(to: TestRouterContext2.self) {
                         TestTransformMiddleware()
                         Get { _, context in
-                            return Response(status: .ok, headers: [.middleware2: context.string])
+                            Response(status: .ok, headers: [.middleware2: context.string])
                         }
                     }
                 }
@@ -360,7 +360,7 @@ final class RouterTests: XCTestCase {
             TestTransformMiddleware()
             RouteGroup("/group", context: TestRouterContext2.self) {
                 Get { _, context in
-                    return Response(status: .ok, headers: [.middleware2: context.string])
+                    Response(status: .ok, headers: [.middleware2: context.string])
                 }
             }
         }
@@ -400,7 +400,7 @@ final class RouterTests: XCTestCase {
                 Post {
                     TestGroupMiddleware(output: "route2")
                     Handle { _, context in
-                        return context.string
+                        context.string
                     }
                 }
             }
@@ -441,7 +441,7 @@ final class RouterTests: XCTestCase {
     func testParameters() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Delete("/user/:id") { _, context -> String? in
-                return context.parameters.get("id", as: String.self)
+                context.parameters.get("id", as: String.self)
             }
         }
         let app = Application(responder: router)
@@ -487,7 +487,7 @@ final class RouterTests: XCTestCase {
     func testPartialWildcard() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Get("/files/file.*/*.jpg") { _, _ -> HTTPResponse.Status in
-                return .ok
+                .ok
             }
         }
         let app = Application(responder: router)
@@ -505,13 +505,13 @@ final class RouterTests: XCTestCase {
     func testRequestId() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Get("id") { _, context in
-                return context.id.description
+                context.id.description
             }
         }
         let app = Application(responder: router)
         try await app.test(.router) { client in
             let id = try await client.execute(uri: "/id", method: .get) { response -> String in
-                return String(buffer: response.body)
+                String(buffer: response.body)
             }
             try await client.execute(uri: "/id", method: .get) { response in
                 let id2 = String(buffer: response.body)
@@ -524,7 +524,7 @@ final class RouterTests: XCTestCase {
     func testRedirect() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Get("redirect") { _, _ in
-                return Response.redirect(to: "/other")
+                Response.redirect(to: "/other")
             }
         }
         let app = Application(responder: router)
@@ -539,7 +539,7 @@ final class RouterTests: XCTestCase {
     func testResponderBuilder() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Get("hello") { _, _ in
-                return "hello"
+                "hello"
             }
         }
         let app = Application(router: router)
@@ -554,14 +554,14 @@ final class RouterTests: XCTestCase {
     func testCaseInsensitive() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self, options: .caseInsensitive) {
             Get("Uppercased") { _, _ in
-                return HTTPResponse.Status.ok
+                HTTPResponse.Status.ok
             }
             Get("lowercased") { _, _ in
-                return HTTPResponse.Status.ok
+                HTTPResponse.Status.ok
             }
             RouteGroup("group") {
                 Get("Uppercased") { _, _ in
-                    return HTTPResponse.Status.ok
+                    HTTPResponse.Status.ok
                 }
             }
         }

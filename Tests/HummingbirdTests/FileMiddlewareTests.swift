@@ -227,7 +227,7 @@ final class FileMiddlewareTests: XCTestCase {
 
         try await app.test(.router) { client in
             let eTag = try await client.execute(uri: filename, method: .head) { response in
-                return try XCTUnwrap(response.headers[.eTag])
+                try XCTUnwrap(response.headers[.eTag])
             }
             try await client.execute(uri: filename, method: .get, headers: [.ifNoneMatch: eTag]) { response in
                 XCTAssertEqual(response.status, .notModified)

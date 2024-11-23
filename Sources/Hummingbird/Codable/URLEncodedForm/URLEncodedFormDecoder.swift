@@ -261,8 +261,10 @@ private class _URLEncodedFormDecoder: Decoder {
             return try self.decoder.unbox(node, as: T.self)
         }
 
-        func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey>
-        where NestedKey: CodingKey {
+        func nestedContainer<NestedKey>(
+            keyedBy type: NestedKey.Type,
+            forKey key: Key
+        ) throws -> KeyedDecodingContainer<NestedKey> where NestedKey: CodingKey {
             self.decoder.codingPath.append(key)
             defer { self.decoder.codingPath.removeLast() }
 
@@ -390,8 +392,9 @@ private class _URLEncodedFormDecoder: Decoder {
             try self.decodeNextNode()
         }
 
-        mutating func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey>
-        where NestedKey: CodingKey {
+        mutating func nestedContainer<NestedKey>(
+            keyedBy type: NestedKey.Type
+        ) throws -> KeyedDecodingContainer<NestedKey> where NestedKey: CodingKey {
             guard !self.isAtEnd else {
                 throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Unkeyed container index out of range"))
             }
