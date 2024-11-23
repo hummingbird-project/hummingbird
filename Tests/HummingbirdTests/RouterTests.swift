@@ -519,8 +519,8 @@ final class RouterTests: XCTestCase {
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
-            let id = try await client.execute(uri: "/id", method: .get) { response -> String in
-                return String(buffer: response.body)
+            let id = try await client.execute(uri: "/id", method: .get) { response in
+                String(buffer: response.body)
             }
             try await client.execute(uri: "/id", method: .get) { response in
                 let id2 = String(buffer: response.body)
@@ -565,7 +565,7 @@ final class RouterTests: XCTestCase {
         let router = Router()
         let routes = RouteCollection()
             .get("that") { _, _ in
-                return HTTPResponse.Status.ok
+                HTTPResponse.Status.ok
             }
         router.group("this").addRoutes(routes)
         let app = Application(responder: router.buildResponder())
@@ -582,7 +582,7 @@ final class RouterTests: XCTestCase {
         let routes = RouteCollection()
             .add(middleware: TestMiddleware("Hello"))
             .get("that") { _, _ in
-                return HTTPResponse.Status.ok
+                HTTPResponse.Status.ok
             }
         router.addRoutes(routes, atPath: "/this")
         let app = Application(responder: router.buildResponder())
@@ -599,11 +599,11 @@ final class RouterTests: XCTestCase {
         let router = Router()
         let routes = RouteCollection()
             .get("this") { _, _ in
-                return HTTPResponse.Status.ok
+                HTTPResponse.Status.ok
             }
             .add(middleware: TestMiddleware("Hello"))
             .get("that") { _, _ in
-                return HTTPResponse.Status.ok
+                HTTPResponse.Status.ok
             }
         router.addRoutes(routes, atPath: "/test")
         let app = Application(responder: router.buildResponder())
