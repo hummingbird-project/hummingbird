@@ -654,10 +654,10 @@ extension Unicode.Scalar {
 
     package var isNewline: Bool {
         switch self.value {
-        case 0x000A...0x000D /* LF ... CR */: return true
-        case 0x0085 /* NEXT LINE (NEL) */: return true
-        case 0x2028 /* LINE SEPARATOR */: return true
-        case 0x2029 /* PARAGRAPH SEPARATOR */: return true
+        case 0x000A...0x000D: return true  // LF ... CR
+        case 0x0085: return true  // NEXT LINE (NEL)
+        case 0x2028: return true  // LINE SEPARATOR
+        case 0x2029: return true  // PARAGRAPH SEPARATOR
         default: return false
         }
     }
