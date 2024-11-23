@@ -94,7 +94,7 @@ final class HTTP2ServerConnectionManager: ChannelDuplexHandler {
             }
 
         default:
-            break // Only interested in PING frames, ignore the rest.
+            break  // Only interested in PING frames, ignore the rest.
         }
 
         context.fireChannelRead(data)
@@ -136,7 +136,7 @@ final class HTTP2ServerConnectionManager: ChannelDuplexHandler {
     func handlePing(context: ChannelHandlerContext, data: HTTP2PingData) {
         switch self.state.receivedPing(atTime: .now(), data: data) {
         case .sendPingAck:
-            break // ping acks are sent by NIOHTTP2 channel handler
+            break  // ping acks are sent by NIOHTTP2 channel handler
 
         case .enhanceYourCalmAndClose(let lastStreamId):
             let goAway = HTTP2Frame(

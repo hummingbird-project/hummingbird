@@ -12,8 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import HummingbirdCore
 import XCTest
+
+@testable import HummingbirdCore
 
 final class ParserTests: XCTestCase {
     func testCharacter() {
@@ -125,6 +126,6 @@ final class ParserTests: XCTestCase {
 
 extension Character {
     var isAlphaNumeric: Bool {
-        return isLetter || isNumber
+        isLetter || isNumber
     }
 }

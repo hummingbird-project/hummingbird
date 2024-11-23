@@ -20,7 +20,7 @@ final class UUIDTests: XCTestCase {
     func testGetUUID() async throws {
         let router = Router()
         router.get(":id") { _, context -> UUID? in
-            return context.parameters.get("id", as: UUID.self)
+            context.parameters.get("id", as: UUID.self)
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -36,7 +36,7 @@ final class UUIDTests: XCTestCase {
     func testRequireUUID() async throws {
         let router = Router()
         router.get(":id") { _, context -> UUID in
-            return try context.parameters.require("id", as: UUID.self)
+            try context.parameters.require("id", as: UUID.self)
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in

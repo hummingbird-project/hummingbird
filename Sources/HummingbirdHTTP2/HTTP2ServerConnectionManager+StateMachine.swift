@@ -94,7 +94,7 @@ extension HTTP2ServerConnectionManager {
 
         enum ReceivedPingResult {
             case sendPingAck(pingData: HTTP2PingData)
-            case enhanceYourCalmAndClose(lastStreamId: HTTP2StreamID) // Sent when client sends too many pings
+            case enhanceYourCalmAndClose(lastStreamId: HTTP2StreamID)  // Sent when client sends too many pings
             case none
         }
 

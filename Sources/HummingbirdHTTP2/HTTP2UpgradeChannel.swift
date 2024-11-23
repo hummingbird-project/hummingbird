@@ -158,8 +158,8 @@ extension Channel {
         http1ConnectionInitializer: @escaping NIOChannelInitializerWithOutput<HTTP1Output>,
         http2ConnectionInitializer: @escaping NIOChannelInitializerWithOutput<HTTP2Output>
     ) -> EventLoopFuture<EventLoopFuture<NIONegotiatedHTTPVersion<HTTP1Output, HTTP2Output>>> {
-        return self.eventLoop.makeCompletedFuture {
-            let alpnHandler = NIOTypedApplicationProtocolNegotiationHandler<NIONegotiatedHTTPVersion<HTTP1Output, HTTP2Output>>() { result in
+        self.eventLoop.makeCompletedFuture {
+            let alpnHandler = NIOTypedApplicationProtocolNegotiationHandler<NIONegotiatedHTTPVersion<HTTP1Output, HTTP2Output>> { result in
                 switch result {
                 case .negotiated("h2"):
                     // Successful upgrade to HTTP/2. Let the user configure the pipeline.
@@ -175,7 +175,8 @@ extension Channel {
             }
             try self.pipeline.syncOperations.addHandler(alpnHandler)
         }.flatMap { _ in
-            self.pipeline.handler(type: NIOTypedApplicationProtocolNegotiationHandler<NIONegotiatedHTTPVersion<HTTP1Output, HTTP2Output>>.self).map { alpnHandler in
+            self.pipeline.handler(type: NIOTypedApplicationProtocolNegotiationHandler<NIONegotiatedHTTPVersion<HTTP1Output, HTTP2Output>>.self).map {
+                alpnHandler in
                 alpnHandler.protocolNegotiationResult
             }
         }

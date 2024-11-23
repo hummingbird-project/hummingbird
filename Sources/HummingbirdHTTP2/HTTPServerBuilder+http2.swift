@@ -36,8 +36,8 @@ extension HTTPServerBuilder {
         tlsConfiguration: TLSConfiguration,
         additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler]
     ) throws -> HTTPServerBuilder {
-        return .init { responder in
-            return try HTTP2UpgradeChannel(
+        .init { responder in
+            try HTTP2UpgradeChannel(
                 tlsConfiguration: tlsConfiguration,
                 additionalChannelHandlers: additionalChannelHandlers,
                 responder: responder
@@ -62,8 +62,8 @@ extension HTTPServerBuilder {
         tlsConfiguration: TLSConfiguration,
         configuration: HTTP2UpgradeChannel.Configuration = .init()
     ) throws -> HTTPServerBuilder {
-        return .init { responder in
-            return try HTTP2UpgradeChannel(
+        .init { responder in
+            try HTTP2UpgradeChannel(
                 tlsConfiguration: tlsConfiguration,
                 configuration: configuration,
                 responder: responder

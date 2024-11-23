@@ -12,8 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import Hummingbird
 import XCTest
+
+@testable import Hummingbird
 
 final class URLDecodedFormDecoderTests: XCTestCase {
     func testForm<Input: Decodable & Equatable>(_ value: Input, query: String, decoder: URLEncodedFormDecoder = .init()) {
@@ -75,8 +76,25 @@ final class URLDecodedFormDecoderTests: XCTestCase {
             let f: [Float]
             let d: [Double]
         }
-        let test = Test(b: [true, false], i: [34], i8: [23], i16: [9], i32: [-6872], i64: [23], u: [0], u8: [255], u16: [7673], u32: [88222], u64: [234], f: [-1.1], d: [8])
-        self.testForm(test, query: "b[]=true&b[]=false&i[]=34&i8[]=23&i16[]=9&i32[]=-6872&i64[]=23&u[]=0&u8[]=255&u16[]=7673&u32[]=88222&u64[]=234&f[]=-1.1&d[]=8")
+        let test = Test(
+            b: [true, false],
+            i: [34],
+            i8: [23],
+            i16: [9],
+            i32: [-6872],
+            i64: [23],
+            u: [0],
+            u8: [255],
+            u16: [7673],
+            u32: [88222],
+            u64: [234],
+            f: [-1.1],
+            d: [8]
+        )
+        self.testForm(
+            test,
+            query: "b[]=true&b[]=false&i[]=34&i8[]=23&i16[]=9&i32[]=-6872&i64[]=23&u[]=0&u8[]=255&u16[]=7673&u32[]=88222&u64[]=234&f[]=-1.1&d[]=8"
+        )
     }
 
     func testArraysWithIndices() {
@@ -88,19 +106,19 @@ final class URLDecodedFormDecoderTests: XCTestCase {
 
         let test2 = Test(arr: [12, 45, 54, 55, -5, 5, 9, 33, 0, 9, 4, 33])
         let query = """
-        arr[0]=12\
-        &arr[1]=45\
-        &arr[2]=54\
-        &arr[3]=55\
-        &arr[4]=-5\
-        &arr[5]=5\
-        &arr[6]=9\
-        &arr[7]=33\
-        &arr[8]=0\
-        &arr[9]=9\
-        &arr[10]=4\
-        &arr[11]=33
-        """
+            arr[0]=12\
+            &arr[1]=45\
+            &arr[2]=54\
+            &arr[3]=55\
+            &arr[4]=-5\
+            &arr[5]=5\
+            &arr[6]=9\
+            &arr[7]=33\
+            &arr[8]=0\
+            &arr[9]=9\
+            &arr[10]=4\
+            &arr[11]=33
+            """
         self.testForm(test2, query: query)
     }
 

@@ -58,16 +58,17 @@ public struct LogRequestsMiddleware<Context: RequestContext>: RouterMiddleware {
         self.logLevel = logLevel
         self.includeHeaders = includeHeaders
         // only include headers in the redaction list if we are outputting them
-        self.redactHeaders = switch includeHeaders.value {
-        case .all(let exceptions):
-            // don't include headers in the except list
-            redactHeaders.filter { header in !exceptions.contains(header) }
-        case .some(let included):
-            // only include headers in the included list
-            redactHeaders.filter { header in included.contains(header) }
-        case .none:
-            []
-        }
+        self.redactHeaders =
+            switch includeHeaders.value {
+            case .all(let exceptions):
+                // don't include headers in the except list
+                redactHeaders.filter { header in !exceptions.contains(header) }
+            case .some(let included):
+                // only include headers in the included list
+                redactHeaders.filter { header in included.contains(header) }
+            case .none:
+                []
+            }
     }
 
     public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
@@ -106,7 +107,8 @@ public struct LogRequestsMiddleware<Context: RequestContext>: RouterMiddleware {
     }
 
     func filterHeaders(headers: HTTPFields, filter: [HTTPField.Name]) -> [String: String] {
-        let headers = filter
+        let headers =
+            filter
             .compactMap { entry -> (key: String, value: String)? in
                 guard let value = headers[entry] else { return nil }
                 if self.redactHeaders.contains(entry) {
@@ -119,7 +121,8 @@ public struct LogRequestsMiddleware<Context: RequestContext>: RouterMiddleware {
     }
 
     func allHeaders(headers: HTTPFields, except: [HTTPField.Name]) -> [String: String] {
-        let headers = headers
+        let headers =
+            headers
             .compactMap { entry -> (key: String, value: String)? in
                 if except.contains(where: { entry.name == $0 }) { return nil }
                 if self.redactHeaders.contains(entry.name) {

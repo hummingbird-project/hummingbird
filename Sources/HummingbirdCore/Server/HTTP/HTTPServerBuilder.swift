@@ -67,8 +67,8 @@ extension HTTPServerBuilder {
     public static func http1(
         additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler]
     ) -> HTTPServerBuilder {
-        return .init { responder in
-            return HTTP1Channel(responder: responder, additionalChannelHandlers: additionalChannelHandlers)
+        .init { responder in
+            HTTP1Channel(responder: responder, additionalChannelHandlers: additionalChannelHandlers)
         }
     }
 
@@ -86,8 +86,8 @@ extension HTTPServerBuilder {
     public static func http1(
         configuration: HTTP1Channel.Configuration = .init()
     ) -> HTTPServerBuilder {
-        return .init { responder in
-            return HTTP1Channel(responder: responder, configuration: configuration)
+        .init { responder in
+            HTTP1Channel(responder: responder, configuration: configuration)
         }
     }
 }

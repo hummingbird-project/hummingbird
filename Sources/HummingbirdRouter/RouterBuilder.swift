@@ -27,7 +27,8 @@ public struct RouterBuilderOptions: OptionSet, Sendable {
 }
 
 /// Router built using a result builder
-public struct RouterBuilder<Context: RouterRequestContext, Handler: MiddlewareProtocol>: MiddlewareProtocol where Handler.Input == Request, Handler.Output == Response, Handler.Context == Context {
+public struct RouterBuilder<Context: RouterRequestContext, Handler: MiddlewareProtocol>: MiddlewareProtocol
+where Handler.Input == Request, Handler.Output == Response, Handler.Context == Context {
     public typealias Input = Request
     public typealias Output = Response
 
@@ -80,6 +81,6 @@ extension RouterBuilder: HTTPResponder, HTTPResponderBuilder {
     }
 
     public func buildResponder() -> Self {
-        return self
+        self
     }
 }

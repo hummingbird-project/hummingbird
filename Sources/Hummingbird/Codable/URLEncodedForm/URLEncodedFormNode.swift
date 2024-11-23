@@ -147,7 +147,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
         }
 
         var percentEncoded: String {
-            return self.value.addingPercentEncoding(withAllowedCharacters: URLEncodedForm.unreservedCharacters) ?? self.value
+            self.value.addingPercentEncoding(withAllowedCharacters: URLEncodedForm.unreservedCharacters) ?? self.value
         }
 
         static func == (lhs: URLEncodedFormNode.NodeValue, rhs: URLEncodedFormNode.NodeValue) -> Bool {

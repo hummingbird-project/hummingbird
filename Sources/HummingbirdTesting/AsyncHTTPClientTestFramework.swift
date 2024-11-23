@@ -197,7 +197,7 @@ extension HTTPRequest.Method {
         case .MKACTIVITY: self = .init("MKACTIVITY")!
         case .UNSUBSCRIBE: self = .init("UNSUBSCRIBE")!
         case .SOURCE: self = .init("SOURCE")!
-        case .RAW(value: let value):
+        case .RAW(let value):
             guard let method = HTTPRequest.Method(value) else {
                 throw HTTP1TypeConversionError.invalidMethod
             }
@@ -225,9 +225,11 @@ extension HTTPFields {
             }
             if let name = HTTPField.Name(field.name) {
                 if splitCookie, name == .cookie, #available(macOS 13.0, iOS 16.0, watchOS 9.0, tvOS 16.0, *) {
-                    self.append(contentsOf: field.value.split(separator: "; ", omittingEmptySubsequences: false).map {
-                        HTTPField(name: name, value: String($0))
-                    })
+                    self.append(
+                        contentsOf: field.value.split(separator: "; ", omittingEmptySubsequences: false).map {
+                            HTTPField(name: name, value: String($0))
+                        }
+                    )
                 } else {
                     self.append(HTTPField(name: name, value: field.value))
                 }

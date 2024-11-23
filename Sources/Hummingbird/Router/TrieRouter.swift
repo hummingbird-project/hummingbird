@@ -73,7 +73,7 @@ import HummingbirdCore
         }
 
         func getChild(_ key: RouterPath.Element) -> Node? {
-            return self.children.first { $0.key == key }
+            self.children.first { $0.key == key }
         }
 
         func getChild(_ key: Substring) -> Node? {

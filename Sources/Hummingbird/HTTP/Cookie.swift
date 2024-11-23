@@ -33,20 +33,20 @@ public struct Cookie: Sendable, CustomStringConvertible {
     public let properties: Properties
 
     /// indicates the maximum lifetime of the cookie
-    public var expires: Date? { return self.properties[.expires].map { DateCache.rfc1123Formatter.date(from: $0) } ?? nil }
+    public var expires: Date? { self.properties[.expires].map { DateCache.rfc1123Formatter.date(from: $0) } ?? nil }
     /// indicates the maximum lifetime of the cookie in seconds. Max age has precedence over expires
     /// (not all user agents support max-age)
-    public var maxAge: Int? { return self.properties[.maxAge].map { Int($0) } ?? nil }
+    public var maxAge: Int? { self.properties[.maxAge].map { Int($0) } ?? nil }
     /// specifies those hosts to which the cookie will be sent
-    public var domain: String? { return self.properties[.domain] }
+    public var domain: String? { self.properties[.domain] }
     /// The scope of each cookie is limited to a set of paths, controlled by the Path attribute
-    public var path: String? { return self.properties[.path] }
+    public var path: String? { self.properties[.path] }
     /// The Secure attribute limits the scope of the cookie to "secure" channels
-    public var secure: Bool { return self.properties[.secure] != nil }
+    public var secure: Bool { self.properties[.secure] != nil }
     /// The HttpOnly attribute limits the scope of the cookie to HTTP requests
-    public var httpOnly: Bool { return self.properties[.httpOnly] != nil }
+    public var httpOnly: Bool { self.properties[.httpOnly] != nil }
     /// The SameSite attribute lets servers specify whether/when cookies are sent with cross-origin requests
-    public var sameSite: SameSite? { return self.properties[.sameSite].map { SameSite(rawValue: $0) } ?? nil }
+    public var sameSite: SameSite? { self.properties[.sameSite].map { SameSite(rawValue: $0) } ?? nil }
 
     /// Create `Cookie`
     /// - Parameters:

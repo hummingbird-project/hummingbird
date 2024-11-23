@@ -32,11 +32,11 @@
 @resultBuilder
 public enum MiddlewareFixedTypeBuilder<Input, Output, Context> {
     public static func buildExpression<M0: MiddlewareProtocol>(_ m0: M0) -> M0 where M0.Input == Input, M0.Output == Output, M0.Context == Context {
-        return m0
+        m0
     }
 
     public static func buildBlock<M0: MiddlewareProtocol>(_ m0: M0) -> M0 {
-        return m0
+        m0
     }
 
     public static func buildPartialBlock<M0: MiddlewareProtocol>(first: M0) -> M0 {
@@ -67,6 +67,6 @@ public enum MiddlewareFixedTypeBuilder<Input, Output, Context> {
     }
 
     public static func buildArray<M0: MiddlewareProtocol>(_ components: [M0]) -> _SpreadMiddleware<M0> {
-        return _SpreadMiddleware(middlewares: components)
+        _SpreadMiddleware(middlewares: components)
     }
 }
