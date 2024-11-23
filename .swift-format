@@ -18,6 +18,7 @@
   "maximumBlankLines" : 1,
   "respectsExistingLineBreaks" : true,
   "prioritizeKeepingFunctionOutputTogether" : true,
+  "multiElementCollectionTrailingCommas" : true,
   "rules" : {
     "AllPublicDeclarationsHaveDocumentation" : false,
     "AlwaysUseLiteralForEmptyCollectionInit" : false,
