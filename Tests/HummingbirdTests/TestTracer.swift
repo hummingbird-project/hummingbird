@@ -59,7 +59,7 @@ final class TestTracer: Tracer {
     public func forceFlush() {}
 
     func extract<Carrier, Extract>(_ carrier: Carrier, into context: inout ServiceContext, using extractor: Extract)
-        where
+    where
         Extract: Extractor,
         Carrier == Extract.Carrier
     {
@@ -68,7 +68,7 @@ final class TestTracer: Tracer {
     }
 
     func inject<Carrier, Inject>(_ context: ServiceContext, into carrier: inout Carrier, using injector: Inject)
-        where
+    where
         Inject: Injector,
         Carrier == Inject.Carrier
     {
@@ -178,5 +178,5 @@ final class TestSpan: Span {
     }
 }
 
-extension TestTracer: @unchecked Sendable {} // only intended for single threaded testing
-extension TestSpan: @unchecked Sendable {} // only intended for single threaded testing
+extension TestTracer: @unchecked Sendable {}  // only intended for single threaded testing
+extension TestSpan: @unchecked Sendable {}  // only intended for single threaded testing

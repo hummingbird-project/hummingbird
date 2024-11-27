@@ -28,7 +28,8 @@ import Hummingbird
 ///     }
 /// }
 /// ```
-public struct ContextTransform<Context: RouterRequestContext, HandlerContext: RouterRequestContext, Handler: MiddlewareProtocol>: RouterMiddleware where Handler.Input == Request, Handler.Output == Response, Handler.Context == HandlerContext, HandlerContext.Source == Context {
+public struct ContextTransform<Context: RouterRequestContext, HandlerContext: RouterRequestContext, Handler: MiddlewareProtocol>: RouterMiddleware
+where Handler.Input == Request, Handler.Output == Response, Handler.Context == HandlerContext, HandlerContext.Source == Context {
     public typealias Input = Request
     public typealias Output = Response
 
@@ -64,7 +65,12 @@ public struct ContextTransform<Context: RouterRequestContext, HandlerContext: Ro
 
 /// Router middleware that transforms the ``Hummingbird/RequestContext`` and uses it with the contained
 /// Middleware chain. Used by ``HummingbirdRouter/RouteGroup/init(_:context:builder:)``
-public struct ThrowingContextTransform<Context: RouterRequestContext, HandlerContext: RouterRequestContext & ChildRequestContext, Handler: MiddlewareProtocol>: RouterMiddleware where Handler.Input == Request, Handler.Output == Response, Handler.Context == HandlerContext, HandlerContext.ParentContext == Context {
+public struct ThrowingContextTransform<
+    Context: RouterRequestContext,
+    HandlerContext: RouterRequestContext & ChildRequestContext,
+    Handler: MiddlewareProtocol
+>: RouterMiddleware
+where Handler.Input == Request, Handler.Output == Response, Handler.Context == HandlerContext, HandlerContext.ParentContext == Context {
     public typealias Input = Request
     public typealias Output = Response
 

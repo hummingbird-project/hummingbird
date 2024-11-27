@@ -51,6 +51,6 @@ extension Response {
     ///   - type: Redirection type
     /// - Returns: Response with redirection
     public static func redirect(to location: String, type: RedirectType = .normal) -> Response {
-        return .init(status: type.status, headers: [.location: location])
+        .init(status: type.status, headers: [.location: location])
     }
 }

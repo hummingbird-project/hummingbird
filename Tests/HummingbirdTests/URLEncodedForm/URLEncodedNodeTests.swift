@@ -12,8 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import Hummingbird
 import XCTest
+
+@testable import Hummingbird
 
 final class URLEncodedFormNodeTests: XCTestCase {
     static func XCTAssertEncodedEqual(_ lhs: String, _ rhs: String) {

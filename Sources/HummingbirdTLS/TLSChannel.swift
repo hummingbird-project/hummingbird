@@ -37,7 +37,7 @@ public struct TLSChannel<BaseChannel: ServerChildChannel>: ServerChildChannel {
     /// - Returns: Object to process input/output on child channel
     @inlinable
     public func setup(channel: Channel, logger: Logger) -> EventLoopFuture<Value> {
-        return channel.eventLoop.makeCompletedFuture {
+        channel.eventLoop.makeCompletedFuture {
             try channel.pipeline.syncOperations.addHandler(NIOSSLServerHandler(context: self.sslContext))
         }.flatMap {
             self.baseChannel.setup(channel: channel, logger: logger)

@@ -78,11 +78,12 @@ extension ApplicationProtocol {
         _ testingSetup: TestingSetup,
         _ test: @Sendable (any TestClientProtocol) async throws -> Value
     ) async throws -> Value {
-        let app: any ApplicationTestFramework = switch testingSetup.value {
-        case .router: try await RouterTestFramework(app: self)
-        case .live: LiveTestFramework(app: self)
-        case .ahc(let scheme): AsyncHTTPClientTestFramework(app: self, scheme: scheme)
-        }
+        let app: any ApplicationTestFramework =
+            switch testingSetup.value {
+            case .router: try await RouterTestFramework(app: self)
+            case .live: LiveTestFramework(app: self)
+            case .ahc(let scheme): AsyncHTTPClientTestFramework(app: self, scheme: scheme)
+            }
         return try await app.run(test)
     }
 }

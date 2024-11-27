@@ -19,32 +19,32 @@ import HummingbirdCore
 /// from URIs
 public typealias Parameters = FlatDictionary<Substring, Substring>
 
-public extension Parameters {
+extension Parameters {
     /// Return parameter with specified id
     /// - Parameter s: parameter id
-    func get(_ s: String) -> String? {
-        return self[s[...]].map { String($0) }
+    public func get(_ s: String) -> String? {
+        self[s[...]].map { String($0) }
     }
 
     /// Return parameter with specified id as a certain type
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
-    func get<T: LosslessStringConvertible>(_ s: String, as: T.Type) -> T? {
-        return self[s[...]].map { T(String($0)) } ?? nil
+    public func get<T: LosslessStringConvertible>(_ s: String, as: T.Type) -> T? {
+        self[s[...]].map { T(String($0)) } ?? nil
     }
 
     /// Return parameter with specified id as a certain type
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
-    func get<T: RawRepresentable>(_ s: String, as: T.Type) -> T? where T.RawValue == String {
-        return self[s[...]].map { T(rawValue: String($0)) } ?? nil
+    public func get<T: RawRepresentable>(_ s: String, as: T.Type) -> T? where T.RawValue == String {
+        self[s[...]].map { T(rawValue: String($0)) } ?? nil
     }
 
     /// Return parameter with specified id
     /// - Parameter s: parameter id
-    func require(_ s: String) throws -> String {
+    public func require(_ s: String) throws -> String {
         guard let param = self[s[...]].map({ String($0) }) else {
             throw HTTPError(.badRequest, message: "Expected parameter does not exist")
         }
@@ -55,7 +55,7 @@ public extension Parameters {
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
-    func require<T: LosslessStringConvertible>(_ s: String, as: T.Type) throws -> T {
+    public func require<T: LosslessStringConvertible>(_ s: String, as: T.Type) throws -> T {
         guard let param = self[s[...]] else {
             throw HTTPError(.badRequest, message: "Expected parameter does not exist")
         }
@@ -70,7 +70,7 @@ public extension Parameters {
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
-    func require<T: RawRepresentable>(_ s: String, as: T.Type) throws -> T where T.RawValue == String {
+    public func require<T: RawRepresentable>(_ s: String, as: T.Type) throws -> T where T.RawValue == String {
         guard let param = self[s[...]] else {
             throw HTTPError(.badRequest, message: "Expected parameter does not exist")
         }
@@ -84,32 +84,32 @@ public extension Parameters {
     /// Return parameter with specified id as a certain type
     /// - Parameters:
     ///   - s: parameter id
-    func getAll(_ s: String) -> [String] {
-        return self[values: s[...]].compactMap { String($0) }
+    public func getAll(_ s: String) -> [String] {
+        self[values: s[...]].compactMap { String($0) }
     }
 
     /// Return parameter with specified id as a certain type
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
-    func getAll<T: LosslessStringConvertible>(_ s: String, as: T.Type) -> [T] {
-        return self[values: s[...]].compactMap { T(String($0)) }
+    public func getAll<T: LosslessStringConvertible>(_ s: String, as: T.Type) -> [T] {
+        self[values: s[...]].compactMap { T(String($0)) }
     }
 
     /// Return parameter with specified id as a certain type
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
-    func getAll<T: RawRepresentable>(_ s: String, as: T.Type) -> [T] where T.RawValue == String {
-        return self[values: s[...]].compactMap { T(rawValue: String($0)) }
+    public func getAll<T: RawRepresentable>(_ s: String, as: T.Type) -> [T] where T.RawValue == String {
+        self[values: s[...]].compactMap { T(rawValue: String($0)) }
     }
 
     /// Return parameter with specified id as a certain type
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
-    func requireAll<T: LosslessStringConvertible>(_ s: String, as: T.Type) throws -> [T] {
-        return try self[values: s[...]].map {
+    public func requireAll<T: LosslessStringConvertible>(_ s: String, as: T.Type) throws -> [T] {
+        try self[values: s[...]].map {
             guard let result = T(String($0)) else {
                 throw HTTPError(.badRequest, message: "One of the parameters '\($0)' can not be converted to the expected type (\(T.self))")
             }
@@ -121,8 +121,8 @@ public extension Parameters {
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
-    func requireAll<T: RawRepresentable>(_ s: String, as: T.Type) throws -> [T] where T.RawValue == String {
-        return try self[values: s[...]].map {
+    public func requireAll<T: RawRepresentable>(_ s: String, as: T.Type) throws -> [T] where T.RawValue == String {
+        try self[values: s[...]].map {
             guard let result = T(rawValue: String($0)) else {
                 throw HTTPError(.badRequest, message: "One of the parameters '\($0)' can not be converted to the expected type (\(T.self))")
             }
@@ -132,18 +132,18 @@ public extension Parameters {
 }
 
 /// Catch all support
-public extension Parameters {
-    static let recursiveCaptureKey: Substring = ":**:"
+extension Parameters {
+    public static let recursiveCaptureKey: Substring = ":**:"
 
     ///  Return path elements caught by recursive capture
-    func getCatchAll() -> [Substring] {
-        return self[Self.recursiveCaptureKey].map { $0.split(separator: "/", omittingEmptySubsequences: true) } ?? []
+    public func getCatchAll() -> [Substring] {
+        self[Self.recursiveCaptureKey].map { $0.split(separator: "/", omittingEmptySubsequences: true) } ?? []
     }
 
     /// Set path components caught by recursive capture
     /// - Parameters:
     ///   - value: parameter value
-    mutating func setCatchAll(_ value: Substring) {
+    public mutating func setCatchAll(_ value: Substring) {
         guard !self.has(Self.recursiveCaptureKey) else { return }
         self[Self.recursiveCaptureKey] = value
     }

@@ -26,7 +26,7 @@ final class TestMetrics: MetricsFactory {
 
     public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
         self.counters.withLockedValue { counters in
-            return self.make(label: label, dimensions: dimensions, registry: &counters, maker: TestCounter.init)
+            self.make(label: label, dimensions: dimensions, registry: &counters, maker: TestCounter.init)
         }
     }
 
@@ -45,7 +45,12 @@ final class TestMetrics: MetricsFactory {
         }
     }
 
-    private func make<Item>(label: String, dimensions: [(String, String)], registry: inout [String: Item], maker: (String, [(String, String)]) -> Item) -> Item {
+    private func make<Item>(
+        label: String,
+        dimensions: [(String, String)],
+        registry: inout [String: Item],
+        maker: (String, [(String, String)]) -> Item
+    ) -> Item {
         let item = maker(label, dimensions)
         registry[label] = item
         return item
@@ -103,7 +108,7 @@ internal final class TestCounter: CounterHandler, Equatable {
     }
 
     public static func == (lhs: TestCounter, rhs: TestCounter) -> Bool {
-        return lhs.id == rhs.id
+        lhs.id == rhs.id
     }
 }
 
@@ -134,7 +139,7 @@ internal final class TestRecorder: RecorderHandler, Equatable {
     }
 
     public static func == (lhs: TestRecorder, rhs: TestRecorder) -> Bool {
-        return lhs.id == rhs.id
+        lhs.id == rhs.id
     }
 }
 
@@ -159,7 +164,7 @@ internal final class TestTimer: TimerHandler, Equatable {
     }
 
     func retriveValueInPreferredUnit(atIndex i: Int) -> Double {
-        return self.values.withLockedValue { values in
+        self.values.withLockedValue { values in
             let value = values[i].1
             return self.displayUnit.withLockedValue { displayUnit in
                 guard let displayUnit else {
@@ -178,7 +183,7 @@ internal final class TestTimer: TimerHandler, Equatable {
     }
 
     public static func == (lhs: TestTimer, rhs: TestTimer) -> Bool {
-        return lhs.id == rhs.id
+        lhs.id == rhs.id
     }
 }
 
@@ -193,7 +198,7 @@ final class MetricsTests: XCTestCase {
         let router = Router()
         router.middlewares.add(MetricsMiddleware())
         router.get("/hello") { _, _ -> String in
-            return "Hello"
+            "Hello"
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -240,7 +245,7 @@ final class MetricsTests: XCTestCase {
         let router = Router()
         router.middlewares.add(MetricsMiddleware())
         router.get("/hello") { _, _ -> String in
-            return "hello"
+            "hello"
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -294,9 +299,12 @@ final class MetricsTests: XCTestCase {
         let router = Router()
         router.middlewares.add(MetricsMiddleware())
         router.get("/hello") { _, _ -> Response in
-            return Response(status: .ok, body: .init { _ in
-                try await Task.sleep(for: .milliseconds(5))
-            })
+            Response(
+                status: .ok,
+                body: .init { _ in
+                    try await Task.sleep(for: .milliseconds(5))
+                }
+            )
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in

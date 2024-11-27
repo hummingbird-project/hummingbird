@@ -16,6 +16,8 @@ import AsyncAlgorithms
 import Atomics
 import NIOCore
 import NIOPosix
+import ServiceLifecycle
+
 #if canImport(Glibc)
 import Glibc
 #elseif canImport(Musl)
@@ -25,7 +27,6 @@ import Darwin.C
 #else
 #error("Unsupported platform")
 #endif
-import ServiceLifecycle
 
 /// Current date formatted cache service
 ///
@@ -57,7 +58,7 @@ final class DateCache: Service {
     }
 
     public var date: String {
-        return self.dateContainer.load(ordering: .acquiring).date
+        self.dateContainer.load(ordering: .acquiring).date
     }
 
     /// Render Epoch seconds as RFC1123 formatted date

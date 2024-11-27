@@ -12,8 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable @_spi(Internal) import Hummingbird
 import XCTest
+
+@testable @_spi(Internal) import Hummingbird
 
 final class TrieRouterTests: XCTestCase {
     func testPathComponentsTrie() {

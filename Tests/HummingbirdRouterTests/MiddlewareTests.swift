@@ -159,10 +159,13 @@ final class MiddlewareTests: XCTestCase {
             RouteGroup("") {
                 TransformMiddleware()
                 Get("test") { request, _ in
-                    Response(status: .ok, body: .init { writer in
-                        try await writer.write(request.body)
-                        try await writer.finish([.middleware: "test"])
-                    })
+                    Response(
+                        status: .ok,
+                        body: .init { writer in
+                            try await writer.write(request.body)
+                            try await writer.finish([.middleware: "test"])
+                        }
+                    )
                 }
             }
         }

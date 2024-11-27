@@ -100,7 +100,7 @@ public struct MediaType: Sendable, CustomStringConvertible {
             }
         }
         if let category,
-           let subCategory
+            let subCategory
         {
             self.type = category
             self.subType = subCategory.lowercased()
@@ -112,7 +112,7 @@ public struct MediaType: Sendable, CustomStringConvertible {
 
     /// Return media type with new parameter
     public func withParameter(name: String, value: String) -> MediaType {
-        return .init(type: self.type, subType: self.subType, parameter: (name, value))
+        .init(type: self.type, subType: self.subType, parameter: (name, value))
     }
 
     /// Output
@@ -127,7 +127,7 @@ public struct MediaType: Sendable, CustomStringConvertible {
     /// Return if media type matches the input
     public func isType(_ type: MediaType) -> Bool {
         guard self.type == type.type,
-              self.subType == type.subType || type.subType == "*"
+            self.subType == type.subType || type.subType == "*"
         else {
             return false
         }
@@ -142,7 +142,7 @@ public struct MediaType: Sendable, CustomStringConvertible {
     /// - Parameter extension: file extension
     /// - Returns: media type
     public static func getMediaType(forExtension extension: String) -> MediaType? {
-        return extensionMediaTypeMap[`extension`]
+        extensionMediaTypeMap[`extension`]
     }
 
     /// Media type categories

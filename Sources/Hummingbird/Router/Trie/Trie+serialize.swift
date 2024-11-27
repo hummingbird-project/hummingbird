@@ -41,12 +41,12 @@ extension RouterTrie {
             token = .path(constantIndex: setStringValue(path))
         case .capture(let parameterName):
             token = .capture(parameterIndex: setStringValue(parameterName))
-        case .prefixCapture(suffix: let suffix, parameter: let parameterName):
+        case .prefixCapture(let suffix, parameter: let parameterName):
             token = .prefixCapture(
                 parameterIndex: setStringValue(parameterName),
                 suffixIndex: setStringValue(suffix)
             )
-        case .suffixCapture(prefix: let prefix, parameter: let parameterName):
+        case .suffixCapture(let prefix, parameter: let parameterName):
             token = .suffixCapture(
                 prefixIndex: setStringValue(prefix),
                 parameterIndex: setStringValue(parameterName)

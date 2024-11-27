@@ -12,9 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import Hummingbird
 import HummingbirdTesting
 import XCTest
+
+@testable import Hummingbird
 
 final class CookieTests: XCTestCase {
     func testNameValue() {
@@ -82,7 +83,7 @@ final class CookieTests: XCTestCase {
     func testSetCookieViaRequest() async throws {
         let router = Router()
         router.post("/") { _, _ in
-            return EditedResponse(headers: [.setCookie: Cookie(name: "test", value: "value").description], response: "Hello")
+            EditedResponse(headers: [.setCookie: Cookie(name: "test", value: "value").description], response: "Hello")
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -95,7 +96,7 @@ final class CookieTests: XCTestCase {
     func testReadCookieFromRequest() async throws {
         let router = Router()
         router.post("/") { request, _ -> String? in
-            return request.cookies["test"]?.value
+            request.cookies["test"]?.value
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in

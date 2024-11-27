@@ -142,7 +142,8 @@ final class FileMiddlewareTests: XCTestCase {
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
         try await app.test(.router) { client in
-            let (eTag, modificationDate) = try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=-3999"]) { response -> (String, String) in
+            let (eTag, modificationDate) = try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=-3999"]) {
+                response -> (String, String) in
                 let eTag = try XCTUnwrap(response.headers[.eTag])
                 let modificationDate = try XCTUnwrap(response.headers[.lastModified])
                 let slice = buffer.getSlice(at: 0, length: 4000)
@@ -367,11 +368,11 @@ final class FileMiddlewareTests: XCTestCase {
             }
 
             func getFileIdentifier(_ path: String) -> String? {
-                return path
+                path
             }
 
             func getAttributes(id path: String) async throws -> FileAttributes? {
-                return .init(
+                .init(
                     isFolder: path.last == "/",
                     size: path.utf8.count
                 )
@@ -438,7 +439,7 @@ final class FileMiddlewareTests: XCTestCase {
             }
 
             func getFileIdentifier(_ path: String) -> String? {
-                return path
+                path
             }
 
             func getAttributes(id path: String) async throws -> FileAttributes? {

@@ -58,11 +58,13 @@ extension RouterTrie {
             }
 
             var nodeIndex = 1
-            guard let node = descend(
-                component: component,
-                nextPathComponentIndex: 1,
-                nodeIndex: &nodeIndex
-            ) else {
+            guard
+                let node = descend(
+                    component: component,
+                    nextPathComponentIndex: 1,
+                    nodeIndex: &nodeIndex
+                )
+            else {
                 return nil
             }
 

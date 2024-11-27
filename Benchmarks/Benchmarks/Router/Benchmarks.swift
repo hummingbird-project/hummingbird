@@ -18,12 +18,12 @@ import Hummingbird
 
 let benchmarks = {
     Benchmark.defaultConfiguration = .init(
-        metrics: ProcessInfo.processInfo.environment["CI"] != nil ?
-            [
+        metrics: ProcessInfo.processInfo.environment["CI"] != nil
+            ? [
                 .instructions,
                 .mallocCountTotal,
-            ] :
-            [
+            ]
+            : [
                 .cpuTotal,
                 .instructions,
                 .mallocCountTotal,

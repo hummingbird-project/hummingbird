@@ -16,9 +16,10 @@ import HTTPTypes
 import Hummingbird
 import HummingbirdRouter
 import HummingbirdTesting
-@testable import Instrumentation
 import Tracing
 import XCTest
+
+@testable import Instrumentation
 
 final class TracingTests: XCTestCase {
     func testTracingMiddleware() async throws {
@@ -31,7 +32,7 @@ final class TracingTests: XCTestCase {
         let router = Router()
         router.middlewares.add(TracingMiddleware(attributes: ["net.host.name": "127.0.0.1", "net.host.port": 8080]))
         router.get("users/{id}") { _, _ -> String in
-            return "42"
+            "42"
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -50,14 +51,17 @@ final class TracingTests: XCTestCase {
         XCTAssertNil(span.status)
         XCTAssertTrue(span.recordedErrors.isEmpty)
 
-        XCTAssertSpanAttributesEqual(span.attributes, [
-            "http.method": "GET",
-            "http.target": "/users/42",
-            "http.status_code": 200,
-            "http.response_content_length": 2,
-            "net.host.name": "127.0.0.1",
-            "net.host.port": 8080,
-        ])
+        XCTAssertSpanAttributesEqual(
+            span.attributes,
+            [
+                "http.method": "GET",
+                "http.target": "/users/42",
+                "http.status_code": 200,
+                "http.response_content_length": 2,
+                "net.host.name": "127.0.0.1",
+                "net.host.port": 8080,
+            ]
+        )
     }
 
     func testTracingMiddlewareWithRouterBuilder() async throws {
@@ -88,14 +92,17 @@ final class TracingTests: XCTestCase {
         XCTAssertNil(span.status)
         XCTAssertTrue(span.recordedErrors.isEmpty)
 
-        XCTAssertSpanAttributesEqual(span.attributes, [
-            "http.method": "GET",
-            "http.target": "/users/42",
-            "http.status_code": 200,
-            "http.response_content_length": 2,
-            "net.host.name": "127.0.0.1",
-            "net.host.port": 8080,
-        ])
+        XCTAssertSpanAttributesEqual(
+            span.attributes,
+            [
+                "http.method": "GET",
+                "http.target": "/users/42",
+                "http.status_code": 200,
+                "http.response_content_length": 2,
+                "net.host.name": "127.0.0.1",
+                "net.host.port": 8080,
+            ]
+        )
     }
 
     func testTracingMiddlewareWithFile() async throws {
@@ -132,20 +139,23 @@ final class TracingTests: XCTestCase {
         XCTAssertNil(span.status)
         XCTAssertTrue(span.recordedErrors.isEmpty)
 
-        XCTAssertSpanAttributesEqual(span.attributes, [
-            "http.method": "GET",
-            "http.target": "/\(filename)",
-            "http.status_code": 200,
-            "http.response_content_length": .int64(Int64(text.count)),
-            "net.host.name": "127.0.0.1",
-            "net.host.port": 8080,
-        ])
+        XCTAssertSpanAttributesEqual(
+            span.attributes,
+            [
+                "http.method": "GET",
+                "http.target": "/\(filename)",
+                "http.status_code": 200,
+                "http.response_content_length": .int64(Int64(text.count)),
+                "net.host.name": "127.0.0.1",
+                "net.host.port": 8080,
+            ]
+        )
     }
 
     func testMiddlewareSkippingEndpoint() async throws {
         struct DeadendMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(_ input: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-                return .init(status: .ok)
+                .init(status: .ok)
             }
         }
         let expectation = expectation(description: "Expected span to be ended.")
@@ -177,12 +187,15 @@ final class TracingTests: XCTestCase {
         XCTAssertNil(span.status)
         XCTAssertTrue(span.recordedErrors.isEmpty)
 
-        XCTAssertSpanAttributesEqual(span.attributes, [
-            "http.method": "GET",
-            "http.target": "/test/this",
-            "http.status_code": 200,
-            "http.response_content_length": 0,
-        ])
+        XCTAssertSpanAttributesEqual(
+            span.attributes,
+            [
+                "http.method": "GET",
+                "http.target": "/test/this",
+                "http.status_code": 200,
+                "http.response_content_length": 0,
+            ]
+        )
     }
 
     func testTracingMiddlewareServerError() async throws {
@@ -216,12 +229,15 @@ final class TracingTests: XCTestCase {
         let error = try XCTUnwrap(span.recordedErrors.first?.0 as? HTTPError, "Recorded unexpected errors: \(span.recordedErrors)")
         XCTAssertEqual(error.status, .internalServerError)
 
-        XCTAssertSpanAttributesEqual(span.attributes, [
-            "http.method": "POST",
-            "http.target": "/users",
-            "http.status_code": 500,
-            "http.request_content_length": 2,
-        ])
+        XCTAssertSpanAttributesEqual(
+            span.attributes,
+            [
+                "http.method": "POST",
+                "http.target": "/users",
+                "http.status_code": 500,
+                "http.request_content_length": 2,
+            ]
+        )
     }
 
     func testTracingMiddlewareIncludingHeaders() async throws {
@@ -232,9 +248,11 @@ final class TracingTests: XCTestCase {
         InstrumentationSystem.bootstrapInternal(tracer)
 
         let router = Router()
-        router.middlewares.add(TracingMiddleware(recordingHeaders: [
-            .accept, .contentType, .cacheControl, .test,
-        ]))
+        router.middlewares.add(
+            TracingMiddleware(recordingHeaders: [
+                .accept, .contentType, .cacheControl, .test,
+            ])
+        )
         router.get("users/{id}") { _, _ -> Response in
             var headers = HTTPFields()
             headers[values: .cacheControl] = ["86400", "public"]
@@ -265,16 +283,19 @@ final class TracingTests: XCTestCase {
         XCTAssertNil(span.status)
         XCTAssertTrue(span.recordedErrors.isEmpty)
 
-        XCTAssertSpanAttributesEqual(span.attributes, [
-            "http.method": "GET",
-            "http.target": "/users/42",
-            "http.status_code": 200,
-            "http.response_content_length": 2,
-            "http.request.header.accept": .stringArray(["text/plain", "application/json"]),
-            "http.request.header.cache_control": "no-cache",
-            "http.response.header.content_type": "text/plain",
-            "http.response.header.cache_control": .stringArray(["86400", "public"]),
-        ])
+        XCTAssertSpanAttributesEqual(
+            span.attributes,
+            [
+                "http.method": "GET",
+                "http.target": "/users/42",
+                "http.status_code": 200,
+                "http.response_content_length": 2,
+                "http.request.header.accept": .stringArray(["text/plain", "application/json"]),
+                "http.request.header.cache_control": "no-cache",
+                "http.response.header.content_type": "text/plain",
+                "http.response.header.cache_control": .stringArray(["86400", "public"]),
+            ]
+        )
     }
 
     func testTracingMiddlewareEmptyResponse() async throws {
@@ -287,7 +308,7 @@ final class TracingTests: XCTestCase {
         let router = Router()
         router.middlewares.add(TracingMiddleware())
         router.post("/users") { _, _ -> HTTPResponse.Status in
-            return .noContent
+            .noContent
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -305,12 +326,15 @@ final class TracingTests: XCTestCase {
         XCTAssertNil(span.status)
         XCTAssertTrue(span.recordedErrors.isEmpty)
 
-        XCTAssertSpanAttributesEqual(span.attributes, [
-            "http.method": "POST",
-            "http.target": "/users",
-            "http.status_code": 204,
-            "http.response_content_length": 0,
-        ])
+        XCTAssertSpanAttributesEqual(
+            span.attributes,
+            [
+                "http.method": "POST",
+                "http.target": "/users",
+                "http.status_code": 204,
+                "http.response_content_length": 0,
+            ]
+        )
     }
 
     func testTracingMiddlewareIndexRoute() async throws {
@@ -323,7 +347,7 @@ final class TracingTests: XCTestCase {
         let router = Router()
         router.middlewares.add(TracingMiddleware())
         router.get("/") { _, _ -> HTTPResponse.Status in
-            return .ok
+            .ok
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -341,12 +365,15 @@ final class TracingTests: XCTestCase {
         XCTAssertNil(span.status)
         XCTAssertTrue(span.recordedErrors.isEmpty)
 
-        XCTAssertSpanAttributesEqual(span.attributes, [
-            "http.method": "GET",
-            "http.target": "/",
-            "http.status_code": 200,
-            "http.response_content_length": 0,
-        ])
+        XCTAssertSpanAttributesEqual(
+            span.attributes,
+            [
+                "http.method": "GET",
+                "http.target": "/",
+                "http.status_code": 200,
+                "http.response_content_length": 0,
+            ]
+        )
     }
 
     func testTracingMiddlewareRouteNotFound() async throws {
@@ -376,11 +403,14 @@ final class TracingTests: XCTestCase {
         let error = try XCTUnwrap(span.recordedErrors.first?.0 as? HTTPError, "Recorded unexpected errors: \(span.recordedErrors)")
         XCTAssertEqual(error.status, .notFound)
 
-        XCTAssertSpanAttributesEqual(span.attributes, [
-            "http.method": "GET",
-            "http.target": "/",
-            "http.status_code": 404,
-        ])
+        XCTAssertSpanAttributesEqual(
+            span.attributes,
+            [
+                "http.method": "GET",
+                "http.target": "/",
+                "http.status_code": 404,
+            ]
+        )
     }
 
     /// Test span is ended even if the response body with the span end is not run
@@ -403,7 +433,7 @@ final class TracingTests: XCTestCase {
         router.middlewares.add(ErrorMiddleware())
         router.middlewares.add(TracingMiddleware())
         router.get("users/:id") { _, _ -> String in
-            return "42"
+            "42"
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -434,7 +464,7 @@ final class TracingTests: XCTestCase {
         let router = Router()
         router.middlewares.add(TracingMiddleware())
         router.get("users/:id") { _, _ -> Response in
-            return Response(
+            Response(
                 status: .ok,
                 body: .init { _ in try await Task.sleep(for: .milliseconds(100)) }
             )
@@ -583,7 +613,7 @@ final class TracingTests: XCTestCase {
         router.get("/") { _, _ -> HTTPResponse.Status in
             try await Task.sleep(nanoseconds: 1000)
             return InstrumentationSystem.tracer.withAnySpan("testing", ofKind: .server) { _ in
-                return .ok
+                .ok
             }
         }
         let app = Application(responder: router.buildResponder())
