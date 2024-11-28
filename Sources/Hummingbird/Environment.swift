@@ -12,6 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
+import HummingbirdCore
+import NIOCore
+
 #if canImport(Glibc)
 import Glibc
 #elseif canImport(Musl)
@@ -21,9 +25,6 @@ import Darwin.C
 #else
 #error("Unsupported platform")
 #endif
-import Foundation
-import HummingbirdCore
-import NIOCore
 
 /// Access environment variables
 public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
@@ -76,7 +77,7 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
     /// Get environment variable with name
     /// - Parameter s: Environment variable name
     public func get(_ s: String) -> String? {
-        return self.values[s.lowercased()]
+        self.values[s.lowercased()]
     }
 
     /// Get environment variable with name as a certain type
@@ -84,7 +85,7 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
     ///   - s: Environment variable name
     ///   - as: Type we want variable to be cast to
     public func get<T: LosslessStringConvertible>(_ s: String, as: T.Type) -> T? {
-        return self.values[s.lowercased()].map { T(String($0)) } ?? nil
+        self.values[s.lowercased()].map { T(String($0)) } ?? nil
     }
 
     /// Set environment variable
@@ -136,7 +137,7 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
             }
             let fileRegion = try FileRegion(fileHandle: fileHandle)
             let contents = try fileHandle.withUnsafeFileDescriptor { descriptor in
-                return Array<UInt8>(unsafeUninitializedCapacity: fileRegion.readableBytes) { bytes, size in
+                return [UInt8](unsafeUninitializedCapacity: fileRegion.readableBytes) { bytes, size in
                     size = fileRegion.readableBytes
                     read(descriptor, .init(bytes.baseAddress), size)
                 }

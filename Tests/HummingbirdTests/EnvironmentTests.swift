@@ -13,8 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-@testable import Hummingbird
 import XCTest
+
+@testable import Hummingbird
 
 final class EnvironmentTests: XCTestCase {
     func testInitFromEnvironment() {
@@ -65,9 +66,9 @@ final class EnvironmentTests: XCTestCase {
 
     func testDotEnvLoading() async throws {
         let dotenv = """
-        TEST=this
-        CREDENTIALS=sdkfjh
-        """
+            TEST=this
+            CREDENTIALS=sdkfjh
+            """
         let data = dotenv.data(using: .utf8)
         let envURL = URL(fileURLWithPath: ".env")
         try data?.write(to: envURL)
@@ -82,8 +83,8 @@ final class EnvironmentTests: XCTestCase {
 
     func testDotEnvParsingError() throws {
         let dotenv = """
-        TEST #thse
-        """
+            TEST #thse
+            """
         do {
             _ = try Environment.parseDotEnv(dotenv)
             XCTFail("Should fail")
@@ -92,9 +93,9 @@ final class EnvironmentTests: XCTestCase {
 
     func testDotEnvSpeechMarks() throws {
         let dotenv = """
-        TEST="test this"
-        CREDENTIALS=sdkfjh
-        """
+            TEST="test this"
+            CREDENTIALS=sdkfjh
+            """
         let result = try Environment.parseDotEnv(dotenv)
         XCTAssertEqual(result["test"], "test this")
         XCTAssertEqual(result["credentials"], "sdkfjh")
@@ -102,10 +103,10 @@ final class EnvironmentTests: XCTestCase {
 
     func testDotEnvMultilineValue() throws {
         let dotenv = """
-        TEST="test
-        this"
-        CREDENTIALS=sdkfjh
-        """
+            TEST="test
+            this"
+            CREDENTIALS=sdkfjh
+            """
         let result = try Environment.parseDotEnv(dotenv)
         XCTAssertEqual(result["test"], "test\nthis")
         XCTAssertEqual(result["credentials"], "sdkfjh")
@@ -113,11 +114,11 @@ final class EnvironmentTests: XCTestCase {
 
     func testDotEnvComments() throws {
         let dotenv = """
-        # Comment 
-        TEST=this # Comment at end of line
-        CREDENTIALS=sdkfjh
-        # Comment at end
-        """
+            # Comment 
+            TEST=this # Comment at end of line
+            CREDENTIALS=sdkfjh
+            # Comment at end
+            """
         let result = try Environment.parseDotEnv(dotenv)
         XCTAssertEqual(result["test"], "this")
         XCTAssertEqual(result["credentials"], "sdkfjh")
@@ -125,11 +126,11 @@ final class EnvironmentTests: XCTestCase {
 
     func testDotEnvCommentAndEmptyLine() throws {
         let dotenv = """
-        FOO=BAR
-        #BAZ=
+            FOO=BAR
+            #BAZ=
 
 
-        """
+            """
         let result = try Environment.parseDotEnv(dotenv)
         XCTAssertEqual(result["foo"], "BAR")
         XCTAssertEqual(result.count, 1)
@@ -137,9 +138,9 @@ final class EnvironmentTests: XCTestCase {
 
     func testEmptyLineAtEnd() throws {
         let dotenv = """
-        FOO=BAR
+            FOO=BAR
 
-        """
+            """
         let result = try Environment.parseDotEnv(dotenv)
         XCTAssertEqual(result["foo"], "BAR")
         XCTAssertEqual(result.count, 1)
@@ -147,8 +148,8 @@ final class EnvironmentTests: XCTestCase {
 
     func testDotEnvOverridingEnvironment() async throws {
         let dotenv = """
-        TEST_VAR=testDotEnvOverridingEnvironment
-        """
+            TEST_VAR=testDotEnvOverridingEnvironment
+            """
         let data = dotenv.data(using: .utf8)
         let envURL = URL(fileURLWithPath: ".override.env")
         try data?.write(to: envURL)

@@ -42,7 +42,8 @@ public struct _RouteHandlerClosure<RouteOutput: ResponseGenerator, Context: Rout
 /// This is used internally to implement `Route` when it is initialized with a middleware built
 /// from the ``RouteBuilder`` result builder.
 @_documentation(visibility: internal)
-public struct _RouteHandlerMiddleware<M0: MiddlewareProtocol>: _RouteHandlerProtocol where M0.Input == Request, M0.Output == Response, M0.Context: RouterRequestContext {
+public struct _RouteHandlerMiddleware<M0: MiddlewareProtocol>: _RouteHandlerProtocol
+where M0.Input == Request, M0.Output == Response, M0.Context: RouterRequestContext {
     public typealias Context = M0.Context
 
     /// Dummy function passed to middleware handle

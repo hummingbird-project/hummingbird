@@ -33,7 +33,7 @@ public struct FlatDictionary<Key: Hashable, Value>: Collection, ExpressibleByDic
     /// The position of the element just after the last element
     public var endIndex: Index { self.elements.endIndex }
     /// Access element at specific position
-    public subscript(_ index: Index) -> Element { return self.elements[index] }
+    public subscript(_ index: Index) -> Element { self.elements[index] }
     /// Returns the index immediately after the given index
     public func index(after index: Index) -> Index { self.elements.index(after: index) }
 

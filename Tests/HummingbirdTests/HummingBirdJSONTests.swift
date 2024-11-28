@@ -47,7 +47,7 @@ final class HummingbirdJSONTests: XCTestCase {
     func testEncode() async throws {
         let router = Router()
         router.get("/user") { _, _ -> User in
-            return User(name: "John Smith", email: "john.smith@email.com", age: 25)
+            User(name: "John Smith", email: "john.smith@email.com", age: 25)
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -63,7 +63,7 @@ final class HummingbirdJSONTests: XCTestCase {
     func testEncode2() async throws {
         let router = Router()
         router.get("/json") { _, _ in
-            return ["message": "Hello, world!"]
+            ["message": "Hello, world!"]
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in

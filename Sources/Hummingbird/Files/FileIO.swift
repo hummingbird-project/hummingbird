@@ -36,7 +36,11 @@ public struct FileIO: Sendable {
     ///   - context: Context this request is being called in
     ///   - chunkLength: Size of the chunks read from disk and loaded into memory (in bytes). Defaults to the value suggested by `swift-nio`.
     /// - Returns: Response body
-    public func loadFile(path: String, context: some RequestContext, chunkLength: Int = NonBlockingFileIO.defaultChunkSize) async throws -> ResponseBody {
+    public func loadFile(
+        path: String,
+        context: some RequestContext,
+        chunkLength: Int = NonBlockingFileIO.defaultChunkSize
+    ) async throws -> ResponseBody {
         do {
             let stat = try await fileIO.lstat(path: path)
             guard stat.st_size > 0 else { return .init() }
@@ -56,7 +60,12 @@ public struct FileIO: Sendable {
     ///   - context: Context this request is being called in
     ///   - chunkLength: Size of the chunks read from disk and loaded into memory (in bytes). Defaults to the value suggested by `swift-nio`.
     /// - Returns: Response body plus file size
-    public func loadFile(path: String, range: ClosedRange<Int>, context: some RequestContext, chunkLength: Int = NonBlockingFileIO.defaultChunkSize) async throws -> ResponseBody {
+    public func loadFile(
+        path: String,
+        range: ClosedRange<Int>,
+        context: some RequestContext,
+        chunkLength: Int = NonBlockingFileIO.defaultChunkSize
+    ) async throws -> ResponseBody {
         do {
             let stat = try await fileIO.lstat(path: path)
             guard stat.st_size > 0 else { return .init() }
@@ -105,8 +114,13 @@ public struct FileIO: Sendable {
     }
 
     /// Return response body that will read file
-    func readFile(path: String, range: ClosedRange<Int>, context: some RequestContext, chunkLength: Int = NonBlockingFileIO.defaultChunkSize) -> ResponseBody {
-        return ResponseBody(contentLength: range.count) { writer in
+    func readFile(
+        path: String,
+        range: ClosedRange<Int>,
+        context: some RequestContext,
+        chunkLength: Int = NonBlockingFileIO.defaultChunkSize
+    ) -> ResponseBody {
+        ResponseBody(contentLength: range.count) { writer in
             try await self.fileIO.withFileHandle(path: path, mode: .read) { handle in
                 let endOffset = range.endIndex
                 let chunkLength = chunkLength

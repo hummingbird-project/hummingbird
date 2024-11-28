@@ -12,11 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import Hummingbird
 import HummingbirdTesting
 import Logging
 import NIOConcurrencyHelpers
 import XCTest
+
+@testable import Hummingbird
 
 final class MiddlewareTests: XCTestCase {
     static func randomBuffer(size: Int) -> ByteBuffer {
@@ -36,7 +37,7 @@ final class MiddlewareTests: XCTestCase {
         let router = Router()
         router.add(middleware: TestMiddleware())
         router.get("/hello") { _, _ -> String in
-            return "Hello"
+            "Hello"
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -59,7 +60,7 @@ final class MiddlewareTests: XCTestCase {
         router.add(middleware: TestMiddleware(string: "first"))
         router.add(middleware: TestMiddleware(string: "second"))
         router.get("/hello") { _, _ -> String in
-            return "Hello"
+            "Hello"
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -83,7 +84,7 @@ final class MiddlewareTests: XCTestCase {
         let router = Router()
         router.add(middleware: TestMiddleware())
         router.get("/hello") { _, _ -> String in
-            return "Hello"
+            "Hello"
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -134,7 +135,7 @@ final class MiddlewareTests: XCTestCase {
         router.group()
             .add(middleware: TestMiddleware())
             .get("test") { _, _ in
-                return "test"
+                "test"
             }
         let app = Application(responder: router.buildResponder())
 
@@ -171,7 +172,7 @@ final class MiddlewareTests: XCTestCase {
         router.group()
             .add(middleware: TransformMiddleware())
             .get("test") { request, _ in
-                return Response(status: .ok, body: .init(asyncSequence: request.body))
+                Response(status: .ok, body: .init(asyncSequence: request.body))
             }
         let app = Application(responder: router.buildResponder())
 
@@ -202,7 +203,7 @@ final class MiddlewareTests: XCTestCase {
                 let response = try await next(request, context)
                 var editedResponse = response
                 editedResponse.body = editedResponse.body.map {
-                    return ByteBuffer(bytes: $0.readableBytesView.map { $0 ^ 255 })
+                    ByteBuffer(bytes: $0.readableBytesView.map { $0 ^ 255 })
                 }
                 return editedResponse
             }
@@ -211,7 +212,7 @@ final class MiddlewareTests: XCTestCase {
         router.group()
             .add(middleware: TransformMiddleware())
             .get("test") { request, _ in
-                return Response(status: .ok, body: .init(asyncSequence: request.body))
+                Response(status: .ok, body: .init(asyncSequence: request.body))
             }
         let app = Application(responder: router.buildResponder())
 
@@ -228,7 +229,7 @@ final class MiddlewareTests: XCTestCase {
         let router = Router()
         router.add(middleware: CORSMiddleware())
         router.get("/hello") { _, _ -> String in
-            return "Hello"
+            "Hello"
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -243,7 +244,7 @@ final class MiddlewareTests: XCTestCase {
         let router = Router()
         router.add(middleware: CORSMiddleware(allowOrigin: .all))
         router.get("/hello") { _, _ -> String in
-            return "Hello"
+            "Hello"
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -256,29 +257,31 @@ final class MiddlewareTests: XCTestCase {
 
     func testCORSOptions() async throws {
         let router = Router()
-        router.add(middleware: CORSMiddleware(
-            allowOrigin: .all,
-            allowHeaders: [.contentType, .authorization],
-            allowMethods: [.get, .put, .delete, .options],
-            allowCredentials: true,
-            exposedHeaders: ["content-length"],
-            maxAge: .seconds(3600)
-        ))
+        router.add(
+            middleware: CORSMiddleware(
+                allowOrigin: .all,
+                allowHeaders: [.contentType, .authorization],
+                allowMethods: [.get, .put, .delete, .options],
+                allowCredentials: true,
+                exposedHeaders: ["content-length"],
+                maxAge: .seconds(3600)
+            )
+        )
         router.get("/hello") { _, _ -> String in
-            return "Hello"
+            "Hello"
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .options, headers: [.origin: "foo.com"]) { response in
                 // headers come back in opposite order as middleware is applied to responses in that order
                 XCTAssertEqual(response.headers[.accessControlAllowOrigin], "*")
-                let headers = response.headers[.accessControlAllowHeaders] // .joined(separator: ", ")
+                let headers = response.headers[.accessControlAllowHeaders]  // .joined(separator: ", ")
                 XCTAssertEqual(headers, "content-type, authorization")
-                let methods = response.headers[.accessControlAllowMethods] // .joined(separator: ", ")
+                let methods = response.headers[.accessControlAllowMethods]  // .joined(separator: ", ")
                 XCTAssertEqual(methods, "GET, PUT, DELETE, OPTIONS")
                 XCTAssertEqual(response.headers[.accessControlAllowCredentials], "true")
                 XCTAssertEqual(response.headers[.accessControlMaxAge], "3600")
-                let exposedHeaders = response.headers[.accessControlExposeHeaders] // .joined(separator: ", ")
+                let exposedHeaders = response.headers[.accessControlExposeHeaders]  // .joined(separator: ", ")
                 XCTAssertEqual(exposedHeaders, "content-length")
             }
         }
@@ -301,7 +304,7 @@ final class MiddlewareTests: XCTestCase {
         let router = Router()
         router.add(middleware: LogRequestsMiddleware(.info))
         router.get("test") { _, _ in
-            return HTTPResponse.Status.ok
+            HTTPResponse.Status.ok
         }
         let app = Application(
             responder: router.buildResponder(),
@@ -329,13 +332,13 @@ final class MiddlewareTests: XCTestCase {
         let router = Router()
         router.group()
             .add(middleware: LogRequestsMiddleware(.info, includeHeaders: .all(except: [.connection])))
-            .get("all") { _, _ in return HTTPResponse.Status.ok }
+            .get("all") { _, _ in HTTPResponse.Status.ok }
         router.group()
             .add(middleware: LogRequestsMiddleware(.info, includeHeaders: .none))
-            .get("none") { _, _ in return HTTPResponse.Status.ok }
+            .get("none") { _, _ in HTTPResponse.Status.ok }
         router.group()
             .add(middleware: LogRequestsMiddleware(.info, includeHeaders: [.contentType]))
-            .get("some") { _, _ in return HTTPResponse.Status.ok }
+            .get("some") { _, _ in HTTPResponse.Status.ok }
         let app = Application(
             responder: router.buildResponder(),
             logger: Logger(label: "TestLogging") { label in
@@ -384,10 +387,10 @@ final class MiddlewareTests: XCTestCase {
         let router = Router()
         router.group()
             .add(middleware: LogRequestsMiddleware(.info, includeHeaders: .all(), redactHeaders: [.authorization]))
-            .get("all") { _, _ in return HTTPResponse.Status.ok }
+            .get("all") { _, _ in HTTPResponse.Status.ok }
         router.group()
             .add(middleware: LogRequestsMiddleware(.info, includeHeaders: [.authorization], redactHeaders: [.authorization]))
-            .get("some") { _, _ in return HTTPResponse.Status.ok }
+            .get("some") { _, _ in HTTPResponse.Status.ok }
         let app = Application(
             responder: router.buildResponder(),
             logger: Logger(label: "TestLogging") { label in
@@ -426,7 +429,7 @@ final class MiddlewareTests: XCTestCase {
         let router = Router()
         router.add(middleware: LogRequestsMiddleware(.info, includeHeaders: [.test]))
         router.get("test") { _, _ in
-            return HTTPResponse.Status.ok
+            HTTPResponse.Status.ok
         }
         let app = Application(
             responder: router.buildResponder(),
@@ -458,7 +461,7 @@ final class MiddlewareTests: XCTestCase {
             TestMiddleware(string: "second")
         }
         router.get("/hello") { _, _ -> String in
-            return "Hello"
+            "Hello"
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -576,9 +579,12 @@ final class MiddlewareTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
-                XCTAssertEqual(response.headers[values: .test], (0..<limit).reversed().map {
-                    String($0)
-                })
+                XCTAssertEqual(
+                    response.headers[values: .test],
+                    (0..<limit).reversed().map {
+                        String($0)
+                    }
+                )
             }
         }
     }

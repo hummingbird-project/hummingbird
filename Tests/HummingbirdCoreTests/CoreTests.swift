@@ -384,10 +384,12 @@ final class HummingBirdCoreTests: XCTestCase {
                 }
                 try await responseWriter.writeResponse(.init(status: .ok))
             },
-            httpChannelSetup: .http1(configuration: .init(
-                additionalChannelHandlers: [HTTPServerIncompleteRequest()],
-                idleTimeout: .seconds(1)
-            )),
+            httpChannelSetup: .http1(
+                configuration: .init(
+                    additionalChannelHandlers: [HTTPServerIncompleteRequest()],
+                    idleTimeout: .seconds(1)
+                )
+            ),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "Hummingbird")
@@ -422,10 +424,12 @@ final class HummingBirdCoreTests: XCTestCase {
                 }
                 try await responseWriter.writeResponse(.init(status: .ok))
             },
-            httpChannelSetup: .http1(configuration: .init(
-                additionalChannelHandlers: [HTTPServerIncompleteRequest()],
-                idleTimeout: .seconds(1)
-            )),
+            httpChannelSetup: .http1(
+                configuration: .init(
+                    additionalChannelHandlers: [HTTPServerIncompleteRequest()],
+                    idleTimeout: .seconds(1)
+                )
+            ),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "Hummingbird")
@@ -561,6 +565,6 @@ extension DelayAsyncSequence: Sendable where CoreSequence: Sendable {}
 
 extension AsyncSequence {
     func delayed() -> DelayAsyncSequence<Self> {
-        return .init(seq: self)
+        .init(seq: self)
     }
 }

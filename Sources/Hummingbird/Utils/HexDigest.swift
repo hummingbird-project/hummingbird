@@ -15,7 +15,7 @@
 extension Sequence<UInt8> {
     /// return a hexEncoded string buffer from an array of bytes
     func hexDigest() -> String {
-        return self.map { String($0, radix: 16, padding: 2) }.joined(separator: "")
+        self.map { String($0, radix: 16, padding: 2) }.joined(separator: "")
     }
 }
 

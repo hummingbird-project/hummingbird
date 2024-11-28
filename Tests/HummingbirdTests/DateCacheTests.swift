@@ -13,9 +13,10 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-@testable import Hummingbird
 import HummingbirdTesting
 import XCTest
+
+@testable import Hummingbird
 
 final class HummingbirdDateTests: XCTestCase {
     func testRFC1123Renderer() {
@@ -33,7 +34,7 @@ final class HummingbirdDateTests: XCTestCase {
     func testDateHeader() async throws {
         let router = Router()
         router.get("date") { _, _ in
-            return "hello"
+            "hello"
         }
         let app = Application(responder: router.buildResponder())
 

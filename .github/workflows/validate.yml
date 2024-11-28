@@ -8,16 +8,12 @@ concurrency:
 
 jobs:
   validate:
-    runs-on: macOS-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
     - name: Checkout
       uses: actions/checkout@v4
       with:
         fetch-depth: 1
-    - name: Install Dependencies
-      run: |
-        brew install mint
-        mint install NickLockwood/SwiftFormat@0.53.10 --no-link
     - name: run script
       run: ./scripts/validate.sh

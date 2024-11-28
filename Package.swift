@@ -123,21 +123,26 @@ let package = Package(
             swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
         ),
         // test targets
-        .testTarget(name: "HummingbirdTests", dependencies: [
-            .byName(name: "Hummingbird"),
-            .byName(name: "HummingbirdTLS"),
-            .byName(name: "HummingbirdHTTP2"),
-            .byName(name: "HummingbirdTesting"),
-            .byName(name: "HummingbirdRouter"),
-        ]),
-        .testTarget(name: "HummingbirdRouterTests", dependencies: [
-            .byName(name: "HummingbirdRouter"),
-            .byName(name: "HummingbirdTesting"),
-        ]),
+        .testTarget(
+            name: "HummingbirdTests",
+            dependencies: [
+                .byName(name: "Hummingbird"),
+                .byName(name: "HummingbirdTLS"),
+                .byName(name: "HummingbirdHTTP2"),
+                .byName(name: "HummingbirdTesting"),
+                .byName(name: "HummingbirdRouter"),
+            ]
+        ),
+        .testTarget(
+            name: "HummingbirdRouterTests",
+            dependencies: [
+                .byName(name: "HummingbirdRouter"),
+                .byName(name: "HummingbirdTesting"),
+            ]
+        ),
         .testTarget(
             name: "HummingbirdCoreTests",
-            dependencies:
-            [
+            dependencies: [
                 .byName(name: "HummingbirdCore"),
                 .byName(name: "HummingbirdTLS"),
                 .byName(name: "HummingbirdTesting"),
@@ -147,8 +152,7 @@ let package = Package(
         ),
         .testTarget(
             name: "HummingbirdHTTP2Tests",
-            dependencies:
-            [
+            dependencies: [
                 .byName(name: "HummingbirdCore"),
                 .byName(name: "HummingbirdHTTP2"),
                 .byName(name: "HummingbirdTesting"),

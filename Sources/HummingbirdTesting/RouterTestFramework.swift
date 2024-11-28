@@ -14,12 +14,12 @@
 
 import Atomics
 import HTTPTypes
-import NIOEmbedded
 @_spi(Internal) import Hummingbird
 @_spi(Internal) import HummingbirdCore
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
+import NIOEmbedded
 import NIOHTTPTypes
 import NIOPosix
 import ServiceLifecycle
@@ -98,7 +98,7 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
         let makeContext: @Sendable (Logger) -> Responder.Context
 
         func executeRequest(uri: String, method: HTTPRequest.Method, headers: HTTPFields, body: ByteBuffer?) async throws -> TestResponse {
-            return try await withThrowingTaskGroup(of: TestResponse.self) { group in
+            try await withThrowingTaskGroup(of: TestResponse.self) { group in
                 var headers = headers
                 if let contentLength = body.map(\.readableBytes) {
                     headers[.contentLength] = String(describing: contentLength)
