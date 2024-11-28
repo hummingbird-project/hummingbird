@@ -174,7 +174,11 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
 
 /// Parse URL encoded key
 enum KeyParser {
-    enum KeyType: Equatable { case map(Substring), array, arrayWithIndices(Int) }
+    enum KeyType: Equatable {
+        case map(Substring)
+        case array
+        case arrayWithIndices(Int)
+    }
 
     static func parse(_ key: String) -> [KeyType]? {
         var index = key.startIndex
