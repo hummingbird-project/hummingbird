@@ -137,7 +137,7 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
             }
             let fileRegion = try FileRegion(fileHandle: fileHandle)
             let contents = try fileHandle.withUnsafeFileDescriptor { descriptor in
-                return [UInt8](unsafeUninitializedCapacity: fileRegion.readableBytes) { bytes, size in
+                [UInt8](unsafeUninitializedCapacity: fileRegion.readableBytes) { bytes, size in
                     size = fileRegion.readableBytes
                     read(descriptor, .init(bytes.baseAddress), size)
                 }

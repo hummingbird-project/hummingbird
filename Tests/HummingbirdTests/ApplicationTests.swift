@@ -588,7 +588,7 @@ final class ApplicationTests: XCTestCase {
             var responder: some HTTPResponder<Context> {
                 let router = Router(context: Context.self)
                 router.get("/hello") { _, _ -> ByteBuffer in
-                    return ByteBuffer(string: "GET: Hello")
+                    ByteBuffer(string: "GET: Hello")
                 }
                 return router.buildResponder()
             }
@@ -610,7 +610,7 @@ final class ApplicationTests: XCTestCase {
         }
         let app = Application(
             responder: CallbackResponder { (_: Request, _: EmptyRequestContext) in
-                return Response(status: .ok)
+                Response(status: .ok)
             }
         )
         try await app.test(.live) { client in
