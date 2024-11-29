@@ -171,7 +171,8 @@ private class _URLEncodedFormEncoder: Encoder {
         }
 
         mutating func nestedContainer<NestedKey>(
-            keyedBy keyType: NestedKey.Type, forKey key: Key
+            keyedBy keyType: NestedKey.Type,
+            forKey key: Key
         ) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
             self.encoder.codingPath.append(key)
             defer { self.encoder.codingPath.removeLast() }
