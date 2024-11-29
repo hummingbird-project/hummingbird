@@ -41,7 +41,7 @@ public func testServer<Value: Sendable>(
     configuration: ServerConfiguration,
     eventLoopGroup: EventLoopGroup,
     logger: Logger,
-    _ test: @escaping @Sendable (Int) async throws -> Value
+    test: @escaping @Sendable (Int) async throws -> Value
 ) async throws -> Value {
     try await withThrowingTaskGroup(of: Void.self) { group in
         let promise = Promise<Int>()

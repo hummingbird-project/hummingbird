@@ -135,18 +135,19 @@ final class HummingBirdHTTP2Tests: XCTestCase {
             ),
             configuration: .init(address: .hostname(port: 0), serverName: testServerName),
             eventLoopGroup: eventLoopGroup,
-            logger: logger
-        ) { port in
-            var tlsConfiguration = try getClientTLSConfiguration()
-            // no way to override the SSL server name with AsyncHTTPClient so need to set
-            // hostname verification off
-            tlsConfiguration.certificateVerification = .noHostnameVerification
-            try await withHTTPClient(.init(tlsConfiguration: tlsConfiguration)) { httpClient in
-                let request = HTTPClientRequest(url: "https://localhost:\(port)/")
-                let response = try await httpClient.execute(request, deadline: .now() + .seconds(30))
-                XCTAssertEqual(response.status, .ok)
+            logger: logger,
+            test: { port in
+                var tlsConfiguration = try getClientTLSConfiguration()
+                // no way to override the SSL server name with AsyncHTTPClient so need to set
+                // hostname verification off
+                tlsConfiguration.certificateVerification = .noHostnameVerification
+                try await withHTTPClient(.init(tlsConfiguration: tlsConfiguration)) { httpClient in
+                    let request = HTTPClientRequest(url: "https://localhost:\(port)/")
+                    let response = try await httpClient.execute(request, deadline: .now() + .seconds(30))
+                    XCTAssertEqual(response.status, .ok)
+                }
             }
-        }
+        )
     }
 
     func testHTTP1Connect() async throws {
@@ -161,28 +162,29 @@ final class HummingBirdHTTP2Tests: XCTestCase {
             httpChannelSetup: .http2Upgrade(tlsConfiguration: getServerTLSConfiguration()),
             configuration: .init(address: .hostname(port: 0), serverName: testServerName),
             eventLoopGroup: eventLoopGroup,
-            logger: logger
-        ) { port in
-            var tlsConfiguration = try getClientTLSConfiguration()
-            // no way to override the SSL server name with AsyncHTTPClient so need to set
-            // hostname verification off
-            tlsConfiguration.certificateVerification = .noHostnameVerification
-            let client = TestClient(
-                host: "localhost",
-                port: port,
-                configuration: .init(tlsConfiguration: tlsConfiguration),
-                eventLoopGroupProvider: .shared(eventLoopGroup)
-            )
-            client.connect()
-            let response: TestClient.Response
-            do {
-                response = try await client.get("/")
-            } catch {
-                try? await client.shutdown()
-                throw error
+            logger: logger,
+            test: { port in
+                var tlsConfiguration = try getClientTLSConfiguration()
+                // no way to override the SSL server name with AsyncHTTPClient so need to set
+                // hostname verification off
+                tlsConfiguration.certificateVerification = .noHostnameVerification
+                let client = TestClient(
+                    host: "localhost",
+                    port: port,
+                    configuration: .init(tlsConfiguration: tlsConfiguration),
+                    eventLoopGroupProvider: .shared(eventLoopGroup)
+                )
+                client.connect()
+                let response: TestClient.Response
+                do {
+                    response = try await client.get("/")
+                } catch {
+                    try? await client.shutdown()
+                    throw error
+                }
+                try await client.shutdown()
+                XCTAssertEqual(response.status, .ok)
             }
-            try await client.shutdown()
-            XCTAssertEqual(response.status, .ok)
-        }
+        )
     }
 }
