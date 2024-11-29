@@ -57,6 +57,7 @@ public final class Router<Context: RequestContext>: RouterMethods, HTTPResponder
     /// build responder from router
     public func buildResponder() -> RouterResponder<Context> {
         if self.options.contains(.autoGenerateHeadEndpoints) {
+            // swift-format-ignore: ReplaceForEachWithForLoop
             self.trie.forEach { node in
                 node.value?.autoGenerateHeadEndpoint()
             }
