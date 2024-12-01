@@ -38,7 +38,7 @@ final class MiddlewareTests: XCTestCase {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             TestMiddleware()
             Get("/hello") { _, _ -> String in
-                return "Hello"
+                "Hello"
             }
         }
         let app = Application(responder: router)
@@ -62,7 +62,7 @@ final class MiddlewareTests: XCTestCase {
             TestMiddleware(string: "first")
             TestMiddleware(string: "second")
             Get("/hello") { _, _ -> String in
-                return "Hello"
+                "Hello"
             }
         }
         let app = Application(responder: router)
@@ -87,7 +87,7 @@ final class MiddlewareTests: XCTestCase {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             TestMiddleware()
             Get("/hello") { _, _ -> String in
-                return "Hello"
+                "Hello"
             }
         }
         let app = Application(responder: router)

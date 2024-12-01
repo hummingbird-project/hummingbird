@@ -78,7 +78,7 @@ public func testServer<Value: Sendable>(
     eventLoopGroup: EventLoopGroup,
     logger: Logger,
     clientConfiguration: TestClient.Configuration = .init(),
-    _ test: @escaping @Sendable (TestClient) async throws -> Value
+    test: @escaping @Sendable (TestClient) async throws -> Value
 ) async throws -> Value {
     try await testServer(
         responder: responder,

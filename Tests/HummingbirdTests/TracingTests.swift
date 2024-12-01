@@ -659,6 +659,7 @@ private func XCTAssertSpanAttributesEqual(
 ) {
     var rhs = rhs()
 
+    // swift-format-ignore: ReplaceForEachWithForLoop
     lhs().forEach { key, attribute in
         if let rhsValue = rhs.removeValue(forKey: key) {
             if rhsValue != attribute {

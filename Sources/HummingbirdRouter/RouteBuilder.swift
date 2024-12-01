@@ -50,8 +50,9 @@ public struct Handle<HandlerOutput: ResponseGenerator, Context: RouterRequestCon
 @resultBuilder
 public enum RouteBuilder<Context: RouterRequestContext> {
     /// Provide generic requirements for MiddlewareProtocol
-    public static func buildExpression<M0: MiddlewareProtocol>(_ m0: M0) -> M0
-    where M0.Input == Request, M0.Output == Response, M0.Context == Context {
+    public static func buildExpression<M0: MiddlewareProtocol>(
+        _ m0: M0
+    ) -> M0 where M0.Input == Request, M0.Output == Response, M0.Context == Context {
         m0
     }
 

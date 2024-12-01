@@ -177,13 +177,14 @@ final class HummingBirdCoreTests: XCTestCase {
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
-        ) { client in
-            let buffer = Self.randomBuffer(size: 1_140_000)
-            let response = try await client.post("/", body: buffer)
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(body, buffer)
-        }
+            logger: Logger(label: "Hummingbird"),
+            test: { client in
+                let buffer = Self.randomBuffer(size: 1_140_000)
+                let response = try await client.post("/", body: buffer)
+                let body = try XCTUnwrap(response.body)
+                XCTAssertEqual(body, buffer)
+            }
+        )
     }
 
     func testWriteBody() async throws {
@@ -196,12 +197,13 @@ final class HummingBirdCoreTests: XCTestCase {
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
-        ) { client in
-            let response = try await client.get("/")
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(body.readableBytes, 1_140_000)
-        }
+            logger: Logger(label: "Hummingbird"),
+            test: { client in
+                let response = try await client.get("/")
+                let body = try XCTUnwrap(response.body)
+                XCTAssertEqual(body.readableBytes, 1_140_000)
+            }
+        )
     }
 
     func testStreamBody() async throws {
@@ -213,13 +215,14 @@ final class HummingBirdCoreTests: XCTestCase {
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
-        ) { client in
-            let buffer = Self.randomBuffer(size: 1_140_000)
-            let response = try await client.post("/", body: buffer)
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(body, buffer)
-        }
+            logger: Logger(label: "Hummingbird"),
+            test: { client in
+                let buffer = Self.randomBuffer(size: 1_140_000)
+                let response = try await client.post("/", body: buffer)
+                let body = try XCTUnwrap(response.body)
+                XCTAssertEqual(body, buffer)
+            }
+        )
     }
 
     func testStreamBodyWriteSlow() async throws {
@@ -231,13 +234,14 @@ final class HummingBirdCoreTests: XCTestCase {
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
-        ) { client in
-            let buffer = Self.randomBuffer(size: 1_140_000)
-            let response = try await client.post("/", body: buffer)
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(body, buffer)
-        }
+            logger: Logger(label: "Hummingbird"),
+            test: { client in
+                let buffer = Self.randomBuffer(size: 1_140_000)
+                let response = try await client.post("/", body: buffer)
+                let body = try XCTUnwrap(response.body)
+                XCTAssertEqual(body, buffer)
+            }
+        )
     }
 
     func testStreamBodySlowStream() async throws {
@@ -262,13 +266,14 @@ final class HummingBirdCoreTests: XCTestCase {
             httpChannelSetup: .http1(configuration: .init(additionalChannelHandlers: [SlowInputChannelHandler()])),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
-        ) { client in
-            let buffer = Self.randomBuffer(size: 1_140_000)
-            let response = try await client.post("/", body: buffer)
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(body, buffer)
-        }
+            logger: Logger(label: "Hummingbird"),
+            test: { client in
+                let buffer = Self.randomBuffer(size: 1_140_000)
+                let response = try await client.post("/", body: buffer)
+                let body = try XCTUnwrap(response.body)
+                XCTAssertEqual(body, buffer)
+            }
+        )
     }
 
     func testTrailerHeaders() async throws {
@@ -280,11 +285,12 @@ final class HummingBirdCoreTests: XCTestCase {
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
-        ) { client in
-            let response = try await client.get("/")
-            XCTAssertEqual(response.trailerHeaders?[.contentType], "text")
-        }
+            logger: Logger(label: "Hummingbird"),
+            test: { client in
+                let response = try await client.get("/")
+                XCTAssertEqual(response.trailerHeaders?[.contentType], "text")
+            }
+        )
     }
 
     func testChannelHandlerErrorPropagation() async throws {
@@ -316,12 +322,13 @@ final class HummingBirdCoreTests: XCTestCase {
             httpChannelSetup: .http1(configuration: .init(additionalChannelHandlers: [CreateErrorHandler()])),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
-        ) { client in
-            let buffer = Self.randomBuffer(size: 32)
-            let response = try await client.post("/", body: buffer)
-            XCTAssertEqual(response.status, .unavailableForLegalReasons)
-        }
+            logger: Logger(label: "Hummingbird"),
+            test: { client in
+                let buffer = Self.randomBuffer(size: 32)
+                let response = try await client.post("/", body: buffer)
+                XCTAssertEqual(response.status, .unavailableForLegalReasons)
+            }
+        )
     }
 
     func testDropRequestBody() async throws {
@@ -332,14 +339,15 @@ final class HummingBirdCoreTests: XCTestCase {
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
-        ) { client in
-            let buffer = Self.randomBuffer(size: 16384)
-            let response = try await client.post("/", body: buffer)
-            XCTAssertEqual(response.status, .accepted)
-            let response2 = try await client.post("/", body: buffer)
-            XCTAssertEqual(response2.status, .accepted)
-        }
+            logger: Logger(label: "Hummingbird"),
+            test: { client in
+                let buffer = Self.randomBuffer(size: 16384)
+                let response = try await client.post("/", body: buffer)
+                XCTAssertEqual(response.status, .accepted)
+                let response2 = try await client.post("/", body: buffer)
+                XCTAssertEqual(response2.status, .accepted)
+            }
+        )
     }
 
     /// test server closes connection if "connection" header is set to "close"
@@ -348,14 +356,15 @@ final class HummingBirdCoreTests: XCTestCase {
             responder: helloResponder,
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
-        ) { client in
-            try await withTimeout(.seconds(5)) {
-                _ = try await client.get("/", headers: [.connection: "close"])
-                let channel = try await client.channelPromise.futureResult.get()
-                try await channel.closeFuture.get()
+            logger: Logger(label: "Hummingbird"),
+            test: { client in
+                try await withTimeout(.seconds(5)) {
+                    _ = try await client.get("/", headers: [.connection: "close"])
+                    let channel = try await client.channelPromise.futureResult.get()
+                    try await channel.closeFuture.get()
+                }
             }
-        }
+        )
     }
 
     func testUnfinishedReadIdleHandler() async throws {
@@ -392,18 +401,19 @@ final class HummingBirdCoreTests: XCTestCase {
             ),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
-        ) { client in
-            try await withTimeout(.seconds(5)) {
-                do {
-                    _ = try await client.get("/", headers: [.connection: "keep-alive"])
-                    XCTFail("Should not get here")
-                } catch TestClient.Error.connectionClosing {
-                } catch {
-                    XCTFail("Unexpected error: \(error)")
+            logger: Logger(label: "Hummingbird"),
+            test: { client in
+                try await withTimeout(.seconds(5)) {
+                    do {
+                        _ = try await client.get("/", headers: [.connection: "keep-alive"])
+                        XCTFail("Should not get here")
+                    } catch TestClient.Error.connectionClosing {
+                    } catch {
+                        XCTFail("Unexpected error: \(error)")
+                    }
                 }
             }
-        }
+        )
     }
 
     func testUninitiatedReadIdleHandler() async throws {
@@ -432,18 +442,19 @@ final class HummingBirdCoreTests: XCTestCase {
             ),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
-        ) { client in
-            try await withTimeout(.seconds(5)) {
-                do {
-                    _ = try await client.get("/", headers: [.connection: "keep-alive"])
-                    XCTFail("Should not get here")
-                } catch TestClient.Error.connectionClosing {
-                } catch {
-                    XCTFail("Unexpected error: \(error)")
+            logger: Logger(label: "Hummingbird"),
+            test: { client in
+                try await withTimeout(.seconds(5)) {
+                    do {
+                        _ = try await client.get("/", headers: [.connection: "keep-alive"])
+                        XCTFail("Should not get here")
+                    } catch TestClient.Error.connectionClosing {
+                    } catch {
+                        XCTFail("Unexpected error: \(error)")
+                    }
                 }
             }
-        }
+        )
     }
 
     func testLeftOpenReadIdleHandler() async throws {
@@ -480,14 +491,15 @@ final class HummingBirdCoreTests: XCTestCase {
             ),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
-        ) { client in
-            try await withTimeout(.seconds(5)) {
-                _ = try await client.get("/", headers: [.connection: "keep-alive"])
-                let channel = try await client.channelPromise.futureResult.get()
-                try await channel.closeFuture.get()
+            logger: Logger(label: "Hummingbird"),
+            test: { client in
+                try await withTimeout(.seconds(5)) {
+                    _ = try await client.get("/", headers: [.connection: "keep-alive"])
+                    let channel = try await client.channelPromise.futureResult.get()
+                    try await channel.closeFuture.get()
+                }
             }
-        }
+        )
     }
 
     func testChildChannelGracefulShutdown() async throws {
