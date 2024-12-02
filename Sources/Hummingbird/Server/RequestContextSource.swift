@@ -16,7 +16,7 @@ import Logging
 import NIOCore
 
 /// Protocol for source of request contexts
-public protocol RequestContextSource {
+public protocol RequestContextSource: Sendable {
     /// Request Logger
     var logger: Logger { get }
 }
