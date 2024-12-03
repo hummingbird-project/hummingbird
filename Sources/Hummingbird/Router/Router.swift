@@ -128,3 +128,23 @@ public struct RouterOptions: OptionSet, Sendable {
     /// For every GET request that does not have a HEAD request, auto generate the HEAD request
     public static var autoGenerateHeadEndpoints: Self { .init(rawValue: 1 << 1) }
 }
+
+extension Router {
+    /// Endpoint description
+    public struct EndpointDescription: CustomStringConvertible {
+        public let path: RouterPath
+        public let method: HTTPRequest.Method
+
+        public var description: String { "\(method): \(path)" }
+    }
+
+    /// List of router endpoints
+    public var endpoints: [EndpointDescription] {
+        let trieValues = self.trie.root.values()
+        return trieValues.flatMap { endpoint in
+            endpoint.value.methods.keys
+                .sorted { $0.rawValue < $1.rawValue }
+                .map { EndpointDescription(path: endpoint.path, method: $0) }
+        }
+    }
+}
