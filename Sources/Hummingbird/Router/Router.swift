@@ -131,20 +131,20 @@ public struct RouterOptions: OptionSet, Sendable {
 
 extension Router {
     /// Endpoint description
-    public struct EndpointDescription: CustomStringConvertible {
+    public struct RouteDescription: CustomStringConvertible {
         public let path: RouterPath
         public let method: HTTPRequest.Method
 
         public var description: String { "\(method): \(path)" }
     }
 
-    /// List of router endpoints
-    public var endpoints: [EndpointDescription] {
+    /// List of router routes
+    public var routes: [RouteDescription] {
         let trieValues = self.trie.root.values()
         return trieValues.flatMap { endpoint in
             endpoint.value.methods.keys
                 .sorted { $0.rawValue < $1.rawValue }
-                .map { EndpointDescription(path: endpoint.path, method: $0) }
+                .map { RouteDescription(path: endpoint.path, method: $0) }
         }
     }
 }
