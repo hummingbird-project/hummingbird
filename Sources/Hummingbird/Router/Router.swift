@@ -130,15 +130,17 @@ public struct RouterOptions: OptionSet, Sendable {
 }
 
 extension Router {
-    /// Endpoint description
+    /// Route description
     public struct RouteDescription: CustomStringConvertible {
+        /// Route path
         public let path: RouterPath
+        /// Route method
         public let method: HTTPRequest.Method
 
         public var description: String { "\(method): \(path)" }
     }
 
-    /// List of router routes
+    /// List of routes added to router
     public var routes: [RouteDescription] {
         let trieValues = self.trie.root.values()
         return trieValues.flatMap { endpoint in
