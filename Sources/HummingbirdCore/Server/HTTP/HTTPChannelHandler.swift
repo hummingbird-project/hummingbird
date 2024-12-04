@@ -45,7 +45,7 @@ extension HTTPChannelHandler {
                         throw HTTPChannelError.unexpectedHTTPPart(part)
                     }
 
-                    while true {
+                    readParts: while true {
                         let bodyStream = NIOAsyncChannelRequestBody(iterator: iterator)
                         let request = Request(head: head, body: .init(nioAsyncChannelInbound: bodyStream))
                         let responseWriter = ResponseWriter(outbound: outbound)
@@ -57,7 +57,15 @@ extension HTTPChannelHandler {
                         if request.headers[.connection] == "close" {
                             return
                         }
-
+                        switch request.getState() {
+                        case .nextHead(let newHead):
+                            head = newHead
+                            continue
+                        case .closed:
+                            break readParts
+                        default:
+                            break
+                        }
                         // Flush current request
                         // read until we don't have a body part
                         var part: HTTPRequestPart?

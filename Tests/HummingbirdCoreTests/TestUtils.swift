@@ -95,7 +95,7 @@ public func testServer<Value: Sendable>(
         )
         client.connect()
         let value = try await test(client)
-        try await client.shutdown()
+        try? await client.shutdown()
         return value
     }
 }

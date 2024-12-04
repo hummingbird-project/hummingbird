@@ -163,6 +163,14 @@ public struct TestClient: Sendable {
         return response
     }
 
+    /// Execute request to server. Return `EventLoopFuture` that will be fulfilled with HTTP response
+    public func executeAndClose(_ request: TestClient.Request) async throws {
+        let channel = try await getChannel()
+        let promise = self.eventLoopGroup.any().makePromise(of: TestClient.Response.self)
+        let task = HTTPTask(request: self.cleanupRequest(request), responsePromise: promise)
+        channel.writeAndFlush(task, promise: nil)
+    }
+
     public func close() async throws {
         self.channelPromise.completeWith(.failure(TestClient.Error.connectionNotOpen))
         let channel = try await getChannel()
