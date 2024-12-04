@@ -553,6 +553,29 @@ final class HummingBirdCoreTests: XCTestCase {
             await serviceGroup.triggerGracefulShutdown()
         }
     }
+
+    func testOnCloseInboundWithoutClose() async throws {
+        try await testServer(
+            responder: { (request, responseWriter: consuming ResponseWriter, _) in
+                let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                try await request.cancelOnInboundClose { request in
+                    var bodyWriter = bodyWriter
+                    try await bodyWriter.write(request.body)
+                    try await bodyWriter.finish(nil)
+                }
+            },
+            httpChannelSetup: .http1(),
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
+            logger: Logger(label: "Hummingbird")
+        ) { client in
+            let response = try await client.get("/")
+            XCTAssertNil(response.body)
+            let response2 = try await client.post("/", body: ByteBuffer(string: "Hello"))
+            let body2 = try XCTUnwrap(response2.body)
+            XCTAssertEqual(String(buffer: body2), "Hello")
+        }
+    }
 }
 
 struct DelayAsyncSequence<CoreSequence: AsyncSequence>: AsyncSequence {
