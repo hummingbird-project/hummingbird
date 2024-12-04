@@ -137,7 +137,7 @@ extension Router {
         /// Route method
         public let method: HTTPRequest.Method
 
-        public var description: String { "\(method): \(path)" }
+        public var description: String { "\(method) \(path)" }
     }
 
     /// List of routes added to router
