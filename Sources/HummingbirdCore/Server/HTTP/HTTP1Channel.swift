@@ -51,7 +51,7 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
     @available(*, deprecated, renamed: "HTTP1Channel(responder:configuration:)")
     public init(
         responder: @escaping HTTPChannelHandler.Responder,
-        additionalChannelHandlers: @escaping @Sendable () -> [any RemovableChannelHandler] = { [] }
+        additionalChannelHandlers: @escaping @Sendable () -> [any RemovableChannelHandler]
     ) {
         self.configuration = .init(additionalChannelHandlers: additionalChannelHandlers())
         self.responder = responder
