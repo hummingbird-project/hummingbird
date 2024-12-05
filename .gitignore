@@ -2,6 +2,7 @@
 .build/
 .swiftpm/
 .vscode/
+.index-build/
 .devcontainer/
 /Packages
 /*.xcodeproj
