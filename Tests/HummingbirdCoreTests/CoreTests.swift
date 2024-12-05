@@ -554,7 +554,8 @@ final class HummingBirdCoreTests: XCTestCase {
         }
     }
 
-    func testOnCloseInboundWithoutClose() async throws {
+    /// Test running cancel on inbound close without an inbound close
+    func testCancelOnCloseInboundWithoutClose() async throws {
         try await testServer(
             responder: { (request, responseWriter: consuming ResponseWriter, _) in
                 let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
@@ -574,6 +575,33 @@ final class HummingBirdCoreTests: XCTestCase {
             let response2 = try await client.post("/", body: ByteBuffer(string: "Hello"))
             let body2 = try XCTUnwrap(response2.body)
             XCTAssertEqual(String(buffer: body2), "Hello")
+        }
+    }
+
+    /// Test running cancel on inbound close actually cancels on inbound closure
+    func testCancelOnCloseInboundInResponseWriter() async throws {
+        let handlerPromise = Promise<Void>()
+        try await testServer(
+            responder: { (request, responseWriter: consuming ResponseWriter, _) in
+                await handlerPromise.complete(())
+                let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                try await request.cancelOnInboundClose { request in
+                    var bodyWriter2 = bodyWriter
+                    let body = try await request.body.collect(upTo: .max)
+                    while true {
+                        try Task.checkCancellation()
+                        try await bodyWriter2.write(body)
+                    }
+                }
+            },
+            httpChannelSetup: .http1(),
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
+            logger: Logger(label: "Hummingbird")
+        ) { client in
+            try await client.executeAndDontWaitForResponse(.init("/", method: .get))
+            await handlerPromise.wait()
+            try await client.close()
         }
     }
 }
