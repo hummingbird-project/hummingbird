@@ -80,7 +80,39 @@ public func testServer<Value: Sendable>(
     clientConfiguration: TestClient.Configuration = .init(),
     test: @escaping @Sendable (TestClient) async throws -> Value
 ) async throws -> Value {
-    try await testServer(
+    try await withThrowingTaskGroup(of: Void.self) { group in
+        let promise = Promise<Int>()
+        let server = try httpChannelSetup.buildServer(
+            configuration: configuration,
+            eventLoopGroup: eventLoopGroup,
+            logger: logger,
+            responder: responder,
+            onServerRunning: { await promise.complete($0.localAddress!.port!) }
+        )
+        let serviceGroup = ServiceGroup(
+            configuration: .init(
+                services: [server],
+                gracefulShutdownSignals: [.sigterm, .sigint],
+                logger: logger
+            )
+        )
+
+        group.addTask {
+            try await serviceGroup.run()
+        }
+        let client = await TestClient(
+            host: "localhost",
+            port: promise.wait(),
+            configuration: clientConfiguration,
+            eventLoopGroupProvider: .createNew
+        )
+        client.connect()
+        let value = try await test(client)
+        try? await client.shutdown()
+        await serviceGroup.triggerGracefulShutdown()
+        return value
+    }
+    /*    try await testServer(
         responder: responder,
         httpChannelSetup: httpChannelSetup,
         configuration: configuration,
@@ -97,7 +129,7 @@ public func testServer<Value: Sendable>(
         let value = try await test(client)
         try? await client.shutdown()
         return value
-    }
+    }*/
 }
 
 /// Run process with a timeout
