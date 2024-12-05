@@ -554,7 +554,9 @@ final class HummingBirdCoreTests: XCTestCase {
         }
     }
 
+    #if compiler(>=6.0)
     /// Test running cancel on inbound close without an inbound close
+    @available(macOS 15, iOS 18, tvOS 18, *)
     func testCancelOnCloseInboundWithoutClose() async throws {
         try await testServer(
             responder: { (request, responseWriter: consuming ResponseWriter, _) in
@@ -579,6 +581,7 @@ final class HummingBirdCoreTests: XCTestCase {
     }
 
     /// Test running cancel on inbound close actually cancels on inbound closure
+    @available(macOS 15, iOS 18, tvOS 18, *)
     func testCancelOnCloseInbound() async throws {
         let handlerPromise = Promise<Void>()
         try await testServer(
@@ -588,10 +591,16 @@ final class HummingBirdCoreTests: XCTestCase {
                 try await request.cancelOnInboundClose { request in
                     var bodyWriter2 = bodyWriter
                     let body = try await request.body.collect(upTo: .max)
-                    while true {
-                        try Task.checkCancellation()
-                        try await bodyWriter2.write(body)
+                    for _ in 0..<200 {
+                        do {
+                            try Task.checkCancellation()
+                            try await Task.sleep(for: .seconds(1))
+                            try await bodyWriter2.write(body)
+                        } catch {
+                            throw error
+                        }
                     }
+                    try await Task.sleep(for: .seconds(60))
                 }
             },
             httpChannelSetup: .http1(),
@@ -604,6 +613,7 @@ final class HummingBirdCoreTests: XCTestCase {
             try await client.close()
         }
     }
+    #endif  // compiler(>=6.0)
 }
 
 struct DelayAsyncSequence<CoreSequence: AsyncSequence>: AsyncSequence {
