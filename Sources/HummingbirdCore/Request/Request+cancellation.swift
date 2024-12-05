@@ -64,7 +64,7 @@ package actor RequestIterationState: Sendable {
         source: RequestBody.Source
     ) async throws {
         var iterator = iterator
-        while let part = try await iterator.next() {
+        while let part = try await iterator.next(isolation: self) {
             switch part {
             case .head(let head):
                 self.state = .nextHead(head)
