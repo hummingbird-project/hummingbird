@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2022 the Hummingbird authors
+// Copyright (c) 2021-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -34,7 +34,7 @@ public struct Request: Sendable {
     @inlinable
     public var headers: HTTPFields { self.head.headerFields }
 
-    private let iterationState: RequestIterationState?
+    let iterationState: RequestIterationState?
 
     // MARK: Initialization
 
@@ -66,99 +66,13 @@ public struct Request: Sendable {
         return byteBuffer
     }
 
-    public func cancelOnInboundClose<Value: Sendable>(_ process: @escaping @Sendable (Request) async throws -> Value) async throws -> Value {
-        guard let iterationState = self.iterationState else { return try await process(self) }
-        let iterator: UnsafeTransfer<NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator>? =
-            switch self.body._backing {
-            case .nioAsyncChannelRequestBody(let iterator):
-                iterator.underlyingIterator
-            default:
-                nil
-            }
-        let (stream, source) = RequestBody.makeStream()
-        var request = self
-        request.body = stream
-        let newRequest = request
-        return try await iterationState.cancelOnIteratorFinished(iterator: iterator, source: source) {
-            try await process(newRequest)
-        }
-    }
-
-    package func getState() -> RequestIterationState.State? {
-        self.iterationState?.state.withLockedValue { $0 }
+    package func getState() async -> RequestIterationState.State? {
+        await self.iterationState?.state
     }
 }
 
 extension Request: CustomStringConvertible {
     public var description: String {
         "uri: \(self.uri), method: \(self.method), headers: \(self.headers), body: \(self.body)"
-    }
-}
-
-package struct RequestIterationState: Sendable {
-    fileprivate enum CancelOnInboundGroupType<Value: Sendable> {
-        case value(Value)
-        case done
-    }
-    package enum State: Sendable {
-        case idle
-        case processing
-        case nextHead(HTTPRequest)
-        case closed
-    }
-    let state: NIOLockedValueBox<State>
-
-    init() {
-        self.state = .init(.idle)
-    }
-
-    func cancelOnIteratorFinished<Value: Sendable>(
-        iterator: UnsafeTransfer<NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator>?,
-        source: RequestBody.Source,
-        process: @escaping @Sendable () async throws -> Value
-    ) async throws -> Value {
-        let state = self.state.withLockedValue { $0 }
-        let unsafeSource = UnsafeTransfer(source)
-        switch (state, iterator) {
-        case (.idle, .some(let asyncIterator)):
-            self.state.withLockedValue { $0 = .processing }
-            return try await withThrowingTaskGroup(of: CancelOnInboundGroupType<Value>.self) { group in
-                group.addTask {
-                    var asyncIterator = asyncIterator.wrappedValue
-                    let source = unsafeSource.wrappedValue
-                    while let part = try await asyncIterator.next() {
-                        switch part {
-                        case .head(let head):
-                            self.state.withLockedValue { $0 = .nextHead(head) }
-                            return .done
-                        case .body(let buffer):
-                            try await source.yield(buffer)
-                        case .end:
-                            source.finish()
-                        }
-                    }
-                    throw CancellationError()
-                }
-                group.addTask {
-                    try await .value(process())
-                }
-                do {
-                    while let result = try await group.next() {
-                        if case .value(let value) = result {
-                            return value
-                        }
-                    }
-                } catch {
-                    self.state.withLockedValue { $0 = .closed }
-                    throw error
-                }
-                preconditionFailure("Cannot reach here")
-            }
-        case (.idle, .none), (.processing, _), (.nextHead, _):
-            return try await process()
-
-        case (.closed, _):
-            throw CancellationError()
-        }
     }
 }
