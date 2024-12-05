@@ -738,22 +738,22 @@ final class RouterTests: XCTestCase {
         router.get("wildcard/*") { _, _ in "" }
         router.get("recursive_wildcard/**") { _, _ in "" }
         router.patch("/test/longer/path/name") { _, _ in "" }
-        let endpoints = router.endpoints
-        XCTAssertEqual(endpoints.count, 7)
-        XCTAssertEqual(endpoints[0].path.description, "/test")
-        XCTAssertEqual(endpoints[0].method, .get)
-        XCTAssertEqual(endpoints[1].path.description, "/test")
-        XCTAssertEqual(endpoints[1].method, .put)
-        XCTAssertEqual(endpoints[2].path.description, "/test/this")
-        XCTAssertEqual(endpoints[2].method, .get)
-        XCTAssertEqual(endpoints[3].path.description, "/test/longer/path/name")
-        XCTAssertEqual(endpoints[3].method, .patch)
-        XCTAssertEqual(endpoints[4].path.description, "/{test}/{what}")
-        XCTAssertEqual(endpoints[4].method, .post)
-        XCTAssertEqual(endpoints[5].path.description, "/wildcard/*")
-        XCTAssertEqual(endpoints[5].method, .get)
-        XCTAssertEqual(endpoints[6].path.description, "/recursive_wildcard/**")
-        XCTAssertEqual(endpoints[6].method, .get)
+        let routes = router.routes
+        XCTAssertEqual(routes.count, 7)
+        XCTAssertEqual(routes[0].path.description, "/test")
+        XCTAssertEqual(routes[0].method, .get)
+        XCTAssertEqual(routes[1].path.description, "/test")
+        XCTAssertEqual(routes[1].method, .put)
+        XCTAssertEqual(routes[2].path.description, "/test/this")
+        XCTAssertEqual(routes[2].method, .get)
+        XCTAssertEqual(routes[3].path.description, "/test/longer/path/name")
+        XCTAssertEqual(routes[3].method, .patch)
+        XCTAssertEqual(routes[4].path.description, "/{test}/{what}")
+        XCTAssertEqual(routes[4].method, .post)
+        XCTAssertEqual(routes[5].path.description, "/wildcard/*")
+        XCTAssertEqual(routes[5].method, .get)
+        XCTAssertEqual(routes[6].path.description, "/recursive_wildcard/**")
+        XCTAssertEqual(routes[6].method, .get)
     }
 }
 
