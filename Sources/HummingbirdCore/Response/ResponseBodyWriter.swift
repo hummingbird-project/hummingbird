@@ -16,7 +16,7 @@ import HTTPTypes
 import NIOCore
 
 /// HTTP Response Body part writer
-public protocol ResponseBodyWriter: Sendable {
+public protocol ResponseBodyWriter {
     /// Write a single ByteBuffer
     /// - Parameter buffer: single buffer to write
     mutating func write(_ buffer: ByteBuffer) async throws
