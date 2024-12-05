@@ -20,7 +20,7 @@ import NIOHTTPTypes
 #if compiler(>=6.0)
 @available(macOS 15, iOS 18, tvOS 18, *)
 extension Request {
-    public func cancelOnInboundClose<Value: Sendable>(_ process: @escaping @Sendable (Request) async throws -> Value) async throws -> Value {
+    public func cancelOnInboundClose<Value: Sendable>(_ process: sending @escaping (Request) async throws -> Value) async throws -> Value {
         guard let iterationState = self.iterationState else { return try await process(self) }
         let iterator: UnsafeTransfer<NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator>? =
             switch self.body._backing {
@@ -82,19 +82,20 @@ package actor RequestIterationState: Sendable {
     func cancelOnIteratorFinished<Value: Sendable>(
         iterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator?,
         source: RequestBody.Source,
-        process: @escaping @Sendable () async throws -> Value
+        process: sending @escaping () async throws -> Value
     ) async throws -> Value {
         switch (self.state, iterator) {
         case (.idle, .some(let asyncIterator)):
             self.state = .processing
             let unsafeIterator = UnsafeTransfer(asyncIterator)
+            let unsafeProcess = UnsafeTransfer(process)
             return try await withThrowingTaskGroup(of: CancelOnInboundGroupType<Value>.self) { group in
                 group.addTask {
                     try await self.iterate(iterator: unsafeIterator.wrappedValue, source: source)
                     return .done
                 }
                 group.addTask {
-                    try await .value(process())
+                    try await .value(unsafeProcess.wrappedValue())
                 }
                 do {
                     while let result = try await group.next() {

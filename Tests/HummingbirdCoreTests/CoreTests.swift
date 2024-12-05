@@ -560,9 +560,8 @@ final class HummingBirdCoreTests: XCTestCase {
     func testCancelOnCloseInboundWithoutClose() async throws {
         try await testServer(
             responder: { (request, responseWriter: consuming ResponseWriter, _) in
-                let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
                 try await request.cancelOnInboundClose { request in
-                    var bodyWriter = bodyWriter
                     try await bodyWriter.write(request.body)
                     try await bodyWriter.finish(nil)
                 }
