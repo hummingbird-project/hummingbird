@@ -57,7 +57,7 @@ extension HTTPChannelHandler {
                         if request.headers[.connection] == "close" {
                             return
                         }
-                        switch request.getState() {
+                        switch await request.getState() {
                         case .nextHead(let newHead):
                             head = newHead
                             continue

@@ -100,36 +100,20 @@ public func testServer<Value: Sendable>(
         group.addTask {
             try await serviceGroup.run()
         }
-        let client = await TestClient(
-            host: "localhost",
-            port: promise.wait(),
-            configuration: clientConfiguration,
-            eventLoopGroupProvider: .createNew
-        )
-        client.connect()
-        let value = try await test(client)
-        try? await client.shutdown()
-        await serviceGroup.triggerGracefulShutdown()
-        return value
-    }
-    /*    try await testServer(
-        responder: responder,
-        httpChannelSetup: httpChannelSetup,
-        configuration: configuration,
-        eventLoopGroup: eventLoopGroup,
-        logger: logger
-    ) { port in
+        let port = await promise.wait()
         let client = TestClient(
             host: "localhost",
             port: port,
             configuration: clientConfiguration,
             eventLoopGroupProvider: .createNew
         )
+        print("Client connecting to port \(port)")
         client.connect()
         let value = try await test(client)
         try? await client.shutdown()
+        await serviceGroup.triggerGracefulShutdown()
         return value
-    }*/
+    }
 }
 
 /// Run process with a timeout
