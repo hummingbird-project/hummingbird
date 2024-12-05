@@ -17,8 +17,14 @@ import NIOCore
 
 /// Response body
 public struct ResponseBody: Sendable {
+    #if compiler(>=6.0)
+    public typealias WriteFunction = @Sendable (sending any ResponseBodyWriter) async throws -> Void
+    #else
+    public typealias WriteFunction = @Sendable (any ResponseBodyWriter) async throws -> Void
+    #endif
+
     @usableFromInline
-    let _write: @Sendable (inout any ResponseBodyWriter) async throws -> Void
+    let _write: WriteFunction
     public let contentLength: Int?
 
     /// Initialise ResponseBody with closure writing body contents.
@@ -36,9 +42,9 @@ public struct ResponseBody: Sendable {
     /// - Parameters:
     ///   - contentLength: Optional length of body
     ///   - write: closure provided with `writer` type that can be used to write to response body
-    public init(contentLength: Int? = nil, _ write: @Sendable @escaping (inout any ResponseBodyWriter) async throws -> Void) {
+    public init(contentLength: Int? = nil, _ write: @escaping WriteFunction) {
         self._write = { writer in
-            try await write(&writer)
+            try await write(writer)
         }
         self.contentLength = contentLength
     }
@@ -77,11 +83,17 @@ public struct ResponseBody: Sendable {
         }
     }
 
+    #if compiler(>=6.0)
     @inlinable
-    public consuming func write(_ writer: consuming any ResponseBodyWriter) async throws {
-        try await self._write(&writer)
+    public consuming func write(_ writer: sending any ResponseBodyWriter) async throws {
+        try await self._write(writer)
     }
-
+    #else
+    @inlinable
+    public consuming func write(_ writer: any ResponseBodyWriter) async throws {
+        try await self._write(writer)
+    }
+    #endif
     /// Returns a ResponseBody containing the results of mapping the given closure over the sequence of
     /// ByteBuffers written.
     /// - Parameter transform: A mapping closure applied to every ByteBuffer in ResponseBody

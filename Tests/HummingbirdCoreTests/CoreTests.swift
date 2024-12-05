@@ -126,7 +126,7 @@ final class HummingBirdCoreTests: XCTestCase {
         @Sendable func helloResponder(to request: Request, responseWriter: consuming ResponseWriter, channel: Channel) async throws {
             try? await Task.sleep(for: .milliseconds(10))
             let responseBody = channel.allocator.buffer(string: "Hello")
-            var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+            let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
             try await bodyWriter.write(responseBody)
             try await bodyWriter.finish(nil)
         }
@@ -171,7 +171,7 @@ final class HummingBirdCoreTests: XCTestCase {
                     try await responseWriter.writeResponse(.init(status: .contentTooLarge))
                     return
                 }
-                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
                 try await bodyWriter.write(buffer)
                 try await bodyWriter.finish(nil)
             },
@@ -191,7 +191,7 @@ final class HummingBirdCoreTests: XCTestCase {
         try await testServer(
             responder: { (_, responseWriter: consuming ResponseWriter, _) in
                 let buffer = Self.randomBuffer(size: 1_140_000)
-                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
                 try await bodyWriter.write(buffer)
                 try await bodyWriter.finish(nil)
             },
@@ -209,7 +209,7 @@ final class HummingBirdCoreTests: XCTestCase {
     func testStreamBody() async throws {
         try await testServer(
             responder: { (request, responseWriter: consuming ResponseWriter, _) in
-                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
                 try await bodyWriter.write(request.body)
                 try await bodyWriter.finish(nil)
             },
@@ -228,7 +228,7 @@ final class HummingBirdCoreTests: XCTestCase {
     func testStreamBodyWriteSlow() async throws {
         try await testServer(
             responder: { (request, responseWriter: consuming ResponseWriter, _) in
-                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
                 try await bodyWriter.write(request.body.delayed())
                 try await bodyWriter.finish(nil)
             },
@@ -259,7 +259,7 @@ final class HummingBirdCoreTests: XCTestCase {
         }
         try await testServer(
             responder: { (request, responseWriter: consuming ResponseWriter, _) in
-                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
                 try await bodyWriter.write(request.body.delayed())
                 try await bodyWriter.finish(nil)
             },
@@ -515,7 +515,7 @@ final class HummingBirdCoreTests: XCTestCase {
             ) { (request, responseWriter: consuming ResponseWriter, _) in
                 await handlerPromise.complete(())
                 try? await Task.sleep(for: .milliseconds(500))
-                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
                 try await bodyWriter.write(request.body.delayed())
                 try await bodyWriter.finish(nil)
             } onServerRunning: {
