@@ -579,7 +579,7 @@ final class HummingBirdCoreTests: XCTestCase {
     }
 
     /// Test running cancel on inbound close actually cancels on inbound closure
-    func testCancelOnCloseInboundInResponseWriter() async throws {
+    func testCancelOnCloseInbound() async throws {
         let handlerPromise = Promise<Void>()
         try await testServer(
             responder: { (request, responseWriter: consuming ResponseWriter, _) in
