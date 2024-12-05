@@ -833,6 +833,39 @@ final class ApplicationTests: XCTestCase {
             XCTAssertEqual(format.error.message, message)
         }
     }
+
+    /// Test AsyncSequence returned by RequestBody.makeStream()
+    func testMakeStream() async throws {
+        let router = Router()
+        router.post("streaming") { request, context -> Response in
+            let body = try await withThrowingTaskGroup(of: Void.self) { group in
+                let (requestBody, source) = RequestBody.makeStream()
+                group.addTask {
+                    for try await buffer in request.body {
+                        try await source.yield(buffer)
+                    }
+                    source.finish()
+                }
+                var body = ByteBuffer()
+                for try await buffer in requestBody {
+                    var buffer = buffer
+                    body.writeBuffer(&buffer)
+                }
+                return body
+            }
+            return Response(status: .ok, body: .init(byteBuffer: body))
+        }
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.router) { client in
+
+            let buffer = Self.randomBuffer(size: 640_001)
+            try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(response.body, buffer)
+            }
+        }
+    }
 }
 
 /// HTTPField used during tests
