@@ -162,7 +162,7 @@ extension RequestBody {
     }
 
     /// A source used for driving a ``RequestBody`` stream.
-    public struct Source: Sendable {
+    public final class Source: Sendable {
         @usableFromInline
         let source: Producer.Source
         @usableFromInline
