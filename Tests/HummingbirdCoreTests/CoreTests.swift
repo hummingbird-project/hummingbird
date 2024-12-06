@@ -566,7 +566,7 @@ final class HummingBirdCoreTests: XCTestCase {
                     try await bodyWriter.finish(nil)
                 }
             },
-            httpChannelSetup: .http1(),
+            httpChannelSetup: .http1(configuration: .init(supportCancelOnInboundClosure: true)),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "Hummingbird")
@@ -602,7 +602,7 @@ final class HummingBirdCoreTests: XCTestCase {
                     try await Task.sleep(for: .seconds(60))
                 }
             },
-            httpChannelSetup: .http1(),
+            httpChannelSetup: .http1(configuration: .init(supportCancelOnInboundClosure: true)),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: "Hummingbird")

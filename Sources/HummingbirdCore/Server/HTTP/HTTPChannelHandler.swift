@@ -22,7 +22,10 @@ import ServiceLifecycle
 /// Protocol for HTTP channels
 public protocol HTTPChannelHandler: ServerChildChannel {
     typealias Responder = @Sendable (Request, consuming ResponseWriter, Channel) async throws -> Void
+    /// HTTP Request responder
     var responder: Responder { get }
+    /// Support being able to use ``Request/cancelOnInboundClosure``
+    var supportCancelOnInboundClosure: Bool { get }
 }
 
 /// Internal error thrown when an unexpected HTTP part is received eg we didn't receive
@@ -46,8 +49,11 @@ extension HTTPChannelHandler {
                     }
 
                     readParts: while true {
-                        let bodyStream = NIOAsyncChannelRequestBody(iterator: iterator)
-                        let request = Request(head: head, body: .init(nioAsyncChannelInbound: bodyStream))
+                        let request = Request(
+                            head: head,
+                            bodyIterator: iterator,
+                            supportCancelOnInboundClosure: self.supportCancelOnInboundClosure
+                        )
                         let responseWriter = ResponseWriter(outbound: outbound)
                         do {
                             try await self.responder(request, responseWriter, asyncChannel.channel)
@@ -96,4 +102,6 @@ extension HTTPChannelHandler {
             logger.trace("Failed to read/write to Channel. Error: \(error)")
         }
     }
+
+    public var supportCancelOnInboundClosure: Bool { false }
 }
