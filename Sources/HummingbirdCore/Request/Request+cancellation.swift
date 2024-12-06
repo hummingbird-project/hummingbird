@@ -20,6 +20,13 @@ import NIOHTTPTypes
 #if compiler(>=6.0)
 @available(macOS 15, iOS 18, tvOS 18, *)
 extension Request {
+    /// Run provided closure but cancel it if the inbound request part stream is closed.
+    ///
+    /// For `cancelOnInboundClose` to work you need to enable it in the HTTP channel configuration
+    /// using ``HTTP1Channel/Configuration/supportCancelOnInboundClosure``.
+    ///
+    /// - Parameter process: closure to run
+    /// - Returns: Return value of closure
     public func cancelOnInboundClose<Value: Sendable>(_ process: sending @escaping (Request) async throws -> Value) async throws -> Value {
         guard let iterationState = self.iterationState else { return try await process(self) }
         let iterator: UnsafeTransfer<NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator>? =
@@ -40,17 +47,21 @@ extension Request {
 }
 #endif  // compiler(>=6.0)
 
+/// Request iteration state
+@usableFromInline
 package actor RequestIterationState: Sendable {
     fileprivate enum CancelOnInboundGroupType<Value: Sendable> {
         case value(Value)
         case done
     }
+    @usableFromInline
     package enum State: Sendable {
         case idle
         case processing
         case nextHead(HTTPRequest)
         case closed
     }
+    @usableFromInline
     var state: State
 
     init() {
@@ -80,7 +91,7 @@ package actor RequestIterationState: Sendable {
 
     @available(macOS 15, iOS 18, tvOS 18, *)
     func cancelOnIteratorFinished<Value: Sendable>(
-        iterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator?,
+        iterator: sending NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator?,
         source: RequestBody.Source,
         process: sending @escaping () async throws -> Value
     ) async throws -> Value {

@@ -34,6 +34,7 @@ public struct Request: Sendable {
     @inlinable
     public var headers: HTTPFields { self.head.headerFields }
 
+    @usableFromInline
     let iterationState: RequestIterationState?
 
     // MARK: Initialization
@@ -49,7 +50,22 @@ public struct Request: Sendable {
         self.uri = .init(head.path ?? "")
         self.head = head
         self.body = body
-        self.iterationState = .init()
+        self.iterationState = nil
+    }
+
+    /// Create new Request
+    /// - Parameters:
+    ///   - head: HTTP head
+    ///   - bodyIterator: HTTP request part stream
+    package init(
+        head: HTTPRequest,
+        bodyIterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator,
+        supportCancelOnInboundClosure: Bool
+    ) {
+        self.uri = .init(head.path ?? "")
+        self.head = head
+        self.body = .init(nioAsyncChannelInbound: .init(iterator: bodyIterator))
+        self.iterationState = supportCancelOnInboundClosure ? .init() : nil
     }
 
     /// Collapse body into one ByteBuffer.
@@ -66,6 +82,7 @@ public struct Request: Sendable {
         return byteBuffer
     }
 
+    @inlinable
     package func getState() async -> RequestIterationState.State? {
         await self.iterationState?.state
     }
