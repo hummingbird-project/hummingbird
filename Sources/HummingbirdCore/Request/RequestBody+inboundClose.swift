@@ -22,14 +22,16 @@ import NIOHTTPTypes
 extension RequestBody {
     /// Run provided closure but cancel it if the inbound request part stream is closed.
     ///
-    /// This function is designed for use with long running requests like server sent events. It comes
-    /// with a number of limitations.
-    /// - `withInboundCloseHandler` will consume the request body so it will not be available after
-    ///     this function has been called.
-    /// - If the response finishes the connection will be closed.
+    /// This function is designed for use with long running requests like server sent events. It assumes you
+    /// are not going to be using the request body after calling as it consumes the request body, it also assumes
+    /// you havent edited the request body prior to calling this function.
     ///
-    /// - Parameter process: closure to run
-    /// - Returns: Return value of closure
+    /// If the response finishes the connection will be closed.
+    ///
+    /// - Parameters
+    ///   - operation: The actual operation
+    ///   = onInboundClose: handler invoked when inbound is closed
+    /// - Returns: Return value of operation
     @available(macOS 15, iOS 18, tvOS 18, *)
     public func consumeWithInboundCloseHandler<Value: Sendable>(
         _ operation: sending (RequestBody) async throws -> Value,
@@ -60,11 +62,14 @@ extension RequestBody {
 
     /// Run provided closure but cancel it if the inbound request part stream is closed.
     ///
-    /// For `cancelOnInboundClose` to work you need to enable it in the HTTP channel configuration
-    /// using ``HTTP1Channel/Configuration/supportCancelOnInboundClosure``.
+    /// This function is designed for use with long running requests like server sent events. It assumes you
+    /// are not going to be using the request body after calling as it consumes the request body, it also assumes
+    /// you havent edited the request body prior to calling this function.
     ///
-    /// - Parameter process: closure to run
-    /// - Returns: Return value of closure
+    /// If the response finishes the connection will be closed.
+    ///
+    /// - Parameter operation: The actual operation to run
+    /// - Returns: Return value of operation
     public func consumeWithCancelOnInboundClose<Value: Sendable>(
         _ operation: sending @escaping (RequestBody) async throws -> Value
     ) async throws -> Value {
