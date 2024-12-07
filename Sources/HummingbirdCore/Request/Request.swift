@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2022 the Hummingbird authors
+// Copyright (c) 2021-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -13,7 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 import HTTPTypes
+import NIOConcurrencyHelpers
 import NIOCore
+import NIOHTTPTypes
 
 /// Holds all the values required to process a request
 public struct Request: Sendable {
@@ -32,6 +34,9 @@ public struct Request: Sendable {
     @inlinable
     public var headers: HTTPFields { self.head.headerFields }
 
+    @usableFromInline
+    let iterationState: RequestIterationState?
+
     // MARK: Initialization
 
     /// Create new Request
@@ -45,6 +50,22 @@ public struct Request: Sendable {
         self.uri = .init(head.path ?? "")
         self.head = head
         self.body = body
+        self.iterationState = nil
+    }
+
+    /// Create new Request
+    /// - Parameters:
+    ///   - head: HTTP head
+    ///   - bodyIterator: HTTP request part stream
+    package init(
+        head: HTTPRequest,
+        bodyIterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator,
+        supportCancelOnInboundClosure: Bool
+    ) {
+        self.uri = .init(head.path ?? "")
+        self.head = head
+        self.body = .init(nioAsyncChannelInbound: .init(iterator: bodyIterator))
+        self.iterationState = supportCancelOnInboundClosure ? .init() : nil
     }
 
     /// Collapse body into one ByteBuffer.
@@ -59,6 +80,11 @@ public struct Request: Sendable {
         let byteBuffer = try await self.body.collect(upTo: maxSize)
         self.body = .init(buffer: byteBuffer)
         return byteBuffer
+    }
+
+    @inlinable
+    package func getState() async -> RequestIterationState.State? {
+        await self.iterationState?.state
     }
 }
 
