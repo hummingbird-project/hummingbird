@@ -46,7 +46,7 @@ extension HTTPChannelHandler {
                         throw HTTPChannelError.unexpectedHTTPPart(part)
                     }
 
-                    readParts: while true {
+                    while true {
                         let request = Request(
                             head: head,
                             bodyIterator: iterator
@@ -60,6 +60,7 @@ extension HTTPChannelHandler {
                         if request.headers[.connection] == "close" {
                             return
                         }
+
                         // Flush current request
                         // read until we don't have a body part
                         var part: HTTPRequestPart?
@@ -90,6 +91,4 @@ extension HTTPChannelHandler {
             logger.trace("Failed to read/write to Channel. Error: \(error)")
         }
     }
-
-    public var supportCancelOnInboundClosure: Bool { false }
 }
