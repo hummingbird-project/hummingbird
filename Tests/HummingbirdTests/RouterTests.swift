@@ -728,6 +728,33 @@ final class RouterTests: XCTestCase {
             }
         }
     }
+
+    func testEndpointDescriptions() {
+        let router = Router()
+        router.get("test") { _, _ in "" }
+        router.get("test/this") { _, _ in "" }
+        router.put("test") { _, _ in "" }
+        router.post("{test}/{what}") { _, _ in "" }
+        router.get("wildcard/*") { _, _ in "" }
+        router.get("recursive_wildcard/**") { _, _ in "" }
+        router.patch("/test/longer/path/name") { _, _ in "" }
+        let routes = router.routes
+        XCTAssertEqual(routes.count, 7)
+        XCTAssertEqual(routes[0].path.description, "/test")
+        XCTAssertEqual(routes[0].method, .get)
+        XCTAssertEqual(routes[1].path.description, "/test")
+        XCTAssertEqual(routes[1].method, .put)
+        XCTAssertEqual(routes[2].path.description, "/test/this")
+        XCTAssertEqual(routes[2].method, .get)
+        XCTAssertEqual(routes[3].path.description, "/test/longer/path/name")
+        XCTAssertEqual(routes[3].method, .patch)
+        XCTAssertEqual(routes[4].path.description, "/{test}/{what}")
+        XCTAssertEqual(routes[4].method, .post)
+        XCTAssertEqual(routes[5].path.description, "/wildcard/*")
+        XCTAssertEqual(routes[5].method, .get)
+        XCTAssertEqual(routes[6].path.description, "/recursive_wildcard/**")
+        XCTAssertEqual(routes[6].method, .get)
+    }
 }
 
 struct TestRouterContext2: RequestContext {
