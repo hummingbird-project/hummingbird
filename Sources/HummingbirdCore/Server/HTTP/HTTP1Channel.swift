@@ -28,23 +28,18 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
         public var additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
         /// Time before closing an idle channel.
         public var idleTimeout: TimeAmount?
-        /// Support being able to use ``Request/cancelOnInboundClosure``
-        public var supportCancelOnInboundClosure: Bool
 
         ///  Initialize HTTP1Channel.Configuration
         /// - Parameters:
         ///   - additionalChannelHandlers: Additional channel handlers to add to channel pipeline after HTTP part decoding and
         ///         before HTTP request processing
         ///   - idleTimeout: Time before closing an idle channel
-        ///   - supportCancelOnInboundClosure: Support being able to use ``Request/cancelOnInboundClosure``
         public init(
             additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = [],
-            idleTimeout: TimeAmount? = nil,
-            supportCancelOnInboundClosure: Bool = false
+            idleTimeout: TimeAmount? = nil
         ) {
             self.additionalChannelHandlers = additionalChannelHandlers
             self.idleTimeout = idleTimeout
-            self.supportCancelOnInboundClosure = supportCancelOnInboundClosure
         }
     }
 
@@ -110,8 +105,6 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
     ) async {
         await handleHTTP(asyncChannel: asyncChannel, logger: logger)
     }
-
-    public var supportCancelOnInboundClosure: Bool { configuration.supportCancelOnInboundClosure }
 
     public let responder: HTTPChannelHandler.Responder
     public let configuration: Configuration
