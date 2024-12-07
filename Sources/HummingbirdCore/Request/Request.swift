@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import HTTPTypes
-import NIOConcurrencyHelpers
 import NIOCore
 import NIOHTTPTypes
 
