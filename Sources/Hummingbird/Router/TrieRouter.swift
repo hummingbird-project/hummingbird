@@ -91,3 +91,20 @@ import HummingbirdCore
         }
     }
 }
+
+extension RouterPathTrieBuilder.Node {
+    /// Return list of paths and associated values in trie node
+    /// - Parameter prefix: Prefix for path
+    /// - Returns: Array of path values pairs
+    func values(prefix: RouterPath = "/") -> [(value: Value, path: RouterPath)] {
+        var values: [(Value, RouterPath)] = []
+        if let value = self.value {
+            values.append((value, prefix))
+        }
+        for node in self.children {
+            let childValues = node.values(prefix: prefix.appendingPath(.init(components: [node.key])))
+            values.append(contentsOf: childValues)
+        }
+        return values
+    }
+}

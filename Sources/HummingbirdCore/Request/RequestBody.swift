@@ -125,7 +125,7 @@ extension RequestBody {
 
     /// Delegate for NIOThrowingAsyncSequenceProducer
     @usableFromInline
-    final class Delegate: NIOAsyncSequenceProducerDelegate {
+    final class Delegate: NIOAsyncSequenceProducerDelegate, Sendable {
         let checkedContinuations: NIOLockedValueBox<Deque<CheckedContinuation<Void, Never>>>
 
         @usableFromInline
@@ -162,13 +162,13 @@ extension RequestBody {
     }
 
     /// A source used for driving a ``RequestBody`` stream.
-    public final class Source {
+    public final class Source: Sendable {
         @usableFromInline
         let source: Producer.Source
         @usableFromInline
         let delegate: Delegate
         @usableFromInline
-        var waitForProduceMore: Bool
+        let waitForProduceMore: NIOLockedValueBox<Bool>
 
         @usableFromInline
         init(source: Producer.Source, delegate: Delegate) {
@@ -187,13 +187,13 @@ extension RequestBody {
         public func yield(_ element: ByteBuffer) async throws {
             // if previous call indicated we should stop producing wait until the delegate
             // says we can start producing again
-            if self.waitForProduceMore {
+            if self.waitForProduceMore.withLockedValue({ $0 }) {
                 await self.delegate.waitForProduceMore()
-                self.waitForProduceMore = false
+                self.waitForProduceMore.withLockedValue { $0 = false }
             }
             let result = self.source.yield(element)
             if result == .stopProducing {
-                self.waitForProduceMore = true
+                self.waitForProduceMore.withLockedValue { $0 = true }
             }
         }
 
