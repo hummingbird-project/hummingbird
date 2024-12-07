@@ -35,16 +35,16 @@ extension RequestBody {
         _ operation: sending (RequestBody) async throws -> Value,
         onInboundClosed: @Sendable @escaping () -> Void
     ) async throws -> Value {
-        let iterator: UnsafeTransfer<NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator>? =
+        let iterator: UnsafeTransfer<NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator> =
             switch self._backing {
             case .nioAsyncChannelRequestBody(let iterator):
                 iterator.underlyingIterator
             default:
-                nil
+                preconditionFailure("Cannot run consumeWithInboundCloseHandler on edited request body")
             }
         let (requestBody, source) = RequestBody.makeStream()
         return try await withInboundCloseHandler(
-            iterator: iterator?.wrappedValue,
+            iterator: iterator.wrappedValue,
             source: source,
             operation: {
                 try await operation(requestBody)
@@ -99,12 +99,11 @@ extension RequestBody {
 
     @available(macOS 15, iOS 18, tvOS 18, *)
     func withInboundCloseHandler<Value: Sendable>(
-        iterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator?,
+        iterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator,
         source: RequestBody.Source,
         operation: sending () async throws -> Value,
         onInboundClosed: @Sendable @escaping () -> Void
     ) async throws -> Value {
-        guard let iterator else { return try await operation() }
         let unsafeIterator = UnsafeTransfer(iterator)
         let unsafeOnInboundClosed = UnsafeTransfer(onInboundClosed)
         let value = try await withThrowingTaskGroup(of: Void.self) { group in
