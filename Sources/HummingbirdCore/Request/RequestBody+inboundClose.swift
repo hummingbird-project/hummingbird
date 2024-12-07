@@ -55,11 +55,6 @@ extension RequestBody {
         )
     }
 
-    fileprivate enum CancelOnInboundGroupType<Value: Sendable>: Sendable {
-        case value(Value)
-        case inboundClosed
-    }
-
     /// Run provided closure but cancel it if the inbound request part stream is closed.
     ///
     /// This function is designed for use with long running requests like server sent events. It assumes you
@@ -76,21 +71,16 @@ extension RequestBody {
         let (barrier, source) = AsyncStream<Void>.makeStream()
         return try await consumeWithInboundCloseHandler { body in
             let unsafeOperation = UnsafeTransfer(operation)
-            return try await withThrowingTaskGroup(of: CancelOnInboundGroupType<Value>.self) { group in
+            return try await withThrowingTaskGroup(of: Value.self) { group in
                 group.addTask {
-                    guard await barrier.first(where: { _ in true }) != nil else {
-                        throw CancellationError()
-                    }
-                    return .inboundClosed
+                    var iterator = barrier.makeAsyncIterator()
+                    _ = await iterator.next()
+                    throw CancellationError()
                 }
                 group.addTask {
-                    do {
-                        return try await .value(unsafeOperation.wrappedValue(body))
-                    } catch {
-                        throw error
-                    }
+                    try await unsafeOperation.wrappedValue(body)
                 }
-                if case .value(let value) = try await group.next() {
+                if case .some(let value) = try await group.next() {
                     source.finish()
                     return value
                 }
@@ -98,7 +88,7 @@ extension RequestBody {
                 throw CancellationError()
             }
         } onInboundClosed: {
-            source.yield()
+            source.finish()
         }
     }
 
