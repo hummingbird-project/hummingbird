@@ -146,9 +146,9 @@ final class MiddlewareTests: XCTestCase {
 
     func testMiddlewareResponseBodyWriter() async throws {
         struct TransformWriter: ResponseBodyWriter {
-            var parentWriter: any ResponseBodyWriter
+            let parentWriter: any ResponseBodyWriter
 
-            mutating func write(_ buffer: ByteBuffer) async throws {
+            func write(_ buffer: ByteBuffer) async throws {
                 let output = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
                 try await self.parentWriter.write(output)
             }
@@ -187,9 +187,9 @@ final class MiddlewareTests: XCTestCase {
 
     func testMappedResponseBodyWriter() async throws {
         struct TransformWriter: ResponseBodyWriter {
-            var parentWriter: any ResponseBodyWriter
+            let parentWriter: any ResponseBodyWriter
 
-            mutating func write(_ buffer: ByteBuffer) async throws {
+            func write(_ buffer: ByteBuffer) async throws {
                 let output = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
                 try await self.parentWriter.write(output)
             }

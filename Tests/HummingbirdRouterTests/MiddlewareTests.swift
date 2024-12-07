@@ -130,10 +130,15 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareResponseBodyWriter() async throws {
-        struct TransformWriter: ResponseBodyWriter {
+        // Test non-sendable ResponseBodyWriter
+        final class TransformWriter: ResponseBodyWriter {
             var parentWriter: any ResponseBodyWriter
 
-            mutating func write(_ buffer: ByteBuffer) async throws {
+            init(parentWriter: any ResponseBodyWriter) {
+                self.parentWriter = parentWriter
+            }
+
+            func write(_ buffer: ByteBuffer) async throws {
                 let output = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
                 try await self.parentWriter.write(output)
             }
