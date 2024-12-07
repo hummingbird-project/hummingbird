@@ -73,8 +73,7 @@ struct HTTP2StreamChannel: ServerChildChannel {
                     }
                     let request = Request(
                         head: head,
-                        bodyIterator: iterator,
-                        supportCancelOnInboundClosure: self.configuration.supportCancelOnInboundClosure
+                        bodyIterator: iterator
                     )
                     let responseWriter = ResponseWriter(outbound: outbound)
                     try await self.responder(request, responseWriter, asyncChannel.channel)

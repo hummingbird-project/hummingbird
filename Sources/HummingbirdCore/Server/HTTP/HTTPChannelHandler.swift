@@ -24,8 +24,6 @@ public protocol HTTPChannelHandler: ServerChildChannel {
     typealias Responder = @Sendable (Request, consuming ResponseWriter, Channel) async throws -> Void
     /// HTTP Request responder
     var responder: Responder { get }
-    /// Support being able to use ``Request/cancelOnInboundClosure``
-    var supportCancelOnInboundClosure: Bool { get }
 }
 
 /// Internal error thrown when an unexpected HTTP part is received eg we didn't receive
@@ -51,8 +49,7 @@ extension HTTPChannelHandler {
                     readParts: while true {
                         let request = Request(
                             head: head,
-                            bodyIterator: iterator,
-                            supportCancelOnInboundClosure: self.supportCancelOnInboundClosure
+                            bodyIterator: iterator
                         )
                         let responseWriter = ResponseWriter(outbound: outbound)
                         do {
@@ -62,15 +59,6 @@ extension HTTPChannelHandler {
                         }
                         if request.headers[.connection] == "close" {
                             return
-                        }
-                        switch await request.getState() {
-                        case .nextHead(let newHead):
-                            head = newHead
-                            continue
-                        case .closed:
-                            break readParts
-                        default:
-                            break
                         }
                         // Flush current request
                         // read until we don't have a body part
