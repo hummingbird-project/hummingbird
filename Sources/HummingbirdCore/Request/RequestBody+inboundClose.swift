@@ -18,7 +18,6 @@ import NIOCore
 import NIOHTTPTypes
 
 #if compiler(>=6.0)
-@available(macOS 15, iOS 18, tvOS 18, *)
 extension RequestBody {
     /// Run provided closure but cancel it if the inbound request part stream is closed.
     ///
@@ -33,7 +32,6 @@ extension RequestBody {
     ///   - operation: The actual operation
     ///   = onInboundClose: handler invoked when inbound is closed
     /// - Returns: Return value of operation
-    @available(macOS 15, iOS 18, tvOS 18, *)
     public func consumeWithInboundCloseHandler<Value: Sendable>(
         isolation: isolated (any Actor)? = #isolation,
         _ operation: (RequestBody) async throws -> Value,
@@ -96,7 +94,6 @@ extension RequestBody {
         }
     }
 
-    @available(macOS 15, iOS 18, tvOS 18, *)
     fileprivate func withInboundCloseHandler<Value: Sendable>(
         isolation: isolated (any Actor)? = #isolation,
         iterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator,
@@ -126,7 +123,6 @@ extension RequestBody {
         case nextRequestReady
     }
 
-    @available(macOS 15, iOS 18, tvOS 18, *)
     fileprivate func iterate(
         iterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator,
         source: RequestBody.Source
