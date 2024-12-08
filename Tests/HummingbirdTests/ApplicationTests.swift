@@ -868,8 +868,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     #if compiler(>=6.0)
-    /// Test consumeWithInboundHandler
-    @available(macOS 15, iOS 18, tvOS 18, *)
+    /// Test consumeWithInboundCloseHandler
     func testConsumeWithInboundHandler() async throws {
         let router = Router()
         router.post("streaming") { request, context -> Response in

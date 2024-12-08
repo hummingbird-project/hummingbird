@@ -556,7 +556,6 @@ final class HummingBirdCoreTests: XCTestCase {
 
     #if compiler(>=6.0)
     /// Test running withInboundCloseHandler with closing input
-    @available(macOS 15, iOS 18, tvOS 18, *)
     func testWithCloseInboundHandlerWithoutClose() async throws {
         try await testServer(
             responder: { (request, responseWriter: consuming ResponseWriter, _) in
@@ -583,7 +582,6 @@ final class HummingBirdCoreTests: XCTestCase {
     }
 
     /// Test running withInboundCloseHandler
-    @available(macOS 15, iOS 18, tvOS 18, *)
     func testWithCloseInboundHandler() async throws {
         let handlerPromise = Promise<Void>()
         try await testServer(
@@ -621,7 +619,6 @@ final class HummingBirdCoreTests: XCTestCase {
     }
 
     /// Test running cancel on inbound close without an inbound close
-    @available(macOS 15, iOS 18, tvOS 18, *)
     func testCancelOnCloseInboundWithoutClose() async throws {
         try await testServer(
             responder: { (request, responseWriter: consuming ResponseWriter, _) in
@@ -643,7 +640,6 @@ final class HummingBirdCoreTests: XCTestCase {
     }
 
     /// Test running cancel on inbound close actually cancels on inbound closure
-    @available(macOS 15, iOS 18, tvOS 18, *)
     func testCancelOnCloseInbound() async throws {
         let handlerPromise = Promise<Void>()
         try await testServer(
