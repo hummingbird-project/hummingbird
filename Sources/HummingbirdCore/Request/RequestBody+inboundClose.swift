@@ -29,12 +29,14 @@ extension RequestBody {
     /// If the response finishes the connection will be closed.
     ///
     /// - Parameters
+    ///   - isolation: The isolation of the method. Defaults to the isolation of the caller.
     ///   - operation: The actual operation
     ///   = onInboundClose: handler invoked when inbound is closed
     /// - Returns: Return value of operation
     @available(macOS 15, iOS 18, tvOS 18, *)
     public func consumeWithInboundCloseHandler<Value: Sendable>(
-        _ operation: sending (RequestBody) async throws -> Value,
+        isolation: isolated (any Actor)? = #isolation,
+        _ operation: (RequestBody) async throws -> Value,
         onInboundClosed: @Sendable @escaping () -> Void
     ) async throws -> Value {
         let iterator: UnsafeTransfer<NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator> =
@@ -63,10 +65,13 @@ extension RequestBody {
     ///
     /// If the response finishes the connection will be closed.
     ///
-    /// - Parameter operation: The actual operation to run
+    /// - Parameters
+    ///   - isolation: The isolation of the method. Defaults to the isolation of the caller.
+    ///   - operation: The actual operation to run
     /// - Returns: Return value of operation
     public func consumeWithCancelOnInboundClose<Value: Sendable>(
-        _ operation: sending @escaping (RequestBody) async throws -> Value
+        isolation: isolated (any Actor)? = #isolation,
+        _ operation: @escaping (RequestBody) async throws -> Value
     ) async throws -> Value {
         let (barrier, source) = AsyncStream<Void>.makeStream()
         return try await consumeWithInboundCloseHandler { body in
@@ -94,17 +99,19 @@ extension RequestBody {
 
     @available(macOS 15, iOS 18, tvOS 18, *)
     func withInboundCloseHandler<Value: Sendable>(
+        isolation: isolated (any Actor)? = #isolation,
         iterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator,
         source: RequestBody.Source,
-        operation: sending () async throws -> Value,
+        operation: () async throws -> Value,
         onInboundClosed: @Sendable @escaping () -> Void
     ) async throws -> Value {
         let unsafeIterator = UnsafeTransfer(iterator)
+        let unsafeOnInboundClosed = UnsafeTransfer(onInboundClosed)
         let value = try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
                 do {
                     if try await self.iterate(iterator: unsafeIterator.wrappedValue, source: source) == .inboundClosed {
-                        onInboundClosed()
+                        unsafeOnInboundClosed.wrappedValue()
                     }
                 } catch is CancellationError {}
             }
