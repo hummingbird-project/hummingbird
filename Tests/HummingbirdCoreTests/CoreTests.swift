@@ -626,7 +626,7 @@ final class HummingBirdCoreTests: XCTestCase {
         try await testServer(
             responder: { (request, responseWriter: consuming ResponseWriter, _) in
                 var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
-                try await request.body.consumeWithCancelOnInboundClose { body in
+                try await request.body.consumeWithCancellationOnInboundClose { body in
                     try await bodyWriter.write(body)
                 }
                 try await bodyWriter.finish(nil)
@@ -650,7 +650,7 @@ final class HummingBirdCoreTests: XCTestCase {
             responder: { (request, responseWriter: consuming ResponseWriter, _) in
                 await handlerPromise.complete(())
                 var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
-                try await request.body.consumeWithCancelOnInboundClose { body in
+                try await request.body.consumeWithCancellationOnInboundClose { body in
                     let body = try await body.collect(upTo: .max)
                     for _ in 0..<200 {
                         do {
