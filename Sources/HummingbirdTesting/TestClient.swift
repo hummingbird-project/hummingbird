@@ -104,7 +104,7 @@ public struct TestClient: Sendable {
     /// shutdown client
     public func shutdown() async throws {
         do {
-            try await self.close()
+            try await self.close(mode: .all)
         } catch TestClient.Error.connectionNotOpen {
         } catch ChannelError.alreadyClosed {}
         if case .createNew = self.eventLoopGroupProvider {
@@ -163,10 +163,18 @@ public struct TestClient: Sendable {
         return response
     }
 
-    public func close() async throws {
+    /// Execute request to server but don't wait for response.
+    public func executeAndDontWaitForResponse(_ request: TestClient.Request) async throws {
+        let channel = try await getChannel()
+        let promise = self.eventLoopGroup.any().makePromise(of: TestClient.Response.self)
+        let task = HTTPTask(request: self.cleanupRequest(request), responsePromise: promise)
+        try await channel.writeAndFlush(task)
+    }
+
+    public func close(mode: CloseMode = .output) async throws {
         self.channelPromise.completeWith(.failure(TestClient.Error.connectionNotOpen))
         let channel = try await getChannel()
-        return try await channel.close()
+        return try await channel.close(mode: mode)
     }
 
     public func getChannel() async throws -> Channel {
