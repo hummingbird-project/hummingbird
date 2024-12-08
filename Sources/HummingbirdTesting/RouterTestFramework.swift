@@ -103,10 +103,14 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
                 if let contentLength = body.map(\.readableBytes) {
                     headers[.contentLength] = String(describing: contentLength)
                 }
-                let (stream, source) = RequestBody.makeStream()
+                let (stream, source) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
+                let iterator = stream.makeAsyncIterator()
+                let requestBody = NIOAsyncChannelRequestBody(iterator: iterator)
+
+                //let (stream, source) = RequestBody.makeStream()
                 let request = Request(
                     head: .init(method: method, scheme: "http", authority: "localhost", path: uri, headerFields: headers),
-                    body: stream
+                    body: RequestBody(nioAsyncChannelInbound: requestBody)
                 )
                 let logger = self.logger.with(metadataKey: "hb.request.id", value: .stringConvertible(RequestID()))
                 let context = self.makeContext(logger)
@@ -129,10 +133,13 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
                     while body.readableBytes > 0 {
                         let chunkSize = min(32 * 1024, body.readableBytes)
                         let buffer = body.readSlice(length: chunkSize)!
-                        try await source.yield(buffer)
+                        source.yield(.body(buffer))
                     }
                 }
-                source.finish()
+                source.yield(.end(nil))
+                defer {
+                    source.finish()
+                }
                 return try await group.next()!
             }
         }
