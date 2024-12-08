@@ -69,14 +69,13 @@ extension RequestBody {
     ///   - isolation: The isolation of the method. Defaults to the isolation of the caller.
     ///   - operation: The actual operation to run
     /// - Returns: Return value of operation
-    public func consumeWithCancelOnInboundClose<Value: Sendable>(
-        isolation: isolated (any Actor)? = #isolation,
-        _ operation: @escaping (RequestBody) async throws -> Value
+    public func consumeWithCancellationOnInboundClose<Value: Sendable>(
+        _ operation: sending @escaping (RequestBody) async throws -> Value
     ) async throws -> Value {
         let (barrier, source) = AsyncStream<Void>.makeStream()
         return try await consumeWithInboundCloseHandler { body in
-            let unsafeOperation = UnsafeTransfer(operation)
-            return try await withThrowingTaskGroup(of: Value.self) { group in
+            try await withThrowingTaskGroup(of: Value.self) { group in
+                let unsafeOperation = UnsafeTransfer(operation)
                 group.addTask {
                     var iterator = barrier.makeAsyncIterator()
                     _ = await iterator.next()
@@ -98,7 +97,7 @@ extension RequestBody {
     }
 
     @available(macOS 15, iOS 18, tvOS 18, *)
-    func withInboundCloseHandler<Value: Sendable>(
+    fileprivate func withInboundCloseHandler<Value: Sendable>(
         isolation: isolated (any Actor)? = #isolation,
         iterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator,
         source: RequestBody.Source,
@@ -122,13 +121,13 @@ extension RequestBody {
         return value
     }
 
-    enum IterateResult {
+    fileprivate enum IterateResult {
         case inboundClosed
         case nextRequestReady
     }
 
     @available(macOS 15, iOS 18, tvOS 18, *)
-    func iterate(
+    fileprivate func iterate(
         iterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator,
         source: RequestBody.Source
     ) async throws -> IterateResult {
