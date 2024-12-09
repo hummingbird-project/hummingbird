@@ -107,7 +107,7 @@ extension RequestBody {
         }
     }
 
-    func withInboundCloseHandler<Value: Sendable, AsyncIterator: AsyncIteratorProtocol>(
+    fileprivate func withInboundCloseHandler<Value: Sendable, AsyncIterator: AsyncIteratorProtocol>(
         isolation: isolated (any Actor)? = #isolation,
         iterator: AsyncIterator,
         source: RequestBody.Source,
@@ -136,7 +136,7 @@ extension RequestBody {
         case nextRequestReady
     }
 
-    func iterate<AsyncIterator: AsyncIteratorProtocol>(
+    fileprivate func iterate<AsyncIterator: AsyncIteratorProtocol>(
         iterator: AsyncIterator,
         source: RequestBody.Source
     ) async throws -> IterateResult where AsyncIterator.Element == HTTPRequestPart {
