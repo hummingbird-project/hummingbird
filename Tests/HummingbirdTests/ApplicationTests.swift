@@ -894,7 +894,7 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    /// Test consumeWithInboundHandler
+    /// Test consumeWithInboundHandler after having collected the Request body
     @available(macOS 15, iOS 18, tvOS 18, *)
     func testConsumeWithInboundHandlerAfterCollect() async throws {
         let router = Router()
@@ -924,7 +924,7 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    /// Test consumeWithInboundHandler
+    /// Test consumeWithInboundHandler after having replaced Request.body with a new streamed RequestBody
     @available(macOS 15, iOS 18, tvOS 18, *)
     func testConsumeWithInboundHandlerAfterReplacingBody() async throws {
         let router = Router()
@@ -932,7 +932,7 @@ final class ApplicationTests: XCTestCase {
             var request = request
             request.body = .init(
                 asyncSequence: request.body.map {
-                    var view = $0.readableBytesView.map { $0 ^ 255 }
+                    let view = $0.readableBytesView.map { $0 ^ 255 }
                     return ByteBuffer(bytes: view)
                 }
             )

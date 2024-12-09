@@ -15,6 +15,11 @@
 import NIOCore
 import NIOHTTPTypes
 
+/// AsyncSequence used by consumeWithInboundCloseHandler
+///
+/// It will provide the buffers output by the ResponseBody and when that finishes will start
+/// iterating what is left of the underlying request part stream, and continue iterating until
+/// it hits the next head
 struct RequestBodyMergedWithUnderlyingRequestPartIterator<Base: AsyncSequence>: AsyncSequence where Base.Element == ByteBuffer {
     typealias Element = HTTPRequestPart
     let base: Base
@@ -24,6 +29,7 @@ struct RequestBodyMergedWithUnderlyingRequestPartIterator<Base: AsyncSequence>: 
         enum CurrentAsyncIterator {
             case base(Base.AsyncIterator, underlying: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator)
             case underlying(NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator)
+            case done
         }
         var current: CurrentAsyncIterator
 
@@ -41,10 +47,20 @@ struct RequestBodyMergedWithUnderlyingRequestPartIterator<Base: AsyncSequence>: 
                     self.current = .underlying(underlying)
                     return .end(nil)
                 }
+
             case .underlying(var underlying):
-                let element = try await underlying.next()
+                while true {
+                    let part = try await underlying.next()
+                    if case .head = part {
+                        self.current = .done
+                        return part
+                    }
+                }
                 self.current = .underlying(underlying)
-                return element
+                return nil
+
+            case .done:
+                return nil
             }
         }
     }
