@@ -893,6 +893,72 @@ final class ApplicationTests: XCTestCase {
             }
         }
     }
+
+    /// Test consumeWithInboundHandler
+    @available(macOS 15, iOS 18, tvOS 18, *)
+    func testConsumeWithInboundHandlerAfterCollect() async throws {
+        let router = Router()
+        router.post("streaming") { request, context -> Response in
+            var request = request
+            _ = try await request.collectBody(upTo: .max)
+            let request2 = request
+            return Response(
+                status: .ok,
+                body: .init { writer in
+                    try await request2.body.consumeWithInboundCloseHandler { body in
+                        try await writer.write(body)
+                    } onInboundClosed: {
+                    }
+                    try await writer.finish(nil)
+                }
+            )
+        }
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.live) { client in
+            let buffer = Self.randomBuffer(size: 640_001)
+            try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(response.body, buffer)
+            }
+        }
+    }
+
+    /// Test consumeWithInboundHandler
+    @available(macOS 15, iOS 18, tvOS 18, *)
+    func testConsumeWithInboundHandlerAfterReplacingBody() async throws {
+        let router = Router()
+        router.post("streaming") { request, context -> Response in
+            var request = request
+            request.body = .init(
+                asyncSequence: request.body.map {
+                    var view = $0.readableBytesView.map { $0 ^ 255 }
+                    return ByteBuffer(bytes: view)
+                }
+            )
+            let request2 = request
+            return Response(
+                status: .ok,
+                body: .init { writer in
+                    try await request2.body.consumeWithInboundCloseHandler { body in
+                        try await writer.write(body)
+                    } onInboundClosed: {
+                    }
+                    try await writer.finish(nil)
+                }
+            )
+        }
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.live) { client in
+            let buffer = Self.randomBuffer(size: 640_001)
+            let xorBuffer = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
+            try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(response.body, xorBuffer)
+            }
+        }
+    }
     #endif
 }
 
