@@ -37,22 +37,35 @@ extension RequestBody {
         _ operation: (RequestBody) async throws -> Value,
         onInboundClosed: @Sendable @escaping () -> Void
     ) async throws -> Value {
-        let iterator: UnsafeTransfer<NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator> =
-            switch self._backing {
-            case .nioAsyncChannelRequestBody(let iterator):
-                iterator.underlyingIterator
-            default:
-                preconditionFailure("Cannot run consumeWithInboundCloseHandler on edited request body")
-            }
         let (requestBody, source) = RequestBody.makeStream()
-        return try await withInboundCloseHandler(
-            iterator: iterator.wrappedValue,
-            source: source,
-            operation: {
-                try await operation(requestBody)
-            },
-            onInboundClosed: onInboundClosed
-        )
+        switch self._backing {
+        case .nioAsyncChannelRequestBody(let body):
+            return try await withInboundCloseHandler(
+                iterator: body.underlyingIterator.wrappedValue,
+                source: source,
+                operation: {
+                    try await operation(requestBody)
+                },
+                onInboundClosed: onInboundClosed
+            )
+
+        case .byteBuffer(_, .some(let originalRequestBody)), .anyAsyncSequence(_, .some(let originalRequestBody)):
+            let iterator =
+                self
+                .mergeWithUnderlyingRequestPartIterator(originalRequestBody.underlyingIterator.wrappedValue)
+                .makeAsyncIterator()
+            return try await withInboundCloseHandler(
+                iterator: iterator,
+                source: source,
+                operation: {
+                    try await operation(requestBody)
+                },
+                onInboundClosed: onInboundClosed
+            )
+
+        default:
+            preconditionFailure("Cannot run consumeWithInboundCloseHandler on edited request body")
+        }
     }
 
     /// Run provided closure but cancel it if the inbound request part stream is closed.
@@ -94,13 +107,13 @@ extension RequestBody {
         }
     }
 
-    fileprivate func withInboundCloseHandler<Value: Sendable>(
+    func withInboundCloseHandler<Value: Sendable, AsyncIterator: AsyncIteratorProtocol>(
         isolation: isolated (any Actor)? = #isolation,
-        iterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator,
+        iterator: AsyncIterator,
         source: RequestBody.Source,
         operation: () async throws -> Value,
         onInboundClosed: @Sendable @escaping () -> Void
-    ) async throws -> Value {
+    ) async throws -> Value where AsyncIterator.Element == HTTPRequestPart {
         let unsafeIterator = UnsafeTransfer(iterator)
         let unsafeOnInboundClosed = UnsafeTransfer(onInboundClosed)
         let value = try await withThrowingTaskGroup(of: Void.self) { group in
@@ -123,10 +136,10 @@ extension RequestBody {
         case nextRequestReady
     }
 
-    fileprivate func iterate(
-        iterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator,
+    func iterate<AsyncIterator: AsyncIteratorProtocol>(
+        iterator: AsyncIterator,
         source: RequestBody.Source
-    ) async throws -> IterateResult {
+    ) async throws -> IterateResult where AsyncIterator.Element == HTTPRequestPart {
         var iterator = iterator
         while let part = try await iterator.next() {
             switch part {
