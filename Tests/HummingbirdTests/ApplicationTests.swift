@@ -866,6 +866,34 @@ final class ApplicationTests: XCTestCase {
             }
         }
     }
+
+    #if compiler(>=6.0)
+    /// Test consumeWithInboundCloseHandler
+    func testConsumeWithInboundHandler() async throws {
+        let router = Router()
+        router.post("streaming") { request, context -> Response in
+            Response(
+                status: .ok,
+                body: .init { writer in
+                    try await request.body.consumeWithInboundCloseHandler { body in
+                        try await writer.write(body)
+                    } onInboundClosed: {
+                    }
+                    try await writer.finish(nil)
+                }
+            )
+        }
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.live) { client in
+            let buffer = Self.randomBuffer(size: 640_001)
+            try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(response.body, buffer)
+            }
+        }
+    }
+    #endif
 }
 
 /// HTTPField used during tests
