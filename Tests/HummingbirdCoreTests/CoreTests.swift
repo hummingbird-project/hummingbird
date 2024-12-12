@@ -648,7 +648,7 @@ final class HummingBirdCoreTests: XCTestCase {
                 var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
                 try await request.body.consumeWithCancellationOnInboundClose { body in
                     let body = try await body.collect(upTo: .max)
-                    for _ in 0..<200 {
+                    for _ in 0..<50 {
                         do {
                             try Task.checkCancellation()
                             try await Task.sleep(for: .seconds(1))
@@ -657,7 +657,7 @@ final class HummingBirdCoreTests: XCTestCase {
                             throw error
                         }
                     }
-                    try await Task.sleep(for: .seconds(60))
+                    XCTFail("Should not reach here as the handler should have been cancelled")
                 }
                 try await bodyWriter.finish(nil)
             },
