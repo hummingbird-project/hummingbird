@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2022 the Hummingbird authors
+// Copyright (c) 2021-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -14,6 +14,7 @@
 
 import HTTPTypes
 import NIOCore
+import NIOHTTPTypes
 
 /// Holds all the values required to process a request
 public struct Request: Sendable {
@@ -45,6 +46,19 @@ public struct Request: Sendable {
         self.uri = .init(head.path ?? "")
         self.head = head
         self.body = body
+    }
+
+    /// Create new Request
+    /// - Parameters:
+    ///   - head: HTTP head
+    ///   - bodyIterator: HTTP request part stream
+    package init(
+        head: HTTPRequest,
+        bodyIterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator
+    ) {
+        self.uri = .init(head.path ?? "")
+        self.head = head
+        self.body = .init(nioAsyncChannelInbound: .init(iterator: bodyIterator))
     }
 
     /// Collapse body into one ByteBuffer.
