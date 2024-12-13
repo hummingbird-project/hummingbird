@@ -117,12 +117,11 @@ extension RequestBody {
         onInboundClosed: @Sendable @escaping () -> Void
     ) async throws -> Value where AsyncIterator.Element == HTTPRequestPart {
         let unsafeIterator = UnsafeTransfer(iterator)
-        let unsafeOnInboundClosed = UnsafeTransfer(onInboundClosed)
         let value = try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
                 do {
                     if try await self.iterate(iterator: unsafeIterator.wrappedValue, source: source) == .inboundClosed {
-                        unsafeOnInboundClosed.wrappedValue()
+                        onInboundClosed()
                     }
                 } catch is CancellationError {}
             }
