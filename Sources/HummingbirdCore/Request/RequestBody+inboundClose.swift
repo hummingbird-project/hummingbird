@@ -81,29 +81,31 @@ extension RequestBody {
     ///   - operation: The actual operation to run
     /// - Returns: Return value of operation
     public func consumeWithCancellationOnInboundClose<Value: Sendable>(
-        _ operation: sending @escaping (RequestBody) async throws -> Value
+        _ operation: (RequestBody) async throws -> Value
     ) async throws -> Value {
-        let (barrier, source) = AsyncStream<Void>.makeStream()
-        return try await consumeWithInboundCloseHandler { body in
-            try await withThrowingTaskGroup(of: Value.self) { group in
-                let unsafeOperation = UnsafeTransfer(operation)
-                group.addTask {
-                    var iterator = barrier.makeAsyncIterator()
-                    _ = await iterator.next()
+        try await withoutActuallyEscaping(operation) { operation in
+            let (barrier, source) = AsyncStream<Void>.makeStream()
+            return try await consumeWithInboundCloseHandler { body in
+                try await withThrowingTaskGroup(of: Value.self) { group in
+                    let unsafeOperation = UnsafeTransfer(operation)
+                    group.addTask {
+                        var iterator = barrier.makeAsyncIterator()
+                        _ = await iterator.next()
+                        throw CancellationError()
+                    }
+                    group.addTask {
+                        try await unsafeOperation.wrappedValue(body)
+                    }
+                    if case .some(let value) = try await group.next() {
+                        source.finish()
+                        return value
+                    }
+                    group.cancelAll()
                     throw CancellationError()
                 }
-                group.addTask {
-                    try await unsafeOperation.wrappedValue(body)
-                }
-                if case .some(let value) = try await group.next() {
-                    source.finish()
-                    return value
-                }
-                group.cancelAll()
-                throw CancellationError()
+            } onInboundClosed: {
+                source.finish()
             }
-        } onInboundClosed: {
-            source.finish()
         }
     }
 
