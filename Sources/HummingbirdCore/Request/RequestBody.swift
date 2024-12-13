@@ -23,9 +23,9 @@ import NIOHTTPTypes
 public struct RequestBody: Sendable, AsyncSequence {
     @usableFromInline
     internal enum _Backing: Sendable {
-        case byteBuffer(ByteBuffer)
+        case byteBuffer(ByteBuffer, NIOAsyncChannelRequestBody?)
         case nioAsyncChannelRequestBody(NIOAsyncChannelRequestBody)
-        case anyAsyncSequence(AnyAsyncSequence<ByteBuffer>)
+        case anyAsyncSequence(AnyAsyncSequence<ByteBuffer>, NIOAsyncChannelRequestBody?)
     }
 
     @usableFromInline
@@ -40,7 +40,7 @@ public struct RequestBody: Sendable, AsyncSequence {
     /// - Parameter buffer: ByteBuffer
     @inlinable
     public init(buffer: ByteBuffer) {
-        self.init(.byteBuffer(buffer))
+        self.init(.byteBuffer(buffer, nil))
     }
 
     ///  Initialise ``RequestBody`` from AsyncSequence of ByteBuffers
@@ -54,7 +54,7 @@ public struct RequestBody: Sendable, AsyncSequence {
     /// - Parameter asyncSequence: AsyncSequence
     @inlinable
     public init<AS: AsyncSequence & Sendable>(asyncSequence: AS) where AS.Element == ByteBuffer {
-        self.init(.anyAsyncSequence(.init(asyncSequence)))
+        self.init(.anyAsyncSequence(.init(asyncSequence), nil))
     }
 }
 
@@ -103,12 +103,20 @@ extension RequestBody {
     @inlinable
     public func makeAsyncIterator() -> AsyncIterator {
         switch self._backing {
-        case .byteBuffer(let buffer):
+        case .byteBuffer(let buffer, _):
             return .init(.byteBuffer(buffer))
         case .nioAsyncChannelRequestBody(let requestBody):
             return .init(.nioAsyncChannelRequestBody(requestBody.makeAsyncIterator()))
-        case .anyAsyncSequence(let stream):
+        case .anyAsyncSequence(let stream, _):
             return .init(.anyAsyncSequence(stream.makeAsyncIterator()))
+        }
+    }
+
+    var originalRequestBody: NIOAsyncChannelRequestBody? {
+        switch _backing {
+        case .nioAsyncChannelRequestBody(let body): body
+        case .byteBuffer(_, let body): body
+        case .anyAsyncSequence: nil
         }
     }
 }
@@ -235,7 +243,7 @@ package struct NIOAsyncChannelRequestBody: Sendable, AsyncSequence {
     public typealias InboundStream = NIOAsyncChannelInboundStream<HTTPRequestPart>
 
     @usableFromInline
-    internal let underlyingIterator: UnsafeTransfer<NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator>
+    internal let underlyingIterator: UnsafeTransfer<InboundStream.AsyncIterator>
     @usableFromInline
     internal let alreadyIterated: NIOLockedValueBox<Bool>
 
