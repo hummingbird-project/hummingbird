@@ -894,8 +894,32 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    /// Test consumeWithInboundCloseHandler
+    func testConsumeWithCancellationOnInboundClose() async throws {
+        let router = Router()
+        router.post("streaming") { request, context -> Response in
+            Response(
+                status: .ok,
+                body: .init { writer in
+                    try await request.body.consumeWithCancellationOnInboundClose { body in
+                        try await writer.write(body)
+                    }
+                    try await writer.finish(nil)
+                }
+            )
+        }
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.live) { client in
+            let buffer = Self.randomBuffer(size: 640_001)
+            try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(response.body, buffer)
+            }
+        }
+    }
+
     /// Test consumeWithInboundHandler after having collected the Request body
-    @available(macOS 15, iOS 18, tvOS 18, *)
     func testConsumeWithInboundHandlerAfterCollect() async throws {
         let router = Router()
         router.post("streaming") { request, context -> Response in
@@ -925,7 +949,6 @@ final class ApplicationTests: XCTestCase {
     }
 
     /// Test consumeWithInboundHandler after having replaced Request.body with a new streamed RequestBody
-    @available(macOS 15, iOS 18, tvOS 18, *)
     func testConsumeWithInboundHandlerAfterReplacingBody() async throws {
         let router = Router()
         router.post("streaming") { request, context -> Response in
