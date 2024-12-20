@@ -735,7 +735,7 @@ final class RouterTests: XCTestCase {
         router.get("test/this") { _, _ in "" }
         router.put("test") { _, _ in "" }
         router.post("{test}/{what}") { _, _ in "" }
-        router.get("wildcard/*") { _, _ in "" }
+        router.get("wildcard/*/*") { _, _ in "" }
         router.get("recursive_wildcard/**") { _, _ in "" }
         router.patch("/test/longer/path/name") { _, _ in "" }
         let routes = router.routes
@@ -750,10 +750,44 @@ final class RouterTests: XCTestCase {
         XCTAssertEqual(routes[3].method, .patch)
         XCTAssertEqual(routes[4].path.description, "/{test}/{what}")
         XCTAssertEqual(routes[4].method, .post)
-        XCTAssertEqual(routes[5].path.description, "/wildcard/*")
+        XCTAssertEqual(routes[5].path.description, "/wildcard/*/*")
         XCTAssertEqual(routes[5].method, .get)
         XCTAssertEqual(routes[6].path.description, "/recursive_wildcard/**")
         XCTAssertEqual(routes[6].method, .get)
+    }
+
+    func testValidateOrdering() throws {
+        let router = Router()
+        router.post("{test}/{what}") { _, _ in "" }
+        router.get("test/this") { _, _ in "" }
+        try router.validate()
+    }
+
+    func testValidateParametersVsWildcards() throws {
+        let router = Router()
+        router.get("test/*") { _, _ in "" }
+        router.get("test/{what}") { _, _ in "" }
+        XCTAssertThrowsError(try router.validate()) { error in
+            guard let error = error as? RouterValidationError else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(error.description, "Route /test/{what} overrides /test/*")
+        }
+    }
+
+    func testValidateParametersVsRecursiveWildcard() throws {
+        let router = Router()
+        router.get("test/**") { _, _ in "" }
+        router.get("test/{what}") { _, _ in "" }
+        try router.validate()
+    }
+
+    func testValidateDifferentParameterNames() throws {
+        let router = Router()
+        router.get("test/{this}") { _, _ in "" }
+        router.get("test/{what}") { _, _ in "" }
+        XCTAssertThrowsError(try router.validate())
     }
 }
 
