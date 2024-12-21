@@ -12,9 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import Logging
 import NIOPosix
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Local file system file provider used by FileMiddleware. All file accesses are relative to a root folder
 public struct LocalFileSystem: FileProvider {
