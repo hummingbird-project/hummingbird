@@ -13,11 +13,16 @@
 //===----------------------------------------------------------------------===//
 
 import Atomics
-import Foundation
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
 import Tracing
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Endpoint path storage
 public struct EndpointPath: Sendable {
