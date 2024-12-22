@@ -30,7 +30,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
         let node = Self.map(.init())
         for element in split {
             if let equals = element.firstIndex(of: "=") {
-                let before = element[..<equals].removingPercentEncoding
+                let before = element[..<equals].removingURLPercentEncoding()
                 let afterEquals = element.index(after: equals)
                 let after = element[afterEquals...].replacingOccurrences(of: "+", with: " ")
                 guard let key = before else { throw Error.failedToDecode("Failed to percent decode \(element)") }
@@ -133,7 +133,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
         }
 
         var percentEncoded: String {
-            self.value.addingPercentEncoding(withAllowedCharacters: URLEncodedForm.unreservedCharacters) ?? self.value
+            self.value.addingPercentEncoding(forURLComponent: .queryItem)
         }
 
         static func == (lhs: URLEncodedFormNode.NodeValue, rhs: URLEncodedFormNode.NodeValue) -> Bool {

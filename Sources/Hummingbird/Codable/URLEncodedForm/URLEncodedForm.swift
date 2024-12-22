@@ -43,11 +43,6 @@ internal enum URLEncodedForm {
         fileprivate static let `super` = Key(stringValue: "super")!
     }
 
-    /// ASCII characters that will not be percent encoded in URL encoded form data
-    static let unreservedCharacters = CharacterSet(
-        charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~"
-    )
-
     /// ISO8601 data formatter used throughout URL encoded form code
     static var iso8601Formatter: ISO8601DateFormatter {
         let formatter = ISO8601DateFormatter()

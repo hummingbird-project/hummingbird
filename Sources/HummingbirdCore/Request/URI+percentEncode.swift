@@ -67,7 +67,7 @@ extension StringProtocol {
         }
     }
 
-    fileprivate func addingPercentEncoding(forURLComponent component: URLComponentSet) -> String {
+    package func addingPercentEncoding(forURLComponent component: URLComponentSet) -> String {
         let fastResult = utf8.withContiguousStorageIfAvailable {
             addingPercentEncoding(utf8Buffer: $0, component: component)
         }
@@ -137,7 +137,7 @@ extension StringProtocol {
         }
     }
 
-    fileprivate func removingURLPercentEncoding(excluding: Set<UInt8> = []) -> String? {
+    package func removingURLPercentEncoding(excluding: Set<UInt8> = []) -> String? {
         let fastResult = utf8.withContiguousStorageIfAvailable {
             removingURLPercentEncoding(utf8Buffer: $0, excluding: excluding)
         }
@@ -193,25 +193,28 @@ extension StringProtocol {
 
 // MARK: - Validation Extensions
 
-private struct URLComponentSet: OptionSet {
-    let rawValue: UInt8
-    static let scheme = URLComponentSet(rawValue: 1 << 0)
+package struct URLComponentSet: OptionSet {
+    package let rawValue: UInt8
+    package init(rawValue: UInt8) {
+        self.rawValue = rawValue
+    }
+    package static let scheme = URLComponentSet(rawValue: 1 << 0)
 
     // user, password, and hostIPLiteral use the same allowed character set.
-    static let user = URLComponentSet(rawValue: 1 << 1)
-    static let password = URLComponentSet(rawValue: 1 << 1)
-    static let hostIPLiteral = URLComponentSet(rawValue: 1 << 1)
+    package static let user = URLComponentSet(rawValue: 1 << 1)
+    package static let password = URLComponentSet(rawValue: 1 << 1)
+    package static let hostIPLiteral = URLComponentSet(rawValue: 1 << 1)
 
-    static let host = URLComponentSet(rawValue: 1 << 2)
-    static let hostZoneID = URLComponentSet(rawValue: 1 << 3)
-    static let path = URLComponentSet(rawValue: 1 << 4)
-    static let pathFirstSegment = URLComponentSet(rawValue: 1 << 5)
+    package static let host = URLComponentSet(rawValue: 1 << 2)
+    package static let hostZoneID = URLComponentSet(rawValue: 1 << 3)
+    package static let path = URLComponentSet(rawValue: 1 << 4)
+    package static let pathFirstSegment = URLComponentSet(rawValue: 1 << 5)
 
     // query and fragment use the same allowed character set.
-    static let query = URLComponentSet(rawValue: 1 << 6)
-    static let fragment = URLComponentSet(rawValue: 1 << 6)
+    package static let query = URLComponentSet(rawValue: 1 << 6)
+    package static let fragment = URLComponentSet(rawValue: 1 << 6)
 
-    static let queryItem = URLComponentSet(rawValue: 1 << 7)
+    package static let queryItem = URLComponentSet(rawValue: 1 << 7)
 }
 
 extension UTF8.CodeUnit {
