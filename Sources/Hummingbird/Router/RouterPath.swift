@@ -18,11 +18,11 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, ExpressibleByStr
         package enum _Internal: Equatable, Sendable {
             case path(Substring)
             case capture(Substring)
-            case prefixCapture(suffix: Substring, parameter: Substring) // *.jpg
-            case suffixCapture(prefix: Substring, parameter: Substring) // file.*
+            case prefixCapture(suffix: Substring, parameter: Substring)  // *.jpg
+            case suffixCapture(prefix: Substring, parameter: Substring)  // file.*
             case wildcard
-            case prefixWildcard(Substring) // *.jpg
-            case suffixWildcard(Substring) // file.*
+            case prefixWildcard(Substring)  // *.jpg
+            case suffixWildcard(Substring)  // file.*
             case recursiveWildcard
             case null
         }
@@ -204,11 +204,11 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, ExpressibleByStr
 
 extension RouterPath: Collection {
     public func index(after i: Int) -> Int {
-        return self.components.index(after: i)
+        self.components.index(after: i)
     }
 
     public subscript(_ index: Int) -> RouterPath.Element {
-        return self.components[index]
+        self.components[index]
     }
 
     public var startIndex: Int { self.components.startIndex }

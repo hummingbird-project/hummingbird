@@ -20,16 +20,18 @@ public struct Cookies: Sendable {
     /// - Parameter request: request to get cookies from
     init(from request: Request) {
         self.cookieStrings = request.headers[values: .cookie].flatMap {
-            return $0.split(separator: ";").map { $0.drop { $0.isWhitespace } }
+            $0.split(separator: ";").map { $0.drop { $0.isWhitespace } }
         }
     }
 
     /// access cookies via dictionary subscript
     public subscript(_ key: String) -> Cookie? {
-        guard let cookieString = cookieStrings.first(where: {
-            guard let cookieName = Cookie.getName(from: $0) else { return false }
-            return cookieName == key
-        }) else {
+        guard
+            let cookieString = cookieStrings.first(where: {
+                guard let cookieName = Cookie.getName(from: $0) else { return false }
+                return cookieName == key
+            })
+        else {
             return nil
         }
         return Cookie(from: cookieString)

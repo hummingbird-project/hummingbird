@@ -57,7 +57,7 @@ struct MiddlewareResponder<Context>: HTTPResponder {
     let next: @Sendable (Request, Context) async throws -> Response
 
     func respond(to request: Request, context: Context) async throws -> Response {
-        return try await self.middleware.handle(request, context: context) { request, context in
+        try await self.middleware.handle(request, context: context) { request, context in
             try await self.next(request, context)
         }
     }

@@ -38,7 +38,7 @@ public struct Handle<HandlerOutput: ResponseGenerator, Context: RouterRequestCon
     ///   - next: Next middleware to run, if no route handler is found
     /// - Returns: Response
     public func handle(_ input: Input, context: Context, next: (Input, Context) async throws -> Output) async throws -> Output {
-        return try await self.handler(input, context).response(from: input, context: context)
+        try await self.handler(input, context).response(from: input, context: context)
     }
 }
 
@@ -50,13 +50,17 @@ public struct Handle<HandlerOutput: ResponseGenerator, Context: RouterRequestCon
 @resultBuilder
 public enum RouteBuilder<Context: RouterRequestContext> {
     /// Provide generic requirements for MiddlewareProtocol
-    public static func buildExpression<M0: MiddlewareProtocol>(_ m0: M0) -> M0 where M0.Input == Request, M0.Output == Response, M0.Context == Context {
-        return m0
+    public static func buildExpression<M0: MiddlewareProtocol>(
+        _ m0: M0
+    ) -> M0 where M0.Input == Request, M0.Output == Response, M0.Context == Context {
+        m0
     }
 
     /// Build a ``Handle`` from a closure
-    public static func buildExpression<HandlerOutput: ResponseGenerator>(_ handler: @escaping @Sendable (Request, Context) async throws -> HandlerOutput) -> Handle<HandlerOutput, Context> {
-        return .init(handler)
+    public static func buildExpression<HandlerOutput: ResponseGenerator>(
+        _ handler: @escaping @Sendable (Request, Context) async throws -> HandlerOutput
+    ) -> Handle<HandlerOutput, Context> {
+        .init(handler)
     }
 
     public static func buildBlock<RouteOutput: ResponseGenerator>(_ m0: Handle<RouteOutput, Context>) -> Handle<RouteOutput, Context> {
@@ -80,7 +84,9 @@ public enum RouteBuilder<Context: RouterRequestContext> {
     }
 
     /// Build the final result where input is multiple middleware with the final middleware being a ``Handle`` middleware.
-    public static func buildFinalResult<M0: MiddlewareProtocol, RouteOutput: ResponseGenerator>(_ m0: _Middleware2<M0, Handle<RouteOutput, M0.Context>>) -> _Middleware2<M0, Handle<RouteOutput, M0.Context>> {
+    public static func buildFinalResult<M0: MiddlewareProtocol, RouteOutput: ResponseGenerator>(
+        _ m0: _Middleware2<M0, Handle<RouteOutput, M0.Context>>
+    ) -> _Middleware2<M0, Handle<RouteOutput, M0.Context>> {
         m0
     }
 }

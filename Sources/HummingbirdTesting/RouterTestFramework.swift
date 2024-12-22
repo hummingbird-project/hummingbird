@@ -14,12 +14,12 @@
 
 import Atomics
 import HTTPTypes
-import NIOEmbedded
 @_spi(Internal) import Hummingbird
 @_spi(Internal) import HummingbirdCore
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
+import NIOEmbedded
 import NIOHTTPTypes
 import NIOPosix
 import ServiceLifecycle
@@ -98,15 +98,19 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
         let makeContext: @Sendable (Logger) -> Responder.Context
 
         func executeRequest(uri: String, method: HTTPRequest.Method, headers: HTTPFields, body: ByteBuffer?) async throws -> TestResponse {
-            return try await withThrowingTaskGroup(of: TestResponse.self) { group in
+            try await withThrowingTaskGroup(of: TestResponse.self) { group in
                 var headers = headers
                 if let contentLength = body.map(\.readableBytes) {
                     headers[.contentLength] = String(describing: contentLength)
                 }
-                let (stream, source) = RequestBody.makeStream()
+                let (stream, source) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
+                let iterator = stream.makeAsyncIterator()
+                let requestBody = NIOAsyncChannelRequestBody(iterator: iterator)
+
+                //let (stream, source) = RequestBody.makeStream()
                 let request = Request(
                     head: .init(method: method, scheme: "http", authority: "localhost", path: uri, headerFields: headers),
-                    body: stream
+                    body: RequestBody(nioAsyncChannelInbound: requestBody)
                 )
                 let logger = self.logger.with(metadataKey: "hb.request.id", value: .stringConvertible(RequestID()))
                 let context = self.makeContext(logger)
@@ -129,10 +133,13 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
                     while body.readableBytes > 0 {
                         let chunkSize = min(32 * 1024, body.readableBytes)
                         let buffer = body.readSlice(length: chunkSize)!
-                        try await source.yield(buffer)
+                        source.yield(.body(buffer))
                     }
                 }
-                source.finish()
+                source.yield(.end(nil))
+                defer {
+                    source.finish()
+                }
                 return try await group.next()!
             }
         }

@@ -169,7 +169,8 @@ extension ApplicationProtocol {
 /// try await app.runService()
 /// ```
 /// Editing the application setup after calling `runService` will produce undefined behaviour.
-public struct Application<Responder: HTTPResponder>: ApplicationProtocol where Responder.Context: InitializableFromSource<ApplicationRequestContextSource> {
+public struct Application<Responder: HTTPResponder>: ApplicationProtocol
+where Responder.Context: InitializableFromSource<ApplicationRequestContextSource> {
     // MARK: Member variables
 
     /// event loop group used by application
@@ -280,7 +281,7 @@ public struct Application<Responder: HTTPResponder>: ApplicationProtocol where R
     }
 
     public func buildResponder() async throws -> Responder {
-        return self.responder
+        self.responder
     }
 
     public func onServerRunning(_ channel: Channel) async {

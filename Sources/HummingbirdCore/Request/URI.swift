@@ -21,27 +21,27 @@ public struct URI: Sendable, CustomStringConvertible, ExpressibleByStringLiteral
             self.rawValue = rawValue
         }
 
-        public static var http: Self { return .init(rawValue: "http") }
-        public static var https: Self { return .init(rawValue: "https") }
-        public static var unix: Self { return .init(rawValue: "unix") }
-        public static var http_unix: Self { return .init(rawValue: "http_unix") }
-        public static var https_unix: Self { return .init(rawValue: "https_unix") }
-        public static var ws: Self { return .init(rawValue: "ws") }
-        public static var wss: Self { return .init(rawValue: "wss") }
+        public static var http: Self { .init(rawValue: "http") }
+        public static var https: Self { .init(rawValue: "https") }
+        public static var unix: Self { .init(rawValue: "unix") }
+        public static var http_unix: Self { .init(rawValue: "http_unix") }
+        public static var https_unix: Self { .init(rawValue: "https_unix") }
+        public static var ws: Self { .init(rawValue: "ws") }
+        public static var wss: Self { .init(rawValue: "wss") }
     }
 
     public let string: String
 
     /// URL scheme
-    public var scheme: Scheme? { return self._scheme.map { .init(rawValue: $0.string) } }
+    public var scheme: Scheme? { self._scheme.map { .init(rawValue: $0.string) } }
     /// URL host
-    public var host: String? { return self._host.map(\.string) }
+    public var host: String? { self._host.map(\.string) }
     /// URL port
-    public var port: Int? { return self._port.map { Int($0.string) } ?? nil }
+    public var port: Int? { self._port.map { Int($0.string) } ?? nil }
     /// URL path
-    public var path: String { return self._path.map(\.string) ?? "/" }
+    public var path: String { self._path.map(\.string) ?? "/" }
     /// URL query
-    public var query: String? { return self._query.map { String($0.string) }}
+    public var query: String? { self._query.map { String($0.string) } }
     /// URL query parameter map
     public var queryParameters: FlatDictionary<Substring, Substring> {
         guard var query = _query else {

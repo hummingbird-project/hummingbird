@@ -38,7 +38,7 @@ final class MiddlewareTests: XCTestCase {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             TestMiddleware()
             Get("/hello") { _, _ -> String in
-                return "Hello"
+                "Hello"
             }
         }
         let app = Application(responder: router)
@@ -62,7 +62,7 @@ final class MiddlewareTests: XCTestCase {
             TestMiddleware(string: "first")
             TestMiddleware(string: "second")
             Get("/hello") { _, _ -> String in
-                return "Hello"
+                "Hello"
             }
         }
         let app = Application(responder: router)
@@ -87,7 +87,7 @@ final class MiddlewareTests: XCTestCase {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             TestMiddleware()
             Get("/hello") { _, _ -> String in
-                return "Hello"
+                "Hello"
             }
         }
         let app = Application(responder: router)
@@ -159,10 +159,13 @@ final class MiddlewareTests: XCTestCase {
             RouteGroup("") {
                 TransformMiddleware()
                 Get("test") { request, _ in
-                    Response(status: .ok, body: .init { writer in
-                        try await writer.write(request.body)
-                        try await writer.finish([.middleware: "test"])
-                    })
+                    Response(
+                        status: .ok,
+                        body: .init { writer in
+                            try await writer.write(request.body)
+                            try await writer.finish([.middleware: "test"])
+                        }
+                    )
                 }
             }
         }

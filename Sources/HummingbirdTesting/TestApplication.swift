@@ -71,7 +71,7 @@ final class Promise<Value: Sendable>: Sendable {
 
     /// wait from promise to be completed
     func wait() async -> Value {
-        return await withCheckedContinuation { cont in
+        await withCheckedContinuation { cont in
             self.state.withLockedValue { state in
                 switch state {
                 case .blocked(var continuations):

@@ -28,12 +28,12 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
     private static func decode(_ string: String) throws -> URLEncodedFormNode {
         let split = string.split(separator: "&")
         let node = Self.map(.init())
-        try split.forEach {
-            if let equals = $0.firstIndex(of: "=") {
-                let before = $0[..<equals].removingPercentEncoding
-                let afterEquals = $0.index(after: equals)
-                let after = $0[afterEquals...].replacingOccurrences(of: "+", with: " ")
-                guard let key = before else { throw Error.failedToDecode("Failed to percent decode \($0)") }
+        for element in split {
+            if let equals = element.firstIndex(of: "=") {
+                let before = element[..<equals].removingPercentEncoding
+                let afterEquals = element.index(after: equals)
+                let after = element[afterEquals...].replacingOccurrences(of: "+", with: " ")
+                guard let key = before else { throw Error.failedToDecode("Failed to percent decode \(element)") }
 
                 guard let keys = KeyParser.parse(key) else { throw Error.failedToDecode("Unexpected key value") }
                 guard let value = NodeValue(percentEncoded: after) else { throw Error.failedToDecode("Failed to percent decode \(after)") }
@@ -133,7 +133,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
         }
 
         var percentEncoded: String {
-            return self.value.addingPercentEncoding(withAllowedCharacters: URLEncodedForm.unreservedCharacters) ?? self.value
+            self.value.addingPercentEncoding(withAllowedCharacters: URLEncodedForm.unreservedCharacters) ?? self.value
         }
 
         static func == (lhs: URLEncodedFormNode.NodeValue, rhs: URLEncodedFormNode.NodeValue) -> Bool {
@@ -174,7 +174,11 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
 
 /// Parse URL encoded key
 enum KeyParser {
-    enum KeyType: Equatable { case map(Substring), array, arrayWithIndices(Int) }
+    enum KeyType: Equatable {
+        case map(Substring)
+        case array
+        case arrayWithIndices(Int)
+    }
 
     static func parse(_ key: String) -> [KeyType]? {
         var index = key.startIndex

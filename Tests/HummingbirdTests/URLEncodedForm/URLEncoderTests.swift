@@ -85,8 +85,25 @@ final class URLEncodedFormEncoderTests: XCTestCase {
             let f: [Float]
             let d: [Double]
         }
-        let test = Test(b: [true], i: [34], i8: [23], i16: [9], i32: [-6872], i64: [23], u: [0], u8: [255], u16: [7673], u32: [88222], u64: [234], f: [-1.1], d: [8])
-        self.testForm(test, query: "b[]=true&i[]=34&i8[]=23&i16[]=9&i32[]=-6872&i64[]=23&u[]=0&u8[]=255&u16[]=7673&u32[]=88222&u64[]=234&f[]=-1.1&d[]=8.0")
+        let test = Test(
+            b: [true],
+            i: [34],
+            i8: [23],
+            i16: [9],
+            i32: [-6872],
+            i64: [23],
+            u: [0],
+            u8: [255],
+            u16: [7673],
+            u32: [88222],
+            u64: [234],
+            f: [-1.1],
+            d: [8]
+        )
+        self.testForm(
+            test,
+            query: "b[]=true&i[]=34&i8[]=23&i16[]=9&i32[]=-6872&i64[]=23&u[]=0&u8[]=255&u16[]=7673&u32[]=88222&u64[]=234&f[]=-1.1&d[]=8.0"
+        )
     }
 
     func testStringSpecialCharactersEncode() {

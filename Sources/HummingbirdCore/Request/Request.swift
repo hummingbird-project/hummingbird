@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2022 the Hummingbird authors
+// Copyright (c) 2021-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -14,6 +14,7 @@
 
 import HTTPTypes
 import NIOCore
+import NIOHTTPTypes
 
 /// Holds all the values required to process a request
 public struct Request: Sendable {
@@ -24,7 +25,7 @@ public struct Request: Sendable {
     /// HTTP head
     public let head: HTTPRequest
     /// Body of HTTP request
-    public var body: RequestBody
+    private var _body: RequestBody
     /// Request HTTP method
     @inlinable
     public var method: HTTPRequest.Method { self.head.method }
@@ -32,6 +33,20 @@ public struct Request: Sendable {
     @inlinable
     public var headers: HTTPFields { self.head.headerFields }
 
+    public var body: RequestBody {
+        get { _body }
+        set {
+            let original = _body.originalRequestBody
+            switch newValue._backing {
+            case .nioAsyncChannelRequestBody:
+                self._body = body
+            case .byteBuffer(let buffer, _):
+                self._body = .init(.byteBuffer(buffer, original))
+            case .anyAsyncSequence(let seq, _):
+                self._body = .init(.anyAsyncSequence(seq, original))
+            }
+        }
+    }
     // MARK: Initialization
 
     /// Create new Request
@@ -44,7 +59,20 @@ public struct Request: Sendable {
     ) {
         self.uri = .init(head.path ?? "")
         self.head = head
-        self.body = body
+        self._body = body
+    }
+
+    /// Create new Request
+    /// - Parameters:
+    ///   - head: HTTP head
+    ///   - bodyIterator: HTTP request part stream
+    package init(
+        head: HTTPRequest,
+        bodyIterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator
+    ) {
+        self.uri = .init(head.path ?? "")
+        self.head = head
+        self._body = .init(nioAsyncChannelInbound: .init(iterator: bodyIterator))
     }
 
     /// Collapse body into one ByteBuffer.

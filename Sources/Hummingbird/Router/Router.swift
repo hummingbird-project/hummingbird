@@ -57,6 +57,7 @@ public final class Router<Context: RequestContext>: RouterMethods, HTTPResponder
     /// build responder from router
     public func buildResponder() -> RouterResponder<Context> {
         if self.options.contains(.autoGenerateHeadEndpoints) {
+            // swift-format-ignore: ReplaceForEachWithForLoop
             self.trie.forEach { node in
                 node.value?.autoGenerateHeadEndpoint()
             }
@@ -126,4 +127,26 @@ public struct RouterOptions: OptionSet, Sendable {
     public static var caseInsensitive: Self { .init(rawValue: 1 << 0) }
     /// For every GET request that does not have a HEAD request, auto generate the HEAD request
     public static var autoGenerateHeadEndpoints: Self { .init(rawValue: 1 << 1) }
+}
+
+extension Router {
+    /// Route description
+    public struct RouteDescription: CustomStringConvertible {
+        /// Route path
+        public let path: RouterPath
+        /// Route method
+        public let method: HTTPRequest.Method
+
+        public var description: String { "\(method) \(path)" }
+    }
+
+    /// List of routes added to router
+    public var routes: [RouteDescription] {
+        let trieValues = self.trie.root.values()
+        return trieValues.flatMap { endpoint in
+            endpoint.value.methods.keys
+                .sorted { $0.rawValue < $1.rawValue }
+                .map { RouteDescription(path: endpoint.path, method: $0) }
+        }
+    }
 }

@@ -51,12 +51,12 @@ package struct Parser: Sendable {
 
     /// Return contents of parser as a string
     package var count: Int {
-        return self.range.count
+        self.range.count
     }
 
     /// Return contents of parser as a string
     package var string: String {
-        return makeString(self.buffer[self.range])
+        makeString(self.buffer[self.range])
     }
 
     private var buffer: [UInt8]
@@ -74,20 +74,21 @@ extension Parser {
         self.range = range
 
         precondition(range.startIndex >= 0 && range.endIndex <= self.buffer.endIndex)
-        precondition(range.startIndex == self.buffer.endIndex || self.buffer[range.startIndex] & 0xC0 != 0x80) // check we arent in the middle of a UTF8 character
+        // check we arent in the middle of a UTF8 character
+        precondition(range.startIndex == self.buffer.endIndex || self.buffer[range.startIndex] & 0xC0 != 0x80)
     }
 
     /// initialise a parser that parses a section of the buffer attached to this parser
     func subParser(_ range: Range<Int>) -> Parser {
-        return Parser(self, range: range)
+        Parser(self, range: range)
     }
 }
 
-package extension Parser {
+extension Parser {
     /// Return current character
     /// - Throws: .overflow
     /// - Returns: Current character
-    mutating func character() throws -> Unicode.Scalar {
+    package mutating func character() throws -> Unicode.Scalar {
         guard !self.reachedEnd() else { throw Error.overflow }
         return unsafeCurrentAndAdvance()
     }
@@ -96,10 +97,13 @@ package extension Parser {
     /// - Parameter char: character to compare against
     /// - Throws: .overflow
     /// - Returns: If current character was the one we expected
-    mutating func read(_ char: Unicode.Scalar) throws -> Bool {
+    package mutating func read(_ char: Unicode.Scalar) throws -> Bool {
         let initialIndex = self.index
         let c = try character()
-        guard c == char else { self.index = initialIndex; return false }
+        guard c == char else {
+            self.index = initialIndex
+            return false
+        }
         return true
     }
 
@@ -107,10 +111,13 @@ package extension Parser {
     /// - Parameter characterSet: Set of characters to compare against
     /// - Throws: .overflow
     /// - Returns: If current character is in character set
-    mutating func read(_ characterSet: Set<Unicode.Scalar>) throws -> Bool {
+    package mutating func read(_ characterSet: Set<Unicode.Scalar>) throws -> Bool {
         let initialIndex = self.index
         let c = try character()
-        guard characterSet.contains(c) else { self.index = initialIndex; return false }
+        guard characterSet.contains(c) else {
+            self.index = initialIndex
+            return false
+        }
         return true
     }
 
@@ -118,11 +125,14 @@ package extension Parser {
     /// - Parameter string: String to compare against
     /// - Throws: .overflow, .emptyString
     /// - Returns: If characters at current position equal string
-    mutating func read(_ string: String) throws -> Bool {
+    package mutating func read(_ string: String) throws -> Bool {
         let initialIndex = self.index
         guard string.count > 0 else { throw Error.emptyString }
         let subString = try read(count: string.count)
-        guard subString.string == string else { self.index = initialIndex; return false }
+        guard subString.string == string else {
+            self.index = initialIndex
+            return false
+        }
         return true
     }
 
@@ -130,7 +140,7 @@ package extension Parser {
     /// - Parameter count: Number of characters to read
     /// - Throws: .overflow
     /// - Returns: The string read from the buffer
-    mutating func read(count: Int) throws -> Parser {
+    package mutating func read(count: Int) throws -> Parser {
         var count = count
         var readEndIndex = self.index
         while count > 0 {
@@ -147,7 +157,7 @@ package extension Parser {
     /// - Parameter until: Unicode.Scalar to read until
     /// - Throws: .overflow if we hit the end of the buffer before reading character
     /// - Returns: String read from buffer
-    @discardableResult mutating func read(until: Unicode.Scalar, throwOnOverflow: Bool = true) throws -> Parser {
+    @discardableResult package mutating func read(until: Unicode.Scalar, throwOnOverflow: Bool = true) throws -> Parser {
         let startIndex = self.index
         while !self.reachedEnd() {
             if unsafeCurrent() == until {
@@ -166,7 +176,7 @@ package extension Parser {
     /// - Parameter characterSet: Unicode.Scalar set to check against
     /// - Throws: .overflow
     /// - Returns: String read from buffer
-    @discardableResult mutating func read(until characterSet: Set<Unicode.Scalar>, throwOnOverflow: Bool = true) throws -> Parser {
+    @discardableResult package mutating func read(until characterSet: Set<Unicode.Scalar>, throwOnOverflow: Bool = true) throws -> Parser {
         let startIndex = self.index
         while !self.reachedEnd() {
             if characterSet.contains(unsafeCurrent()) {
@@ -185,7 +195,7 @@ package extension Parser {
     /// - Parameter until: Function to test
     /// - Throws: .overflow
     /// - Returns: String read from buffer
-    @discardableResult mutating func read(until: (Unicode.Scalar) -> Bool, throwOnOverflow: Bool = true) throws -> Parser {
+    @discardableResult package mutating func read(until: (Unicode.Scalar) -> Bool, throwOnOverflow: Bool = true) throws -> Parser {
         let startIndex = self.index
         while !self.reachedEnd() {
             if until(unsafeCurrent()) {
@@ -204,7 +214,7 @@ package extension Parser {
     /// - Parameter characterSet: Unicode.Scalar set to check against
     /// - Throws: .overflow
     /// - Returns: String read from buffer
-    @discardableResult mutating func read(until keyPath: KeyPath<Unicode.Scalar, Bool>, throwOnOverflow: Bool = true) throws -> Parser {
+    @discardableResult package mutating func read(until keyPath: KeyPath<Unicode.Scalar, Bool>, throwOnOverflow: Bool = true) throws -> Parser {
         let startIndex = self.index
         while !self.reachedEnd() {
             if unsafeCurrent()[keyPath: keyPath] {
@@ -225,7 +235,7 @@ package extension Parser {
     /// - Parameter skipToEnd: Should we set the position to after the found string
     /// - Throws: .overflow, .emptyString
     /// - Returns: String read from buffer
-    @discardableResult mutating func read(untilString: String, throwOnOverflow: Bool = true, skipToEnd: Bool = false) throws -> Parser {
+    @discardableResult package mutating func read(untilString: String, throwOnOverflow: Bool = true, skipToEnd: Bool = false) throws -> Parser {
         var untilString = untilString
         return try untilString.withUTF8 { utf8 in
             guard utf8.count > 0 else { throw Error.emptyString }
@@ -261,7 +271,7 @@ package extension Parser {
 
     /// Read from buffer from current position until the end of the buffer
     /// - Returns: String read from buffer
-    @discardableResult mutating func readUntilTheEnd() -> Parser {
+    @discardableResult package mutating func readUntilTheEnd() -> Parser {
         let startIndex = self.index
         self.index = self.range.endIndex
         return self.subParser(startIndex..<self.index)
@@ -270,10 +280,10 @@ package extension Parser {
     /// Read while character at current position is the one supplied
     /// - Parameter while: Unicode.Scalar to check against
     /// - Returns: String read from buffer
-    @discardableResult mutating func read(while: Unicode.Scalar) -> Int {
+    @discardableResult package mutating func read(while: Unicode.Scalar) -> Int {
         var count = 0
         while !self.reachedEnd(),
-              unsafeCurrent() == `while`
+            unsafeCurrent() == `while`
         {
             unsafeAdvance()
             count += 1
@@ -284,10 +294,10 @@ package extension Parser {
     /// Read while character at current position is in supplied set
     /// - Parameter while: character set to check
     /// - Returns: String read from buffer
-    @discardableResult mutating func read(while characterSet: Set<Unicode.Scalar>) -> Parser {
+    @discardableResult package mutating func read(while characterSet: Set<Unicode.Scalar>) -> Parser {
         let startIndex = self.index
         while !self.reachedEnd(),
-              characterSet.contains(unsafeCurrent())
+            characterSet.contains(unsafeCurrent())
         {
             unsafeAdvance()
         }
@@ -297,10 +307,10 @@ package extension Parser {
     /// Read while character returns true for supplied closure
     /// - Parameter while: character set to check
     /// - Returns: String read from buffer
-    @discardableResult mutating func read(while: (Unicode.Scalar) -> Bool) -> Parser {
+    @discardableResult package mutating func read(while: (Unicode.Scalar) -> Bool) -> Parser {
         let startIndex = self.index
         while !self.reachedEnd(),
-              `while`(unsafeCurrent())
+            `while`(unsafeCurrent())
         {
             unsafeAdvance()
         }
@@ -310,10 +320,10 @@ package extension Parser {
     /// Read while character returns true for supplied KeyPath
     /// - Parameter while: character set to check
     /// - Returns: String read from buffer
-    @discardableResult mutating func read(while keyPath: KeyPath<Unicode.Scalar, Bool>) -> Parser {
+    @discardableResult package mutating func read(while keyPath: KeyPath<Unicode.Scalar, Bool>) -> Parser {
         let startIndex = self.index
         while !self.reachedEnd(),
-              unsafeCurrent()[keyPath: keyPath]
+            unsafeCurrent()[keyPath: keyPath]
         {
             unsafeAdvance()
         }
@@ -323,7 +333,7 @@ package extension Parser {
     /// Split parser into sections separated by character
     /// - Parameter separator: Separator character
     /// - Returns: arrays of sub parsers
-    mutating func split(separator: Unicode.Scalar) -> [Parser] {
+    package mutating func split(separator: Unicode.Scalar) -> [Parser] {
         var subParsers: [Parser] = []
         while !self.reachedEnd() {
             do {
@@ -341,24 +351,24 @@ package extension Parser {
 
     /// Return whether we have reached the end of the buffer
     /// - Returns: Have we reached the end
-    func reachedEnd() -> Bool {
-        return self.index == self.range.endIndex
+    package func reachedEnd() -> Bool {
+        self.index == self.range.endIndex
     }
 }
 
 /// Public versions of internal functions which include tests for overflow
-package extension Parser {
+extension Parser {
     /// Return the character at the current position
     /// - Throws: .overflow
     /// - Returns: Unicode.Scalar
-    func current() -> Unicode.Scalar {
+    package func current() -> Unicode.Scalar {
         guard !self.reachedEnd() else { return Unicode.Scalar(0) }
         return unsafeCurrent()
     }
 
     /// Move forward one character
     /// - Throws: .overflow
-    mutating func advance() throws {
+    package mutating func advance() throws {
         guard !self.reachedEnd() else { throw Error.overflow }
         return self.unsafeAdvance()
     }
@@ -366,7 +376,7 @@ package extension Parser {
     /// Move forward so many character
     /// - Parameter amount: number of characters to move forward
     /// - Throws: .overflow
-    mutating func advance(by amount: Int) throws {
+    package mutating func advance(by amount: Int) throws {
         var amount = amount
         while amount > 0 {
             guard !self.reachedEnd() else { throw Error.overflow }
@@ -377,7 +387,7 @@ package extension Parser {
 
     /// Move backwards one character
     /// - Throws: .overflow
-    mutating func retreat() throws {
+    package mutating func retreat() throws {
         guard self.index > self.range.startIndex else { throw Error.overflow }
         self.index = backOneUTF8Character(at: self.index)
     }
@@ -385,7 +395,7 @@ package extension Parser {
     /// Move back so many characters
     /// - Parameter amount: number of characters to move back
     /// - Throws: .overflow
-    mutating func retreat(by amount: Int) throws {
+    package mutating func retreat(by amount: Int) throws {
         var amount = amount
         while amount > 0 {
             guard self.index > self.range.startIndex else { throw Error.overflow }
@@ -395,20 +405,20 @@ package extension Parser {
     }
 
     /// Move parser to beginning of string
-    mutating func moveToStart() {
+    package mutating func moveToStart() {
         self.index = self.range.startIndex
     }
 
     /// Move parser to end of string
-    mutating func moveToEnd() {
+    package mutating func moveToEnd() {
         self.index = self.range.endIndex
     }
 
-    mutating func unsafeAdvance() {
+    package mutating func unsafeAdvance() {
         self.index = skipUTF8Character(at: self.index)
     }
 
-    mutating func unsafeAdvance(by amount: Int) {
+    package mutating func unsafeAdvance(by amount: Int) {
         var amount = amount
         while amount > 0 {
             self.index = skipUTF8Character(at: self.index)
@@ -422,7 +432,7 @@ extension Parser: Sequence {
     public typealias Element = Unicode.Scalar
 
     public func makeIterator() -> Iterator {
-        return Iterator(self)
+        Iterator(self)
     }
 
     public struct Iterator: IteratorProtocol {
@@ -442,22 +452,22 @@ extension Parser: Sequence {
 }
 
 // internal versions without checks
-private extension Parser {
-    func unsafeCurrent() -> Unicode.Scalar {
-        return decodeUTF8Character(at: self.index).0
+extension Parser {
+    fileprivate func unsafeCurrent() -> Unicode.Scalar {
+        decodeUTF8Character(at: self.index).0
     }
 
-    mutating func unsafeCurrentAndAdvance() -> Unicode.Scalar {
+    fileprivate mutating func unsafeCurrentAndAdvance() -> Unicode.Scalar {
         let (unicodeScalar, index) = decodeUTF8Character(at: self.index)
         self.index = index
         return unicodeScalar
     }
 
-    mutating func _setPosition(_ index: Int) {
+    fileprivate mutating func _setPosition(_ index: Int) {
         self.index = index
     }
 
-    func makeString<Bytes: Collection>(_ bytes: Bytes) -> String where Bytes.Element == UInt8, Bytes.Index == Int {
+    fileprivate func makeString<Bytes: Collection>(_ bytes: Bytes) -> String where Bytes.Element == UInt8, Bytes.Index == Int {
         if let string = bytes.withContiguousStorageIfAvailable({ String(decoding: $0, as: Unicode.UTF8.self) }) {
             return string
         } else {
@@ -555,39 +565,39 @@ extension Parser {
     }
 
     private static let asciiHexValues: [UInt8] = [
-        /* 00 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* 08 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* 10 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* 18 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* 20 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* 28 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* 30 */ 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-        /* 38 */ 0x08, 0x09, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* 40 */ 0x80, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x80,
-        /* 48 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* 50 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* 58 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* 60 */ 0x80, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x80,
-        /* 68 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* 70 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* 78 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0x00
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0x08
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0x10
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0x18
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0x20
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0x28
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,  // 0x30
+        0x08, 0x09, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0x38
+        0x80, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x80,  // 0x40
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0x48
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0x50
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0x58
+        0x80, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x80,  // 0x60
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0x68
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0x70
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0x78
 
-        /* 80 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* 88 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* 90 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* 98 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* A0 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* A8 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* B0 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* B8 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* C0 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* C8 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* D0 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* D8 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* E0 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* E8 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* F0 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-        /* F8 */ 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0x80
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0x88
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0x90
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0x98
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0xA0
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0xA8
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0xB0
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0xB8
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0xC0
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0xC8
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0xD0
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0xD8
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0xE0
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0xE8
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0xF0
+        0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,  // 0xF8
     ]
 
     /// percent decode UTF8
@@ -624,7 +634,7 @@ extension Parser {
         do {
             if #available(macOS 11, macCatalyst 14.0, iOS 14.0, tvOS 14.0, *) {
                 return try String(unsafeUninitializedCapacity: range.endIndex - index) { bytes -> Int in
-                    return try _percentDecode(self.buffer[self.index..<range.endIndex], bytes)
+                    try _percentDecode(self.buffer[self.index..<range.endIndex], bytes)
                 }
             } else {
                 let newBuffer = try [UInt8](unsafeUninitializedCapacity: self.range.endIndex - self.index) { bytes, count in
@@ -640,15 +650,15 @@ extension Parser {
 
 extension Unicode.Scalar {
     package var isWhitespace: Bool {
-        return properties.isWhitespace
+        properties.isWhitespace
     }
 
     package var isNewline: Bool {
         switch self.value {
-        case 0x000A...0x000D /* LF ... CR */: return true
-        case 0x0085 /* NEXT LINE (NEL) */: return true
-        case 0x2028 /* LINE SEPARATOR */: return true
-        case 0x2029 /* PARAGRAPH SEPARATOR */: return true
+        case 0x000A...0x000D: return true  // LF ... CR
+        case 0x0085: return true  // NEXT LINE (NEL)
+        case 0x2028: return true  // LINE SEPARATOR
+        case 0x2029: return true  // PARAGRAPH SEPARATOR
         default: return false
         }
     }

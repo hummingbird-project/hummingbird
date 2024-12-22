@@ -12,12 +12,17 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import HTTPTypes
 import HummingbirdCore
 import Logging
 import NIOCore
 import NIOPosix
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Protocol for all the file attributes required by ``FileMiddleware``
 ///
@@ -41,7 +46,8 @@ public protocol FileMiddlewareFileAttributes {
 /// "if-modified-since", "if-none-match", "if-range" and 'range" headers. It will output "content-length",
 /// "modified-date", "eTag", "content-type", "cache-control" and "content-range" headers where
 /// they are relevant.
-public struct FileMiddleware<Context: RequestContext, Provider: FileProvider>: RouterMiddleware where Provider.FileAttributes: FileMiddlewareFileAttributes {
+public struct FileMiddleware<Context: RequestContext, Provider: FileProvider>: RouterMiddleware
+where Provider.FileAttributes: FileMiddlewareFileAttributes {
     let cacheControl: CacheControl
     let searchForIndexHtml: Bool
     let urlBasePath: String?
@@ -174,7 +180,7 @@ extension FileMiddleware {
     /// Return file attributes, and actual file path
     private func getFileAttributes(_ path: String) async throws -> (path: String, id: Provider.FileIdentifier, attributes: Provider.FileAttributes) {
         guard let id = self.fileProvider.getFileIdentifier(path),
-              let attributes = try await self.fileProvider.getAttributes(id: id)
+            let attributes = try await self.fileProvider.getAttributes(id: id)
         else {
             throw HTTPError(.notFound)
         }
@@ -184,7 +190,7 @@ extension FileMiddleware {
             guard self.searchForIndexHtml else { throw HTTPError(.notFound) }
             let indexPath = self.appendingPathComponent(path, "index.html")
             guard let indexID = self.fileProvider.getFileIdentifier(indexPath),
-                  let indexAttributes = try await self.fileProvider.getAttributes(id: indexID)
+                let indexAttributes = try await self.fileProvider.getAttributes(id: indexID)
             else {
                 throw HTTPError(.notFound)
             }
@@ -286,7 +292,8 @@ extension FileMiddleware {
                 return lowerBound...Int.max
             } else {
                 guard let lowerBound = Int(lower),
-                      let upperBound = Int(upper) else { return nil }
+                    let upperBound = Int(upper)
+                else { return nil }
                 return lowerBound...upperBound
             }
         } catch {
@@ -296,7 +303,7 @@ extension FileMiddleware {
 
     private func createETag(_ strings: [String]) -> String {
         let string = strings.joined(separator: "-")
-        let buffer = Array<UInt8>(unsafeUninitializedCapacity: 16) { bytes, size in
+        let buffer = [UInt8](unsafeUninitializedCapacity: 16) { bytes, size in
             var index = 0
             for i in 0..<16 {
                 bytes[i] = 0

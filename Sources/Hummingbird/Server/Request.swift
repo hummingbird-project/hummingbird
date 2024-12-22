@@ -57,7 +57,7 @@ extension Request {
     }
 }
 
-internal extension CodingKey {
+extension CodingKey {
     /// returns a coding key as a path key string
     var pathKeyValue: String {
         if let value = intValue {
@@ -67,7 +67,7 @@ internal extension CodingKey {
     }
 }
 
-internal extension Array<CodingKey> {
+extension [CodingKey] {
     /// returns a path key using a dot character as a separator
     var pathKeyValue: String {
         map(\.pathKeyValue).joined(separator: ".")

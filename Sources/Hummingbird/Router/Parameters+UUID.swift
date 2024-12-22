@@ -12,7 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// It is common for UUID's to be passed in as parameters. So lets add helper
 /// functions to extract them from Parameters
@@ -22,7 +26,7 @@ extension Parameters {
     ///   - s: parameter id
     ///   - as: type we want returned
     public func get(_ s: String, as: UUID.Type) -> UUID? {
-        return self[s[...]].map { UUID(uuidString: String($0)) } ?? nil
+        self[s[...]].map { UUID(uuidString: String($0)) } ?? nil
     }
 
     /// Return parameter with specified id as a certain type
@@ -45,7 +49,7 @@ extension Parameters {
     ///   - s: parameter id
     ///   - as: type we want returned
     public func getAll(_ s: String, as: UUID.Type) -> [UUID] {
-        return self[values: s[...]].compactMap { UUID(uuidString: String($0)) }
+        self[values: s[...]].compactMap { UUID(uuidString: String($0)) }
     }
 
     /// Return parameter with specified id as a certain type
@@ -53,7 +57,7 @@ extension Parameters {
     ///   - s: parameter id
     ///   - as: type we want returned
     public func requireAll(_ s: String, as: UUID.Type) throws -> [UUID] {
-        return try self[values: s[...]].map {
+        try self[values: s[...]].map {
             guard let result = UUID(uuidString: String($0)) else {
                 throw HTTPError(.badRequest, message: "One of the parameters '\($0)' can not be converted to the expected type (UUID)")
             }

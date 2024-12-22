@@ -82,7 +82,7 @@ public struct TestClient: Sendable {
             try self.getBootstrap()
                 .channelOption(ChannelOptions.socket(SocketOptionLevel(IPPROTO_TCP), TCP_NODELAY), value: 1)
                 .channelInitializer { channel in
-                    return channel.pipeline.addHTTPClientHandlers()
+                    channel.pipeline.addHTTPClientHandlers()
                         .flatMapThrowing {
                             let handlers: [ChannelHandler] = [
                                 HTTP1ToHTTPClientCodec(),
@@ -104,7 +104,7 @@ public struct TestClient: Sendable {
     /// shutdown client
     public func shutdown() async throws {
         do {
-            try await self.close()
+            try await self.close(mode: .all)
         } catch TestClient.Error.connectionNotOpen {
         } catch ChannelError.alreadyClosed {}
         if case .createNew = self.eventLoopGroupProvider {
@@ -163,10 +163,18 @@ public struct TestClient: Sendable {
         return response
     }
 
-    public func close() async throws {
+    /// Execute request to server but don't wait for response.
+    public func executeAndDontWaitForResponse(_ request: TestClient.Request) async throws {
+        let channel = try await getChannel()
+        let promise = self.eventLoopGroup.any().makePromise(of: TestClient.Response.self)
+        let task = HTTPTask(request: self.cleanupRequest(request), responsePromise: promise)
+        try await channel.writeAndFlush(task)
+    }
+
+    public func close(mode: CloseMode = .output) async throws {
         self.channelPromise.completeWith(.failure(TestClient.Error.connectionNotOpen))
         let channel = try await getChannel()
-        return try await channel.close()
+        return try await channel.close(mode: mode)
     }
 
     public func getChannel() async throws -> Channel {
@@ -184,7 +192,10 @@ public struct TestClient: Sendable {
     private func getBootstrap() throws -> NIOClientTCPBootstrap {
         if let tlsConfiguration = self.configuration.tlsConfiguration {
             let sslContext = try NIOSSLContext(configuration: tlsConfiguration)
-            let tlsProvider = try NIOSSLClientTLSProvider<ClientBootstrap>(context: sslContext, serverHostname: self.configuration.serverName ?? self.host)
+            let tlsProvider = try NIOSSLClientTLSProvider<ClientBootstrap>(
+                context: sslContext,
+                serverHostname: self.configuration.serverName ?? self.host
+            )
             let bootstrap = NIOClientTCPBootstrap(ClientBootstrap(group: self.eventLoopGroup), tls: tlsProvider)
             bootstrap.enableTLS()
             return bootstrap

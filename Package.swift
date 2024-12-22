@@ -27,7 +27,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.0.1"),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.63.0"),
         .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.20.0"),
-        .package(url: "https://github.com/apple/swift-nio-http2.git", from: "1.28.0"),
+        .package(url: "https://github.com/apple/swift-nio-http2.git", from: "1.34.1"),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.14.0"),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.20.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.0.0"),
@@ -123,21 +123,26 @@ let package = Package(
             swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
         ),
         // test targets
-        .testTarget(name: "HummingbirdTests", dependencies: [
-            .byName(name: "Hummingbird"),
-            .byName(name: "HummingbirdTLS"),
-            .byName(name: "HummingbirdHTTP2"),
-            .byName(name: "HummingbirdTesting"),
-            .byName(name: "HummingbirdRouter"),
-        ]),
-        .testTarget(name: "HummingbirdRouterTests", dependencies: [
-            .byName(name: "HummingbirdRouter"),
-            .byName(name: "HummingbirdTesting"),
-        ]),
+        .testTarget(
+            name: "HummingbirdTests",
+            dependencies: [
+                .byName(name: "Hummingbird"),
+                .byName(name: "HummingbirdTLS"),
+                .byName(name: "HummingbirdHTTP2"),
+                .byName(name: "HummingbirdTesting"),
+                .byName(name: "HummingbirdRouter"),
+            ]
+        ),
+        .testTarget(
+            name: "HummingbirdRouterTests",
+            dependencies: [
+                .byName(name: "HummingbirdRouter"),
+                .byName(name: "HummingbirdTesting"),
+            ]
+        ),
         .testTarget(
             name: "HummingbirdCoreTests",
-            dependencies:
-            [
+            dependencies: [
                 .byName(name: "HummingbirdCore"),
                 .byName(name: "HummingbirdTLS"),
                 .byName(name: "HummingbirdTesting"),
@@ -147,8 +152,7 @@ let package = Package(
         ),
         .testTarget(
             name: "HummingbirdHTTP2Tests",
-            dependencies:
-            [
+            dependencies: [
                 .byName(name: "HummingbirdCore"),
                 .byName(name: "HummingbirdHTTP2"),
                 .byName(name: "HummingbirdTesting"),

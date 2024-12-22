@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import HummingbirdCore
-import HummingbirdTesting
 import HummingbirdTLS
+import HummingbirdTesting
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore

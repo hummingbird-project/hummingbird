@@ -19,7 +19,7 @@ public struct RequestID: CustomStringConvertible, Sendable {
     let low: UInt64
 
     public init() {
-        self.low = Self.globalRequestID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
+        self.low = Self.nextID.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
     }
 
     public var description: String {
@@ -36,5 +36,5 @@ public struct RequestID: CustomStringConvertible, Sendable {
     }
 
     private static let high = String(UInt64.random(in: .min ... .max), radix: 16)
-    private static let globalRequestID = ManagedAtomic<UInt64>(UInt64.random(in: .min ... .max))
+    private static let nextID = ManagedAtomic<UInt64>(UInt64.random(in: .min ... .max))
 }

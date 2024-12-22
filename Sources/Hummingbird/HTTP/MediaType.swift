@@ -100,7 +100,7 @@ public struct MediaType: Sendable, CustomStringConvertible {
             }
         }
         if let category,
-           let subCategory
+            let subCategory
         {
             self.type = category
             self.subType = subCategory.lowercased()
@@ -112,7 +112,7 @@ public struct MediaType: Sendable, CustomStringConvertible {
 
     /// Return media type with new parameter
     public func withParameter(name: String, value: String) -> MediaType {
-        return .init(type: self.type, subType: self.subType, parameter: (name, value))
+        .init(type: self.type, subType: self.subType, parameter: (name, value))
     }
 
     /// Output
@@ -127,7 +127,7 @@ public struct MediaType: Sendable, CustomStringConvertible {
     /// Return if media type matches the input
     public func isType(_ type: MediaType) -> Bool {
         guard self.type == type.type,
-              self.subType == type.subType || type.subType == "*"
+            self.subType == type.subType || type.subType == "*"
         else {
             return false
         }
@@ -142,7 +142,7 @@ public struct MediaType: Sendable, CustomStringConvertible {
     /// - Parameter extension: file extension
     /// - Returns: media type
     public static func getMediaType(forExtension extension: String) -> MediaType? {
-        return extensionMediaTypeMap[`extension`]
+        extensionMap[`extension`]
     }
 
     /// Media type categories
@@ -281,6 +281,8 @@ extension MediaType {
     public static var applicationTar: Self { .init(type: .application, subType: "x-tar") }
     /// Microsoft Visio
     public static var applicationVsd: Self { .init(type: .application, subType: "vnd.visio") }
+    /// WebAssembly
+    public static var applicationWasm: Self { .init(type: .application, subType: "wasm") }
     /// XHTML
     public static var applicationXhtml: Self { .init(type: .application, subType: "xhtml+xml") }
     /// Microsoft Excel
@@ -385,7 +387,7 @@ extension MediaType {
     public static var multipartForm: Self { .init(type: .multipart, subType: "form-data") }
 
     /// map from extension string to media type
-    static let extensionMediaTypeMap: [String: MediaType] = [
+    static let extensionMap: [String: MediaType] = [
         "aac": .audioAac,
         "abw": .applicationAbiWord,
         "arc": .applicationArc,
@@ -445,6 +447,7 @@ extension MediaType {
         "ttf": .fontTtf,
         "txt": .textPlain,
         "vsd": .applicationVsd,
+        "wasm": .applicationWasm,
         "wav": .audioWave,
         "weba": .audioWebm,
         "webm": .videoWebm,

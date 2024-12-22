@@ -15,6 +15,7 @@
 import HummingbirdCore
 import Logging
 import NIOCore
+
 #if canImport(Network)
 import Network
 #endif
@@ -89,7 +90,7 @@ public struct ApplicationConfiguration: Sendable {
     ) {
         self.address = address
         self.serverName = serverName
-        self.backlog = 256 // not used by Network framework
+        self.backlog = 256  // not used by Network framework
         self.reuseAddress = reuseAddress
         self.availableConnectionsDelegate = availableConnectionsDelegate
         self.tlsOptions = tlsOptions
@@ -104,7 +105,7 @@ public struct ApplicationConfiguration: Sendable {
         backlog: Int? = nil,
         reuseAddress: Bool? = nil
     ) -> Self {
-        return .init(
+        .init(
             address: address ?? self.address,
             serverName: serverName ?? self.serverName,
             backlog: backlog ?? self.backlog,
@@ -115,7 +116,7 @@ public struct ApplicationConfiguration: Sendable {
     /// return HTTP server configuration
     #if canImport(Network)
     var httpServer: ServerConfiguration {
-        return .init(
+        .init(
             address: self.address,
             serverName: self.serverName,
             backlog: self.backlog,
@@ -126,7 +127,7 @@ public struct ApplicationConfiguration: Sendable {
     }
     #else
     var httpServer: ServerConfiguration {
-        return .init(
+        .init(
             address: self.address,
             serverName: self.serverName,
             backlog: self.backlog,

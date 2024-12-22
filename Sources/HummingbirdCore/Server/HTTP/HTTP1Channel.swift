@@ -51,7 +51,7 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
     @available(*, deprecated, renamed: "HTTP1Channel(responder:configuration:)")
     public init(
         responder: @escaping HTTPChannelHandler.Responder,
-        additionalChannelHandlers: @escaping @Sendable () -> [any RemovableChannelHandler] = { [] }
+        additionalChannelHandlers: @escaping @Sendable () -> [any RemovableChannelHandler]
     ) {
         self.configuration = .init(additionalChannelHandlers: additionalChannelHandlers())
         self.responder = responder
@@ -75,11 +75,11 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
     ///   - logger: Logger used during setup
     /// - Returns: Object to process input/output on child channel
     public func setup(channel: Channel, logger: Logger) -> EventLoopFuture<Value> {
-        return channel.eventLoop.makeCompletedFuture {
+        channel.eventLoop.makeCompletedFuture {
             try channel.pipeline.syncOperations.configureHTTPServerPipeline(
-                withPipeliningAssistance: false, // HTTP is pipelined by NIOAsyncChannel
+                withPipeliningAssistance: false,  // HTTP is pipelined by NIOAsyncChannel
                 withErrorHandling: true,
-                withOutboundHeaderValidation: false // Swift HTTP Types are already doing this validation
+                withOutboundHeaderValidation: false  // Swift HTTP Types are already doing this validation
             )
             try channel.pipeline.syncOperations.addHandler(HTTP1ToHTTPServerCodec(secure: false))
             try channel.pipeline.syncOperations.addHandlers(self.configuration.additionalChannelHandlers())

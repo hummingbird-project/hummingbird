@@ -15,7 +15,8 @@
 import Hummingbird
 
 /// Router middleware that applies a middleware chain to URIs with a specified prefix
-public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProtocol>: RouterMiddleware where Handler.Input == Request, Handler.Output == Response, Handler.Context == Context {
+public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProtocol>: RouterMiddleware
+where Handler.Input == Request, Handler.Output == Response, Handler.Context == Context {
     public typealias Input = Request
     public typealias Output = Response
 

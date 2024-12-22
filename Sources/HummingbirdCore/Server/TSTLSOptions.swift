@@ -43,7 +43,7 @@ public struct TSTLSOptions: Sendable {
         let secIdentity: SecIdentity
 
         public static func secIdentity(_ secIdentity: SecIdentity) -> Self {
-            return .init(secIdentity: secIdentity)
+            .init(secIdentity: secIdentity)
         }
 
         public static func p12(filename: String, password: String) throws -> Self {
@@ -101,7 +101,7 @@ public struct TSTLSOptions: Sendable {
 
     /// TSTLSOptions holding options
     public static func options(_ options: NWProtocolTLS.Options) -> Self {
-        return .init(value: .some(options))
+        .init(value: .some(options))
     }
 
     public static func options(
@@ -117,7 +117,9 @@ public struct TSTLSOptions: Sendable {
     }
 
     public static func options(
-        clientIdentity: Identity, trustRoots: Certificates = .none, serverName: String? = nil
+        clientIdentity: Identity,
+        trustRoots: Certificates = .none,
+        serverName: String? = nil
     ) -> Self? {
         let options = NWProtocolTLS.Options()
 
@@ -143,7 +145,8 @@ public struct TSTLSOptions: Sendable {
                         }
                         sec_protocol_verify_complete(result)
                     }
-                }, Self.tlsDispatchQueue
+                },
+                Self.tlsDispatchQueue
             )
         }
         return .init(value: .some(options))
@@ -151,7 +154,7 @@ public struct TSTLSOptions: Sendable {
 
     /// Empty TSTLSOptions
     public static var none: Self {
-        return .init(value: .none)
+        .init(value: .none)
     }
 
     var options: NWProtocolTLS.Options? {

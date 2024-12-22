@@ -33,8 +33,8 @@ extension HTTPServerBuilder {
         _ base: HTTPServerBuilder = .http1(),
         tlsConfiguration: TLSConfiguration
     ) throws -> HTTPServerBuilder {
-        return .init { responder in
-            return try base.buildChildChannel(responder).withTLS(tlsConfiguration: tlsConfiguration)
+        .init { responder in
+            try base.buildChildChannel(responder).withTLS(tlsConfiguration: tlsConfiguration)
         }
     }
 }

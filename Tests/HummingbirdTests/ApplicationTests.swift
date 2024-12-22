@@ -17,8 +17,8 @@ import HTTPTypes
 import Hummingbird
 import HummingbirdCore
 import HummingbirdHTTP2
-import HummingbirdTesting
 import HummingbirdTLS
+import HummingbirdTesting
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
@@ -37,7 +37,7 @@ final class ApplicationTests: XCTestCase {
     func testGetRoute() async throws {
         let router = Router()
         router.get("/hello") { _, _ -> ByteBuffer in
-            return ByteBuffer(string: "GET: Hello")
+            ByteBuffer(string: "GET: Hello")
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -51,7 +51,7 @@ final class ApplicationTests: XCTestCase {
     func testHTTPStatusRoute() async throws {
         let router = Router()
         router.get("/accepted") { _, _ -> HTTPResponse.Status in
-            return .accepted
+            .accepted
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -64,7 +64,7 @@ final class ApplicationTests: XCTestCase {
     func testStandardHeaders() async throws {
         let router = Router()
         router.get("/hello") { _, _ in
-            return "Hello"
+            "Hello"
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.live) { client in
@@ -78,10 +78,11 @@ final class ApplicationTests: XCTestCase {
     func testServerHeaders() async throws {
         let router = Router()
         router.get("/hello") { _, _ in
-            return "Hello"
+            "Hello"
         }
         let app = Application(
-            responder: router.buildResponder(), configuration: .init(serverName: "TestServer")
+            responder: router.buildResponder(),
+            configuration: .init(serverName: "TestServer")
         )
         try await app.test(.live) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
@@ -93,7 +94,7 @@ final class ApplicationTests: XCTestCase {
     func testPostRoute() async throws {
         let router = Router()
         router.post("/hello") { _, _ -> String in
-            return "POST: Hello"
+            "POST: Hello"
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -108,10 +109,10 @@ final class ApplicationTests: XCTestCase {
     func testMultipleMethods() async throws {
         let router = Router()
         router.post("/hello") { _, _ -> String in
-            return "POST"
+            "POST"
         }
         router.get("/hello") { _, _ -> String in
-            return "GET"
+            "GET"
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -129,10 +130,10 @@ final class ApplicationTests: XCTestCase {
         let router = Router()
         router.group("hello")
             .post { _, _ -> String in
-                return "POST"
+                "POST"
             }
             .get { _, _ -> String in
-                return "GET"
+                "GET"
             }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -149,8 +150,9 @@ final class ApplicationTests: XCTestCase {
     func testQueryRoute() async throws {
         let router = Router()
         router.post("/query") { request, _ -> ByteBuffer in
-            return ByteBuffer(
-                string: request.uri.queryParameters["test"].map { String($0) } ?? "")
+            ByteBuffer(
+                string: request.uri.queryParameters["test"].map { String($0) } ?? ""
+            )
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -166,7 +168,7 @@ final class ApplicationTests: XCTestCase {
     func testMultipleQueriesRoute() async throws {
         let router = Router()
         router.post("/add") { request, _ -> String in
-            return request.uri.queryParameters.getAll("value", as: Int.self).reduce(0, +)
+            request.uri.queryParameters.getAll("value", as: Int.self).reduce(0, +)
                 .description
         }
         let app = Application(responder: router.buildResponder())
@@ -183,7 +185,7 @@ final class ApplicationTests: XCTestCase {
     func testArray() async throws {
         let router = Router()
         router.get("array") { _, _ -> [String] in
-            return ["yes", "no"]
+            ["yes", "no"]
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -276,7 +278,7 @@ final class ApplicationTests: XCTestCase {
     func testStreaming() async throws {
         let router = Router()
         router.post("streaming") { request, _ -> Response in
-            return Response(status: .ok, body: .init(asyncSequence: request.body))
+            Response(status: .ok, body: .init(asyncSequence: request.body))
         }
         router.post("size") { request, _ -> String in
             var size = 0
@@ -308,7 +310,7 @@ final class ApplicationTests: XCTestCase {
     func testStreamingSmallBuffer() async throws {
         let router = Router()
         router.post("streaming") { request, _ -> Response in
-            return Response(status: .ok, body: .init(asyncSequence: request.body))
+            Response(status: .ok, body: .init(asyncSequence: request.body))
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -327,7 +329,8 @@ final class ApplicationTests: XCTestCase {
     func testCollectBody() async throws {
         struct CollateMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(
-                _ request: Request, context: Context,
+                _ request: Request,
+                context: Context,
                 next: (Request, Context) async throws -> Response
             ) async throws -> Response {
                 var request = request
@@ -416,7 +419,7 @@ final class ApplicationTests: XCTestCase {
         router
             .group("/name")
             .patch { _, _ -> Name? in
-                return Name(first: "john", last: "smith")
+                Name(first: "john", last: "smith")
             }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -430,7 +433,7 @@ final class ApplicationTests: XCTestCase {
     func testTypedResponse() async throws {
         let router = Router()
         router.delete("/hello") { _, _ in
-            return EditedResponse(
+            EditedResponse(
                 status: .preconditionRequired,
                 headers: [.test: "value", .contentType: "application/json"],
                 response: "Hello"
@@ -454,7 +457,7 @@ final class ApplicationTests: XCTestCase {
         }
         let router = Router()
         router.patch("/hello") { _, _ in
-            return EditedResponse(
+            EditedResponse(
                 status: .multipleChoices,
                 headers: [.test: "value", .contentType: "application/json"],
                 response: Result(value: "true")
@@ -506,10 +509,13 @@ final class ApplicationTests: XCTestCase {
     func testChunkedTransferEncoding() async throws {
         let router = Router()
             .get("chunked") { _, _ in
-                Response(status: .ok, body: .init { writer in
-                    try await writer.write(ByteBuffer(string: "Testing"))
-                    try await writer.finish(nil)
-                })
+                Response(
+                    status: .ok,
+                    body: .init { writer in
+                        try await writer.write(ByteBuffer(string: "Testing"))
+                        try await writer.finish(nil)
+                    }
+                )
             }
         let app = Application(responder: router.buildResponder())
         try await app.test(.live) { client in
@@ -561,7 +567,7 @@ final class ApplicationTests: XCTestCase {
         func createApplication() -> some ApplicationProtocol {
             let router = Router()
             router.get("/hello") { _, _ -> ByteBuffer in
-                return ByteBuffer(string: "GET: Hello")
+                ByteBuffer(string: "GET: Hello")
             }
             return Application(responder: router.buildResponder())
         }
@@ -582,7 +588,7 @@ final class ApplicationTests: XCTestCase {
             var responder: some HTTPResponder<Context> {
                 let router = Router(context: Context.self)
                 router.get("/hello") { _, _ -> ByteBuffer in
-                    return ByteBuffer(string: "GET: Hello")
+                    ByteBuffer(string: "GET: Hello")
                 }
                 return router.buildResponder()
             }
@@ -604,7 +610,7 @@ final class ApplicationTests: XCTestCase {
         }
         let app = Application(
             responder: CallbackResponder { (_: Request, _: EmptyRequestContext) in
-                return Response(status: .ok)
+                Response(status: .ok)
             }
         )
         try await app.test(.live) { client in
@@ -734,7 +740,8 @@ final class ApplicationTests: XCTestCase {
                 body: .init { writer in
                     for try await buffer in request.body {
                         let processed = ByteBuffer(
-                            bytes: buffer.readableBytesView.map { $0 ^ 0xFF })
+                            bytes: buffer.readableBytesView.map { $0 ^ 0xFF }
+                        )
                         try await writer.write(processed)
                     }
                     try await writer.finish(nil)
@@ -745,7 +752,8 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.live) { client in
             try await client.execute(uri: "/", method: .post, body: buffer) { response in
                 XCTAssertEqual(
-                    response.body, ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 0xFF })
+                    response.body,
+                    ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 0xFF })
                 )
             }
         }
@@ -755,16 +763,20 @@ final class ApplicationTests: XCTestCase {
 
     func getServerTLSConfiguration() throws -> TLSConfiguration {
         let caCertificate = try NIOSSLCertificate(
-            bytes: [UInt8](caCertificateData.utf8), format: .pem
+            bytes: [UInt8](caCertificateData.utf8),
+            format: .pem
         )
         let certificate = try NIOSSLCertificate(
-            bytes: [UInt8](serverCertificateData.utf8), format: .pem
+            bytes: [UInt8](serverCertificateData.utf8),
+            format: .pem
         )
         let privateKey = try NIOSSLPrivateKey(
-            bytes: [UInt8](serverPrivateKeyData.utf8), format: .pem
+            bytes: [UInt8](serverPrivateKeyData.utf8),
+            format: .pem
         )
         var tlsConfig = TLSConfiguration.makeServerConfiguration(
-            certificateChain: [.certificate(certificate)], privateKey: .privateKey(privateKey)
+            certificateChain: [.certificate(certificate)],
+            privateKey: .privateKey(privateKey)
         )
         tlsConfig.trustRoots = .certificates([caCertificate])
         return tlsConfig
@@ -821,6 +833,156 @@ final class ApplicationTests: XCTestCase {
             XCTAssertEqual(format.error.message, message)
         }
     }
+
+    /// Test AsyncSequence returned by RequestBody.makeStream()
+    func testMakeStream() async throws {
+        let router = Router()
+        router.post("streaming") { request, context -> Response in
+            let body = try await withThrowingTaskGroup(of: Void.self) { group in
+                let (requestBody, source) = RequestBody.makeStream()
+                group.addTask {
+                    for try await buffer in request.body {
+                        try await source.yield(buffer)
+                    }
+                    source.finish()
+                }
+                var body = ByteBuffer()
+                for try await buffer in requestBody {
+                    var buffer = buffer
+                    body.writeBuffer(&buffer)
+                }
+                return body
+            }
+            return Response(status: .ok, body: .init(byteBuffer: body))
+        }
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.router) { client in
+
+            let buffer = Self.randomBuffer(size: 640_001)
+            try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(response.body, buffer)
+            }
+        }
+    }
+
+    #if compiler(>=6.0)
+    /// Test consumeWithInboundCloseHandler
+    func testConsumeWithInboundHandler() async throws {
+        let router = Router()
+        router.post("streaming") { request, context -> Response in
+            Response(
+                status: .ok,
+                body: .init { writer in
+                    try await request.body.consumeWithInboundCloseHandler { body in
+                        try await writer.write(body)
+                    } onInboundClosed: {
+                    }
+                    try await writer.finish(nil)
+                }
+            )
+        }
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.live) { client in
+            let buffer = Self.randomBuffer(size: 640_001)
+            try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(response.body, buffer)
+            }
+        }
+    }
+
+    /// Test consumeWithInboundCloseHandler
+    func testConsumeWithCancellationOnInboundClose() async throws {
+        let router = Router()
+        router.post("streaming") { request, context -> Response in
+            Response(
+                status: .ok,
+                body: .init { writer in
+                    try await request.body.consumeWithCancellationOnInboundClose { body in
+                        try await writer.write(body)
+                    }
+                    try await writer.finish(nil)
+                }
+            )
+        }
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.live) { client in
+            let buffer = Self.randomBuffer(size: 640_001)
+            try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(response.body, buffer)
+            }
+        }
+    }
+
+    /// Test consumeWithInboundHandler after having collected the Request body
+    func testConsumeWithInboundHandlerAfterCollect() async throws {
+        let router = Router()
+        router.post("streaming") { request, context -> Response in
+            var request = request
+            _ = try await request.collectBody(upTo: .max)
+            let request2 = request
+            return Response(
+                status: .ok,
+                body: .init { writer in
+                    try await request2.body.consumeWithInboundCloseHandler { body in
+                        try await writer.write(body)
+                    } onInboundClosed: {
+                    }
+                    try await writer.finish(nil)
+                }
+            )
+        }
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.live) { client in
+            let buffer = Self.randomBuffer(size: 640_001)
+            try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(response.body, buffer)
+            }
+        }
+    }
+
+    /// Test consumeWithInboundHandler after having replaced Request.body with a new streamed RequestBody
+    func testConsumeWithInboundHandlerAfterReplacingBody() async throws {
+        let router = Router()
+        router.post("streaming") { request, context -> Response in
+            var request = request
+            request.body = .init(
+                asyncSequence: request.body.map {
+                    let view = $0.readableBytesView.map { $0 ^ 255 }
+                    return ByteBuffer(bytes: view)
+                }
+            )
+            let request2 = request
+            return Response(
+                status: .ok,
+                body: .init { writer in
+                    try await request2.body.consumeWithInboundCloseHandler { body in
+                        try await writer.write(body)
+                    } onInboundClosed: {
+                    }
+                    try await writer.finish(nil)
+                }
+            )
+        }
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.live) { client in
+            let buffer = Self.randomBuffer(size: 640_001)
+            let xorBuffer = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
+            try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(response.body, xorBuffer)
+            }
+        }
+    }
+    #endif
 }
 
 /// HTTPField used during tests

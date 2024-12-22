@@ -24,7 +24,7 @@ struct EndpointResponders<Context>: Sendable {
 
     @inlinable
     public func getResponder(for method: __shared HTTPRequest.Method) -> (any HTTPResponder<Context>)? {
-        return self.methods[method]
+        self.methods[method]
     }
 
     mutating func addResponder(for method: HTTPRequest.Method, responder: any HTTPResponder<Context>) {

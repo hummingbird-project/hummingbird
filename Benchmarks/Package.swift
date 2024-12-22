@@ -21,8 +21,8 @@ let package = Package(
             ],
             path: "Benchmarks/Router",
             plugins: [
-                .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
+                .plugin(name: "BenchmarkPlugin", package: "package-benchmark")
             ]
-        ),
+        )
     ]
 )

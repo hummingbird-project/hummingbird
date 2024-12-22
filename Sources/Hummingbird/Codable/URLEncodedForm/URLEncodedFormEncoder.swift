@@ -55,7 +55,7 @@ public struct URLEncodedFormEncoder: Sendable {
 
     /// The options set on the top-level encoder.
     fileprivate var options: _Options {
-        return _Options(
+        _Options(
             dateEncodingStrategy: self.dateEncodingStrategy,
             userInfo: self.userInfo
         )
@@ -104,7 +104,7 @@ private class _URLEncodedFormEncoder: Encoder {
 
     /// Contextual user-provided information for use during encoding.
     public var userInfo: [CodingUserInfoKey: Any] {
-        return self.options.userInfo
+        self.options.userInfo
     }
 
     /// Initialization
@@ -127,7 +127,7 @@ private class _URLEncodedFormEncoder: Encoder {
     }
 
     struct KEC<Key: CodingKey>: KeyedEncodingContainerProtocol {
-        var codingPath: [CodingKey] { return self.encoder.codingPath }
+        var codingPath: [CodingKey] { self.encoder.codingPath }
         let container: URLEncodedFormNode.Map
         let encoder: _URLEncodedFormEncoder
 
@@ -170,7 +170,10 @@ private class _URLEncodedFormEncoder: Encoder {
             self.container.addChild(key: key.stringValue, value: childContainer)
         }
 
-        mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
+        mutating func nestedContainer<NestedKey>(
+            keyedBy keyType: NestedKey.Type,
+            forKey key: Key
+        ) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
             self.encoder.codingPath.append(key)
             defer { self.encoder.codingPath.removeLast() }
 
@@ -192,11 +195,11 @@ private class _URLEncodedFormEncoder: Encoder {
         }
 
         mutating func superEncoder() -> Encoder {
-            return self.encoder
+            self.encoder
         }
 
         mutating func superEncoder(forKey key: Key) -> Encoder {
-            return self.encoder
+            self.encoder
         }
     }
 
@@ -206,7 +209,7 @@ private class _URLEncodedFormEncoder: Encoder {
     }
 
     struct UKEC: UnkeyedEncodingContainer {
-        var codingPath: [CodingKey] { return self.encoder.codingPath }
+        var codingPath: [CodingKey] { self.encoder.codingPath }
         let container: URLEncodedFormNode.Array
         let encoder: _URLEncodedFormEncoder
         var count: Int
@@ -275,7 +278,7 @@ private class _URLEncodedFormEncoder: Encoder {
         }
 
         mutating func superEncoder() -> Encoder {
-            return self.encoder
+            self.encoder
         }
     }
 }
@@ -313,7 +316,7 @@ extension _URLEncodedFormEncoder: SingleValueEncodingContainer {
     }
 
     func singleValueContainer() -> SingleValueEncodingContainer {
-        return self
+        self
     }
 }
 
@@ -388,6 +391,6 @@ private struct URLEncodedFormEncoderStorage {
 
     /// pop a container from the storage
     @discardableResult mutating func popContainer() -> URLEncodedFormNode {
-        return self.containers.removeLast()
+        self.containers.removeLast()
     }
 }
