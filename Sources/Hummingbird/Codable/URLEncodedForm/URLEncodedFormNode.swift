@@ -128,7 +128,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
         }
 
         init?(percentEncoded value: String) {
-            guard let value = value.removingPercentEncoding else { return nil }
+            guard let value = value.removingURLPercentEncoding() else { return nil }
             self.value = value
         }
 

@@ -28,7 +28,7 @@
 
 extension StringProtocol {
 
-    fileprivate func hexToAscii(_ hex: UInt8) -> UInt8 {
+    fileprivate static func hexToAscii(_ hex: UInt8) -> UInt8 {
         switch hex {
         case 0x0:
             return UInt8(ascii: "0")
@@ -69,16 +69,16 @@ extension StringProtocol {
 
     package func addingPercentEncoding(forURLComponent component: URLComponentSet) -> String {
         let fastResult = utf8.withContiguousStorageIfAvailable {
-            addingPercentEncoding(utf8Buffer: $0, component: component)
+            Self.addingPercentEncoding(utf8Buffer: $0, component: component)
         }
         if let fastResult {
             return fastResult
         } else {
-            return addingPercentEncoding(utf8Buffer: utf8, component: component)
+            return Self.addingPercentEncoding(utf8Buffer: utf8, component: component)
         }
     }
 
-    fileprivate func addingPercentEncoding(utf8Buffer: some Collection<UInt8>, component: URLComponentSet) -> String {
+    fileprivate static func addingPercentEncoding(utf8Buffer: some Collection<UInt8>, component: URLComponentSet) -> String {
         let maxLength = utf8Buffer.count * 3
         let result = withUnsafeTemporaryAllocation(of: UInt8.self, capacity: maxLength + 1) { _buffer in
             var buffer = OutputBuffer(initializing: _buffer.baseAddress!, capacity: _buffer.count)
@@ -98,7 +98,7 @@ extension StringProtocol {
         return result
     }
 
-    fileprivate func asciiToHex(_ ascii: UInt8) -> UInt8? {
+    fileprivate static func asciiToHex(_ ascii: UInt8) -> UInt8? {
         switch ascii {
         case UInt8(ascii: "0"):
             return 0x0
@@ -139,16 +139,16 @@ extension StringProtocol {
 
     package func removingURLPercentEncoding(excluding: Set<UInt8> = []) -> String? {
         let fastResult = utf8.withContiguousStorageIfAvailable {
-            removingURLPercentEncoding(utf8Buffer: $0, excluding: excluding)
+            Self.removingURLPercentEncoding(utf8Buffer: $0, excluding: excluding)
         }
         if let fastResult {
             return fastResult
         } else {
-            return removingURLPercentEncoding(utf8Buffer: utf8, excluding: excluding)
+            return Self.removingURLPercentEncoding(utf8Buffer: utf8, excluding: excluding)
         }
     }
 
-    fileprivate func removingURLPercentEncoding(utf8Buffer: some Collection<UInt8>, excluding: Set<UInt8>) -> String? {
+    package static func removingURLPercentEncoding(utf8Buffer: some Collection<UInt8>, excluding: Set<UInt8> = []) -> String? {
         let result: String? = withUnsafeTemporaryAllocation(of: UInt8.self, capacity: utf8Buffer.count) { buffer -> String? in
             var i = 0
             var byte: UInt8 = 0
