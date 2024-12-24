@@ -34,9 +34,6 @@ public struct URLEncodedFormEncoder: Sendable {
         /// Encode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
         case iso8601
 
-        /// Encode the `Date` as a string parsed by the given formatter.
-        case formatted(DateFormatter)
-
         /// Encode the `Date` as a custom value encoded by the given closure.
         case custom(@Sendable (Date, Encoder) throws -> Void)
     }
@@ -335,8 +332,6 @@ extension _URLEncodedFormEncoder {
             #else
             try self.encode(URLEncodedForm.iso8601Formatter.string(from: date))
             #endif
-        case .formatted(let formatter):
-            try self.encode(formatter.string(from: date))
         case .custom(let closure):
             try closure(date, self)
         }

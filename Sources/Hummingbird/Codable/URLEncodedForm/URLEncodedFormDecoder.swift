@@ -34,9 +34,6 @@ public struct URLEncodedFormDecoder: Sendable {
         /// Decode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
         case iso8601
 
-        /// Decode the `Date` as a string parsed by the given formatter.
-        case formatted(DateFormatter)
-
         /// Decode the `Date` as a custom value encoded by the given closure.
         case custom(@Sendable (_ decoder: Decoder) throws -> Date)
     }
@@ -631,12 +628,6 @@ extension _URLEncodedFormDecoder {
                 throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Invalid date format"))
             }
             #endif
-            return date
-        case .formatted(let formatter):
-            let dateString = try unbox(node, as: String.self)
-            guard let date = formatter.date(from: dateString) else {
-                throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Invalid date format"))
-            }
             return date
         case .custom(let closure):
             self.storage.push(container: node)
