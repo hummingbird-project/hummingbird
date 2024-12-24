@@ -12,7 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if os(Linux)
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#elseif os(Linux)
 @preconcurrency import Foundation
 #else
 import Foundation
