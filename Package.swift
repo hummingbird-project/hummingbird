@@ -63,7 +63,7 @@ let package = Package(
                 .product(name: "NIOHTTPTypesHTTP1", package: "swift-nio-extras"),
                 .product(name: "NIOExtras", package: "swift-nio-extras"),
                 .product(name: "NIOPosix", package: "swift-nio"),
-                .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
+                .product(name: "NIOTransportServices", package: "swift-nio-transport-services", condition: .when(platforms: [.macOS, .iOS, .tvOS])),
                 .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
             ],
             swiftSettings: swiftSettings
