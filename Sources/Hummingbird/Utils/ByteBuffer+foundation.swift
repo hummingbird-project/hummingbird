@@ -33,6 +33,8 @@ import FoundationEssentials
 import Foundation
 #endif
 
+// MARK: Data
+
 extension ByteBuffer {
     /// Controls how bytes are transferred between `ByteBuffer` and other storage types.
     @usableFromInline
@@ -45,24 +47,6 @@ extension ByteBuffer {
 
         /// Use a heuristic to decide whether to copy the bytes or not.
         case automatic
-    }
-
-    // MARK: - Data APIs
-
-    /// Return `length` bytes starting at `index` and return the result as `Data`. This will not change the reader index.
-    /// The selected bytes must be readable or else `nil` will be returned.
-    ///
-    /// `ByteBuffer` will use a heuristic to decide whether to copy the bytes or whether to reference `ByteBuffer`'s
-    /// underlying storage from the returned `Data` value. If you want manual control over the byte transferring
-    /// behaviour, please use `getData(at:byteTransferStrategy:)`.
-    ///
-    /// - parameters:
-    ///     - index: The starting index of the bytes of interest into the `ByteBuffer`
-    ///     - length: The number of bytes of interest
-    /// - returns: A `Data` value containing the bytes of interest or `nil` if the selected bytes are not readable.
-    @usableFromInline
-    package func _getData(at index: Int, length: Int) -> Data? {
-        self.getData(at: index, length: length, byteTransferStrategy: .automatic)
     }
 
     /// Return `length` bytes starting at `index` and return the result as `Data`. This will not change the reader index.
@@ -106,4 +90,83 @@ extension ByteBuffer {
             }
         }
     }
+
+    /// Read `length` bytes off this `ByteBuffer`, move the reader index forward by `length` bytes and return the result
+    /// as `Data`.
+    ///
+    /// - parameters:
+    ///     - length: The number of bytes to be read from this `ByteBuffer`.
+    ///     - byteTransferStrategy: Controls how to transfer the bytes. See `ByteTransferStrategy` for an explanation
+    ///                             of the options.
+    /// - returns: A `Data` value containing `length` bytes or `nil` if there aren't at least `length` bytes readable.
+    package mutating func _readData(length: Int, byteTransferStrategy: _ByteTransferStrategy) -> Data? {
+        guard
+            let result = self._getData(at: self.readerIndex, length: length, byteTransferStrategy: byteTransferStrategy)
+        else {
+            return nil
+        }
+        self.moveReaderIndex(forwardBy: length)
+        return result
+    }
+
+    /// Attempts to decode the `length` bytes from `index` using the `JSONDecoder` `decoder` as `T`.
+    ///
+    /// - parameters:
+    ///    - type: The type type that is attempted to be decoded.
+    ///    - decoder: The `JSONDecoder` that is used for the decoding.
+    ///    - index: The index of the first byte to decode.
+    ///    - length: The number of bytes to decode.
+    /// - returns: The decoded value if successful or `nil` if there are not enough readable bytes available.
+    @inlinable
+    package func _getJSONDecodable<T: Decodable>(
+        _ type: T.Type,
+        decoder: JSONDecoder = JSONDecoder(),
+        at index: Int,
+        length: Int
+    ) throws -> T? {
+        guard let data = self._getData(at: index, length: length, byteTransferStrategy: .noCopy) else {
+            return nil
+        }
+        return try decoder.decode(T.self, from: data)
+    }
+}
+
+// MARK: JSONDecoder
+
+extension JSONDecoder {
+    /// Returns a value of the type you specify, decoded from a JSON object inside the readable bytes of a `ByteBuffer`.
+    ///
+    /// If the `ByteBuffer` does not contain valid JSON, this method throws the
+    /// `DecodingError.dataCorrupted(_:)` error. If a value within the JSON
+    /// fails to decode, this method throws the corresponding error.
+    ///
+    /// - note: The provided `ByteBuffer` remains unchanged, neither the `readerIndex` nor the `writerIndex` will move.
+    ///         If you would like the `readerIndex` to move, consider using `ByteBuffer.readJSONDecodable(_:length:)`.
+    ///
+    /// - parameters:
+    ///     - type: The type of the value to decode from the supplied JSON object.
+    ///     - buffer: The `ByteBuffer` that contains JSON object to decode.
+    /// - returns: The decoded object.
+    package func decodeByteBuffer<T: Decodable>(_ type: T.Type, from buffer: ByteBuffer) throws -> T {
+        try buffer._getJSONDecodable(
+            T.self,
+            decoder: self,
+            at: buffer.readerIndex,
+            length: buffer.readableBytes
+        )!  // must work, enough readable bytes// must work, enough readable bytes
+    }
+}
+
+// MARK: Data
+
+extension Data {
+
+    /// Creates a `Data` from a given `ByteBuffer`. The entire readable portion of the buffer will be read.
+    /// - parameter buffer: The buffer to read.
+    @_disfavoredOverload
+    package init(buffer: ByteBuffer, byteTransferStrategy: ByteBuffer._ByteTransferStrategy = .automatic) {
+        var buffer = buffer
+        self = buffer._readData(length: buffer.readableBytes, byteTransferStrategy: byteTransferStrategy)!
+    }
+
 }

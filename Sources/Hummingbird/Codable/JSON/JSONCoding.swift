@@ -46,7 +46,6 @@ extension JSONDecoder: RequestDecoder {
     ///   - context: Request context
     public func decode<T: Decodable>(_ type: T.Type, from request: Request, context: some RequestContext) async throws -> T {
         let buffer = try await request.body.collect(upTo: context.maxUploadSize)
-        let data = buffer.getData(at: buffer.readerIndex, length: buffer.readableBytes, byteTransferStrategy: .noCopy)!
-        return try self.decode(T.self, from: data)
+        return try self.decodeByteBuffer(T.self, from: buffer)
     }
 }
