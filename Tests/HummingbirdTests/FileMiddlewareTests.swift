@@ -14,9 +14,9 @@
 
 import Foundation
 import HTTPTypes
-import NIOPosix
 import Hummingbird
 import HummingbirdTesting
+import NIOPosix
 import XCTest
 
 final class FileMiddlewareTests: XCTestCase {
@@ -328,7 +328,7 @@ final class FileMiddlewareTests: XCTestCase {
         let fileURL = URL(fileURLWithPath: "test.html")
         XCTAssertNoThrow(try data.write(to: fileURL))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
-        
+
         let fileIO = NonBlockingFileIO(threadPool: .singleton)
 
         try await app.test(.router) { client in
