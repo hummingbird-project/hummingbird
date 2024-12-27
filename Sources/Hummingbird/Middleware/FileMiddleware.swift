@@ -12,12 +12,17 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import HTTPTypes
 import HummingbirdCore
 import Logging
 import NIOCore
 import NIOPosix
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Protocol for all the file attributes required by ``FileMiddleware``
 ///
