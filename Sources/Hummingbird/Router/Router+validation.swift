@@ -81,7 +81,7 @@ extension Router {
                     ["\(prefix)/\(UUID().uuidString)"]
                 case .recursiveWildcard:
                     // can't think of a better way to do this at the moment except
-                    // by creating path woith many entries
+                    // by creating path with many entries
                     (0..<20).map { _ in UUID().uuidString }
                 case .null:
                     [""]
