@@ -780,7 +780,13 @@ final class RouterTests: XCTestCase {
         let router = Router()
         router.get("test/**") { _, _ in "" }
         router.get("test/{what}") { _, _ in "" }
-        try router.validate()
+        XCTAssertThrowsError(try router.validate()) { error in
+            guard let error = error as? RouterValidationError else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(error.description, "Route /test/{what} overrides /test/**")
+        }
     }
 
     func testValidateDifferentParameterNames() throws {

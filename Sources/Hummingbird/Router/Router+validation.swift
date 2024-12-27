@@ -12,8 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import HTTPTypes
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 extension Router {
     /// Route description
@@ -40,62 +45,51 @@ extension Router {
     ///
     /// Verify that routes are not clashing
     public func validate() throws {
-        func matching(routerPath: RouterPath, pathComponents: [String]) -> Bool {
-            guard routerPath.count == pathComponents.count else { return false }
-            for index in 0..<routerPath.count {
-                if case routerPath[index] = pathComponents[index] {
-                    continue
+        try self.trie.root.validate()
+    }
+}
+
+extension RouterPathTrieBuilder.Node {
+    func validate(_ root: String = "") throws {
+        let sortedChildren = children.sorted { $0.key.priority > $1.key.priority }
+        if sortedChildren.count > 1 {
+            for index in 1..<sortedChildren.count {
+                let exampleElement =
+                    switch sortedChildren[index].key.value {
+                    case .path(let path):
+                        String(path)
+                    case .capture:
+                        UUID().uuidString
+                    case .prefixCapture(let suffix, _):
+                        "\(UUID().uuidString)\(suffix)"
+                    case .suffixCapture(let prefix, _):
+                        "\(prefix)/\(UUID().uuidString)"
+                    case .wildcard:
+                        UUID().uuidString
+                    case .prefixWildcard(let suffix):
+                        "\(UUID().uuidString)\(suffix)"
+                    case .suffixWildcard(let prefix):
+                        "\(prefix)/\(UUID().uuidString)"
+                    case .recursiveWildcard:
+                        UUID().uuidString
+                    case .null:
+                        ""
+                    }
+                // test path element against all the previous trie entries in this node
+                for trieEntry in sortedChildren[0..<index] {
+                    if case trieEntry.key = exampleElement {
+                        throw RouterValidationError(
+                            path: "\(root)/\(sortedChildren[index].key)",
+                            override: "\(root)/\(trieEntry.key)"
+                        )
+                    }
                 }
-                return false
+
             }
-            return true
         }
-        // get trie routes sorted in the way they will be evaluated after building the router
-        let trieValues = self.trie.root.values().sorted { lhs, rhs in
-            let count = min(lhs.path.count, rhs.path.count)
-            for i in 0..<count {
-                if lhs.path[i].priority < rhs.path[i].priority {
-                    return false
-                }
-            }
-            return true
-        }
-        guard trieValues.count > 1 else { return }
-        for index in 1..<trieValues.count {
-            // create path that will match this trie entry
-            let pathComponents = trieValues[index].path.flatMap { element -> [String] in
-                switch element.value {
-                case .path(let path):
-                    [String(path)]
-                case .capture:
-                    [UUID().uuidString]
-                case .prefixCapture(let suffix, _):
-                    ["\(UUID().uuidString)\(suffix)"]
-                case .suffixCapture(let prefix, _):
-                    ["\(prefix)/\(UUID().uuidString)"]
-                case .wildcard:
-                    [UUID().uuidString]
-                case .prefixWildcard(let suffix):
-                    ["\(UUID().uuidString)\(suffix)"]
-                case .suffixWildcard(let prefix):
-                    ["\(prefix)/\(UUID().uuidString)"]
-                case .recursiveWildcard:
-                    // can't think of a better way to do this at the moment except
-                    // by creating path with many entries
-                    (0..<20).map { _ in UUID().uuidString }
-                case .null:
-                    [""]
-                }
-            }
-            // test path against all the previous trie entries
-            for route in trieValues[0..<index] {
-                if matching(routerPath: route.path, pathComponents: pathComponents) {
-                    throw RouterValidationError(
-                        path: trieValues[index].path,
-                        override: route.path
-                    )
-                }
-            }
+
+        for child in self.children {
+            try child.validate("\(root)/\(child.key)")
         }
     }
 }
