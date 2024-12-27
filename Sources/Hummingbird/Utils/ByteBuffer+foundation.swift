@@ -153,7 +153,7 @@ extension JSONDecoder {
             decoder: self,
             at: buffer.readerIndex,
             length: buffer.readableBytes
-        )!  // must work, enough readable bytes// must work, enough readable bytes
+        )!  // must work, enough readable bytes
     }
 }
 
