@@ -106,6 +106,7 @@ public struct Cookie: Sendable, CustomStringConvertible {
         httpOnly: Bool = true,
         sameSite: SameSite
     ) {
+        assert(!(secure == false && sameSite == .none), "Cookies with SameSite set to None require the Secure attribute to be set")
         self.name = name
         self.value = value
         var properties = Properties()
