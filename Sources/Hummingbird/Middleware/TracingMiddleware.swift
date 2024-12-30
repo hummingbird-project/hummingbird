@@ -51,7 +51,7 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
         // span name is updated after route has run
         let operationName = "HTTP \(request.method.rawValue) route not found"
 
-        let span = InstrumentationSystem.tracer.startSpan(operationName, context: serviceContext, ofKind: .server)
+        let span = startSpan(operationName, context: serviceContext, ofKind: .server)
         span.updateAttributes { attributes in
             if let staticAttributes = self.attributes {
                 attributes.merge(staticAttributes)
@@ -174,22 +174,5 @@ private struct HTTPHeadersExtractor: Extractor {
     func extract(key name: String, from headers: HTTPFields) -> String? {
         guard let headerName = HTTPField.Name(name) else { return nil }
         return headers[headerName]
-    }
-}
-
-extension Span {
-    /// Update Span attributes in a block instead of individually
-    ///
-    /// Updating a span attribute will involve some type of thread synchronisation
-    /// primitive to avoid multiple threads updating the attributes at the same
-    /// time. If you update each attributes individually this could cause slowdown.
-    /// This function updates the attributes in one call to avoid hitting the
-    /// thread synchronisation code multiple times
-    ///
-    /// - Parameter update: closure used to update span attributes
-    func updateAttributes(_ update: (inout SpanAttributes) -> Void) {
-        var attributes = self.attributes
-        update(&attributes)
-        self.attributes = attributes
     }
 }
