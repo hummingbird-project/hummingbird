@@ -18,7 +18,6 @@ import HummingbirdCore
 import Logging
 import NIOCore
 import NIOPosix
-import NIOTransportServices
 import ServiceLifecycle
 
 /// Test using a live server

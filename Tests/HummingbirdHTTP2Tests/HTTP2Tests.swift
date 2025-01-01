@@ -22,7 +22,6 @@ import NIOHTTP1
 import NIOHTTPTypes
 import NIOPosix
 import NIOSSL
-import NIOTransportServices
 import XCTest
 
 final class HummingBirdHTTP2Tests: XCTestCase {

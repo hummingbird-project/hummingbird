@@ -18,7 +18,7 @@ import XCTest
 
 @testable import Hummingbird
 
-final class HummingbirdDateTests: XCTestCase {
+final class DateTests: XCTestCase {
     func testRFC1123Renderer() {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")

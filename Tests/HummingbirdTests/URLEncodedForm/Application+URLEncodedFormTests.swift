@@ -19,7 +19,7 @@ import Logging
 import NIOCore
 import XCTest
 
-final class HummingBirdURLEncodedTests: XCTestCase {
+final class URLEncodedFormTests: XCTestCase {
     struct User: ResponseCodable {
         let name: String
         let email: String

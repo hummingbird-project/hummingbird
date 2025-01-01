@@ -17,7 +17,7 @@ import HummingbirdTesting
 import Logging
 import XCTest
 
-final class HummingbirdJSONTests: XCTestCase {
+final class JSONCodingTests: XCTestCase {
     struct User: ResponseCodable {
         let name: String
         let email: String
@@ -52,7 +52,7 @@ final class HummingbirdJSONTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/user", method: .get) { response in
-                let user = try JSONDecoder().decode(User.self, from: response.body)
+                let user = try JSONDecoder().decodeByteBuffer(User.self, from: response.body)
                 XCTAssertEqual(user.name, "John Smith")
                 XCTAssertEqual(user.email, "john.smith@email.com")
                 XCTAssertEqual(user.age, 25)
