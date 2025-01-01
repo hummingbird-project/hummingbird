@@ -602,49 +602,7 @@ extension Parser {
 
     /// percent decode UTF8
     public func percentDecode() -> String? {
-        struct DecodeError: Swift.Error {}
-        func _percentDecode(_ original: ArraySlice<UInt8>, _ bytes: UnsafeMutableBufferPointer<UInt8>) throws -> Int {
-            var newIndex = 0
-            var index = original.startIndex
-            while index < (original.endIndex - 2) {
-                // if we have found a percent sign
-                if original[index] == 0x25 {
-                    let high = Self.asciiHexValues[Int(original[index + 1])]
-                    let low = Self.asciiHexValues[Int(original[index + 2])]
-                    index += 3
-                    if ((high | low) & 0x80) != 0 {
-                        throw DecodeError()
-                    }
-                    bytes[newIndex] = (high << 4) | low
-                    newIndex += 1
-                } else {
-                    bytes[newIndex] = original[index]
-                    newIndex += 1
-                    index += 1
-                }
-            }
-            while index < original.endIndex {
-                bytes[newIndex] = original[index]
-                newIndex += 1
-                index += 1
-            }
-            return newIndex
-        }
-        guard self.index != self.range.endIndex else { return "" }
-        do {
-            if #available(macOS 11, macCatalyst 14.0, iOS 14.0, tvOS 14.0, *) {
-                return try String(unsafeUninitializedCapacity: range.endIndex - index) { bytes -> Int in
-                    try _percentDecode(self.buffer[self.index..<range.endIndex], bytes)
-                }
-            } else {
-                let newBuffer = try [UInt8](unsafeUninitializedCapacity: self.range.endIndex - self.index) { bytes, count in
-                    try count = _percentDecode(self.buffer[self.index..<self.range.endIndex], bytes)
-                }
-                return self.makeString(newBuffer)
-            }
-        } catch {
-            return nil
-        }
+        String.removingURLPercentEncoding(utf8Buffer: self.buffer[self.index..<self.range.endIndex])
     }
 }
 

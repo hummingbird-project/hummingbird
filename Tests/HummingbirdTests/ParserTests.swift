@@ -100,7 +100,7 @@ final class ParserTests: XCTestCase {
 
     func testPercentDecode() throws {
         let string = "abc,é☺😀併"
-        let encoded = string.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!
+        let encoded = string.addingPercentEncoding(forURLComponent: .queryItem)
         var parser = Parser(encoded)
         try! parser.read(until: ",")
         let decoded = try XCTUnwrap(parser.percentDecode())

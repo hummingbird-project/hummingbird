@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,7 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if os(Linux)
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#elseif os(Linux)
 @preconcurrency import Foundation
 #else
 import Foundation
@@ -33,9 +35,6 @@ public struct URLEncodedFormDecoder: Sendable {
 
         /// Decode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
         case iso8601
-
-        /// Decode the `Date` as a string parsed by the given formatter.
-        case formatted(DateFormatter)
 
         /// Decode the `Date` as a custom value encoded by the given closure.
         case custom(@Sendable (_ decoder: Decoder) throws -> Date)
@@ -621,20 +620,16 @@ extension _URLEncodedFormDecoder {
             let seconds = try unbox(node, as: Double.self)
             return Date(timeIntervalSince1970: seconds)
         case .iso8601:
-            if #available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *) {
-                let dateString = try unbox(node, as: String.self)
-                guard let date = URLEncodedForm.iso8601Formatter.date(from: dateString) else {
-                    throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Invalid date format"))
-                }
-                return date
-            } else {
-                preconditionFailure("ISO8601DateFormatter is unavailable on this platform")
-            }
-        case .formatted(let formatter):
             let dateString = try unbox(node, as: String.self)
-            guard let date = formatter.date(from: dateString) else {
+            #if compiler(>=6.0)
+            guard let date = try? Date(dateString, strategy: .iso8601) else {
                 throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Invalid date format"))
             }
+            #else
+            guard let date = URLEncodedForm.iso8601Formatter.date(from: dateString) else {
+                throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Invalid date format"))
+            }
+            #endif
             return date
         case .custom(let closure):
             self.storage.push(container: node)

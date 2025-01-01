@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,7 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if os(Linux)
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#elseif os(Linux)
 @preconcurrency import Foundation
 #else
 import Foundation
@@ -33,9 +35,6 @@ public struct URLEncodedFormEncoder: Sendable {
 
         /// Encode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
         case iso8601
-
-        /// Encode the `Date` as a string parsed by the given formatter.
-        case formatted(DateFormatter)
 
         /// Encode the `Date` as a custom value encoded by the given closure.
         case custom(@Sendable (Date, Encoder) throws -> Void)
@@ -330,13 +329,11 @@ extension _URLEncodedFormEncoder {
         case .secondsSince1970:
             try self.encode(Double(date.timeIntervalSince1970).description)
         case .iso8601:
-            if #available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *) {
-                try encode(URLEncodedForm.iso8601Formatter.string(from: date))
-            } else {
-                preconditionFailure("ISO8601DateFormatter is unavailable on this platform")
-            }
-        case .formatted(let formatter):
-            try self.encode(formatter.string(from: date))
+            #if compiler(>=6.0)
+            try self.encode(date.formatted(.iso8601))
+            #else
+            try self.encode(URLEncodedForm.iso8601Formatter.string(from: date))
+            #endif
         case .custom(let closure):
             try closure(date, self)
         }
