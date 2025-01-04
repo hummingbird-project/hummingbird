@@ -16,6 +16,7 @@ import Foundation
 import HTTPTypes
 import Hummingbird
 import HummingbirdTesting
+import NIOPosix
 import XCTest
 
 final class FileMiddlewareTests: XCTestCase {
@@ -313,6 +314,43 @@ final class FileMiddlewareTests: XCTestCase {
         try await app.test(.router) { client in
             try await client.execute(uri: "/", method: .get) { response in
                 XCTAssertEqual(String(buffer: response.body), text)
+            }
+        }
+    }
+
+    func testSymlink() async throws {
+        let router = Router()
+        router.middlewares.add(FileMiddleware(".", searchForIndexHtml: true))
+        let app = Application(responder: router.buildResponder())
+
+        let text = "Test file contents"
+        let data = Data(text.utf8)
+        let fileURL = URL(fileURLWithPath: "test.html")
+        XCTAssertNoThrow(try data.write(to: fileURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+
+        let fileIO = NonBlockingFileIO(threadPool: .singleton)
+
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/test.html", method: .get) { response in
+                XCTAssertEqual(String(buffer: response.body), text)
+            }
+
+            try await client.execute(uri: "/", method: .get) { response in
+                XCTAssertEqual(String(buffer: response.body), "")
+            }
+
+            try await fileIO.symlink(path: "index.html", to: "test.html")
+
+            do {
+                try await client.execute(uri: "/", method: .get) { response in
+                    XCTAssertEqual(String(buffer: response.body), text)
+                }
+
+                try await fileIO.unlink(path: "index.html")
+            } catch {
+                try await fileIO.unlink(path: "index.html")
+                throw error
             }
         }
     }

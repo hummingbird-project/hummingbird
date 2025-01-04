@@ -42,7 +42,7 @@ public struct FileIO: Sendable {
         chunkLength: Int = NonBlockingFileIO.defaultChunkSize
     ) async throws -> ResponseBody {
         do {
-            let stat = try await fileIO.lstat(path: path)
+            let stat = try await fileIO.stat(path: path)
             guard stat.st_size > 0 else { return .init() }
             return self.readFile(path: path, range: 0...numericCast(stat.st_size - 1), context: context, chunkLength: chunkLength)
         } catch {
@@ -67,7 +67,7 @@ public struct FileIO: Sendable {
         chunkLength: Int = NonBlockingFileIO.defaultChunkSize
     ) async throws -> ResponseBody {
         do {
-            let stat = try await fileIO.lstat(path: path)
+            let stat = try await fileIO.stat(path: path)
             guard stat.st_size > 0 else { return .init() }
             let fileRange: ClosedRange<Int> = 0...numericCast(stat.st_size - 1)
             let range = range.clamped(to: fileRange)
@@ -141,6 +141,18 @@ public struct FileIO: Sendable {
                 }
                 try await writer.finish(nil)
             }
+        }
+    }
+}
+
+extension NonBlockingFileIO {
+    func stat(path: String) async throws -> stat {
+        let stat = try await self.lstat(path: path)
+        if stat.st_mode & S_IFMT == S_IFLNK {
+            let realPath = try await self.readlink(path: path)
+            return try await self.lstat(path: realPath)
+        } else {
+            return stat
         }
     }
 }
