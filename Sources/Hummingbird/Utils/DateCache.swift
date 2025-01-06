@@ -74,7 +74,7 @@ final class DateCache: Service {
         var formatted = day
         formatted.reserveCapacity(30)
         formatted += ", "
-        formatted += timeStruct.tm_mday.description
+        formatted += self.numberNames[numericCast(timeStruct.tm_mday)]
         formatted += " "
         formatted += month
         formatted += " "
