@@ -19,7 +19,7 @@ import XCTest
 @testable import Hummingbird
 
 final class DateTests: XCTestCase {
-    func testRFC1123Renderer() {
+    func testHTTPHeaderDateRenderer() {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "EEE, dd MMM yyy HH:mm:ss z"
@@ -30,7 +30,7 @@ final class DateTests: XCTestCase {
             let date = Date(timeIntervalSince1970: Double(time))
             XCTAssertEqual(
                 formatter.string(from: date),
-                date.formatted(.rfc1123)
+                date.httpHeaderDate
             )
         }
     }
@@ -58,8 +58,8 @@ final class DateTests: XCTestCase {
         for _ in 0..<1000 {
             let time = Int.random(in: 1...4 * Int(Int32.max))
             let date = Date(timeIntervalSince1970: Double(time))
-            let string = date.formatted(.rfc1123)
-            let parsedDate = try Date(string, strategy: .rfc1123)
+            let string = date.httpHeaderDate
+            let parsedDate = Date(httpHeaderDate: string)
             XCTAssertEqual(date, parsedDate)
         }
 

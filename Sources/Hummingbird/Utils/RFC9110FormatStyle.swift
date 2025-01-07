@@ -12,15 +12,27 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if swift(>=6.0)
+
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
 import Foundation
 #endif
 
-struct RFC1123DateParsingError: Error {}
+extension Date {
+    init?(httpHeaderDate: String) {
+        try? self.init(httpHeaderDate, strategy: .rfc9110)
+    }
 
-struct RFC1123FormatStyle {
+    var httpHeaderDate: String {
+        self.formatted(.rfc9110)
+    }
+}
+
+struct RFC9110DateParsingError: Error {}
+
+struct RFC9110FormatStyle {
 
     let calendar: Calendar
 
@@ -31,13 +43,13 @@ struct RFC1123FormatStyle {
     }
 }
 
-extension RFC1123FormatStyle: ParseStrategy {
+extension RFC9110FormatStyle: ParseStrategy {
     func parse(_ input: String) throws -> Date {
         guard let components = self.components(from: input) else {
-            throw RFC1123DateParsingError()
+            throw RFC9110DateParsingError()
         }
         guard let date = components.date else {
-            throw RFC1123DateParsingError()
+            throw RFC9110DateParsingError()
         }
         return date
     }
@@ -266,7 +278,7 @@ let timezoneOffsetMap: [[UInt8]: Int] = [
     Array("PDT".utf8): -7 * 60,
 ]
 
-extension RFC1123FormatStyle: FormatStyle {
+extension RFC9110FormatStyle: FormatStyle {
     //let calendar: Calendar
 
     func format(_ value: Date) -> String {
@@ -310,10 +322,75 @@ extension RFC1123FormatStyle: FormatStyle {
     ]
 }
 
-extension FormatStyle where Self == RFC1123FormatStyle {
-    static var rfc1123: Self { .init() }
+extension FormatStyle where Self == RFC9110FormatStyle {
+    static var rfc9110: Self { .init() }
 }
 
-extension ParseStrategy where Self == RFC1123FormatStyle {
-    static var rfc1123: Self { .init() }
+extension ParseStrategy where Self == RFC9110FormatStyle {
+    static var rfc9110: Self { .init() }
 }
+
+#else
+
+import Foundation
+
+extension Date {
+    init?(httpHeaderDate: String) {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "EEE, dd MMM yyy HH:mm:ss z"
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        guard let date = formatter.date(from: httpHeaderDate) else { return  nil }
+        self = date
+    }
+
+    var httpHeaderDate: String {
+        var epochTime = Int(self.timeIntervalSince1970)
+        var timeStruct = tm.init()
+        gmtime_r(&epochTime, &timeStruct)
+        let year = Int(timeStruct.tm_year + 1900)
+        let day = Self.dayNames[numericCast(timeStruct.tm_wday)]
+        let month = Self.monthNames[numericCast(timeStruct.tm_mon)]
+        var formatted = day
+        formatted.reserveCapacity(30)
+        formatted += ", "
+        formatted += Self.numberNames[numericCast(timeStruct.tm_mday)]
+        formatted += " "
+        formatted += month
+        formatted += " "
+        formatted += Self.numberNames[year / 100]
+        formatted += Self.numberNames[year % 100]
+        formatted += " "
+        formatted += Self.numberNames[numericCast(timeStruct.tm_hour)]
+        formatted += ":"
+        formatted += Self.numberNames[numericCast(timeStruct.tm_min)]
+        formatted += ":"
+        formatted += Self.numberNames[numericCast(timeStruct.tm_sec)]
+        formatted += " GMT"
+
+        return formatted
+    }
+
+    private static let dayNames = [
+        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
+    ]
+
+    private static let monthNames = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ]
+
+    private static let numberNames = [
+        "00", "01", "02", "03", "04", "05", "06", "07", "08", "09",
+        "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
+        "20", "21", "22", "23", "24", "25", "26", "27", "28", "29",
+        "30", "31", "32", "33", "34", "35", "36", "37", "38", "39",
+        "40", "41", "42", "43", "44", "45", "46", "47", "48", "49",
+        "50", "51", "52", "53", "54", "55", "56", "57", "58", "59",
+        "60", "61", "62", "63", "64", "65", "66", "67", "68", "69",
+        "70", "71", "72", "73", "74", "75", "76", "77", "78", "79",
+        "80", "81", "82", "83", "84", "85", "86", "87", "88", "89",
+        "90", "91", "92", "93", "94", "95", "96", "97", "98", "99",
+    ]
+}
+
+#endif  // #if swift(>=6.0)

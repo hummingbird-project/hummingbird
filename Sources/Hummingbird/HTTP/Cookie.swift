@@ -37,7 +37,7 @@ public struct Cookie: Sendable, CustomStringConvertible {
     public let properties: Properties
 
     /// indicates the maximum lifetime of the cookie
-    public var expires: Date? { self.properties[.expires].flatMap { try? Date($0, strategy: .rfc1123) } }
+    public var expires: Date? { self.properties[.expires].flatMap { Date(httpHeaderDate: $0) } }
     /// indicates the maximum lifetime of the cookie in seconds. Max age has precedence over expires
     /// (not all user agents support max-age)
     public var maxAge: Int? { self.properties[.maxAge].map { Int($0) } ?? nil }
@@ -75,7 +75,7 @@ public struct Cookie: Sendable, CustomStringConvertible {
         self.name = name
         self.value = value
         var properties = Properties()
-        properties[.expires] = expires?.formatted(.rfc1123)
+        properties[.expires] = expires?.httpHeaderDate
         properties[.maxAge] = maxAge?.description
         properties[.domain] = domain
         properties[.path] = path
@@ -110,7 +110,7 @@ public struct Cookie: Sendable, CustomStringConvertible {
         self.name = name
         self.value = value
         var properties = Properties()
-        properties[.expires] = expires?.formatted(.rfc1123)
+        properties[.expires] = expires?.httpHeaderDate
         properties[.maxAge] = maxAge?.description
         properties[.domain] = domain
         properties[.path] = path

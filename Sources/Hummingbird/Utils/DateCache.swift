@@ -37,7 +37,7 @@ import Darwin.C
 /// Current date formatted cache service
 ///
 /// Getting the current date formatted is an expensive operation. This creates a task that will
-/// update a cached version of the date in the format as detailed in RFC1123 once every second.
+/// update a cached version of the date in the format as detailed in RFC9110 once every second.
 final class DateCache: Service {
     final class DateContainer: AtomicReference, Sendable {
         let date: String
@@ -50,14 +50,14 @@ final class DateCache: Service {
     let dateContainer: ManagedAtomic<DateContainer>
 
     init() {
-        self.dateContainer = .init(.init(date: Date.now.formatted(.rfc1123)))
+        self.dateContainer = .init(.init(date: Date.now.httpHeaderDate))
     }
 
     public func run() async throws {
         let timerSequence = AsyncTimerSequence(interval: .seconds(1), clock: .suspending)
             .cancelOnGracefulShutdown()
         for try await _ in timerSequence {
-            self.dateContainer.store(.init(date: Date.now.formatted(.rfc1123)), ordering: .releasing)
+            self.dateContainer.store(.init(date: Date.now.httpHeaderDate), ordering: .releasing)
         }
     }
 
