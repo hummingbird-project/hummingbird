@@ -22,7 +22,7 @@ final class DateTests: XCTestCase {
     func testRFC1123Renderer() {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "EEE, d MMM yyy HH:mm:ss z"
+        formatter.dateFormat = "EEE, dd MMM yyy HH:mm:ss z"
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
 
         for _ in 0..<1000 {
