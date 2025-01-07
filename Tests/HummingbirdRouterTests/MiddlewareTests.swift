@@ -123,7 +123,7 @@ final class MiddlewareTests: XCTestCase {
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
                 XCTAssertEqual(response.status, .notFound)
-                let error = try JSONDecoder().decode(ErrorMessage.self, from: response.body)
+                let error = try JSONDecoder().decodeByteBuffer(ErrorMessage.self, from: response.body)
                 XCTAssertEqual(error.error.message, "Edited error")
             }
         }
