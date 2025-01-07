@@ -30,7 +30,7 @@ final class DateTests: XCTestCase {
             let date = Date(timeIntervalSince1970: Double(time))
             XCTAssertEqual(
                 formatter.string(from: date),
-                date.httpHeaderDate
+                date.httpHeader
             )
         }
     }
@@ -58,8 +58,8 @@ final class DateTests: XCTestCase {
         for _ in 0..<1000 {
             let time = Int.random(in: 1...4 * Int(Int32.max))
             let date = Date(timeIntervalSince1970: Double(time))
-            let string = date.httpHeaderDate
-            let parsedDate = Date(httpHeaderDate: string)
+            let string = date.httpHeader
+            let parsedDate = Date(httpHeader: string)
             XCTAssertEqual(date, parsedDate)
         }
 

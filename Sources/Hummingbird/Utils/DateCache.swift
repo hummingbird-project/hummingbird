@@ -50,14 +50,14 @@ final class DateCache: Service {
     let dateContainer: ManagedAtomic<DateContainer>
 
     init() {
-        self.dateContainer = .init(.init(date: Date.now.httpHeaderDate))
+        self.dateContainer = .init(.init(date: Date.now.httpHeader))
     }
 
     public func run() async throws {
         let timerSequence = AsyncTimerSequence(interval: .seconds(1), clock: .suspending)
             .cancelOnGracefulShutdown()
         for try await _ in timerSequence {
-            self.dateContainer.store(.init(date: Date.now.httpHeaderDate), ordering: .releasing)
+            self.dateContainer.store(.init(date: Date.now.httpHeader), ordering: .releasing)
         }
     }
 

@@ -21,19 +21,18 @@ import Foundation
 #endif
 
 extension Date {
-    init?(httpHeaderDate: String) {
-        try? self.init(httpHeaderDate, strategy: .rfc9110)
+    init?(httpHeader: String) {
+        try? self.init(httpHeader, strategy: .rfc9110)
     }
 
-    var httpHeaderDate: String {
+    var httpHeader: String {
         self.formatted(.rfc9110)
     }
 }
 
-struct RFC9110DateParsingError: Error {}
+struct HTTPHeaderDateParsingError: Error {}
 
-struct RFC9110FormatStyle {
-
+struct HTTPHeaderDateFormatStyle {
     let calendar: Calendar
 
     init() {
@@ -43,13 +42,13 @@ struct RFC9110FormatStyle {
     }
 }
 
-extension RFC9110FormatStyle: ParseStrategy {
+extension HTTPHeaderDateFormatStyle: ParseStrategy {
     func parse(_ input: String) throws -> Date {
         guard let components = self.components(from: input) else {
-            throw RFC9110DateParsingError()
+            throw HTTPHeaderDateParsingError()
         }
         guard let date = components.date else {
-            throw RFC9110DateParsingError()
+            throw HTTPHeaderDateParsingError()
         }
         return date
     }
@@ -278,7 +277,7 @@ let timezoneOffsetMap: [[UInt8]: Int] = [
     Array("PDT".utf8): -7 * 60,
 ]
 
-extension RFC9110FormatStyle: FormatStyle {
+extension HTTPHeaderDateFormatStyle: FormatStyle {
     //let calendar: Calendar
 
     func format(_ value: Date) -> String {
@@ -322,11 +321,11 @@ extension RFC9110FormatStyle: FormatStyle {
     ]
 }
 
-extension FormatStyle where Self == RFC9110FormatStyle {
+extension FormatStyle where Self == HTTPHeaderDateFormatStyle {
     static var rfc9110: Self { .init() }
 }
 
-extension ParseStrategy where Self == RFC9110FormatStyle {
+extension ParseStrategy where Self == HTTPHeaderDateFormatStyle {
     static var rfc9110: Self { .init() }
 }
 
@@ -335,16 +334,16 @@ extension ParseStrategy where Self == RFC9110FormatStyle {
 import Foundation
 
 extension Date {
-    init?(httpHeaderDate: String) {
+    init?(httpHeader: String) {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "EEE, dd MMM yyy HH:mm:ss z"
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        guard let date = formatter.date(from: httpHeaderDate) else { return nil }
+        guard let date = formatter.date(from: httpHeader) else { return nil }
         self = date
     }
 
-    var httpHeaderDate: String {
+    var httpHeader: String {
         var epochTime = Int(self.timeIntervalSince1970)
         var timeStruct = tm.init()
         gmtime_r(&epochTime, &timeStruct)
