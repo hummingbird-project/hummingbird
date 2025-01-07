@@ -27,7 +27,11 @@ final class DateTests: XCTestCase {
 
         for _ in 0..<1000 {
             let time = Int.random(in: 1...4 * Int(Int32.max))
-            XCTAssertEqual(formatter.string(from: Date(timeIntervalSince1970: Double(time))), DateCache.formatRFC1123Date(time))
+            let date = Date(timeIntervalSince1970: Double(time))
+            XCTAssertEqual(
+                formatter.string(from: date),
+                date.formatted(.rfc1123)
+            )
         }
     }
 
@@ -48,5 +52,16 @@ final class DateTests: XCTestCase {
                 XCTAssertNotEqual(response.headers[.date], date)
             }
         }
+    }
+
+    func testFormatStyleAndParser() throws {
+        for _ in 0..<1000 {
+            let time = Int.random(in: 1...4 * Int(Int32.max))
+            let date = Date(timeIntervalSince1970: Double(time))
+            let string = date.formatted(.rfc1123)
+            let parsedDate = try Date(string, strategy: .rfc1123)
+            XCTAssertEqual(date, parsedDate)
+        }
+
     }
 }

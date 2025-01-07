@@ -213,7 +213,7 @@ extension FileMiddleware {
         // content-length
         headers[.contentLength] = String(describing: attributes.size)
         // modified-date
-        let modificationDateString = DateCache.rfc1123Formatter.string(from: attributes.modificationDate)
+        let modificationDateString = attributes.modificationDate.formatted(.rfc1123)
         headers[.lastModified] = modificationDateString
         // eTag (constructed from modification date and content size)
         headers[.eTag] = eTag
@@ -244,7 +244,7 @@ extension FileMiddleware {
         }
         // verify if-modified-since
         else if let ifModifiedSince = request.headers[.ifModifiedSince] {
-            if let ifModifiedSinceDate = DateCache.rfc1123Formatter.date(from: ifModifiedSince) {
+            if let ifModifiedSinceDate = try? Date(ifModifiedSince, strategy: .rfc1123) {
                 // round modification date of file down to seconds for comparison
                 let modificationDateTimeInterval = attributes.modificationDate.timeIntervalSince1970.rounded(.down)
                 let ifModifiedSinceDateTimeInterval = ifModifiedSinceDate.timeIntervalSince1970
