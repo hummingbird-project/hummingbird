@@ -340,7 +340,7 @@ extension Date {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "EEE, dd MMM yyy HH:mm:ss z"
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        guard let date = formatter.date(from: httpHeaderDate) else { return  nil }
+        guard let date = formatter.date(from: httpHeaderDate) else { return nil }
         self = date
     }
 
