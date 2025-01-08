@@ -26,7 +26,7 @@ final class FileMiddlewareTests: XCTestCase {
         return ByteBufferAllocator().buffer(bytes: data)
     }
 
-    static var rfc1123Formatter: DateFormatter {
+    static var rfc9110Formatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "EEE, d MMM yyy HH:mm:ss z"
@@ -185,7 +185,7 @@ final class FileMiddlewareTests: XCTestCase {
                 XCTAssertEqual(response.headers[.contentLength], text.utf8.count.description)
                 XCTAssertEqual(response.headers[.contentType], "text/plain")
                 let responseDateString = try XCTUnwrap(response.headers[.lastModified])
-                let responseDate = try XCTUnwrap(Self.rfc1123Formatter.date(from: responseDateString))
+                let responseDate = try XCTUnwrap(Self.rfc9110Formatter.date(from: responseDateString))
                 XCTAssert(date < responseDate + 2 && date > responseDate - 2)
             }
         }
@@ -264,7 +264,7 @@ final class FileMiddlewareTests: XCTestCase {
                 XCTAssertEqual(response.status, .notModified)
             }
             // one minute before current date
-            let date = try XCTUnwrap(Self.rfc1123Formatter.string(from: Date(timeIntervalSinceNow: -60)))
+            let date = try XCTUnwrap(Self.rfc9110Formatter.string(from: Date(timeIntervalSinceNow: -60)))
             try await client.execute(uri: filename, method: .get, headers: [.ifModifiedSince: date]) { response in
                 XCTAssertEqual(response.status, .ok)
             }
