@@ -10,7 +10,7 @@ import CNIOLinux
 public import HummingbirdCore
 import Logging
 import NIOCore
-import NIOPosix
+public import NIOPosix
 import _NIOFileSystem
 
 /// Manages File reading and writing.

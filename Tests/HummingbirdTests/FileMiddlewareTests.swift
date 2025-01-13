@@ -13,6 +13,7 @@ import HummingbirdTesting
 import NIOFoundationEssentialsCompat
 import NIOPosix
 import Testing
+import _NIOFileSystem
 
 struct FileMiddlewareTests {
     static func randomBuffer(size: Int) -> ByteBuffer {
@@ -29,6 +30,25 @@ struct FileMiddlewareTests {
         return formatter
     }
 
+    static func withFile<Buffer: Sequence & Sendable, ReturnValue>(
+        _ path: String,
+        contents: Buffer,
+        process: () async throws -> ReturnValue
+    ) async throws -> ReturnValue where Buffer.Element == UInt8 {
+        let fileSystem = FileSystem(threadPool: .singleton)
+        try await fileSystem.withFileHandle(forWritingAt: .init(path)) { write in
+            _ = try await write.write(contentsOf: contents, toAbsoluteOffset: 0)
+        }
+        do {
+            let value = try await process()
+            _ = try? await fileSystem.removeItem(at: .init(path))
+            return value
+        } catch {
+            _ = try? await fileSystem.removeItem(at: .init(path))
+            throw error
+        }
+    }
+
     @Test func testRead() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware("."))
@@ -36,15 +56,13 @@ struct FileMiddlewareTests {
 
         let filename = "\(#function).jpg"
         let text = "Test file contents"
-        let data = Data(text.utf8)
-        let fileURL = URL(fileURLWithPath: filename)
-        #expect(throws: Never.self) { try data.write(to: fileURL) }
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
 
-        try await app.test(.router) { client in
-            try await client.execute(uri: filename, method: .get) { response in
-                #expect(String(buffer: response.body) == text)
-                #expect(response.headers[.contentType] == "image/jpeg")
+        try await Self.withFile(filename, contents: text.utf8) {
+            try await app.test(.router) { client in
+                try await client.execute(uri: filename, method: .get) { response in
+                    #expect(String(buffer: response.body) == text)
+                    #expect(response.headers[.contentType] == "image/jpeg")
+                }
             }
         }
     }
@@ -68,14 +86,12 @@ struct FileMiddlewareTests {
 
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 380_000)
-        let data = Data(buffer: buffer)
-        let fileURL = URL(fileURLWithPath: filename)
-        #expect(throws: Never.self) { try data.write(to: fileURL) }
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
 
-        try await app.test(.router) { client in
-            try await client.execute(uri: filename, method: .get) { response in
-                #expect(response.body == buffer)
+        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+            try await app.test(.router) { client in
+                try await client.execute(uri: filename, method: .get) { response in
+                    #expect(response.body == buffer)
+                }
             }
         }
     }
@@ -87,40 +103,38 @@ struct FileMiddlewareTests {
 
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 326_000)
-        let data = Data(buffer: buffer)
-        let fileURL = URL(fileURLWithPath: filename)
-        #expect(throws: Never.self) { try data.write(to: fileURL) }
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
 
-        try await app.test(.router) { client in
-            try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=100-3999"]) { response in
-                let slice = buffer.getSlice(at: 100, length: 3900)
-                #expect(response.body == slice)
-                #expect(response.headers[.contentRange] == "bytes 100-3999/326000")
-                #expect(response.headers[.contentLength] == "3900")
-                #expect(response.headers[.contentType] == "text/plain")
-            }
+        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+            try await app.test(.router) { client in
+                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=100-3999"]) { response in
+                    let slice = buffer.getSlice(at: 100, length: 3900)
+                    #expect(response.body == slice)
+                    #expect(response.headers[.contentRange] == "bytes 100-3999/326000")
+                    #expect(response.headers[.contentLength] == "3900")
+                    #expect(response.headers[.contentType] == "text/plain")
+                }
 
-            try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=0-0"]) { response in
-                let slice = buffer.getSlice(at: 0, length: 1)
-                #expect(response.body == slice)
-                #expect(response.headers[.contentRange] == "bytes 0-0/326000")
-                #expect(response.headers[.contentLength] == "1")
-                #expect(response.headers[.contentType] == "text/plain")
-            }
+                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=0-0"]) { response in
+                    let slice = buffer.getSlice(at: 0, length: 1)
+                    #expect(response.body == slice)
+                    #expect(response.headers[.contentRange] == "bytes 0-0/326000")
+                    #expect(response.headers[.contentLength] == "1")
+                    #expect(response.headers[.contentType] == "text/plain")
+                }
 
-            try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=-3999"]) { response in
-                let slice = buffer.getSlice(at: 0, length: 4000)
-                #expect(response.body == slice)
-                #expect(response.headers[.contentLength] == "4000")
-                #expect(response.headers[.contentRange] == "bytes 0-3999/326000")
-            }
+                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=-3999"]) { response in
+                    let slice = buffer.getSlice(at: 0, length: 4000)
+                    #expect(response.body == slice)
+                    #expect(response.headers[.contentLength] == "4000")
+                    #expect(response.headers[.contentRange] == "bytes 0-3999/326000")
+                }
 
-            try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=6000-"]) { response in
-                let slice = buffer.getSlice(at: 6000, length: 320_000)
-                #expect(response.body == slice)
-                #expect(response.headers[.contentLength] == "320000")
-                #expect(response.headers[.contentRange] == "bytes 6000-325999/326000")
+                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=6000-"]) { response in
+                    let slice = buffer.getSlice(at: 6000, length: 320_000)
+                    #expect(response.body == slice)
+                    #expect(response.headers[.contentLength] == "320000")
+                    #expect(response.headers[.contentRange] == "bytes 6000-325999/326000")
+                }
             }
         }
     }
@@ -132,32 +146,30 @@ struct FileMiddlewareTests {
 
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 10000)
-        let data = Data(buffer: buffer)
-        let fileURL = URL(fileURLWithPath: filename)
-        #expect(throws: Never.self) { try data.write(to: fileURL) }
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
 
-        try await app.test(.router) { client in
-            let (eTag, modificationDate) = try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=-3999"]) {
-                response -> (String, String) in
-                let eTag = try #require(response.headers[.eTag])
-                let modificationDate = try #require(response.headers[.lastModified])
-                let slice = buffer.getSlice(at: 0, length: 4000)
-                #expect(response.body == slice)
-                #expect(response.headers[.contentRange] == "bytes 0-3999/10000")
-                return (eTag, modificationDate)
-            }
+        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+            try await app.test(.router) { client in
+                let (eTag, modificationDate) = try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=-3999"]) {
+                    response -> (String, String) in
+                    let eTag = try #require(response.headers[.eTag])
+                    let modificationDate = try #require(response.headers[.lastModified])
+                    let slice = buffer.getSlice(at: 0, length: 4000)
+                    #expect(response.body == slice)
+                    #expect(response.headers[.contentRange] == "bytes 0-3999/10000")
+                    return (eTag, modificationDate)
+                }
 
-            try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=4000-", .ifRange: eTag]) { response in
-                #expect(response.headers[.contentRange] == "bytes 4000-9999/10000")
-            }
+                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=4000-", .ifRange: eTag]) { response in
+                    #expect(response.headers[.contentRange] == "bytes 4000-9999/10000")
+                }
 
-            try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=4000-", .ifRange: modificationDate]) { response in
-                #expect(response.headers[.contentRange] == "bytes 4000-9999/10000")
-            }
+                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=4000-", .ifRange: modificationDate]) { response in
+                    #expect(response.headers[.contentRange] == "bytes 4000-9999/10000")
+                }
 
-            try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=4000-", .ifRange: "not valid"]) { response in
-                #expect(response.headers[.contentRange] == nil)
+                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=4000-", .ifRange: "not valid"]) { response in
+                    #expect(response.headers[.contentRange] == nil)
+                }
             }
         }
     }
@@ -167,21 +179,21 @@ struct FileMiddlewareTests {
         router.middlewares.add(FileMiddleware("."))
         let app = Application(responder: router.buildResponder())
 
+        let filename = "testHead.txt"
         let date = Date()
         let text = "Test file contents"
-        let data = Data(text.utf8)
-        let fileURL = URL(fileURLWithPath: "testHead.txt")
-        #expect(throws: Never.self) { try data.write(to: fileURL) }
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
 
-        try await app.test(.router) { client in
-            try await client.execute(uri: "/testHead.txt", method: .head) { response in
-                #expect(response.body.readableBytes == 0)
-                #expect(response.headers[.contentLength] == text.utf8.count.description)
-                #expect(response.headers[.contentType] == "text/plain")
-                let responseDateString = try #require(response.headers[.lastModified])
-                let responseDate = try #require(Self.rfc9110Formatter.date(from: responseDateString))
-                #expect(date < responseDate + 2 && date > responseDate - 2)
+        try await Self.withFile(filename, contents: text.utf8) {
+            try await app.test(.router) { client in
+                let filename = "testHead.txt"
+                try await client.execute(uri: "/\(filename)", method: .head) { response in
+                    #expect(response.body.readableBytes == 0)
+                    #expect(response.headers[.contentLength] == text.utf8.count.description)
+                    #expect(response.headers[.contentType] == "text/plain")
+                    let responseDateString = try #require(response.headers[.lastModified])
+                    let responseDate = try #require(Self.rfc9110Formatter.date(from: responseDateString))
+                    #expect(date < responseDate + 2 && date > responseDate - 2)
+                }
             }
         }
     }
@@ -193,18 +205,15 @@ struct FileMiddlewareTests {
 
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 16200)
-        let data = Data(buffer: buffer)
-        let fileURL = URL(fileURLWithPath: filename)
-        #expect(throws: Never.self) { try data.write(to: fileURL) }
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
 
-        try await app.test(.router) { client in
-            var eTag: String?
-            try await client.execute(uri: filename, method: .head) { response in
-                eTag = response.headers[.eTag]
-            }
-            try await client.execute(uri: filename, method: .head) { response in
-                #expect(response.headers[.eTag] == eTag)
+        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+            try await app.test(.router) { client in
+                let eTag = try await client.execute(uri: filename, method: .head) { response in
+                    response.headers[.eTag]
+                }
+                try await client.execute(uri: filename, method: .head) { response in
+                    #expect(response.headers[.eTag] == eTag)
+                }
             }
         }
     }
@@ -216,25 +225,23 @@ struct FileMiddlewareTests {
 
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 16200)
-        let data = Data(buffer: buffer)
-        let fileURL = URL(fileURLWithPath: filename)
-        #expect(throws: Never.self) { try data.write(to: fileURL) }
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
 
-        try await app.test(.router) { client in
-            let eTag = try await client.execute(uri: filename, method: .head) { response in
-                try #require(response.headers[.eTag])
-            }
-            try await client.execute(uri: filename, method: .get, headers: [.ifNoneMatch: eTag]) { response in
-                #expect(response.status == .notModified)
-            }
-            var headers: HTTPFields = .init()
-            headers[values: .ifNoneMatch] = ["test", "\(eTag)"]
-            try await client.execute(uri: filename, method: .get, headers: headers) { response in
-                #expect(response.status == .notModified)
-            }
-            try await client.execute(uri: filename, method: .get, headers: [.ifNoneMatch: "dummyETag"]) { response in
-                #expect(response.status == .ok)
+        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+            try await app.test(.router) { client in
+                let eTag = try await client.execute(uri: filename, method: .head) { response in
+                    try #require(response.headers[.eTag])
+                }
+                try await client.execute(uri: filename, method: .get, headers: [.ifNoneMatch: eTag]) { response in
+                    #expect(response.status == .notModified)
+                }
+                var headers: HTTPFields = .init()
+                headers[values: .ifNoneMatch] = ["test", "\(eTag)"]
+                try await client.execute(uri: filename, method: .get, headers: headers) { response in
+                    #expect(response.status == .notModified)
+                }
+                try await client.execute(uri: filename, method: .get, headers: [.ifNoneMatch: "dummyETag"]) { response in
+                    #expect(response.status == .ok)
+                }
             }
         }
     }
@@ -246,22 +253,20 @@ struct FileMiddlewareTests {
 
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 16200)
-        let data = Data(buffer: buffer)
-        let fileURL = URL(fileURLWithPath: filename)
-        #expect(throws: Never.self) { try data.write(to: fileURL) }
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
 
-        try await app.test(.router) { client in
-            let modifiedDate = try await client.execute(uri: filename, method: .head) { response in
-                try #require(response.headers[.lastModified])
-            }
-            try await client.execute(uri: filename, method: .get, headers: [.ifModifiedSince: modifiedDate]) { response in
-                #expect(response.status == .notModified)
-            }
-            // one minute before current date
-            let date = Self.rfc9110Formatter.string(from: Date(timeIntervalSinceNow: -60))
-            try await client.execute(uri: filename, method: .get, headers: [.ifModifiedSince: date]) { response in
-                #expect(response.status == .ok)
+        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+            try await app.test(.router) { client in
+                let modifiedDate = try await client.execute(uri: filename, method: .head) { response in
+                    try #require(response.headers[.lastModified])
+                }
+                try await client.execute(uri: filename, method: .get, headers: [.ifModifiedSince: modifiedDate]) { response in
+                    #expect(response.status == .notModified)
+                }
+                // one minute before current date
+                let date = Self.rfc9110Formatter.string(from: Date(timeIntervalSinceNow: -60))
+                try await client.execute(uri: filename, method: .get, headers: [.ifModifiedSince: date]) { response in
+                    #expect(response.status == .ok)
+                }
             }
         }
     }
@@ -277,20 +282,18 @@ struct FileMiddlewareTests {
 
         let filename = "\(#function).txt"
         let text = "Test file contents"
-        let data = Data(text.utf8)
-        let fileURL = URL(fileURLWithPath: filename)
-        #expect(throws: Never.self) { try data.write(to: fileURL) }
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
-        let fileURL2 = URL(fileURLWithPath: "test.jpg")
-        #expect(throws: Never.self) { try data.write(to: fileURL2) }
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL2) } }
+        let filename2 = "\(#function).jpg"
 
-        try await app.test(.router) { client in
-            try await client.execute(uri: filename, method: .get) { response in
-                #expect(response.headers[.cacheControl] == "max-age=2592000")
-            }
-            try await client.execute(uri: "/test.jpg", method: .get) { response in
-                #expect(response.headers[.cacheControl] == "max-age=2592000, private")
+        try await Self.withFile(filename, contents: text.utf8) {
+            try await Self.withFile(filename2, contents: text.utf8) {
+                try await app.test(.router) { client in
+                    try await client.execute(uri: filename, method: .get) { response in
+                        #expect(response.headers[.cacheControl] == "max-age=2592000")
+                    }
+                    try await client.execute(uri: filename2, method: .get) { response in
+                        #expect(response.headers[.cacheControl] == "max-age=2592000, private")
+                    }
+                }
             }
         }
     }
@@ -299,16 +302,13 @@ struct FileMiddlewareTests {
         let router = Router()
         router.middlewares.add(FileMiddleware(".", searchForIndexHtml: true))
         let app = Application(responder: router.buildResponder())
-
         let text = "Test file contents"
-        let data = Data(text.utf8)
-        let fileURL = URL(fileURLWithPath: "index.html")
-        #expect(throws: Never.self) { try data.write(to: fileURL) }
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
 
-        try await app.test(.router) { client in
-            try await client.execute(uri: "/", method: .get) { response in
-                #expect(String(buffer: response.body) == text)
+        try await Self.withFile("index.html", contents: text.utf8) {
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/", method: .get) { response in
+                    #expect(String(buffer: response.body) == text)
+                }
             }
         }
     }
@@ -340,35 +340,29 @@ struct FileMiddlewareTests {
         let router = Router()
         router.middlewares.add(FileMiddleware(".", searchForIndexHtml: true))
         let app = Application(responder: router.buildResponder())
-
         let text = "Test file contents"
-        let data = Data(text.utf8)
-        let fileURL = URL(fileURLWithPath: "testSymlink.html")
-        #expect(throws: Never.self) { try data.write(to: fileURL) }
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
 
-        let fileIO = NonBlockingFileIO(threadPool: .singleton)
-
-        try await app.test(.router) { client in
-            try await client.execute(uri: "/testSymlink.html", method: .get) { response in
-                #expect(String(buffer: response.body) == text)
-            }
-
-            try await client.execute(uri: "/testSymlink2.html", method: .get) { response in
-                #expect(String(buffer: response.body) == "")
-            }
-
-            try await fileIO.symlink(path: "testSymlink2.html", to: "testSymlink.html")
-
-            do {
-                try await client.execute(uri: "/testSymlink2.html", method: .get) { response in
+        try await Self.withFile("testSymlink.html", contents: text.utf8) {
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/testSymlink.html", method: .get) { response in
                     #expect(String(buffer: response.body) == text)
                 }
 
-                try await fileIO.unlink(path: "testSymlink2.html")
-            } catch {
-                try await fileIO.unlink(path: "testSymlink2.html")
-                throw error
+                try await client.execute(uri: "/testSymlink2.html", method: .get) { response in
+                    #expect(String(buffer: response.body) == "")
+                }
+
+                try await FileSystem.shared.createSymbolicLink(at: "testSymlink2.html", withDestination: "testSymlink.html")
+
+                do {
+                    try await client.execute(uri: "/testSymlink2.html", method: .get) { response in
+                        #expect(String(buffer: response.body) == text)
+                    }
+                    try await FileSystem.shared.removeItem(at: "testSymlink2.html")
+                } catch {
+                    try await FileSystem.shared.removeItem(at: "testSymlink2.html")
+                    throw error
+                }
             }
         }
     }
@@ -387,16 +381,13 @@ struct FileMiddlewareTests {
             throw Custom404Error()
         }
         let app = Application(responder: router.buildResponder())
-
         let text = "Test file contents"
-        let data = Data(text.utf8)
-        let fileURL = URL(fileURLWithPath: "testOnThrowCustom404.html")
-        #expect(throws: Never.self) { try data.write(to: fileURL) }
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
 
-        try await app.test(.router) { client in
-            try await client.execute(uri: "/testOnThrowCustom404.html", method: .get) { response in
-                #expect(String(buffer: response.body) == text)
+        try await Self.withFile("index.html", contents: text.utf8) {
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/", method: .get) { response in
+                    #expect(String(buffer: response.body) == text)
+                }
             }
         }
     }

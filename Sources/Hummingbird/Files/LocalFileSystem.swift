@@ -8,6 +8,7 @@
 
 public import Logging
 public import NIOPosix
+import _NIOFileSystem
 
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
