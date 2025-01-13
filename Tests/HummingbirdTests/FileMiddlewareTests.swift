@@ -35,25 +35,6 @@ final class FileMiddlewareTests: XCTestCase {
         return formatter
     }
 
-    static func withFile<Buffer: Sequence & Sendable, ReturnValue>(
-        _ path: String,
-        contents: Buffer,
-        process: () async throws -> ReturnValue
-    ) async throws -> ReturnValue where Buffer.Element == UInt8 {
-        let fileSystem = FileSystem(threadPool: .singleton)
-        try await fileSystem.withFileHandle(forWritingAt: .init(path)) { write in
-            _ = try await write.write(contentsOf: contents, toAbsoluteOffset: 0)
-        }
-        do {
-            let value = try await process()
-            _ = try? await fileSystem.removeItem(at: .init(path))
-            return value
-        } catch {
-            _ = try? await fileSystem.removeItem(at: .init(path))
-            throw error
-        }
-    }
-
     func testRead() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware("."))
@@ -62,7 +43,7 @@ final class FileMiddlewareTests: XCTestCase {
         let filename = "\(#function).jpg"
         let text = "Test file contents"
 
-        try await Self.withFile(filename, contents: text.utf8) {
+        try await FileIOTests.withFile(filename, contents: text.utf8) {
             try await app.test(.router) { client in
                 try await client.execute(uri: filename, method: .get) { response in
                     XCTAssertEqual(String(buffer: response.body), text)
@@ -92,7 +73,7 @@ final class FileMiddlewareTests: XCTestCase {
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 380_000)
 
-        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+        try await FileIOTests.withFile(filename, contents: buffer.readableBytesView) {
             try await app.test(.router) { client in
                 try await client.execute(uri: filename, method: .get) { response in
                     XCTAssertEqual(response.body, buffer)
@@ -109,7 +90,7 @@ final class FileMiddlewareTests: XCTestCase {
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 326_000)
 
-        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+        try await FileIOTests.withFile(filename, contents: buffer.readableBytesView) {
             try await app.test(.router) { client in
                 try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=100-3999"]) { response in
                     let slice = buffer.getSlice(at: 100, length: 3900)
@@ -152,7 +133,7 @@ final class FileMiddlewareTests: XCTestCase {
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 10000)
 
-        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+        try await FileIOTests.withFile(filename, contents: buffer.readableBytesView) {
             try await app.test(.router) { client in
                 let (eTag, modificationDate) = try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=-3999"]) {
                     response -> (String, String) in
@@ -188,7 +169,7 @@ final class FileMiddlewareTests: XCTestCase {
         let date = Date()
         let text = "Test file contents"
 
-        try await Self.withFile(filename, contents: text.utf8) {
+        try await FileIOTests.withFile(filename, contents: text.utf8) {
             try await app.test(.router) { client in
                 let filename = "testHead.txt"
                 try await client.execute(uri: "/\(filename)", method: .head) { response in
@@ -211,7 +192,7 @@ final class FileMiddlewareTests: XCTestCase {
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 16200)
 
-        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+        try await FileIOTests.withFile(filename, contents: buffer.readableBytesView) {
             try await app.test(.router) { client in
                 var eTag: String?
                 try await client.execute(uri: filename, method: .head) { response in
@@ -232,7 +213,7 @@ final class FileMiddlewareTests: XCTestCase {
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 16200)
 
-        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+        try await FileIOTests.withFile(filename, contents: buffer.readableBytesView) {
             try await app.test(.router) { client in
                 let eTag = try await client.execute(uri: filename, method: .head) { response in
                     try XCTUnwrap(response.headers[.eTag])
@@ -260,7 +241,7 @@ final class FileMiddlewareTests: XCTestCase {
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 16200)
 
-        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+        try await FileIOTests.withFile(filename, contents: buffer.readableBytesView) {
             try await app.test(.router) { client in
                 let modifiedDate = try await client.execute(uri: filename, method: .head) { response in
                     try XCTUnwrap(response.headers[.lastModified])
@@ -290,8 +271,8 @@ final class FileMiddlewareTests: XCTestCase {
         let text = "Test file contents"
         let filename2 = "\(#function).jpg"
 
-        try await Self.withFile(filename, contents: text.utf8) {
-            try await Self.withFile(filename2, contents: text.utf8) {
+        try await FileIOTests.withFile(filename, contents: text.utf8) {
+            try await FileIOTests.withFile(filename2, contents: text.utf8) {
                 try await app.test(.router) { client in
                     try await client.execute(uri: filename, method: .get) { response in
                         XCTAssertEqual(response.headers[.cacheControl], "max-age=2592000")
@@ -311,7 +292,7 @@ final class FileMiddlewareTests: XCTestCase {
 
         let text = "Test file contents"
 
-        try await Self.withFile("index.html", contents: text.utf8) {
+        try await FileIOTests.withFile("index.html", contents: text.utf8) {
             try await app.test(.router) { client in
                 try await client.execute(uri: "/", method: .get) { response in
                     XCTAssertEqual(String(buffer: response.body), text)
@@ -350,7 +331,7 @@ final class FileMiddlewareTests: XCTestCase {
 
         let text = "Test file contents"
 
-        try await Self.withFile("test.html", contents: text.utf8) {
+        try await FileIOTests.withFile("test.html", contents: text.utf8) {
             try await app.test(.router) { client in
                 try await client.execute(uri: "/test.html", method: .get) { response in
                     XCTAssertEqual(String(buffer: response.body), text)
@@ -394,7 +375,7 @@ final class FileMiddlewareTests: XCTestCase {
 
         let text = "Test file contents"
 
-        try await Self.withFile("index.html", contents: text.utf8) {
+        try await FileIOTests.withFile("index.html", contents: text.utf8) {
             try await app.test(.router) { client in
                 try await client.execute(uri: "/", method: .get) { response in
                     XCTAssertEqual(String(buffer: response.body), text)
