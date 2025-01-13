@@ -18,6 +18,7 @@ import Hummingbird
 import HummingbirdTesting
 import NIOPosix
 import XCTest
+import _NIOFileSystem
 
 final class FileMiddlewareTests: XCTestCase {
     static func randomBuffer(size: Int) -> ByteBuffer {
@@ -34,6 +35,25 @@ final class FileMiddlewareTests: XCTestCase {
         return formatter
     }
 
+    static func withFile<Buffer: Sequence & Sendable, ReturnValue>(
+        _ path: String,
+        contents: Buffer,
+        process: () async throws -> ReturnValue
+    ) async throws -> ReturnValue where Buffer.Element == UInt8 {
+        let fileSystem = FileSystem(threadPool: .singleton)
+        try await fileSystem.withFileHandle(forWritingAt: .init(path)) { write in
+            _ = try await write.write(contentsOf: contents, toAbsoluteOffset: 0)
+        }
+        do {
+            let value = try await process()
+            _ = try? await fileSystem.removeItem(at: .init(path))
+            return value
+        } catch {
+            _ = try? await fileSystem.removeItem(at: .init(path))
+            throw error
+        }
+    }
+
     func testRead() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware("."))
@@ -41,15 +61,13 @@ final class FileMiddlewareTests: XCTestCase {
 
         let filename = "\(#function).jpg"
         let text = "Test file contents"
-        let data = Data(text.utf8)
-        let fileURL = URL(fileURLWithPath: filename)
-        XCTAssertNoThrow(try data.write(to: fileURL))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        try await app.test(.router) { client in
-            try await client.execute(uri: filename, method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), text)
-                XCTAssertEqual(response.headers[.contentType], "image/jpeg")
+        try await Self.withFile(filename, contents: text.utf8) {
+            try await app.test(.router) { client in
+                try await client.execute(uri: filename, method: .get) { response in
+                    XCTAssertEqual(String(buffer: response.body), text)
+                    XCTAssertEqual(response.headers[.contentType], "image/jpeg")
+                }
             }
         }
     }
@@ -73,14 +91,12 @@ final class FileMiddlewareTests: XCTestCase {
 
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 380_000)
-        let data = Data(buffer: buffer)
-        let fileURL = URL(fileURLWithPath: filename)
-        XCTAssertNoThrow(try data.write(to: fileURL))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        try await app.test(.router) { client in
-            try await client.execute(uri: filename, method: .get) { response in
-                XCTAssertEqual(response.body, buffer)
+        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+            try await app.test(.router) { client in
+                try await client.execute(uri: filename, method: .get) { response in
+                    XCTAssertEqual(response.body, buffer)
+                }
             }
         }
     }
@@ -92,40 +108,38 @@ final class FileMiddlewareTests: XCTestCase {
 
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 326_000)
-        let data = Data(buffer: buffer)
-        let fileURL = URL(fileURLWithPath: filename)
-        XCTAssertNoThrow(try data.write(to: fileURL))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        try await app.test(.router) { client in
-            try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=100-3999"]) { response in
-                let slice = buffer.getSlice(at: 100, length: 3900)
-                XCTAssertEqual(response.body, slice)
-                XCTAssertEqual(response.headers[.contentRange], "bytes 100-3999/326000")
-                XCTAssertEqual(response.headers[.contentLength], "3900")
-                XCTAssertEqual(response.headers[.contentType], "text/plain")
-            }
+        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+            try await app.test(.router) { client in
+                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=100-3999"]) { response in
+                    let slice = buffer.getSlice(at: 100, length: 3900)
+                    XCTAssertEqual(response.body, slice)
+                    XCTAssertEqual(response.headers[.contentRange], "bytes 100-3999/326000")
+                    XCTAssertEqual(response.headers[.contentLength], "3900")
+                    XCTAssertEqual(response.headers[.contentType], "text/plain")
+                }
 
-            try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=0-0"]) { response in
-                let slice = buffer.getSlice(at: 0, length: 1)
-                XCTAssertEqual(response.body, slice)
-                XCTAssertEqual(response.headers[.contentRange], "bytes 0-0/326000")
-                XCTAssertEqual(response.headers[.contentLength], "1")
-                XCTAssertEqual(response.headers[.contentType], "text/plain")
-            }
+                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=0-0"]) { response in
+                    let slice = buffer.getSlice(at: 0, length: 1)
+                    XCTAssertEqual(response.body, slice)
+                    XCTAssertEqual(response.headers[.contentRange], "bytes 0-0/326000")
+                    XCTAssertEqual(response.headers[.contentLength], "1")
+                    XCTAssertEqual(response.headers[.contentType], "text/plain")
+                }
 
-            try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=-3999"]) { response in
-                let slice = buffer.getSlice(at: 0, length: 4000)
-                XCTAssertEqual(response.body, slice)
-                XCTAssertEqual(response.headers[.contentLength], "4000")
-                XCTAssertEqual(response.headers[.contentRange], "bytes 0-3999/326000")
-            }
+                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=-3999"]) { response in
+                    let slice = buffer.getSlice(at: 0, length: 4000)
+                    XCTAssertEqual(response.body, slice)
+                    XCTAssertEqual(response.headers[.contentLength], "4000")
+                    XCTAssertEqual(response.headers[.contentRange], "bytes 0-3999/326000")
+                }
 
-            try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=6000-"]) { response in
-                let slice = buffer.getSlice(at: 6000, length: 320_000)
-                XCTAssertEqual(response.body, slice)
-                XCTAssertEqual(response.headers[.contentLength], "320000")
-                XCTAssertEqual(response.headers[.contentRange], "bytes 6000-325999/326000")
+                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=6000-"]) { response in
+                    let slice = buffer.getSlice(at: 6000, length: 320_000)
+                    XCTAssertEqual(response.body, slice)
+                    XCTAssertEqual(response.headers[.contentLength], "320000")
+                    XCTAssertEqual(response.headers[.contentRange], "bytes 6000-325999/326000")
+                }
             }
         }
     }
@@ -137,32 +151,30 @@ final class FileMiddlewareTests: XCTestCase {
 
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 10000)
-        let data = Data(buffer: buffer)
-        let fileURL = URL(fileURLWithPath: filename)
-        XCTAssertNoThrow(try data.write(to: fileURL))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        try await app.test(.router) { client in
-            let (eTag, modificationDate) = try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=-3999"]) {
-                response -> (String, String) in
-                let eTag = try XCTUnwrap(response.headers[.eTag])
-                let modificationDate = try XCTUnwrap(response.headers[.lastModified])
-                let slice = buffer.getSlice(at: 0, length: 4000)
-                XCTAssertEqual(response.body, slice)
-                XCTAssertEqual(response.headers[.contentRange], "bytes 0-3999/10000")
-                return (eTag, modificationDate)
-            }
+        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+            try await app.test(.router) { client in
+                let (eTag, modificationDate) = try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=-3999"]) {
+                    response -> (String, String) in
+                    let eTag = try XCTUnwrap(response.headers[.eTag])
+                    let modificationDate = try XCTUnwrap(response.headers[.lastModified])
+                    let slice = buffer.getSlice(at: 0, length: 4000)
+                    XCTAssertEqual(response.body, slice)
+                    XCTAssertEqual(response.headers[.contentRange], "bytes 0-3999/10000")
+                    return (eTag, modificationDate)
+                }
 
-            try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=4000-", .ifRange: eTag]) { response in
-                XCTAssertEqual(response.headers[.contentRange], "bytes 4000-9999/10000")
-            }
+                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=4000-", .ifRange: eTag]) { response in
+                    XCTAssertEqual(response.headers[.contentRange], "bytes 4000-9999/10000")
+                }
 
-            try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=4000-", .ifRange: modificationDate]) { response in
-                XCTAssertEqual(response.headers[.contentRange], "bytes 4000-9999/10000")
-            }
+                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=4000-", .ifRange: modificationDate]) { response in
+                    XCTAssertEqual(response.headers[.contentRange], "bytes 4000-9999/10000")
+                }
 
-            try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=4000-", .ifRange: "not valid"]) { response in
-                XCTAssertNil(response.headers[.contentRange])
+                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=4000-", .ifRange: "not valid"]) { response in
+                    XCTAssertNil(response.headers[.contentRange])
+                }
             }
         }
     }
@@ -172,21 +184,21 @@ final class FileMiddlewareTests: XCTestCase {
         router.middlewares.add(FileMiddleware("."))
         let app = Application(responder: router.buildResponder())
 
+        let filename = "testHead.txt"
         let date = Date()
         let text = "Test file contents"
-        let data = Data(text.utf8)
-        let fileURL = URL(fileURLWithPath: "testHead.txt")
-        XCTAssertNoThrow(try data.write(to: fileURL))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        try await app.test(.router) { client in
-            try await client.execute(uri: "/testHead.txt", method: .head) { response in
-                XCTAssertEqual(response.body.readableBytes, 0)
-                XCTAssertEqual(response.headers[.contentLength], text.utf8.count.description)
-                XCTAssertEqual(response.headers[.contentType], "text/plain")
-                let responseDateString = try XCTUnwrap(response.headers[.lastModified])
-                let responseDate = try XCTUnwrap(Self.rfc9110Formatter.date(from: responseDateString))
-                XCTAssert(date < responseDate + 2 && date > responseDate - 2)
+        try await Self.withFile(filename, contents: text.utf8) {
+            try await app.test(.router) { client in
+                let filename = "testHead.txt"
+                try await client.execute(uri: "/\(filename)", method: .head) { response in
+                    XCTAssertEqual(response.body.readableBytes, 0)
+                    XCTAssertEqual(response.headers[.contentLength], text.utf8.count.description)
+                    XCTAssertEqual(response.headers[.contentType], "text/plain")
+                    let responseDateString = try XCTUnwrap(response.headers[.lastModified])
+                    let responseDate = try XCTUnwrap(Self.rfc9110Formatter.date(from: responseDateString))
+                    XCTAssert(date < responseDate + 2 && date > responseDate - 2)
+                }
             }
         }
     }
@@ -198,18 +210,16 @@ final class FileMiddlewareTests: XCTestCase {
 
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 16200)
-        let data = Data(buffer: buffer)
-        let fileURL = URL(fileURLWithPath: filename)
-        XCTAssertNoThrow(try data.write(to: fileURL))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        try await app.test(.router) { client in
-            var eTag: String?
-            try await client.execute(uri: filename, method: .head) { response in
-                eTag = try XCTUnwrap(response.headers[.eTag])
-            }
-            try await client.execute(uri: filename, method: .head) { response in
-                XCTAssertEqual(response.headers[.eTag], eTag)
+        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+            try await app.test(.router) { client in
+                var eTag: String?
+                try await client.execute(uri: filename, method: .head) { response in
+                    eTag = try XCTUnwrap(response.headers[.eTag])
+                }
+                try await client.execute(uri: filename, method: .head) { response in
+                    XCTAssertEqual(response.headers[.eTag], eTag)
+                }
             }
         }
     }
@@ -221,25 +231,23 @@ final class FileMiddlewareTests: XCTestCase {
 
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 16200)
-        let data = Data(buffer: buffer)
-        let fileURL = URL(fileURLWithPath: filename)
-        XCTAssertNoThrow(try data.write(to: fileURL))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        try await app.test(.router) { client in
-            let eTag = try await client.execute(uri: filename, method: .head) { response in
-                try XCTUnwrap(response.headers[.eTag])
-            }
-            try await client.execute(uri: filename, method: .get, headers: [.ifNoneMatch: eTag]) { response in
-                XCTAssertEqual(response.status, .notModified)
-            }
-            var headers: HTTPFields = .init()
-            headers[values: .ifNoneMatch] = ["test", "\(eTag)"]
-            try await client.execute(uri: filename, method: .get, headers: headers) { response in
-                XCTAssertEqual(response.status, .notModified)
-            }
-            try await client.execute(uri: filename, method: .get, headers: [.ifNoneMatch: "dummyETag"]) { response in
-                XCTAssertEqual(response.status, .ok)
+        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+            try await app.test(.router) { client in
+                let eTag = try await client.execute(uri: filename, method: .head) { response in
+                    try XCTUnwrap(response.headers[.eTag])
+                }
+                try await client.execute(uri: filename, method: .get, headers: [.ifNoneMatch: eTag]) { response in
+                    XCTAssertEqual(response.status, .notModified)
+                }
+                var headers: HTTPFields = .init()
+                headers[values: .ifNoneMatch] = ["test", "\(eTag)"]
+                try await client.execute(uri: filename, method: .get, headers: headers) { response in
+                    XCTAssertEqual(response.status, .notModified)
+                }
+                try await client.execute(uri: filename, method: .get, headers: [.ifNoneMatch: "dummyETag"]) { response in
+                    XCTAssertEqual(response.status, .ok)
+                }
             }
         }
     }
@@ -251,22 +259,20 @@ final class FileMiddlewareTests: XCTestCase {
 
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 16200)
-        let data = Data(buffer: buffer)
-        let fileURL = URL(fileURLWithPath: filename)
-        XCTAssertNoThrow(try data.write(to: fileURL))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        try await app.test(.router) { client in
-            let modifiedDate = try await client.execute(uri: filename, method: .head) { response in
-                try XCTUnwrap(response.headers[.lastModified])
-            }
-            try await client.execute(uri: filename, method: .get, headers: [.ifModifiedSince: modifiedDate]) { response in
-                XCTAssertEqual(response.status, .notModified)
-            }
-            // one minute before current date
-            let date = try XCTUnwrap(Self.rfc9110Formatter.string(from: Date(timeIntervalSinceNow: -60)))
-            try await client.execute(uri: filename, method: .get, headers: [.ifModifiedSince: date]) { response in
-                XCTAssertEqual(response.status, .ok)
+        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+            try await app.test(.router) { client in
+                let modifiedDate = try await client.execute(uri: filename, method: .head) { response in
+                    try XCTUnwrap(response.headers[.lastModified])
+                }
+                try await client.execute(uri: filename, method: .get, headers: [.ifModifiedSince: modifiedDate]) { response in
+                    XCTAssertEqual(response.status, .notModified)
+                }
+                // one minute before current date
+                let date = try XCTUnwrap(Self.rfc9110Formatter.string(from: Date(timeIntervalSinceNow: -60)))
+                try await client.execute(uri: filename, method: .get, headers: [.ifModifiedSince: date]) { response in
+                    XCTAssertEqual(response.status, .ok)
+                }
             }
         }
     }
@@ -282,20 +288,18 @@ final class FileMiddlewareTests: XCTestCase {
 
         let filename = "\(#function).txt"
         let text = "Test file contents"
-        let data = Data(text.utf8)
-        let fileURL = URL(fileURLWithPath: filename)
-        XCTAssertNoThrow(try data.write(to: fileURL))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
-        let fileURL2 = URL(fileURLWithPath: "test.jpg")
-        XCTAssertNoThrow(try data.write(to: fileURL2))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL2)) }
+        let filename2 = "\(#function).jpg"
 
-        try await app.test(.router) { client in
-            try await client.execute(uri: filename, method: .get) { response in
-                XCTAssertEqual(response.headers[.cacheControl], "max-age=2592000")
-            }
-            try await client.execute(uri: "/test.jpg", method: .get) { response in
-                XCTAssertEqual(response.headers[.cacheControl], "max-age=2592000, private")
+        try await Self.withFile(filename, contents: text.utf8) {
+            try await Self.withFile(filename2, contents: text.utf8) {
+                try await app.test(.router) { client in
+                    try await client.execute(uri: filename, method: .get) { response in
+                        XCTAssertEqual(response.headers[.cacheControl], "max-age=2592000")
+                    }
+                    try await client.execute(uri: filename2, method: .get) { response in
+                        XCTAssertEqual(response.headers[.cacheControl], "max-age=2592000, private")
+                    }
+                }
             }
         }
     }
@@ -306,14 +310,12 @@ final class FileMiddlewareTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
 
         let text = "Test file contents"
-        let data = Data(text.utf8)
-        let fileURL = URL(fileURLWithPath: "index.html")
-        XCTAssertNoThrow(try data.write(to: fileURL))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        try await app.test(.router) { client in
-            try await client.execute(uri: "/", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), text)
+        try await Self.withFile("index.html", contents: text.utf8) {
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/", method: .get) { response in
+                    XCTAssertEqual(String(buffer: response.body), text)
+                }
             }
         }
     }
@@ -347,33 +349,30 @@ final class FileMiddlewareTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
 
         let text = "Test file contents"
-        let data = Data(text.utf8)
-        let fileURL = URL(fileURLWithPath: "test.html")
-        XCTAssertNoThrow(try data.write(to: fileURL))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        let fileIO = NonBlockingFileIO(threadPool: .singleton)
-
-        try await app.test(.router) { client in
-            try await client.execute(uri: "/test.html", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), text)
-            }
-
-            try await client.execute(uri: "/", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "")
-            }
-
-            try await fileIO.symlink(path: "index.html", to: "test.html")
-
-            do {
-                try await client.execute(uri: "/", method: .get) { response in
+        try await Self.withFile("test.html", contents: text.utf8) {
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/test.html", method: .get) { response in
                     XCTAssertEqual(String(buffer: response.body), text)
                 }
 
-                try await fileIO.unlink(path: "index.html")
-            } catch {
-                try await fileIO.unlink(path: "index.html")
-                throw error
+                try await client.execute(uri: "/", method: .get) { response in
+                    XCTAssertEqual(String(buffer: response.body), "")
+                }
+
+                let fileSystem = FileSystem(threadPool: .singleton)
+                try await fileSystem.createSymbolicLink(at: .init("index.html"), withDestination: .init("test.html"))
+
+                do {
+                    try await client.execute(uri: "/", method: .get) { response in
+                        XCTAssertEqual(String(buffer: response.body), text)
+                    }
+
+                    try await fileSystem.removeItem(at: .init("index.html"))
+                } catch {
+                    try await fileSystem.removeItem(at: .init("index.html"))
+                    throw error
+                }
             }
         }
     }
@@ -394,14 +393,12 @@ final class FileMiddlewareTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
 
         let text = "Test file contents"
-        let data = Data(text.utf8)
-        let fileURL = URL(fileURLWithPath: "index.html")
-        XCTAssertNoThrow(try data.write(to: fileURL))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
 
-        try await app.test(.router) { client in
-            try await client.execute(uri: "/", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), text)
+        try await Self.withFile("index.html", contents: text.utf8) {
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/", method: .get) { response in
+                    XCTAssertEqual(String(buffer: response.body), text)
+                }
             }
         }
     }
