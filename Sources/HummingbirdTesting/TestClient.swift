@@ -61,7 +61,7 @@ public struct TestClient: Sendable {
         host: String,
         port: Int,
         configuration: Configuration = .init(),
-        eventLoopGroupProvider: NIOEventLoopGroupProvider
+        eventLoopGroupProvider: NIOEventLoopGroupProvider = .shared(MultiThreadedEventLoopGroup.singleton)
     ) {
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {

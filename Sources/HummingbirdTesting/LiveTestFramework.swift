@@ -64,8 +64,7 @@ final class LiveTestFramework<App: ApplicationProtocol>: ApplicationTestFramewor
             let client = TestClient(
                 host: "localhost",
                 port: port,
-                configuration: .init(timeout: self.timeout),
-                eventLoopGroupProvider: .createNew
+                configuration: .init(timeout: self.timeout)
             )
             client.connect()
             do {

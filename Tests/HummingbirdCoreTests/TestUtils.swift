@@ -104,8 +104,7 @@ public func testServer<Value: Sendable>(
         let client = TestClient(
             host: "localhost",
             port: port,
-            configuration: clientConfiguration,
-            eventLoopGroupProvider: .createNew
+            configuration: clientConfiguration
         )
         client.connect()
         let value = try await test(client)
