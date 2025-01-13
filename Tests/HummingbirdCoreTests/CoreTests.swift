@@ -82,8 +82,7 @@ final class HummingbirdCoreTests: XCTestCase {
                         let client = TestClient(
                             host: "localhost",
                             port: port,
-                            configuration: .init(),
-                            eventLoopGroupProvider: .createNew
+                            configuration: .init()
                         )
                         client.connect()
                         let response = try await client.post("/", body: ByteBuffer(string: "Hello"))
@@ -144,8 +143,7 @@ final class HummingbirdCoreTests: XCTestCase {
                         let client = TestClient(
                             host: "localhost",
                             port: port,
-                            configuration: .init(),
-                            eventLoopGroupProvider: .createNew
+                            configuration: .init()
                         )
                         client.connect()
                         let response = try await client.post("/", body: ByteBuffer(string: "Hello"))
@@ -535,8 +533,7 @@ final class HummingbirdCoreTests: XCTestCase {
             let client = await TestClient(
                 host: "localhost",
                 port: portPromise.wait(),
-                configuration: .init(),
-                eventLoopGroupProvider: .createNew
+                configuration: .init()
             )
             group.addTask {
                 do {
