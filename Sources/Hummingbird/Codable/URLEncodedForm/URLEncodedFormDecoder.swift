@@ -523,6 +523,19 @@ extension _URLEncodedFormDecoder {
         return value2.value
     }
 
+    func unbox(_ node: URLEncodedFormNode, as type: URL.Type) throws -> URL {
+        guard case .leaf(let value) = node else {
+            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expect value not array of dictionary"))
+        }
+        guard let value2 = value else {
+            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected value not empty string"))
+        }
+        guard let url = URL(string: value2.value) else {
+            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Invalid URL String"))
+        }
+        return url
+    }
+
     func unbox(_ node: URLEncodedFormNode, as type: Double.Type) throws -> Double {
         guard let unboxValue = try Double(unbox(node, as: String.self)) else {
             throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected Double"))
@@ -657,6 +670,8 @@ extension _URLEncodedFormDecoder {
             return try self.unbox(node, as: Data.self)
         } else if type == Date.self {
             return try self.unbox(node, as: Date.self)
+        } else if type == URL.self {
+            return try self.unbox(node, as: URL.self)
         } else {
             self.storage.push(container: node)
             defer { self.storage.popContainer() }

@@ -20,7 +20,6 @@ import NIOConcurrencyHelpers
 import NIOCore
 import NIOPosix
 import NIOSSL
-import NIOTransportServices
 import XCTest
 
 final class HummingBirdTLSTests: XCTestCase {

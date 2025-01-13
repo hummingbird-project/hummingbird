@@ -16,6 +16,7 @@ import Foundation
 import HTTPTypes
 import Hummingbird
 import HummingbirdTesting
+import NIOPosix
 import XCTest
 
 final class FileMiddlewareTests: XCTestCase {
@@ -25,7 +26,7 @@ final class FileMiddlewareTests: XCTestCase {
         return ByteBufferAllocator().buffer(bytes: data)
     }
 
-    static var rfc1123Formatter: DateFormatter {
+    static var rfc9110Formatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "EEE, d MMM yyy HH:mm:ss z"
@@ -184,7 +185,7 @@ final class FileMiddlewareTests: XCTestCase {
                 XCTAssertEqual(response.headers[.contentLength], text.utf8.count.description)
                 XCTAssertEqual(response.headers[.contentType], "text/plain")
                 let responseDateString = try XCTUnwrap(response.headers[.lastModified])
-                let responseDate = try XCTUnwrap(Self.rfc1123Formatter.date(from: responseDateString))
+                let responseDate = try XCTUnwrap(Self.rfc9110Formatter.date(from: responseDateString))
                 XCTAssert(date < responseDate + 2 && date > responseDate - 2)
             }
         }
@@ -263,7 +264,7 @@ final class FileMiddlewareTests: XCTestCase {
                 XCTAssertEqual(response.status, .notModified)
             }
             // one minute before current date
-            let date = try XCTUnwrap(Self.rfc1123Formatter.string(from: Date(timeIntervalSinceNow: -60)))
+            let date = try XCTUnwrap(Self.rfc9110Formatter.string(from: Date(timeIntervalSinceNow: -60)))
             try await client.execute(uri: filename, method: .get, headers: [.ifModifiedSince: date]) { response in
                 XCTAssertEqual(response.status, .ok)
             }
@@ -313,6 +314,43 @@ final class FileMiddlewareTests: XCTestCase {
         try await app.test(.router) { client in
             try await client.execute(uri: "/", method: .get) { response in
                 XCTAssertEqual(String(buffer: response.body), text)
+            }
+        }
+    }
+
+    func testSymlink() async throws {
+        let router = Router()
+        router.middlewares.add(FileMiddleware(".", searchForIndexHtml: true))
+        let app = Application(responder: router.buildResponder())
+
+        let text = "Test file contents"
+        let data = Data(text.utf8)
+        let fileURL = URL(fileURLWithPath: "test.html")
+        XCTAssertNoThrow(try data.write(to: fileURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+
+        let fileIO = NonBlockingFileIO(threadPool: .singleton)
+
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/test.html", method: .get) { response in
+                XCTAssertEqual(String(buffer: response.body), text)
+            }
+
+            try await client.execute(uri: "/", method: .get) { response in
+                XCTAssertEqual(String(buffer: response.body), "")
+            }
+
+            try await fileIO.symlink(path: "index.html", to: "test.html")
+
+            do {
+                try await client.execute(uri: "/", method: .get) { response in
+                    XCTAssertEqual(String(buffer: response.body), text)
+                }
+
+                try await fileIO.unlink(path: "index.html")
+            } catch {
+                try await fileIO.unlink(path: "index.html")
+                throw error
             }
         }
     }

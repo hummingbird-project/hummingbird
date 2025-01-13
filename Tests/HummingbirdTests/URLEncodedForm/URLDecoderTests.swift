@@ -258,4 +258,14 @@ final class URLDecodedFormDecoderTests: XCTestCase {
         let test = Test(name: "John", age: nil)
         self.testForm(test, query: "name=John")
     }
+
+    func testURLDecode() throws {
+        struct URLForm: Decodable, Equatable {
+            let site: URL
+        }
+
+        let test = URLForm(site: URL(string: "https://hummingbird.codes")!)
+
+        self.testForm(test, query: "site=https://hummingbird.codes".addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)
+    }
 }

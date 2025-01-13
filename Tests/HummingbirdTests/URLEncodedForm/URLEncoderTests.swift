@@ -184,4 +184,27 @@ final class URLEncodedFormEncoderTests: XCTestCase {
         let test = Test(name: "John", age: nil)
         self.testForm(test, query: "name=John")
     }
+
+    func testURLEncode() throws {
+        struct URLForm: Encodable, Equatable {
+            let site: URL
+
+            init(site: URL) {
+                self.site = site
+            }
+
+            enum CodingKeys: CodingKey {
+                case site
+            }
+
+            func encode(to encoder: any Encoder) throws {
+                var container = encoder.container(keyedBy: CodingKeys.self)
+                try container.encode(self.site, forKey: .site)
+            }
+        }
+
+        let test = URLForm(site: URL(string: "https://hummingbird.codes")!)
+
+        self.testForm(test, query: "site=https://hummingbird.codes".addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)
+    }
 }

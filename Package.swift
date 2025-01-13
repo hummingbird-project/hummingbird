@@ -7,7 +7,7 @@ let swiftSettings: [SwiftSetting] = [.enableExperimentalFeature("StrictConcurren
 
 let package = Package(
     name: "hummingbird",
-    platforms: [.macOS(.v14), .iOS(.v17), .tvOS(.v17)],
+    platforms: [.macOS(.v14), .iOS(.v17), .tvOS(.v17), .visionOS(.v1)],
     products: [
         .library(name: "Hummingbird", targets: ["Hummingbird"]),
         .library(name: "HummingbirdCore", targets: ["HummingbirdCore"]),
@@ -24,7 +24,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-log.git", from: "1.4.0"),
         .package(url: "https://github.com/apple/swift-http-types.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-metrics.git", from: "2.5.0"),
-        .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.0.1"),
+        .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.1.0"),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.63.0"),
         .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.20.0"),
         .package(url: "https://github.com/apple/swift-nio-http2.git", from: "1.34.1"),
@@ -46,7 +46,6 @@ let package = Package(
                 .product(name: "Metrics", package: "swift-metrics"),
                 .product(name: "Tracing", package: "swift-distributed-tracing"),
                 .product(name: "NIOCore", package: "swift-nio"),
-                .product(name: "NIOFoundationCompat", package: "swift-nio"),
                 .product(name: "NIOPosix", package: "swift-nio"),
             ],
             swiftSettings: swiftSettings
@@ -64,7 +63,11 @@ let package = Package(
                 .product(name: "NIOHTTPTypesHTTP1", package: "swift-nio-extras"),
                 .product(name: "NIOExtras", package: "swift-nio-extras"),
                 .product(name: "NIOPosix", package: "swift-nio"),
-                .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
+                .product(
+                    name: "NIOTransportServices",
+                    package: "swift-nio-transport-services",
+                    condition: .when(platforms: [.macOS, .iOS, .tvOS, .visionOS])
+                ),
                 .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
             ],
             swiftSettings: swiftSettings

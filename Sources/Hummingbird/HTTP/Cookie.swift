@@ -37,7 +37,7 @@ public struct Cookie: Sendable, CustomStringConvertible {
     public let properties: Properties
 
     /// indicates the maximum lifetime of the cookie
-    public var expires: Date? { self.properties[.expires].map { DateCache.rfc1123Formatter.date(from: $0) } ?? nil }
+    public var expires: Date? { self.properties[.expires].flatMap { Date(httpHeader: $0) } }
     /// indicates the maximum lifetime of the cookie in seconds. Max age has precedence over expires
     /// (not all user agents support max-age)
     public var maxAge: Int? { self.properties[.maxAge].map { Int($0) } ?? nil }
@@ -75,7 +75,7 @@ public struct Cookie: Sendable, CustomStringConvertible {
         self.name = name
         self.value = value
         var properties = Properties()
-        properties[.expires] = expires.map { DateCache.rfc1123Formatter.string(from: $0) }
+        properties[.expires] = expires?.httpHeader
         properties[.maxAge] = maxAge?.description
         properties[.domain] = domain
         properties[.path] = path
@@ -106,10 +106,11 @@ public struct Cookie: Sendable, CustomStringConvertible {
         httpOnly: Bool = true,
         sameSite: SameSite
     ) {
+        assert(!(secure == false && sameSite == .none), "Cookies with SameSite set to None require the Secure attribute to be set")
         self.name = name
         self.value = value
         var properties = Properties()
-        properties[.expires] = expires.map { DateCache.rfc1123Formatter.string(from: $0) }
+        properties[.expires] = expires?.httpHeader
         properties[.maxAge] = maxAge?.description
         properties[.domain] = domain
         properties[.path] = path

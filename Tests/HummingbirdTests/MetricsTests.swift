@@ -21,12 +21,19 @@ import XCTest
 final class TestMetrics: MetricsFactory {
     private let lock = NIOLock()
     let counters = NIOLockedValueBox([String: CounterHandler]())
+    let meters = NIOLockedValueBox([String: MeterHandler]())
     let recorders = NIOLockedValueBox([String: RecorderHandler]())
     let timers = NIOLockedValueBox([String: TimerHandler]())
 
     public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
         self.counters.withLockedValue { counters in
             self.make(label: label, dimensions: dimensions, registry: &counters, maker: TestCounter.init)
+        }
+    }
+
+    public func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
+        self.meters.withLockedValue { counters in
+            self.make(label: label, dimensions: dimensions, registry: &counters, maker: TestMeter.init)
         }
     }
 
@@ -60,6 +67,14 @@ final class TestMetrics: MetricsFactory {
         if let testCounter = handler as? TestCounter {
             _ = self.counters.withLockedValue { counters in
                 counters.removeValue(forKey: testCounter.label)
+            }
+        }
+    }
+
+    func destroyMeter(_ handler: MeterHandler) {
+        if let testMeter = handler as? TestMeter {
+            _ = self.counters.withLockedValue { counters in
+                counters.removeValue(forKey: testMeter.label)
             }
         }
     }
@@ -108,6 +123,52 @@ internal final class TestCounter: CounterHandler, Equatable {
     }
 
     public static func == (lhs: TestCounter, rhs: TestCounter) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
+internal final class TestMeter: MeterHandler, Equatable {
+    let id: String
+    let label: String
+    let dimensions: [(String, String)]
+    let values = NIOLockedValueBox([(Date, Double)]())
+
+    init(label: String, dimensions: [(String, String)]) {
+        self.id = NSUUID().uuidString
+        self.label = label
+        self.dimensions = dimensions
+    }
+
+    func set(_ value: Int64) {
+        self.set(Double(value))
+    }
+
+    func set(_ value: Double) {
+        self.values.withLockedValue { values in
+            values.append((Date(), value))
+        }
+        print("adding \(value) to \(self.label)")
+    }
+
+    func increment(by: Double) {
+        self.values.withLockedValue { values in
+            let value = values.last?.1 ?? 0.0
+            values.append((Date(), value + by))
+        }
+        print("incrementing \(by) to \(self.label)")
+
+    }
+
+    func decrement(by: Double) {
+        self.values.withLockedValue { values in
+            let value = values.last?.1 ?? 0.0
+            values.append((Date(), value - by))
+        }
+        print("decrementing \(by) to \(self.label)")
+
+    }
+
+    static func == (lhs: TestMeter, rhs: TestMeter) -> Bool {
         lhs.id == rhs.id
     }
 }
@@ -313,5 +374,22 @@ final class MetricsTests: XCTestCase {
 
         let timer = try XCTUnwrap(Self.testMetrics.timers.withLockedValue { $0 }["http.server.request.duration"] as? TestTimer)
         XCTAssertGreaterThan(timer.values.withLockedValue { $0 }[0].1, 5_000_000)
+    }
+
+    func testActiveRequestsMetric() async throws {
+        let router = Router()
+        router.middlewares.add(MetricsMiddleware())
+        router.get("/hello") { _, _ -> Response in
+            Response(status: .ok)
+        }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/hello", method: .get) { _ in }
+        }
+
+        let meter = try XCTUnwrap(Self.testMetrics.meters.withLockedValue { $0 }["http.server.active_requests"] as? TestMeter)
+        let values = meter.values.withLockedValue { $0 }.map { $0.1 }
+        let maxValue = values.max() ?? 0.0
+        XCTAssertGreaterThan(maxValue, 0.0)
     }
 }
