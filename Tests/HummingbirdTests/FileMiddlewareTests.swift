@@ -57,7 +57,7 @@ struct FileMiddlewareTests {
         let filename = "\(#function).jpg"
         let text = "Test file contents"
 
-        try await Self.withFile(filename, contents: text.utf8) {
+        try await FileIOTests.withFile(filename, contents: text.utf8) {
             try await app.test(.router) { client in
                 try await client.execute(uri: filename, method: .get) { response in
                     #expect(String(buffer: response.body) == text)
@@ -87,7 +87,7 @@ struct FileMiddlewareTests {
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 380_000)
 
-        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+        try await FileIOTests.withFile(filename, contents: buffer.readableBytesView) {
             try await app.test(.router) { client in
                 try await client.execute(uri: filename, method: .get) { response in
                     #expect(response.body == buffer)
@@ -104,7 +104,7 @@ struct FileMiddlewareTests {
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 326_000)
 
-        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+        try await FileIOTests.withFile(filename, contents: buffer.readableBytesView) {
             try await app.test(.router) { client in
                 try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=100-3999"]) { response in
                     let slice = buffer.getSlice(at: 100, length: 3900)
@@ -147,7 +147,7 @@ struct FileMiddlewareTests {
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 10000)
 
-        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+        try await FileIOTests.withFile(filename, contents: buffer.readableBytesView) {
             try await app.test(.router) { client in
                 let (eTag, modificationDate) = try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=-3999"]) {
                     response -> (String, String) in
@@ -183,7 +183,7 @@ struct FileMiddlewareTests {
         let date = Date()
         let text = "Test file contents"
 
-        try await Self.withFile(filename, contents: text.utf8) {
+        try await FileIOTests.withFile(filename, contents: text.utf8) {
             try await app.test(.router) { client in
                 let filename = "testHead.txt"
                 try await client.execute(uri: "/\(filename)", method: .head) { response in
@@ -206,7 +206,7 @@ struct FileMiddlewareTests {
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 16200)
 
-        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+        try await FileIOTests.withFile(filename, contents: buffer.readableBytesView) {
             try await app.test(.router) { client in
                 let eTag = try await client.execute(uri: filename, method: .head) { response in
                     response.headers[.eTag]
@@ -254,7 +254,7 @@ struct FileMiddlewareTests {
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 16200)
 
-        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+        try await FileIOTests.withFile(filename, contents: buffer.readableBytesView) {
             try await app.test(.router) { client in
                 let modifiedDate = try await client.execute(uri: filename, method: .head) { response in
                     try #require(response.headers[.lastModified])
@@ -284,8 +284,8 @@ struct FileMiddlewareTests {
         let text = "Test file contents"
         let filename2 = "\(#function).jpg"
 
-        try await Self.withFile(filename, contents: text.utf8) {
-            try await Self.withFile(filename2, contents: text.utf8) {
+        try await FileIOTests.withFile(filename, contents: text.utf8) {
+            try await FileIOTests.withFile(filename2, contents: text.utf8) {
                 try await app.test(.router) { client in
                     try await client.execute(uri: filename, method: .get) { response in
                         #expect(response.headers[.cacheControl] == "max-age=2592000")
@@ -304,7 +304,7 @@ struct FileMiddlewareTests {
         let app = Application(responder: router.buildResponder())
         let text = "Test file contents"
 
-        try await Self.withFile("index.html", contents: text.utf8) {
+        try await FileIOTests.withFile("index.html", contents: text.utf8) {
             try await app.test(.router) { client in
                 try await client.execute(uri: "/", method: .get) { response in
                     #expect(String(buffer: response.body) == text)
@@ -383,7 +383,7 @@ struct FileMiddlewareTests {
         let app = Application(responder: router.buildResponder())
         let text = "Test file contents"
 
-        try await Self.withFile("index.html", contents: text.utf8) {
+        try await FileIOTests.withFile("index.html", contents: text.utf8) {
             try await app.test(.router) { client in
                 try await client.execute(uri: "/", method: .get) { response in
                     #expect(String(buffer: response.body) == text)

@@ -9,15 +9,34 @@
 import Foundation
 import Hummingbird
 import HummingbirdTesting
-import NIOFoundationEssentialsCompat
 import NIOPosix
 import Testing
+import _NIOFileSystem
 
 struct FileIOTests {
     static func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
         data = data.map { _ in UInt8.random(in: 0...255) }
         return ByteBufferAllocator().buffer(bytes: data)
+    }
+
+    static func withFile<Buffer: Sequence & Sendable, ReturnValue>(
+        _ path: String,
+        contents: Buffer,
+        process: () async throws -> ReturnValue
+    ) async throws -> ReturnValue where Buffer.Element == UInt8 {
+        let fileSystem = FileSystem(threadPool: .singleton)
+        try await fileSystem.withFileHandle(forWritingAt: .init(path)) { write in
+            _ = try await write.write(contentsOf: contents, toAbsoluteOffset: 0)
+        }
+        do {
+            let value = try await process()
+            _ = try? await fileSystem.removeItem(at: .init(path))
+            return value
+        } catch {
+            _ = try? await fileSystem.removeItem(at: .init(path))
+            throw error
+        }
     }
 
     @Test func testReadFileIO() async throws {
@@ -27,17 +46,15 @@ struct FileIOTests {
             let body = try await fileIO.loadFile(path: "testReadFileIO.jpg", context: context)
             return .init(status: .ok, headers: [:], body: body)
         }
-        let buffer = Self.randomBuffer(size: 320_003)
-        let data = Data(buffer: buffer)
-        let fileURL = URL(fileURLWithPath: "testReadFileIO.jpg")
-        #expect(throws: Never.self) { try data.write(to: fileURL) }
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
-
         let app = Application(responder: router.buildResponder())
 
-        try await app.test(.router) { client in
-            try await client.execute(uri: "/test.jpg", method: .get) { response in
-                #expect(response.body == buffer)
+        let buffer = Self.randomBuffer(size: 320_003)
+
+        try await FileIOTests.withFile("testReadFileIO.jpg", contents: buffer.readableBytesView) {
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/test.jpg", method: .get) { response in
+                    #expect(response.body == buffer)
+                }
             }
         }
     }
@@ -50,19 +67,17 @@ struct FileIOTests {
             return .init(status: .ok, headers: [:], body: body)
         }
         let buffer = Self.randomBuffer(size: 54003)
-        let data = Data(buffer: buffer)
-        let fileURL = URL(fileURLWithPath: "testReadMultipleFilesOnSameConnection.jpg")
-        #expect(throws: Never.self) { try data.write(to: fileURL) }
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
 
         let app = Application(responder: router.buildResponder())
 
-        try await app.test(.live) { client in
-            try await client.execute(uri: "/test.jpg", method: .get) { response in
-                #expect(response.body == buffer)
-            }
-            try await client.execute(uri: "/test.jpg", method: .get) { response in
-                #expect(response.body == buffer)
+        try await FileIOTests.withFile("testReadMultipleFilesOnSameConnection.jpg", contents: buffer.readableBytesView) {
+            try await app.test(.live) { client in
+                try await client.execute(uri: "/test.jpg", method: .get) { response in
+                    #expect(response.body == buffer)
+                }
+                try await client.execute(uri: "/test.jpg", method: .get) { response in
+                    #expect(response.body == buffer)
+                }
             }
         }
     }
@@ -84,10 +99,11 @@ struct FileIOTests {
             }
         }
 
-        let fileURL = URL(fileURLWithPath: filename)
-        let data = try Data(contentsOf: fileURL)
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
-        #expect(String(decoding: data, as: Unicode.UTF8.self) == "This is a test")
+        let contents = try await FileSystem.shared.withFileHandle(forReadingAt: .init(filename)) { read in
+            try await read.readToEnd(fromAbsoluteOffset: 0, maximumSizeAllowed: .megabytes(1000))
+        }
+        try await FileSystem.shared.removeItem(at: .init(filename))
+        #expect(String(buffer: contents) == "This is a test")
     }
 
     @Test func testWriteLargeFile() async throws {
@@ -106,10 +122,11 @@ struct FileIOTests {
                 #expect(response.status == .ok)
             }
 
-            let fileURL = URL(fileURLWithPath: filename)
-            let data = try Data(contentsOf: fileURL)
-            defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
-            #expect(Data(buffer: buffer) == data)
+            let contents = try await FileSystem.shared.withFileHandle(forReadingAt: .init(filename)) { read in
+                try await read.readToEnd(fromAbsoluteOffset: 0, maximumSizeAllowed: .megabytes(1000))
+            }
+            try await FileSystem.shared.removeItem(at: .init(filename))
+            #expect(contents == buffer)
         }
     }
 
@@ -120,16 +137,15 @@ struct FileIOTests {
             let body = try await fileIO.loadFile(path: "testReadEmptyFile.txt", context: context)
             return .init(status: .ok, headers: [:], body: body)
         }
-        let data = Data()
-        let fileURL = URL(fileURLWithPath: "testReadEmptyFile.txt")
-        #expect(throws: Never.self) { try data.write(to: fileURL) }
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
-
         let app = Application(responder: router.buildResponder())
 
-        try await app.test(.router) { client in
-            try await client.execute(uri: "/empty.txt", method: .get) { response in
-                #expect(response.status == .ok)
+        let buffer = ByteBuffer()
+
+        try await FileIOTests.withFile("empty.txt", contents: buffer.readableBytesView) {
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/empty.txt", method: .get) { response in
+                    #expect(response.status == .ok)
+                }
             }
         }
     }
@@ -141,16 +157,16 @@ struct FileIOTests {
             let body = try await fileIO.loadFile(path: "empty.txt", range: 0...10, context: context)
             return .init(status: .ok, headers: [:], body: body)
         }
-        let data = Data()
-        let fileURL = URL(fileURLWithPath: "empty.txt")
-        #expect(throws: Never.self) { try data.write(to: fileURL) }
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
 
         let app = Application(responder: router.buildResponder())
 
-        try await app.test(.router) { client in
-            try await client.execute(uri: "/empty.txt", method: .get) { response in
-                #expect(response.status == .ok)
+        let buffer = ByteBuffer()
+
+        try await FileIOTests.withFile("empty.txt", contents: buffer.readableBytesView) {
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/empty.txt", method: .get) { response in
+                    #expect(response.status == .ok)
+                }
             }
         }
     }
