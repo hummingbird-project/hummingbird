@@ -111,7 +111,7 @@ final class URLEncodedFormEncoderTests: XCTestCase {
             let a: String
         }
         let test = Test(a: "adam+!@£$%^&*()_=")
-        self.testForm(test, query: "a=adam%2B%21%40%C2%A3%24%25%5E%26%2A%28%29_%3D")
+        self.testForm(test, query: "a=adam+!@%C2%A3$%25%5E%26*()_%3D")
     }
 
     func testContainingStructureEncode() {
@@ -164,13 +164,13 @@ final class URLEncodedFormEncoderTests: XCTestCase {
         self.testForm(test, query: "d=2387643.0")
         self.testForm(test, query: "d=980694843000.0", encoder: .init(dateEncodingStrategy: .millisecondsSince1970))
         self.testForm(test, query: "d=980694843.0", encoder: .init(dateEncodingStrategy: .secondsSince1970))
-        self.testForm(test, query: "d=2001-01-28T15%3A14%3A03Z", encoder: .init(dateEncodingStrategy: .iso8601))
+        self.testForm(test, query: "d=2001-01-28T15:14:03Z", encoder: .init(dateEncodingStrategy: .iso8601))
 
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        self.testForm(test, query: "d=2001-01-28T15%3A14%3A03.000Z", encoder: .init(dateEncodingStrategy: .formatted(dateFormatter)))
+        self.testForm(test, query: "d=2001-01-28T15:14:03.000Z", encoder: .init(dateEncodingStrategy: .formatted(dateFormatter)))
     }
 
     func testDataBlobEncode() {
@@ -211,6 +211,6 @@ final class URLEncodedFormEncoderTests: XCTestCase {
 
         let test = URLForm(site: URL(string: "https://hummingbird.codes")!)
 
-        self.testForm(test, query: "site=https://hummingbird.codes".addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)
+        self.testForm(test, query: "site=https://hummingbird.codes")
     }
 }

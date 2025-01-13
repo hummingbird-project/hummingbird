@@ -112,7 +112,7 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
             }
 
             // Remove percent encoding from URI path
-            guard var path = request.uri.path.removingPercentEncoding else {
+            guard var path = request.uri.path.removingURLPercentEncoding() else {
                 throw HTTPError(.badRequest, message: "Invalid percent encoding in URL")
             }
 

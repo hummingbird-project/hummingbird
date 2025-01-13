@@ -1,3 +1,17 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Hummingbird server framework project
+//
+// Copyright (c) 2021-2024 the Hummingbird authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE.txt for license information
+// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
+
 /// Internal representation of URL encoded form data used by both encode and decode
 enum URLEncodedFormNode: CustomStringConvertible, Equatable {
     /// holds a value
@@ -30,7 +44,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
         let node = Self.map(.init())
         for element in split {
             if let equals = element.firstIndex(of: "=") {
-                let before = element[..<equals].removingPercentEncoding
+                let before = element[..<equals].removingURLPercentEncoding()
                 let afterEquals = element.index(after: equals)
                 let after = element[afterEquals...].replacingOccurrences(of: "+", with: " ")
                 guard let key = before else { throw Error.failedToDecode("Failed to percent decode \(element)") }
@@ -128,12 +142,12 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
         }
 
         init?(percentEncoded value: String) {
-            guard let value = value.removingPercentEncoding else { return nil }
+            guard let value = value.removingURLPercentEncoding() else { return nil }
             self.value = value
         }
 
         var percentEncoded: String {
-            self.value.addingPercentEncoding(withAllowedCharacters: URLEncodedForm.unreservedCharacters) ?? self.value
+            self.value.addingPercentEncoding(forURLComponent: .queryItem)
         }
 
         static func == (lhs: URLEncodedFormNode.NodeValue, rhs: URLEncodedFormNode.NodeValue) -> Bool {

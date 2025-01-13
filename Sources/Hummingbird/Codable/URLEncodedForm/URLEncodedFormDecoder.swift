@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -634,15 +634,17 @@ extension _URLEncodedFormDecoder {
             let seconds = try unbox(node, as: Double.self)
             return Date(timeIntervalSince1970: seconds)
         case .iso8601:
-            if #available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *) {
-                let dateString = try unbox(node, as: String.self)
-                guard let date = URLEncodedForm.iso8601Formatter.date(from: dateString) else {
-                    throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Invalid date format"))
-                }
-                return date
-            } else {
-                preconditionFailure("ISO8601DateFormatter is unavailable on this platform")
+            let dateString = try unbox(node, as: String.self)
+            #if compiler(>=6.0)
+            guard let date = try? Date(dateString, strategy: .iso8601) else {
+                throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Invalid date format"))
             }
+            #else
+            guard let date = URLEncodedForm.iso8601Formatter.date(from: dateString) else {
+                throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Invalid date format"))
+            }
+            #endif
+            return date
         case .formatted(let formatter):
             let dateString = try unbox(node, as: String.self)
             guard let date = formatter.date(from: dateString) else {

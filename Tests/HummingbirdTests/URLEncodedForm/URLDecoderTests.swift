@@ -272,6 +272,6 @@ final class URLDecodedFormDecoderTests: XCTestCase {
 
         let test = URLForm(site: URL(string: "https://hummingbird.codes")!)
 
-        self.testForm(test, query: "site=https://hummingbird.codes".addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)
+        self.testForm(test, query: "site=https://hummingbird.codes")
     }
 }
