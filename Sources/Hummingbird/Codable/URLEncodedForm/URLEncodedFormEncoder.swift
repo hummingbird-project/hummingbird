@@ -348,12 +348,19 @@ extension _URLEncodedFormEncoder {
         return self.storage.popContainer()
     }
 
+    func box(_ url: URL) throws -> URLEncodedFormNode {
+        try self.encode(url.absoluteString)
+        return self.storage.popContainer()
+    }
+
     func box(_ value: Encodable) throws -> URLEncodedFormNode {
         let type = Swift.type(of: value)
         if type == Data.self {
             return try self.box(value as! Data)
         } else if type == Date.self {
             return try self.box(value as! Date)
+        } else if type == URL.self {
+            return try self.box(value as! URL)
         } else {
             try value.encode(to: self)
             return self.storage.popContainer()
