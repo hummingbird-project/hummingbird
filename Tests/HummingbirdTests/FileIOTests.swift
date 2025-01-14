@@ -100,7 +100,7 @@ struct FileIOTests {
         }
 
         let contents = try await FileSystem.shared.withFileHandle(forReadingAt: .init(filename)) { read in
-            try await read.readToEnd(fromAbsoluteOffset: 0, maximumSizeAllowed: .megabytes(1000))
+            try await read.readToEnd(fromAbsoluteOffset: 0, maximumSizeAllowed: .unlimited)
         }
         try await FileSystem.shared.removeItem(at: .init(filename))
         #expect(String(buffer: contents) == "This is a test")
@@ -123,7 +123,7 @@ struct FileIOTests {
             }
 
             let contents = try await FileSystem.shared.withFileHandle(forReadingAt: .init(filename)) { read in
-                try await read.readToEnd(fromAbsoluteOffset: 0, maximumSizeAllowed: .megabytes(1000))
+                try await read.readToEnd(fromAbsoluteOffset: 0, maximumSizeAllowed: .unlimited)
             }
             try await FileSystem.shared.removeItem(at: .init(filename))
             #expect(contents == buffer)
