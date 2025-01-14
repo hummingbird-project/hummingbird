@@ -104,7 +104,7 @@ final class FileIOTests: XCTestCase {
         }
 
         let contents = try await FileSystem.shared.withFileHandle(forReadingAt: .init(filename)) { read in
-            try await read.readToEnd(fromAbsoluteOffset: 0, maximumSizeAllowed: .megabytes(1000))
+            try await read.readToEnd(fromAbsoluteOffset: 0, maximumSizeAllowed: .unlimited)
         }
         try await FileSystem.shared.removeItem(at: .init(filename))
         XCTAssertEqual(String(buffer: contents), "This is a test")
@@ -127,7 +127,7 @@ final class FileIOTests: XCTestCase {
             }
 
             let contents = try await FileSystem.shared.withFileHandle(forReadingAt: .init(filename)) { read in
-                try await read.readToEnd(fromAbsoluteOffset: 0, maximumSizeAllowed: .megabytes(1000))
+                try await read.readToEnd(fromAbsoluteOffset: 0, maximumSizeAllowed: .unlimited)
             }
             try await FileSystem.shared.removeItem(at: .init(filename))
             XCTAssertEqual(contents, buffer)
