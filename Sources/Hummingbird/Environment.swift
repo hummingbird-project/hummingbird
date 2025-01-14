@@ -14,6 +14,7 @@
 
 import HummingbirdCore
 import NIOCore
+import _NIOFileSystem
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials
@@ -172,18 +173,10 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
     /// Load `.env` file into string
     internal static func loadDotEnv(_ dotEnvPath: String = ".env") async -> String? {
         do {
-            let fileHandle = try NIOFileHandle(path: dotEnvPath)
-            defer {
-                try? fileHandle.close()
+            return try await FileSystem.shared.withFileHandle(forReadingAt: .init(dotEnvPath)) { fileHandle in
+                let buffer = try await fileHandle.readToEnd(maximumSizeAllowed: .unlimited)
+                return String(buffer: buffer)
             }
-            let fileRegion = try FileRegion(fileHandle: fileHandle)
-            let contents = try fileHandle.withUnsafeFileDescriptor { descriptor in
-                [UInt8](unsafeUninitializedCapacity: fileRegion.readableBytes) { bytes, size in
-                    size = fileRegion.readableBytes
-                    read(descriptor, .init(bytes.baseAddress), size)
-                }
-            }
-            return String(bytes: contents, encoding: .utf8)
         } catch {
             return nil
         }
