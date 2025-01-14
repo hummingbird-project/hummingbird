@@ -983,6 +983,27 @@ final class ApplicationTests: XCTestCase {
         }
     }
     #endif
+
+    func testErrorInResponseWriterClosesConnection() async throws {
+        let router = Router()
+        router.post("error") { request, context -> Response in
+            Response(
+                status: .ok,
+                body: .init { writer in
+                    throw HTTPError(.badRequest)
+                }
+            )
+        }
+        let app = Application(router: router)
+        try await app.test(.live) { client in
+            do {
+                _ = try await client.execute(uri: "/error", method: .post)
+                XCTFail("Should not receive a response as the response writer failed before finishing")
+            } catch TestClient.Error.connectionClosing {
+                // verify connection was closed before reading full response
+            }
+        }
+    }
 }
 
 /// HTTPField used during tests
