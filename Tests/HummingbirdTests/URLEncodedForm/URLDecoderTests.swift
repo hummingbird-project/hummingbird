@@ -17,12 +17,18 @@ import XCTest
 @testable import Hummingbird
 
 final class URLDecodedFormDecoderTests: XCTestCase {
-    func testForm<Input: Decodable & Equatable>(_ value: Input, query: String, decoder: URLEncodedFormDecoder = .init()) {
+    func testForm<Input: Decodable & Equatable>(
+        _ value: Input,
+        query: String,
+        decoder: URLEncodedFormDecoder = .init(),
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
         do {
             let value2 = try decoder.decode(Input.self, from: query)
-            XCTAssertEqual(value, value2)
+            XCTAssertEqual(value, value2, file: file, line: line)
         } catch {
-            XCTFail("\(error)")
+            XCTFail("\(error)", file: file, line: line)
         }
     }
 

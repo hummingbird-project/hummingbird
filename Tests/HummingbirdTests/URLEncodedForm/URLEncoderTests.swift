@@ -16,22 +16,22 @@ import Hummingbird
 import XCTest
 
 final class URLEncodedFormEncoderTests: XCTestCase {
-    static func XCTAssertEncodedEqual(_ lhs: String, _ rhs: String) {
+    static func XCTAssertEncodedEqual(_ lhs: String, _ rhs: String, file: StaticString = #filePath, line: UInt = #line) {
         let lhs = lhs.split(separator: "&")
             .sorted { $0 < $1 }
             .joined(separator: "&")
         let rhs = rhs.split(separator: "&")
             .sorted { $0 < $1 }
             .joined(separator: "&")
-        XCTAssertEqual(lhs, rhs)
+        XCTAssertEqual(lhs, rhs, file: file, line: line)
     }
 
-    func testForm(_ value: some Encodable, query: String, encoder: URLEncodedFormEncoder = .init()) {
+    func testForm(_ value: some Encodable, query: String, encoder: URLEncodedFormEncoder = .init(), file: StaticString = #filePath, line: UInt = #line) {
         do {
             let query2 = try encoder.encode(value)
-            Self.XCTAssertEncodedEqual(query2, query)
+            Self.XCTAssertEncodedEqual(query2, query, file: file, line: line)
         } catch {
-            XCTFail("\(error)")
+            XCTFail("\(error)", file: file, line: line)
         }
     }
 
