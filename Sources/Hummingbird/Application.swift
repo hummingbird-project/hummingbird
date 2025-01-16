@@ -36,7 +36,7 @@ public enum EventLoopGroupProvider {
     public var eventLoopGroup: EventLoopGroup {
         switch self {
         case .singleton:
-            #if os(iOS)
+            #if os(iOS) && canImport(NIOTransportServices)
             return NIOTSEventLoopGroup.singleton
             #else
             return MultiThreadedEventLoopGroup.singleton
