@@ -17,9 +17,14 @@ import Logging
 import NIOCore
 import NIOHTTPTypes
 import NIOPosix
-import NIOTransportServices
 import ServiceLifecycle
 import UnixSignals
+
+#if os(iOS) && canImport(NIOTransportServices)
+// Import for NIOTSEventLoopGroup, which we're accessing
+// with #if os(iOS), below.
+import NIOTransportServices
+#endif
 
 /// Where should the application get its EventLoopGroup from
 public enum EventLoopGroupProvider {
