@@ -52,7 +52,7 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
     let searchForIndexHtml: Bool
     let urlBasePath: String?
     let fileProvider: Provider
-    let additionalMediaTypeExtensions: [String: MediaType]
+    let mediaTypeFileExtensionMap: [String: MediaType]
 
     /// Create FileMiddleware
     /// - Parameters:
@@ -79,7 +79,7 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
             urlBasePath: urlBasePath,
             cacheControl: cacheControl,
             searchForIndexHtml: searchForIndexHtml,
-            additionalMediaTypeExtensions: [:]
+            mediaTypeFileExtensionMap: [:]
         )
     }
 
@@ -100,7 +100,7 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
             urlBasePath: urlBasePath,
             cacheControl: cacheControl,
             searchForIndexHtml: searchForIndexHtml,
-            additionalMediaTypeExtensions: [:]
+            mediaTypeFileExtensionMap: [:]
         )
     }
 
@@ -109,24 +109,24 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
         urlBasePath: String? = nil,
         cacheControl: CacheControl = .init([]),
         searchForIndexHtml: Bool = false,
-        additionalMediaTypeExtensions: [String: MediaType]
+        mediaTypeFileExtensionMap: [String: MediaType]
     ) {
         self.cacheControl = cacheControl
         self.searchForIndexHtml = searchForIndexHtml
         self.urlBasePath = urlBasePath.map { String($0.dropSuffix("/")) }
         self.fileProvider = fileProvider
-        self.additionalMediaTypeExtensions = additionalMediaTypeExtensions
+        self.mediaTypeFileExtensionMap = mediaTypeFileExtensionMap
     }
 
-    public func withAdditionalMediaType(_ mediaType: MediaType, forFileExtension fileExtension: String) -> FileMiddleware {
-        var extensions = additionalMediaTypeExtensions
+    public func withAdditionalMediaType(_ mediaType: MediaType, mappedToFileExtension fileExtension: String) -> FileMiddleware {
+        var extensions = mediaTypeFileExtensionMap
         extensions[fileExtension] = mediaType
         return FileMiddleware(
             fileProvider: fileProvider,
             urlBasePath: urlBasePath,
             cacheControl: cacheControl,
             searchForIndexHtml: searchForIndexHtml,
-            additionalMediaTypeExtensions: extensions
+            mediaTypeFileExtensionMap: extensions
         )
     }
 
@@ -253,7 +253,7 @@ extension FileMiddleware {
 
         // content-type
         if let ext = self.fileExtension(for: path) {
-            if let contentType = additionalMediaTypeExtensions[ext] ?? MediaType.getMediaType(forExtension: ext) {
+            if let contentType = mediaTypeFileExtensionMap[ext] ?? MediaType.getMediaType(forExtension: ext) {
                 headers[.contentType] = contentType.description
             }
         }

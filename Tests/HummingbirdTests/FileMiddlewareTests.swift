@@ -516,7 +516,7 @@ final class FileMiddlewareTests: XCTestCase {
     func testCustomMIMEType() async throws {
         let hlsStream = try XCTUnwrap(MediaType(from: "application/x-mpegURL"))
         let router = Router()
-        router.middlewares.add(FileMiddleware(".").withAdditionalMediaType(hlsStream, forFileExtension: "m3u8"))
+        router.middlewares.add(FileMiddleware(".").withAdditionalMediaType(hlsStream, mappedToFileExtension: "m3u8"))
         let app = Application(responder: router.buildResponder())
 
         let filename = "\(#function).m3u8"
