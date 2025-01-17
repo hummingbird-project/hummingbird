@@ -20,9 +20,7 @@ import NIOPosix
 import ServiceLifecycle
 import UnixSignals
 
-#if os(iOS) && canImport(NIOTransportServices)
-// Import for NIOTSEventLoopGroup, which we're accessing
-// with #if os(iOS), below.
+#if os(iOS)
 import NIOTransportServices
 #endif
 
@@ -36,7 +34,7 @@ public enum EventLoopGroupProvider {
     public var eventLoopGroup: EventLoopGroup {
         switch self {
         case .singleton:
-            #if os(iOS) && canImport(NIOTransportServices)
+            #if os(iOS)
             return NIOTSEventLoopGroup.singleton
             #else
             return MultiThreadedEventLoopGroup.singleton
