@@ -52,7 +52,7 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
     let searchForIndexHtml: Bool
     let urlBasePath: String?
     let fileProvider: Provider
-    public let mediaTypeFileExtensionMap: [String: MediaType]
+    let mediaTypeFileExtensionMap: [String: MediaType]
 
     /// Create FileMiddleware
     /// - Parameters:
