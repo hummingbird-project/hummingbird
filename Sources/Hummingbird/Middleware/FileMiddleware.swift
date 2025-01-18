@@ -332,7 +332,7 @@ extension FileMiddleware {
     private func fileExtension(for path: String) -> String? {
         if let extPointIndex = path.lastIndex(of: ".") {
             let extIndex = path.index(after: extPointIndex)
-            return .init(path.suffix(from: extIndex))
+            return .init(path.suffix(from: extIndex)).lowercased()
         }
         return nil
     }

@@ -512,4 +512,33 @@ final class FileMiddlewareTests: XCTestCase {
             }
         }
     }
+
+    func testFilesWithNonLowercaseFileExtensions() async throws {
+        let router = Router()
+        router.middlewares.add(FileMiddleware("."))
+        let app = Application(responder: router.buildResponder())
+
+        let testedExtensions: [(String, UInt)] = [
+            ("jpg", #line),
+            ("JPG", #line),
+            ("JpG", #line),
+            ("JPeG", #line),
+            ("JPEG", #line),
+        ]
+
+        for (index, (testedExtension, line)) in testedExtensions.enumerated() {
+            let fileURL = URL(filePath: "\(#function)-\(index)")
+                .appendingPathExtension(testedExtension)
+            let filename = fileURL.lastPathComponent
+            let data = Data()
+            XCTAssertNoThrow(try data.write(to: fileURL))
+            defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+
+            try await app.test(.router) { client in
+                try await client.execute(uri: filename, method: .get) { response in
+                    XCTAssertEqual(response.headers[.contentType], "image/jpeg", file: #filePath, line: line)
+                }
+            }
+        }
+    }
 }
