@@ -20,6 +20,10 @@ import NIOPosix
 import ServiceLifecycle
 import UnixSignals
 
+#if os(iOS)
+import NIOTransportServices
+#endif
+
 /// Where should the application get its EventLoopGroup from
 public enum EventLoopGroupProvider {
     /// Use this EventLoopGroup
