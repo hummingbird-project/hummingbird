@@ -527,7 +527,7 @@ final class FileMiddlewareTests: XCTestCase {
         ]
 
         for (index, (testedExtension, line)) in testedExtensions.enumerated() {
-            let fileURL = URL(filePath: "\(#function)-\(index)")
+            let fileURL = URL(fileURLWithPath: "\(#function)-\(index)")
                 .appendingPathExtension(testedExtension)
             let filename = fileURL.lastPathComponent
             let data = Data()
