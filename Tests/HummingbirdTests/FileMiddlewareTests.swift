@@ -512,4 +512,78 @@ final class FileMiddlewareTests: XCTestCase {
             }
         }
     }
+
+    func testCustomMIMEType() async throws {
+        let hlsStream = try XCTUnwrap(MediaType(from: "application/x-mpegURL"))
+        let router = Router()
+        router.middlewares.add(FileMiddleware(".").withAdditionalMediaType(hlsStream, mappedToFileExtension: "m3u8"))
+        let app = Application(responder: router.buildResponder())
+
+        let filename = "\(#function).m3u8"
+        let content = """
+            #EXTM3U
+            #EXT-X-VERSION:7
+            #EXT-X-ALLOW-CACHE:YES
+            #EXT-X-TARGETDURATION:0
+            #EXT-X-MEDIA-SEQUENCE:10
+            #EXT-X-PLAYLIST-TYPE:EVENT
+            #EXT-X-MAP:URI="init.mp4"
+            #EXT-X-DISCONTINUITY
+            #EXTINF:0.000000,
+            live000010.m4s
+            """
+        let data = Data(content.utf8)
+        let fileURL = URL(fileURLWithPath: filename)
+        XCTAssertNoThrow(try data.write(to: fileURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+
+        try await app.test(.router) { client in
+            try await client.execute(uri: filename, method: .get) { response in
+                XCTAssertEqual(String(buffer: response.body), content)
+                let contentType = try XCTUnwrap(response.headers[.contentType])
+                let validTypes = Set(["application/vnd.apple.mpegurl", "application/x-mpegurl"])
+                XCTAssert(validTypes.contains(contentType))
+            }
+        }
+    }
+
+    func testCustomMIMETypes() async throws {
+        let hlsStream = try XCTUnwrap(MediaType(from: "application/x-mpegURL"))
+        let router = Router()
+        let fileMiddleware = FileMiddleware<BasicRequestContext, LocalFileSystem>(".")
+            .withAdditionalMediaType(hlsStream, mappedToFileExtension: "m3u8")
+            .withAdditionalMediaTypes(forFileExtensions: [
+                "foo": MediaType(type: .any, subType: "x-foo"),
+                "M3U8": MediaType(type: .application, subType: "vnd.apple.mpegURL"),
+            ])
+        router.middlewares.add(fileMiddleware)
+        let app = Application(responder: router.buildResponder())
+
+        let filename = "\(#function).m3u8"
+        let content = """
+            #EXTM3U
+            #EXT-X-VERSION:7
+            #EXT-X-ALLOW-CACHE:YES
+            #EXT-X-TARGETDURATION:0
+            #EXT-X-MEDIA-SEQUENCE:10
+            #EXT-X-PLAYLIST-TYPE:EVENT
+            #EXT-X-MAP:URI="init.mp4"
+            #EXT-X-DISCONTINUITY
+            #EXTINF:0.000000,
+            live000010.m4s
+            """
+        let data = Data(content.utf8)
+        let fileURL = URL(fileURLWithPath: filename)
+        XCTAssertNoThrow(try data.write(to: fileURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+
+        try await app.test(.router) { client in
+            try await client.execute(uri: filename, method: .get) { response in
+                XCTAssertEqual(String(buffer: response.body), content)
+                let contentType = try XCTUnwrap(response.headers[.contentType])
+                let validTypes = Set(["application/vnd.apple.mpegurl", "application/vnd.apple.mpegURL"])
+                XCTAssert(validTypes.contains(contentType))
+            }
+        }
+    }
 }

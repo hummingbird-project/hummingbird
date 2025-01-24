@@ -52,6 +52,7 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
     let searchForIndexHtml: Bool
     let urlBasePath: String?
     let fileProvider: Provider
+    let mediaTypeFileExtensionMap: [String: MediaType]
 
     /// Create FileMiddleware
     /// - Parameters:
@@ -69,13 +70,16 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
         threadPool: NIOThreadPool = NIOThreadPool.singleton,
         logger: Logger = Logger(label: "FileMiddleware")
     ) where Provider == LocalFileSystem {
-        self.cacheControl = cacheControl
-        self.searchForIndexHtml = searchForIndexHtml
-        self.urlBasePath = urlBasePath.map { String($0.dropSuffix("/")) }
-        self.fileProvider = LocalFileSystem(
-            rootFolder: rootFolder,
-            threadPool: threadPool,
-            logger: logger
+        self.init(
+            fileProvider: LocalFileSystem(
+                rootFolder: rootFolder,
+                threadPool: threadPool,
+                logger: logger
+            ),
+            urlBasePath: urlBasePath,
+            cacheControl: cacheControl,
+            searchForIndexHtml: searchForIndexHtml,
+            mediaTypeFileExtensionMap: [:]
         )
     }
 
@@ -91,10 +95,47 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
         cacheControl: CacheControl = .init([]),
         searchForIndexHtml: Bool = false
     ) {
+        self.init(
+            fileProvider: fileProvider,
+            urlBasePath: urlBasePath,
+            cacheControl: cacheControl,
+            searchForIndexHtml: searchForIndexHtml,
+            mediaTypeFileExtensionMap: [:]
+        )
+    }
+
+    private init(
+        fileProvider: Provider,
+        urlBasePath: String? = nil,
+        cacheControl: CacheControl = .init([]),
+        searchForIndexHtml: Bool = false,
+        mediaTypeFileExtensionMap: [String: MediaType]
+    ) {
         self.cacheControl = cacheControl
         self.searchForIndexHtml = searchForIndexHtml
         self.urlBasePath = urlBasePath.map { String($0.dropSuffix("/")) }
         self.fileProvider = fileProvider
+        self.mediaTypeFileExtensionMap = mediaTypeFileExtensionMap
+    }
+
+    public func withAdditionalMediaType(_ mediaType: MediaType, mappedToFileExtension fileExtension: String) -> FileMiddleware {
+        withAdditionalMediaTypes(forFileExtensions: [fileExtension: mediaType])
+    }
+
+    public func withAdditionalMediaTypes(forFileExtensions extensionToMediaTypeMap: [String: MediaType]) -> FileMiddleware {
+        let extensions = extensionToMediaTypeMap.reduce(
+            into: mediaTypeFileExtensionMap
+        ) {
+            $0[$1.key.lowercased()] = $1.value
+        }
+
+        return FileMiddleware(
+            fileProvider: fileProvider,
+            urlBasePath: urlBasePath,
+            cacheControl: cacheControl,
+            searchForIndexHtml: searchForIndexHtml,
+            mediaTypeFileExtensionMap: extensions
+        )
     }
 
     /// Handle request
@@ -220,7 +261,7 @@ extension FileMiddleware {
 
         // content-type
         if let ext = self.fileExtension(for: path) {
-            if let contentType = MediaType.getMediaType(forExtension: ext) {
+            if let contentType = mediaTypeFileExtensionMap[ext] ?? MediaType.getMediaType(forExtension: ext) {
                 headers[.contentType] = contentType.description
             }
         }
