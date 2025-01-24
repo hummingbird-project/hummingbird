@@ -13,17 +13,21 @@ needs to be listed here.
 - Adam Fowler <adamfowler71@gmail.com>
 - Aleph Retamal <7674479+alephao@users.noreply.github.com>
 - Andreas Ley <andreas@andreasley.ch>
+- Aura Lily Vulcano <millenomi@me.com>
 - Brian Michel <brian.michel@gmail.com>
 - Callum Todd <c@callumtodd.uk>
 - Chris <4376956+SoftwareEngineerChris@users.noreply.github.com>
+- Connor Ricks <13373737+connor-ricks@users.noreply.github.com>
 - Connor Ricks <connor.ricks@gmail.com>
 - Derek Clarkson <d4rkf1br3@gmail.com>
 - Florion <florion@lilo.org>
 - Garrett Moseke <gmosedev@proton.me>
+- Goston Wu <bcbod2002@hotmail.com.tw>
 - Iceman <side.junktown@gmail.com>
 - Joannis Orlandos <joannis@orlandos.nl>
 - Jonathan Pulfer <JonPulfer@users.noreply.github.com>
 - Lorenzo Fiamingo <personal@lorenzofiamingo.com>
+- Michael <mredig@gmail.com>
 - Mirza Učanbarlić <56406159+supersonicbyte@users.noreply.github.com>
 - Moritz Lang <hi@slashmo.codes>
 - Runar Hummelsund <runhum@users.noreply.github.com>
@@ -43,11 +47,13 @@ needs to be listed here.
 - Gao Lei <7885834+ladiesman218@users.noreply.github.com>
 - Kanz <87kangsw@gmail.com>
 - Kia Abdi <65511468+TheeKia@users.noreply.github.com>
-- Michael <juniper.fife_0b@icloud.com>
 - Michael Critz <github@michaelcritz.com>
+- Natan Rolnik <natanrolnik@gmail.com>
 - Patrick Heneise <patrick@zentered.co>
+- Robert Cottrell <rgcottrell@gmail.com>
 - xavgru12 <117173294+xavgru12@users.noreply.github.com>
 - Ádám Rocska <1914616+adam-rocska@users.noreply.github.com>
+- 이강호 <ibcylon@naver.com>
 
 **Updating this list**
 
