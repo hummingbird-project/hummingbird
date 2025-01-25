@@ -1,7 +1,7 @@
 import HummingbirdCore
 
 extension MediaType {
-    public struct WellknownExtension: RawRepresentable, ExpressibleByStringLiteral, Sendable, Hashable {
+    public struct FileExtension: RawRepresentable, ExpressibleByStringLiteral, Sendable, Hashable {
         public let rawValue: String
 
         public init<S: StringProtocol>(_ rawValue: S) {
@@ -18,7 +18,7 @@ extension MediaType {
     }
 }
 
-extension MediaType.WellknownExtension {
+extension MediaType.FileExtension {
     public static let aac: Self = "aac"
     public static let abw: Self = "abw"
     public static let arc: Self = "arc"

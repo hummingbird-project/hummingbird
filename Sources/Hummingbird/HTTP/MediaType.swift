@@ -142,13 +142,13 @@ public struct MediaType: Sendable, CustomStringConvertible {
     /// - Parameter extension: file extension
     /// - Returns: media type
     public static func getMediaType(forExtension extension: String) -> MediaType? {
-        getMediaType(forExtension: WellknownExtension(rawValue: `extension`))
+        getMediaType(forExtension: FileExtension(rawValue: `extension`))
     }
 
     /// Get media type from a file extension
     /// - Parameter extension: file extension
     /// - Returns: media type
-    public static func getMediaType(forExtension extension: WellknownExtension) -> MediaType? {
+    public static func getMediaType(forExtension extension: FileExtension) -> MediaType? {
         extensionMap[`extension`]
     }
 
@@ -394,7 +394,7 @@ extension MediaType {
     public static var multipartForm: Self { .init(type: .multipart, subType: "form-data") }
 
     /// map from extension string to media type
-    static let extensionMap: [WellknownExtension: MediaType] = [
+    static let extensionMap: [FileExtension: MediaType] = [
         .aac: .audioAac,
         .abw: .applicationAbiWord,
         .arc: .applicationArc,
