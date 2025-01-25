@@ -52,7 +52,7 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
     let searchForIndexHtml: Bool
     let urlBasePath: String?
     let fileProvider: Provider
-    let mediaTypeFileExtensionMap: [String: MediaType]
+    let mediaTypeFileExtensionMap: [MediaType.WellknownExtension: MediaType]
 
     /// Create FileMiddleware
     /// - Parameters:
@@ -109,7 +109,7 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
         urlBasePath: String? = nil,
         cacheControl: CacheControl = .init([]),
         searchForIndexHtml: Bool = false,
-        mediaTypeFileExtensionMap: [String: MediaType]
+        mediaTypeFileExtensionMap: [MediaType.WellknownExtension: MediaType]
     ) {
         self.cacheControl = cacheControl
         self.searchForIndexHtml = searchForIndexHtml
@@ -118,15 +118,15 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
         self.mediaTypeFileExtensionMap = mediaTypeFileExtensionMap
     }
 
-    public func withAdditionalMediaType(_ mediaType: MediaType, mappedToFileExtension fileExtension: String) -> FileMiddleware {
+    public func withAdditionalMediaType(_ mediaType: MediaType, mappedToFileExtension fileExtension: MediaType.WellknownExtension) -> FileMiddleware {
         withAdditionalMediaTypes(forFileExtensions: [fileExtension: mediaType])
     }
 
-    public func withAdditionalMediaTypes(forFileExtensions extensionToMediaTypeMap: [String: MediaType]) -> FileMiddleware {
+    public func withAdditionalMediaTypes(forFileExtensions extensionToMediaTypeMap: [MediaType.WellknownExtension: MediaType]) -> FileMiddleware {
         let extensions = extensionToMediaTypeMap.reduce(
             into: mediaTypeFileExtensionMap
         ) {
-            $0[$1.key.lowercased()] = $1.value
+            $0[$1.key] = $1.value
         }
 
         return FileMiddleware(
@@ -370,7 +370,7 @@ extension FileMiddleware {
         }
     }
 
-    private func fileExtension(for path: String) -> String? {
+    private func fileExtension(for path: String) -> MediaType.WellknownExtension? {
         if let extPointIndex = path.lastIndex(of: ".") {
             let extIndex = path.index(after: extPointIndex)
             return .init(path.suffix(from: extIndex))
