@@ -576,6 +576,27 @@ final class FileMiddlewareTests: XCTestCase {
         }
     }
 
+    func testCustomMIMETypeCaseInsensitivity() async throws {
+        let hlsStream = try XCTUnwrap(MediaType(from: "application/x-mpegURL"))
+        let router = Router()
+        router.middlewares.add(FileMiddleware(".").withAdditionalMediaType(hlsStream, mappedToFileExtension: "m3u8"))
+        let app = Application(responder: router.buildResponder())
+
+        let filename = "\(#function).m3U8"
+        let data = Data("".utf8)
+        let fileURL = URL(fileURLWithPath: filename)
+        XCTAssertNoThrow(try data.write(to: fileURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+
+        try await app.test(.router) { client in
+            try await client.execute(uri: filename, method: .get) { response in
+                let contentType = try XCTUnwrap(response.headers[.contentType])
+                let validTypes = Set(["application/vnd.apple.mpegurl", "application/x-mpegurl"])
+                XCTAssert(validTypes.contains(contentType))
+            }
+        }
+    }
+
     func testCustomMIMETypes() async throws {
         let hlsStream = try XCTUnwrap(MediaType(from: "application/x-mpegURL"))
         let router = Router()
