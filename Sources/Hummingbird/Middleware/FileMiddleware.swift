@@ -118,8 +118,23 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
         self.mediaTypeFileExtensionMap = mediaTypeFileExtensionMap
     }
 
+    public func withAdditionalMediaType(_ mediaType: MediaType, mappedToFileExtension fileExtension: String) -> FileMiddleware {
+        withAdditionalMediaType(mediaType, mappedToFileExtension: MediaType.FileExtension(fileExtension))
+    }
+
     public func withAdditionalMediaType(_ mediaType: MediaType, mappedToFileExtension fileExtension: MediaType.FileExtension) -> FileMiddleware {
         withAdditionalMediaTypes(forFileExtensions: [fileExtension: mediaType])
+    }
+
+    public func withAdditionalMediaTypes(forFileExtensions extensionToMediaTypeMap: [String: MediaType]) -> FileMiddleware {
+        withAdditionalMediaTypes(
+            forFileExtensions: extensionToMediaTypeMap.reduce(
+                into: [MediaType.FileExtension: MediaType](),
+                {
+                    $0[.init($1.key)] = $1.value
+                }
+            )
+        )
     }
 
     public func withAdditionalMediaTypes(forFileExtensions extensionToMediaTypeMap: [MediaType.FileExtension: MediaType]) -> FileMiddleware {
