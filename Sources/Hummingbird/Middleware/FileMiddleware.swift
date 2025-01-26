@@ -138,11 +138,7 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
     }
 
     public func withAdditionalMediaTypes(forFileExtensions extensionToMediaTypeMap: [MediaType.FileExtension: MediaType]) -> FileMiddleware {
-        let extensions = extensionToMediaTypeMap.reduce(
-            into: mediaTypeFileExtensionMap
-        ) {
-            $0[$1.key] = $1.value
-        }
+        let extensions = mediaTypeFileExtensionMap.merging(extensionToMediaTypeMap, uniquingKeysWith: { _, new in new })
 
         return FileMiddleware(
             fileProvider: fileProvider,
