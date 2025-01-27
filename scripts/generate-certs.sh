@@ -140,6 +140,8 @@ func getClientTLSConfiguration() throws -> TLSConfiguration {
     return tlsConfig
 }
 " >> "$FILENAME"
+
+    swift format format -i $FILENAME
 }
 
 TMPDIR=$(mktemp -d /tmp/.workingXXXXXX)
