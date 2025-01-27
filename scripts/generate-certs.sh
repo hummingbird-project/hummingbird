@@ -14,7 +14,7 @@ function generateCA() {
         -sha256 \
         -newkey rsa:2048 \
         -subj "$SUBJECT" \
-        -days 365 \
+        -days 1825 \
         -keyout ca.key \
         -out ca.pem
     TSTESTDER="$FULL_HOME/../Tests/HummingbirdCoreTests/Certificates/ca.der"
@@ -46,10 +46,10 @@ function generateServerCertificate() {
         -extfile <(cat "$FULL_HOME"/openssl.cnf <(printf "subjectAltName=DNS:$SERVER\n")) \
         -extensions v3_req \
         -out "$NAME".pem \
-        -days 365
+        -days 1825
 
     TSTESTP12="$FULL_HOME/../Tests/HummingbirdCoreTests/Certificates/server.p12"
-    openssl pkcs12 -legacy -export -passout pass:"$PASSWORD" -out "$TSTESTP12" -in "$NAME".pem -inkey "$NAME".key
+    openssl pkcs12 -export -passout pass:"$PASSWORD" -out "$TSTESTP12" -in "$NAME".pem -inkey "$NAME".key
 }
 
 function generateClientCertificate() {
@@ -72,10 +72,10 @@ function generateClientCertificate() {
         -CAkey ca.key \
         -CAcreateserial \
         -out "$NAME".pem \
-        -days 365
+        -days 1825
 
     TSTESTP12="$FULL_HOME/../Tests/HummingbirdCoreTests/Certificates/client.p12"
-    openssl pkcs12 -legacy -export -passout pass:"$PASSWORD" -out "$TSTESTP12" -in "$NAME".pem -inkey "$NAME".key
+    openssl pkcs12 -export -passout pass:"$PASSWORD" -out "$TSTESTP12" -in "$NAME".pem -inkey "$NAME".key
 }
 
 function createCertSwiftFile() {
@@ -150,5 +150,6 @@ generateServerCertificate "/C=UK/ST=Edinburgh/L=Edinburgh/O=Hummingbird/OU=Serve
 generateClientCertificate "/C=UK/ST=Edinburgh/L=Edinburgh/O=Hummingbird/OU=Client/CN=${SERVER}" client
 
 createCertSwiftFile $FULL_HOME/../Tests/HummingbirdCoreTests/Certificates.swift
+cp $FULL_HOME/../Tests/HummingbirdCoreTests/Certificates.swift $FULL_HOME/../Tests/HummingbirdHTTP2Tests/Certificates.swift
 
 rm -rf "$TMPDIR"
