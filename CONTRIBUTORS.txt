@@ -27,7 +27,7 @@ needs to be listed here.
 - Joannis Orlandos <joannis@orlandos.nl>
 - Jonathan Pulfer <JonPulfer@users.noreply.github.com>
 - Lorenzo Fiamingo <personal@lorenzofiamingo.com>
-- Michael <mredig@gmail.com>
+- Michael Redig <juniper.fife_0b@icloud.com>
 - Mirza Učanbarlić <56406159+supersonicbyte@users.noreply.github.com>
 - Moritz Lang <hi@slashmo.codes>
 - Runar Hummelsund <runhum@users.noreply.github.com>
