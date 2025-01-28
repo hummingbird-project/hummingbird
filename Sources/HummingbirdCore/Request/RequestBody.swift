@@ -148,7 +148,6 @@ extension RequestBody {
 
         @usableFromInline
         func produceMore() {
-            
             self.state.withLockedValue { state in
                 switch state {
                 case .produceMore:
@@ -187,21 +186,26 @@ extension RequestBody {
 
         @usableFromInline
         func waitForProduceMore() async {
-            await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
-                self.state.withLockedValue { state in
-                    switch state {
-                    case .produceMore:
-                        cont.resume()
-                    case .waitingForProduceMore(var continuations):
-                        continuations.append(cont)
-                        state = .waitingForProduceMore(continuations)
-                    case .terminated:
-                        cont.resume()
+            switch self.state.withLockedValue({ $0 }) {
+            case .produceMore, .terminated:
+                break
+            case .waitingForProduceMore:
+                await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
+                    self.state.withLockedValue { state in
+                        switch state {
+                        case .produceMore:
+                            cont.resume()
+                        case .waitingForProduceMore(var continuations):
+                            continuations.append(cont)
+                            state = .waitingForProduceMore(continuations)
+                        case .terminated:
+                            cont.resume()
+                        }
                     }
                 }
             }
         }
-        
+
         @usableFromInline
         func stopProducing() {
             self.state.withLockedValue { state in
