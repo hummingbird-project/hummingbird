@@ -52,7 +52,7 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
     let searchForIndexHtml: Bool
     let urlBasePath: String?
     let fileProvider: Provider
-    let mediaTypeFileExtensionMap: [String: MediaType]
+    let mediaTypeFileExtensionMap: [MediaType.FileExtension: MediaType]
 
     /// Create FileMiddleware
     /// - Parameters:
@@ -109,7 +109,7 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
         urlBasePath: String? = nil,
         cacheControl: CacheControl = .init([]),
         searchForIndexHtml: Bool = false,
-        mediaTypeFileExtensionMap: [String: MediaType]
+        mediaTypeFileExtensionMap: [MediaType.FileExtension: MediaType]
     ) {
         self.cacheControl = cacheControl
         self.searchForIndexHtml = searchForIndexHtml
@@ -119,15 +119,26 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
     }
 
     public func withAdditionalMediaType(_ mediaType: MediaType, mappedToFileExtension fileExtension: String) -> FileMiddleware {
+        withAdditionalMediaType(mediaType, mappedToFileExtension: MediaType.FileExtension(fileExtension))
+    }
+
+    public func withAdditionalMediaType(_ mediaType: MediaType, mappedToFileExtension fileExtension: MediaType.FileExtension) -> FileMiddleware {
         withAdditionalMediaTypes(forFileExtensions: [fileExtension: mediaType])
     }
 
     public func withAdditionalMediaTypes(forFileExtensions extensionToMediaTypeMap: [String: MediaType]) -> FileMiddleware {
-        let extensions = extensionToMediaTypeMap.reduce(
-            into: mediaTypeFileExtensionMap
-        ) {
-            $0[$1.key.lowercased()] = $1.value
-        }
+        withAdditionalMediaTypes(
+            forFileExtensions: extensionToMediaTypeMap.reduce(
+                into: [MediaType.FileExtension: MediaType](),
+                {
+                    $0[.init($1.key)] = $1.value
+                }
+            )
+        )
+    }
+
+    public func withAdditionalMediaTypes(forFileExtensions extensionToMediaTypeMap: [MediaType.FileExtension: MediaType]) -> FileMiddleware {
+        let extensions = mediaTypeFileExtensionMap.merging(extensionToMediaTypeMap, uniquingKeysWith: { _, new in new })
 
         return FileMiddleware(
             fileProvider: fileProvider,
@@ -370,7 +381,7 @@ extension FileMiddleware {
         }
     }
 
-    private func fileExtension(for path: String) -> String? {
+    private func fileExtension(for path: String) -> MediaType.FileExtension? {
         if let extPointIndex = path.lastIndex(of: ".") {
             let extIndex = path.index(after: extPointIndex)
             return .init(path.suffix(from: extIndex))

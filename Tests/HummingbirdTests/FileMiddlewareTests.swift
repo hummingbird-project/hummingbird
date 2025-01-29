@@ -513,6 +513,35 @@ final class FileMiddlewareTests: XCTestCase {
         }
     }
 
+    func testFilesWithNonLowercaseFileExtensions() async throws {
+        let router = Router()
+        router.middlewares.add(FileMiddleware("."))
+        let app = Application(responder: router.buildResponder())
+
+        let testedExtensions: [(String, UInt)] = [
+            ("jpg", #line),
+            ("JPG", #line),
+            ("JpG", #line),
+            ("JPeG", #line),
+            ("JPEG", #line),
+        ]
+
+        try await app.test(.router) { client in
+            for (index, (testedExtension, line)) in testedExtensions.enumerated() {
+                let fileURL = URL(fileURLWithPath: "\(#function)-\(index)")
+                    .appendingPathExtension(testedExtension)
+                let filename = fileURL.lastPathComponent
+                let data = Data()
+                XCTAssertNoThrow(try data.write(to: fileURL))
+                defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+
+                try await client.execute(uri: filename, method: .get) { response in
+                    XCTAssertEqual(response.headers[.contentType], "image/jpeg", file: #filePath, line: line)
+                }
+            }
+        }
+    }
+
     func testCustomMIMEType() async throws {
         let hlsStream = try XCTUnwrap(MediaType(from: "application/x-mpegURL"))
         let router = Router()
@@ -540,6 +569,27 @@ final class FileMiddlewareTests: XCTestCase {
         try await app.test(.router) { client in
             try await client.execute(uri: filename, method: .get) { response in
                 XCTAssertEqual(String(buffer: response.body), content)
+                let contentType = try XCTUnwrap(response.headers[.contentType])
+                let validTypes = Set(["application/vnd.apple.mpegurl", "application/x-mpegurl"])
+                XCTAssert(validTypes.contains(contentType))
+            }
+        }
+    }
+
+    func testCustomMIMETypeCaseInsensitivity() async throws {
+        let hlsStream = try XCTUnwrap(MediaType(from: "application/x-mpegURL"))
+        let router = Router()
+        router.middlewares.add(FileMiddleware(".").withAdditionalMediaType(hlsStream, mappedToFileExtension: "m3u8"))
+        let app = Application(responder: router.buildResponder())
+
+        let filename = "\(#function).m3U8"
+        let data = Data("".utf8)
+        let fileURL = URL(fileURLWithPath: filename)
+        XCTAssertNoThrow(try data.write(to: fileURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+
+        try await app.test(.router) { client in
+            try await client.execute(uri: filename, method: .get) { response in
                 let contentType = try XCTUnwrap(response.headers[.contentType])
                 let validTypes = Set(["application/vnd.apple.mpegurl", "application/x-mpegurl"])
                 XCTAssert(validTypes.contains(contentType))
