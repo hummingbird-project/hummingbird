@@ -867,6 +867,52 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    /// Test AsyncSequence returned by RequestBody.makeStream() and feeding it data from multiple processes
+    func testMakeStreamMultipleSources() async throws {
+        let router = Router()
+        router.get("numbers") { request, context -> Response in
+            let body = try await withThrowingTaskGroup(of: Void.self) { group in
+                let (requestBody, source) = RequestBody.makeStream()
+                group.addTask {
+                    // Add three tasks feeding the source
+                    await withThrowingTaskGroup(of: Void.self) { group in
+                        group.addTask {
+                            for value in 0..<100 {
+                                try await source.yield(ByteBuffer(string: String(describing: value)))
+                            }
+                        }
+                        group.addTask {
+                            for value in 0..<100 {
+                                try await source.yield(ByteBuffer(string: String(describing: value)))
+                            }
+                        }
+                        group.addTask {
+                            for value in 0..<100 {
+                                try await source.yield(ByteBuffer(string: String(describing: value)))
+                            }
+                        }
+                    }
+                    source.finish()
+                }
+                var body = ByteBuffer()
+                for try await buffer in requestBody {
+                    var buffer = buffer
+                    body.writeBuffer(&buffer)
+                    try await Task.sleep(for: .milliseconds(1))
+                }
+                return body
+            }
+            return Response(status: .ok, body: .init(byteBuffer: body))
+        }
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/numbers", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+        }
+    }
+
     #if compiler(>=6.0)
     /// Test consumeWithInboundCloseHandler
     func testConsumeWithInboundHandler() async throws {

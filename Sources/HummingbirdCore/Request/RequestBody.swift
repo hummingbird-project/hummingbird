@@ -132,8 +132,11 @@ extension RequestBody {
     >
 
     /// Delegate for NIOThrowingAsyncSequenceProducer
+    ///
+    /// This can be a struct as the state is stored inside a NIOLockedValueBox which
+    /// turns it into a reference value
     @usableFromInline
-    final class Delegate: NIOAsyncSequenceProducerDelegate, Sendable {
+    struct Delegate: NIOAsyncSequenceProducerDelegate, Sendable {
         enum State {
             case produceMore
             case waitingForProduceMore(CheckedContinuation<Void, Never>?)
@@ -160,14 +163,13 @@ extension RequestBody {
                     state = .produceMore
 
                 case .multipleWaitingForProduceMore(var continuations):
-                    if let cont = continuations.popFirst() {
+                    // this isnt exactly correct as the number of continuations
+                    // resumed can overflow the back pressure
+                    while let cont = continuations.popFirst() {
                         cont.resume()
                     }
-                    if continuations.count > 0 {
-                        state = .multipleWaitingForProduceMore(continuations)
-                    } else {
-                        state = .produceMore
-                    }
+                    state = .produceMore
+
                 case .terminated:
                     preconditionFailure("Unexpected state")
                 }
