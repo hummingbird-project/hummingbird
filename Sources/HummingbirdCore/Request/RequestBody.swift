@@ -136,7 +136,8 @@ extension RequestBody {
     final class Delegate: NIOAsyncSequenceProducerDelegate, Sendable {
         enum State {
             case produceMore
-            case waitingForProduceMore(Deque<CheckedContinuation<Void, Never>>)
+            case waitingForProduceMore(CheckedContinuation<Void, Never>?)
+            case multipleWaitingForProduceMore(Deque<CheckedContinuation<Void, Never>>)
             case terminated
         }
         let state: NIOLockedValueBox<State>
@@ -152,12 +153,18 @@ extension RequestBody {
                 switch state {
                 case .produceMore:
                     break
-                case .waitingForProduceMore(var continuations):
+                case .waitingForProduceMore(let continuation):
+                    if let continuation {
+                        continuation.resume()
+                    }
+                    state = .produceMore
+
+                case .multipleWaitingForProduceMore(var continuations):
                     if let cont = continuations.popFirst() {
                         cont.resume()
                     }
                     if continuations.count > 0 {
-                        state = .waitingForProduceMore(continuations)
+                        state = .multipleWaitingForProduceMore(continuations)
                     } else {
                         state = .produceMore
                     }
@@ -173,7 +180,12 @@ extension RequestBody {
                 switch state {
                 case .produceMore:
                     break
-                case .waitingForProduceMore(var continuations):
+                case .waitingForProduceMore(let continuation):
+                    if let continuation {
+                        continuation.resume()
+                    }
+                    state = .terminated
+                case .multipleWaitingForProduceMore(var continuations):
                     while let cont = continuations.popFirst() {
                         cont.resume()
                     }
@@ -189,17 +201,27 @@ extension RequestBody {
             switch self.state.withLockedValue({ $0 }) {
             case .produceMore, .terminated:
                 break
-            case .waitingForProduceMore:
-                await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
+            case .waitingForProduceMore, .multipleWaitingForProduceMore:
+                await withCheckedContinuation { (newContinuation: CheckedContinuation<Void, Never>) in
                     self.state.withLockedValue { state in
                         switch state {
                         case .produceMore:
-                            cont.resume()
-                        case .waitingForProduceMore(var continuations):
-                            continuations.append(cont)
-                            state = .waitingForProduceMore(continuations)
+                            newContinuation.resume()
+                        case .waitingForProduceMore(let firstContinuation):
+                            if let firstContinuation {
+                                var continuations = Deque<CheckedContinuation<Void, Never>>()
+                                continuations.reserveCapacity(2)
+                                continuations.append(firstContinuation)
+                                continuations.append(newContinuation)
+                                state = .multipleWaitingForProduceMore(continuations)
+                            } else {
+                                state = .waitingForProduceMore(newContinuation)
+                            }
+                        case .multipleWaitingForProduceMore(var continuations):
+                            continuations.append(newContinuation)
+                            state = .multipleWaitingForProduceMore(continuations)
                         case .terminated:
-                            cont.resume()
+                            newContinuation.resume()
                         }
                     }
                 }
@@ -211,8 +233,10 @@ extension RequestBody {
             self.state.withLockedValue { state in
                 switch state {
                 case .produceMore:
-                    state = .waitingForProduceMore([])
+                    state = .waitingForProduceMore(nil)
                 case .waitingForProduceMore:
+                    break
+                case .multipleWaitingForProduceMore:
                     break
                 case .terminated:
                     break
