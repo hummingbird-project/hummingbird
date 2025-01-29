@@ -132,38 +132,116 @@ extension RequestBody {
     >
 
     /// Delegate for NIOThrowingAsyncSequenceProducer
+    ///
+    /// This can be a struct as the state is stored inside a NIOLockedValueBox which
+    /// turns it into a reference value
     @usableFromInline
-    final class Delegate: NIOAsyncSequenceProducerDelegate, Sendable {
-        let checkedContinuations: NIOLockedValueBox<Deque<CheckedContinuation<Void, Never>>>
+    struct Delegate: NIOAsyncSequenceProducerDelegate, Sendable {
+        enum State {
+            case produceMore
+            case waitingForProduceMore(CheckedContinuation<Void, Never>?)
+            case multipleWaitingForProduceMore(Deque<CheckedContinuation<Void, Never>>)
+            case terminated
+        }
+        let state: NIOLockedValueBox<State>
 
         @usableFromInline
         init() {
-            self.checkedContinuations = .init([])
+            self.state = .init(.produceMore)
         }
 
         @usableFromInline
         func produceMore() {
-            self.checkedContinuations.withLockedValue {
-                if let cont = $0.popFirst() {
-                    cont.resume()
+            self.state.withLockedValue { state in
+                switch state {
+                case .produceMore:
+                    break
+                case .waitingForProduceMore(let continuation):
+                    if let continuation {
+                        continuation.resume()
+                    }
+                    state = .produceMore
+
+                case .multipleWaitingForProduceMore(var continuations):
+                    // this isnt exactly correct as the number of continuations
+                    // resumed can overflow the back pressure
+                    while let cont = continuations.popFirst() {
+                        cont.resume()
+                    }
+                    state = .produceMore
+
+                case .terminated:
+                    preconditionFailure("Unexpected state")
                 }
             }
         }
 
         @usableFromInline
         func didTerminate() {
-            self.checkedContinuations.withLockedValue {
-                while let cont = $0.popFirst() {
-                    cont.resume()
+            self.state.withLockedValue { state in
+                switch state {
+                case .produceMore:
+                    break
+                case .waitingForProduceMore(let continuation):
+                    if let continuation {
+                        continuation.resume()
+                    }
+                    state = .terminated
+                case .multipleWaitingForProduceMore(var continuations):
+                    while let cont = continuations.popFirst() {
+                        cont.resume()
+                    }
+                    state = .terminated
+                case .terminated:
+                    preconditionFailure("Unexpected state")
                 }
             }
         }
 
         @usableFromInline
         func waitForProduceMore() async {
-            await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
-                self.checkedContinuations.withLockedValue {
-                    $0.append(cont)
+            switch self.state.withLockedValue({ $0 }) {
+            case .produceMore, .terminated:
+                break
+            case .waitingForProduceMore, .multipleWaitingForProduceMore:
+                await withCheckedContinuation { (newContinuation: CheckedContinuation<Void, Never>) in
+                    self.state.withLockedValue { state in
+                        switch state {
+                        case .produceMore:
+                            newContinuation.resume()
+                        case .waitingForProduceMore(let firstContinuation):
+                            if let firstContinuation {
+                                var continuations = Deque<CheckedContinuation<Void, Never>>()
+                                continuations.reserveCapacity(2)
+                                continuations.append(firstContinuation)
+                                continuations.append(newContinuation)
+                                state = .multipleWaitingForProduceMore(continuations)
+                            } else {
+                                state = .waitingForProduceMore(newContinuation)
+                            }
+                        case .multipleWaitingForProduceMore(var continuations):
+                            continuations.append(newContinuation)
+                            state = .multipleWaitingForProduceMore(continuations)
+                        case .terminated:
+                            newContinuation.resume()
+                        }
+                    }
+                }
+            }
+        }
+
+        @usableFromInline
+        func stopProducing() {
+            self.state.withLockedValue { state in
+                switch state {
+                case .produceMore:
+                    state = .waitingForProduceMore(nil)
+                case .waitingForProduceMore:
+                    break
+                case .multipleWaitingForProduceMore:
+                    break
+                case .terminated:
+                    break
                 }
             }
         }
@@ -175,14 +253,11 @@ extension RequestBody {
         let source: Producer.Source
         @usableFromInline
         let delegate: Delegate
-        @usableFromInline
-        let waitForProduceMore: NIOLockedValueBox<Bool>
 
         @usableFromInline
         init(source: Producer.Source, delegate: Delegate) {
             self.source = source
             self.delegate = delegate
-            self.waitForProduceMore = .init(false)
         }
 
         /// Yields the element to the inbound stream.
@@ -195,13 +270,10 @@ extension RequestBody {
         public func yield(_ element: ByteBuffer) async throws {
             // if previous call indicated we should stop producing wait until the delegate
             // says we can start producing again
-            if self.waitForProduceMore.withLockedValue({ $0 }) {
-                await self.delegate.waitForProduceMore()
-                self.waitForProduceMore.withLockedValue { $0 = false }
-            }
+            await self.delegate.waitForProduceMore()
             let result = self.source.yield(element)
             if result == .stopProducing {
-                self.waitForProduceMore.withLockedValue { $0 = true }
+                self.delegate.stopProducing()
             }
         }
 
