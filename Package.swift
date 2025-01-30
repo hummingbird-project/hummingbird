@@ -25,7 +25,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-http-types.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-metrics.git", from: "2.5.0"),
         .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.1.0"),
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.63.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.78.0"),
         .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.20.0"),
         .package(url: "https://github.com/apple/swift-nio-http2.git", from: "1.34.1"),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.14.0"),
@@ -46,6 +46,7 @@ let package = Package(
                 .product(name: "Metrics", package: "swift-metrics"),
                 .product(name: "Tracing", package: "swift-distributed-tracing"),
                 .product(name: "NIOCore", package: "swift-nio"),
+                .product(name: "_NIOFileSystem", package: "swift-nio"),
                 .product(name: "NIOPosix", package: "swift-nio"),
             ],
             swiftSettings: swiftSettings
