@@ -26,7 +26,16 @@ public struct TLSChannel<BaseChannel: ServerChildChannel>: ServerChildChannel {
     ///   - baseChannel: Base child channel wrap
     ///   - tlsConfiguration: TLS configuration
     public init(_ baseChannel: BaseChannel, tlsConfiguration: TLSConfiguration) throws {
-        self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
+        self.configuration = try .init(configuration: .init(tlsConfiguration: tlsConfiguration))
+        self.baseChannel = baseChannel
+    }
+
+    ///  Initialize TLSChannel
+    /// - Parameters:
+    ///   - baseChannel: Base child channel wrap
+    ///   - tlsConfiguration: TLS configuration
+    public init(_ baseChannel: BaseChannel, configuration: TLSChannelConfiguration) throws {
+        self.configuration = try .init(configuration: configuration)
         self.baseChannel = baseChannel
     }
 
@@ -38,7 +47,13 @@ public struct TLSChannel<BaseChannel: ServerChildChannel>: ServerChildChannel {
     @inlinable
     public func setup(channel: Channel, logger: Logger) -> EventLoopFuture<Value> {
         channel.eventLoop.makeCompletedFuture {
-            try channel.pipeline.syncOperations.addHandler(NIOSSLServerHandler(context: self.sslContext))
+            try channel.pipeline.syncOperations.addHandler(
+                NIOSSLServerHandler(
+                    context: self.configuration.sslContext,
+                    customVerificationCallback: self.configuration.customVerificationCallback,
+                    configuration: .init()
+                )
+            )
         }.flatMap {
             self.baseChannel.setup(channel: channel, logger: logger)
         }
@@ -54,7 +69,7 @@ public struct TLSChannel<BaseChannel: ServerChildChannel>: ServerChildChannel {
     }
 
     @usableFromInline
-    let sslContext: NIOSSLContext
+    let configuration: TLSChannelInternalConfiguration
     @usableFromInline
     var baseChannel: BaseChannel
 }
@@ -69,5 +84,46 @@ extension ServerChildChannel {
     /// Construct existential ``TLSChannel`` from existential `ServerChildChannel`
     func withTLS(tlsConfiguration: TLSConfiguration) throws -> any ServerChildChannel {
         try TLSChannel(self, tlsConfiguration: tlsConfiguration)
+    }
+}
+
+/// TLSChannel configuration
+public struct TLSChannelConfiguration: Sendable {
+    public typealias CustomVerificationCallback = @Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void
+    // Manages configuration of TLS
+    public let tlsConfiguration: TLSConfiguration
+    /// A custom verification callback that allows completely overriding the certificate verification logic of BoringSSL.
+    public let customVerificationCallback: CustomVerificationCallback?
+
+    ///  Initialize TLSChannel.Configuration
+    ///
+    /// For details on custom callback see swift-nio-ssl documentation
+    /// https://swiftpackageindex.com/apple/swift-nio-ssl/main/documentation/niossl/niosslcustomverificationcallback
+    /// - Parameters:
+    ///   - tlsConfiguration: TLS configuration
+    ///   - customVerificationCallback: A custom verification callback that allows completely overriding the
+    ///         certificate verification logic of BoringSSL.
+    public init(
+        tlsConfiguration: TLSConfiguration,
+        customVerificationCallback: CustomVerificationCallback? = nil
+    ) {
+        self.tlsConfiguration = tlsConfiguration
+        self.customVerificationCallback = customVerificationCallback
+    }
+}
+
+/// TLSChannel configuration
+@usableFromInline
+package struct TLSChannelInternalConfiguration: Sendable {
+    // Manages configuration of TLS
+    @usableFromInline
+    let sslContext: NIOSSLContext
+    /// A custom verification callback that allows completely overriding the certificate verification logic of BoringSSL.
+    @usableFromInline
+    let customVerificationCallback: TLSChannelConfiguration.CustomVerificationCallback?
+
+    init(configuration: TLSChannelConfiguration) throws {
+        self.sslContext = try NIOSSLContext(configuration: configuration.tlsConfiguration)
+        self.customVerificationCallback = configuration.customVerificationCallback
     }
 }
