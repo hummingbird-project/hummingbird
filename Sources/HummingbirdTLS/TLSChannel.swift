@@ -85,6 +85,11 @@ extension ServerChildChannel {
     func withTLS(tlsConfiguration: TLSConfiguration) throws -> any ServerChildChannel {
         try TLSChannel(self, tlsConfiguration: tlsConfiguration)
     }
+
+    /// Construct existential ``TLSChannel`` from existential `ServerChildChannel`
+    func withTLS(configuration: TLSChannelConfiguration) throws -> any ServerChildChannel {
+        try TLSChannel(self, configuration: configuration)
+    }
 }
 
 /// TLSChannel configuration
