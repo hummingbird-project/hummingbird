@@ -17,6 +17,7 @@ import HummingbirdCore
 import HummingbirdHTTP2
 import HummingbirdTesting
 import Logging
+import NIOConcurrencyHelpers
 import NIOCore
 import NIOHTTP1
 import NIOHTTPTypes
@@ -52,6 +53,56 @@ final class HummingBirdHTTP2Tests: XCTestCase {
                 XCTAssertEqual(response.status, .ok)
             }
         }
+    }
+
+    func testCustomVerify() async throws {
+        let verifiedResult = NIOLockedValueBox<NIOSSLVerificationResult>(.certificateVerified)
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
+        defer {
+            XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+        }
+        var logger = Logger(label: "Hummingbird")
+        logger.logLevel = .debug
+
+        var serverTLSConfig = try getServerTLSConfiguration()
+        serverTLSConfig.certificateVerification = .noHostnameVerification
+        try await testServer(
+            responder: { (_, responseWriter: consuming ResponseWriter, _) in
+                try await responseWriter.writeResponse(.init(status: .ok))
+            },
+            httpChannelSetup: .http2Upgrade(
+                tlsChannelConfiguration: .init(
+                    tlsConfiguration: serverTLSConfig
+                ) { certs, promise in
+                    promise.succeed(verifiedResult.withLockedValue { $0 })
+                }
+            ),
+            configuration: .init(address: .hostname(port: 0), serverName: testServerName),
+            eventLoopGroup: eventLoopGroup,
+            logger: logger
+        ) { port in
+            var tlsConfiguration = try getClientTLSConfiguration()
+            // no way to override the SSL server name with AsyncHTTPClient so need to set
+            // hostname verification off
+            tlsConfiguration.certificateVerification = .noHostnameVerification
+            try await withHTTPClient(.init(tlsConfiguration: tlsConfiguration)) { httpClient in
+                let request = HTTPClientRequest(url: "https://localhost:\(port)/")
+                let response = try await httpClient.execute(request, deadline: .now() + .seconds(30))
+                XCTAssertEqual(response.status, .ok)
+            }
+            // set certicate verification to fail
+            verifiedResult.withLockedValue { $0 = .failed }
+
+            do {
+                try await withHTTPClient(.init(tlsConfiguration: tlsConfiguration)) { httpClient in
+                    let request2 = HTTPClientRequest(url: "https://localhost:\(port)/")
+                    let response2 = try await httpClient.execute(request2, deadline: .now() + .seconds(30))
+                    print(response2)
+                }
+                XCTFail("HTTP request should fail as certificate verification is going to fail")
+            } catch let error as HTTPClientError where error == .remoteConnectionClosed {}
+        }
+
     }
 
     func testMultipleSerialRequests() async throws {
