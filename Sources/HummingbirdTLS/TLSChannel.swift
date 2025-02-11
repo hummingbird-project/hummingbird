@@ -95,6 +95,7 @@ extension ServerChildChannel {
 /// TLSChannel configuration
 public struct TLSChannelConfiguration: Sendable {
     public typealias CustomVerificationCallback = @Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void
+
     // Manages configuration of TLS
     public let tlsConfiguration: TLSConfiguration
     /// A custom verification callback that allows completely overriding the certificate verification logic of BoringSSL.
@@ -114,6 +115,26 @@ public struct TLSChannelConfiguration: Sendable {
     ) {
         self.tlsConfiguration = tlsConfiguration
         self.customVerificationCallback = customVerificationCallback
+    }
+
+    ///  Initialize TLSChannel.Configuration
+    ///
+    /// For details on custom callback see swift-nio-ssl documentation
+    /// https://swiftpackageindex.com/apple/swift-nio-ssl/main/documentation/niossl/niosslcustomverificationcallback
+    /// - Parameters:
+    ///   - tlsConfiguration: TLS configuration
+    ///   - customAsyncVerificationCallback: A custom verification callback that allows completely overriding the
+    ///         certificate verification logic of BoringSSL.
+    public init(
+        tlsConfiguration: TLSConfiguration,
+        customAsyncVerificationCallback: @escaping @Sendable ([NIOSSLCertificate]) async throws -> NIOSSLVerificationResult
+    ) {
+        self.tlsConfiguration = tlsConfiguration
+        self.customVerificationCallback = { certificates, promise in
+            promise.completeWithTask {
+                try await customAsyncVerificationCallback(certificates)
+            }
+        }
     }
 }
 
