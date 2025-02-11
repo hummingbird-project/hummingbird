@@ -36,6 +36,38 @@ final class EnvironmentTests: XCTestCase {
         XCTAssertEqual(env?.get("TEST_VAR"), "testSetFromCodable")
     }
 
+    func testRequire() throws {
+        var env = Environment()
+        env.set("TEST_REQUIRE", value: "testing")
+        let value = try env.require("TEST_REQUIRE")
+        XCTAssertEqual(value, "testing")
+        XCTAssertThrowsError(try env.require("TEST_REQUIRE2")) { error in
+            if let error = error as? Environment.Error, error == .variableDoesNotExist {
+                return
+            }
+            XCTFail()
+        }
+    }
+
+    func testRequireAs() throws {
+        var env = Environment()
+        env.set("TEST_REQUIRE_AS", value: "testing")
+        let value = try env.require("TEST_REQUIRE_AS", as: String.self)
+        XCTAssertEqual(value, "testing")
+        XCTAssertThrowsError(try env.require("TEST_REQUIRE_AS_2", as: Int.self)) { error in
+            if let error = error as? Environment.Error, error == .variableDoesNotExist {
+                return
+            }
+            XCTFail()
+        }
+        XCTAssertThrowsError(try env.require("TEST_REQUIRE_AS", as: Int.self)) { error in
+            if let error = error as? Environment.Error, error == .variableDoesNotConvert {
+                return
+            }
+            XCTFail()
+        }
+    }
+
     func testSet() {
         var env = Environment()
         env.set("TEST_VAR", value: "testSet")

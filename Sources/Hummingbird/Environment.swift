@@ -33,16 +33,29 @@ import Darwin.C
 
 /// Access environment variables
 public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
-    struct Error: Swift.Error, Equatable {
-        enum Value {
+    public struct Error: Swift.Error, Equatable {
+        enum Code {
             case dotEnvParseError
+            case variableDoesNotExist
+            case variableDoesNotConvert
         }
 
-        private let value: Value
-        private init(_ value: Value) {
-            self.value = value
+        fileprivate let code: Code
+        public let message: String?
+        fileprivate init(_ code: Code, message: String? = nil) {
+            self.code = code
+            self.message = message
         }
 
+        public static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.code == rhs.code
+        }
+
+        /// Required variable does not exist
+        public static var variableDoesNotExist: Self { .init(.variableDoesNotExist) }
+        /// Required variable does not convert to type
+        public static var variableDoesNotConvert: Self { .init(.variableDoesNotConvert) }
+        /// Error while parsing dot env file
         public static var dotEnvParseError: Self { .init(.dotEnvParseError) }
     }
 
@@ -91,6 +104,27 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
     ///   - as: Type we want variable to be cast to
     public func get<T: LosslessStringConvertible>(_ s: String, as: T.Type) -> T? {
         self.values[s.lowercased()].map { T(String($0)) } ?? nil
+    }
+
+    /// Require environment variable with name
+    /// - Parameter s: Environment variable name
+    public func require(_ s: String) throws -> String {
+        guard let value = self.values[s.lowercased()] else {
+            throw Error(.variableDoesNotExist, message: "Environment variable '\(s)' does not exist")
+        }
+        return value
+    }
+
+    /// Require environment variable with name as a certain type
+    /// - Parameters:
+    ///   - s: Environment variable name
+    ///   - as: Type we want variable to be cast to
+    public func require<T: LosslessStringConvertible>(_ s: String, as: T.Type) throws -> T {
+        let stringValue = try self.require(s)
+        guard let value = T(stringValue) else {
+            throw Error(.variableDoesNotConvert, message: "Environment variable '\(s)' can not be converted to \(T.self)")
+        }
+        return value
     }
 
     /// Set environment variable
