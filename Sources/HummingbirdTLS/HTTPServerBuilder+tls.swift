@@ -37,4 +37,26 @@ extension HTTPServerBuilder {
             try base.buildChildChannel(responder).withTLS(tlsConfiguration: tlsConfiguration)
         }
     }
+
+    ///  Build server supporting HTTP with TLS
+    ///
+    /// Use in ``Hummingbird/Application`` initialization.
+    /// ```
+    /// let app = Application(
+    ///     router: router,
+    ///     server: .tls(.http1(), tlsConfiguration: tlsConfiguration)
+    /// )
+    /// ```
+    /// - Parameters:
+    ///   - base: Base child channel to wrap with TLS
+    ///   - configuration: TLS channel configuration
+    /// - Returns: HTTPChannelHandler builder
+    public static func tls(
+        _ base: HTTPServerBuilder = .http1(),
+        configuration: TLSChannelConfiguration
+    ) throws -> HTTPServerBuilder {
+        .init { responder in
+            try base.buildChildChannel(responder).withTLS(configuration: configuration)
+        }
+    }
 }
