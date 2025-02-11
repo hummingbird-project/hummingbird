@@ -144,7 +144,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
                 await self.http2.handle(value: http2, logger: logger)
             }
         } catch {
-            logger.error("Error getting HTTP2 upgrade negotiated value: \(error)")
+            logger.debug("Error getting HTTP2 upgrade negotiated value: \(error)")
         }
     }
 }
