@@ -94,7 +94,13 @@ final class HummingBirdHTTP2Tests: XCTestCase {
             verifiedResult.withLockedValue { $0 = .failed }
 
             do {
-                try await withHTTPClient(.init(tlsConfiguration: tlsConfiguration)) { httpClient in
+                try await withHTTPClient(
+                    .init(
+                        tlsConfiguration: tlsConfiguration,
+                        timeout: .init(connect: .seconds(2), read: .seconds(2))
+                    )
+                ) {
+                    httpClient in
                     let request2 = HTTPClientRequest(url: "https://localhost:\(port)/")
                     let response2 = try await httpClient.execute(request2, deadline: .now() + .seconds(30))
                     print(response2)
