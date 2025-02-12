@@ -59,4 +59,51 @@ final class HummingBirdTLSTests: XCTestCase {
         let channel = try clientChannel.withLockedValue { try XCTUnwrap($0) }
         try await channel.closeFuture.get()
     }
+
+    func testCustomVerify() async throws {
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
+        let verifiedResult = NIOLockedValueBox<NIOSSLVerificationResult>(.certificateVerified)
+        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        var tlsConfig = try getServerTLSConfiguration()
+        tlsConfig.certificateVerification = .noHostnameVerification
+        try await testServer(
+            responder: helloResponder,
+            httpChannelSetup: .tls(
+                configuration: .init(
+                    tlsConfiguration: tlsConfig,
+                    customAsyncVerificationCallback: { _ in
+                        verifiedResult.withLockedValue { $0 }
+                    }
+                )
+            ),
+            configuration: .init(address: .hostname(port: 0), serverName: testServerName),
+            eventLoopGroup: eventLoopGroup,
+            logger: Logger(label: "Hummingbird")
+        ) { port in
+            try await TestClient.withClient(
+                host: "localhost",
+                port: port,
+                configuration: .init(tlsConfiguration: getClientTLSConfiguration(), serverName: testServerName)
+            ) { client in
+                let response = try await client.get("/")
+                var body = try XCTUnwrap(response.body)
+                XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
+            }
+            // set certificate verification to fail
+            verifiedResult.withLockedValue { $0 = .failed }
+            do {
+                try await TestClient.withClient(
+                    host: "localhost",
+                    port: port,
+                    configuration: .init(tlsConfiguration: getClientTLSConfiguration(), serverName: testServerName)
+                ) { client in
+                    let response = try await client.get("/")
+                    var body = try XCTUnwrap(response.body)
+                    XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
+                }
+                XCTFail("Client connection should fail as certificate verification is set to fail")
+            } catch TestClient.Error.connectionClosing {}
+        }
+    }
+
 }

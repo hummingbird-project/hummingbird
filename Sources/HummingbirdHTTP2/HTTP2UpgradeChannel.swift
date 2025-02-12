@@ -32,7 +32,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
         public let channel: Channel
     }
 
-    private let sslContext: NIOSSLContext
+    private let tlsChannelConfiguration: TLSChannelInternalConfiguration
     private let http1: HTTP1Channel
     private let http2: HTTP2Channel
     public let configuration: Configuration
@@ -54,7 +54,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
     ) throws {
         var tlsConfiguration = tlsConfiguration
         tlsConfiguration.applicationProtocols = NIOHTTP2SupportedALPNProtocols
-        self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
+        self.tlsChannelConfiguration = try .init(configuration: .init(tlsConfiguration: tlsConfiguration))
         self.configuration = .init()
         self.http1 = HTTP1Channel(
             responder: responder,
@@ -78,7 +78,25 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
     ) throws {
         var tlsConfiguration = tlsConfiguration
         tlsConfiguration.applicationProtocols = NIOHTTP2SupportedALPNProtocols
-        self.sslContext = try NIOSSLContext(configuration: tlsConfiguration)
+        self.tlsChannelConfiguration = try .init(configuration: .init(tlsConfiguration: tlsConfiguration))
+        self.configuration = configuration
+        self.http1 = HTTP1Channel(responder: responder, configuration: configuration.streamConfiguration)
+        self.http2 = HTTP2Channel(responder: responder, configuration: configuration)
+    }
+
+    ///  Initialize HTTP2UpgradeChannel
+    /// - Parameters:
+    ///   - tlsConfiguration: TLS configuration
+    ///   - configuration: HTTP2 channel configuration
+    ///   - responder: Function returning a HTTP response for a HTTP request
+    public init(
+        tlsChannelConfiguration: TLSChannelConfiguration,
+        configuration: Configuration = .init(),
+        responder: @escaping HTTPChannelHandler.Responder
+    ) throws {
+        var tlsChannelConfiguration = tlsChannelConfiguration
+        tlsChannelConfiguration.tlsConfiguration.applicationProtocols = NIOHTTP2SupportedALPNProtocols
+        self.tlsChannelConfiguration = try .init(configuration: tlsChannelConfiguration)
         self.configuration = configuration
         self.http1 = HTTP1Channel(responder: responder, configuration: configuration.streamConfiguration)
         self.http2 = HTTP2Channel(responder: responder, configuration: configuration)
@@ -91,7 +109,13 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
     /// - Returns: Object to process input/output on child channel
     public func setup(channel: Channel, logger: Logger) -> EventLoopFuture<Value> {
         do {
-            try channel.pipeline.syncOperations.addHandler(NIOSSLServerHandler(context: self.sslContext))
+            try channel.pipeline.syncOperations.addHandler(
+                NIOSSLServerHandler(
+                    context: self.tlsChannelConfiguration.sslContext,
+                    customVerificationCallback: self.tlsChannelConfiguration.customVerificationCallback,
+                    configuration: .init()
+                )
+            )
         } catch {
             return channel.eventLoop.makeFailedFuture(error)
         }
@@ -120,7 +144,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
                 await self.http2.handle(value: http2, logger: logger)
             }
         } catch {
-            logger.error("Error getting HTTP2 upgrade negotiated value: \(error)")
+            logger.debug("Error getting HTTP2 upgrade negotiated value: \(error)")
         }
     }
 }

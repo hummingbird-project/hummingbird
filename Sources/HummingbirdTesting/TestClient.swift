@@ -76,6 +76,33 @@ public struct TestClient: Sendable {
         self.configuration = configuration
     }
 
+    /// Run closure with temporary test client
+    /// - Parameters:
+    ///   - host: host to connect
+    ///   - port: port to connect to
+    ///   - configuration: Client configuration
+    ///   - eventLoopGroupProvider: EventLoopGroup to use
+    ///   - operation: Closure to run
+    public static func withClient<Value>(
+        host: String,
+        port: Int,
+        configuration: Configuration = .init(),
+        eventLoopGroupProvider: NIOEventLoopGroupProvider = .shared(MultiThreadedEventLoopGroup.singleton),
+        operation: @escaping @Sendable (Self) async throws -> Value
+    ) async throws -> Value {
+        let client = Self(host: host, port: port, configuration: configuration, eventLoopGroupProvider: eventLoopGroupProvider)
+        client.connect()
+        let value: Value
+        do {
+            value = try await operation(client)
+        } catch {
+            try? await client.shutdown()
+            throw error
+        }
+        try await client.shutdown()
+        return value
+    }
+
     /// connect to HTTP server
     public func connect() {
         do {
