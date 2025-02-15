@@ -91,7 +91,7 @@ public struct LocalFileSystem: FileProvider {
         do {
             let stat = try await self.fileIO.fileIO.stat(path: path)
             let isFolder = (stat.st_mode & S_IFMT) == S_IFDIR
-            #if os(Linux)
+            #if os(Linux) || os(Android)
             let modificationDate = Double(stat.st_mtim.tv_sec) + (Double(stat.st_mtim.tv_nsec) / 1_000_000_000.0)
             #else
             let modificationDate = Double(stat.st_mtimespec.tv_sec) + (Double(stat.st_mtimespec.tv_nsec) / 1_000_000_000.0)
