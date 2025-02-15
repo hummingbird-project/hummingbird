@@ -24,16 +24,6 @@ import FoundationEssentials
 import Foundation
 #endif
 
-#if canImport(Glibc)
-import Glibc
-#elseif canImport(Musl)
-import Musl
-#elseif canImport(Darwin)
-import Darwin.C
-#else
-#error("Unsupported platform")
-#endif
-
 /// Current date formatted cache service
 ///
 /// Getting the current date formatted is an expensive operation. This creates a task that will
