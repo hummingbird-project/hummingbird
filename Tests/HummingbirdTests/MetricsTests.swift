@@ -20,19 +20,24 @@ import XCTest
 
 final class TestMetrics: MetricsFactory {
     private let lock = NIOLock()
-    let counters = NIOLockedValueBox([String: CounterHandler]())
-    let meters = NIOLockedValueBox([String: MeterHandler]())
-    let recorders = NIOLockedValueBox([String: RecorderHandler]())
-    let timers = NIOLockedValueBox([String: TimerHandler]())
+    private let _counters = NIOLockedValueBox([String: CounterHandler]())
+    private let _meters = NIOLockedValueBox([String: MeterHandler]())
+    private let _recorders = NIOLockedValueBox([String: RecorderHandler]())
+    private let _timers = NIOLockedValueBox([String: TimerHandler]())
+
+    public var counters: [String: CounterHandler] { _counters.withLockedValue { $0 } }
+    public var meters: [String: MeterHandler] { _meters.withLockedValue { $0 } }
+    public var recorders: [String: RecorderHandler] { _recorders.withLockedValue { $0 } }
+    public var timers: [String: TimerHandler] { _timers.withLockedValue { $0 } }
 
     public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
-        self.counters.withLockedValue { counters in
+        self._counters.withLockedValue { counters in
             self.make(label: label, dimensions: dimensions, registry: &counters, maker: TestCounter.init)
         }
     }
 
     public func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
-        self.meters.withLockedValue { counters in
+        self._meters.withLockedValue { counters in
             self.make(label: label, dimensions: dimensions, registry: &counters, maker: TestMeter.init)
         }
     }
@@ -41,13 +46,13 @@ final class TestMetrics: MetricsFactory {
         let maker = { (label: String, dimensions: [(String, String)]) -> RecorderHandler in
             TestRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
         }
-        return self.recorders.withLockedValue { recorders in
+        return self._recorders.withLockedValue { recorders in
             self.make(label: label, dimensions: dimensions, registry: &recorders, maker: maker)
         }
     }
 
     public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
-        self.timers.withLockedValue { timers in
+        self._timers.withLockedValue { timers in
             self.make(label: label, dimensions: dimensions, registry: &timers, maker: TestTimer.init)
         }
     }
@@ -65,7 +70,7 @@ final class TestMetrics: MetricsFactory {
 
     func destroyCounter(_ handler: CounterHandler) {
         if let testCounter = handler as? TestCounter {
-            _ = self.counters.withLockedValue { counters in
+            _ = self._counters.withLockedValue { counters in
                 counters.removeValue(forKey: testCounter.label)
             }
         }
@@ -73,7 +78,7 @@ final class TestMetrics: MetricsFactory {
 
     func destroyMeter(_ handler: MeterHandler) {
         if let testMeter = handler as? TestMeter {
-            _ = self.counters.withLockedValue { counters in
+            _ = self._counters.withLockedValue { counters in
                 counters.removeValue(forKey: testMeter.label)
             }
         }
@@ -81,7 +86,7 @@ final class TestMetrics: MetricsFactory {
 
     func destroyRecorder(_ handler: RecorderHandler) {
         if let testRecorder = handler as? TestRecorder {
-            _ = self.recorders.withLockedValue { recorders in
+            _ = self._recorders.withLockedValue { recorders in
                 recorders.removeValue(forKey: testRecorder.label)
             }
         }
@@ -89,7 +94,7 @@ final class TestMetrics: MetricsFactory {
 
     func destroyTimer(_ handler: TimerHandler) {
         if let testTimer = handler as? TestTimer {
-            _ = self.timers.withLockedValue { timers in
+            _ = self._timers.withLockedValue { timers in
                 timers.removeValue(forKey: testTimer.label)
             }
         }
@@ -248,148 +253,210 @@ internal final class TestTimer: TimerHandler, Equatable {
     }
 }
 
-final class MetricsTests: XCTestCase {
-    static let testMetrics = TestMetrics()
-
-    override class func setUp() {
-        MetricsSystem.bootstrap(self.testMetrics)
+final class TaskUniqueTestMetrics: MetricsFactory {
+    @TaskLocal static var current: TestMetrics = .init()
+    func withUnique<Value: Sendable>(
+        isolation: isolated (any Actor)? = #isolation,
+        _ operation: () async throws -> Value
+    ) async throws -> Value {
+        try await TaskUniqueTestMetrics.$current.withValue(TestMetrics()) {
+            try await operation()
+        }
     }
 
-    func testCounter() async throws {
-        let router = Router()
-        router.middlewares.add(MetricsMiddleware())
-        router.get("/hello") { _, _ -> String in
-            "Hello"
-        }
-        let app = Application(responder: router.buildResponder())
-        try await app.test(.router) { client in
-            try await client.execute(uri: "/hello", method: .get) { _ in }
-        }
+    func makeCounter(label: String, dimensions: [(String, String)]) -> any CoreMetrics.CounterHandler {
+        TaskUniqueTestMetrics.current.makeCounter(label: label, dimensions: dimensions)
+    }
 
-        let counter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb.requests"] as? TestCounter)
-        XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
-        XCTAssertEqual(counter.dimensions[0].0, "http.route")
-        XCTAssertEqual(counter.dimensions[0].1, "/hello")
-        XCTAssertEqual(counter.dimensions[1].0, "http.request.method")
-        XCTAssertEqual(counter.dimensions[1].1, "GET")
+    public func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
+        TaskUniqueTestMetrics.current.makeMeter(label: label, dimensions: dimensions)
+    }
+
+    func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> any CoreMetrics.RecorderHandler {
+        TaskUniqueTestMetrics.current.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
+    }
+
+    func makeTimer(label: String, dimensions: [(String, String)]) -> any CoreMetrics.TimerHandler {
+        TaskUniqueTestMetrics.current.makeTimer(label: label, dimensions: dimensions)
+    }
+
+    func destroyCounter(_ handler: any CoreMetrics.CounterHandler) {
+        TaskUniqueTestMetrics.current.destroyCounter(handler)
+    }
+
+    func destroyMeter(_ handler: MeterHandler) {
+        TaskUniqueTestMetrics.current.destroyMeter(handler)
+    }
+
+    func destroyRecorder(_ handler: any CoreMetrics.RecorderHandler) {
+        TaskUniqueTestMetrics.current.destroyRecorder(handler)
+    }
+
+    func destroyTimer(_ handler: any CoreMetrics.TimerHandler) {
+        TaskUniqueTestMetrics.current.destroyTimer(handler)
+    }
+
+    public var counters: [String: CounterHandler] { TaskUniqueTestMetrics.current.counters }
+    public var meters: [String: MeterHandler] { TaskUniqueTestMetrics.current.meters }
+    public var recorders: [String: RecorderHandler] { TaskUniqueTestMetrics.current.recorders }
+    public var timers: [String: TimerHandler] { TaskUniqueTestMetrics.current.timers }
+
+}
+
+final class MetricsTests: XCTestCase {
+    static let testMetrics = {
+        let metrics = TaskUniqueTestMetrics()
+        MetricsSystem.bootstrap(metrics)
+        return metrics
+    }()
+
+    func testCounter() async throws {
+        try await Self.testMetrics.withUnique {
+            let router = Router()
+            router.middlewares.add(MetricsMiddleware())
+            router.get("/hello") { _, _ -> String in
+                "Hello"
+            }
+            let app = Application(responder: router.buildResponder())
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/hello", method: .get) { _ in }
+            }
+
+            let counter = try XCTUnwrap(Self.testMetrics.counters["hb.requests"] as? TestCounter)
+            XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
+            XCTAssertEqual(counter.dimensions[0].0, "http.route")
+            XCTAssertEqual(counter.dimensions[0].1, "/hello")
+            XCTAssertEqual(counter.dimensions[1].0, "http.request.method")
+            XCTAssertEqual(counter.dimensions[1].1, "GET")
+        }
     }
 
     func testError() async throws {
-        let router = Router()
-        router.middlewares.add(MetricsMiddleware())
-        router.get("/hello") { _, _ -> String in
-            throw HTTPError(.badRequest)
-        }
-        let app = Application(responder: router.buildResponder())
-        try await app.test(.router) { client in
-            try await client.execute(uri: "/hello", method: .get) { _ in }
-        }
+        try await Self.testMetrics.withUnique {
+            let router = Router()
+            router.middlewares.add(MetricsMiddleware())
+            router.get("/hello") { _, _ -> String in
+                throw HTTPError(.badRequest)
+            }
+            let app = Application(responder: router.buildResponder())
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/hello", method: .get) { _ in }
+            }
 
-        let counter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb.requests"] as? TestCounter)
-        XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
-        XCTAssertEqual(counter.dimensions[0].0, "http.route")
-        XCTAssertEqual(counter.dimensions[0].1, "/hello")
-        XCTAssertEqual(counter.dimensions[1].0, "http.request.method")
-        XCTAssertEqual(counter.dimensions[1].1, "GET")
-        XCTAssertEqual(counter.dimensions[2].0, "http.response.status_code")
-        XCTAssertEqual(counter.dimensions[2].1, "400")
-        let errorCounter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb.request.errors"] as? TestCounter)
-        XCTAssertEqual(errorCounter.values.withLockedValue { $0 }.count, 1)
-        XCTAssertEqual(errorCounter.values.withLockedValue { $0 }[0].1, 1)
-        XCTAssertEqual(errorCounter.dimensions[0].0, "http.route")
-        XCTAssertEqual(errorCounter.dimensions[0].1, "/hello")
-        XCTAssertEqual(errorCounter.dimensions[1].0, "http.request.method")
-        XCTAssertEqual(errorCounter.dimensions[1].1, "GET")
+            let counter = try XCTUnwrap(Self.testMetrics.counters["hb.requests"] as? TestCounter)
+            XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
+            XCTAssertEqual(counter.dimensions[0].0, "http.route")
+            XCTAssertEqual(counter.dimensions[0].1, "/hello")
+            XCTAssertEqual(counter.dimensions[1].0, "http.request.method")
+            XCTAssertEqual(counter.dimensions[1].1, "GET")
+            XCTAssertEqual(counter.dimensions[2].0, "http.response.status_code")
+            XCTAssertEqual(counter.dimensions[2].1, "400")
+            let errorCounter = try XCTUnwrap(Self.testMetrics.counters["hb.request.errors"] as? TestCounter)
+            XCTAssertEqual(errorCounter.values.withLockedValue { $0 }.count, 1)
+            XCTAssertEqual(errorCounter.values.withLockedValue { $0 }[0].1, 1)
+            XCTAssertEqual(errorCounter.dimensions[0].0, "http.route")
+            XCTAssertEqual(errorCounter.dimensions[0].1, "/hello")
+            XCTAssertEqual(errorCounter.dimensions[1].0, "http.request.method")
+            XCTAssertEqual(errorCounter.dimensions[1].1, "GET")
+        }
     }
 
     func testNotFoundError() async throws {
-        let router = Router()
-        router.middlewares.add(MetricsMiddleware())
-        router.get("/hello") { _, _ -> String in
-            "hello"
-        }
-        let app = Application(responder: router.buildResponder())
-        try await app.test(.router) { client in
-            try await client.execute(uri: "/hello2", method: .get) { _ in }
-        }
+        try await Self.testMetrics.withUnique {
+            let router = Router()
+            router.middlewares.add(MetricsMiddleware())
+            router.get("/hello") { _, _ -> String in
+                "hello"
+            }
+            let app = Application(responder: router.buildResponder())
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/hello2", method: .get) { _ in }
+            }
 
-        let counter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb.requests"] as? TestCounter)
-        XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
-        XCTAssertEqual(counter.dimensions[0].0, "http.route")
-        XCTAssertEqual(counter.dimensions[0].1, "NotFound")
-        XCTAssertEqual(counter.dimensions[1].0, "http.request.method")
-        XCTAssertEqual(counter.dimensions[1].1, "GET")
-        XCTAssertEqual(counter.dimensions[2].0, "http.response.status_code")
-        XCTAssertEqual(counter.dimensions[2].1, "404")
-        let errorCounter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb.request.errors"] as? TestCounter)
-        XCTAssertEqual(errorCounter.values.withLockedValue { $0 }.count, 1)
-        XCTAssertEqual(errorCounter.values.withLockedValue { $0 }[0].1, 1)
-        XCTAssertEqual(errorCounter.dimensions.count, 3)
-        XCTAssertEqual(errorCounter.dimensions[0].0, "http.route")
-        XCTAssertEqual(errorCounter.dimensions[0].1, "NotFound")
-        XCTAssertEqual(errorCounter.dimensions[1].0, "http.request.method")
-        XCTAssertEqual(errorCounter.dimensions[1].1, "GET")
-        XCTAssertEqual(errorCounter.dimensions[2].0, "error.type")
-        XCTAssertEqual(errorCounter.dimensions[2].1, "404")
+            let counter = try XCTUnwrap(Self.testMetrics.counters["hb.requests"] as? TestCounter)
+            XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
+            XCTAssertEqual(counter.dimensions[0].0, "http.route")
+            XCTAssertEqual(counter.dimensions[0].1, "NotFound")
+            XCTAssertEqual(counter.dimensions[1].0, "http.request.method")
+            XCTAssertEqual(counter.dimensions[1].1, "GET")
+            XCTAssertEqual(counter.dimensions[2].0, "http.response.status_code")
+            XCTAssertEqual(counter.dimensions[2].1, "404")
+            let errorCounter = try XCTUnwrap(Self.testMetrics.counters["hb.request.errors"] as? TestCounter)
+            XCTAssertEqual(errorCounter.values.withLockedValue { $0 }.count, 1)
+            XCTAssertEqual(errorCounter.values.withLockedValue { $0 }[0].1, 1)
+            XCTAssertEqual(errorCounter.dimensions.count, 3)
+            XCTAssertEqual(errorCounter.dimensions[0].0, "http.route")
+            XCTAssertEqual(errorCounter.dimensions[0].1, "NotFound")
+            XCTAssertEqual(errorCounter.dimensions[1].0, "http.request.method")
+            XCTAssertEqual(errorCounter.dimensions[1].1, "GET")
+            XCTAssertEqual(errorCounter.dimensions[2].0, "error.type")
+            XCTAssertEqual(errorCounter.dimensions[2].1, "404")
+        }
     }
 
     func testParameterEndpoint() async throws {
-        let router = Router()
-        router.middlewares.add(MetricsMiddleware())
-        router.get("/user/:id") { _, _ -> String in
-            throw HTTPError(.badRequest)
-        }
-        let app = Application(responder: router.buildResponder())
-        try await app.test(.router) { client in
-            try await client.execute(uri: "/user/765", method: .get) { _ in }
-        }
+        try await Self.testMetrics.withUnique {
+            let router = Router()
+            router.middlewares.add(MetricsMiddleware())
+            router.get("/user/:id") { _, _ -> String in
+                throw HTTPError(.badRequest)
+            }
+            let app = Application(responder: router.buildResponder())
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/user/765", method: .get) { _ in }
+            }
 
-        let counter = try XCTUnwrap(Self.testMetrics.counters.withLockedValue { $0 }["hb.request.errors"] as? TestCounter)
-        XCTAssertEqual(counter.values.withLockedValue { $0 }.count, 1)
-        XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
-        XCTAssertEqual(counter.dimensions.count, 3)
-        XCTAssertEqual(counter.dimensions[0].0, "http.route")
-        XCTAssertEqual(counter.dimensions[0].1, "/user/{id}")
-        XCTAssertEqual(counter.dimensions[1].0, "http.request.method")
-        XCTAssertEqual(counter.dimensions[1].1, "GET")
-        XCTAssertEqual(counter.dimensions[2].0, "error.type")
-        XCTAssertEqual(counter.dimensions[2].1, "400")
+            let counter = try XCTUnwrap(Self.testMetrics.counters["hb.request.errors"] as? TestCounter)
+            XCTAssertEqual(counter.values.withLockedValue { $0 }.count, 1)
+            XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
+            XCTAssertEqual(counter.dimensions.count, 3)
+            XCTAssertEqual(counter.dimensions[0].0, "http.route")
+            XCTAssertEqual(counter.dimensions[0].1, "/user/{id}")
+            XCTAssertEqual(counter.dimensions[1].0, "http.request.method")
+            XCTAssertEqual(counter.dimensions[1].1, "GET")
+            XCTAssertEqual(counter.dimensions[2].0, "error.type")
+            XCTAssertEqual(counter.dimensions[2].1, "400")
+        }
     }
 
     func testRecordingBodyWriteTime() async throws {
-        let router = Router()
-        router.middlewares.add(MetricsMiddleware())
-        router.get("/hello") { _, _ -> Response in
-            Response(
-                status: .ok,
-                body: .init { _ in
-                    try await Task.sleep(for: .milliseconds(5))
-                }
-            )
-        }
-        let app = Application(responder: router.buildResponder())
-        try await app.test(.router) { client in
-            try await client.execute(uri: "/hello", method: .get) { _ in }
-        }
+        try await Self.testMetrics.withUnique {
+            let router = Router()
+            router.middlewares.add(MetricsMiddleware())
+            router.get("/hello") { _, _ -> Response in
+                Response(
+                    status: .ok,
+                    body: .init { _ in
+                        try await Task.sleep(for: .milliseconds(5))
+                    }
+                )
+            }
+            let app = Application(responder: router.buildResponder())
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/hello", method: .get) { _ in }
+            }
 
-        let timer = try XCTUnwrap(Self.testMetrics.timers.withLockedValue { $0 }["http.server.request.duration"] as? TestTimer)
-        XCTAssertGreaterThan(timer.values.withLockedValue { $0 }[0].1, 5_000_000)
+            let timer = try XCTUnwrap(Self.testMetrics.timers["http.server.request.duration"] as? TestTimer)
+            XCTAssertGreaterThan(timer.values.withLockedValue { $0 }[0].1, 5_000_000)
+        }
     }
 
     func testActiveRequestsMetric() async throws {
-        let router = Router()
-        router.middlewares.add(MetricsMiddleware())
-        router.get("/hello") { _, _ -> Response in
-            Response(status: .ok)
-        }
-        let app = Application(responder: router.buildResponder())
-        try await app.test(.router) { client in
-            try await client.execute(uri: "/hello", method: .get) { _ in }
-        }
+        try await Self.testMetrics.withUnique {
+            let router = Router()
+            router.middlewares.add(MetricsMiddleware())
+            router.get("/hello") { _, _ -> Response in
+                Response(status: .ok)
+            }
+            let app = Application(responder: router.buildResponder())
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/hello", method: .get) { _ in }
+            }
 
-        let meter = try XCTUnwrap(Self.testMetrics.meters.withLockedValue { $0 }["http.server.active_requests"] as? TestMeter)
-        let values = meter.values.withLockedValue { $0 }.map { $0.1 }
-        let maxValue = values.max() ?? 0.0
-        XCTAssertGreaterThan(maxValue, 0.0)
+            let meter = try XCTUnwrap(Self.testMetrics.meters["http.server.active_requests"] as? TestMeter)
+            let values = meter.values.withLockedValue { $0 }.map { $0.1 }
+            let maxValue = values.max() ?? 0.0
+            XCTAssertGreaterThan(maxValue, 0.0)
+        }
     }
 }
