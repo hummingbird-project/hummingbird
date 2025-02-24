@@ -256,7 +256,6 @@ internal final class TestTimer: TimerHandler, Equatable {
 final class TaskUniqueTestMetrics: MetricsFactory {
     @TaskLocal static var current: TestMetrics = .init()
     func withUnique<Value: Sendable>(
-        isolation: isolated (any Actor)? = #isolation,
         _ operation: () async throws -> Value
     ) async throws -> Value {
         try await TaskUniqueTestMetrics.$current.withValue(TestMetrics()) {

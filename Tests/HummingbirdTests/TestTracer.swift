@@ -187,7 +187,6 @@ final class TaskUniqueTestTracer: Tracer {
     @TaskLocal static var current: TestTracer = .init()
 
     func withUnique<Value: Sendable>(
-        isolation: isolated (any Actor)? = #isolation,
         _ operation: () async throws -> Value
     ) async throws -> Value {
         try await TaskUniqueTestTracer.$current.withValue(TestTracer()) {
