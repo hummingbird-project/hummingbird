@@ -168,8 +168,7 @@ public struct MediaType: Sendable, CustomStringConvertible {
 
         static func ~= (_ lhs: Self, _ rhs: Self) -> Bool {
             switch (lhs, rhs) {
-            case (.any, _),
-                (_, .any):
+            case (.any, _), (_, .any):
                 true
             default:
                 lhs == rhs
