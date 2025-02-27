@@ -126,8 +126,8 @@ public struct MediaType: Sendable, CustomStringConvertible {
 
     /// Return if media type matches the input
     public func isType(_ type: MediaType) -> Bool {
-        guard self.type == type.type,
-            self.subType == type.subType || type.subType == "*"
+        guard
+            (self.type == type.type && (self.subType == type.subType || type.subType == "*")) || type.type == .any
         else {
             return false
         }
