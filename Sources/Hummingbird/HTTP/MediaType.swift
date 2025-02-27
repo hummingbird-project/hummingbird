@@ -154,7 +154,7 @@ public struct MediaType: Sendable, CustomStringConvertible {
 
     /// Media type categories
     public struct Category: Sendable, Equatable, RawRepresentable, CustomStringConvertible {
-        internal enum Internal: String, Sendable, Equatable {
+        internal enum Internal: String, Sendable {
             case application
             case audio
             case example
@@ -166,15 +166,6 @@ public struct MediaType: Sendable, CustomStringConvertible {
             case text
             case video
             case any
-
-            public static func == (_ lhs: Self, _ rhs: Self) -> Bool {
-                switch (lhs, rhs) {
-                case (.any, _), (_, .any):
-                    return true
-                default:
-                    return lhs.rawValue == rhs.rawValue
-                }
-            }
         }
 
         let value: Internal
