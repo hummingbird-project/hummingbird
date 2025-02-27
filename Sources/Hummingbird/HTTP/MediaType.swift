@@ -126,8 +126,8 @@ public struct MediaType: Sendable, CustomStringConvertible {
 
     /// Return if media type matches the input
     public func isType(_ type: MediaType) -> Bool {
-        guard
-            (self.type == type.type && (self.subType == type.subType || type.subType == "*")) || type.type == .any
+        guard self.type ~= type.type,
+            self.subType == type.subType || type.subType == "*"
         else {
             return false
         }
@@ -153,50 +153,30 @@ public struct MediaType: Sendable, CustomStringConvertible {
     }
 
     /// Media type categories
-    public struct Category: Sendable, Equatable, RawRepresentable, CustomStringConvertible {
-        internal enum Internal: String, Sendable {
-            case application
-            case audio
-            case example
-            case font
-            case image
-            case message
-            case model
-            case multipart
-            case text
-            case video
-            case any
+    public enum Category: String, Sendable, Equatable, RawRepresentable, CustomStringConvertible {
+        case application
+        case audio
+        case example
+        case font
+        case image
+        case message
+        case model
+        case multipart
+        case text
+        case video
+        case any
+
+        static func ~= (_ lhs: Self, _ rhs: Self) -> Bool {
+            switch (lhs, rhs) {
+            case (.any, _),
+                (_, .any):
+                true
+            default:
+                lhs == rhs
+            }
         }
 
-        let value: Internal
-        init(value: Internal) {
-            self.value = value
-        }
-
-        public init?(rawValue: String) {
-            guard let value = Internal(rawValue: rawValue) else { return nil }
-            self.value = value
-        }
-
-        public var rawValue: String {
-            self.value.rawValue
-        }
-
-        public var description: String {
-            self.value.rawValue
-        }
-
-        public static var application: Self { .init(value: .application) }
-        public static var audio: Self { .init(value: .audio) }
-        public static var example: Self { .init(value: .example) }
-        public static var font: Self { .init(value: .font) }
-        public static var image: Self { .init(value: .image) }
-        public static var message: Self { .init(value: .message) }
-        public static var model: Self { .init(value: .model) }
-        public static var multipart: Self { .init(value: .multipart) }
-        public static var text: Self { .init(value: .text) }
-        public static var video: Self { .init(value: .video) }
-        public static var any: Self { .init(value: .any) }
+        public var description: String { rawValue }
     }
 
     static let tSpecial = Set<Unicode.Scalar>(["(", ")", "<", ">", "@", ",", ";", ":", "\\", "\"", "/", "[", "]", "?", ".", "="])
