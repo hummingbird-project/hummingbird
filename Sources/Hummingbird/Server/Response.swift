@@ -18,7 +18,7 @@ extension Response {
     /// Specifies the type of redirect that the client should receive.
     public enum RedirectType {
         /// `301 moved permanently`: The URL of the requested resource has been changed permanently.
-        /// The new URL is iven in the response.
+        /// The new URL is given in the response.
         case permanent
         /// `302 found`: This response code means that the URI of requested resource has been changed
         /// temporarily. Further changes in the URI might be made in the future. Therefore,
