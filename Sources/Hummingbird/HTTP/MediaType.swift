@@ -126,7 +126,7 @@ public struct MediaType: Sendable, CustomStringConvertible {
 
     /// Return if media type matches the input
     public func isType(_ type: MediaType) -> Bool {
-        guard self.type == type.type,
+        guard self.type ~= type.type,
             self.subType == type.subType || type.subType == "*"
         else {
             return false
@@ -154,7 +154,7 @@ public struct MediaType: Sendable, CustomStringConvertible {
 
     /// Media type categories
     public struct Category: Sendable, Equatable, RawRepresentable, CustomStringConvertible {
-        internal enum Internal: String, Sendable, Equatable {
+        internal enum Internal: String, Sendable {
             case application
             case audio
             case example
@@ -166,15 +166,6 @@ public struct MediaType: Sendable, CustomStringConvertible {
             case text
             case video
             case any
-
-            public static func == (_ lhs: Self, _ rhs: Self) -> Bool {
-                switch (lhs, rhs) {
-                case (.any, _), (_, .any):
-                    return true
-                default:
-                    return lhs.rawValue == rhs.rawValue
-                }
-            }
         }
 
         let value: Internal
@@ -193,6 +184,15 @@ public struct MediaType: Sendable, CustomStringConvertible {
 
         public var description: String {
             self.value.rawValue
+        }
+
+        static func ~= (_ lhs: Self, _ rhs: Self) -> Bool {
+            switch (lhs.value, rhs.value) {
+            case (.any, _), (_, .any):
+                true
+            default:
+                lhs.value == rhs.value
+            }
         }
 
         public static var application: Self { .init(value: .application) }
