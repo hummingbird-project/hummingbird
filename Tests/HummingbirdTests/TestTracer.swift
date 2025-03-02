@@ -180,3 +180,63 @@ final class TestSpan: Span {
 
 extension TestTracer: @unchecked Sendable {}  // only intended for single threaded testing
 extension TestSpan: @unchecked Sendable {}  // only intended for single threaded testing
+
+final class TaskUniqueTestTracer: Tracer {
+    typealias Span = TestTracer.Span
+
+    @TaskLocal static var current: TestTracer = .init()
+
+    func withUnique<Value: Sendable>(
+        _ operation: () async throws -> Value
+    ) async throws -> Value {
+        try await TaskUniqueTestTracer.$current.withValue(TestTracer()) {
+            try await operation()
+        }
+    }
+
+    var spans: [TestSpan] {
+        TaskUniqueTestTracer.current.spans
+    }
+    var onEndSpan: (TestSpan) -> Void {
+        get { TaskUniqueTestTracer.current.onEndSpan }
+        set { TaskUniqueTestTracer.current.onEndSpan = newValue }
+    }
+
+    func startSpan<Instant>(
+        _ operationName: String,
+        context: @autoclosure () -> ServiceContextModule.ServiceContext,
+        ofKind kind: Tracing.SpanKind,
+        at instant: @autoclosure () -> Instant,
+        function: String,
+        file fileID: String,
+        line: UInt
+    ) -> Span where Instant: Tracing.TracerInstant {
+        TaskUniqueTestTracer.current.startSpan(
+            operationName,
+            context: context(),
+            ofKind: kind,
+            at: instant(),
+            function: function,
+            file: fileID,
+            line: line
+        )
+    }
+
+    func activeSpan(identifiedBy context: ServiceContextModule.ServiceContext) -> Span? {
+        TaskUniqueTestTracer.current.activeSpan(identifiedBy: context)
+    }
+
+    func forceFlush() {
+        TaskUniqueTestTracer.current.forceFlush()
+    }
+
+    func extract<Carrier, Extract>(_ carrier: Carrier, into context: inout ServiceContextModule.ServiceContext, using extractor: Extract)
+    where Carrier == Extract.Carrier, Extract: Instrumentation.Extractor {
+        TaskUniqueTestTracer.current.extract(carrier, into: &context, using: extractor)
+    }
+
+    func inject<Carrier, Inject>(_ context: ServiceContextModule.ServiceContext, into carrier: inout Carrier, using injector: Inject)
+    where Carrier == Inject.Carrier, Inject: Instrumentation.Injector {
+        TaskUniqueTestTracer.current.inject(context, into: &carrier, using: injector)
+    }
+}
