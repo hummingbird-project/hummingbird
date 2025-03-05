@@ -83,7 +83,7 @@ targets: [
   .executableTarget(
     name: "MyApp",
     dependencies: [
-        .product(name: "Hummingbird"),
+        .product(name: "Hummingbird", package: "hummingbird"),
     ]),
 ]
 ```
