@@ -32,8 +32,8 @@ public protocol ChildRequestContext<ParentContext>: RequestContext where Source 
 }
 
 extension ChildRequestContext {
-    /// ChildRequestContext can never to created from it Source `Never` so add preconditionFailure
     public init(source: Source) {
+        // ChildRequestContext can never be created from it's Source `Never` so add preconditionFailure
         preconditionFailure("Cannot reach this.")
     }
 }

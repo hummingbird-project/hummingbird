@@ -16,7 +16,7 @@ import HummingbirdCore
 import NIOSSL
 
 extension HTTPServerBuilder {
-    ///  Build server supporting HTTP with TLS
+    /// Build server supporting HTTP with TLS
     ///
     /// Use in ``Hummingbird/Application`` initialization.
     /// ```
@@ -25,6 +25,7 @@ extension HTTPServerBuilder {
     ///     server: .tls(.http1(), tlsConfiguration: tlsConfiguration)
     /// )
     /// ```
+    ///
     /// - Parameters:
     ///   - base: Base child channel to wrap with TLS
     ///   - tlsConfiguration: TLS configuration
@@ -38,15 +39,23 @@ extension HTTPServerBuilder {
         }
     }
 
-    ///  Build server supporting HTTP with TLS
+    /// Build server supporting HTTP with TLS
     ///
-    /// Use in ``Hummingbird/Application`` initialization.
-    /// ```
-    /// let app = Application(
-    ///     router: router,
-    ///     server: .tls(.http1(), tlsConfiguration: tlsConfiguration)
-    /// )
-    /// ```
+    ///  Use in ``Hummingbird/Application`` initialization.
+    ///
+    ///  This version of the function adds extra configuration including a custom verification callback
+    ///  which can be used to override the standard certificate verification.
+    ///
+    ///  ```
+    ///  let app = Application(
+    ///    router: router,
+    ///    server: .tls(.http1(), configuration: .init(
+    ///         tlsConfiguration: tlsConfiguration,
+    ///         customAsyncVerificationCallback: { certificates in .certificateVerified }
+    ///    ))
+    ///  )
+    ///  ```
+    ///
     /// - Parameters:
     ///   - base: Base child channel to wrap with TLS
     ///   - configuration: TLS channel configuration

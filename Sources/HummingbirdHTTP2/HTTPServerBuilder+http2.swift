@@ -17,7 +17,7 @@ import NIOCore
 import NIOSSL
 
 extension HTTPServerBuilder {
-    ///  Build HTTP channel with HTTP2 upgrade
+    /// Build HTTP channel with HTTP2 upgrade
     ///
     /// Use in ``Hummingbird/Application`` initialization.
     /// ```
@@ -45,7 +45,7 @@ extension HTTPServerBuilder {
         }
     }
 
-    ///  Build HTTP channel with HTTP2 upgrade
+    /// Build HTTP channel with HTTP2 upgrade
     ///
     /// Use in ``Hummingbird/Application`` initialization.
     /// ```
@@ -71,7 +71,7 @@ extension HTTPServerBuilder {
         }
     }
 
-    ///  Build HTTP channel with HTTP2 upgrade
+    /// Build HTTP channel with HTTP2 upgrade
     ///
     /// Use in ``Hummingbird/Application`` initialization.
     /// ```
@@ -81,7 +81,7 @@ extension HTTPServerBuilder {
     /// )
     /// ```
     /// - Parameters:
-    ///   - tlsConfiguration: TLS configuration
+    ///   - tlsChannelConfiguration: TLS channel configuration
     ///   - configuration: HTTP2 Upgrade channel configuration
     /// - Returns: HTTPChannelHandler builder
     public static func http2Upgrade(
