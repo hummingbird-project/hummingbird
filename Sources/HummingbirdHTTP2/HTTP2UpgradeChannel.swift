@@ -40,7 +40,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
         self.http1.responder
     }
 
-    ///  Initialize HTTP2Channel
+    /// Initialize HTTP2Channel
     /// - Parameters:
     ///   - tlsConfiguration: TLS configuration
     ///   - additionalChannelHandlers: Additional channel handlers to add to stream channel pipeline after HTTP part decoding and
@@ -66,7 +66,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
         )
     }
 
-    ///  Initialize HTTP2UpgradeChannel
+    /// Initialize HTTP2UpgradeChannel
     /// - Parameters:
     ///   - tlsConfiguration: TLS configuration
     ///   - configuration: HTTP2 channel configuration
@@ -84,9 +84,9 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
         self.http2 = HTTP2Channel(responder: responder, configuration: configuration)
     }
 
-    ///  Initialize HTTP2UpgradeChannel
+    /// Initialize HTTP2UpgradeChannel
     /// - Parameters:
-    ///   - tlsConfiguration: TLS configuration
+    ///   - tlsChannelConfiguration: TLS channel configuration
     ///   - configuration: HTTP2 channel configuration
     ///   - responder: Function returning a HTTP response for a HTTP request
     public init(
