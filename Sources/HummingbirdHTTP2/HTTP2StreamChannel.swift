@@ -68,15 +68,45 @@ struct HTTP2StreamChannel: ServerChildChannel {
 
                     // read first part, verify it is a head
                     guard let part = try await iterator.next() else { return }
-                    guard case .head(let head) = part else {
+                    guard case .head(var head) = part else {
                         throw HTTPChannelError.unexpectedHTTPPart(part)
                     }
-                    let request = Request(
-                        head: head,
-                        bodyIterator: iterator
-                    )
-                    let responseWriter = ResponseWriter(outbound: outbound)
-                    try await self.responder(request, responseWriter, asyncChannel.channel)
+                    while true {
+                        let request = Request(
+                            head: head,
+                            bodyIterator: iterator
+                        )
+                        let responseWriter = ResponseWriter(outbound: outbound)
+                        do {
+                            try await self.responder(request, responseWriter, asyncChannel.channel)
+                        } catch {
+                            throw error
+                        }
+                        if request.headers[.connection] == "close" {
+                            return
+                        }
+                        
+                        // Flush current request
+                        // read until we don't have a body part
+                        var part: HTTPRequestPart?
+                        while true {
+                            part = try await iterator.next()
+                            guard case .body = part else { break }
+                        }
+                        // if we have an end then read the next part
+                        if case .end = part {
+                            part = try await iterator.next()
+                        }
+                        
+                        // if part is nil break out of loop
+                        guard let part else {
+                            break
+                        }
+                        
+                        // part should be a head, if not throw error
+                        guard case .head(let newHead) = part else { throw HTTPChannelError.unexpectedHTTPPart(part) }
+                        head = newHead
+                    }
                 }
             } onCancel: {
                 asyncChannel.channel.close(mode: .input, promise: nil)
