@@ -15,6 +15,9 @@
 /// Associates cache control values with filename
 public struct CacheControl: Sendable {
     /// Cache control directive
+    ///
+    /// Original CacheControl directive value was a fixed enum. This has been replaced
+    /// with CacheControl.CacheControlValue which is more extensible
     @_documentation(visibility: internal)
     public enum Value: CustomStringConvertible, Sendable {
         case noStore
