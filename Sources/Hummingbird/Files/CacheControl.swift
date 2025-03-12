@@ -15,6 +15,7 @@
 /// Associates cache control values with filename
 public struct CacheControl: Sendable {
     /// Cache control directive
+    @_documentation(visibility: internal)
     public enum Value: CustomStringConvertible, Sendable {
         case noStore
         case noCache
