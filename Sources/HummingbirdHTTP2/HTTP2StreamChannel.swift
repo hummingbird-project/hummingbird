@@ -77,9 +77,9 @@ struct HTTP2StreamChannel: ServerChildChannel {
                     )
                     let responseWriter = ResponseWriter(outbound: outbound)
                     try await self.responder(request, responseWriter, asyncChannel.channel)
-                    // Temporary fix: wait until the client send a RST_STREAM (to end inbound). When we
-                    // receive that we can assume that the response has been fully written. Ideally
-                    // this shouldnt be necessary as calling write should guarantee data is written
+                    // Temporary fix: wait until the client ends inbound stream. When inbound ends
+                    // we can assume that the response has been fully written. Ideally this
+                    // shouldnt be necessary as calling write should guarantee data is written
                     // TODO: Remove this once SwiftNIO code is working
                     while try await iterator.next() != nil {}
                 }
