@@ -12,7 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-public struct URLEncodedFormError: Error {
+/// Error thrown from parsing URLEncoded forms
+public struct URLEncodedFormError: Error, CustomStringConvertible {
     public struct Code: Sendable, Equatable {
         fileprivate enum Internal: Equatable {
             case duplicateKeys
@@ -55,6 +56,20 @@ public struct URLEncodedFormError: Error {
     }
 }
 
+extension URLEncodedFormError {
+    public var description: String {
+        switch self.code.value {
+        case .duplicateKeys: "Found duplicate keys with name '\(self.value)'"
+        case .addingToInvalidType: "Adding array or dictionary value to non array or dictionary value '\(self.value)'"
+        case .failedToPercentDecode: "Failed to percent decode '\(self.value)'"
+        case .corruptKeyValue: "Parsing dictionary key value failed '\(self.value)'"
+        case .notSupported: "URLEncoded form structure not supported '\(self.value)'"
+        case .invalidArrayIndex: "Invalid array index '\(self.value)'"
+        case .unexpectedError:
+            "Unexpected error with '\(self.value)' please add an issue at https://github.com/hummingbird-project/hummingbird/issues"
+        }
+    }
+}
 /// Internal representation of URL encoded form data used by both encode and decode
 enum URLEncodedFormNode: CustomStringConvertible, Equatable {
     /// holds a value
@@ -142,7 +157,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
             }
         case (.array(let array), .arrayWithIndices(let index)):
             guard keys.count == 0, array.values.count == index else {
-                throw URLEncodedFormError(code: .invalidArrayIndex, value: key)
+                throw URLEncodedFormError(code: .invalidArrayIndex, value: "\(key)[\(index)]")
             }
             array.values.append(.leaf(value))
         case (_, .arrayWithIndices), (_, .array):

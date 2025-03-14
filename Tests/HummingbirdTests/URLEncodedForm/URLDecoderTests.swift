@@ -141,7 +141,7 @@ final class URLDecodedFormDecoderTests: XCTestCase {
                 return
             }
             XCTAssertEqual(error.code, .invalidArrayIndex)
-            XCTAssertEqual(error.value, "arr")
+            XCTAssertEqual(error.value, "arr[2]")
         }
     }
 
@@ -295,9 +295,17 @@ final class URLDecodedFormDecoderTests: XCTestCase {
         self.testForm(ArrayDecoding(array: [], map: [:], a: 3), query: "a=3")
     }
 
-    func testDecodeErrors() throws {
+    func testParsingErrors() throws {
         struct Input1: Decodable {}
         XCTAssertThrowsError(try URLEncodedFormDecoder().decode(Input1.self, from: "someField=1&someField=2")) { error in
+            guard let error = try? XCTUnwrap(error as? URLEncodedFormError) else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(error.code, .duplicateKeys)
+            XCTAssertEqual(error.value, "someField")
+        }
+        XCTAssertThrowsError(try URLEncodedFormDecoder().decode(Input1.self, from: "someField[]=1&someField=2")) { error in
             guard let error = try? XCTUnwrap(error as? URLEncodedFormError) else {
                 XCTFail()
                 return
@@ -320,6 +328,14 @@ final class URLDecodedFormDecoderTests: XCTestCase {
             }
             XCTAssertEqual(error.code, .addingToInvalidType)
             XCTAssertEqual(error.value, "someField")
+        }
+        XCTAssertThrowsError(try URLEncodedFormDecoder().decode(Input1.self, from: "someField[=2")) { error in
+            guard let error = try? XCTUnwrap(error as? URLEncodedFormError) else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(error.code, .corruptKeyValue)
+            XCTAssertEqual(error.value, "someField[")
         }
     }
 }
