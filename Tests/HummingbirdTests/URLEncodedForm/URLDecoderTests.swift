@@ -280,4 +280,38 @@ final class URLDecodedFormDecoderTests: XCTestCase {
 
         self.testForm(test, query: "site=https://hummingbird.codes")
     }
+
+    func testDecodingEmptyArrayAndMap() throws {
+        struct ArrayDecoding: Decodable, Equatable {
+            let array: [Int]
+            let map: [String: Int]
+            let a: Int
+        }
+        self.testForm(ArrayDecoding(array: [], map: [:], a: 3), query: "a=3")
+    }
+
+    func testDecodeErrors() throws {
+        struct Input1: Decodable {}
+        XCTAssertThrowsError(try URLEncodedFormDecoder().decode(Input1.self, from: "someField=1&someField=2")) { error in
+            guard case URLEncodedFormNode.Error.failedToDecode(let message) = error else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(message, "Duplicate keys with name 'someField'")
+        }
+        XCTAssertThrowsError(try URLEncodedFormDecoder().decode(Input1.self, from: "someField=1&someField[]=2")) { error in
+            guard case URLEncodedFormNode.Error.failedToDecode(let message) = error else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(message, "Trying to add array value to non array type 'someField'")
+        }
+        XCTAssertThrowsError(try URLEncodedFormDecoder().decode(Input1.self, from: "someField=1&someField[test]=2")) { error in
+            guard case URLEncodedFormNode.Error.failedToDecode(let message) = error else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(message, "Trying to add dictionary value to non dictionary type 'someField'")
+        }
+    }
 }

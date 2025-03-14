@@ -20,6 +20,8 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
     case map(Map)
     /// holds an array of nodes
     case array(Array)
+    // empty node
+    case empty
 
     enum Error: Swift.Error, Equatable {
         case failedToDecode(String? = nil)
@@ -52,7 +54,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
                 guard let keys = KeyParser.parse(key) else { throw Error.failedToDecode("Unexpected key value") }
                 guard let value = NodeValue(percentEncoded: after) else { throw Error.failedToDecode("Failed to percent decode \(after)") }
 
-                try node.addValue(keys: keys[...], value: value)
+                try node.addValue(keys: keys[...], value: value, key: key)
             }
         }
         return node
@@ -62,7 +64,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
     /// - Parameters:
     ///   - keys: Array of key parser types (array or map)
     ///   - value: value to add to leaf node
-    private func addValue(keys: ArraySlice<KeyParser.KeyType>, value: NodeValue) throws {
+    private func addValue(keys: ArraySlice<KeyParser.KeyType>, value: NodeValue, key: String) throws {
         /// function for create `URLEncodedFormNode` from `KeyParser.Key.Type`
         func createNode(from key: KeyParser.KeyType) -> URLEncodedFormNode {
             switch key {
@@ -81,15 +83,15 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
         case (.map(let map), .map(let key)):
             let key = String(key)
             if keys.count == 0 {
-                guard map.values[key] == nil else { throw Error.failedToDecode() }
+                guard map.values[key] == nil else { throw Error.failedToDecode("Duplicate keys with name '\(key)'") }
                 map.values[key] = .leaf(value)
             } else {
                 if let node = map.values[key] {
-                    try node.addValue(keys: keys, value: value)
+                    try node.addValue(keys: keys, value: value, key: key)
                 } else {
                     let node = createNode(from: keys.first!)
                     map.values[key] = node
-                    try node.addValue(keys: keys, value: value)
+                    try node.addValue(keys: keys, value: value, key: key)
                 }
             }
         case (.array(let array), .array):
@@ -104,6 +106,10 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
                 throw Error.invalidArrayIndex(index)
             }
             array.values.append(.leaf(value))
+        case (_, .arrayWithIndices), (_, .array):
+            throw Error.failedToDecode("Trying to add array value to non array type '\(key)'")
+        case (_, .map):
+            throw Error.failedToDecode("Trying to add dictionary value to non dictionary type '\(key)'")
         default:
             throw Error.failedToDecode()
         }
@@ -130,6 +136,8 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
                     $0.value.encode("\(prefix)[\($0.key)]")
                 }.joined(separator: "&")
             }
+        case .empty:
+            return ""
         }
     }
 
