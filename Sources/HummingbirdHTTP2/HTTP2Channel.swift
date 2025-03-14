@@ -112,7 +112,7 @@ internal struct HTTP2Channel: ServerChildChannel {
                 }
             }
         } catch {
-            logger.error("Error handling inbound connection for HTTP2 handler: \(error)")
+            logger.debug("Error handling inbound connection for HTTP2 handler: \(error)")
         }
     }
 }

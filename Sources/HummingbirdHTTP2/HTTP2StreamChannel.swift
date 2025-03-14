@@ -77,6 +77,10 @@ struct HTTP2StreamChannel: ServerChildChannel {
                     )
                     let responseWriter = ResponseWriter(outbound: outbound)
                     try await self.responder(request, responseWriter, asyncChannel.channel)
+                    // Wait until inbound stream is finished. NIO will end the stream once
+                    // it receives the HTTP part `.end`. This shouldnt be necessary as calling
+                    // write should guarantee data is written
+                    while try await iterator.next() != nil {}
                 }
             } onCancel: {
                 asyncChannel.channel.close(mode: .input, promise: nil)
