@@ -12,6 +12,49 @@
 //
 //===----------------------------------------------------------------------===//
 
+public struct URLEncodedFormError: Error {
+    public struct Code: Sendable, Equatable {
+        fileprivate enum Internal: Equatable {
+            case duplicateKeys
+            case addingToInvalidType
+            case failedToPercentDecode
+            case corruptKeyValue
+            case notSupported
+            case invalidArrayIndex
+            case unexpectedError
+        }
+        fileprivate let value: Internal
+
+        /// encoded form has duplicate keys in it
+        public static var duplicateKeys: Self { .init(value: .duplicateKeys) }
+        /// trying to add an array or dictionary value to something isnt an array of dictionary
+        public static var addingToInvalidType: Self { .init(value: .addingToInvalidType) }
+        /// failed to percent decode key or value
+        public static var failedToPercentDecode: Self { .init(value: .failedToPercentDecode) }
+        /// corrupt dictionary key in form data
+        public static var corruptKeyValue: Self { .init(value: .corruptKeyValue) }
+        /// Form structure not supported eg arrays of arrays
+        public static var notSupported: Self { .init(value: .notSupported) }
+        /// Array includes an invalid array index
+        public static var invalidArrayIndex: Self { .init(value: .invalidArrayIndex) }
+        /// Unexpected errpr
+        public static var unexpectedError: Self { .init(value: .unexpectedError) }
+    }
+
+    public let code: Code
+    public let value: String
+
+    init(code: Code, value: String) {
+        self.code = code
+        self.value = value
+    }
+
+    init(code: Code, value: Substring) {
+        self.code = code
+        self.value = .init(value)
+    }
+}
+
 /// Internal representation of URL encoded form data used by both encode and decode
 enum URLEncodedFormNode: CustomStringConvertible, Equatable {
     /// holds a value
@@ -22,12 +65,6 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
     case array(Array)
     // empty node
     case empty
-
-    enum Error: Swift.Error, Equatable {
-        case failedToDecode(String? = nil)
-        case notSupported
-        case invalidArrayIndex(Int)
-    }
 
     /// Initialize node from URL encoded form data
     /// - Parameter string: URL encoded form data
@@ -49,10 +86,12 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
                 let before = element[..<equals].removingURLPercentEncoding()
                 let afterEquals = element.index(after: equals)
                 let after = element[afterEquals...].replacingOccurrences(of: "+", with: " ")
-                guard let key = before else { throw Error.failedToDecode("Failed to percent decode \(element)") }
+                guard let key = before else { throw URLEncodedFormError(code: .failedToPercentDecode, value: element[..<equals]) }
 
-                guard let keys = KeyParser.parse(key) else { throw Error.failedToDecode("Unexpected key value") }
-                guard let value = NodeValue(percentEncoded: after) else { throw Error.failedToDecode("Failed to percent decode \(after)") }
+                guard let keys = KeyParser.parse(key) else { throw URLEncodedFormError(code: .corruptKeyValue, value: key) }
+                guard let value = NodeValue(percentEncoded: after) else {
+                    throw URLEncodedFormError(code: .failedToPercentDecode, value: after)
+                }
 
                 try node.addValue(keys: keys[...], value: value, key: key)
             }
@@ -83,7 +122,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
         case (.map(let map), .map(let key)):
             let key = String(key)
             if keys.count == 0 {
-                guard map.values[key] == nil else { throw Error.failedToDecode("Duplicate keys with name '\(key)'") }
+                guard map.values[key] == nil else { throw URLEncodedFormError(code: .duplicateKeys, value: key) }
                 map.values[key] = .leaf(value)
             } else {
                 if let node = map.values[key] {
@@ -99,19 +138,19 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
                 array.values.append(.leaf(value))
             } else {
                 // currently don't support arrays and maps inside arrays
-                throw Error.notSupported
+                throw URLEncodedFormError(code: .notSupported, value: key)
             }
         case (.array(let array), .arrayWithIndices(let index)):
             guard keys.count == 0, array.values.count == index else {
-                throw Error.invalidArrayIndex(index)
+                throw URLEncodedFormError(code: .invalidArrayIndex, value: key)
             }
             array.values.append(.leaf(value))
         case (_, .arrayWithIndices), (_, .array):
-            throw Error.failedToDecode("Trying to add array value to non array type '\(key)'")
+            throw URLEncodedFormError(code: .addingToInvalidType, value: key)
         case (_, .map):
-            throw Error.failedToDecode("Trying to add dictionary value to non dictionary type '\(key)'")
+            throw URLEncodedFormError(code: .addingToInvalidType, value: key)
         default:
-            throw Error.failedToDecode()
+            throw URLEncodedFormError(code: .unexpectedError, value: key)
         }
     }
 

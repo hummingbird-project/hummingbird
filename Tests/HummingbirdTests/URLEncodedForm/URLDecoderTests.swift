@@ -136,7 +136,12 @@ final class URLDecodedFormDecoderTests: XCTestCase {
         // incorrect indices
         let query = "arr[0]=2&arr[2]=4"
         XCTAssertThrowsError(try decoder.decode(Test.self, from: query)) { error in
-            XCTAssertEqual(error as? URLEncodedFormNode.Error, URLEncodedFormNode.Error.invalidArrayIndex(2))
+            guard let error = try? XCTUnwrap(error as? URLEncodedFormError) else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(error.code, .invalidArrayIndex)
+            XCTAssertEqual(error.value, "arr")
         }
     }
 
@@ -293,25 +298,28 @@ final class URLDecodedFormDecoderTests: XCTestCase {
     func testDecodeErrors() throws {
         struct Input1: Decodable {}
         XCTAssertThrowsError(try URLEncodedFormDecoder().decode(Input1.self, from: "someField=1&someField=2")) { error in
-            guard case URLEncodedFormNode.Error.failedToDecode(let message) = error else {
+            guard let error = try? XCTUnwrap(error as? URLEncodedFormError) else {
                 XCTFail()
                 return
             }
-            XCTAssertEqual(message, "Duplicate keys with name 'someField'")
+            XCTAssertEqual(error.code, .duplicateKeys)
+            XCTAssertEqual(error.value, "someField")
         }
         XCTAssertThrowsError(try URLEncodedFormDecoder().decode(Input1.self, from: "someField=1&someField[]=2")) { error in
-            guard case URLEncodedFormNode.Error.failedToDecode(let message) = error else {
+            guard let error = try? XCTUnwrap(error as? URLEncodedFormError) else {
                 XCTFail()
                 return
             }
-            XCTAssertEqual(message, "Trying to add array value to non array type 'someField'")
+            XCTAssertEqual(error.code, .addingToInvalidType)
+            XCTAssertEqual(error.value, "someField")
         }
         XCTAssertThrowsError(try URLEncodedFormDecoder().decode(Input1.self, from: "someField=1&someField[test]=2")) { error in
-            guard case URLEncodedFormNode.Error.failedToDecode(let message) = error else {
+            guard let error = try? XCTUnwrap(error as? URLEncodedFormError) else {
                 XCTFail()
                 return
             }
-            XCTAssertEqual(message, "Trying to add dictionary value to non dictionary type 'someField'")
+            XCTAssertEqual(error.code, .addingToInvalidType)
+            XCTAssertEqual(error.value, "someField")
         }
     }
 }
