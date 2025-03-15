@@ -136,7 +136,12 @@ final class URLDecodedFormDecoderTests: XCTestCase {
         // incorrect indices
         let query = "arr[0]=2&arr[2]=4"
         XCTAssertThrowsError(try decoder.decode(Test.self, from: query)) { error in
-            XCTAssertEqual(error as? URLEncodedFormNode.Error, URLEncodedFormNode.Error.invalidArrayIndex(2))
+            guard let error = try? XCTUnwrap(error as? URLEncodedFormError) else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(error.code, .invalidArrayIndex)
+            XCTAssertEqual(error.value, "arr[2]")
         }
     }
 
@@ -279,5 +284,58 @@ final class URLDecodedFormDecoderTests: XCTestCase {
         let test = URLForm(site: URL(string: "https://hummingbird.codes")!)
 
         self.testForm(test, query: "site=https://hummingbird.codes")
+    }
+
+    func testDecodingEmptyArrayAndMap() throws {
+        struct ArrayDecoding: Decodable, Equatable {
+            let array: [Int]
+            let map: [String: Int]
+            let a: Int
+        }
+        self.testForm(ArrayDecoding(array: [], map: [:], a: 3), query: "a=3")
+    }
+
+    func testParsingErrors() throws {
+        struct Input1: Decodable {}
+        XCTAssertThrowsError(try URLEncodedFormDecoder().decode(Input1.self, from: "someField=1&someField=2")) { error in
+            guard let error = try? XCTUnwrap(error as? URLEncodedFormError) else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(error.code, .duplicateKeys)
+            XCTAssertEqual(error.value, "someField")
+        }
+        XCTAssertThrowsError(try URLEncodedFormDecoder().decode(Input1.self, from: "someField[]=1&someField=2")) { error in
+            guard let error = try? XCTUnwrap(error as? URLEncodedFormError) else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(error.code, .duplicateKeys)
+            XCTAssertEqual(error.value, "someField")
+        }
+        XCTAssertThrowsError(try URLEncodedFormDecoder().decode(Input1.self, from: "someField=1&someField[]=2")) { error in
+            guard let error = try? XCTUnwrap(error as? URLEncodedFormError) else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(error.code, .addingToInvalidType)
+            XCTAssertEqual(error.value, "someField")
+        }
+        XCTAssertThrowsError(try URLEncodedFormDecoder().decode(Input1.self, from: "someField=1&someField[test]=2")) { error in
+            guard let error = try? XCTUnwrap(error as? URLEncodedFormError) else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(error.code, .addingToInvalidType)
+            XCTAssertEqual(error.value, "someField")
+        }
+        XCTAssertThrowsError(try URLEncodedFormDecoder().decode(Input1.self, from: "someField[=2")) { error in
+            guard let error = try? XCTUnwrap(error as? URLEncodedFormError) else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(error.code, .corruptKeyValue)
+            XCTAssertEqual(error.value, "someField[")
+        }
     }
 }

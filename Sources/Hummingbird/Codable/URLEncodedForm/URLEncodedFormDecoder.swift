@@ -112,17 +112,25 @@ private class _URLEncodedFormDecoder: Decoder {
     }
 
     func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key: CodingKey {
-        guard case .map(let map) = self.storage.topContainer else {
+        switch self.storage.topContainer {
+        case .map(let map):
+            KeyedDecodingContainer(KDC(container: map, decoder: self))
+        case .empty:
+            KeyedDecodingContainer(KDC(container: .init(values: [:]), decoder: self))
+        default:
             throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected a dictionary"))
         }
-        return KeyedDecodingContainer(KDC(container: map, decoder: self))
     }
 
     func unkeyedContainer() throws -> UnkeyedDecodingContainer {
-        guard case .array(let array) = self.storage.topContainer else {
+        switch self.storage.topContainer {
+        case .array(let array):
+            UKDC(container: array, decoder: self)
+        case .empty:
+            UKDC(container: .init(values: []), decoder: self)
+        default:
             throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected an array"))
         }
-        return UKDC(container: array, decoder: self)
     }
 
     func singleValueContainer() throws -> SingleValueDecodingContainer {
@@ -255,9 +263,7 @@ private class _URLEncodedFormDecoder: Decoder {
             self.decoder.codingPath.append(key)
             defer { self.decoder.codingPath.removeLast() }
 
-            guard let node = container.values[key.stringValue] else {
-                throw DecodingError.keyNotFound(key, .init(codingPath: self.codingPath, debugDescription: ""))
-            }
+            let node = container.values[key.stringValue] ?? .empty
             return try self.decoder.unbox(node, as: T.self)
         }
 
@@ -494,14 +500,14 @@ extension _URLEncodedFormDecoder: SingleValueDecodingContainer {
 extension _URLEncodedFormDecoder {
     func unboxNil(_ node: URLEncodedFormNode) throws -> Bool {
         guard case .leaf(let value) = node else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expect value not array of dictionary"))
+            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expect value not array or dictionary"))
         }
         return value == nil
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: Bool.Type) throws -> Bool {
         guard case .leaf(let value) = node else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expect value not array of dictionary"))
+            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expect value not array or dictionary"))
         }
         if let value2 = value {
             if let unboxValue = Bool(value2.value) {
@@ -516,7 +522,7 @@ extension _URLEncodedFormDecoder {
 
     func unbox(_ node: URLEncodedFormNode, as type: String.Type) throws -> String {
         guard case .leaf(let value) = node else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expect value not array of dictionary"))
+            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expect value not array or dictionary"))
         }
         guard let value2 = value else {
             throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected value not empty string"))
@@ -526,7 +532,7 @@ extension _URLEncodedFormDecoder {
 
     func unbox(_ node: URLEncodedFormNode, as type: URL.Type) throws -> URL {
         guard case .leaf(let value) = node else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expect value not array of dictionary"))
+            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expect value not array or dictionary"))
         }
         guard let value2 = value else {
             throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected value not empty string"))
