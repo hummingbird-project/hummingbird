@@ -19,7 +19,7 @@ import Foundation
 #endif
 
 extension JSONEncoder: ResponseEncoder {
-    /// Extend JSONEncoder to support encoding `Response`'s. Sets body and header values
+    /// Extend JSONEncoder to support generating a ``HummingbirdCore/Response``. Sets body and header values
     /// - Parameters:
     ///   - value: Value to encode
     ///   - request: Request used to generate response
@@ -39,7 +39,7 @@ extension JSONEncoder: ResponseEncoder {
 }
 
 extension JSONDecoder: RequestDecoder {
-    /// Extend JSONDecoder to decode from `Request`.
+    /// Extend JSONDecoder to decode from ``HummingbirdCore/Request``.
     /// - Parameters:
     ///   - type: Type to decode
     ///   - request: Request to decode from
