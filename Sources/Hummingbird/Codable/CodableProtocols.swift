@@ -16,7 +16,7 @@ import HTTPTypes
 
 /// protocol for encoders generating a Response
 public protocol ResponseEncoder {
-    /// Encode value returned by handler to request
+    /// Encode value returned by handler to ``HummingbirdCore/Response`
     ///
     /// - Parameters:
     ///   - value: value to encode
@@ -27,7 +27,7 @@ public protocol ResponseEncoder {
 
 /// protocol for decoder deserializing from a Request body
 public protocol RequestDecoder {
-    /// Decode type from request
+    /// Decode Swift object from ``HummingbirdCore/Request``
     /// - Parameters:
     ///   - type: type to decode to
     ///   - request: request
