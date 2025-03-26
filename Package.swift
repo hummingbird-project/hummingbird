@@ -7,7 +7,7 @@ let swiftSettings: [SwiftSetting] = [.enableExperimentalFeature("StrictConcurren
 
 let package = Package(
     name: "hummingbird",
-    platforms: [.macOS(.v14), .iOS(.v17), .tvOS(.v17), .visionOS(.v1)],
+    platforms: [.macOS(.v14), .iOS(.v17), .macCatalyst(.v17), .tvOS(.v17), .visionOS(.v1)],
     products: [
         .library(name: "Hummingbird", targets: ["Hummingbird"]),
         .library(name: "HummingbirdCore", targets: ["HummingbirdCore"]),
@@ -66,7 +66,7 @@ let package = Package(
                 .product(
                     name: "NIOTransportServices",
                     package: "swift-nio-transport-services",
-                    condition: .when(platforms: [.macOS, .iOS, .tvOS, .visionOS])
+                    condition: .when(platforms: [.macOS, .iOS, .macCatalyst, .tvOS, .visionOS])
                 ),
                 .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
             ],
