@@ -64,11 +64,22 @@ extension Request {
 }
 
 extension Request {
+    /// Conditional request which will only be processed if the eTag supplied is not in the
+    /// `If-None-Match` request header.
+    ///
+    /// - Parameters:
+    ///   - headers: Headers to add to response when condition fails
+    ///   - eTag: ETag for this responses content
+    ///   - process: Closure to run if eTag is not in the `If-None-Match` header
+    /// - Returns: Response
     public func ifNoneMatch(
         headers: HTTPFields = [:],
         eTag: String,
-        noMatch: () async throws -> Response
+        context: some RequestContext,
+        process: () async throws -> ResponseGenerator
     ) async throws -> Response {
+        var headers = headers
+        headers[.eTag] = eTag
         let ifNoneMatch = self.headers[values: .ifNoneMatch]
         if ifNoneMatch.count > 0 {
             if ifNoneMatch.contains(eTag) {
@@ -79,34 +90,38 @@ extension Request {
                     } else {
                         .preconditionFailed
                     }
-                var headers = headers
-                headers[.eTag] = eTag
                 return Response(status: status, headers: headers)
             }
         }
-        var response = try await noMatch()
-        response.headers[.eTag] = eTag
+        var response = try await process().response(from: self, context: context)
+        response.headers.append(contentsOf: headers)
         return response
     }
 
     public func ifMatch(
         headers: HTTPFields = [:],
         eTag: String,
-        matched: () async throws -> Response
+        context: some RequestContext,
+        process: () async throws -> ResponseGenerator
     ) async throws -> Response {
+        var headers = headers
+        headers[.eTag] = eTag
         if !self.headers[values: .ifMatch].contains(eTag) {
             return Response(status: .preconditionFailed, headers: headers)
         }
-        var response = try await matched()
-        response.headers[.eTag] = eTag
+        var response = try await process().response(from: self, context: context)
+        response.headers.append(contentsOf: headers)
         return response
     }
 
     public func ifModifiedSince(
         headers: HTTPFields = [:],
         modificationDate: Date,
-        modifiedSince: () async throws -> Response
+        context: some RequestContext,
+        process: () async throws -> ResponseGenerator
     ) async throws -> Response {
+        var headers = headers
+        headers[.lastModified] = modificationDate.httpHeader
         // `If-Modified-Since` headers are only applied to GET or HEAD requests
         if self.method == .get || self.method == .head {
             if let ifModifiedSinceHeader = self.headers[.ifModifiedSince] {
@@ -115,37 +130,36 @@ extension Request {
                     let modificationDateTimeInterval = modificationDate.timeIntervalSince1970.rounded(.down)
                     let ifModifiedSinceDateTimeInterval = ifModifiedSinceDate.timeIntervalSince1970
                     if modificationDateTimeInterval <= ifModifiedSinceDateTimeInterval {
-                        var headers = headers
-                        headers[.lastModified] = modificationDate.httpHeader
                         return Response(status: .notModified, headers: headers)
                     }
                 }
             }
         }
-        var response = try await modifiedSince()
-        response.headers[.lastModified] = modificationDate.httpHeader
+        var response = try await process().response(from: self, context: context)
+        response.headers.append(contentsOf: headers)
         return response
     }
 
     public func ifUnmodifiedSince(
         headers: HTTPFields = [:],
         modificationDate: Date,
-        unmodifiedSince: () async throws -> Response
+        context: some RequestContext,
+        process: () async throws -> ResponseGenerator
     ) async throws -> Response {
+        var headers = headers
+        headers[.lastModified] = modificationDate.httpHeader
         if let ifUnmodifiedSinceHeader = self.headers[.ifUnmodifiedSince] {
             if let ifUnmodifiedSinceDate = Date(httpHeader: ifUnmodifiedSinceHeader) {
                 // round modification date of file down to seconds for comparison
                 let modificationDateTimeInterval = modificationDate.timeIntervalSince1970.rounded(.down)
                 let ifUnmodifiedSinceDateTimeInterval = ifUnmodifiedSinceDate.timeIntervalSince1970
                 if modificationDateTimeInterval > ifUnmodifiedSinceDateTimeInterval {
-                    var headers = headers
-                    headers[.lastModified] = modificationDate.httpHeader
                     return Response(status: .preconditionFailed, headers: headers)
                 }
             }
         }
-        var response = try await unmodifiedSince()
-        response.headers[.lastModified] = modificationDate.httpHeader
+        var response = try await process().response(from: self, context: context)
+        response.headers.append(contentsOf: headers)
         return response
     }
 }

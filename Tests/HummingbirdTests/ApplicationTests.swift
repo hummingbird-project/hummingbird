@@ -1055,8 +1055,8 @@ final class ApplicationTests: XCTestCase {
 
     func testIfMatchEtagHeaders() async throws {
         let router = Router()
-        router.get("ifMatch") { request, _ -> Response in
-            try await request.ifMatch(eTag: "5678") {
+        router.get("ifMatch") { request, context -> Response in
+            try await request.ifMatch(eTag: "5678", context: context) {
                 Response(status: .ok)
             }
         }
@@ -1077,13 +1077,13 @@ final class ApplicationTests: XCTestCase {
 
     func testIfNoneMatchEtagHeaders() async throws {
         let router = Router()
-        router.get("ifNoneMatch") { request, _ -> Response in
-            try await request.ifNoneMatch(eTag: "1234") {
-                Response(status: .ok)
+        router.get("ifNoneMatch") { request, context -> Response in
+            try await request.ifNoneMatch(eTag: "1234", context: context) {
+                "Hello"
             }
         }
-        router.post("ifNoneMatch") { request, _ -> Response in
-            try await request.ifNoneMatch(eTag: "1234") {
+        router.post("ifNoneMatch") { request, context -> Response in
+            try await request.ifNoneMatch(eTag: "1234", context: context) {
                 Response(status: .ok)
             }
         }
@@ -1105,9 +1105,9 @@ final class ApplicationTests: XCTestCase {
     func testIfUnmodifiedSinceHeaders() async throws {
         let now = Date.now
         let router = Router()
-        router.get("ifUnmodifiedSince") { request, _ in
-            try await request.ifUnmodifiedSince(modificationDate: now) {
-                Response(status: .ok)
+        router.get("ifUnmodifiedSince") { request, context in
+            try await request.ifUnmodifiedSince(modificationDate: now, context: context) {
+                HTTPResponse.Status.ok
             }
         }
         let app = Application(router: router)
@@ -1128,22 +1128,24 @@ final class ApplicationTests: XCTestCase {
     func testIfModifiedSinceHeaders() async throws {
         let now = Date.now
         let router = Router()
-        router.get("ifModifiedSince") { request, _ in
-            try await request.ifModifiedSince(modificationDate: now) {
-                Response(status: .ok)
+        router.get("ifModifiedSince") { request, context in
+            try await request.ifModifiedSince(modificationDate: now, context: context) {
+                "Testing"
             }
         }
-        router.post("ifModifiedSince") { request, _ in
-            try await request.ifModifiedSince(modificationDate: now) {
-                Response(status: .ok)
+        router.post("ifModifiedSince") { request, context in
+            try await request.ifModifiedSince(modificationDate: now, context: context) {
+                "Testing"
             }
         }
         let app = Application(router: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "ifModifiedSince", method: .get) { response in
+                XCTAssertEqual(String(buffer: response.body), "Testing")
                 XCTAssertEqual(response.status, .ok)
             }
             try await client.execute(uri: "ifModifiedSince", method: .get, headers: [.ifModifiedSince: (now - 2).httpHeader]) { response in
+                XCTAssertEqual(String(buffer: response.body), "Testing")
                 XCTAssertEqual(response.status, .ok)
             }
             try await client.execute(uri: "ifModifiedSince", method: .get, headers: [.ifModifiedSince: (now + 2).httpHeader]) { response in
@@ -1152,6 +1154,7 @@ final class ApplicationTests: XCTestCase {
             }
             // If-Modified-Since can only be used with a GET or HEAD
             try await client.execute(uri: "ifModifiedSince", method: .post, headers: [.ifModifiedSince: (now + 2).httpHeader]) { response in
+                XCTAssertEqual(String(buffer: response.body), "Testing")
                 XCTAssertEqual(response.status, .ok)
             }
         }
