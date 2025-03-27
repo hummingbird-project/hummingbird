@@ -14,6 +14,12 @@
 
 import HummingbirdCore
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
+
 extension Response {
     /// Specifies the type of redirect that the client should receive.
     public enum RedirectType {
@@ -52,5 +58,77 @@ extension Response {
     /// - Returns: Response with redirection
     public static func redirect(to location: String, type: RedirectType = .normal) -> Response {
         .init(status: type.status, headers: [.location: location])
+    }
+}
+
+extension Response {
+    /// Method of comparing cached content
+    public struct CachedContentComparison {
+        enum Internal {
+            case modificationDate(Date)
+            case eTag(String)
+        }
+        let value: Internal
+
+        /// Compare content using the content modification data and the `If-Modified-Since` header
+        static func modificationDate(_ date: Date) -> Self { .init(value: .modificationDate(date)) }
+        /// Compare content using the content eTag and the `If-None-Match` header
+        static func eTags(_ eTag: String) -> Self { .init(value: .eTag(eTag)) }
+    }
+
+    /// Make request conditional by checking request headers against either the modification date or eTag of content
+    ///
+    /// - Parameters:
+    ///   - request: Request
+    ///   - headers: Additional headers to write into response if returning a condition failed response
+    ///   - eTag: ETag to test against request `If-None-Matched` header
+    ///   - modificationDate: Modification date to test against request `If-Modified-Since` header
+    ///   - noMatch: If all the conditions pass a closure that will return the desired Response.
+    /// - Returns: Response
+    static func conditional(
+        request: Request,
+        headers: HTTPFields = [:],
+        eTag: String? = nil,
+        modificationDate: Date? = nil,
+        noMatch: () async throws -> Response
+    ) async throws -> Response {
+        if let eTag {
+            let ifNoneMatch = request.headers[values: .ifNoneMatch]
+            if ifNoneMatch.count > 0 {
+                for match in ifNoneMatch {
+                    if eTag == match {
+                        // Response status based on whether this is a read-only request ie GET or HEAD
+                        let status: HTTPResponse.Status =
+                            if request.method == .get || request.method == .head {
+                                .notModified
+                            } else {
+                                .preconditionFailed
+                            }
+                        var headers = headers
+                        headers[.eTag] = eTag
+                        return Response(status: status, headers: headers)
+                    }
+                }
+                // if an eTag was supplied and the `If-None-Match` contained eTags then
+                // we shouldn't do a modification data check, so return now
+                return try await noMatch()
+            }
+        }
+        // `If-Modified-Since` headers are only applied to GET or HEAD requests
+        if let modificationDate, request.method == .get || request.method == .head {
+            if let ifModifiedSinceHeader = request.headers[.ifModifiedSince] {
+                if let ifModifiedSinceDate = Date(httpHeader: ifModifiedSinceHeader) {
+                    // round modification date of file down to seconds for comparison
+                    let modificationDateTimeInterval = modificationDate.timeIntervalSince1970.rounded(.down)
+                    let ifModifiedSinceDateTimeInterval = ifModifiedSinceDate.timeIntervalSince1970
+                    if modificationDateTimeInterval <= ifModifiedSinceDateTimeInterval {
+                        var headers = headers
+                        headers[.lastModified] = modificationDate.httpHeader
+                        return Response(status: .notModified, headers: headers)
+                    }
+                }
+            }
+        }
+        return try await noMatch()
     }
 }
