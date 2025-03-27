@@ -81,8 +81,8 @@ extension Response {
     /// - Parameters:
     ///   - request: Request
     ///   - headers: Additional headers to write into response if returning a condition failed response
-    ///   - eTag: ETag to test against request `If-None-Matched` header
-    ///   - modificationDate: Modification date to test against request `If-Modified-Since` header
+    ///   - eTag: ETag to test against request `If-None-Matched` and `If-Matched` headers
+    ///   - modificationDate: Modification date to test against request `If-Modified-Since` and `If-Unmodified-Since` header
     ///   - noMatch: If all the conditions pass a closure that will return the desired Response.
     /// - Returns: Response
     static func conditional(
@@ -95,36 +95,51 @@ extension Response {
         if let eTag {
             let ifNoneMatch = request.headers[values: .ifNoneMatch]
             if ifNoneMatch.count > 0 {
-                for match in ifNoneMatch {
-                    if eTag == match {
-                        // Response status based on whether this is a read-only request ie GET or HEAD
-                        let status: HTTPResponse.Status =
-                            if request.method == .get || request.method == .head {
-                                .notModified
-                            } else {
-                                .preconditionFailed
-                            }
-                        var headers = headers
-                        headers[.eTag] = eTag
-                        return Response(status: status, headers: headers)
-                    }
+                if ifNoneMatch.contains(eTag) {
+                    // Response status based on whether this is a read-only request ie GET or HEAD
+                    let status: HTTPResponse.Status =
+                        if request.method == .get || request.method == .head {
+                            .notModified
+                        } else {
+                            .preconditionFailed
+                        }
+                    var headers = headers
+                    headers[.eTag] = eTag
+                    return Response(status: status, headers: headers)
                 }
                 // if an eTag was supplied and the `If-None-Match` contained eTags then
                 // we shouldn't do a modification data check, so return now
                 return try await noMatch()
             }
+            if !request.headers[values: .ifMatch].contains(eTag) {
+                return Response(status: .preconditionFailed, headers: headers)
+            }
         }
-        // `If-Modified-Since` headers are only applied to GET or HEAD requests
-        if let modificationDate, request.method == .get || request.method == .head {
-            if let ifModifiedSinceHeader = request.headers[.ifModifiedSince] {
-                if let ifModifiedSinceDate = Date(httpHeader: ifModifiedSinceHeader) {
+        if let modificationDate {
+            // `If-Modified-Since` headers are only applied to GET or HEAD requests
+            if request.method == .get || request.method == .head {
+                if let ifModifiedSinceHeader = request.headers[.ifModifiedSince] {
+                    if let ifModifiedSinceDate = Date(httpHeader: ifModifiedSinceHeader) {
+                        // round modification date of file down to seconds for comparison
+                        let modificationDateTimeInterval = modificationDate.timeIntervalSince1970.rounded(.down)
+                        let ifModifiedSinceDateTimeInterval = ifModifiedSinceDate.timeIntervalSince1970
+                        if modificationDateTimeInterval <= ifModifiedSinceDateTimeInterval {
+                            var headers = headers
+                            headers[.lastModified] = modificationDate.httpHeader
+                            return Response(status: .notModified, headers: headers)
+                        }
+                    }
+                }
+            }
+            if let ifUnmodifiedSinceHeader = request.headers[.ifUnmodifiedSince] {
+                if let ifUnmodifiedSinceDate = Date(httpHeader: ifUnmodifiedSinceHeader) {
                     // round modification date of file down to seconds for comparison
                     let modificationDateTimeInterval = modificationDate.timeIntervalSince1970.rounded(.down)
-                    let ifModifiedSinceDateTimeInterval = ifModifiedSinceDate.timeIntervalSince1970
-                    if modificationDateTimeInterval <= ifModifiedSinceDateTimeInterval {
+                    let ifUnmodifiedSinceDateTimeInterval = ifUnmodifiedSinceDate.timeIntervalSince1970
+                    if modificationDateTimeInterval > ifUnmodifiedSinceDateTimeInterval {
                         var headers = headers
                         headers[.lastModified] = modificationDate.httpHeader
-                        return Response(status: .notModified, headers: headers)
+                        return Response(status: .preconditionFailed, headers: headers)
                     }
                 }
             }
