@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import Atomics
+import Foundation
 import HTTPTypes
-import Hummingbird
 import HummingbirdCore
 import HummingbirdHTTP2
 import HummingbirdTLS
@@ -26,6 +26,8 @@ import NIOEmbedded
 import NIOSSL
 import ServiceLifecycle
 import XCTest
+
+@testable import Hummingbird
 
 final class ApplicationTests: XCTestCase {
     static func randomBuffer(size: Int) -> ByteBuffer {
@@ -1051,13 +1053,8 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    func testConditionalEtagHeaders() async throws {
+    func testIfMatchEtagHeaders() async throws {
         let router = Router()
-        router.get("ifNonMatch") { request, _ -> Response in
-            try await request.ifNoneMatch(eTag: "1234") {
-                Response(status: .ok)
-            }
-        }
         router.get("ifMatch") { request, _ -> Response in
             try await request.ifMatch(eTag: "5678") {
                 Response(status: .ok)
@@ -1065,16 +1062,6 @@ final class ApplicationTests: XCTestCase {
         }
         let app = Application(router: router)
         try await app.test(.router) { client in
-            try await client.execute(uri: "/ifNonMatch", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
-            }
-            try await client.execute(uri: "/ifNonMatch", method: .get, headers: [.ifNoneMatch: "1234"]) { response in
-                XCTAssertEqual(response.status, .notModified)
-                XCTAssertEqual(response.headers[.eTag], "1234")
-            }
-            try await client.execute(uri: "/ifNonMatch", method: .get, headers: [.ifNoneMatch: "1235"]) { response in
-                XCTAssertEqual(response.status, .ok)
-            }
             try await client.execute(uri: "/ifMatch", method: .get) { response in
                 XCTAssertEqual(response.status, .preconditionFailed)
             }
@@ -1083,6 +1070,89 @@ final class ApplicationTests: XCTestCase {
             }
             try await client.execute(uri: "/ifMatch", method: .get, headers: [.ifMatch: "5679"]) { response in
                 XCTAssertEqual(response.status, .preconditionFailed)
+                XCTAssertEqual(response.headers[.eTag], "5678")
+            }
+        }
+    }
+
+    func testIfNoneMatchEtagHeaders() async throws {
+        let router = Router()
+        router.get("ifNoneMatch") { request, _ -> Response in
+            try await request.ifNoneMatch(eTag: "1234") {
+                Response(status: .ok)
+            }
+        }
+        router.post("ifNoneMatch") { request, _ -> Response in
+            try await request.ifNoneMatch(eTag: "1234") {
+                Response(status: .ok)
+            }
+        }
+        let app = Application(router: router)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/ifNoneMatch", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+            try await client.execute(uri: "/ifNoneMatch", method: .get, headers: [.ifNoneMatch: "1234"]) { response in
+                XCTAssertEqual(response.status, .notModified)
+                XCTAssertEqual(response.headers[.eTag], "1234")
+            }
+            try await client.execute(uri: "/ifNoneMatch", method: .get, headers: [.ifNoneMatch: "1235"]) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+        }
+    }
+
+    func testIfUnmodifiedSinceHeaders() async throws {
+        let now = Date.now
+        let router = Router()
+        router.get("ifUnmodifiedSince") { request, _ in
+            try await request.ifUnmodifiedSince(modificationDate: now) {
+                Response(status: .ok)
+            }
+        }
+        let app = Application(router: router)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "ifUnmodifiedSince", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+            try await client.execute(uri: "ifUnmodifiedSince", method: .get, headers: [.ifUnmodifiedSince: (now - 2).httpHeader]) { response in
+                XCTAssertEqual(response.status, .preconditionFailed)
+                XCTAssertEqual(response.headers[.lastModified], now.httpHeader)
+            }
+            try await client.execute(uri: "ifUnmodifiedSince", method: .get, headers: [.ifUnmodifiedSince: (now + 2).httpHeader]) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+        }
+    }
+
+    func testIfModifiedSinceHeaders() async throws {
+        let now = Date.now
+        let router = Router()
+        router.get("ifModifiedSince") { request, _ in
+            try await request.ifModifiedSince(modificationDate: now) {
+                Response(status: .ok)
+            }
+        }
+        router.post("ifModifiedSince") { request, _ in
+            try await request.ifModifiedSince(modificationDate: now) {
+                Response(status: .ok)
+            }
+        }
+        let app = Application(router: router)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "ifModifiedSince", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+            try await client.execute(uri: "ifModifiedSince", method: .get, headers: [.ifModifiedSince: (now - 2).httpHeader]) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+            try await client.execute(uri: "ifModifiedSince", method: .get, headers: [.ifModifiedSince: (now + 2).httpHeader]) { response in
+                XCTAssertEqual(response.status, .notModified)
+                XCTAssertEqual(response.headers[.lastModified], now.httpHeader)
+            }
+            // If-Modified-Since can only be used with a GET or HEAD
+            try await client.execute(uri: "ifModifiedSince", method: .post, headers: [.ifModifiedSince: (now + 2).httpHeader]) { response in
+                XCTAssertEqual(response.status, .ok)
             }
         }
     }
