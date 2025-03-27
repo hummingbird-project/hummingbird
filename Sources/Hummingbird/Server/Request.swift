@@ -14,6 +14,12 @@
 
 import HummingbirdCore
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
+
 extension Request {
     /// Collapse body into one ByteBuffer.
     ///
@@ -54,6 +60,93 @@ extension Request {
             context.logger.debug("Decode Error: \(error)")
             throw error
         }
+    }
+}
+
+extension Request {
+    public func ifNoneMatch(
+        headers: HTTPFields = [:],
+        eTag: String,
+        noMatch: () async throws -> Response
+    ) async throws -> Response {
+        let ifNoneMatch = self.headers[values: .ifNoneMatch]
+        if ifNoneMatch.count > 0 {
+            if ifNoneMatch.contains(eTag) {
+                // Response status based on whether this is a read-only request ie GET or HEAD
+                let status: HTTPResponse.Status =
+                    if self.method == .get || self.method == .head {
+                        .notModified
+                    } else {
+                        .preconditionFailed
+                    }
+                var headers = headers
+                headers[.eTag] = eTag
+                return Response(status: status, headers: headers)
+            }
+        }
+        var response = try await noMatch()
+        response.headers[.eTag] = eTag
+        return response
+    }
+
+    public func ifMatch(
+        headers: HTTPFields = [:],
+        eTag: String,
+        matched: () async throws -> Response
+    ) async throws -> Response {
+        if !self.headers[values: .ifMatch].contains(eTag) {
+            return Response(status: .preconditionFailed, headers: headers)
+        }
+        var response = try await matched()
+        response.headers[.eTag] = eTag
+        return response
+    }
+
+    public func ifModifiedSince(
+        headers: HTTPFields = [:],
+        modificationDate: Date,
+        modifiedSince: () async throws -> Response
+    ) async throws -> Response {
+        // `If-Modified-Since` headers are only applied to GET or HEAD requests
+        if self.method == .get || self.method == .head {
+            if let ifModifiedSinceHeader = self.headers[.ifModifiedSince] {
+                if let ifModifiedSinceDate = Date(httpHeader: ifModifiedSinceHeader) {
+                    // round modification date of file down to seconds for comparison
+                    let modificationDateTimeInterval = modificationDate.timeIntervalSince1970.rounded(.down)
+                    let ifModifiedSinceDateTimeInterval = ifModifiedSinceDate.timeIntervalSince1970
+                    if modificationDateTimeInterval <= ifModifiedSinceDateTimeInterval {
+                        var headers = headers
+                        headers[.lastModified] = modificationDate.httpHeader
+                        return Response(status: .notModified, headers: headers)
+                    }
+                }
+            }
+        }
+        var response = try await modifiedSince()
+        response.headers[.lastModified] = modificationDate.httpHeader
+        return response
+    }
+
+    public func ifUnmodifiedSince(
+        headers: HTTPFields = [:],
+        modificationDate: Date,
+        unmodifiedSince: () async throws -> Response
+    ) async throws -> Response {
+        if let ifUnmodifiedSinceHeader = self.headers[.ifUnmodifiedSince] {
+            if let ifUnmodifiedSinceDate = Date(httpHeader: ifUnmodifiedSinceHeader) {
+                // round modification date of file down to seconds for comparison
+                let modificationDateTimeInterval = modificationDate.timeIntervalSince1970.rounded(.down)
+                let ifUnmodifiedSinceDateTimeInterval = ifUnmodifiedSinceDate.timeIntervalSince1970
+                if modificationDateTimeInterval > ifUnmodifiedSinceDateTimeInterval {
+                    var headers = headers
+                    headers[.lastModified] = modificationDate.httpHeader
+                    return Response(status: .preconditionFailed, headers: headers)
+                }
+            }
+        }
+        var response = try await unmodifiedSince()
+        response.headers[.lastModified] = modificationDate.httpHeader
+        return response
     }
 }
 

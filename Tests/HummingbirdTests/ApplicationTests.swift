@@ -1050,6 +1050,42 @@ final class ApplicationTests: XCTestCase {
             }
         }
     }
+
+    func testConditionalEtagHeaders() async throws {
+        let router = Router()
+        router.get("ifNonMatch") { request, _ -> Response in
+            try await request.ifNoneMatch(eTag: "1234") {
+                Response(status: .ok)
+            }
+        }
+        router.get("ifMatch") { request, _ -> Response in
+            try await request.ifMatch(eTag: "5678") {
+                Response(status: .ok)
+            }
+        }
+        let app = Application(router: router)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/ifNonMatch", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+            try await client.execute(uri: "/ifNonMatch", method: .get, headers: [.ifNoneMatch: "1234"]) { response in
+                XCTAssertEqual(response.status, .notModified)
+                XCTAssertEqual(response.headers[.eTag], "1234")
+            }
+            try await client.execute(uri: "/ifNonMatch", method: .get, headers: [.ifNoneMatch: "1235"]) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+            try await client.execute(uri: "/ifMatch", method: .get) { response in
+                XCTAssertEqual(response.status, .preconditionFailed)
+            }
+            try await client.execute(uri: "/ifMatch", method: .get, headers: [.ifMatch: "5678"]) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+            try await client.execute(uri: "/ifMatch", method: .get, headers: [.ifMatch: "5679"]) { response in
+                XCTAssertEqual(response.status, .preconditionFailed)
+            }
+        }
+    }
 }
 
 /// HTTPField used during tests

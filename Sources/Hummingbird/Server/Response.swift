@@ -62,20 +62,6 @@ extension Response {
 }
 
 extension Response {
-    /// Method of comparing cached content
-    public struct CachedContentComparison {
-        enum Internal {
-            case modificationDate(Date)
-            case eTag(String)
-        }
-        let value: Internal
-
-        /// Compare content using the content modification data and the `If-Modified-Since` header
-        static func modificationDate(_ date: Date) -> Self { .init(value: .modificationDate(date)) }
-        /// Compare content using the content eTag and the `If-None-Match` header
-        static func eTags(_ eTag: String) -> Self { .init(value: .eTag(eTag)) }
-    }
-
     /// Make request conditional by checking request headers against either the modification date or eTag of content
     ///
     /// - Parameters:
@@ -85,7 +71,7 @@ extension Response {
     ///   - modificationDate: Modification date to test against request `If-Modified-Since` and `If-Unmodified-Since` header
     ///   - noMatch: If all the conditions pass a closure that will return the desired Response.
     /// - Returns: Response
-    static func conditional(
+    public static func conditional(
         request: Request,
         headers: HTTPFields = [:],
         eTag: String? = nil,
