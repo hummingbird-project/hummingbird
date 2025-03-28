@@ -14,12 +14,6 @@
 
 import HummingbirdCore
 
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
-
 extension Response {
     /// Specifies the type of redirect that the client should receive.
     public enum RedirectType {
