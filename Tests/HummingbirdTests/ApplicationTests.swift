@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import Atomics
+import Foundation
 import HTTPTypes
-import Hummingbird
 import HummingbirdCore
 import HummingbirdHTTP2
 import HummingbirdTLS
@@ -26,6 +26,8 @@ import NIOEmbedded
 import NIOSSL
 import ServiceLifecycle
 import XCTest
+
+@testable import Hummingbird
 
 final class ApplicationTests: XCTestCase {
     static func randomBuffer(size: Int) -> ByteBuffer {
@@ -1047,6 +1049,113 @@ final class ApplicationTests: XCTestCase {
                 XCTFail("Should not receive a response as the response writer failed before finishing")
             } catch TestClient.Error.connectionClosing {
                 // verify connection was closed before reading full response
+            }
+        }
+    }
+
+    func testIfMatchEtagHeaders() async throws {
+        let router = Router()
+        router.get("ifMatch") { request, context -> Response in
+            try await request.ifMatch(eTag: "5678", context: context) {
+                Response(status: .ok)
+            }
+        }
+        let app = Application(router: router)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/ifMatch", method: .get) { response in
+                XCTAssertEqual(response.status, .preconditionFailed)
+            }
+            try await client.execute(uri: "/ifMatch", method: .get, headers: [.ifMatch: "5678"]) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+            try await client.execute(uri: "/ifMatch", method: .get, headers: [.ifMatch: "5679"]) { response in
+                XCTAssertEqual(response.status, .preconditionFailed)
+                XCTAssertEqual(response.headers[.eTag], "5678")
+            }
+        }
+    }
+
+    func testIfNoneMatchEtagHeaders() async throws {
+        let router = Router()
+        router.get("ifNoneMatch") { request, context -> Response in
+            try await request.ifNoneMatch(eTag: "1234", context: context) {
+                "Hello"
+            }
+        }
+        router.post("ifNoneMatch") { request, context -> Response in
+            try await request.ifNoneMatch(eTag: "1234", context: context) {
+                Response(status: .ok)
+            }
+        }
+        let app = Application(router: router)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/ifNoneMatch", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+            try await client.execute(uri: "/ifNoneMatch", method: .get, headers: [.ifNoneMatch: "1234"]) { response in
+                XCTAssertEqual(response.status, .notModified)
+                XCTAssertEqual(response.headers[.eTag], "1234")
+            }
+            try await client.execute(uri: "/ifNoneMatch", method: .get, headers: [.ifNoneMatch: "1235"]) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+        }
+    }
+
+    func testIfUnmodifiedSinceHeaders() async throws {
+        let now = Date.now
+        let router = Router()
+        router.get("ifUnmodifiedSince") { request, context in
+            try await request.ifUnmodifiedSince(modificationDate: now, context: context) {
+                HTTPResponse.Status.ok
+            }
+        }
+        let app = Application(router: router)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "ifUnmodifiedSince", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+            try await client.execute(uri: "ifUnmodifiedSince", method: .get, headers: [.ifUnmodifiedSince: (now - 2).httpHeader]) { response in
+                XCTAssertEqual(response.status, .preconditionFailed)
+                XCTAssertEqual(response.headers[.lastModified], now.httpHeader)
+            }
+            try await client.execute(uri: "ifUnmodifiedSince", method: .get, headers: [.ifUnmodifiedSince: (now + 2).httpHeader]) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
+        }
+    }
+
+    func testIfModifiedSinceHeaders() async throws {
+        let now = Date.now
+        let router = Router()
+        router.get("ifModifiedSince") { request, context in
+            try await request.ifModifiedSince(modificationDate: now, context: context) {
+                "Testing"
+            }
+        }
+        router.post("ifModifiedSince") { request, context in
+            try await request.ifModifiedSince(modificationDate: now, context: context) {
+                "Testing"
+            }
+        }
+        let app = Application(router: router)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "ifModifiedSince", method: .get) { response in
+                XCTAssertEqual(String(buffer: response.body), "Testing")
+                XCTAssertEqual(response.status, .ok)
+            }
+            try await client.execute(uri: "ifModifiedSince", method: .get, headers: [.ifModifiedSince: (now - 2).httpHeader]) { response in
+                XCTAssertEqual(String(buffer: response.body), "Testing")
+                XCTAssertEqual(response.status, .ok)
+            }
+            try await client.execute(uri: "ifModifiedSince", method: .get, headers: [.ifModifiedSince: (now + 2).httpHeader]) { response in
+                XCTAssertEqual(response.status, .notModified)
+                XCTAssertEqual(response.headers[.lastModified], now.httpHeader)
+            }
+            // If-Modified-Since can only be used with a GET or HEAD
+            try await client.execute(uri: "ifModifiedSince", method: .post, headers: [.ifModifiedSince: (now + 2).httpHeader]) { response in
+                XCTAssertEqual(String(buffer: response.body), "Testing")
+                XCTAssertEqual(response.status, .ok)
             }
         }
     }
