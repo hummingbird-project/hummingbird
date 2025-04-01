@@ -79,7 +79,7 @@ extension Request {
         headers: HTTPFields = [:],
         eTag: String,
         context: some RequestContext,
-        process: () async throws -> ResponseGenerator
+        process: () async throws -> some ResponseGenerator
     ) async throws -> Response {
         var headers = headers
         headers[.eTag] = eTag
@@ -121,7 +121,7 @@ extension Request {
         headers: HTTPFields = [:],
         eTag: String,
         context: some RequestContext,
-        process: () async throws -> ResponseGenerator
+        process: () async throws -> some ResponseGenerator
     ) async throws -> Response {
         var headers = headers
         headers[.eTag] = eTag
@@ -148,7 +148,7 @@ extension Request {
         headers: HTTPFields = [:],
         modificationDate: Date,
         context: some RequestContext,
-        process: () async throws -> ResponseGenerator
+        process: () async throws -> some ResponseGenerator
     ) async throws -> Response {
         var headers = headers
         headers[.lastModified] = modificationDate.httpHeader
@@ -187,7 +187,7 @@ extension Request {
         headers: HTTPFields = [:],
         modificationDate: Date,
         context: some RequestContext,
-        process: () async throws -> ResponseGenerator
+        process: () async throws -> some ResponseGenerator
     ) async throws -> Response {
         var headers = headers
         headers[.lastModified] = modificationDate.httpHeader
