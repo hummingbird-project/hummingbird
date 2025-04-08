@@ -58,6 +58,7 @@ final class RequestBodyTests: XCTestCase {
         }
     }
 
+    #if compiler(>=6.0)
     func testInboundClosureParsingStream() async throws {
         try await withThrowingTaskGroup(of: Void.self) { group in
             let (httpSource, httpStream) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
@@ -157,4 +158,5 @@ final class RequestBodyTests: XCTestCase {
             try await group.waitForAll()
         }
     }
+    #endif  // compiler(>=6.0)
 }
