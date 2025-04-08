@@ -140,15 +140,28 @@ extension RequestBody {
         source: RequestBody.Source
     ) async -> IterateResult where AsyncIterator.Element == HTTPRequestPart {
         var iterator = iterator
-
-        while let part = try? await iterator.next() {
-            switch part {
-            case .head:
-                return .nextRequestReady
-            case .body(let buffer):
-                await source.yield(buffer)
-            case .end:
-                source.finish()
+        var finished = false
+        while true {
+            do {
+                guard let part = try await iterator.next() else { break }
+                switch part {
+                case .head:
+                    return .nextRequestReady
+                case .body(let buffer):
+                    await source.yield(buffer)
+                case .end:
+                    finished = true
+                    source.finish()
+                }
+            } catch {
+                // if we are not finished receiving the request body pass error onto source
+                if !finished {
+                    source.finish(error)
+                }
+                // we received an error on the inbound stream it is in effect closed. This
+                // is of particular importance for HTTP2 streams where stream closure invokes
+                // an error on the inbound stream of HTTP parts instead of just finishing it.
+                return .inboundClosed
             }
         }
         return .inboundClosed

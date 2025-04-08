@@ -844,7 +844,7 @@ final class ApplicationTests: XCTestCase {
                 let (requestBody, source) = RequestBody.makeStream()
                 group.addTask {
                     for try await buffer in request.body {
-                        try await source.yield(buffer)
+                        await source.yield(buffer)
                     }
                     source.finish()
                 }
@@ -880,17 +880,17 @@ final class ApplicationTests: XCTestCase {
                     await withThrowingTaskGroup(of: Void.self) { group in
                         group.addTask {
                             for value in 0..<100 {
-                                try await source.yield(ByteBuffer(string: String(describing: value)))
+                                await source.yield(ByteBuffer(string: String(describing: value)))
                             }
                         }
                         group.addTask {
                             for value in 0..<100 {
-                                try await source.yield(ByteBuffer(string: String(describing: value)))
+                                await source.yield(ByteBuffer(string: String(describing: value)))
                             }
                         }
                         group.addTask {
                             for value in 0..<100 {
-                                try await source.yield(ByteBuffer(string: String(describing: value)))
+                                await source.yield(ByteBuffer(string: String(describing: value)))
                             }
                         }
                     }
