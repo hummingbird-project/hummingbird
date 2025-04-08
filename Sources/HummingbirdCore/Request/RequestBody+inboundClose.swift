@@ -119,11 +119,9 @@ extension RequestBody {
         let unsafeIterator = UnsafeTransfer(iterator)
         let value = try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-                do {
-                    if try await self.iterate(iterator: unsafeIterator.wrappedValue, source: source) == .inboundClosed {
-                        onInboundClosed()
-                    }
-                } catch is CancellationError {}
+                if await self.iterate(iterator: unsafeIterator.wrappedValue, source: source) == .inboundClosed {
+                    onInboundClosed()
+                }
             }
             let value = try await operation()
             group.cancelAll()
@@ -140,14 +138,15 @@ extension RequestBody {
     fileprivate func iterate<AsyncIterator: AsyncIteratorProtocol>(
         iterator: AsyncIterator,
         source: RequestBody.Source
-    ) async throws -> IterateResult where AsyncIterator.Element == HTTPRequestPart {
+    ) async -> IterateResult where AsyncIterator.Element == HTTPRequestPart {
         var iterator = iterator
-        while let part = try await iterator.next() {
+
+        while let part = try? await iterator.next() {
             switch part {
             case .head:
                 return .nextRequestReady
             case .body(let buffer):
-                try await source.yield(buffer)
+                await source.yield(buffer)
             case .end:
                 source.finish()
             }

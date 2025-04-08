@@ -267,7 +267,7 @@ extension RequestBody {
         ///
         /// - Parameter element: The element to yield to the inbound stream.
         @inlinable
-        public func yield(_ element: ByteBuffer) async throws {
+        public func yield(_ element: ByteBuffer) async {
             // if previous call indicated we should stop producing wait until the delegate
             // says we can start producing again
             await self.delegate.waitForProduceMore()
