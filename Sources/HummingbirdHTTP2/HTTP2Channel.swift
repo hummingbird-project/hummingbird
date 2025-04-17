@@ -50,7 +50,7 @@ public struct HTTP2ChannelConfiguration: Sendable {
 }
 
 /// Child channel for processing HTTP2
-internal struct HTTP2Channel: ServerChildChannel {
+public struct HTTP2Channel: ServerChildChannel {
     public typealias Configuration = HTTP2ChannelConfiguration
     typealias HTTP2Connection = NIOHTTP2Handler.AsyncStreamMultiplexer<HTTP2StreamChannel.Value>
     public struct Value: ServerChildChannelValue {

@@ -96,4 +96,28 @@ extension HTTPServerBuilder {
             )
         }
     }
+
+    /// Build HTTP channel with HTTP2 upgrade
+    ///
+    /// Use in ``Hummingbird/Application`` initialization.
+    /// ```
+    /// let app = Application(
+    ///     router: router,
+    ///     server: .http2Upgrade(configuration: .init(tlsConfiguration: tlsConfiguration))
+    /// )
+    /// ```
+    /// - Parameters:
+    ///   - tlsChannelConfiguration: TLS channel configuration
+    ///   - configuration: HTTP2 Upgrade channel configuration
+    /// - Returns: HTTPChannelHandler builder
+    public static func plaintextHTTP2(
+        configuration: HTTP2Channel.Configuration = .init()
+    ) -> HTTPServerBuilder {
+        .init { responder in
+            HTTP2Channel(
+                responder: responder,
+                configuration: configuration
+            )
+        }
+    }
 }
