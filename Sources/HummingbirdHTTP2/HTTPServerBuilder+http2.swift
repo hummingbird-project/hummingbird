@@ -97,18 +97,21 @@ extension HTTPServerBuilder {
         }
     }
 
-    /// Build HTTP channel with HTTP2 upgrade
+    /// Build plaintext HTTP2 channel
+    ///
+    /// As this is running on a connection without TLS it cannot perform the upgrade negotiation via ALPN.
+    /// Therefore a client will need to know in advance it is connecting to an HTTP2 server. You can
+    /// test this with curl as follows: `curl --http2-prior-knowledge http://localhost:8080/`
     ///
     /// Use in ``Hummingbird/Application`` initialization.
     /// ```
     /// let app = Application(
     ///     router: router,
-    ///     server: .http2Upgrade(configuration: .init(tlsConfiguration: tlsConfiguration))
+    ///     server: .plaintextHTTP2()
     /// )
     /// ```
     /// - Parameters:
-    ///   - tlsChannelConfiguration: TLS channel configuration
-    ///   - configuration: HTTP2 Upgrade channel configuration
+    ///   - configuration: HTTP2 channel configuration
     /// - Returns: HTTPChannelHandler builder
     public static func plaintextHTTP2(
         configuration: HTTP2Channel.Configuration = .init()
