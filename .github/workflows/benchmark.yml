@@ -119,7 +119,7 @@ jobs:
         uses: thollander/actions-comment-pull-request@v3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          file-path: Benchmarks/comment.md
+          file-path: comment.md
           comment-tag: benchmark
       - name: Exit with correct status
         run: |
