@@ -84,26 +84,25 @@ jobs:
           echo 'PRTEST<<EOF' >> $GITHUB_ENV
 
           EXIT_CODE='${{steps.benchmark.outputs.exit-status}}'
+          EXIT_STATUS=0
           case "${EXIT_CODE}" in
             0)
-              echo "_Pull request no significant performance differences ✅_"
-              echo "exitStatus=0" >> $GITHUB_ENV
+              echo "_✅ Pull request no significant performance differences ✅_"
               ;;
             *)
               # Get error string from benchmark output
               BENCHMARK_ERROR='${{steps.benchmark.outputs.benchmark-error}}'
               case "${BENCHMARK_ERROR}" in
                 "benchmarkThresholdRegression")
-                  echo "_Pull request has performance regressions ❌_"
-                  echo "exitStatus=1" >> $GITHUB_ENV
+                  echo "_❌ Pull request has performance regressions ❌_"
+                  EXIT_STATUS=1
                   ;;
                 "benchmarkThresholdImprovement")
-                  echo "_Pull request has performance improvements ✅_"
-                  echo "exitStatus=0" >> $GITHUB_ENV
+                  echo "_✅ Pull request has performance improvements ✅_"
                   ;;
                 *)
-                  echo "_Benchmark comparison failed with error $BENCHMARK_ERROR ❌_"
-                  echo "exitStatus=1" >> $GITHUB_ENV
+                  echo "_❌ Benchmark comparison failed with error $BENCHMARK_ERROR ❌_"
+                  EXIT_STATUS=1
                   ;;
               esac
               ;;
@@ -118,6 +117,7 @@ jobs:
           set -e
 
           echo 'EOF' >> $GITHUB_ENV
+          echo "exitStatus=$EXIT_STATUS" >> $GITHUB_ENV
       - name: Comment PR
         if: ${{ env.hasBenchmark == '1' }}
         uses: thollander/actions-comment-pull-request@v3
