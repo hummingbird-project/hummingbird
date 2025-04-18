@@ -53,6 +53,7 @@ jobs:
       - name: Run benchmarks for PR branch
         if: ${{ env.hasBenchmark == '1' }}
         run: |
+          cd Benchmarks          
           swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update pull_request
       - name: Checkout main
         run: |
@@ -60,12 +61,14 @@ jobs:
       - name: Run benchmarks for branch 'main'
         if: ${{ env.hasBenchmark == '1' }}
         run: |
+          cd Benchmarks          
           swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update main
       - name: Compare PR and main
         if: ${{ env.hasBenchmark == '1' }}
         id: benchmark
         run: |
           set +e
+          cd Benchmarks          
           echo '## Summary' >> $GITHUB_STEP_SUMMARY
           echo $(date) >> $GITHUB_STEP_SUMMARY
           # if we had access to fd 3 we could do this in one call eg { var=$(cmd 3>&2 2>&1 1>&3); }  2>&1
@@ -79,6 +82,7 @@ jobs:
       - name: Pull request comment text
         id: benchmark-comment
         run: |
+          cd Benchmarks          
           echo "[Pull request benchmark comparison [${{ matrix.os }}] with 'main' run at $(date -Iseconds)](https://github.com/adam-fowler/${{ github.event.repository.name }}/actions/runs/${{ github.run_id }})" >> comment.md
 
           EXIT_CODE='${{steps.benchmark.outputs.exit-status}}'
@@ -115,7 +119,7 @@ jobs:
         uses: thollander/actions-comment-pull-request@v3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          file-path: comment.md
+          file-path: Benchmarks/comment.md
           comment-tag: benchmark
       - name: Exit with correct status
         run: |
