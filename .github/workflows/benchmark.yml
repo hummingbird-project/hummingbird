@@ -65,6 +65,7 @@ jobs:
         if: ${{ env.hasBenchmark == '1' }}
         id: benchmark
         run: |
+          set +e
           echo '## Summary' >> $GITHUB_STEP_SUMMARY
           echo $(date) >> $GITHUB_STEP_SUMMARY
           # if we had access to fd 3 we could do this in one call eg { var=$(cmd 3>&2 2>&1 1>&3); }  2>&1
@@ -74,7 +75,7 @@ jobs:
           swift package benchmark baseline check main pull_request --format markdown >> $GITHUB_STEP_SUMMARY
           echo "exit-status=$?" >> $GITHUB_OUTPUT
           echo "benchmark-error=$(echo -e "$BENCHMARK_STDERR" | grep -e "^error: .*" | tail -n 1 | cut -c 8-)" >> $GITHUB_OUTPUT
-        continue-on-error: true
+          set -e
       - name: Pull request comment text
         id: benchmark-comment
         run: |
