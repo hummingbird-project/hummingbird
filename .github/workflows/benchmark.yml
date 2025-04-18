@@ -27,7 +27,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        image: ["swift:6.1"]
+        image: ["swift:latest"]
         
     container:
       image: ${{ matrix.image }}
@@ -37,16 +37,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Homebrew Mac
-        if: ${{ runner.os == 'Macos' }}
+      - name: Install libjemalloc-dev
         run: |
-          echo "/opt/homebrew/bin:/usr/local/bin" >> $GITHUB_PATH
-          brew install jemalloc
-  
-      - name: Ubuntu deps
-        if: ${{ runner.os == 'Linux' }}
-        run: |
-          sudo apt-get install -y libjemalloc-dev
+          apt-get -q update
+          apt-get install -y libjemalloc-dev
 
         # https://github.com/actions/checkout/issues/766
       - name: Mark the workspace as safe
