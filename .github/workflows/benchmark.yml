@@ -69,27 +69,24 @@ jobs:
         run: |
           set +e
           cd Benchmarks          
-          echo '## Summary' >> $GITHUB_STEP_SUMMARY
-          echo $(date) >> $GITHUB_STEP_SUMMARY
           # if we had access to fd 3 we could do this in one call eg { var=$(cmd 3>&2 2>&1 1>&3); }  2>&1
           # but unfortunately we don't so we have to run the baseline check twice once to extract stdout 
           # and once to extract stderr
           BENCHMARK_STDERR=$(swift package benchmark baseline check main pull_request 2>&1)
-          swift package benchmark baseline check main pull_request --format markdown >> $GITHUB_STEP_SUMMARY
           echo "exit-status=$?" >> $GITHUB_OUTPUT
           echo "benchmark-error=$(echo -e "$BENCHMARK_STDERR" | grep -e "^error: .*" | tail -n 1 | cut -c 8-)" >> $GITHUB_OUTPUT
           set -e
       - name: Pull request comment text
         id: benchmark-comment
         run: |
-          cd Benchmarks          
-          echo "[Pull request benchmark comparison [${{ matrix.os }}] with 'main' run at $(date -Iseconds)](https://github.com/adam-fowler/${{ github.event.repository.name }}/actions/runs/${{ github.run_id }})" >> comment.md
+          cd Benchmarks
+
+          echo 'PRTEST<<EOF' >> $GITHUB_ENV
 
           EXIT_CODE='${{steps.benchmark.outputs.exit-status}}'
-
           case "${EXIT_CODE}" in
             0)
-              echo "_Pull request no significant performance differences ✅_" >> comment.md
+              echo "_Pull request no significant performance differences ✅_"
               echo "exitStatus=0" >> $GITHUB_ENV
               ;;
             *)
@@ -97,29 +94,36 @@ jobs:
               BENCHMARK_ERROR='${{steps.benchmark.outputs.benchmark-error}}'
               case "${BENCHMARK_ERROR}" in
                 "benchmarkThresholdRegression")
-                  echo "_Pull request has performance regressions ❌_" >> comment.md
+                  echo "_Pull request has performance regressions ❌_"
                   echo "exitStatus=1" >> $GITHUB_ENV
                   ;;
                 "benchmarkThresholdImprovement")
-                  echo "_Pull request has performance improvements ✅_" >> comment.md
+                  echo "_Pull request has performance improvements ✅_"
                   echo "exitStatus=0" >> $GITHUB_ENV
                   ;;
                 *)
-                  echo "_Benchmark comparison failed with error $BENCHMARK_ERROR ❌_" >> comment.md
+                  echo "_Benchmark comparison failed with error $BENCHMARK_ERROR ❌_"
                   echo "exitStatus=1" >> $GITHUB_ENV
                   ;;
               esac
               ;;
           esac
 
-          echo '---' >> $GITHUB_STEP_SUMMARY
-          swift package benchmark baseline compare main pull_request --no-progress --quiet --format markdown >> $GITHUB_STEP_SUMMARY
+          set +e
+          echo "<details><summary>Summary</summary>"
+          swift package benchmark baseline check main pull_request --format markdown
+          echo "</details><details><summary>Full Benchmark Comparison</summary>"
+          swift package benchmark baseline compare main pull_request --no-progress --quiet --format markdown
+          echo "</details>"
+          set -e
+
+          echo 'EOF' >> $GITHUB_ENV
       - name: Comment PR
         if: ${{ env.hasBenchmark == '1' }}
         uses: thollander/actions-comment-pull-request@v3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          file-path: comment.md
+          message: ${{ env.PRTEST }}
           comment-tag: benchmark
       - name: Exit with correct status
         run: |
