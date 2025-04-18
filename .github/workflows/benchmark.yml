@@ -87,21 +87,21 @@ jobs:
           EXIT_STATUS=0
           case "${EXIT_CODE}" in
             0)
-              echo "_✅ Pull request no significant performance differences ✅_"
+              echo "_✅ Pull request no significant performance differences ✅_" >> $GITHUB_ENV
               ;;
             *)
               # Get error string from benchmark output
               BENCHMARK_ERROR='${{steps.benchmark.outputs.benchmark-error}}'
               case "${BENCHMARK_ERROR}" in
                 "benchmarkThresholdRegression")
-                  echo "_❌ Pull request has performance regressions ❌_"
+                  echo "_❌ Pull request has performance regressions ❌_" >> $GITHUB_ENV
                   EXIT_STATUS=1
                   ;;
                 "benchmarkThresholdImprovement")
-                  echo "_✅ Pull request has performance improvements ✅_"
+                  echo "_✅ Pull request has performance improvements ✅_" >> $GITHUB_ENV
                   ;;
                 *)
-                  echo "_❌ Benchmark comparison failed with error $BENCHMARK_ERROR ❌_"
+                  echo "_❌ Benchmark comparison failed with error $BENCHMARK_ERROR ❌_" >> $GITHUB_ENV
                   EXIT_STATUS=1
                   ;;
               esac
@@ -109,11 +109,11 @@ jobs:
           esac
 
           set +e
-          echo "<details><summary>Summary</summary>"
-          swift package benchmark baseline check main pull_request --format markdown
-          echo "</details><details><summary>Full Benchmark Comparison</summary>"
-          swift package benchmark baseline compare main pull_request --no-progress --quiet --format markdown
-          echo "</details>"
+          echo "<details><summary>Summary</summary>" >> $GITHUB_ENV
+          swift package benchmark baseline check main pull_request --format markdown >> $GITHUB_ENV
+          echo "</details><details><summary>Full Benchmark Comparison</summary>" >> $GITHUB_ENV
+          swift package benchmark baseline compare main pull_request --no-progress --quiet --format markdown >> $GITHUB_ENV
+          echo "</details>" >> $GITHUB_ENV
           set -e
 
           echo 'EOF' >> $GITHUB_ENV
