@@ -24,6 +24,7 @@ import Logging
 import NIOConcurrencyHelpers
 import NIOCore
 import NIOEmbedded
+import NIOHTTPTypes
 import NIOSSL
 import ServiceLifecycle
 import Synchronization
@@ -1172,8 +1173,11 @@ final class ApplicationTests: XCTestCase {
             let b = try await request.body.collect(upTo: .max)
             return Response(status: .ok, body: .init(byteBuffer: b))
         }
+        var httpConfiguration = HTTP1Channel.Configuration()
+        httpConfiguration.pipliningAssistance = true
         let app = Application(
             router: router,
+            server: .http1(configuration: httpConfiguration),
             onServerRunning: { cont.yield($0.localAddress!.port!) }
         )
         do {
