@@ -27,7 +27,6 @@ import NIOEmbedded
 import NIOHTTPTypes
 import NIOSSL
 import ServiceLifecycle
-import Synchronization
 import XCTest
 
 @testable import Hummingbird
@@ -1196,10 +1195,10 @@ final class ApplicationTests: XCTestCase {
 
                 let port = await stream.first { _ in true }!
                 let task = Task {
-                    let count = Atomic(0)
+                    let count = ManagedAtomic(0)
                     let stream = AsyncStream {
-                        let values = count.add(1, ordering: .relaxed)
-                        if values.oldValue < 16 {
+                        let value = count.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
+                        if value < 16 {
                             try? await Task.sleep(for: .milliseconds(100))
                             return ByteBuffer(repeating: 0, count: 256)
                         } else {
