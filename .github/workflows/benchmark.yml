@@ -8,8 +8,9 @@ on:
     paths:
     - '**.swift'
     - '**.yml'
+
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-apibreakage
+  group: ${{ github.workflow }}-${{ github.ref }}-benchmark
   cancel-in-progress: true
     
 jobs:
@@ -18,73 +19,105 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     continue-on-error: true
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: read
 
     strategy:
       matrix:
         os: [ubuntu-latest]
-
+        image: ["swift:latest"]
+        
+    container:
+      image: ${{ matrix.image }}
+      
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Homebrew Mac
-        if: ${{ runner.os == 'Macos' }}
+      - name: Install libjemalloc-dev
         run: |
-          echo "/opt/homebrew/bin:/usr/local/bin" >> $GITHUB_PATH
-          brew install jemalloc
+          apt-get -q update
+          apt-get install -y libjemalloc-dev
 
-      - name: Ubuntu deps
-        if: ${{ runner.os == 'Linux' }}
+        # https://github.com/actions/checkout/issues/766
+      - name: Mark the workspace as safe
+        run: git config --global --add safe.directory ${GITHUB_WORKSPACE}
+        
+      - name: Miscellaneous
         run: |
-          sudo apt-get install -y libjemalloc-dev
-
-      - name: Git URL token override and misc
-        run: |
-          #git config --global url."https://ordo-ci:${{ secrets.CI_MACHINE_PAT }}@github.com".insteadOf "https://github.com"
-          #/usr/bin/ordo-performance
           [ -d Benchmarks ] && echo "hasBenchmark=1" >> $GITHUB_ENV
           echo "/opt/homebrew/bin:/usr/local/bin" >> $GITHUB_PATH
       - name: Run benchmarks for PR branch
         if: ${{ env.hasBenchmark == '1' }}
         run: |
-          cd Benchmarks
+          cd Benchmarks          
           swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update pull_request
-      - name: Switch to branch 'main'
-        if: ${{ env.hasBenchmark == '1' }}
+      - name: Checkout main
         run: |
-          git stash
-          git checkout main
+          git checkout main 
       - name: Run benchmarks for branch 'main'
         if: ${{ env.hasBenchmark == '1' }}
         run: |
-          cd Benchmarks
+          cd Benchmarks          
           swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update main
       - name: Compare PR and main
         if: ${{ env.hasBenchmark == '1' }}
         id: benchmark
         run: |
-          echo $(date) >> $GITHUB_STEP_SUMMARY
-          echo "exitStatus=1" >> $GITHUB_ENV
+          set +e
+          cd Benchmarks          
+          # if we had access to fd 3 we could do this in one call eg { var=$(cmd 3>&2 2>&1 1>&3); }  2>&1
+          # but unfortunately we don't so we have to run the baseline check twice once to extract stdout 
+          # and once to extract stderr
+          BENCHMARK_STDERR=$(swift package benchmark baseline check main pull_request 2>&1)
+          echo "exit-status=$?" >> $GITHUB_OUTPUT
+          echo "benchmark-error=$(echo -e "$BENCHMARK_STDERR" | grep -e "^error: .*" | tail -n 1 | cut -c 8-)" >> $GITHUB_OUTPUT
+          set -e
+      - name: Pull request comment text
+        id: benchmark-comment
+        run: |
           cd Benchmarks
-          swift package benchmark baseline check main pull_request --format markdown >> $GITHUB_STEP_SUMMARY
-          echo "exitStatus=0" >> $GITHUB_ENV
-        continue-on-error: true
-      - if: ${{ env.exitStatus == '0' }}
-        name: Pull request comment text success
-        id: prtestsuccess
-        run: |
+
           echo 'PRTEST<<EOF' >> $GITHUB_ENV
-          echo "[Pull request benchmark comparison [${{ matrix.os }}] with 'main' run at $(date -Iseconds)](https://github.com/hummingbird-project/${{ github.event.repository.name }}/actions/runs/${{ github.run_id }})" >> $GITHUB_ENV
+
+          EXIT_CODE='${{steps.benchmark.outputs.exit-status}}'
+          EXIT_STATUS=0
+          case "${EXIT_CODE}" in
+            0)
+              echo "_✅ Pull request no significant performance differences ✅_" >> $GITHUB_ENV
+              ;;
+            *)
+              # Get error string from benchmark output
+              BENCHMARK_ERROR='${{steps.benchmark.outputs.benchmark-error}}'
+              case "${BENCHMARK_ERROR}" in
+                "benchmarkThresholdRegression")
+                  echo "_❌ Pull request has performance regressions ❌_" >> $GITHUB_ENV
+                  EXIT_STATUS=1
+                  ;;
+                "benchmarkThresholdImprovement")
+                  echo "_✅ Pull request has performance improvements ✅_" >> $GITHUB_ENV
+                  ;;
+                *)
+                  echo "_❌ Benchmark comparison failed with error $BENCHMARK_ERROR ❌_" >> $GITHUB_ENV
+                  EXIT_STATUS=1
+                  ;;
+              esac
+              ;;
+          esac
+
+          set +e
+          echo "<details><summary>Summary</summary>" >> $GITHUB_ENV
+          swift package benchmark baseline check main pull_request --format markdown >> $GITHUB_ENV
+          echo "</details><details><summary>Full Benchmark Comparison</summary>" >> $GITHUB_ENV
+          swift package benchmark baseline compare main pull_request --no-progress --quiet --format markdown >> $GITHUB_ENV
+          echo "</details>" >> $GITHUB_ENV
+          set -e
+
           echo 'EOF' >> $GITHUB_ENV
-      - if: ${{ env.exitStatus == '1' }}
-        name: Pull request comment text failure
-        id: prtestfailure
-        run: |
-          echo 'PRTEST<<EOF' >> $GITHUB_ENV
-          echo "[Pull request benchmark comparison [${{ matrix.os }}] with 'main' run at $(date -Iseconds)](https://github.com/hummingbird-project/${{ github.event.repository.name }}/actions/runs/${{ github.run_id }})" >> $GITHUB_ENV
-          echo "_Pull request had performance regressions_" >> $GITHUB_ENV
-          echo 'EOF' >> $GITHUB_ENV
+          echo "exitStatus=$EXIT_STATUS" >> $GITHUB_ENV
       - name: Comment PR
         if: ${{ env.hasBenchmark == '1' }}
         uses: thollander/actions-comment-pull-request@v3
@@ -94,4 +127,5 @@ jobs:
           comment-tag: benchmark
       - name: Exit with correct status
         run: |
-          exit ${{ env.exitStatus }}
+          exit ${{env.exitStatus}}
+          
