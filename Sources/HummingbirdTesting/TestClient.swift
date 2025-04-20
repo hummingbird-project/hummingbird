@@ -180,7 +180,10 @@ public struct TestClient: Sendable {
             group.addTask {
                 let promise = self.eventLoopGroup.any().makePromise(of: TestClient.Response.self)
                 let task = HTTPTask(request: self.cleanupRequest(request), responsePromise: promise)
-                channel.writeAndFlush(task, promise: nil)
+                try await channel.writeAndFlush(task).flatMapErrorThrowing { error in
+                    promise.fail(error)
+                    throw error
+                }.get()
                 return try await promise.futureResult.get()
             }
             let response = try await group.next()

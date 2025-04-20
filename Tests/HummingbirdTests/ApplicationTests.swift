@@ -24,6 +24,7 @@ import Logging
 import NIOConcurrencyHelpers
 import NIOCore
 import NIOEmbedded
+import NIOHTTP1
 import NIOHTTPTypes
 import NIOSSL
 import ServiceLifecycle
@@ -1162,7 +1163,44 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    @available(macOS 15, *)
+    func testHTTPProtocolParseError() async throws {
+        final class CreateErrorHandler: ChannelInboundHandler, RemovableChannelHandler {
+            typealias InboundIn = HTTPRequestPart
+
+            func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+                if case .body = self.unwrapInboundIn(data) {
+                    context.fireErrorCaught(HTTPParserError.invalidInternalState)
+                }
+                context.fireChannelRead(data)
+            }
+        }
+        let router = Router()
+            .post { request, _ in
+                let buffer = try await request.body.collect(upTo: .max)
+                print(buffer.readableBytes)
+                return HTTPResponse.Status.ok
+            }
+        let app = Application(
+            router: router,
+            server: .http1(configuration: .init(additionalChannelHandlers: [CreateErrorHandler()]))
+        )
+        try await app.test(.live) { client in
+            // client should return badRequest and close the connection
+            do {
+                try await client.execute(uri: "", method: .post, body: ByteBuffer(string: "Hello")) { response in
+                    XCTAssertEqual(response.status, .badRequest)
+                }
+            } catch TestClient.Error.connectionClosing {
+                // sometimes connection close occurs before badRequest is received
+            }
+
+            do {
+                try await client.execute(uri: "", method: .post)
+                XCTFail("Connection should be closed")
+            } catch ChannelError.ioOnClosedChannel {}
+        }
+    }
+
     func testCancelledRequest() async throws {
         let httpClient = HTTPClient()
         let (stream, cont) = AsyncStream.makeStream(of: Int.self)
@@ -1215,8 +1253,6 @@ final class ApplicationTests: XCTestCase {
 
                 try await Task.sleep(for: .seconds(1))
                 task.cancel()
-                try await Task.sleep(for: .seconds(1))
-                //                _ = try await group.next()
                 await serviceGroup.triggerGracefulShutdown()
             }
         } catch {
