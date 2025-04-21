@@ -28,6 +28,8 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
         public var additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
         /// Time before closing an idle channel.
         public var idleTimeout: TimeAmount?
+        /// Internal flag for enabling/disabling pipeline assistance
+        package var pipliningAssistance: Bool = false
 
         ///  Initialize HTTP1Channel.Configuration
         /// - Parameters:
@@ -77,8 +79,8 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
     public func setup(channel: Channel, logger: Logger) -> EventLoopFuture<Value> {
         channel.eventLoop.makeCompletedFuture {
             try channel.pipeline.syncOperations.configureHTTPServerPipeline(
-                withPipeliningAssistance: false,  // HTTP is pipelined by NIOAsyncChannel
-                withErrorHandling: true,
+                withPipeliningAssistance: self.configuration.pipliningAssistance,  // HTTP is pipelined by NIOAsyncChannel
+                withErrorHandling: false,  // We doing the error handling in Application
                 withOutboundHeaderValidation: false  // Swift HTTP Types are already doing this validation
             )
             try channel.pipeline.syncOperations.addHandler(HTTP1ToHTTPServerCodec(secure: false))

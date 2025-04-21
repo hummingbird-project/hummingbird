@@ -15,6 +15,7 @@
 import HummingbirdCore
 import Logging
 import NIOCore
+import NIOHTTP1
 import NIOHTTPTypes
 import NIOPosix
 import ServiceLifecycle
@@ -116,6 +117,17 @@ extension ApplicationProtocol {
             var response: Response
             do {
                 response = try await responder.respond(to: request, context: context)
+            } catch let error as HTTPParserError {
+                // if we receive an HTTPParserError write badRequest and close connection
+                // by throwing the error
+                logger.debug("HTTP parse error, closing connection")
+                var errorResponseHeaders: HTTPFields = [.date: dateCache.date]
+                // server name header
+                if let serverName = self.configuration.serverName {
+                    errorResponseHeaders[.server] = serverName
+                }
+                try await responseWriter.writeResponse(.init(status: .badRequest, headerFields: errorResponseHeaders))
+                throw error
             } catch {
                 logger.debug("Unrecognised Error", metadata: ["error.type": "\(error)"])
                 response = Response(

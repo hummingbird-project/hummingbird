@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AsyncHTTPClient
 import Atomics
 import Foundation
 import HTTPTypes
@@ -23,6 +24,8 @@ import Logging
 import NIOConcurrencyHelpers
 import NIOCore
 import NIOEmbedded
+import NIOHTTP1
+import NIOHTTPTypes
 import NIOSSL
 import ServiceLifecycle
 import XCTest
@@ -1158,6 +1161,105 @@ final class ApplicationTests: XCTestCase {
                 XCTAssertEqual(response.status, .ok)
             }
         }
+    }
+
+    func testHTTPProtocolParseError() async throws {
+        final class CreateErrorHandler: ChannelInboundHandler, RemovableChannelHandler {
+            typealias InboundIn = HTTPRequestPart
+
+            func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+                if case .body = self.unwrapInboundIn(data) {
+                    context.fireErrorCaught(HTTPParserError.invalidInternalState)
+                }
+                context.fireChannelRead(data)
+            }
+        }
+        let router = Router()
+            .post { request, _ in
+                let buffer = try await request.body.collect(upTo: .max)
+                print(buffer.readableBytes)
+                return HTTPResponse.Status.ok
+            }
+        let app = Application(
+            router: router,
+            server: .http1(configuration: .init(additionalChannelHandlers: [CreateErrorHandler()]))
+        )
+        try await app.test(.live) { client in
+            // client should return badRequest and close the connection
+            do {
+                try await client.execute(uri: "", method: .post, body: ByteBuffer(string: "Hello")) { response in
+                    XCTAssertEqual(response.status, .badRequest)
+                }
+            } catch TestClient.Error.connectionClosing {
+                // sometimes connection close occurs before badRequest is received
+            }
+
+            do {
+                try await client.execute(uri: "", method: .post)
+                XCTFail("Connection should be closed")
+            } catch ChannelError.ioOnClosedChannel {}
+        }
+    }
+
+    func testCancelledRequest() async throws {
+        let httpClient = HTTPClient()
+        let (stream, cont) = AsyncStream.makeStream(of: Int.self)
+
+        let router = Router()
+        router.post("/") { request, context in
+            let b = try await request.body.collect(upTo: .max)
+            return Response(status: .ok, body: .init(byteBuffer: b))
+        }
+        var httpConfiguration = HTTP1Channel.Configuration()
+        httpConfiguration.pipliningAssistance = true
+        let app = Application(
+            router: router,
+            server: .http1(configuration: httpConfiguration),
+            onServerRunning: { cont.yield($0.localAddress!.port!) }
+        )
+        do {
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                let serviceGroup = ServiceGroup(
+                    configuration: .init(
+                        services: [app],
+                        gracefulShutdownSignals: [.sigterm, .sigint],
+                        logger: Logger(label: "SG")
+                    )
+                )
+
+                group.addTask {
+                    try await serviceGroup.run()
+                }
+
+                let port = await stream.first { _ in true }!
+                let task = Task {
+                    let count = ManagedAtomic(0)
+                    let stream = AsyncStream {
+                        let value = count.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
+                        if value < 16 {
+                            try? await Task.sleep(for: .milliseconds(100))
+                            return ByteBuffer(repeating: 0, count: 256)
+                        } else {
+                            return nil
+                        }
+                    }
+                    var request = HTTPClientRequest(url: "http://localhost:\(port)")
+                    request.method = .POST
+                    request.body = .stream(stream, length: .known(Int64(4096)))
+                    let response = try await httpClient.execute(request, deadline: .now() + .minutes(30))
+                    let result = try await response.body.collect(upTo: .max)
+                    print("Result size: \(result.readableBytes)")
+                }
+
+                try await Task.sleep(for: .seconds(1))
+                task.cancel()
+                await serviceGroup.triggerGracefulShutdown()
+            }
+        } catch {
+            try await httpClient.shutdown()
+            throw error
+        }
+        try await httpClient.shutdown()
     }
 }
 
