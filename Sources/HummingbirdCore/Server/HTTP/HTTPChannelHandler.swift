@@ -16,6 +16,7 @@ import HTTPTypes
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
+import NIOHTTP1
 import NIOHTTPTypes
 import ServiceLifecycle
 
@@ -31,6 +32,7 @@ public protocol HTTPChannelHandler: ServerChildChannel {
 @usableFromInline
 package enum HTTPChannelError: Error {
     case unexpectedHTTPPart(HTTPRequestPart)
+    case parseErrorWhileWritingResponse
 }
 
 extension HTTPChannelHandler {
@@ -40,47 +42,51 @@ extension HTTPChannelHandler {
                 try await asyncChannel.executeThenClose { inbound, outbound in
                     var iterator = inbound.makeAsyncIterator()
 
-                    // read first part, verify it is a head
-                    guard let part = try await iterator.next() else { return }
-                    guard case .head(var head) = part else {
-                        throw HTTPChannelError.unexpectedHTTPPart(part)
-                    }
-
-                    while true {
-                        let request = Request(
-                            head: head,
-                            bodyIterator: iterator
-                        )
-                        let responseWriter = ResponseWriter(outbound: outbound)
-                        do {
-                            try await self.responder(request, responseWriter, asyncChannel.channel)
-                        } catch {
-                            throw error
-                        }
-                        if request.headers[.connection] == "close" {
-                            return
+                    do {
+                        // read first part, verify it is a head
+                        guard let part = try await iterator.next() else { return }
+                        guard case .head(var head) = part else {
+                            throw HTTPChannelError.unexpectedHTTPPart(part)
                         }
 
-                        // Flush current request
-                        // read until we don't have a body part
-                        var part: HTTPRequestPart?
                         while true {
-                            part = try await iterator.next()
-                            guard case .body = part else { break }
-                        }
-                        // if we have an end then read the next part
-                        if case .end = part {
-                            part = try await iterator.next()
-                        }
+                            let request = Request(
+                                head: head,
+                                bodyIterator: iterator
+                            )
+                            let responseWriter = ResponseWriter(outbound: outbound)
+                            try await self.responder(request, responseWriter, asyncChannel.channel)
+                            if request.headers[.connection] == "close" {
+                                return
+                            }
 
-                        // if part is nil break out of loop
-                        guard let part else {
-                            break
-                        }
+                            // Flush current request
+                            // read until we don't have a body part
+                            var part: HTTPRequestPart?
+                            while true {
+                                part = try await iterator.next()
+                                guard case .body = part else { break }
+                            }
+                            // if we have an end then read the next part
+                            if case .end = part {
+                                part = try await iterator.next()
+                            }
 
-                        // part should be a head, if not throw error
-                        guard case .head(let newHead) = part else { throw HTTPChannelError.unexpectedHTTPPart(part) }
-                        head = newHead
+                            // if part is nil break out of loop
+                            guard let part else {
+                                break
+                            }
+
+                            // part should be a head, if not throw error
+                            guard case .head(let newHead) = part else { throw HTTPChannelError.unexpectedHTTPPart(part) }
+                            head = newHead
+                        }
+                    } catch is HTTPParserError {
+                        // if we receive an HTTPParserError write badRequest and close connection
+                        // by throwing the error
+                        logger.debug("HTTP parse error, closing connection")
+                        try await outbound.write(.head(.init(status: .badRequest, headerFields: [.connection: "close", .contentLength: "0"])))
+                        try await outbound.write(.end(nil))
                     }
                 }
             } onCancel: {

@@ -118,15 +118,6 @@ extension ApplicationProtocol {
             do {
                 response = try await responder.respond(to: request, context: context)
             } catch let error as HTTPParserError {
-                // if we receive an HTTPParserError write badRequest and close connection
-                // by throwing the error
-                logger.debug("HTTP parse error, closing connection")
-                var errorResponseHeaders: HTTPFields = [.date: dateCache.date]
-                // server name header
-                if let serverName = self.configuration.serverName {
-                    errorResponseHeaders[.server] = serverName
-                }
-                try await responseWriter.writeResponse(.init(status: .badRequest, headerFields: errorResponseHeaders))
                 throw error
             } catch {
                 logger.debug("Unrecognised Error", metadata: ["error.type": "\(error)"])
@@ -140,9 +131,15 @@ extension ApplicationProtocol {
             if let serverName = self.configuration.serverName {
                 response.headers[.server] = serverName
             }
-            // Write response
-            let bodyWriter = try await responseWriter.writeHead(response.head)
-            try await response.body.write(bodyWriter)
+            do {
+                // Write response
+                let bodyWriter = try await responseWriter.writeHead(response.head)
+                try await response.body.write(bodyWriter)
+            } catch is HTTPParserError {
+                // cannot throw the parser error, as that will cause another response
+                // to be written
+                throw HTTPChannelError.parseErrorWhileWritingResponse
+            }
         } onServerRunning: {
             await self.onServerRunning($0)
         }
