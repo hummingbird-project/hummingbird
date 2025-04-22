@@ -23,7 +23,7 @@ import XCTest
 final class HTTP1ChannelTests: XCTestCase {
     func testHTTP1Channel(
         _ test: (NIOAsyncTestingChannel) async throws -> Void,
-        responder: @escaping HTTPChannelHandler.Responder = { request, writer, _ in
+        responder: @escaping HTTPChannelHandler.Responder = { (request: Request, writer: consuming ResponseWriter, channel: Channel) in
             let body = try await request.body.collect(upTo: .max)
             try await writer.writeResponse(
                 .init(
