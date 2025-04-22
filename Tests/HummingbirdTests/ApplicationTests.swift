@@ -1180,9 +1180,11 @@ final class ApplicationTests: XCTestCase {
                 print(buffer.readableBytes)
                 return HTTPResponse.Status.ok
             }
+        var httpConfiguration = HTTP1Channel.Configuration(additionalChannelHandlers: [CreateErrorHandler()])
+        httpConfiguration.pipliningAssistance = true
         let app = Application(
             router: router,
-            server: .http1(configuration: .init(additionalChannelHandlers: [CreateErrorHandler()]))
+            server: .http1(configuration: httpConfiguration)
         )
         try await app.test(.live) { client in
             // client should return badRequest and close the connection
