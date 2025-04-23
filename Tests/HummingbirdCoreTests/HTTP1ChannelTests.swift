@@ -37,9 +37,9 @@ final class HTTP1ChannelTests: XCTestCase {
         let logger = Logger(label: "HTTP1Channel")
 
         let http1Channel = HTTP1Channel(responder: responder)
-        let value = try await channel.eventLoop.submit {
+        let value = try await channel.eventLoop.flatSubmit {
             http1Channel.setup(channel: channel, logger: logger)
-        }.get().get()
+        }.get()
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
