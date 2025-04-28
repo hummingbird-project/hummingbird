@@ -29,6 +29,20 @@ public actor MemoryPersistDriver<C: Clock>: PersistDriver where C.Duration == Du
         }
     }
 
+    /// Initialize MemoryPersistDriver
+    /// - Parameters:
+    ///   - clock: Clock to use when calculating expiration dates
+    @_disfavoredOverload
+    public init(_ clock: C = .continuous) {
+        self.values = [:]
+        self.clock = clock
+        self.configuration = .init()
+    }
+
+    /// Initialize MemoryPersistDriver
+    /// - Parameters:
+    ///   - clock: Clock to use when calculating expiration dates
+    ///   - configuration: Configuration of driver
     public init(_ clock: C = .continuous, configuration: Configuration = .init()) {
         self.values = [:]
         self.clock = clock
