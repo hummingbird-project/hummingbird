@@ -19,9 +19,11 @@ import XCTest
 final class PersistTests: XCTestCase {
     static let redisHostname = Environment().get("REDIS_HOSTNAME") ?? "localhost"
 
-    func createRouter() throws -> (Router<BasicRequestContext>, PersistDriver) {
+    func createRouter(
+        configuration: MemoryPersistDriver<ContinuousClock>.Configuration = .init()
+    ) throws -> (Router<BasicRequestContext>, PersistDriver) {
         let router = Router()
-        let persist = MemoryPersistDriver()
+        let persist = MemoryPersistDriver(configuration: configuration)
 
         router.put("/persist/:tag") { request, context -> HTTPResponse.Status in
             let buffer = try await request.body.collect(upTo: .max)
@@ -222,6 +224,19 @@ final class PersistTests: XCTestCase {
             try await client.execute(uri: "/persist/\(tag)", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(String(buffer: response.body), "ThisIsTest1")
+            }
+        }
+    }
+
+    func testTidy() async throws {
+        let (router, persist) = try createRouter(configuration: .init(tidyFrequency: .milliseconds(1)))
+        let app = Application(responder: router.buildResponder(), services: [persist])
+        try await app.test(.router) { client in
+            let tag = UUID().uuidString
+            try await client.execute(uri: "/persist/\(tag)/10", method: .put, body: ByteBufferAllocator().buffer(string: "NotExpired")) { _ in }
+            try await Task.sleep(for: .milliseconds(20))
+            try await client.execute(uri: "/persist/\(tag)", method: .get) { response in
+                XCTAssertEqual(String(buffer: response.body), "NotExpired")
             }
         }
     }
