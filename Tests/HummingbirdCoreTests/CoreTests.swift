@@ -204,6 +204,25 @@ final class HummingbirdCoreTests: XCTestCase {
         )
     }
 
+    func testWriteLargeBodyAndClose() async throws {
+        try await testServer(
+            responder: { (_, responseWriter: consuming ResponseWriter, _) in
+                let buffer = Self.randomBuffer(size: 1_140_000)
+                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                try await bodyWriter.write(buffer)
+                try await bodyWriter.finish(nil)
+            },
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
+            logger: Logger(label: "Hummingbird"),
+            test: { client in
+                let response = try await client.get("/", headers: [.connection: "close"])
+                let body = try XCTUnwrap(response.body)
+                XCTAssertEqual(body.readableBytes, 1_140_000)
+            }
+        )
+    }
+
     func testStreamBody() async throws {
         try await testServer(
             responder: { (request, responseWriter: consuming ResponseWriter, _) in

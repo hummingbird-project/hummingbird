@@ -91,7 +91,7 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
             try channel.pipeline.syncOperations.addHandler(HTTPUserEventHandler(logger: logger))
             return try NIOAsyncChannel(
                 wrappingChannelSynchronously: channel,
-                configuration: .init()
+                configuration: .init(isOutboundHalfClosureEnabled: true)
             )
         }
     }
