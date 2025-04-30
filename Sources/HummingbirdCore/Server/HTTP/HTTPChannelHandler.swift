@@ -57,7 +57,7 @@ extension HTTPChannelHandler {
                             let responseWriter = ResponseWriter(outbound: outbound)
                             try await self.responder(request, responseWriter, asyncChannel.channel)
                             if request.headers[.connection] == "close" {
-                                return
+                                break
                             }
 
                             // Flush current request
@@ -88,6 +88,9 @@ extension HTTPChannelHandler {
                         try await outbound.write(.head(.init(status: .badRequest, headerFields: [.connection: "close", .contentLength: "0"])))
                         try await outbound.write(.end(nil))
                     }
+                    // close outbound and wait for channel to close
+                    outbound.finish()
+                    try await asyncChannel.channel.closeFuture.get()
                 }
             } onCancel: {
                 asyncChannel.channel.close(mode: .input, promise: nil)
