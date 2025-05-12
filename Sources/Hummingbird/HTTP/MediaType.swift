@@ -211,6 +211,22 @@ public struct MediaType: Sendable, CustomStringConvertible {
     static let tSpecial = Set<Unicode.Scalar>(["(", ")", "<", ">", "@", ",", ";", ":", "\\", "\"", "/", "[", "]", "?", ".", "="])
 }
 
+extension MediaType: Codable {
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let value = try container.decode(String.self)
+        guard let value: Self = MediaType(from: value) else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Failed to decode MediaType"))
+        }
+        self = value
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(self.description)
+    }
+}
+
 extension MediaType {
     // types
     public static var application: Self { .init(type: .application) }

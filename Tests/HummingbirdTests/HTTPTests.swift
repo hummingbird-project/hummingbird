@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import Hummingbird
 import HummingbirdCore
 import XCTest
@@ -132,5 +133,21 @@ final class HTTPTests: XCTestCase {
         XCTAssertNil(MediaType(from: "application/json; charset"))
         XCTAssertNil(MediaType(from: "appl2ication/json"))
         XCTAssertNil(MediaType(from: "application/json charset=utf8"))
+    }
+
+    func testMediaTypeEncoding() throws {
+        let mediaType = MediaType.applicationJson.withParameter(name: "charset", value: "utf8")
+        let encoded = try JSONEncoder().encode(mediaType)
+        let encodedString = String(decoding: encoded, as: UTF8.self)
+        XCTAssertEqual(encodedString, "\"application\\/json; charset=utf8\"")
+    }
+
+    func testMediaTypeDecoding() throws {
+        let data = Data("\"application/json; charset=utf8\"".utf8)
+        let mediaType = try JSONDecoder().decode(MediaType.self, from: data)
+        XCTAssertEqual(mediaType.type, .application)
+        XCTAssertEqual(mediaType.subType, "json")
+        XCTAssertEqual(mediaType.parameter?.name, "charset")
+        XCTAssertEqual(mediaType.parameter?.value, "utf8")
     }
 }
