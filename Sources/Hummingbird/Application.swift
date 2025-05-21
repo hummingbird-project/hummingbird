@@ -227,7 +227,9 @@ where Responder.Context: InitializableFromSource<ApplicationRequestContextSource
             self.logger = logger
         } else {
             var logger = Logger(label: configuration.serverName ?? "Hummingbird")
-            logger.logLevel = Environment().get("LOG_LEVEL").map { Logger.Level(rawValue: $0) ?? .info } ?? .info
+            if let logLevel = Environment().get("LOG_LEVEL").flatMap({ Logger.Level(rawValue: $0) }) {
+                logger.logLevel = logLevel
+            }
             self.logger = logger
         }
         self.responder = responder
