@@ -15,11 +15,7 @@
 #if compiler(>=6.2)
 @_documentation(visibility: internal)
 public typealias _HB_SendableMetatype = SendableMetatype
-@_documentation(visibility: internal)
-public typealias _HB_SendableMetatypeAsyncIteratorProtocol = AsyncIteratorProtocol & SendableMetatype
 #else
 @_documentation(visibility: internal)
-public protocol _HB_SendableMetatype {}
-@_documentation(visibility: internal)
-public typealias _HB_SendableMetatypeAsyncIteratorProtocol = AsyncIteratorProtocol
+public typealias _HB_SendableMetatype = Any
 #endif

@@ -54,7 +54,7 @@ public struct RequestBody: Sendable, AsyncSequence {
     /// - Parameter asyncSequence: AsyncSequence
     @inlinable
     public init<AS: AsyncSequence & Sendable>(asyncSequence: AS)
-    where AS.Element == ByteBuffer, AS.AsyncIterator: _HB_SendableMetatypeAsyncIteratorProtocol {
+    where AS.Element == ByteBuffer, AS.AsyncIterator: _HB_SendableMetatype {
         self.init(.anyAsyncSequence(.init(asyncSequence), nil))
     }
 }
