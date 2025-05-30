@@ -41,8 +41,8 @@ extension Request {
     public func decode<Type: Decodable>(as type: Type.Type, context: some RequestContext) async throws -> Type {
         do {
             return try await context.requestDecoder.decode(type, from: self, context: context)
-        } catch DecodingError.dataCorrupted(_) {
-            let message = "The given data was not valid input."
+        } catch DecodingError.dataCorrupted(let context) {
+            let message = "The given data was not valid input: \(context.debugDescription)"
             throw HTTPError(.badRequest, message: message)
         } catch DecodingError.keyNotFound(let key, _) {
             let path = key.pathKeyValue
