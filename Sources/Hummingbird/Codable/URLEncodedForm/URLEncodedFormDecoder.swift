@@ -505,7 +505,7 @@ extension _URLEncodedFormDecoder {
         case .array, .map:
             return false
         case .empty:
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expect value not array or dictionary"))
+            return true
         }
     }
 
