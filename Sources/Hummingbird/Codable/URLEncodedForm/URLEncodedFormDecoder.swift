@@ -500,12 +500,12 @@ extension _URLEncodedFormDecoder: SingleValueDecodingContainer {
 extension _URLEncodedFormDecoder {
     func unboxNil(_ node: URLEncodedFormNode) throws -> Bool {
         switch node {
-            case .leaf(let value):
-                return value == nil
-            case .array, .map:
-                return false
-            case .empty:
-                throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expect value not array or dictionary"))
+        case .leaf(let value):
+            return value == nil
+        case .array, .map:
+            return false
+        case .empty:
+            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expect value not array or dictionary"))
         }
     }
 
