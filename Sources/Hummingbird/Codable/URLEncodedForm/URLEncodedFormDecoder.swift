@@ -504,7 +504,7 @@ extension _URLEncodedFormDecoder {
                 return value == nil
             case .array, .map:
                 return false
-            default:
+            case .empty:
                 throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expect value not array or dictionary"))
         }
     }
