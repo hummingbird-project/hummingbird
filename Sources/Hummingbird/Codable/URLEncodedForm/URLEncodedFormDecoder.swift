@@ -505,7 +505,7 @@ extension _URLEncodedFormDecoder {
         case .array, .map:
             return false
         case .empty:
-            return true
+            return false
         }
     }
 
