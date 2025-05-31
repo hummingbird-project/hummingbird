@@ -145,6 +145,15 @@ final class URLDecodedFormDecoderTests: XCTestCase {
         }
     }
 
+    func testDecodeBool() {
+        struct Test: Codable, Equatable {
+            let b: Bool
+        }
+
+        let test = Test(b: true)
+        self.testForm(test, query: "b")
+    }
+
     func testStringSpecialCharactersDecode() {
         struct Test: Codable, Equatable {
             let a: String

@@ -109,6 +109,9 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
                 }
 
                 try node.addValue(keys: keys[...], value: value, key: key)
+            } else {
+                let key = element
+                try node.addValue(keys: [.map(key)], value: nil, key: String(key))
             }
         }
         return node
@@ -118,7 +121,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
     /// - Parameters:
     ///   - keys: Array of key parser types (array or map)
     ///   - value: value to add to leaf node
-    private func addValue(keys: ArraySlice<KeyParser.KeyType>, value: NodeValue, key: String) throws {
+    private func addValue(keys: ArraySlice<KeyParser.KeyType>, value: NodeValue?, key: String) throws {
         /// function for create `URLEncodedFormNode` from `KeyParser.Key.Type`
         func createNode(from key: KeyParser.KeyType) -> URLEncodedFormNode {
             switch key {

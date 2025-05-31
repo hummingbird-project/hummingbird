@@ -516,7 +516,7 @@ extension _URLEncodedFormDecoder {
                 throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected Bool"))
             }
         } else {
-            return false
+            return true
         }
     }
 
