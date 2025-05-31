@@ -118,7 +118,7 @@ private class _URLEncodedFormDecoder: Decoder {
         case .empty:
             KeyedDecodingContainer(KDC(container: .init(values: [:]), decoder: self))
         default:
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected a dictionary"))
+            throw DecodingError.typeMismatch([String: Any].self, .init(codingPath: self.codingPath, debugDescription: "Expected a dictionary"))
         }
     }
 
@@ -129,7 +129,7 @@ private class _URLEncodedFormDecoder: Decoder {
         case .empty:
             UKDC(container: .init(values: []), decoder: self)
         default:
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected an array"))
+            throw DecodingError.typeMismatch([Any].self, .init(codingPath: self.codingPath, debugDescription: "Expected an array"))
         }
     }
 
@@ -278,7 +278,7 @@ private class _URLEncodedFormDecoder: Decoder {
                 throw DecodingError.keyNotFound(key, .init(codingPath: self.codingPath, debugDescription: ""))
             }
             guard case .map(let map) = node else {
-                throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected a dictionary"))
+                throw DecodingError.typeMismatch([String: Any].self, .init(codingPath: self.codingPath, debugDescription: "Expected a dictionary"))
             }
             let container = KDC<NestedKey>(container: map, decoder: self.decoder)
             return KeyedDecodingContainer(container)
@@ -292,7 +292,7 @@ private class _URLEncodedFormDecoder: Decoder {
                 throw DecodingError.keyNotFound(key, .init(codingPath: self.codingPath, debugDescription: ""))
             }
             guard case .array(let array) = node else {
-                throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected a dictionary"))
+                throw DecodingError.typeMismatch([String: Any].self, .init(codingPath: self.codingPath, debugDescription: "Expected a dictionary"))
             }
             return UKDC(container: array, decoder: self.decoder)
         }
@@ -407,7 +407,7 @@ private class _URLEncodedFormDecoder: Decoder {
             let node = container.values[self.currentIndex]
             self.currentIndex += 1
             guard case .map(let map) = node else {
-                throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected a dictionary"))
+                throw DecodingError.typeMismatch([String: Any].self, .init(codingPath: self.codingPath, debugDescription: "Expected a dictionary"))
             }
             let container = KDC<NestedKey>(container: map, decoder: self.decoder)
             return KeyedDecodingContainer(container)
@@ -420,7 +420,7 @@ private class _URLEncodedFormDecoder: Decoder {
             let node = self.container.values[self.currentIndex]
             self.currentIndex += 1
             guard case .array(let array) = node else {
-                throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected an array"))
+                throw DecodingError.typeMismatch([String: Any].self, .init(codingPath: self.codingPath, debugDescription: "Expected an array"))
             }
             return UKDC(container: array, decoder: self.decoder)
         }
@@ -511,13 +511,13 @@ extension _URLEncodedFormDecoder {
 
     func unbox(_ node: URLEncodedFormNode, as type: Bool.Type) throws -> Bool {
         guard case .leaf(let value) = node else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expect value not array or dictionary"))
+            throw DecodingError.typeMismatch(Bool.self, .init(codingPath: self.codingPath, debugDescription: "Expect value not array or dictionary"))
         }
         if let value2 = value {
             if let unboxValue = Bool(value2.value) {
                 return unboxValue
             } else {
-                throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected Bool"))
+                throw DecodingError.typeMismatch(Bool.self, .init(codingPath: self.codingPath, debugDescription: "Expected Boolean value"))
             }
         } else {
             return false
@@ -526,107 +526,110 @@ extension _URLEncodedFormDecoder {
 
     func unbox(_ node: URLEncodedFormNode, as type: String.Type) throws -> String {
         guard case .leaf(let value) = node else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expect value not array or dictionary"))
+            throw DecodingError.typeMismatch(
+                String.self,
+                .init(codingPath: self.codingPath, debugDescription: "Expect value not array or dictionary")
+            )
         }
         guard let value2 = value else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected value not empty string"))
+            throw DecodingError.typeMismatch(String.self, .init(codingPath: self.codingPath, debugDescription: "Expected value not empty string"))
         }
         return value2.value
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: URL.Type) throws -> URL {
         guard case .leaf(let value) = node else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expect value not array or dictionary"))
+            throw DecodingError.typeMismatch(URL.self, .init(codingPath: self.codingPath, debugDescription: "Expect value not array or dictionary"))
         }
         guard let value2 = value else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected value not empty string"))
+            throw DecodingError.typeMismatch(URL.self, .init(codingPath: self.codingPath, debugDescription: "Expected value not empty string"))
         }
         guard let url = URL(string: value2.value) else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Invalid URL String"))
+            throw DecodingError.typeMismatch(URL.self, .init(codingPath: self.codingPath, debugDescription: "Invalid URL String"))
         }
         return url
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: Double.Type) throws -> Double {
         guard let unboxValue = try Double(unbox(node, as: String.self)) else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected Double"))
+            throw DecodingError.typeMismatch(Double.self, .init(codingPath: self.codingPath, debugDescription: "Expected Double"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: Float.Type) throws -> Float {
         guard let unboxValue = try Float(unbox(node, as: String.self)) else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected Float"))
+            throw DecodingError.typeMismatch(Float.self, .init(codingPath: self.codingPath, debugDescription: "Expected Float"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: Int.Type) throws -> Int {
         guard let unboxValue = try Int(unbox(node, as: String.self)) else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected Int"))
+            throw DecodingError.typeMismatch(Int.self, .init(codingPath: self.codingPath, debugDescription: "Expected Int"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: Int8.Type) throws -> Int8 {
         guard let unboxValue = try Int8(unbox(node, as: String.self)) else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected Int8"))
+            throw DecodingError.typeMismatch(Int8.self, .init(codingPath: self.codingPath, debugDescription: "Expected Int8"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: Int16.Type) throws -> Int16 {
         guard let unboxValue = try Int16(unbox(node, as: String.self)) else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected Int16"))
+            throw DecodingError.typeMismatch(Int16.self, .init(codingPath: self.codingPath, debugDescription: "Expected Int16"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: Int32.Type) throws -> Int32 {
         guard let unboxValue = try Int32(unbox(node, as: String.self)) else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected Int32"))
+            throw DecodingError.typeMismatch(Int32.self, .init(codingPath: self.codingPath, debugDescription: "Expected Int32"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: Int64.Type) throws -> Int64 {
         guard let unboxValue = try Int64(unbox(node, as: String.self)) else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected Int64"))
+            throw DecodingError.typeMismatch(Int64.self, .init(codingPath: self.codingPath, debugDescription: "Expected Int64"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: UInt.Type) throws -> UInt {
         guard let unboxValue = try UInt(unbox(node, as: String.self)) else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected UInt"))
+            throw DecodingError.typeMismatch(UInt.self, .init(codingPath: self.codingPath, debugDescription: "Expected UInt"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: UInt8.Type) throws -> UInt8 {
         guard let unboxValue = try UInt8(unbox(node, as: String.self)) else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected UInt8"))
+            throw DecodingError.typeMismatch(UInt8.self, .init(codingPath: self.codingPath, debugDescription: "Expected UInt8"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: UInt16.Type) throws -> UInt16 {
         guard let unboxValue = try UInt16(unbox(node, as: String.self)) else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected UInt16"))
+            throw DecodingError.typeMismatch(UInt16.self, .init(codingPath: self.codingPath, debugDescription: "Expected UInt16"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: UInt32.Type) throws -> UInt32 {
         guard let unboxValue = try UInt32(unbox(node, as: String.self)) else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected UInt32"))
+            throw DecodingError.typeMismatch(UInt32.self, .init(codingPath: self.codingPath, debugDescription: "Expected UInt32"))
         }
         return unboxValue
     }
 
     func unbox(_ node: URLEncodedFormNode, as type: UInt64.Type) throws -> UInt64 {
         guard let unboxValue = try UInt64(unbox(node, as: String.self)) else {
-            throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Expected UInt64"))
+            throw DecodingError.typeMismatch(UInt64.self, .init(codingPath: self.codingPath, debugDescription: "Expected UInt64"))
         }
         return unboxValue
     }
@@ -647,11 +650,15 @@ extension _URLEncodedFormDecoder {
             let dateString = try unbox(node, as: String.self)
             #if compiler(>=6.0)
             guard let date = try? Date(dateString, strategy: .iso8601) else {
-                throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Invalid date format"))
+                throw DecodingError.dataCorrupted(
+                    .init(codingPath: self.codingPath, debugDescription: "Expected date string to be ISO8601-formatted.")
+                )
             }
             #else
             guard let date = URLEncodedForm.iso8601Formatter.date(from: dateString) else {
-                throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Invalid date format"))
+                throw DecodingError.dataCorrupted(
+                    .init(codingPath: self.codingPath, debugDescription: "Expected date string to be ISO8601-formatted.")
+                )
             }
             #endif
             return date
