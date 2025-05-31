@@ -145,6 +145,18 @@ final class URLDecodedFormDecoderTests: XCTestCase {
         }
     }
 
+    func testOptionalArrays() {
+        struct Test: Codable, Equatable {
+            let arr: [Int]?
+        }
+
+        let test = Test(arr: [1, 2, 3, 4])
+        self.testForm(test, query: "arr[]=1&arr[]=2&arr[]=3&arr[]=4")
+
+        let test2 = Test(arr: nil)
+        self.testForm(test2, query: "")
+    }
+
     func testStringSpecialCharactersDecode() {
         struct Test: Codable, Equatable {
             let a: String
@@ -193,6 +205,18 @@ final class URLDecodedFormDecoderTests: XCTestCase {
         }
         let test = Test(a: ["one": 1, "two": 2, "three": 3])
         self.testForm(test, query: "a[one]=1&a[three]=3&a[two]=2")
+    }
+
+    func testOptionalMaps() {
+        struct Test: Codable, Equatable {
+            let map: [String: Int]?
+        }
+
+        let test = Test(map: ["one": 1, "two": 2, "three": 3])
+        self.testForm(test, query: "map[one]=1&map[two]=2&map[three]=3")
+
+        let test2 = Test(map: nil)
+        self.testForm(test2, query: "")
     }
 
     func testDateDecode() {
