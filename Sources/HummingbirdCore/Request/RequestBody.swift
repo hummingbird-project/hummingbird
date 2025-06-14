@@ -52,6 +52,7 @@ public struct RequestBody: Sendable, AsyncSequence {
 
     ///  Initialise ``RequestBody`` from AsyncSequence of ByteBuffers
     /// - Parameter asyncSequence: AsyncSequence
+    @preconcurrency
     @inlinable
     public init<AS: AsyncSequence & Sendable>(asyncSequence: AS)
     where AS.Element == ByteBuffer, AS.AsyncIterator: _HB_SendableMetatype {

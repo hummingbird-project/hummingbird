@@ -17,6 +17,7 @@ import HummingbirdCore
 import NIOCore
 
 /// Conform to `RouterMethods` to add standard router verb (get, post ...) methods
+@preconcurrency
 public protocol RouterMethods<Context>: _HB_SendableMetatype {
     associatedtype Context: RequestContext
 
