@@ -13,11 +13,13 @@
 //===----------------------------------------------------------------------===//
 
 import HTTPTypes
+import HummingbirdCore
 
 /// Object that can generate a `Response`.
 ///
 /// This is used by `Router` to convert handler return values into a `Response`.
-public protocol ResponseGenerator {
+@preconcurrency
+public protocol ResponseGenerator: _HB_SendableMetatype {
     /// Generate response based on the request this object came from
     func response(from request: Request, context: some RequestContext) throws -> Response
 }
