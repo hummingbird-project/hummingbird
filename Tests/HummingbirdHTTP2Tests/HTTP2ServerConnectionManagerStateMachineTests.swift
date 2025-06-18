@@ -35,10 +35,7 @@ final class HTTP2ServerConnectionManagerStateMachineTests: XCTestCase {
         }
         XCTAssertEqual(close, true)
         XCTAssertEqual(lastStreamId, 2)
-        guard case .closed = stateMachine.state else {
-            XCTFail()
-            return
-        }
+        XCTAssert(stateMachine.isClosed())
     }
 
     func testAddCloseRemove() {
@@ -57,10 +54,7 @@ final class HTTP2ServerConnectionManagerStateMachineTests: XCTestCase {
         XCTAssertEqual(close, false)
         XCTAssertEqual(lastStreamId, 2)
         XCTAssertEqual(stateMachine.streamClosed(.init(2)), .close)
-        guard case .closed = stateMachine.state else {
-            XCTFail()
-            return
-        }
+        XCTAssert(stateMachine.isClosed())
     }
 
     func testCloseAddRemove() {
@@ -79,10 +73,7 @@ final class HTTP2ServerConnectionManagerStateMachineTests: XCTestCase {
         XCTAssertEqual(close, false)
         XCTAssertEqual(lastStreamId, 2)
         XCTAssertEqual(stateMachine.streamClosed(.init(2)), .close)
-        guard case .closed = stateMachine.state else {
-            XCTFail()
-            return
-        }
+        XCTAssert(stateMachine.isClosed())
     }
 
     func testReceivedPing() {
@@ -112,10 +103,7 @@ final class HTTP2ServerConnectionManagerStateMachineTests: XCTestCase {
             return
         }
         XCTAssertEqual(id, 4)
-        guard case .closed = stateMachine.state else {
-            XCTFail()
-            return
-        }
+        XCTAssert(stateMachine.isClosed())
     }
 
     func testClosedState() {

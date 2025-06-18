@@ -16,27 +16,31 @@ import NIOCore
 import NIOHTTP2
 
 extension HTTP2ServerConnectionManager {
-    struct StateMachine {
+    struct StateMachine: ~Copyable {
         var state: State
 
         init() {
             self.state = .active(.init())
         }
 
+        fileprivate init(state: consuming State) {
+            self.state = state
+        }
+
         mutating func streamOpened(_ id: HTTP2StreamID) {
-            switch self.state {
+            switch consume self.state {
             case .active(var activeState):
                 activeState.openStreams.insert(id)
                 activeState.lastStreamId = id
-                self.state = .active(activeState)
+                self = .active(activeState)
 
             case .closing(var closingState):
                 closingState.openStreams.insert(id)
                 closingState.lastStreamId = id
-                self.state = .closing(closingState)
+                self = .closing(closingState)
 
             case .closed:
-                break
+                self = .closed
             }
         }
 
@@ -47,10 +51,10 @@ extension HTTP2ServerConnectionManager {
         }
 
         mutating func streamClosed(_ id: HTTP2StreamID) -> StreamClosedResult {
-            switch self.state {
+            switch consume self.state {
             case .active(var activeState):
                 activeState.openStreams.remove(id)
-                self.state = .active(activeState)
+                self = .active(activeState)
                 if activeState.openStreams.isEmpty {
                     return .startIdleTimer
                 } else {
@@ -60,14 +64,15 @@ extension HTTP2ServerConnectionManager {
             case .closing(var closingState):
                 closingState.openStreams.remove(id)
                 if closingState.openStreams.isEmpty, closingState.sentSecondGoAway == true {
-                    self.state = .closed
+                    self = .closed
                     return .close
                 } else {
-                    self.state = .closing(closingState)
+                    self = .closing(closingState)
                     return .none
                 }
 
             case .closed:
+                self = .closed
                 return .none
             }
         }
@@ -78,16 +83,18 @@ extension HTTP2ServerConnectionManager {
         }
 
         mutating func triggerGracefulShutdown() -> TriggerGracefulShutdownResult {
-            switch self.state {
+            switch consume self.state {
             case .active(let activeState):
                 let closingState = State.ClosingState(from: activeState)
-                self.state = .closing(closingState)
+                self = .closing(closingState)
                 return .sendGoAway(pingData: closingState.goAwayPingData)
 
-            case .closing:
+            case .closing(let closingState):
+                self = .closing(closingState)
                 return .none
 
             case .closed:
+                self = .closed
                 return .none
             }
         }
@@ -99,28 +106,29 @@ extension HTTP2ServerConnectionManager {
         }
 
         mutating func receivedPing(atTime time: NIODeadline, data: HTTP2PingData) -> ReceivedPingResult {
-            switch self.state {
+            switch consume self.state {
             case .active(var activeState):
                 let tooManyPings = activeState.keepalive.receivedPing(atTime: time, hasOpenStreams: activeState.openStreams.count > 0)
                 if tooManyPings {
-                    self.state = .closed
+                    self = .closed
                     return .enhanceYourCalmAndClose(lastStreamId: activeState.lastStreamId)
                 } else {
-                    self.state = .active(activeState)
+                    self = .active(activeState)
                     return .sendPingAck(pingData: data)
                 }
 
             case .closing(var closingState):
                 let tooManyPings = closingState.keepalive.receivedPing(atTime: time, hasOpenStreams: closingState.openStreams.count > 0)
                 if tooManyPings {
-                    self.state = .closed
+                    self = .closed
                     return .enhanceYourCalmAndClose(lastStreamId: closingState.lastStreamId)
                 } else {
-                    self.state = .closing(closingState)
+                    self = .closing(closingState)
                     return .sendPingAck(pingData: data)
                 }
 
             case .closed:
+                self = .closed
                 return .none
             }
         }
@@ -131,24 +139,27 @@ extension HTTP2ServerConnectionManager {
         }
 
         mutating func receivedPingAck(data: HTTP2PingData) -> ReceivedPingAckResult {
-            switch self.state {
-            case .active:
+            switch consume self.state {
+            case .active(let activeState):
+                self = .active(activeState)
                 return .none
 
             case .closing(var state):
                 guard state.goAwayPingData == data else {
+                    self = .closing(state)
                     return .none
                 }
                 state.sentSecondGoAway = true
                 if state.openStreams.count > 0 {
-                    self.state = .closing(state)
+                    self = .closing(state)
                     return .sendGoAway(lastStreamId: state.lastStreamId, close: false)
                 } else {
-                    self.state = .closed
+                    self = .closed
                     return .sendGoAway(lastStreamId: state.lastStreamId, close: true)
                 }
 
             case .closed:
+                self = .closed
                 return .none
             }
         }
@@ -160,28 +171,39 @@ extension HTTP2ServerConnectionManager {
         }
 
         mutating func inputClosed() -> InputClosedResult {
-            switch self.state {
+            switch consume self.state {
             case .active(let activeState):
-                self.state = .closed
+                self = .closed
                 return .closeWithGoAway(lastStreamId: activeState.lastStreamId)
 
             case .closing(let closeState):
                 if closeState.sentSecondGoAway {
-                    self.state = .closed
+                    self = .closed
                     return .close
                 } else {
+                    self = .closing(closeState)
                     return .closeWithGoAway(lastStreamId: closeState.lastStreamId)
                 }
 
             case .closed:
+                self = .closed
                 return .none
+            }
+        }
+
+        package func isClosed() -> Bool {
+            switch self.state {
+            case .closed:
+                return true
+            default:
+                return false
             }
         }
     }
 }
 
 extension HTTP2ServerConnectionManager.StateMachine {
-    enum State {
+    enum State: ~Copyable {
         struct ActiveState {
             var openStreams: Set<HTTP2StreamID>
             var lastStreamId: HTTP2StreamID
@@ -285,4 +307,13 @@ extension HTTP2ServerConnectionManager.StateMachine {
             return tooManyPings
         }
     }
+}
+
+extension HTTP2ServerConnectionManager.StateMachine {
+    //     case active(ActiveState)
+    //     case closing(ClosingState)
+    //     case closed
+    static func active(_ state: State.ActiveState) -> Self { .init(state: .active(state)) }
+    static func closing(_ state: State.ClosingState) -> Self { .init(state: .closing(state)) }
+    static var closed: Self { .init(state: .closed) }
 }
