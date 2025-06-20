@@ -102,7 +102,7 @@ final class HummingBirdTLSTests: XCTestCase {
                     XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
                 }
                 XCTFail("Client connection should fail as certificate verification is set to fail")
-            } catch TestClient.Error.connectionClosing {}
+            } catch BoringSSLError.sslError {}
         }
     }
 
