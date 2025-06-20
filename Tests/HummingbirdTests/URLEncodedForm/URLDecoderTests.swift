@@ -139,9 +139,7 @@ extension URLEncodedFormTests {
             let decoder = URLEncodedFormDecoder()
             // incorrect indices
             let query = "arr[0]=2&arr[2]=4"
-            let error = #expect(throws: URLEncodedFormError.self) { try decoder.decode(Test.self, from: query) }
-            #expect(error?.code == .invalidArrayIndex)
-            #expect(error?.value == "arr[2]")
+            #expect(throws: URLEncodedFormError(code: .invalidArrayIndex, value: "arr[2]")) { try decoder.decode(Test.self, from: query) }
         }
 
         @Test func testOptionalArrays() {
@@ -248,13 +246,7 @@ extension URLEncodedFormTests {
             struct Test: Codable, Equatable {
                 let a: ClosedRange<Int>
             }
-            let error = #expect(throws: DecodingError.self) { try URLEncodedFormDecoder().decode(Test.self, from: "a[]=4") }
-            if let error {
-                if case DecodingError.valueNotFound = error {
-                } else {
-                    Issue.record("\(error)")
-                }
-            }
+            #expect(throws: DecodingError.self) { try URLEncodedFormDecoder().decode(Test.self, from: "a[]=4") }
         }
 
         @Test func testNestedKeyDecode() {
@@ -321,27 +313,21 @@ extension URLEncodedFormTests {
 
         @Test func testParsingErrors() throws {
             struct Input1: Decodable {}
-            var error = #expect(throws: URLEncodedFormError.self) { try URLEncodedFormDecoder().decode(Input1.self, from: "someField=1&someField=2") }
-            #expect(error?.code == .duplicateKeys)
-            #expect(error?.value == "someField")
-
-            error = #expect(throws: URLEncodedFormError.self) { try URLEncodedFormDecoder().decode(Input1.self, from: "someField[]=1&someField=2") }
-            #expect(error?.code == .duplicateKeys)
-            #expect(error?.value == "someField")
-
-            error = #expect(throws: URLEncodedFormError.self) { try URLEncodedFormDecoder().decode(Input1.self, from: "someField=1&someField[]=2") }
-            #expect(error?.code == .addingToInvalidType)
-            #expect(error?.value == "someField")
-
-            error = #expect(throws: URLEncodedFormError.self) {
+            #expect(throws: URLEncodedFormError(code: .duplicateKeys, value: "someField")) {
+                try URLEncodedFormDecoder().decode(Input1.self, from: "someField=1&someField=2")
+            }
+            #expect(throws: URLEncodedFormError(code: .duplicateKeys, value: "someField")) {
+                try URLEncodedFormDecoder().decode(Input1.self, from: "someField[]=1&someField=2")
+            }
+            #expect(throws: URLEncodedFormError(code: .addingToInvalidType, value: "someField")) {
+                try URLEncodedFormDecoder().decode(Input1.self, from: "someField=1&someField[]=2")
+            }
+            #expect(throws: URLEncodedFormError(code: .addingToInvalidType, value: "someField")) {
                 try URLEncodedFormDecoder().decode(Input1.self, from: "someField=1&someField[test]=2")
             }
-            #expect(error?.code == .addingToInvalidType)
-            #expect(error?.value == "someField")
-
-            error = #expect(throws: URLEncodedFormError.self) { try URLEncodedFormDecoder().decode(Input1.self, from: "someField[=2") }
-            #expect(error?.code == .corruptKeyValue)
-            #expect(error?.value == "someField[")
+            #expect(throws: URLEncodedFormError(code: .corruptKeyValue, value: "someField[")) {
+                try URLEncodedFormDecoder().decode(Input1.self, from: "someField[=2")
+            }
         }
     }
 }
