@@ -12,21 +12,22 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import HummingbirdTesting
 import Logging
 import NIOConcurrencyHelpers
-import XCTest
+import Testing
 
 @testable import Hummingbird
 
-final class MiddlewareTests: XCTestCase {
+struct MiddlewareTests {
     static func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
         data = data.map { _ in UInt8.random(in: 0...255) }
         return ByteBufferAllocator().buffer(bytes: data)
     }
 
-    func testMiddleware() async throws {
+    @Test func testMiddleware() async throws {
         struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 var response = try await next(request, context)
@@ -42,12 +43,12 @@ final class MiddlewareTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
-                XCTAssertEqual(response.headers[.test], "TestMiddleware")
+                #expect(response.headers[.test] == "TestMiddleware")
             }
         }
     }
 
-    func testMiddlewareOrder() async throws {
+    @Test func testMiddlewareOrder() async throws {
         struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
             let string: String
             public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
@@ -66,17 +67,17 @@ final class MiddlewareTests: XCTestCase {
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
                 // headers come back in opposite order as middleware is applied to responses in that order
-                XCTAssertEqual(response.headers[values: .test].first, "second")
-                XCTAssertEqual(response.headers[values: .test].last, "first")
+                #expect(response.headers[values: .test].first == "second")
+                #expect(response.headers[values: .test].last == "first")
             }
         }
     }
 
-    func testMiddlewareRunOnce() async throws {
+    @Test func testMiddlewareRunOnce() async throws {
         struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 var response = try await next(request, context)
-                XCTAssertNil(response.headers[.test])
+                #expect(response.headers[.test] == nil)
                 response.headers[.test] = "alreadyRun"
                 return response
             }
@@ -93,7 +94,7 @@ final class MiddlewareTests: XCTestCase {
         }
     }
 
-    func testMiddlewareRunWhenNoRouteFound() async throws {
+    @Test func testMiddlewareRunWhenNoRouteFound() async throws {
         /// Error message returned by Hummingbird
         struct ErrorMessage: Codable {
             struct Details: Codable {
@@ -117,17 +118,17 @@ final class MiddlewareTests: XCTestCase {
 
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
-                XCTAssertEqual(response.status, .notFound)
+                #expect(response.status == .notFound)
                 let error = try JSONDecoder().decodeByteBuffer(ErrorMessage.self, from: response.body)
-                XCTAssertEqual(error.error.message, "Edited error")
+                #expect(error.error.message == "Edited error")
             }
         }
     }
 
-    func testEndpointPathInGroup() async throws {
+    @Test func testEndpointPathInGroup() async throws {
         struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-                XCTAssertNotNil(context.endpointPath)
+                #expect(context.endpointPath != nil)
                 return try await next(request, context)
             }
         }
@@ -144,7 +145,7 @@ final class MiddlewareTests: XCTestCase {
         }
     }
 
-    func testMiddlewareResponseBodyWriter() async throws {
+    @Test func testMiddlewareResponseBodyWriter() async throws {
         struct TransformWriter: ResponseBodyWriter {
             var parentWriter: any ResponseBodyWriter
 
@@ -180,12 +181,12 @@ final class MiddlewareTests: XCTestCase {
             let buffer = Self.randomBuffer(size: 64000)
             try await client.execute(uri: "/test", method: .get, body: buffer) { response in
                 let expectedOutput = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
-                XCTAssertEqual(expectedOutput, response.body)
+                #expect(expectedOutput == response.body)
             }
         }
     }
 
-    func testMappedResponseBodyWriter() async throws {
+    @Test func testMappedResponseBodyWriter() async throws {
         struct TransformWriter: ResponseBodyWriter {
             var parentWriter: any ResponseBodyWriter
 
@@ -220,12 +221,12 @@ final class MiddlewareTests: XCTestCase {
             let buffer = Self.randomBuffer(size: 64000)
             try await client.execute(uri: "/test", method: .get, body: buffer) { response in
                 let expectedOutput = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
-                XCTAssertEqual(expectedOutput, response.body)
+                #expect(expectedOutput == response.body)
             }
         }
     }
 
-    func testCORSUseOrigin() async throws {
+    @Test func testCORSUseOrigin() async throws {
         let router = Router()
         router.add(middleware: CORSMiddleware())
         router.get("/hello") { _, _ -> String in
@@ -235,12 +236,12 @@ final class MiddlewareTests: XCTestCase {
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get, headers: [.origin: "foo.com"]) { response in
                 // headers come back in opposite order as middleware is applied to responses in that order
-                XCTAssertEqual(response.headers[.accessControlAllowOrigin], "foo.com")
+                #expect(response.headers[.accessControlAllowOrigin] == "foo.com")
             }
         }
     }
 
-    func testCORSUseAll() async throws {
+    @Test func testCORSUseAll() async throws {
         let router = Router()
         router.add(middleware: CORSMiddleware(allowOrigin: .all))
         router.get("/hello") { _, _ -> String in
@@ -250,12 +251,12 @@ final class MiddlewareTests: XCTestCase {
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get, headers: [.origin: "foo.com"]) { response in
                 // headers come back in opposite order as middleware is applied to responses in that order
-                XCTAssertEqual(response.headers[.accessControlAllowOrigin], "*")
+                #expect(response.headers[.accessControlAllowOrigin] == "*")
             }
         }
     }
 
-    func testCORSOptions() async throws {
+    @Test func testCORSOptions() async throws {
         let router = Router()
         router.add(
             middleware: CORSMiddleware(
@@ -274,32 +275,32 @@ final class MiddlewareTests: XCTestCase {
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .options, headers: [.origin: "foo.com"]) { response in
                 // headers come back in opposite order as middleware is applied to responses in that order
-                XCTAssertEqual(response.headers[.accessControlAllowOrigin], "*")
+                #expect(response.headers[.accessControlAllowOrigin] == "*")
                 let headers = response.headers[.accessControlAllowHeaders]  // .joined(separator: ", ")
-                XCTAssertEqual(headers, "content-type, authorization")
+                #expect(headers == "content-type, authorization")
                 let methods = response.headers[.accessControlAllowMethods]  // .joined(separator: ", ")
-                XCTAssertEqual(methods, "GET, PUT, DELETE, OPTIONS")
-                XCTAssertEqual(response.headers[.accessControlAllowCredentials], "true")
-                XCTAssertEqual(response.headers[.accessControlMaxAge], "3600")
+                #expect(methods == "GET, PUT, DELETE, OPTIONS")
+                #expect(response.headers[.accessControlAllowCredentials] == "true")
+                #expect(response.headers[.accessControlMaxAge] == "3600")
                 let exposedHeaders = response.headers[.accessControlExposeHeaders]  // .joined(separator: ", ")
-                XCTAssertEqual(exposedHeaders, "content-length")
+                #expect(exposedHeaders == "content-length")
             }
         }
     }
 
-    func testCORSHeadersAndErrors() async throws {
+    @Test func testCORSHeadersAndErrors() async throws {
         let router = Router()
         router.add(middleware: CORSMiddleware())
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get, headers: [.origin: "foo.com"]) { response in
                 // headers come back in opposite order as middleware is applied to responses in that order
-                XCTAssertEqual(response.headers[.accessControlAllowOrigin], "foo.com")
+                #expect(response.headers[.accessControlAllowOrigin] == "foo.com")
             }
         }
     }
 
-    func testLogRequestMiddleware() async throws {
+    @Test func testLogRequestMiddleware() async throws {
         let logAccumalator = TestLogHandler.LogAccumalator()
         let router = Router()
         router.add(middleware: LogRequestsMiddleware(.info))
@@ -320,14 +321,14 @@ final class MiddlewareTests: XCTestCase {
                 body: .init(string: "{}")
             ) { _ in
                 let logs = logAccumalator.filter { $0.metadata?["hb.request.path"]?.description == "/test" }
-                let firstLog = try XCTUnwrap(logs.first)
-                XCTAssertEqual(firstLog.metadata?["hb.request.method"]?.description, "GET")
-                XCTAssertNotNil(firstLog.metadata?["hb.request.id"])
+                let firstLog = try #require(logs.first)
+                #expect(firstLog.metadata?["hb.request.method"]?.description == "GET")
+                #expect(firstLog.metadata?["hb.request.id"] != nil)
             }
         }
     }
 
-    func testLogRequestMiddlewareHeaderFiltering() async throws {
+    @Test func testLogRequestMiddlewareHeaderFiltering() async throws {
         let logAccumalator = TestLogHandler.LogAccumalator()
         let router = Router()
         router.group()
@@ -353,7 +354,7 @@ final class MiddlewareTests: XCTestCase {
                 body: .init(string: "{}")
             ) { _ in
                 let logEntries = logAccumalator.filter { $0.metadata?["hb.request.path"]?.description == "/some" }
-                XCTAssertEqual(logEntries.first?.metadata?["hb.request.headers"], .stringConvertible(["content-type": "application/json"]))
+                #expect(logEntries.first?.metadata?["hb.request.headers"] == .stringConvertible(["content-type": "application/json"]))
             }
             try await client.execute(
                 uri: "/none",
@@ -362,7 +363,7 @@ final class MiddlewareTests: XCTestCase {
                 body: .init(string: "{}")
             ) { _ in
                 let logEntries = logAccumalator.filter { $0.metadata?["hb.request.path"]?.description == "/none" }
-                XCTAssertNil(logEntries.first?.metadata?["hb.request.headers"])
+                #expect(logEntries.first?.metadata?["hb.request.headers"] == nil)
             }
             try await client.execute(
                 uri: "/all",
@@ -374,15 +375,15 @@ final class MiddlewareTests: XCTestCase {
                 guard case .stringConvertible(let headers) = logEntries.first?.metadata?["hb.request.headers"] else {
                     fatalError("Should never get here")
                 }
-                let reportedHeaders = try XCTUnwrap(headers as? [String: String])
-                XCTAssertEqual(reportedHeaders["content-type"], "application/json")
-                XCTAssertEqual(reportedHeaders["content-length"], "2")
-                XCTAssertNil(reportedHeaders["connection"])
+                let reportedHeaders = try #require(headers as? [String: String])
+                #expect(reportedHeaders["content-type"] == "application/json")
+                #expect(reportedHeaders["content-length"] == "2")
+                #expect(reportedHeaders["connection"] == nil)
             }
         }
     }
 
-    func testLogRequestMiddlewareHeaderRedaction() async throws {
+    @Test func testLogRequestMiddlewareHeaderRedaction() async throws {
         let logAccumalator = TestLogHandler.LogAccumalator()
         let router = Router()
         router.group()
@@ -405,7 +406,7 @@ final class MiddlewareTests: XCTestCase {
                 body: .init(string: "{}")
             ) { _ in
                 let logEntries = logAccumalator.filter { $0.metadata?["hb.request.path"]?.description == "/some" }
-                XCTAssertEqual(logEntries.first?.metadata?["hb.request.headers"], .stringConvertible(["authorization": "***"]))
+                #expect(logEntries.first?.metadata?["hb.request.headers"] == .stringConvertible(["authorization": "***"]))
             }
             try await client.execute(
                 uri: "/all",
@@ -417,14 +418,14 @@ final class MiddlewareTests: XCTestCase {
                 guard case .stringConvertible(let headers) = logEntries.first?.metadata?["hb.request.headers"] else {
                     fatalError("Should never get here")
                 }
-                let reportedHeaders = try XCTUnwrap(headers as? [String: String])
-                XCTAssertEqual(reportedHeaders["authorization"], "***")
-                XCTAssertEqual(reportedHeaders["content-length"], "2")
+                let reportedHeaders = try #require(headers as? [String: String])
+                #expect(reportedHeaders["authorization"] == "***")
+                #expect(reportedHeaders["content-length"] == "2")
             }
         }
     }
 
-    func testLogRequestMiddlewareMultipleHeaders() async throws {
+    @Test func testLogRequestMiddlewareMultipleHeaders() async throws {
         let logAccumalator = TestLogHandler.LogAccumalator()
         let router = Router()
         router.add(middleware: LogRequestsMiddleware(.info, includeHeaders: [.test]))
@@ -448,13 +449,13 @@ final class MiddlewareTests: XCTestCase {
                 body: .init(string: "{}")
             ) { _ in
                 let logs = logAccumalator.filter { $0.metadata?["hb.request.path"]?.description == "/test" }
-                let firstLog = try XCTUnwrap(logs.first)
-                XCTAssertEqual(firstLog.metadata?["hb.request.headers"], .stringConvertible(["hbtest": "One, Two"]))
+                let firstLog = try #require(logs.first)
+                #expect(firstLog.metadata?["hb.request.headers"] == .stringConvertible(["hbtest": "One, Two"]))
             }
         }
     }
 
-    func testMiddlewareResultBuilder() async throws {
+    @Test func testMiddlewareResultBuilder() async throws {
         let router = Router()
         router.addMiddleware {
             TestMiddleware(string: "first")
@@ -467,13 +468,13 @@ final class MiddlewareTests: XCTestCase {
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
                 // headers come back in opposite order as middleware is applied to responses in that order
-                XCTAssertEqual(response.headers[values: .test].first, "second")
-                XCTAssertEqual(response.headers[values: .test].last, "first")
+                #expect(response.headers[values: .test].first == "second")
+                #expect(response.headers[values: .test].last == "first")
             }
         }
     }
 
-    func testMiddlewareEitherResultBuilder() async throws {
+    @Test func testMiddlewareEitherResultBuilder() async throws {
         func test(shouldUseFirst: Bool) async throws {
             let router = Router()
             router.addMiddleware {
@@ -487,8 +488,8 @@ final class MiddlewareTests: XCTestCase {
             let app = Application(responder: router.buildResponder())
             try await app.test(.router) { client in
                 try await client.execute(uri: "/hello", method: .get) { response in
-                    XCTAssertEqual(response.headers[values: .test].first, shouldUseFirst ? "first" : "second")
-                    XCTAssertEqual(response.headers[values: .test].count, 1)
+                    #expect(response.headers[values: .test].first == (shouldUseFirst ? "first" : "second"))
+                    #expect(response.headers[values: .test].count == 1)
                 }
             }
         }
@@ -499,7 +500,7 @@ final class MiddlewareTests: XCTestCase {
         try await test(shouldUseFirst: false)
     }
 
-    func testMiddlewareOptionalIfResultBuilder() async throws {
+    @Test func testMiddlewareOptionalIfResultBuilder() async throws {
         func test(shouldUseFirst: Bool) async throws {
             let router = Router()
             router.addMiddleware {
@@ -514,13 +515,13 @@ final class MiddlewareTests: XCTestCase {
             try await app.test(.router) { client in
                 try await client.execute(uri: "/hello", method: .get) { response in
                     // headers come back in opposite order as middleware is applied to responses in that order
-                    XCTAssertEqual(response.headers[values: .test].first, "second")
+                    #expect(response.headers[values: .test].first == "second")
 
                     if shouldUseFirst {
-                        XCTAssertEqual(response.headers[values: .test].last, "first")
-                        XCTAssertEqual(response.headers[values: .test].count, 2)
+                        #expect(response.headers[values: .test].last == "first")
+                        #expect(response.headers[values: .test].count == 2)
                     } else {
-                        XCTAssertEqual(response.headers[values: .test].count, 1)
+                        #expect(response.headers[values: .test].count == 1)
                     }
                 }
             }
@@ -533,7 +534,7 @@ final class MiddlewareTests: XCTestCase {
         try await test(shouldUseFirst: false)
     }
 
-    func testMiddlewareOptionalUnwrapResultBuilder() async throws {
+    @Test func testMiddlewareOptionalUnwrapResultBuilder() async throws {
         func test<M: RouterMiddleware>(middleware: M?) async throws where M.Context == BasicRequestContext {
             let router = Router()
             router.addMiddleware {
@@ -548,13 +549,13 @@ final class MiddlewareTests: XCTestCase {
             try await app.test(.router) { client in
                 try await client.execute(uri: "/hello", method: .get) { response in
                     // headers come back in opposite order as middleware is applied to responses in that order
-                    XCTAssertEqual(response.headers[values: .test].first, "second")
+                    #expect(response.headers[values: .test].first == "second")
 
                     if middleware != nil {
-                        XCTAssertEqual(response.headers[values: .test].last, "first")
-                        XCTAssertEqual(response.headers[values: .test].count, 2)
+                        #expect(response.headers[values: .test].last == "first")
+                        #expect(response.headers[values: .test].count == 2)
                     } else {
-                        XCTAssertEqual(response.headers[values: .test].count, 1)
+                        #expect(response.headers[values: .test].count == 1)
                     }
                 }
             }
@@ -567,7 +568,7 @@ final class MiddlewareTests: XCTestCase {
         try await test(middleware: Optional<TestMiddleware>.none)
     }
 
-    func testMiddlewareArrayResultBuilder() async throws {
+    @Test func testMiddlewareArrayResultBuilder() async throws {
         let limit = 5
         let router = Router()
         router.addMiddleware {
@@ -579,11 +580,8 @@ final class MiddlewareTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
-                XCTAssertEqual(
-                    response.headers[values: .test],
-                    (0..<limit).reversed().map {
-                        String($0)
-                    }
+                #expect(
+                    response.headers[values: .test] == (0..<limit).reversed().map { String($0) }
                 )
             }
         }

@@ -18,9 +18,9 @@ import Logging
 import NIOCore
 import NIOEmbedded
 import NIOHTTP1
-import XCTest
+import Testing
 
-final class HTTP1ChannelTests: XCTestCase {
+struct HTTP1ChannelTests {
     func testHTTP1Channel(
         _ test: (NIOAsyncTestingChannel) async throws -> Void,
         responder: @escaping HTTPChannelHandler.Responder = { (request: Request, writer: consuming ResponseWriter, channel: Channel) in
@@ -50,55 +50,50 @@ final class HTTP1ChannelTests: XCTestCase {
         }
     }
 
-    func testHTTPParserError() async throws {
+    @Test func testHTTPParserError() async throws {
         try await testHTTP1Channel { channel in
             channel.pipeline.fireErrorCaught(HTTPParserError.unknown)
             let outbound = try await channel.waitForOutboundWrite(as: ByteBuffer.self)
-            XCTAssertEqual(
-                String(buffer: outbound),
-                "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 0\r\n\r\n"
+            #expect(
+                String(buffer: outbound) == "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 0\r\n\r\n"
             )
         }
     }
 
-    func testHTTPParserErrorAfterHeader() async throws {
+    @Test func testHTTPParserErrorAfterHeader() async throws {
         try await testHTTP1Channel { channel in
             try await channel.writeInbound(ByteBuffer(string: "GET / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 16\r\n\r\n"))
             channel.pipeline.fireErrorCaught(HTTPParserError.unknown)
             let outbound = try await channel.waitForOutboundWrite(as: ByteBuffer.self)
-            XCTAssertEqual(
-                String(buffer: outbound),
-                "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 0\r\n\r\n"
+            #expect(
+                String(buffer: outbound) == "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 0\r\n\r\n"
             )
         }
     }
 
-    func testHTTPParserErrorAfterSuccessfulResponse() async throws {
+    @Test func testHTTPParserErrorAfterSuccessfulResponse() async throws {
         try await testHTTP1Channel { channel in
             try await channel.writeInbound(ByteBuffer(string: "GET / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 0\r\n\r\n"))
             var outbound = try await channel.waitForOutboundWrite(as: ByteBuffer.self)
-            XCTAssertEqual(
-                String(buffer: outbound),
-                "HTTP/1.1 200 OK\r\ntest: 0\r\nContent-Length: 0\r\n\r\n"
+            #expect(
+                String(buffer: outbound) == "HTTP/1.1 200 OK\r\ntest: 0\r\nContent-Length: 0\r\n\r\n"
             )
             channel.pipeline.fireErrorCaught(HTTPParserError.unknown)
             outbound = try await channel.waitForOutboundWrite(as: ByteBuffer.self)
-            XCTAssertEqual(
-                String(buffer: outbound),
-                "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 0\r\n\r\n"
+            #expect(
+                String(buffer: outbound) == "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 0\r\n\r\n"
             )
         }
     }
 
-    func testHTTPParserErrorInvalidMethod() async throws {
+    @Test func testHTTPParserErrorInvalidMethod() async throws {
         try await testHTTP1Channel { channel in
             do {
                 try await channel.writeInbound(ByteBuffer(string: "INVALID / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 0\r\n\r\n"))
             } catch HTTPParserError.invalidMethod {}
             let outbound = try await channel.waitForOutboundWrite(as: ByteBuffer.self)
-            XCTAssertEqual(
-                String(buffer: outbound),
-                "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 0\r\n\r\n"
+            #expect(
+                String(buffer: outbound) == "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 0\r\n\r\n"
             )
         }
     }

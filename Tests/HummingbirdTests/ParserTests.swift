@@ -12,115 +12,115 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
+import Testing
 
 @testable import HummingbirdCore
 
-final class ParserTests: XCTestCase {
-    func testCharacter() {
+struct ParserTests {
+    @Test func testCharacter() throws {
         var parser = Parser("TestString")
-        XCTAssertEqual(try parser.character(), "T")
-        XCTAssertEqual(try parser.character(), "e")
+        #expect(try parser.character() == "T")
+        #expect(try parser.character() == "e")
     }
 
-    func testSubstring() {
+    @Test func testSubstring() throws {
         var parser = Parser("TestString")
-        XCTAssertThrowsError(try parser.read(count: 23))
-        XCTAssertEqual(try parser.read(count: 3).string, "Tes")
-        XCTAssertEqual(try parser.read(count: 5).string, "tStri")
-        XCTAssertThrowsError(try parser.read(count: 3))
-        XCTAssertNoThrow(try parser.read(count: 2))
+        #expect(throws: (any Error).self) { try parser.read(count: 23) }
+        #expect(try parser.read(count: 3).string == "Tes")
+        #expect(try parser.read(count: 5).string == "tStri")
+        #expect(throws: (any Error).self) { try parser.read(count: 3) }
+        #expect(throws: Never.self) { try parser.read(count: 2) }
     }
 
-    func testReadCharacter() {
+    @Test func testReadCharacter() throws {
         var parser = Parser("TestString")
-        XCTAssertNoThrow(try parser.read("T"))
-        XCTAssertNoThrow(try parser.read("e"))
-        XCTAssertEqual(try parser.read("e"), false)
-        XCTAssertEqual(try parser.read(Set("hgs")), true)
+        #expect(throws: Never.self) { try parser.read("T") }
+        #expect(throws: Never.self) { try parser.read("e") }
+        #expect(try parser.read("e") == false)
+        #expect(try parser.read(Set("hgs")) == true)
     }
 
-    func testReadUntilCharacter() throws {
+    @Test func testReadUntilCharacter() throws {
         var parser = Parser("TestString")
-        XCTAssertEqual(try parser.read(until: "S").string, "Test")
-        XCTAssertEqual(try parser.read(until: "n").string, "Stri")
-        XCTAssertThrowsError(try parser.read(until: "!"))
+        #expect(try parser.read(until: "S").string == "Test")
+        #expect(try parser.read(until: "n").string == "Stri")
+        #expect(throws: (any Error).self) { try parser.read(until: "!") }
     }
 
-    func testReadUntilCharacterSet() throws {
+    @Test func testReadUntilCharacterSet() throws {
         var parser = Parser("TestString")
-        XCTAssertEqual(try parser.read(until: Set("Sr")).string, "Test")
-        XCTAssertEqual(try parser.read(until: Set("abcdefg")).string, "Strin")
+        #expect(try parser.read(until: Set("Sr")).string == "Test")
+        #expect(try parser.read(until: Set("abcdefg")).string == "Strin")
     }
 
-    func testReadUntilString() throws {
+    @Test func testReadUntilString() throws {
         var parser = Parser("<!-- check for -comment end -->")
-        XCTAssertEqual(try parser.read(untilString: "-->").string, "<!-- check for -comment end ")
-        XCTAssertTrue(try parser.read("-->"))
+        #expect(try parser.read(untilString: "-->").string == "<!-- check for -comment end ")
+        #expect(try parser.read("-->") == true)
     }
 
-    func testReadWhileCharacter() throws {
+    @Test func testReadWhileCharacter() throws {
         var parser = Parser("122333")
-        XCTAssertEqual(parser.read(while: "1"), 1)
-        XCTAssertEqual(parser.read(while: "2"), 2)
-        XCTAssertEqual(parser.read(while: "3"), 3)
+        #expect(parser.read(while: "1") == 1)
+        #expect(parser.read(while: "2") == 2)
+        #expect(parser.read(while: "3") == 3)
     }
 
-    func testReadWhileCharacterSet() throws {
+    @Test func testReadWhileCharacterSet() throws {
         var parser = Parser("aabbcdd836de")
-        XCTAssertEqual(parser.read(while: Set("abcdef")).string, "aabbcdd")
-        XCTAssertEqual(parser.read(while: Set("123456789")).string, "836")
-        XCTAssertEqual(parser.read(while: Set("abcdef")).string, "de")
+        #expect(parser.read(while: Set("abcdef")).string == "aabbcdd")
+        #expect(parser.read(while: Set("123456789")).string == "836")
+        #expect(parser.read(while: Set("abcdef")).string == "de")
     }
 
-    func testRetreat() throws {
+    @Test func testRetreat() throws {
         var parser = Parser("abcdef")
-        XCTAssertThrowsError(try parser.retreat())
+        #expect(throws: (any Error).self) { try parser.retreat() }
         _ = try parser.read(count: 4)
         try parser.retreat(by: 3)
-        XCTAssertEqual(try parser.read(count: 4).string, "bcde")
+        #expect(try parser.read(count: 4).string == "bcde")
     }
 
-    func testCopy() throws {
+    @Test func testCopy() throws {
         var parser = Parser("abcdef")
-        XCTAssertEqual(try parser.read(count: 3).string, "abc")
+        #expect(try parser.read(count: 3).string == "abc")
         var reader2 = parser
-        XCTAssertEqual(try parser.read(count: 3).string, "def")
-        XCTAssertEqual(try reader2.read(count: 3).string, "def")
+        #expect(try parser.read(count: 3).string == "def")
+        #expect(try reader2.read(count: 3).string == "def")
     }
 
-    func testSplit() throws {
+    @Test func testSplit() throws {
         var parser = Parser("abc,defgh,ijk")
         let split = parser.split(separator: ",")
-        XCTAssertEqual(split.count, 3)
-        XCTAssertEqual(split[0].string, "abc")
-        XCTAssertEqual(split[1].string, "defgh")
-        XCTAssertEqual(split[2].string, "ijk")
+        #expect(split.count == 3)
+        #expect(split[0].string == "abc")
+        #expect(split[1].string == "defgh")
+        #expect(split[2].string == "ijk")
     }
 
-    func testPercentDecode() throws {
+    @Test func testPercentDecode() throws {
         let string = "abc,é☺😀併"
         let encoded = string.addingPercentEncoding(forURLComponent: .queryItem)
         var parser = Parser(encoded)
         try! parser.read(until: ",")
-        let decoded = try XCTUnwrap(parser.percentDecode())
+        let decoded = try #require(parser.percentDecode())
 
-        XCTAssertEqual(decoded, ",é☺😀併")
+        #expect(decoded == ",é☺😀併")
     }
 
-    func testValidate() {
+    @Test func testValidate() {
         let string = "abc,é☺😀併"
-        XCTAssertNotNil(Parser([UInt8](string.utf8), validateUTF8: true))
+        #expect(Parser([UInt8](string.utf8), validateUTF8: true) != nil)
     }
 
-    func testSequence() {
+    @Test func testSequence() {
         let string = "abc,é☺😀併 lorem"
         var string2 = ""
         let parser = Parser(string)
         for c in parser {
             string2 += String(c)
         }
-        XCTAssertEqual(string, string2)
+        #expect(string == string2)
     }
 }
 

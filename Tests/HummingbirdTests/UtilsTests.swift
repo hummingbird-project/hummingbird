@@ -13,27 +13,29 @@
 //===----------------------------------------------------------------------===//
 
 import HummingbirdCore
-import XCTest
+import Testing
 
-final class FlatDictionaryTests: XCTestCase {
-    func testLiteralInit() {
-        let a: FlatDictionary<String, String> = ["test": "value", "key2": "value2"]
-        XCTAssertEqual(a["test"], "value")
-        XCTAssertEqual(a["key2"], "value2")
-    }
+struct UtilsTests {
+    struct FlatDictionaryTests {
+        @Test func testLiteralInit() {
+            let a: FlatDictionary<String, String> = ["test": "value", "key2": "value2"]
+            #expect(a["test"] == "value")
+            #expect(a["key2"] == "value2")
+        }
 
-    func testKeyGetSet() {
-        var a: FlatDictionary<String, String> = [:]
-        a["key"] = "value"
-        XCTAssertEqual(a["key"], "value")
-        a["key"] = nil
-        XCTAssertEqual(a["key2"], nil)
-    }
+        @Test func testKeyGetSet() {
+            var a: FlatDictionary<String, String> = [:]
+            a["key"] = "value"
+            #expect(a["key"] == "value")
+            a["key"] = nil
+            #expect(a["key2"] == nil)
+        }
 
-    func testKeyGetFirst() {
-        var a: FlatDictionary<String, String> = [:]
-        a.append(key: "key", value: "value1")
-        a.append(key: "key", value: "value2")
-        XCTAssertEqual(a["key"], "value1")
+        @Test func testKeyGetFirst() {
+            var a: FlatDictionary<String, String> = [:]
+            a.append(key: "key", value: "value1")
+            a.append(key: "key", value: "value2")
+            #expect(a["key"] == "value1")
+        }
     }
 }
