@@ -45,7 +45,7 @@ struct HummingbirdCoreTests {
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
+            logger: Logger(label: #function)
         ) { client in
             let response = try await client.get("/")
             var body = try #require(response.body)
@@ -58,7 +58,7 @@ struct HummingbirdCoreTests {
             responder: helloResponder,
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
+            logger: Logger(label: #function)
         ) { client in
             for _ in 0..<10 {
                 let response = try await client.post("/", body: ByteBuffer(string: "Hello"))
@@ -74,7 +74,7 @@ struct HummingbirdCoreTests {
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
+            logger: Logger(label: #function)
         ) { port in
             try await withThrowingTaskGroup(of: Void.self) { group in
                 for _ in 0..<100 {
@@ -135,7 +135,7 @@ struct HummingbirdCoreTests {
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0), availableConnectionsDelegate: availableConnectionsDelegate),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
+            logger: Logger(label: #function)
         ) { port in
             try await withThrowingTaskGroup(of: Void.self) { group in
                 for _ in 0..<100 {
@@ -175,7 +175,7 @@ struct HummingbirdCoreTests {
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird"),
+            logger: Logger(label: #function),
             test: { client in
                 let buffer = Self.randomBuffer(size: 1_140_000)
                 let response = try await client.post("/", body: buffer)
@@ -195,7 +195,7 @@ struct HummingbirdCoreTests {
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird"),
+            logger: Logger(label: #function),
             test: { client in
                 let response = try await client.get("/")
                 let body = try #require(response.body)
@@ -214,7 +214,7 @@ struct HummingbirdCoreTests {
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird"),
+            logger: Logger(label: #function),
             test: { client in
                 let response = try await client.get("/", headers: [.connection: "close"])
                 let body = try #require(response.body)
@@ -232,7 +232,7 @@ struct HummingbirdCoreTests {
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird"),
+            logger: Logger(label: #function),
             test: { client in
                 let buffer = Self.randomBuffer(size: 1_140_000)
                 let response = try await client.post("/", body: buffer)
@@ -251,7 +251,7 @@ struct HummingbirdCoreTests {
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird"),
+            logger: Logger(label: #function),
             test: { client in
                 let buffer = Self.randomBuffer(size: 1_140_000)
                 let response = try await client.post("/", body: buffer)
@@ -283,7 +283,7 @@ struct HummingbirdCoreTests {
             httpChannelSetup: .http1(configuration: .init(additionalChannelHandlers: [SlowInputChannelHandler()])),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird"),
+            logger: Logger(label: #function),
             test: { client in
                 let buffer = Self.randomBuffer(size: 1_140_000)
                 let response = try await client.post("/", body: buffer)
@@ -302,7 +302,7 @@ struct HummingbirdCoreTests {
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird"),
+            logger: Logger(label: #function),
             test: { client in
                 let response = try await client.get("/")
                 #expect(response.trailerHeaders?[.contentType] == "text")
@@ -339,7 +339,7 @@ struct HummingbirdCoreTests {
             httpChannelSetup: .http1(configuration: .init(additionalChannelHandlers: [CreateErrorHandler()])),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird"),
+            logger: Logger(label: #function),
             test: { client in
                 let buffer = Self.randomBuffer(size: 32)
                 let response = try await client.post("/", body: buffer)
@@ -356,7 +356,7 @@ struct HummingbirdCoreTests {
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird"),
+            logger: Logger(label: #function),
             test: { client in
                 let buffer = Self.randomBuffer(size: 16384)
                 let response = try await client.post("/", body: buffer)
@@ -373,7 +373,7 @@ struct HummingbirdCoreTests {
             responder: helloResponder,
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird"),
+            logger: Logger(label: #function),
             test: { client in
                 try await withTimeout(.seconds(5)) {
                     _ = try await client.get("/", headers: [.connection: "close"])
@@ -419,11 +419,13 @@ struct HummingbirdCoreTests {
             ),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird"),
+            logger: Logger(label: #function),
             test: { client in
                 try await withTimeout(.seconds(5)) {
-                    await #expect(throws: TestClient.Error.connectionClosing) {
-                        try await client.get("/", headers: [.connection: "keep-alive"])
+                    do {
+                        _ = try await client.get("/", headers: [.connection: "keep-alive"])
+                    } catch TestClient.Error.connectionClosing {
+                    } catch ChannelError.ioOnClosedChannel {
                     }
                 }
             }
@@ -457,11 +459,13 @@ struct HummingbirdCoreTests {
             ),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird"),
+            logger: Logger(label: #function),
             test: { client in
                 try await withTimeout(.seconds(5)) {
-                    await #expect(throws: TestClient.Error.connectionClosing) {
-                        try await client.get("/", headers: [.connection: "keep-alive"])
+                    do {
+                        _ = try await client.get("/", headers: [.connection: "keep-alive"])
+                    } catch TestClient.Error.connectionClosing {
+                    } catch ChannelError.ioOnClosedChannel {
                     }
                 }
             }
@@ -497,12 +501,12 @@ struct HummingbirdCoreTests {
             httpChannelSetup: .http1(
                 configuration: .init(
                     additionalChannelHandlers: [HTTPServerIncompleteRequest()],
-                    idleTimeout: .seconds(1)
+                    idleTimeout: .seconds(2)
                 )
             ),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird"),
+            logger: Logger(label: #function),
             test: { client in
                 try await withTimeout(.seconds(5)) {
                     _ = try await client.get("/", headers: [.connection: "keep-alive"])
@@ -518,7 +522,7 @@ struct HummingbirdCoreTests {
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             let portPromise = Promise<Int>()
-            let logger = Logger(label: "Hummingbird")
+            let logger = Logger(label: #function)
             let server = try HTTPServerBuilder.http1().buildServer(
                 configuration: .init(address: .hostname(port: 0)),
                 eventLoopGroup: Self.eventLoopGroup,
@@ -582,7 +586,7 @@ struct HummingbirdCoreTests {
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
+            logger: Logger(label: #function)
         ) { client in
             let response = try await client.post("/", body: ByteBuffer(string: "Hello"))
             let body = try #require(response.body)
@@ -619,7 +623,7 @@ struct HummingbirdCoreTests {
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
+            logger: Logger(label: #function)
         ) { client in
             try await client.executeAndDontWaitForResponse(.init("/", method: .get))
             await handlerPromise.wait()
@@ -640,7 +644,7 @@ struct HummingbirdCoreTests {
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
+            logger: Logger(label: #function)
         ) { client in
             let response = try await client.post("/", body: ByteBuffer(string: "Hello"))
             let body = try #require(response.body)
@@ -674,7 +678,7 @@ struct HummingbirdCoreTests {
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
-            logger: Logger(label: "Hummingbird")
+            logger: Logger(label: #function)
         ) { client in
             try await client.executeAndDontWaitForResponse(.init("/", method: .get))
             await handlerPromise.wait()

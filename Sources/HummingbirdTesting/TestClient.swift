@@ -182,7 +182,6 @@ public struct TestClient: Sendable {
                 let task = HTTPTask(request: self.cleanupRequest(request), responsePromise: promise)
                 try await channel.writeAndFlush(task).flatMapErrorThrowing { error in
                     promise.fail(error)
-                    throw error
                 }.get()
                 return try await promise.futureResult.get()
             }

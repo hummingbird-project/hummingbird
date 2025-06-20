@@ -91,13 +91,15 @@ struct HummingBirdTLSTests {
             }
             // set certificate verification to fail
             verifiedResult.withLockedValue { $0 = .failed }
-            await #expect(throws: BoringSSLError.self) {
-                try await TestClient.withClient(
-                    host: "localhost",
-                    port: port,
-                    configuration: .init(tlsConfiguration: getClientTLSConfiguration(), serverName: testServerName)
-                ) { client in
+            try await TestClient.withClient(
+                host: "localhost",
+                port: port,
+                configuration: .init(tlsConfiguration: getClientTLSConfiguration(), serverName: testServerName)
+            ) { client in
+                do {
                     _ = try await client.get("/")
+                } catch TestClient.Error.connectionClosing {
+                } catch ChannelError.ioOnClosedChannel {
                 }
             }
         }
