@@ -91,7 +91,7 @@ struct HummingBirdTLSTests {
             }
             // set certificate verification to fail
             verifiedResult.withLockedValue { $0 = .failed }
-            await #expect(throws: TestClient.Error.connectionClosing) {
+            await #expect(throws: BoringSSLError.self) {
                 try await TestClient.withClient(
                     host: "localhost",
                     port: port,
