@@ -384,6 +384,7 @@ struct HummingbirdCoreTests {
         )
     }
 
+    /// Test idle handler kicks in if request is never finished
     @Test func testUnfinishedReadIdleHandler() async throws {
         /// Channel Handler for serializing request header and data
         final class HTTPServerIncompleteRequest: ChannelInboundHandler, RemovableChannelHandler {
@@ -429,7 +430,7 @@ struct HummingbirdCoreTests {
         )
     }
 
-    /// Test idle handler kicks in 
+    /// Test idle handler kicks in if head is never sent after opening connection
     @Test func testUninitiatedReadIdleHandler() async throws {
         /// Channel Handler for serializing request header and data
         final class HTTPServerIncompleteRequest: ChannelInboundHandler, RemovableChannelHandler {
