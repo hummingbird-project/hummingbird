@@ -767,21 +767,21 @@ struct RouterTests {
         let router = Router()
         router.get("test/*") { _, _ in "" }
         router.get("test/{what}") { _, _ in "" }
-        #expect(throws: RouterValidationError(path: "/test/{what}", override: "/test/*")) { try router.validate() }
+        #expect(throws: RouterValidationError(path: "/test/*", override: "/test/{what}")) { try router.validate() }
     }
 
     @Test func testValidateParametersVsRecursiveWildcard() throws {
         let router = Router()
         router.get("test/**") { _, _ in "" }
         router.get("test/{what}") { _, _ in "" }
-        #expect(throws: RouterValidationError(path: "/test/{what}", override: "/test/**")) { try router.validate() }
+        #expect(throws: RouterValidationError(path: "/test/**", override: "/test/{what}")) { try router.validate() }
     }
 
     @Test func testValidateDifferentParameterNames() throws {
         let router = Router()
         router.get("test/{this}") { _, _ in "" }
         router.get("test/{what}") { _, _ in "" }
-        #expect(throws: RouterValidationError(path: "/test/{this}", override: "/test/{what}")) { try router.validate() }
+        #expect(throws: RouterValidationError(path: "/test/{what}", override: "/test/{this}")) { try router.validate() }
     }
 }
 
