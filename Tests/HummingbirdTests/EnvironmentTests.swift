@@ -19,9 +19,9 @@ import Testing
 
 struct EnvironmentTests {
     @Test func testInitFromEnvironment() {
-        #expect(setenv("TEST_VAR", "testSetFromEnvironment", 1) == 0)
+        #expect(setenv("testInitFromEnvironment", "testSetFromEnvironment", 1) == 0)
         let env = Environment()
-        #expect(env.get("TEST_VAR") == "testSetFromEnvironment")
+        #expect(env.get("testInitFromEnvironment") == "testSetFromEnvironment")
     }
 
     @Test func testInitFromDictionary() {
@@ -30,10 +30,10 @@ struct EnvironmentTests {
     }
 
     @Test func testInitFromCodable() {
-        let json = #"{"TEST_VAR": "testSetFromCodable"}"#
+        let json = #"{"testInitFromCodable": "testSetFromCodable"}"#
         var env: Environment?
         #expect(throws: Never.self) { env = try JSONDecoder().decode(Environment.self, from: Data(json.utf8)) }
-        #expect(env?.get("TEST_VAR") == "testSetFromCodable")
+        #expect(env?.get("testInitFromCodable") == "testSetFromCodable")
     }
 
     @Test func testRequire() throws {
@@ -75,10 +75,10 @@ struct EnvironmentTests {
     }
 
     @Test func testCaseInsensitive() {
-        #expect(setenv("test_VAR", "testSetFromEnvironment", 1) == 0)
+        #expect(setenv("testCaseInsensitive", "testSetFromEnvironment", 1) == 0)
         let env = Environment()
-        #expect(env.get("TEST_VAR") == "testSetFromEnvironment")
-        #expect(env.get("test_var") == "testSetFromEnvironment")
+        #expect(env.get("TESTCaseInsensitive") == "testSetFromEnvironment")
+        #expect(env.get("testcaseinsensitive") == "testSetFromEnvironment")
     }
 
     @Test func testDotEnvLoading() async throws {
@@ -164,7 +164,7 @@ struct EnvironmentTests {
 
     @Test func testDotEnvOverridingEnvironment() async throws {
         let dotenv = """
-            TEST_VAR=testDotEnvOverridingEnvironment
+            testDotEnvOverridingEnvironment=testDotEnvOverridingEnvironment
             """
         let data = dotenv.data(using: .utf8)
         let envURL = URL(fileURLWithPath: ".override.env")
@@ -172,10 +172,10 @@ struct EnvironmentTests {
         defer {
             try? FileManager.default.removeItem(at: envURL)
         }
-        #expect(setenv("TEST_VAR", "testSetFromEnvironment", 1) == 0)
-        #expect(setenv("TEST_VAR2", "testSetFromEnvironment2", 1) == 0)
+        #expect(setenv("testDotEnvOverridingEnvironment", "testSetFromEnvironment", 1) == 0)
+        #expect(setenv("testDotEnvOverridingEnvironment2", "testSetFromEnvironment2", 1) == 0)
         let env = try await Environment().merging(with: .dotEnv(".override.env"))
-        #expect(env.get("TEST_VAR") == "testDotEnvOverridingEnvironment")
-        #expect(env.get("TEST_VAR2") == "testSetFromEnvironment2")
+        #expect(env.get("testDotEnvOverridingEnvironment") == "testDotEnvOverridingEnvironment")
+        #expect(env.get("testDotEnvOverridingEnvironment2") == "testSetFromEnvironment2")
     }
 }
