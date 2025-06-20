@@ -28,9 +28,8 @@ struct UUIDTests {
         try await app.test(.router) { client in
             let uuid = UUID()
             try await client.execute(uri: "\(uuid)", method: .get) { response in
-                let body = try #require(response.body)
                 #expect(response.status == .ok)
-                #expect(String(buffer: body) == "\"\(uuid.uuidString)\"")
+                #expect(String(buffer: response.body) == "\"\(uuid.uuidString)\"")
             }
         }
     }
@@ -44,9 +43,8 @@ struct UUIDTests {
         try await app.test(.router) { client in
             let uuid = UUID()
             try await client.execute(uri: "\(uuid)", method: .get) { response in
-                let body = try #require(response.body)
                 #expect(response.status == .ok)
-                #expect(String(buffer: body) == "\"\(uuid.uuidString)\"")
+                #expect(String(buffer: response.body) == "\"\(uuid.uuidString)\"")
             }
         }
     }
@@ -62,9 +60,8 @@ struct UUIDTests {
             let uuid = UUID()
             let uuid2 = UUID()
             try await client.execute(uri: "/?id=\(uuid)&id=\(uuid2)&id=Wrong", method: .get) { response in
-                let body = try #require(response.body)
                 #expect(response.status == .ok)
-                #expect(String(buffer: body) == "[\"\(uuid.uuidString)\",\"\(uuid2.uuidString)\"]")
+                #expect(String(buffer: response.body) == "[\"\(uuid.uuidString)\",\"\(uuid2.uuidString)\"]")
             }
         }
     }
@@ -81,9 +78,8 @@ struct UUIDTests {
             let uuid2 = UUID()
             // test good request
             try await client.execute(uri: "/?id=\(uuid)&id=\(uuid2)", method: .get) { response in
-                let body = try #require(response.body)
                 #expect(response.status == .ok)
-                #expect(String(buffer: body) == "[\"\(uuid.uuidString)\",\"\(uuid2.uuidString)\"]")
+                #expect(String(buffer: response.body) == "[\"\(uuid.uuidString)\",\"\(uuid2.uuidString)\"]")
             }
             // test bad request
             try await client.execute(uri: "/?id=\(uuid)&id=\(uuid2)&id=Wrong", method: .get) { response in
