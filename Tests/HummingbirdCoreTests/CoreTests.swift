@@ -421,12 +421,8 @@ struct HummingbirdCoreTests {
             logger: Logger(label: "Hummingbird"),
             test: { client in
                 try await withTimeout(.seconds(5)) {
-                    do {
-                        _ = try await client.get("/", headers: [.connection: "keep-alive"])
-                        Issue.record("Should not get here")
-                    } catch TestClient.Error.connectionClosing {
-                    } catch {
-                        Issue.record("Unexpected error: \(error)")
+                    await #expect(throws: TestClient.Error.connectionClosing) {
+                        try await client.get("/", headers: [.connection: "keep-alive"])
                     }
                 }
             }
@@ -462,12 +458,8 @@ struct HummingbirdCoreTests {
             logger: Logger(label: "Hummingbird"),
             test: { client in
                 try await withTimeout(.seconds(5)) {
-                    do {
-                        _ = try await client.get("/", headers: [.connection: "keep-alive"])
-                        Issue.record("Should not get here")
-                    } catch TestClient.Error.connectionClosing {
-                    } catch {
-                        Issue.record("Unexpected error: \(error)")
+                    await #expect(throws: TestClient.Error.connectionClosing) {
+                        try await client.get("/", headers: [.connection: "keep-alive"])
                     }
                 }
             }
@@ -555,18 +547,17 @@ struct HummingbirdCoreTests {
                 configuration: .init()
             )
             group.addTask {
-                do {
-                    client.connect()
+                client.connect()
+                await #expect(throws: Never.self) {
                     let response = try await client.get("/")
                     #expect(response.status == .ok)
-                } catch {
-                    Issue.record("Error: \(error)")
                 }
             }
             // wait until we are sure handler has been called
             await handlerPromise.wait()
             // trigger graceful shutdown
             await serviceGroup.triggerGracefulShutdown()
+            try await group.waitForAll()
         }
     }
 
@@ -664,16 +655,17 @@ struct HummingbirdCoreTests {
                 var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
                 try await request.body.consumeWithCancellationOnInboundClose { body in
                     let body = try await body.collect(upTo: .max)
-                    for _ in 0..<50 {
-                        do {
-                            try Task.checkCancellation()
-                            try await Task.sleep(for: .seconds(1))
-                            try await bodyWriter.write(body)
-                        } catch {
-                            throw error
+                    await #expect(throws: CancellationError.self) {
+                        for _ in 0..<50 {
+                            do {
+                                try Task.checkCancellation()
+                                try await Task.sleep(for: .seconds(1))
+                                try await bodyWriter.write(body)
+                            } catch {
+                                throw error
+                            }
                         }
                     }
-                    Issue.record("Should not reach here as the handler should have been cancelled")
                 }
                 try await bodyWriter.finish(nil)
             },
