@@ -98,7 +98,7 @@ struct HummingBirdTLSTests {
             ) { client in
                 do {
                     _ = try await client.get("/")
-                } catch TestClient.Error.connectionClosing {
+                } catch is BoringSSLError {
                 } catch ChannelError.ioOnClosedChannel {
                 }
             }
