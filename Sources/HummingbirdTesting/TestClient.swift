@@ -182,7 +182,6 @@ public struct TestClient: Sendable {
                 let task = HTTPTask(request: self.cleanupRequest(request), responsePromise: promise)
                 try await channel.writeAndFlush(task).flatMapErrorThrowing { error in
                     promise.fail(error)
-                    throw error
                 }.get()
                 return try await promise.futureResult.get()
             }
@@ -340,7 +339,7 @@ public struct TestClient: Sendable {
             }
         }
 
-        func errorCaught(context: ChannelHandlerContext, error: Error) {
+        func errorCaught(context: ChannelHandlerContext, error: Swift.Error) {
             // if error caught, pass to all tasks in progress and close channel
             while let task = self.queue.popFirst() {
                 task.responsePromise.fail(error)

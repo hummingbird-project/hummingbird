@@ -23,13 +23,13 @@ import NIOHTTP1
 import NIOHTTPTypes
 import NIOPosix
 import NIOSSL
-import XCTest
+import Testing
 
-final class HummingBirdHTTP2Tests: XCTestCase {
-    func testConnect() async throws {
+struct HummingBirdHTTP2Tests {
+    @Test func testConnect() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
         defer {
-            XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+            #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() }
         }
         var logger = Logger(label: "Hummingbird")
         logger.logLevel = .trace
@@ -50,16 +50,16 @@ final class HummingBirdHTTP2Tests: XCTestCase {
             ) { port in
                 let request = HTTPClientRequest(url: "https://localhost:\(port)/")
                 let response = try await httpClient.execute(request, deadline: .now() + .seconds(30))
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
         }
     }
 
-    func testCustomVerify() async throws {
+    @Test func testCustomVerify() async throws {
         let verifiedResult = NIOLockedValueBox<NIOSSLVerificationResult>(.certificateVerified)
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
         defer {
-            XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+            #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() }
         }
         var logger = Logger(label: "Hummingbird")
         logger.logLevel = .debug
@@ -88,12 +88,12 @@ final class HummingBirdHTTP2Tests: XCTestCase {
             try await withHTTPClient(.init(tlsConfiguration: tlsConfiguration)) { httpClient in
                 let request = HTTPClientRequest(url: "https://localhost:\(port)/")
                 let response = try await httpClient.execute(request, deadline: .now() + .seconds(30))
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
             // set certicate verification to fail
             verifiedResult.withLockedValue { $0 = .failed }
 
-            do {
+            await #expect(throws: HTTPClientError.remoteConnectionClosed) {
                 try await withHTTPClient(
                     .init(
                         tlsConfiguration: tlsConfiguration,
@@ -105,15 +105,14 @@ final class HummingBirdHTTP2Tests: XCTestCase {
                     let response2 = try await httpClient.execute(request2, deadline: .now() + .seconds(30))
                     print(response2)
                 }
-                XCTFail("HTTP request should fail as certificate verification is going to fail")
-            } catch let error as HTTPClientError where error == .remoteConnectionClosed {}
+            }
         }
 
     }
 
-    func testMultipleSerialRequests() async throws {
+    @Test func testMultipleSerialRequests() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
         var logger = Logger(label: "Hummingbird")
         logger.logLevel = .trace
 
@@ -135,15 +134,15 @@ final class HummingBirdHTTP2Tests: XCTestCase {
                 for _ in 0..<16 {
                     let response = try await httpClient.execute(request, deadline: .now() + .seconds(30))
                     _ = try await response.body.collect(upTo: .max)
-                    XCTAssertEqual(response.status, .ok)
+                    #expect(response.status == .ok)
                 }
             }
         }
     }
 
-    func testMultipleConcurrentRequests() async throws {
+    @Test func testMultipleConcurrentRequests() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
         var logger = Logger(label: "Hummingbird")
         logger.logLevel = .trace
 
@@ -167,7 +166,7 @@ final class HummingBirdHTTP2Tests: XCTestCase {
                         for _ in 0..<16 {
                             let response = try await httpClient.execute(request, deadline: .now() + .seconds(30))
                             _ = try await response.body.collect(upTo: .max)
-                            XCTAssertEqual(response.status, .ok)
+                            #expect(response.status == .ok)
                         }
                     }
                     try await group.waitForAll()
@@ -176,9 +175,9 @@ final class HummingBirdHTTP2Tests: XCTestCase {
         }
     }
 
-    func testConnectionClosed() async throws {
+    @Test func testConnectionClosed() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
         var logger = Logger(label: "Hummingbird")
         logger.logLevel = .trace
 
@@ -200,15 +199,15 @@ final class HummingBirdHTTP2Tests: XCTestCase {
                 try await withHTTPClient(.init(tlsConfiguration: tlsConfiguration)) { httpClient in
                     let request = HTTPClientRequest(url: "https://localhost:\(port)/")
                     let response = try await httpClient.execute(request, deadline: .now() + .seconds(30))
-                    XCTAssertEqual(response.status, .ok)
+                    #expect(response.status == .ok)
                 }
             }
         )
     }
 
-    func testHTTP1Connect() async throws {
+    @Test func testHTTP1Connect() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
         var logger = Logger(label: "Hummingbird")
         logger.logLevel = .trace
         try await testServer(
@@ -239,7 +238,7 @@ final class HummingBirdHTTP2Tests: XCTestCase {
                     throw error
                 }
                 try await client.shutdown()
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
         )
     }

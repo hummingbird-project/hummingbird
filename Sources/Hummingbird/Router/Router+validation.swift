@@ -95,9 +95,14 @@ extension RouterPathTrieBuilder.Node {
 }
 
 /// Router validation error
-public struct RouterValidationError: Error, CustomStringConvertible {
+public struct RouterValidationError: Error, CustomStringConvertible, Equatable {
     let path: RouterPath
     let override: RouterPath
+
+    package init(path: RouterPath, override: RouterPath) {
+        self.path = path
+        self.override = override
+    }
 
     public var description: String {
         "Route \(override) overrides \(path)"
