@@ -1050,7 +1050,7 @@ final class ApplicationTests: XCTestCase {
             do {
                 _ = try await client.execute(uri: "/error", method: .post)
                 XCTFail("Should not receive a response as the response writer failed before finishing")
-            } catch TestClient.Error.connectionClosing {
+            } catch HTTPParserError.invalidEOFState {
                 // verify connection was closed before reading full response
             }
         }
