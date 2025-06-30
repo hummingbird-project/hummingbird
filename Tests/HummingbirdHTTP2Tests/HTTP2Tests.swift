@@ -23,6 +23,7 @@ import NIOHTTP1
 import NIOHTTPTypes
 import NIOPosix
 import NIOSSL
+import ServiceLifecycle
 import XCTest
 
 final class HummingBirdHTTP2Tests: XCTestCase {
@@ -243,4 +244,54 @@ final class HummingBirdHTTP2Tests: XCTestCase {
             }
         )
     }
+
+    func testChildChannelGracefulShutdown() async throws {
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
+        defer {
+            XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+        }
+        var logger = Logger(label: "Hummingbird")
+        logger.logLevel = .trace
+
+        var tlsConfiguration = try getClientTLSConfiguration()
+        // no way to override the SSL server name with AsyncHTTPClient so need to set
+        // hostname verification off
+        tlsConfiguration.certificateVerification = .noHostnameVerification
+        try await withHTTPClient(.init(tlsConfiguration: tlsConfiguration)) { httpClient in
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                let promise = Promise<Int>()
+                let server = try HTTPServerBuilder.http2Upgrade(tlsConfiguration: getServerTLSConfiguration()).buildServer(
+                    configuration: .init(address: .hostname(port: 0), serverName: testServerName),
+                    eventLoopGroup: eventLoopGroup,
+                    logger: logger,
+                    responder: { (_, responseWriter: consuming ResponseWriter, _) in
+                        try await Task.sleep(for: .seconds(2))
+                        try await responseWriter.writeResponse(.init(status: .ok))
+                    },
+                    onServerRunning: { await promise.complete($0.localAddress!.port!) }
+                )
+                let serviceGroup = ServiceGroup(
+                    configuration: .init(
+                        services: [server],
+                        gracefulShutdownSignals: [.sigterm, .sigint],
+                        logger: logger
+                    )
+                )
+
+                group.addTask {
+                    try await serviceGroup.run()
+                }
+
+                let port = await promise.wait()
+                group.addTask {
+                    let request = HTTPClientRequest(url: "https://localhost:\(port)/")
+                    let response = try await httpClient.execute(request, deadline: .now() + .seconds(30))
+                    XCTAssertEqual(response.status, .ok)
+                }
+                try await Task.sleep(for: .milliseconds(500))
+                await serviceGroup.triggerGracefulShutdown()
+            }
+        }
+    }
+
 }
