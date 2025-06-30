@@ -89,16 +89,12 @@ public struct LocalFileSystem: FileProvider {
     /// - Returns: File attributes
     public func getAttributes(id path: FileIdentifier) async throws -> FileAttributes? {
         do {
-            let stat = try await self.fileIO.fileIO.stat(path: path)
-            let isFolder = (stat.st_mode & S_IFMT) == S_IFDIR
-            #if os(Linux) || os(Android)
-            let modificationDate = Double(stat.st_mtim.tv_sec) + (Double(stat.st_mtim.tv_nsec) / 1_000_000_000.0)
-            #else
-            let modificationDate = Double(stat.st_mtimespec.tv_sec) + (Double(stat.st_mtimespec.tv_nsec) / 1_000_000_000.0)
-            #endif
+            guard let info = try await self.fileIO.fileSystem.info(forFileAt: .init(path)) else { throw FileIO.FileError.fileDoesNotExist }
+            let isFolder = info.type == .directory
+            let modificationDate = Double(info.lastDataModificationTime.seconds)
             return .init(
                 isFolder: isFolder,
-                size: numericCast(stat.st_size),
+                size: numericCast(info.size),
                 modificationDate: Date(timeIntervalSince1970: modificationDate)
             )
         } catch {
