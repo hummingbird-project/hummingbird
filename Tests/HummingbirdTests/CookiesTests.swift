@@ -125,10 +125,16 @@ final class CookieTests: XCTestCase {
         XCTAssertThrowsError(try Cookie.validated(name: "invalid;name", value: "value")) { error in
             XCTAssert(error is Cookie.ValidationError, "Unexpected error type")
         }
+        XCTAssertThrowsError(try Cookie.validated(name: "invalid;name", value: "value", sameSite: .strict)) { error in
+            XCTAssert(error is Cookie.ValidationError, "Unexpected error type")
+        }
     }
 
     func testValidatedCookieInvalidValue() {
         XCTAssertThrowsError(try Cookie.validated(name: "name", value: "inv\u{7F}alid")) { error in
+            XCTAssert(error is Cookie.ValidationError, "Unexpected error type")
+        }
+        XCTAssertThrowsError(try Cookie.validated(name: "name", value: "inv\u{7F}alid", sameSite: .strict)) { error in
             XCTAssert(error is Cookie.ValidationError, "Unexpected error type")
         }
     }
