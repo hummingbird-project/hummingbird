@@ -25,10 +25,10 @@ public struct Cookie: Sendable, CustomStringConvertible {
             case invalidName
             case invalidValue
         }
-        
+
         let reason: Reason
     }
-    
+
     public enum SameSite: String, Sendable {
         case lax = "Lax"
         case strict = "Strict"
@@ -60,7 +60,11 @@ public struct Cookie: Sendable, CustomStringConvertible {
     public var httpOnly: Bool { self.properties[.httpOnly] != nil }
     /// The SameSite attribute lets servers specify whether/when cookies are sent with cross-origin requests
     public var sameSite: SameSite? { self.properties[.sameSite].map { SameSite(rawValue: $0) } ?? nil }
-    
+    /// indicate if a cookie has been validated
+    public var valid: Bool {
+        Cookie.isValidName(self.name) && Cookie.isValidValue(self.value)
+    }
+
     private static func isValidValue(_ value: String) -> Bool {
         // RFC 6265 Section 4.1.1: cookie-octet set
         // Allowed: 0x21, 0x23-0x2B, 0x2D-0x3A, 0x3C-0x5B, 0x5D-0x7E
@@ -72,7 +76,7 @@ public struct Cookie: Sendable, CustomStringConvertible {
             (0x5D...0x7E).contains(byte)
         }
     }
-    
+
     private static func isValidName(_ name: String) -> Bool {
         // RFC 2616 Section 2.2: token = 1*<any CHAR except CTLs or separators>
         // CTLs: 0-31, 127
@@ -102,46 +106,6 @@ public struct Cookie: Sendable, CustomStringConvertible {
             (byte >= 0x21 && byte != 127 && !separators.contains(byte))
         }
     }
-    
-    /// Create `Cookie`
-    /// - Parameters:
-    ///   - name: Name of cookie
-    ///   - value: Value of cookie
-    ///   - expires: indicates the maximum lifetime of the cookie
-    ///   - maxAge: indicates the maximum lifetime of the cookie in seconds. Max age has precedence over expires (not all user agents support max-age)
-    ///   - domain: specifies those hosts to which the cookie will be sent
-    ///   - path: The scope of each cookie is limited to a set of paths, controlled by the Path attribute
-    ///   - secure: The Secure attribute limits the scope of the cookie to "secure" channels
-    ///   - httpOnly: The HttpOnly attribute limits the scope of the cookie to HTTP requests
-    public static func validated(
-        name: String,
-        value: String,
-        expires: Date? = nil,
-        maxAge: Int? = nil,
-        domain: String? = nil,
-        path: String? = nil,
-        secure: Bool = false,
-        httpOnly: Bool = true
-    ) throws -> Cookie {
-        guard Cookie.isValidName(name) else {
-            throw ValidationError(reason: .invalidName)
-        }
-        
-        guard Cookie.isValidValue(value) else {
-            throw ValidationError(reason: .invalidValue)
-        }
-        
-        return Cookie(
-            name: name,
-            value: value,
-            expires: expires,
-            maxAge: maxAge,
-            domain: domain,
-            path: path,
-            secure: secure,
-            httpOnly: httpOnly
-        )
-    }
 
     /// Create `Cookie`
     /// - Parameters:
@@ -153,8 +117,8 @@ public struct Cookie: Sendable, CustomStringConvertible {
     ///   - path: The scope of each cookie is limited to a set of paths, controlled by the Path attribute
     ///   - secure: The Secure attribute limits the scope of the cookie to "secure" channels
     ///   - httpOnly: The HttpOnly attribute limits the scope of the cookie to HTTP requests
-    ///   - sameSite: The SameSite attribute lets servers specify whether/when cookies are sent with cross-origin requests
-    public static func validated(
+    ///   - validate: Check the cookie's name and value for valid characters (throw on failure)
+    public init(
         name: String,
         value: String,
         expires: Date? = nil,
@@ -163,29 +127,27 @@ public struct Cookie: Sendable, CustomStringConvertible {
         path: String? = nil,
         secure: Bool = false,
         httpOnly: Bool = true,
-        sameSite: SameSite
-    ) throws -> Cookie {
-        guard Cookie.isValidName(name) else {
-            throw ValidationError(reason: .invalidName)
+        validate: Bool
+    ) throws {
+        if validate {
+            guard Cookie.isValidName(name) else {
+                throw ValidationError(reason: .invalidName)
+            }
+
+            guard Cookie.isValidValue(value) else {
+                throw ValidationError(reason: .invalidValue)
+            }
         }
-        
-        guard Cookie.isValidValue(value) else {
-            throw ValidationError(reason: .invalidValue)
-        }
-        
-        assert(!(secure == false && sameSite == .none), "Cookies with SameSite set to None require the Secure attribute to be set")
-        
-        return Cookie(
-            name: name,
-            value: value,
-            expires: expires,
-            maxAge: maxAge,
-            domain: domain,
-            path: path,
-            secure: secure,
-            httpOnly: httpOnly,
-            sameSite: sameSite
-        )
+        self.name = name
+        self.value = value
+        var properties = Properties()
+        properties[.expires] = expires?.httpHeader
+        properties[.maxAge] = maxAge?.description
+        properties[.domain] = domain
+        properties[.path] = path
+        if secure { properties[.secure] = "" }
+        if httpOnly { properties[.httpOnly] = "" }
+        self.properties = properties
     }
 
     /// Create `Cookie`
@@ -198,6 +160,55 @@ public struct Cookie: Sendable, CustomStringConvertible {
     ///   - path: The scope of each cookie is limited to a set of paths, controlled by the Path attribute
     ///   - secure: The Secure attribute limits the scope of the cookie to "secure" channels
     ///   - httpOnly: The HttpOnly attribute limits the scope of the cookie to HTTP requests
+    ///   - validate: Check the cookie's name and value for valid characters (throw on failure)
+    ///   - sameSite: The SameSite attribute lets servers specify whether/when cookies are sent with cross-origin requests
+    public init(
+        name: String,
+        value: String,
+        expires: Date? = nil,
+        maxAge: Int? = nil,
+        domain: String? = nil,
+        path: String? = nil,
+        secure: Bool = false,
+        httpOnly: Bool = true,
+        validate: Bool,
+        sameSite: SameSite
+    ) throws {
+        if validate {
+            guard Cookie.isValidName(name) else {
+                throw ValidationError(reason: .invalidName)
+            }
+
+            guard Cookie.isValidValue(value) else {
+                throw ValidationError(reason: .invalidValue)
+            }
+        }
+
+        assert(!(secure == false && sameSite == .none), "Cookies with SameSite set to None require the Secure attribute to be set")
+        self.name = name
+        self.value = value
+        var properties = Properties()
+        properties[.expires] = expires?.httpHeader
+        properties[.maxAge] = maxAge?.description
+        properties[.domain] = domain
+        properties[.path] = path
+        if secure { properties[.secure] = "" }
+        if httpOnly { properties[.httpOnly] = "" }
+        properties[.sameSite] = sameSite.rawValue
+        self.properties = properties
+    }
+
+    /// Create `Cookie`
+    /// - Parameters:
+    ///   - name: Name of cookie
+    ///   - value: Value of cookie
+    ///   - expires: indicates the maximum lifetime of the cookie
+    ///   - maxAge: indicates the maximum lifetime of the cookie in seconds. Max age has precedence over expires (not all user agents support max-age)
+    ///   - domain: specifies those hosts to which the cookie will be sent
+    ///   - path: The scope of each cookie is limited to a set of paths, controlled by the Path attribute
+    ///   - secure: The Secure attribute limits the scope of the cookie to "secure" channels
+    ///   - httpOnly: The HttpOnly attribute limits the scope of the cookie to HTTP requests
+    @available(*, deprecated, message: "Use try init(name:value:expires:maxAge:domain:path:secure:httpOnly:validate) (specify validate) instead")
     public init(
         name: String,
         value: String,
@@ -208,9 +219,6 @@ public struct Cookie: Sendable, CustomStringConvertible {
         secure: Bool = false,
         httpOnly: Bool = true
     ) {
-        assert(Cookie.isValidName(name), "Cookie name contains invalid characters as per RFC 6265")
-        assert(Cookie.isValidValue(value), "Cookie value contains invalid characters as per RFC 6265")
-        
         self.name = name
         self.value = value
         var properties = Properties()
@@ -234,6 +242,7 @@ public struct Cookie: Sendable, CustomStringConvertible {
     ///   - secure: The Secure attribute limits the scope of the cookie to "secure" channels
     ///   - httpOnly: The HttpOnly attribute limits the scope of the cookie to HTTP requests
     ///   - sameSite: The SameSite attribute lets servers specify whether/when cookies are sent with cross-origin requests
+    @available(*, deprecated, message: "Use try init(name:value:expires:maxAge:domain:path:secure:httpOnly:validate:sameSite) (specify validate) instead")
     public init(
         name: String,
         value: String,
@@ -245,10 +254,8 @@ public struct Cookie: Sendable, CustomStringConvertible {
         httpOnly: Bool = true,
         sameSite: SameSite
     ) {
-        assert(Cookie.isValidName(name), "Cookie name contains invalid characters as per RFC 6265")
         assert(!(secure == false && sameSite == .none), "Cookies with SameSite set to None require the Secure attribute to be set")
-        assert(Cookie.isValidValue(value), "Cookie value contains invalid characters as per RFC 6265")
-        
+
         self.name = name
         self.value = value
         var properties = Properties()
@@ -264,13 +271,23 @@ public struct Cookie: Sendable, CustomStringConvertible {
 
     /// Construct cookie from cookie header value
     /// - Parameter header: cookie header value
-    internal init?(from header: Substring) {
+    /// - Parameter validate: check cookie name and value validity
+    internal init?(from header: Substring, validate: Bool = true) throws {
         let elements = header.split(separator: ";")
         guard elements.count > 0 else { return nil }
         let keyValue = elements[0].split(separator: "=", maxSplits: 1)
         guard keyValue.count == 2 else { return nil }
         self.name = String(keyValue[0])
         self.value = String(keyValue[1])
+
+        if validate {
+            guard Cookie.isValidName(name) else {
+                throw ValidationError(reason: .invalidName)
+            }
+            guard Cookie.isValidValue(value) else {
+                throw ValidationError(reason: .invalidValue)
+            }
+        }
 
         var properties = Properties()
         // extract elements

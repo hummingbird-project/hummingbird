@@ -16,7 +16,8 @@ import HummingbirdCore
 
 extension Request {
     /// access cookies from request. When accessing this for the first time the Cookies struct will be created
+    /// allows invalid cookies for compatibility reasons
     public var cookies: Cookies {
-        Cookies(from: self)
+        Cookies(from: self, validate: false)
     }
 }

@@ -18,10 +18,12 @@
 public struct Cookies: Sendable {
     /// Construct cookies accessor from `Request`
     /// - Parameter request: request to get cookies from
-    init(from request: Request) {
+    /// - Parameter validate: cookies are nil if invalid
+    init(from request: Request, validate: Bool = true) {
         self.cookieStrings = request.headers[values: .cookie].flatMap {
             $0.split(separator: ";").map { $0.drop { $0.isWhitespace } }
         }
+        self.validate = validate
     }
 
     /// access cookies via dictionary subscript
@@ -34,8 +36,9 @@ public struct Cookies: Sendable {
         else {
             return nil
         }
-        return Cookie(from: cookieString)
+        return try? Cookie(from: cookieString, validate: validate)
     }
 
     var cookieStrings: [Substring]
+    var validate: Bool
 }
