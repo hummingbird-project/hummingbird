@@ -318,6 +318,29 @@ final class FileMiddlewareTests: XCTestCase {
         }
     }
 
+    func testFolderRedirect() async throws {
+        let router = Router()
+        router.middlewares.add(FileMiddleware(".", searchForIndexHtml: true))
+        let app = Application(responder: router.buildResponder())
+
+        try FileManager.default.createDirectory(atPath: "testFolderRedirect", withIntermediateDirectories: false)
+        let text = "Test file contents"
+        let data = Data(text.utf8)
+        let fileURL = URL(fileURLWithPath: "testFolderRedirect/index.html")
+        XCTAssertNoThrow(try data.write(to: fileURL))
+        defer {
+            XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL))
+            XCTAssertNoThrow(try FileManager.default.removeItem(atPath: "testFolderRedirect"))
+        }
+
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/testFolderRedirect", method: .get) { response in
+                XCTAssertEqual(response.status, .seeOther)
+                XCTAssertEqual(response.headers[.location], "/testFolderRedirect/")
+            }
+        }
+    }
+
     func testSymlink() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware(".", searchForIndexHtml: true))
