@@ -221,7 +221,7 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
                     }
                 }
             case .redirect(let path):
-                return .redirect(to: path)
+                return .redirect(to: path, type: .permanent)
             }
         }
     }

@@ -335,7 +335,7 @@ final class FileMiddlewareTests: XCTestCase {
 
         try await app.test(.router) { client in
             try await client.execute(uri: "/testFolderRedirect", method: .get) { response in
-                XCTAssertEqual(response.status, .seeOther)
+                XCTAssertEqual(response.status, .movedPermanently)
                 XCTAssertEqual(response.headers[.location], "/testFolderRedirect/")
             }
         }
