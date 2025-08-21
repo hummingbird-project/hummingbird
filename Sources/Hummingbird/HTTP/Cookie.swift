@@ -102,48 +102,11 @@ public struct Cookie: Sendable, CustomStringConvertible {
             (byte >= 0x21 && byte != 127 && !separators.contains(byte))
         }
     }
-    
-    /// Create `Cookie`
-    /// - Parameters:
-    ///   - name: Name of cookie
-    ///   - value: Value of cookie
-    ///   - expires: indicates the maximum lifetime of the cookie
-    ///   - maxAge: indicates the maximum lifetime of the cookie in seconds. Max age has precedence over expires (not all user agents support max-age)
-    ///   - domain: specifies those hosts to which the cookie will be sent
-    ///   - path: The scope of each cookie is limited to a set of paths, controlled by the Path attribute
-    ///   - secure: The Secure attribute limits the scope of the cookie to "secure" channels
-    ///   - httpOnly: The HttpOnly attribute limits the scope of the cookie to HTTP requests
-    public static func validated(
-        name: String,
-        value: String,
-        expires: Date? = nil,
-        maxAge: Int? = nil,
-        domain: String? = nil,
-        path: String? = nil,
-        secure: Bool = false,
-        httpOnly: Bool = true
-    ) throws -> Cookie {
-        guard Cookie.isValidName(name) else {
-            throw ValidationError(reason: .invalidName)
-        }
-        
-        guard Cookie.isValidValue(value) else {
-            throw ValidationError(reason: .invalidValue)
-        }
-        
-        return Cookie(
-            name: name,
-            value: value,
-            expires: expires,
-            maxAge: maxAge,
-            domain: domain,
-            path: path,
-            secure: secure,
-            httpOnly: httpOnly
-        )
-    }
 
-    /// Create `Cookie`
+    /// Create `Cookie` and validates the name and value to be valid as per RFC 6265.
+    ///
+    /// If the name and value are not valid, an `ValidationError` will be thrown. Contrary to the equivalent initializer, this function will not `assert` on DEBUG for invalid names and values.
+    ///
     /// - Parameters:
     ///   - name: Name of cookie
     ///   - value: Value of cookie
@@ -163,7 +126,7 @@ public struct Cookie: Sendable, CustomStringConvertible {
         path: String? = nil,
         secure: Bool = false,
         httpOnly: Bool = true,
-        sameSite: SameSite
+        sameSite: SameSite? = nil
     ) throws -> Cookie {
         guard Cookie.isValidName(name) else {
             throw ValidationError(reason: .invalidName)
@@ -173,22 +136,39 @@ public struct Cookie: Sendable, CustomStringConvertible {
             throw ValidationError(reason: .invalidValue)
         }
         
-        assert(!(secure == false && sameSite == .none), "Cookies with SameSite set to None require the Secure attribute to be set")
+        assert(!(secure == false && sameSite == Cookie.SameSite.none), "Cookies with SameSite set to None require the Secure attribute to be set")
         
-        return Cookie(
-            name: name,
-            value: value,
-            expires: expires,
-            maxAge: maxAge,
-            domain: domain,
-            path: path,
-            secure: secure,
-            httpOnly: httpOnly,
-            sameSite: sameSite
-        )
+        if let sameSite {
+            return Cookie(
+                name: name,
+                value: value,
+                expires: expires,
+                maxAge: maxAge,
+                domain: domain,
+                path: path,
+                secure: secure,
+                httpOnly: httpOnly,
+                sameSite: sameSite
+            )
+        } else {
+            return Cookie(
+                name: name,
+                value: value,
+                expires: expires,
+                maxAge: maxAge,
+                domain: domain,
+                path: path,
+                secure: secure,
+                httpOnly: httpOnly
+            )
+        }
     }
 
-    /// Create `Cookie`
+    /// Create `Cookie`. The `name` and `value` are assumed to contain valid characters as per RFC 6265.
+    /// If the name and value are not valid, an `assert` will fail on DEBUG, or the cookie will be have an invalid `String` representation on RELEASE.
+    /// 
+    /// Use ``Cookie/validated(name:value:expires:maxAge:domain:path:secure:httpOnly:sameSite:)`` to create a cookie while validating name and value.
+    ///
     /// - Parameters:
     ///   - name: Name of cookie
     ///   - value: Value of cookie
@@ -223,7 +203,11 @@ public struct Cookie: Sendable, CustomStringConvertible {
         self.properties = properties
     }
 
-    /// Create `Cookie`
+    /// Create `Cookie`. The `name` and `value` are assumed to contain valid characters as per RFC 6265.
+    /// If the name and value are not valid, an `assert` will fail on DEBUG, or the cookie will be have an invalid `String` representation on RELEASE.
+    /// 
+    /// Use ``Cookie/validated(name:value:expires:maxAge:domain:path:secure:httpOnly:sameSite:)`` to create a cookie while validating name and value.
+    ///
     /// - Parameters:
     ///   - name: Name of cookie
     ///   - value: Value of cookie
