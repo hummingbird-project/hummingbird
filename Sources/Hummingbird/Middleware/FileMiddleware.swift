@@ -191,32 +191,37 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
                 }
             }
             // get file attributes and actual file path and ID (It might be an index.html)
-            let (actualPath, actualID, attributes) = try await self.getFileAttributes(path)
-            // we have a file so indicate it came from the FileMiddleware
-            context.coreContext.endpointPath.value = "FileMiddleware"
-            // get how we should respond
-            let fileResult = try await self.constructResponse(path: actualPath, attributes: attributes, request: request)
+            let action = try await self.getFileAttributes(path)
+            switch action {
+            case .returnFile(let actualPath, let actualID, let attributes):
+                // we have a file so indicate it came from the FileMiddleware
+                context.coreContext.endpointPath.value = "FileMiddleware"
+                // get how we should respond
+                let fileResult = try await self.constructResponse(path: actualPath, attributes: attributes, request: request)
 
-            switch fileResult {
-            case .notModified(let headers):
-                return Response(status: .notModified, headers: headers)
-            case .loadFile(let headers, let range):
-                switch request.method {
-                case .get:
-                    if let range {
-                        let body = try await self.fileProvider.loadFile(id: actualID, range: range, context: context)
-                        return Response(status: .partialContent, headers: headers, body: body)
+                switch fileResult {
+                case .notModified(let headers):
+                    return Response(status: .notModified, headers: headers)
+                case .loadFile(let headers, let range):
+                    switch request.method {
+                    case .get:
+                        if let range {
+                            let body = try await self.fileProvider.loadFile(id: actualID, range: range, context: context)
+                            return Response(status: .partialContent, headers: headers, body: body)
+                        }
+
+                        let body = try await self.fileProvider.loadFile(id: actualID, context: context)
+                        return Response(status: .ok, headers: headers, body: body)
+
+                    case .head:
+                        return Response(status: .ok, headers: headers, body: .init())
+
+                    default:
+                        throw error
                     }
-
-                    let body = try await self.fileProvider.loadFile(id: actualID, context: context)
-                    return Response(status: .ok, headers: headers, body: body)
-
-                case .head:
-                    return Response(status: .ok, headers: headers, body: .init())
-
-                default:
-                    throw error
                 }
+            case .redirect(let path):
+                return .redirect(to: path, type: .permanent)
             }
         }
     }
@@ -229,8 +234,13 @@ extension FileMiddleware {
         case loadFile(HTTPFields, ClosedRange<Int>?)
     }
 
+    private enum GetFileAttributesAction {
+        case returnFile(path: String, id: Provider.FileIdentifier, attributes: Provider.FileAttributes)
+        case redirect(path: String)
+    }
+
     /// Return file attributes, and actual file path
-    private func getFileAttributes(_ path: String) async throws -> (path: String, id: Provider.FileIdentifier, attributes: Provider.FileAttributes) {
+    private func getFileAttributes(_ path: String) async throws -> GetFileAttributesAction {
         guard let id = self.fileProvider.getFileIdentifier(path),
             let attributes = try await self.fileProvider.getAttributes(id: id)
         else {
@@ -239,6 +249,9 @@ extension FileMiddleware {
         // if file is a directory seach and `searchForIndexHtml` is set to true
         // then search for index.html in directory
         if attributes.isFolder {
+            if path.last != "/" {
+                return .redirect(path: "\(path)/")
+            }
             guard self.searchForIndexHtml else { throw HTTPError(.notFound) }
             let indexPath = self.appendingPathComponent(path, "index.html")
             guard let indexID = self.fileProvider.getFileIdentifier(indexPath),
@@ -246,9 +259,9 @@ extension FileMiddleware {
             else {
                 throw HTTPError(.notFound)
             }
-            return (path: indexPath, id: indexID, attributes: indexAttributes)
+            return .returnFile(path: indexPath, id: indexID, attributes: indexAttributes)
         } else {
-            return (path: path, id: id, attributes: attributes)
+            return .returnFile(path: path, id: id, attributes: attributes)
         }
     }
 
