@@ -103,13 +103,16 @@ public struct Cookie: Sendable, CustomStringConvertible {
 
     /// Create `Cookie` and validates the name and value to be valid as per RFC 6265.
     ///
-    /// If the name and value are not valid, an `ValidationError` will be thrown. Contrary to the equivalent initializer, this function will not `assert` on DEBUG for invalid names and values.
+    /// If the name and value are not valid, an `ValidationError` will be thrown. Contrary to
+    /// the equivalent initializer, this function will not `assert` on DEBUG for invalid names
+    /// and values.
     ///
     /// - Parameters:
     ///   - name: Name of cookie
     ///   - value: Value of cookie
     ///   - expires: indicates the maximum lifetime of the cookie
-    ///   - maxAge: indicates the maximum lifetime of the cookie in seconds. Max age has precedence over expires (not all user agents support max-age)
+    ///   - maxAge: indicates the maximum lifetime of the cookie in seconds. Max age has precedence
+    ///         over expires (not all user agents support max-age)
     ///   - domain: specifies those hosts to which the cookie will be sent
     ///   - path: The scope of each cookie is limited to a set of paths, controlled by the Path attribute
     ///   - secure: The Secure attribute limits the scope of the cookie to "secure" channels
@@ -163,9 +166,12 @@ public struct Cookie: Sendable, CustomStringConvertible {
     }
 
     /// Create `Cookie`. The `name` and `value` are assumed to contain valid characters as per RFC 6265.
-    /// If the name and value are not valid, an `assert` will fail on DEBUG, or the cookie will be have an invalid `String` representation on RELEASE.
     ///
-    /// Use ``Cookie/validated(name:value:expires:maxAge:domain:path:secure:httpOnly:sameSite:)`` to create a cookie while validating name and value.
+    /// If the name and value are not valid, an `assert` will fail on DEBUG, or the cookie will be have
+    /// an invalid `String` representation on RELEASE.
+    ///
+    /// Use ``Cookie/validated(name:value:expires:maxAge:domain:path:secure:httpOnly:sameSite:)`` to create
+    /// a cookie while validating name and value.
     ///
     /// - Parameters:
     ///   - name: Name of cookie
@@ -202,20 +208,25 @@ public struct Cookie: Sendable, CustomStringConvertible {
     }
 
     /// Create `Cookie`. The `name` and `value` are assumed to contain valid characters as per RFC 6265.
-    /// If the name and value are not valid, an `assert` will fail on DEBUG, or the cookie will be have an invalid `String` representation on RELEASE.
     ///
-    /// Use ``Cookie/validated(name:value:expires:maxAge:domain:path:secure:httpOnly:sameSite:)`` to create a cookie while validating name and value.
+    /// If the name and value are not valid, an `assert` will fail on DEBUG, or the cookie will be have
+    /// an invalid `String` representation on RELEASE.
+    ///
+    /// Use ``Cookie/validated(name:value:expires:maxAge:domain:path:secure:httpOnly:sameSite:)`` to create
+    /// a cookie while validating name and value.
     ///
     /// - Parameters:
     ///   - name: Name of cookie
     ///   - value: Value of cookie
     ///   - expires: indicates the maximum lifetime of the cookie
-    ///   - maxAge: indicates the maximum lifetime of the cookie in seconds. Max age has precedence over expires (not all user agents support max-age)
+    ///   - maxAge: indicates the maximum lifetime of the cookie in seconds. Max age has precedence over
+    ///         expires (not all user agents support max-age)
     ///   - domain: specifies those hosts to which the cookie will be sent
     ///   - path: The scope of each cookie is limited to a set of paths, controlled by the Path attribute
     ///   - secure: The Secure attribute limits the scope of the cookie to "secure" channels
     ///   - httpOnly: The HttpOnly attribute limits the scope of the cookie to HTTP requests
-    ///   - sameSite: The SameSite attribute lets servers specify whether/when cookies are sent with cross-origin requests
+    ///   - sameSite: The SameSite attribute lets servers specify whether/when cookies are sent with
+    ///         cross-origin requests
     public init(
         name: String,
         value: String,
