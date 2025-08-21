@@ -25,10 +25,10 @@ public struct Cookie: Sendable, CustomStringConvertible {
             case invalidName
             case invalidValue
         }
-        
+
         let reason: Reason
     }
-    
+
     public enum SameSite: String, Sendable {
         case lax = "Lax"
         case strict = "Strict"
@@ -60,19 +60,16 @@ public struct Cookie: Sendable, CustomStringConvertible {
     public var httpOnly: Bool { self.properties[.httpOnly] != nil }
     /// The SameSite attribute lets servers specify whether/when cookies are sent with cross-origin requests
     public var sameSite: SameSite? { self.properties[.sameSite].map { SameSite(rawValue: $0) } ?? nil }
-    
+
     private static func isValidValue(_ value: String) -> Bool {
         // RFC 6265 Section 4.1.1: cookie-octet set
         // Allowed: 0x21, 0x23-0x2B, 0x2D-0x3A, 0x3C-0x5B, 0x5D-0x7E
-        return value.utf8.allSatisfy { byte in
-            (byte == 0x21) ||
-            (0x23...0x2B).contains(byte) ||
-            (0x2D...0x3A).contains(byte) ||
-            (0x3C...0x5B).contains(byte) ||
-            (0x5D...0x7E).contains(byte)
+        value.utf8.allSatisfy { byte in
+            (byte == 0x21) || (0x23...0x2B).contains(byte) || (0x2D...0x3A).contains(byte) || (0x3C...0x5B).contains(byte)
+                || (0x5D...0x7E).contains(byte)
         }
     }
-    
+
     private static func isValidName(_ name: String) -> Bool {
         // RFC 2616 Section 2.2: token = 1*<any CHAR except CTLs or separators>
         // CTLs: 0-31, 127
@@ -98,9 +95,10 @@ public struct Cookie: Sendable, CustomStringConvertible {
         ]
         // Space is no in the separators, but is added to the CTLs because it's right behind the last CTL
         // `0x1F` is the last CTL, and space is `0x20`
-        return !name.isEmpty && name.utf8.allSatisfy { byte in
-            (byte >= 0x21 && byte != 127 && !separators.contains(byte))
-        }
+        return !name.isEmpty
+            && name.utf8.allSatisfy { byte in
+                (byte >= 0x21 && byte != 127 && !separators.contains(byte))
+            }
     }
 
     /// Create `Cookie` and validates the name and value to be valid as per RFC 6265.
@@ -131,13 +129,13 @@ public struct Cookie: Sendable, CustomStringConvertible {
         guard Cookie.isValidName(name) else {
             throw ValidationError(reason: .invalidName)
         }
-        
+
         guard Cookie.isValidValue(value) else {
             throw ValidationError(reason: .invalidValue)
         }
-        
+
         assert(!(secure == false && sameSite == Cookie.SameSite.none), "Cookies with SameSite set to None require the Secure attribute to be set")
-        
+
         if let sameSite {
             return Cookie(
                 name: name,
@@ -166,7 +164,7 @@ public struct Cookie: Sendable, CustomStringConvertible {
 
     /// Create `Cookie`. The `name` and `value` are assumed to contain valid characters as per RFC 6265.
     /// If the name and value are not valid, an `assert` will fail on DEBUG, or the cookie will be have an invalid `String` representation on RELEASE.
-    /// 
+    ///
     /// Use ``Cookie/validated(name:value:expires:maxAge:domain:path:secure:httpOnly:sameSite:)`` to create a cookie while validating name and value.
     ///
     /// - Parameters:
@@ -190,7 +188,7 @@ public struct Cookie: Sendable, CustomStringConvertible {
     ) {
         assert(Cookie.isValidName(name), "Cookie name contains invalid characters as per RFC 6265")
         assert(Cookie.isValidValue(value), "Cookie value contains invalid characters as per RFC 6265")
-        
+
         self.name = name
         self.value = value
         var properties = Properties()
@@ -205,7 +203,7 @@ public struct Cookie: Sendable, CustomStringConvertible {
 
     /// Create `Cookie`. The `name` and `value` are assumed to contain valid characters as per RFC 6265.
     /// If the name and value are not valid, an `assert` will fail on DEBUG, or the cookie will be have an invalid `String` representation on RELEASE.
-    /// 
+    ///
     /// Use ``Cookie/validated(name:value:expires:maxAge:domain:path:secure:httpOnly:sameSite:)`` to create a cookie while validating name and value.
     ///
     /// - Parameters:
@@ -232,7 +230,7 @@ public struct Cookie: Sendable, CustomStringConvertible {
         assert(Cookie.isValidName(name), "Cookie name contains invalid characters as per RFC 6265")
         assert(!(secure == false && sameSite == .none), "Cookies with SameSite set to None require the Secure attribute to be set")
         assert(Cookie.isValidValue(value), "Cookie value contains invalid characters as per RFC 6265")
-        
+
         self.name = name
         self.value = value
         var properties = Properties()
