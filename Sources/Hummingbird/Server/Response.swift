@@ -16,7 +16,7 @@ import HummingbirdCore
 
 extension Response {
     /// Specifies the type of redirect that the client should receive.
-    public enum RedirectType {
+    public enum RedirectType: Sendable {
         /// `301 moved permanently`: The URL of the requested resource has been changed permanently.
         /// The new URL is given in the response.
         case permanent
