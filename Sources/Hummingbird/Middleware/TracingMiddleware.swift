@@ -56,7 +56,7 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
             if let staticAttributes = self.attributes {
                 attributes.merge(staticAttributes)
             }
-            attributes["http.method"] = request.method.rawValue
+            attributes["http.request.method"] = request.method.rawValue
             attributes["http.target"] = request.uri.path
             // TODO: Get HTTP version and scheme
             // attributes["http.flavor"] = "\(request.version.major).\(request.version.minor)"

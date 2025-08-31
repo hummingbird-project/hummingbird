@@ -58,7 +58,7 @@ final class TracingTests: XCTestCase {
             XCTAssertSpanAttributesEqual(
                 span.attributes,
                 [
-                    "http.method": "GET",
+                    "http.request.method": "GET",
                     "http.target": "/users/42",
                     "http.status_code": 200,
                     "http.response_content_length": 2,
@@ -98,7 +98,7 @@ final class TracingTests: XCTestCase {
             XCTAssertSpanAttributesEqual(
                 span.attributes,
                 [
-                    "http.method": "GET",
+                    "http.request.method": "GET",
                     "http.target": "/users/42",
                     "http.status_code": 200,
                     "http.response_content_length": 2,
@@ -144,7 +144,7 @@ final class TracingTests: XCTestCase {
             XCTAssertSpanAttributesEqual(
                 span.attributes,
                 [
-                    "http.method": "GET",
+                    "http.request.method": "GET",
                     "http.target": "/\(filename)",
                     "http.status_code": 200,
                     "http.response_content_length": .int64(Int64(text.count)),
@@ -192,7 +192,7 @@ final class TracingTests: XCTestCase {
             XCTAssertSpanAttributesEqual(
                 span.attributes,
                 [
-                    "http.method": "GET",
+                    "http.request.method": "GET",
                     "http.target": "/test/this",
                     "http.status_code": 200,
                     "http.response_content_length": 0,
@@ -234,7 +234,7 @@ final class TracingTests: XCTestCase {
             XCTAssertSpanAttributesEqual(
                 span.attributes,
                 [
-                    "http.method": "POST",
+                    "http.request.method": "POST",
                     "http.target": "/users",
                     "http.status_code": 500,
                     "http.request_content_length": 2,
@@ -288,7 +288,7 @@ final class TracingTests: XCTestCase {
             XCTAssertSpanAttributesEqual(
                 span.attributes,
                 [
-                    "http.method": "GET",
+                    "http.request.method": "GET",
                     "http.target": "/users/42",
                     "http.status_code": 200,
                     "http.response_content_length": 2,
@@ -331,7 +331,7 @@ final class TracingTests: XCTestCase {
             XCTAssertSpanAttributesEqual(
                 span.attributes,
                 [
-                    "http.method": "POST",
+                    "http.request.method": "POST",
                     "http.target": "/users",
                     "http.status_code": 204,
                     "http.response_content_length": 0,
@@ -370,7 +370,7 @@ final class TracingTests: XCTestCase {
             XCTAssertSpanAttributesEqual(
                 span.attributes,
                 [
-                    "http.method": "GET",
+                    "http.request.method": "GET",
                     "http.target": "/",
                     "http.status_code": 200,
                     "http.response_content_length": 0,
@@ -408,7 +408,7 @@ final class TracingTests: XCTestCase {
             XCTAssertSpanAttributesEqual(
                 span.attributes,
                 [
-                    "http.method": "GET",
+                    "http.request.method": "GET",
                     "http.target": "/",
                     "http.status_code": 404,
                 ]
