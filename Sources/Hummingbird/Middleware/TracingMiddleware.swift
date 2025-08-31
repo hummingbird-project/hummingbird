@@ -62,7 +62,7 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
             // attributes["http.flavor"] = "\(request.version.major).\(request.version.minor)"
             // attributes["http.scheme"] = request.uri.scheme?.rawValue
             attributes["http.user_agent"] = request.headers[.userAgent]
-            attributes["http.request_content_length"] = request.headers[.contentLength].map { Int($0) } ?? nil
+            attributes["http.request.body.size"] = request.headers[.contentLength].map { Int($0) } ?? nil
 
             if let remoteAddress = (context as? any RemoteAddressRequestContext)?.remoteAddress {
                 attributes["net.sock.peer.port"] = remoteAddress.port

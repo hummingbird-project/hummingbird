@@ -237,7 +237,7 @@ final class TracingTests: XCTestCase {
                     "http.request.method": "POST",
                     "http.target": "/users",
                     "http.response.status_code": 500,
-                    "http.request_content_length": 2,
+                    "http.request.body.size": 2,
                 ]
             )
         }
