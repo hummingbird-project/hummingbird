@@ -60,7 +60,7 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
             attributes["http.target"] = request.uri.path
             // TODO: Get HTTP version and scheme
             // attributes["http.flavor"] = "\(request.version.major).\(request.version.minor)"
-            // attributes["http.scheme"] = request.uri.scheme?.rawValue
+            // attributes["url.scheme"] = request.uri.scheme?.rawValue
             attributes["http.user_agent"] = request.headers[.userAgent]
             attributes["http.request.body.size"] = request.headers[.contentLength].map { Int($0) } ?? nil
 
