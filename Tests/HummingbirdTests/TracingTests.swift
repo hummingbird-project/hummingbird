@@ -61,7 +61,7 @@ final class TracingTests: XCTestCase {
                     "http.request.method": "GET",
                     "http.target": "/users/42",
                     "http.response.status_code": 200,
-                    "http.response_content_length": 2,
+                    "http.response.body.size": 2,
                     "net.host.name": "127.0.0.1",
                     "net.host.port": 8080,
                 ]
@@ -101,7 +101,7 @@ final class TracingTests: XCTestCase {
                     "http.request.method": "GET",
                     "http.target": "/users/42",
                     "http.response.status_code": 200,
-                    "http.response_content_length": 2,
+                    "http.response.body.size": 2,
                     "net.host.name": "127.0.0.1",
                     "net.host.port": 8080,
                 ]
@@ -147,7 +147,7 @@ final class TracingTests: XCTestCase {
                     "http.request.method": "GET",
                     "http.target": "/\(filename)",
                     "http.response.status_code": 200,
-                    "http.response_content_length": .int64(Int64(text.count)),
+                    "http.response.body.size": .int64(Int64(text.count)),
                     "net.host.name": "127.0.0.1",
                     "net.host.port": 8080,
                 ]
@@ -195,7 +195,7 @@ final class TracingTests: XCTestCase {
                     "http.request.method": "GET",
                     "http.target": "/test/this",
                     "http.response.status_code": 200,
-                    "http.response_content_length": 0,
+                    "http.response.body.size": 0,
                 ]
             )
         }
@@ -291,7 +291,7 @@ final class TracingTests: XCTestCase {
                     "http.request.method": "GET",
                     "http.target": "/users/42",
                     "http.response.status_code": 200,
-                    "http.response_content_length": 2,
+                    "http.response.body.size": 2,
                     "http.request.header.accept": .stringArray(["text/plain", "application/json"]),
                     "http.request.header.cache_control": "no-cache",
                     "http.response.header.content_type": "text/plain",
@@ -334,7 +334,7 @@ final class TracingTests: XCTestCase {
                     "http.request.method": "POST",
                     "http.target": "/users",
                     "http.response.status_code": 204,
-                    "http.response_content_length": 0,
+                    "http.response.body.size": 0,
                 ]
             )
         }
@@ -373,7 +373,7 @@ final class TracingTests: XCTestCase {
                     "http.request.method": "GET",
                     "http.target": "/",
                     "http.response.status_code": 200,
-                    "http.response_content_length": 0,
+                    "http.response.body.size": 0,
                 ]
             )
         }

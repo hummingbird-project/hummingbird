@@ -93,7 +93,7 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
                     attributes = self.recordHeaders(response.headers, toSpanAttributes: attributes, withPrefix: "http.response.header.")
 
                     attributes["http.response.status_code"] = Int(response.status.code)
-                    attributes["http.response_content_length"] = response.body.contentLength
+                    attributes["http.response.body.size"] = response.body.contentLength
                 }
                 let spanWrapper = UnsafeTransfer(SpanWrapper(span))
                 response.body = response.body.withPostWriteClosure {
