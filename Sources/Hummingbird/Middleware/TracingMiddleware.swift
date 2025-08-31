@@ -92,7 +92,7 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
                 span.updateAttributes { attributes in
                     attributes = self.recordHeaders(response.headers, toSpanAttributes: attributes, withPrefix: "http.response.header.")
 
-                    attributes["http.status_code"] = Int(response.status.code)
+                    attributes["http.response.status_code"] = Int(response.status.code)
                     attributes["http.response_content_length"] = response.body.contentLength
                 }
                 let spanWrapper = UnsafeTransfer(SpanWrapper(span))
@@ -106,7 +106,7 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
                 span.operationName = endpointPath
             }
             let statusCode = (error as? HTTPResponseError)?.status.code ?? 500
-            span.attributes["http.status_code"] = statusCode
+            span.attributes["http.response.status_code"] = statusCode
             if 500..<600 ~= statusCode {
                 span.setStatus(.init(code: .error))
             }
