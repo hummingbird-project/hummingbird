@@ -40,7 +40,7 @@ final class TracingTests: XCTestCase {
             }
             let app = Application(responder: router.buildResponder())
             try await app.test(.router) { client in
-                try await client.execute(uri: "/users/42", method: .get) { response in
+                try await client.execute(uri: "/users/42", method: .get, headers: [.userAgent: "42"]) { response in
                     XCTAssertEqual(response.status, .ok)
                     XCTAssertEqual(String(buffer: response.body), "42")
                 }
@@ -65,6 +65,7 @@ final class TracingTests: XCTestCase {
                     "http.response.body.size": 2,
                     "net.host.name": "127.0.0.1",
                     "net.host.port": 8080,
+                    "user_agent.original": "42",
                 ]
             )
         }
