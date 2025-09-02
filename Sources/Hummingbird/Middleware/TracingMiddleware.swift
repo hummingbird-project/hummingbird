@@ -57,7 +57,8 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
                 attributes.merge(staticAttributes)
             }
             attributes["http.request.method"] = request.method.rawValue
-            attributes["http.target"] = request.uri.path
+            attributes["url.path"] = request.uri.path
+            attributes["url.query"] = request.uri.query
             // TODO: Get HTTP version and scheme
             // attributes["http.flavor"] = "\(request.version.major).\(request.version.minor)"
             // attributes["url.scheme"] = request.uri.scheme?.rawValue
@@ -90,6 +91,7 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
                     span.operationName = endpointPath
                 }
                 span.updateAttributes { attributes in
+                    attributes["http.route"] = context.endpointPath
                     attributes = self.recordHeaders(response.headers, toSpanAttributes: attributes, withPrefix: "http.response.header.")
 
                     attributes["http.response.status_code"] = Int(response.status.code)
@@ -106,7 +108,10 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
                 span.operationName = endpointPath
             }
             let statusCode = (error as? HTTPResponseError)?.status.code ?? 500
-            span.attributes["http.response.status_code"] = statusCode
+            span.updateAttributes { attributes in
+                attributes["http.route"] = context.endpointPath
+                attributes["http.response.status_code"] = statusCode
+            }
             if 500..<600 ~= statusCode {
                 span.setStatus(.init(code: .error))
             }
