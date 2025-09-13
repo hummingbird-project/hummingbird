@@ -153,6 +153,47 @@ final class TracingTests: XCTestCase {
         }
     }
 
+    func testTracingMiddlewareWithRedactedQueryParameters() async throws {
+        try await Self.testTracer.withUnique {
+            let expectation = expectation(description: "Expected span to be ended.")
+            Self.testTracer.onEndSpan = { _ in expectation.fulfill() }
+
+            let router = Router()
+            router.middlewares.add(TracingMiddleware(redactingQueryParameters: ["secret"]))
+            router.get("users") { _, _ -> String in
+                "42"
+            }
+            let app = Application(responder: router.buildResponder())
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/users?q=42&secret=foo&s=asc", method: .get) { response in
+                    XCTAssertEqual(response.status, .ok)
+                    XCTAssertEqual(String(buffer: response.body), "42")
+                }
+            }
+
+            await fulfillment(of: [expectation], timeout: 1)
+
+            let span = try XCTUnwrap(Self.testTracer.spans.first)
+
+            XCTAssertEqual(span.operationName, "/users")
+            XCTAssertEqual(span.kind, .server)
+            XCTAssertNil(span.status)
+            XCTAssertTrue(span.recordedErrors.isEmpty)
+
+            XCTAssertSpanAttributesEqual(
+                span.attributes,
+                [
+                    "http.request.method": "GET",
+                    "http.route": "/users",
+                    "url.path": "/users",
+                    "url.query": "q=42&secret=REDACTED&s=asc",
+                    "http.response.status_code": 200,
+                    "http.response.body.size": 2,
+                ]
+            )
+        }
+    }
+
     func testTracingMiddlewareWithFile() async throws {
         let filename = "\(#function).jpg"
         let text = "Test file contents"

@@ -30,6 +30,7 @@ import Tracing
 /// A list of implementations is available in the swift-distributed-tracing repository's README.
 public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
     private let headerNamesToRecord: Set<RecordingHeader>
+    private let queryParametersToRedact: Set<Substring>
     private let attributes: SpanAttributes?
 
     /// Intialize a new TracingMiddleware.
@@ -37,10 +38,17 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
     /// - Parameters
     ///     - recordingHeaders: A list of HTTP header names to be recorded as span attributes. By default, no headers
     ///         are being recorded.
+    ///     - redactingQueryParameters: A set of query parameter keys to redact. By default, all query parameters are
+    ///         being recorded without redaction.
     ///     - parameters: A list of static parameters added to every span. These could be the "net.host.name",
     ///         "net.host.port" or "http.scheme"
-    public init(recordingHeaders headerNamesToRecord: some Collection<HTTPField.Name> = [], attributes: SpanAttributes? = nil) {
+    public init(
+        recordingHeaders headerNamesToRecord: some Collection<HTTPField.Name> = [],
+        redactingQueryParameters queryParametersToRedact: Set<String> = [],
+        attributes: SpanAttributes? = nil
+    ) {
         self.headerNamesToRecord = Set(headerNamesToRecord.map(RecordingHeader.init))
+        self.queryParametersToRedact = Set(queryParametersToRedact.map { $0[...] })
         self.attributes = attributes
     }
 
@@ -58,7 +66,16 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
             }
             attributes["http.request.method"] = request.method.rawValue
             attributes["url.path"] = request.uri.path
-            attributes["url.query"] = request.uri.query
+            if self.queryParametersToRedact.isEmpty {
+                attributes["url.query"] = request.uri.query
+            } else {
+                attributes["url.query"] = request.uri.queryParameters
+                    .lazy
+                    .map { (key, value) in
+                        self.queryParametersToRedact.contains(key) ? "\(key)=REDACTED" : "\(key)=\(value)"
+                    }
+                    .joined(separator: "&")
+            }
             // TODO: Get HTTP version and scheme
             // attributes["http.flavor"] = "\(request.version.major).\(request.version.minor)"
             // attributes["url.scheme"] = request.uri.scheme?.rawValue
