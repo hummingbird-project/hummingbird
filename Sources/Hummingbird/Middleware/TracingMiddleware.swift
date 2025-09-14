@@ -38,6 +38,20 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
     /// - Parameters
     ///     - recordingHeaders: A list of HTTP header names to be recorded as span attributes. By default, no headers
     ///         are being recorded.
+    ///     - parameters: A list of static parameters added to every span. These could be the "net.host.name",
+    ///         "net.host.port" or "http.scheme"
+    public init(
+        recordingHeaders headerNamesToRecord: some Collection<HTTPField.Name> = [],
+        attributes: SpanAttributes? = nil
+    ) {
+        self.init(recordingHeaders: headerNamesToRecord, redactingQueryParameters: [], attributes: attributes)
+    }
+
+    /// Intialize a new TracingMiddleware.
+    ///
+    /// - Parameters
+    ///     - recordingHeaders: A list of HTTP header names to be recorded as span attributes. By default, no headers
+    ///         are being recorded.
     ///     - redactingQueryParameters: A set of query parameter keys to redact. By default, all query parameters are
     ///         being recorded without redaction.
     ///     - parameters: A list of static parameters added to every span. These could be the "net.host.name",
