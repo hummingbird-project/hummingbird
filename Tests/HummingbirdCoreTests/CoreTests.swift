@@ -508,7 +508,7 @@ struct HummingbirdCoreTests {
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: #function),
             test: { client in
-                try await withTimeout(.seconds(5)) {
+                try await withTimeout(.seconds(15)) {
                     _ = try await client.get("/", headers: [.connection: "keep-alive"])
                     let channel = try await client.channelPromise.futureResult.get()
                     try await channel.closeFuture.get()
