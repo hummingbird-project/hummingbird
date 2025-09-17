@@ -20,6 +20,15 @@ import Foundation
 
 /// Structure holding a single cookie
 public struct Cookie: Sendable, CustomStringConvertible {
+    public struct ValidationError: Error {
+        enum Reason {
+            case invalidName
+            case invalidValue
+        }
+
+        let reason: Reason
+    }
+
     public enum SameSite: String, Sendable {
         case lax = "Lax"
         case strict = "Strict"
@@ -52,7 +61,118 @@ public struct Cookie: Sendable, CustomStringConvertible {
     /// The SameSite attribute lets servers specify whether/when cookies are sent with cross-origin requests
     public var sameSite: SameSite? { self.properties[.sameSite].map { SameSite(rawValue: $0) } ?? nil }
 
-    /// Create `Cookie`
+    private static func isValidValue(_ value: String) -> Bool {
+        // RFC 6265 Section 4.1.1: cookie-octet set
+        // Allowed: 0x21, 0x23-0x2B, 0x2D-0x3A, 0x3C-0x5B, 0x5D-0x7E
+        value.utf8.allSatisfy { byte in
+            (byte == 0x21) || (0x23...0x2B).contains(byte) || (0x2D...0x3A).contains(byte) || (0x3C...0x5B).contains(byte)
+                || (0x5D...0x7E).contains(byte)
+        }
+    }
+
+    private static func isValidName(_ name: String) -> Bool {
+        // RFC 2616 Section 2.2: token = 1*<any CHAR except CTLs or separators>
+        // CTLs: 0-31, 127
+        // Separators: ()<>@,;:\"/[]?={} \t
+        let separators: Set<UInt8> = [
+            UInt8(ascii: "("),
+            UInt8(ascii: ")"),
+            UInt8(ascii: "<"),
+            UInt8(ascii: ">"),
+            UInt8(ascii: "@"),
+            UInt8(ascii: ","),
+            UInt8(ascii: ";"),
+            UInt8(ascii: ":"),
+            UInt8(ascii: "\\"),
+            UInt8(ascii: "\""),
+            UInt8(ascii: "/"),
+            UInt8(ascii: "["),
+            UInt8(ascii: "]"),
+            UInt8(ascii: "?"),
+            UInt8(ascii: "="),
+            UInt8(ascii: "{"),
+            UInt8(ascii: "}"),
+        ]
+        // Space is no in the separators, but is added to the CTLs because it's right behind the last CTL
+        // `0x1F` is the last CTL, and space is `0x20`
+        return !name.isEmpty
+            && name.utf8.allSatisfy { byte in
+                (byte >= 0x21 && byte != 127 && !separators.contains(byte))
+            }
+    }
+
+    /// Create `Cookie` and validates the name and value to be valid as per RFC 6265.
+    ///
+    /// If the name and value are not valid, an `ValidationError` will be thrown. Contrary to
+    /// the equivalent initializer, this function will not `assert` on DEBUG for invalid names
+    /// and values.
+    ///
+    /// - Parameters:
+    ///   - name: Name of cookie
+    ///   - value: Value of cookie
+    ///   - expires: indicates the maximum lifetime of the cookie
+    ///   - maxAge: indicates the maximum lifetime of the cookie in seconds. Max age has precedence
+    ///         over expires (not all user agents support max-age)
+    ///   - domain: specifies those hosts to which the cookie will be sent
+    ///   - path: The scope of each cookie is limited to a set of paths, controlled by the Path attribute
+    ///   - secure: The Secure attribute limits the scope of the cookie to "secure" channels
+    ///   - httpOnly: The HttpOnly attribute limits the scope of the cookie to HTTP requests
+    ///   - sameSite: The SameSite attribute lets servers specify whether/when cookies are sent with cross-origin requests
+    public static func validated(
+        name: String,
+        value: String,
+        expires: Date? = nil,
+        maxAge: Int? = nil,
+        domain: String? = nil,
+        path: String? = nil,
+        secure: Bool = false,
+        httpOnly: Bool = true,
+        sameSite: SameSite? = nil
+    ) throws -> Cookie {
+        guard Cookie.isValidName(name) else {
+            throw ValidationError(reason: .invalidName)
+        }
+
+        guard Cookie.isValidValue(value) else {
+            throw ValidationError(reason: .invalidValue)
+        }
+
+        assert(!(secure == false && sameSite == Cookie.SameSite.none), "Cookies with SameSite set to None require the Secure attribute to be set")
+
+        if let sameSite {
+            return Cookie(
+                name: name,
+                value: value,
+                expires: expires,
+                maxAge: maxAge,
+                domain: domain,
+                path: path,
+                secure: secure,
+                httpOnly: httpOnly,
+                sameSite: sameSite
+            )
+        } else {
+            return Cookie(
+                name: name,
+                value: value,
+                expires: expires,
+                maxAge: maxAge,
+                domain: domain,
+                path: path,
+                secure: secure,
+                httpOnly: httpOnly
+            )
+        }
+    }
+
+    /// Create `Cookie`. The `name` and `value` are assumed to contain valid characters as per RFC 6265.
+    ///
+    /// If the name and value are not valid, an `assert` will fail on DEBUG, or the cookie will be have
+    /// an invalid `String` representation on RELEASE.
+    ///
+    /// Use ``Cookie/validated(name:value:expires:maxAge:domain:path:secure:httpOnly:sameSite:)`` to create
+    /// a cookie while validating name and value.
+    ///
     /// - Parameters:
     ///   - name: Name of cookie
     ///   - value: Value of cookie
@@ -72,6 +192,9 @@ public struct Cookie: Sendable, CustomStringConvertible {
         secure: Bool = false,
         httpOnly: Bool = true
     ) {
+        assert(Cookie.isValidName(name), "Cookie name contains invalid characters as per RFC 6265")
+        assert(Cookie.isValidValue(value), "Cookie value contains invalid characters as per RFC 6265")
+
         self.name = name
         self.value = value
         var properties = Properties()
@@ -84,17 +207,26 @@ public struct Cookie: Sendable, CustomStringConvertible {
         self.properties = properties
     }
 
-    /// Create `Cookie`
+    /// Create `Cookie`. The `name` and `value` are assumed to contain valid characters as per RFC 6265.
+    ///
+    /// If the name and value are not valid, an `assert` will fail on DEBUG, or the cookie will be have
+    /// an invalid `String` representation on RELEASE.
+    ///
+    /// Use ``Cookie/validated(name:value:expires:maxAge:domain:path:secure:httpOnly:sameSite:)`` to create
+    /// a cookie while validating name and value.
+    ///
     /// - Parameters:
     ///   - name: Name of cookie
     ///   - value: Value of cookie
     ///   - expires: indicates the maximum lifetime of the cookie
-    ///   - maxAge: indicates the maximum lifetime of the cookie in seconds. Max age has precedence over expires (not all user agents support max-age)
+    ///   - maxAge: indicates the maximum lifetime of the cookie in seconds. Max age has precedence over
+    ///         expires (not all user agents support max-age)
     ///   - domain: specifies those hosts to which the cookie will be sent
     ///   - path: The scope of each cookie is limited to a set of paths, controlled by the Path attribute
     ///   - secure: The Secure attribute limits the scope of the cookie to "secure" channels
     ///   - httpOnly: The HttpOnly attribute limits the scope of the cookie to HTTP requests
-    ///   - sameSite: The SameSite attribute lets servers specify whether/when cookies are sent with cross-origin requests
+    ///   - sameSite: The SameSite attribute lets servers specify whether/when cookies are sent with
+    ///         cross-origin requests
     public init(
         name: String,
         value: String,
@@ -106,7 +238,10 @@ public struct Cookie: Sendable, CustomStringConvertible {
         httpOnly: Bool = true,
         sameSite: SameSite
     ) {
+        assert(Cookie.isValidName(name), "Cookie name contains invalid characters as per RFC 6265")
         assert(!(secure == false && sameSite == .none), "Cookies with SameSite set to None require the Secure attribute to be set")
+        assert(Cookie.isValidValue(value), "Cookie value contains invalid characters as per RFC 6265")
+
         self.name = name
         self.value = value
         var properties = Properties()

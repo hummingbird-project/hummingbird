@@ -105,4 +105,37 @@ final class CookieTests: XCTestCase {
             }
         }
     }
+
+    func testValidatedCookieSuccess() throws {
+        let cookie = try Cookie.validated(name: "session", value: "abcdef1234")
+        XCTAssertEqual(cookie.name, "session")
+        XCTAssertEqual(cookie.value, "abcdef1234")
+        XCTAssertEqual(cookie.httpOnly, true)
+        XCTAssertEqual(cookie.secure, false)
+    }
+
+    func testValidatedCookieWithSameSite() throws {
+        let cookie = try Cookie.validated(name: "foo", value: "bar", sameSite: .strict)
+        XCTAssertEqual(cookie.name, "foo")
+        XCTAssertEqual(cookie.value, "bar")
+        XCTAssertEqual(cookie.sameSite, .strict)
+    }
+
+    func testValidatedCookieInvalidName() {
+        XCTAssertThrowsError(try Cookie.validated(name: "invalid;name", value: "value")) { error in
+            XCTAssert(error is Cookie.ValidationError, "Unexpected error type")
+        }
+        XCTAssertThrowsError(try Cookie.validated(name: "invalid;name", value: "value", sameSite: .strict)) { error in
+            XCTAssert(error is Cookie.ValidationError, "Unexpected error type")
+        }
+    }
+
+    func testValidatedCookieInvalidValue() {
+        XCTAssertThrowsError(try Cookie.validated(name: "name", value: "inv\u{7F}alid")) { error in
+            XCTAssert(error is Cookie.ValidationError, "Unexpected error type")
+        }
+        XCTAssertThrowsError(try Cookie.validated(name: "name", value: "inv\u{7F}alid", sameSite: .strict)) { error in
+            XCTAssert(error is Cookie.ValidationError, "Unexpected error type")
+        }
+    }
 }

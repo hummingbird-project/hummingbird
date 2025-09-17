@@ -17,12 +17,12 @@ jobs:
       run: |
         apt-get update && apt-get install -y rsync bc
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         fetch-depth: 0
         path: "package"
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         repository: "hummingbird-project/hummingbird-docs"
         fetch-depth: 0

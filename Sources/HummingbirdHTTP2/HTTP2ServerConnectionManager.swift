@@ -293,7 +293,8 @@ extension HTTP2ServerConnectionManager {
                 loopBoundHandler.triggerGracefulShutdown()
             }
         case .close:
-            LoopBoundHandler(self).triggerGracefulShutdown()
+            channelHandlerContext?.close(promise: nil)
+
         case .none:
             break
         }
