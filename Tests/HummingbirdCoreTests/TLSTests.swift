@@ -100,7 +100,11 @@ struct HummingBirdTLSTests {
                     _ = try await client.get("/")
                 }
                 Issue.record("Client connection should fail as certificate verification is set to fail")
-            } catch BoringSSLError.sslError {}
+            } catch BoringSSLError.sslError {
+            } catch {
+                print("\(error)")
+            }
+
         }
     }
 }

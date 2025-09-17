@@ -344,7 +344,6 @@ public struct TestClient: Sendable {
             while let task = self.queue.popFirst() {
                 task.responsePromise.fail(error)
             }
-            context.close(promise: nil)
         }
 
         func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {

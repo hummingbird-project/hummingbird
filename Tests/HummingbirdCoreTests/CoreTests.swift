@@ -501,7 +501,7 @@ struct HummingbirdCoreTests {
             httpChannelSetup: .http1(
                 configuration: .init(
                     additionalChannelHandlers: [HTTPServerIncompleteRequest()],
-                    idleTimeout: .seconds(2)
+                    idleTimeout: .seconds(3)
                 )
             ),
             configuration: .init(address: .hostname(port: 0)),
