@@ -182,7 +182,6 @@ public struct TestClient: Sendable {
                 let task = HTTPTask(request: self.cleanupRequest(request), responsePromise: promise)
                 try await channel.writeAndFlush(task).flatMapErrorThrowing { error in
                     promise.fail(error)
-                    throw error
                 }.get()
                 return try await promise.futureResult.get()
             }
@@ -345,7 +344,6 @@ public struct TestClient: Sendable {
             while let task = self.queue.popFirst() {
                 task.responsePromise.fail(error)
             }
-            context.close(promise: nil)
         }
 
         func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {

@@ -12,22 +12,23 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import HTTPTypes
 import Hummingbird
 import HummingbirdRouter
 import HummingbirdTesting
 import Logging
 import NIOCore
-import XCTest
+import Testing
 
-final class MiddlewareTests: XCTestCase {
+struct MiddlewareTests {
     static func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
         data = data.map { _ in UInt8.random(in: 0...255) }
         return ByteBufferAllocator().buffer(bytes: data)
     }
 
-    func testMiddleware() async throws {
+    @Test func testMiddleware() async throws {
         struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 var response = try await next(request, context)
@@ -44,12 +45,12 @@ final class MiddlewareTests: XCTestCase {
         let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
-                XCTAssertEqual(response.headers[.middleware], "TestMiddleware")
+                #expect(response.headers[.middleware] == "TestMiddleware")
             }
         }
     }
 
-    func testMiddlewareOrder() async throws {
+    @Test func testMiddlewareOrder() async throws {
         struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
             let string: String
             func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
@@ -69,17 +70,17 @@ final class MiddlewareTests: XCTestCase {
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
                 // headers come back in opposite order as middleware is applied to responses in that order
-                XCTAssertEqual(response.headers[values: .middleware].first, "second")
-                XCTAssertEqual(response.headers[values: .middleware].last, "first")
+                #expect(response.headers[values: .middleware].first == "second")
+                #expect(response.headers[values: .middleware].last == "first")
             }
         }
     }
 
-    func testMiddlewareRunOnce() async throws {
+    @Test func testMiddlewareRunOnce() async throws {
         struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 var response = try await next(request, context)
-                XCTAssertNil(response.headers[.alreadyRun])
+                #expect(response.headers[.alreadyRun] == nil)
                 response.headers[.alreadyRun] = "true"
                 return response
             }
@@ -97,7 +98,7 @@ final class MiddlewareTests: XCTestCase {
         }
     }
 
-    func testMiddlewareRunWhenNoRouteFound() async throws {
+    @Test func testMiddlewareRunWhenNoRouteFound() async throws {
         /// Error message returned by Hummingbird
         struct ErrorMessage: Codable {
             struct Details: Codable {
@@ -122,14 +123,14 @@ final class MiddlewareTests: XCTestCase {
 
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
-                XCTAssertEqual(response.status, .notFound)
+                #expect(response.status == .notFound)
                 let error = try JSONDecoder().decodeByteBuffer(ErrorMessage.self, from: response.body)
-                XCTAssertEqual(error.error.message, "Edited error")
+                #expect(error.error.message == "Edited error")
             }
         }
     }
 
-    func testMiddlewareResponseBodyWriter() async throws {
+    @Test func testMiddlewareResponseBodyWriter() async throws {
         struct TransformWriter: ResponseBodyWriter {
             var parentWriter: any ResponseBodyWriter
 
@@ -174,10 +175,10 @@ final class MiddlewareTests: XCTestCase {
         try await app.test(.router) { client in
             let buffer = Self.randomBuffer(size: 64000)
             try await client.execute(uri: "/test", method: .get, body: buffer) { response in
-                XCTAssertEqual(response.trailerHeaders?[.middleware], "test")
-                XCTAssertEqual(response.trailerHeaders?[.middleware2], "test2")
+                #expect(response.trailerHeaders?[.middleware] == "test")
+                #expect(response.trailerHeaders?[.middleware2] == "test2")
                 let expectedOutput = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
-                XCTAssertEqual(expectedOutput, response.body)
+                #expect(expectedOutput == response.body)
             }
         }
     }

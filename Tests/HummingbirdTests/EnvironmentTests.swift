@@ -13,90 +13,75 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import XCTest
+import Testing
 
 @testable import Hummingbird
 
-final class EnvironmentTests: XCTestCase {
-    func testInitFromEnvironment() {
-        XCTAssertEqual(setenv("TEST_VAR", "testSetFromEnvironment", 1), 0)
+struct EnvironmentTests {
+    @Test func testInitFromEnvironment() {
+        #expect(setenv("testInitFromEnvironment", "testSetFromEnvironment", 1) == 0)
         let env = Environment()
-        XCTAssertEqual(env.get("TEST_VAR"), "testSetFromEnvironment")
+        #expect(env.get("testInitFromEnvironment") == "testSetFromEnvironment")
     }
 
-    func testInitFromDictionary() {
+    @Test func testInitFromDictionary() {
         let env = Environment(values: ["TEST_VAR": "testSetFromDictionary"])
-        XCTAssertEqual(env.get("TEST_VAR"), "testSetFromDictionary")
+        #expect(env.get("TEST_VAR") == "testSetFromDictionary")
     }
 
-    func testInitFromCodable() {
-        let json = #"{"TEST_VAR": "testSetFromCodable"}"#
+    @Test func testInitFromCodable() {
+        let json = #"{"testInitFromCodable": "testSetFromCodable"}"#
         var env: Environment?
-        XCTAssertNoThrow(env = try JSONDecoder().decode(Environment.self, from: Data(json.utf8)))
-        XCTAssertEqual(env?.get("TEST_VAR"), "testSetFromCodable")
+        #expect(throws: Never.self) { env = try JSONDecoder().decode(Environment.self, from: Data(json.utf8)) }
+        #expect(env?.get("testInitFromCodable") == "testSetFromCodable")
     }
 
-    func testRequire() throws {
+    @Test func testRequire() throws {
         var env = Environment()
         env.set("TEST_REQUIRE", value: "testing")
         let value = try env.require("TEST_REQUIRE")
-        XCTAssertEqual(value, "testing")
-        XCTAssertThrowsError(try env.require("TEST_REQUIRE2")) { error in
-            if let error = error as? Environment.Error, error == .variableDoesNotExist {
-                return
-            }
-            XCTFail()
-        }
+        #expect(value == "testing")
+        #expect(throws: Environment.Error.variableDoesNotExist) { try env.require("TEST_REQUIRE2") }
     }
 
-    func testRequireAs() throws {
+    @Test func testRequireAs() throws {
         var env = Environment()
         env.set("TEST_REQUIRE_AS", value: "testing")
         let value = try env.require("TEST_REQUIRE_AS", as: String.self)
-        XCTAssertEqual(value, "testing")
-        XCTAssertThrowsError(try env.require("TEST_REQUIRE_AS_2", as: Int.self)) { error in
-            if let error = error as? Environment.Error, error == .variableDoesNotExist {
-                return
-            }
-            XCTFail()
-        }
-        XCTAssertThrowsError(try env.require("TEST_REQUIRE_AS", as: Int.self)) { error in
-            if let error = error as? Environment.Error, error == .variableDoesNotConvert {
-                return
-            }
-            XCTFail()
-        }
+        #expect(value == "testing")
+        #expect(throws: Environment.Error.variableDoesNotExist) { try env.require("TEST_REQUIRE_AS_2", as: Int.self) }
+        #expect(throws: Environment.Error.variableDoesNotConvert) { try env.require("TEST_REQUIRE_AS", as: Int.self) }
     }
 
-    func testSet() {
+    @Test func testSet() {
         var env = Environment()
         env.set("TEST_VAR", value: "testSet")
-        XCTAssertEqual(env.get("TEST_VAR"), "testSet")
+        #expect(env.get("TEST_VAR") == "testSet")
     }
 
-    func testSetForAllEnvironments() {
+    @Test func testSetForAllEnvironments() {
         var env = Environment()
         env.set("TEST_VAR_E1", value: "testSet")
         let env2 = Environment()
-        XCTAssertEqual(env2.get("TEST_VAR_E1"), "testSet")
+        #expect(env2.get("TEST_VAR_E1") == "testSet")
     }
 
-    func testLogLevel() {
+    @Test func testLogLevel() {
         var env = Environment()
         env.set("LOG_LEVEL", value: "trace")
         let router = Router()
         let app = Application(responder: router.buildResponder())
-        XCTAssertEqual(app.logger.logLevel, .trace)
+        #expect(app.logger.logLevel == .trace)
     }
 
-    func testCaseInsensitive() {
-        XCTAssertEqual(setenv("test_VAR", "testSetFromEnvironment", 1), 0)
+    @Test func testCaseInsensitive() {
+        #expect(setenv("testCaseInsensitive", "testSetFromEnvironment", 1) == 0)
         let env = Environment()
-        XCTAssertEqual(env.get("TEST_VAR"), "testSetFromEnvironment")
-        XCTAssertEqual(env.get("test_var"), "testSetFromEnvironment")
+        #expect(env.get("TESTCaseInsensitive") == "testSetFromEnvironment")
+        #expect(env.get("testcaseinsensitive") == "testSetFromEnvironment")
     }
 
-    func testDotEnvLoading() async throws {
+    @Test func testDotEnvLoading() async throws {
         let dotenv = """
             TEST=this
             CREDENTIALS=sdkfjh
@@ -109,42 +94,41 @@ final class EnvironmentTests: XCTestCase {
         }
 
         let result = try await Environment.dotEnv()
-        XCTAssertEqual(result.get("test"), "this")
-        XCTAssertEqual(result.get("credentials"), "sdkfjh")
+        #expect(result.get("test") == "this")
+        #expect(result.get("credentials") == "sdkfjh")
     }
 
-    func testDotEnvParsingError() throws {
+    @Test func testDotEnvParsingError() throws {
         let dotenv = """
             TEST #thse
             """
-        do {
-            _ = try Environment.parseDotEnv(dotenv)
-            XCTFail("Should fail")
-        } catch let error as Environment.Error where error == .dotEnvParseError {}
+        #expect(throws: Environment.Error.dotEnvParseError) {
+            try Environment.parseDotEnv(dotenv)
+        }
     }
 
-    func testDotEnvSpeechMarks() throws {
+    @Test func testDotEnvSpeechMarks() throws {
         let dotenv = """
             TEST="test this"
             CREDENTIALS=sdkfjh
             """
         let result = try Environment.parseDotEnv(dotenv)
-        XCTAssertEqual(result["test"], "test this")
-        XCTAssertEqual(result["credentials"], "sdkfjh")
+        #expect(result["test"] == "test this")
+        #expect(result["credentials"] == "sdkfjh")
     }
 
-    func testDotEnvMultilineValue() throws {
+    @Test func testDotEnvMultilineValue() throws {
         let dotenv = """
             TEST="test
             this"
             CREDENTIALS=sdkfjh
             """
         let result = try Environment.parseDotEnv(dotenv)
-        XCTAssertEqual(result["test"], "test\nthis")
-        XCTAssertEqual(result["credentials"], "sdkfjh")
+        #expect(result["test"] == "test\nthis")
+        #expect(result["credentials"] == "sdkfjh")
     }
 
-    func testDotEnvComments() throws {
+    @Test func testDotEnvComments() throws {
         let dotenv = """
             # Comment 
             TEST=this # Comment at end of line
@@ -152,11 +136,11 @@ final class EnvironmentTests: XCTestCase {
             # Comment at end
             """
         let result = try Environment.parseDotEnv(dotenv)
-        XCTAssertEqual(result["test"], "this")
-        XCTAssertEqual(result["credentials"], "sdkfjh")
+        #expect(result["test"] == "this")
+        #expect(result["credentials"] == "sdkfjh")
     }
 
-    func testDotEnvCommentAndEmptyLine() throws {
+    @Test func testDotEnvCommentAndEmptyLine() throws {
         let dotenv = """
             FOO=BAR
             #BAZ=
@@ -164,23 +148,23 @@ final class EnvironmentTests: XCTestCase {
 
             """
         let result = try Environment.parseDotEnv(dotenv)
-        XCTAssertEqual(result["foo"], "BAR")
-        XCTAssertEqual(result.count, 1)
+        #expect(result["foo"] == "BAR")
+        #expect(result.count == 1)
     }
 
-    func testEmptyLineAtEnd() throws {
+    @Test func testEmptyLineAtEnd() throws {
         let dotenv = """
             FOO=BAR
 
             """
         let result = try Environment.parseDotEnv(dotenv)
-        XCTAssertEqual(result["foo"], "BAR")
-        XCTAssertEqual(result.count, 1)
+        #expect(result["foo"] == "BAR")
+        #expect(result.count == 1)
     }
 
-    func testDotEnvOverridingEnvironment() async throws {
+    @Test func testDotEnvOverridingEnvironment() async throws {
         let dotenv = """
-            TEST_VAR=testDotEnvOverridingEnvironment
+            testDotEnvOverridingEnvironment=testDotEnvOverridingEnvironment
             """
         let data = dotenv.data(using: .utf8)
         let envURL = URL(fileURLWithPath: ".override.env")
@@ -188,10 +172,10 @@ final class EnvironmentTests: XCTestCase {
         defer {
             try? FileManager.default.removeItem(at: envURL)
         }
-        XCTAssertEqual(setenv("TEST_VAR", "testSetFromEnvironment", 1), 0)
-        XCTAssertEqual(setenv("TEST_VAR2", "testSetFromEnvironment2", 1), 0)
+        #expect(setenv("testDotEnvOverridingEnvironment", "testSetFromEnvironment", 1) == 0)
+        #expect(setenv("testDotEnvOverridingEnvironment2", "testSetFromEnvironment2", 1) == 0)
         let env = try await Environment().merging(with: .dotEnv(".override.env"))
-        XCTAssertEqual(env.get("TEST_VAR"), "testDotEnvOverridingEnvironment")
-        XCTAssertEqual(env.get("TEST_VAR2"), "testSetFromEnvironment2")
+        #expect(env.get("testDotEnvOverridingEnvironment") == "testDotEnvOverridingEnvironment")
+        #expect(env.get("testDotEnvOverridingEnvironment2") == "testSetFromEnvironment2")
     }
 }

@@ -12,18 +12,19 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import Hummingbird
 import HummingbirdTesting
-import XCTest
+import Testing
 
-final class FileIOTests: XCTestCase {
+struct FileIOTests {
     static func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
         data = data.map { _ in UInt8.random(in: 0...255) }
         return ByteBufferAllocator().buffer(bytes: data)
     }
 
-    func testReadFileIO() async throws {
+    @Test func testReadFileIO() async throws {
         let router = Router()
         router.get("test.jpg") { _, context -> Response in
             let fileIO = FileIO(threadPool: .singleton)
@@ -33,19 +34,19 @@ final class FileIOTests: XCTestCase {
         let buffer = Self.randomBuffer(size: 320_003)
         let data = Data(buffer: buffer)
         let fileURL = URL(fileURLWithPath: "testReadFileIO.jpg")
-        XCTAssertNoThrow(try data.write(to: fileURL))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+        #expect(throws: Never.self) { try data.write(to: fileURL) }
+        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
 
         let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
             try await client.execute(uri: "/test.jpg", method: .get) { response in
-                XCTAssertEqual(response.body, buffer)
+                #expect(response.body == buffer)
             }
         }
     }
 
-    func testReadMultipleFilesOnSameConnection() async throws {
+    @Test func testReadMultipleFilesOnSameConnection() async throws {
         let router = Router()
         router.get("test.jpg") { _, context -> Response in
             let fileIO = FileIO(threadPool: .singleton)
@@ -55,22 +56,22 @@ final class FileIOTests: XCTestCase {
         let buffer = Self.randomBuffer(size: 54003)
         let data = Data(buffer: buffer)
         let fileURL = URL(fileURLWithPath: "testReadMultipleFilesOnSameConnection.jpg")
-        XCTAssertNoThrow(try data.write(to: fileURL))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+        #expect(throws: Never.self) { try data.write(to: fileURL) }
+        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
 
         let app = Application(responder: router.buildResponder())
 
         try await app.test(.live) { client in
             try await client.execute(uri: "/test.jpg", method: .get) { response in
-                XCTAssertEqual(response.body, buffer)
+                #expect(response.body == buffer)
             }
             try await client.execute(uri: "/test.jpg", method: .get) { response in
-                XCTAssertEqual(response.body, buffer)
+                #expect(response.body == buffer)
             }
         }
     }
 
-    func testWrite() async throws {
+    @Test func testWrite() async throws {
         let filename = "testWrite.txt"
         let router = Router()
         router.put("store") { request, context -> HTTPResponse.Status in
@@ -83,17 +84,17 @@ final class FileIOTests: XCTestCase {
         try await app.test(.router) { client in
             let buffer = ByteBufferAllocator().buffer(string: "This is a test")
             try await client.execute(uri: "/store", method: .put, body: buffer) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
         }
 
         let fileURL = URL(fileURLWithPath: filename)
         let data = try Data(contentsOf: fileURL)
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
-        XCTAssertEqual(String(decoding: data, as: Unicode.UTF8.self), "This is a test")
+        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
+        #expect(String(decoding: data, as: Unicode.UTF8.self) == "This is a test")
     }
 
-    func testWriteLargeFile() async throws {
+    @Test func testWriteLargeFile() async throws {
         let filename = "testWriteLargeFile.txt"
         let router = Router()
         router.put("store") { request, context -> HTTPResponse.Status in
@@ -106,38 +107,38 @@ final class FileIOTests: XCTestCase {
         try await app.test(.live) { client in
             let buffer = Self.randomBuffer(size: 400_000)
             try await client.execute(uri: "/store", method: .put, body: buffer) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
 
             let fileURL = URL(fileURLWithPath: filename)
             let data = try Data(contentsOf: fileURL)
-            defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
-            XCTAssertEqual(Data(buffer: buffer), data)
+            defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
+            #expect(Data(buffer: buffer) == data)
         }
     }
 
-    func testReadEmptyFile() async throws {
+    @Test func testReadEmptyFile() async throws {
         let router = Router()
         router.get("empty.txt") { _, context -> Response in
             let fileIO = FileIO(threadPool: .singleton)
-            let body = try await fileIO.loadFile(path: "empty.txt", context: context)
+            let body = try await fileIO.loadFile(path: "testReadEmptyFile.txt", context: context)
             return .init(status: .ok, headers: [:], body: body)
         }
         let data = Data()
-        let fileURL = URL(fileURLWithPath: "empty.txt")
-        XCTAssertNoThrow(try data.write(to: fileURL))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+        let fileURL = URL(fileURLWithPath: "testReadEmptyFile.txt")
+        #expect(throws: Never.self) { try data.write(to: fileURL) }
+        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
 
         let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
             try await client.execute(uri: "/empty.txt", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
         }
     }
 
-    func testReadEmptyFilePart() async throws {
+    @Test func testReadEmptyFilePart() async throws {
         let router = Router()
         router.get("empty.txt") { _, context -> Response in
             let fileIO = FileIO(threadPool: .singleton)
@@ -146,14 +147,14 @@ final class FileIOTests: XCTestCase {
         }
         let data = Data()
         let fileURL = URL(fileURLWithPath: "empty.txt")
-        XCTAssertNoThrow(try data.write(to: fileURL))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL)) }
+        #expect(throws: Never.self) { try data.write(to: fileURL) }
+        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
 
         let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
             try await client.execute(uri: "/empty.txt", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
         }
     }

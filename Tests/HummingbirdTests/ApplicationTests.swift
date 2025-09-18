@@ -28,18 +28,18 @@ import NIOHTTP1
 import NIOHTTPTypes
 import NIOSSL
 import ServiceLifecycle
-import XCTest
+import Testing
 
 @testable import Hummingbird
 
-final class ApplicationTests: XCTestCase {
+struct ApplicationTests {
     static func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
         data = data.map { _ in UInt8.random(in: 0...255) }
         return ByteBufferAllocator().buffer(bytes: data)
     }
 
-    func testGetRoute() async throws {
+    @Test func testGetRoute() async throws {
         let router = Router()
         router.get("/hello") { _, _ -> ByteBuffer in
             ByteBuffer(string: "GET: Hello")
@@ -47,13 +47,13 @@ final class ApplicationTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(String(buffer: response.body), "GET: Hello")
+                #expect(response.status == .ok)
+                #expect(String(buffer: response.body) == "GET: Hello")
             }
         }
     }
 
-    func testHTTPStatusRoute() async throws {
+    @Test func testHTTPStatusRoute() async throws {
         let router = Router()
         router.get("/accepted") { _, _ -> HTTPResponse.Status in
             .accepted
@@ -61,12 +61,12 @@ final class ApplicationTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/accepted", method: .get) { response in
-                XCTAssertEqual(response.status, .accepted)
+                #expect(response.status == .accepted)
             }
         }
     }
 
-    func testStandardHeaders() async throws {
+    @Test func testStandardHeaders() async throws {
         let router = Router()
         router.get("/hello") { _, _ in
             "Hello"
@@ -74,13 +74,13 @@ final class ApplicationTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
         try await app.test(.live) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
-                XCTAssertEqual(response.headers[.contentLength], "5")
-                XCTAssertNotNil(response.headers[.date])
+                #expect(response.headers[.contentLength] == "5")
+                #expect(response.headers[.date] != nil)
             }
         }
     }
 
-    func testServerHeaders() async throws {
+    @Test func testServerHeaders() async throws {
         let router = Router()
         router.get("/hello") { _, _ in
             "Hello"
@@ -91,12 +91,12 @@ final class ApplicationTests: XCTestCase {
         )
         try await app.test(.live) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
-                XCTAssertEqual(response.headers[.server], "TestServer")
+                #expect(response.headers[.server] == "TestServer")
             }
         }
     }
 
-    func testPostRoute() async throws {
+    @Test func testPostRoute() async throws {
         let router = Router()
         router.post("/hello") { _, _ -> String in
             "POST: Hello"
@@ -105,13 +105,13 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.execute(uri: "/hello", method: .post) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(String(buffer: response.body), "POST: Hello")
+                #expect(response.status == .ok)
+                #expect(String(buffer: response.body) == "POST: Hello")
             }
         }
     }
 
-    func testMultipleMethods() async throws {
+    @Test func testMultipleMethods() async throws {
         let router = Router()
         router.post("/hello") { _, _ -> String in
             "POST"
@@ -123,15 +123,15 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.execute(uri: "/hello", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "GET")
+                #expect(String(buffer: response.body) == "GET")
             }
             try await client.execute(uri: "/hello", method: .post) { response in
-                XCTAssertEqual(String(buffer: response.body), "POST")
+                #expect(String(buffer: response.body) == "POST")
             }
         }
     }
 
-    func testMultipleGroupMethods() async throws {
+    @Test func testMultipleGroupMethods() async throws {
         let router = Router()
         router.group("hello")
             .post { _, _ -> String in
@@ -144,15 +144,15 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.execute(uri: "/hello", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "GET")
+                #expect(String(buffer: response.body) == "GET")
             }
             try await client.execute(uri: "/hello", method: .post) { response in
-                XCTAssertEqual(String(buffer: response.body), "POST")
+                #expect(String(buffer: response.body) == "POST")
             }
         }
     }
 
-    func testQueryRoute() async throws {
+    @Test func testQueryRoute() async throws {
         let router = Router()
         router.post("/query") { request, _ -> ByteBuffer in
             ByteBuffer(
@@ -164,13 +164,13 @@ final class ApplicationTests: XCTestCase {
 
             try await client.execute(uri: "/query?test=test%20data%C3%A9", method: .post) {
                 response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(String(buffer: response.body), "test dataé")
+                #expect(response.status == .ok)
+                #expect(String(buffer: response.body) == "test dataé")
             }
         }
     }
 
-    func testMultipleQueriesRoute() async throws {
+    @Test func testMultipleQueriesRoute() async throws {
         let router = Router()
         router.post("/add") { request, _ -> String in
             request.uri.queryParameters.getAll("value", as: Int.self).reduce(0, +)
@@ -181,13 +181,13 @@ final class ApplicationTests: XCTestCase {
 
             try await client.execute(uri: "/add?value=3&value=45&value=7", method: .post) {
                 response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(String(buffer: response.body), "55")
+                #expect(response.status == .ok)
+                #expect(String(buffer: response.body) == "55")
             }
         }
     }
 
-    func testArray() async throws {
+    @Test func testArray() async throws {
         let router = Router()
         router.get("array") { _, _ -> [String] in
             ["yes", "no"]
@@ -196,12 +196,12 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.execute(uri: "/array", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "[\"yes\",\"no\"]")
+                #expect(String(buffer: response.body) == "[\"yes\",\"no\"]")
             }
         }
     }
 
-    func testErrorOutput() async throws {
+    @Test func testErrorOutput() async throws {
         /// Error message returned by Hummingbird
         struct ErrorMessage: Codable {
             struct Details: Codable {
@@ -218,12 +218,12 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
             try await client.execute(uri: "/error", method: .get) { response in
                 let error = try JSONDecoder().decodeByteBuffer(ErrorMessage.self, from: response.body)
-                XCTAssertEqual(error.error.message, "BAD!")
+                #expect(error.error.message == "BAD!")
             }
         }
     }
 
-    func testErrorHeaders() async throws {
+    @Test func testErrorHeaders() async throws {
         let router = Router()
         router.get("error") { _, _ -> HTTPResponse.Status in
             throw HTTPError(.badRequest, message: "BAD!")
@@ -231,13 +231,13 @@ final class ApplicationTests: XCTestCase {
         let app = Application(router: router, configuration: .init(serverName: "HB"))
         try await app.test(.live) { client in
             try await client.execute(uri: "/error", method: .get) { response in
-                XCTAssertEqual(response.headers[.server], "HB")
-                XCTAssertNotNil(response.headers[.date])
+                #expect(response.headers[.server] == "HB")
+                #expect(response.headers[.date] != nil)
             }
         }
     }
 
-    func testResponseBody() async throws {
+    @Test func testResponseBody() async throws {
         let router = Router()
         router
             .group("/echo-body")
@@ -250,13 +250,13 @@ final class ApplicationTests: XCTestCase {
 
             let buffer = Self.randomBuffer(size: 1_140_000)
             try await client.execute(uri: "/echo-body", method: .post, body: buffer) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(response.body, buffer)
+                #expect(response.status == .ok)
+                #expect(response.body == buffer)
             }
         }
     }
 
-    func testResponseBodySequence() async throws {
+    @Test func testResponseBodySequence() async throws {
         let router = Router()
         router
             .group("/echo-body")
@@ -272,15 +272,15 @@ final class ApplicationTests: XCTestCase {
 
             let buffer = Self.randomBuffer(size: 400_000)
             try await client.execute(uri: "/echo-body", method: .post, body: buffer) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(response.headers[.contentLength], "400000")
-                XCTAssertEqual(response.body, buffer)
+                #expect(response.status == .ok)
+                #expect(response.headers[.contentLength] == "400000")
+                #expect(response.body == buffer)
             }
         }
     }
 
     /// Test streaming of requests and streaming of responses by streaming the request body into a response streamer
-    func testStreaming() async throws {
+    @Test func testStreaming() async throws {
         let router = Router()
         router.post("streaming") { request, _ -> Response in
             Response(status: .ok, body: .init(asyncSequence: request.body))
@@ -298,21 +298,21 @@ final class ApplicationTests: XCTestCase {
 
             let buffer = Self.randomBuffer(size: 640_001)
             try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(response.body, buffer)
+                #expect(response.status == .ok)
+                #expect(response.body == buffer)
             }
             try await client.execute(uri: "/streaming", method: .post) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(response.body, ByteBuffer())
+                #expect(response.status == .ok)
+                #expect(response.body == ByteBuffer())
             }
             try await client.execute(uri: "/size", method: .post, body: buffer) { response in
-                XCTAssertEqual(String(buffer: response.body), "640001")
+                #expect(String(buffer: response.body) == "640001")
             }
         }
     }
 
     /// Test streaming of requests and streaming of responses by streaming the request body into a response streamer
-    func testStreamingSmallBuffer() async throws {
+    @Test func testStreamingSmallBuffer() async throws {
         let router = Router()
         router.post("streaming") { request, _ -> Response in
             Response(status: .ok, body: .init(asyncSequence: request.body))
@@ -321,17 +321,17 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
             let buffer = Self.randomBuffer(size: 64)
             try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(response.body, buffer)
+                #expect(response.status == .ok)
+                #expect(response.body == buffer)
             }
             try await client.execute(uri: "/streaming", method: .post) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(response.body, ByteBuffer())
+                #expect(response.status == .ok)
+                #expect(response.body == ByteBuffer())
             }
         }
     }
 
-    func testCollectBody() async throws {
+    @Test func testCollectBody() async throws {
         struct CollateMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(
                 _ request: Request,
@@ -354,13 +354,13 @@ final class ApplicationTests: XCTestCase {
 
             let buffer = Self.randomBuffer(size: 512_000)
             try await client.execute(uri: "/hello", method: .put, body: buffer) { response in
-                XCTAssertEqual(String(buffer: response.body), "512000")
-                XCTAssertEqual(response.status, .ok)
+                #expect(String(buffer: response.body) == "512000")
+                #expect(response.status == .ok)
             }
         }
     }
 
-    func testDoubleStreaming() async throws {
+    @Test func testDoubleStreaming() async throws {
         let router = Router()
         router.post("size") { request, context -> String in
             var request = request
@@ -376,12 +376,12 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
             let buffer = Self.randomBuffer(size: 100_000)
             try await client.execute(uri: "/size", method: .post, body: buffer) { response in
-                XCTAssertEqual(String(buffer: response.body), "100000")
+                #expect(String(buffer: response.body) == "100000")
             }
         }
     }
 
-    func testOptional() async throws {
+    @Test func testOptional() async throws {
         let router = Router()
         router
             .group("/echo-body")
@@ -394,16 +394,16 @@ final class ApplicationTests: XCTestCase {
 
             let buffer = Self.randomBuffer(size: 64)
             try await client.execute(uri: "/echo-body", method: .post, body: buffer) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(response.body, buffer)
+                #expect(response.status == .ok)
+                #expect(response.body == buffer)
             }
             try await client.execute(uri: "/echo-body", method: .post) { response in
-                XCTAssertEqual(response.status, .noContent)
+                #expect(response.status == .noContent)
             }
         }
     }
 
-    func testOptionalCodable() async throws {
+    @Test func testOptionalCodable() async throws {
         struct SortedJSONRequestContext: RequestContext {
             var coreContext: CoreRequestContextStorage
             var responseEncoder: JSONEncoder {
@@ -430,12 +430,12 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.execute(uri: "/name", method: .patch) { response in
-                XCTAssertEqual(String(buffer: response.body), #"{"first":"john","last":"smith"}"#)
+                #expect(String(buffer: response.body) == #"{"first":"john","last":"smith"}"#)
             }
         }
     }
 
-    func testTypedResponse() async throws {
+    @Test func testTypedResponse() async throws {
         let router = Router()
         router.delete("/hello") { _, _ in
             EditedResponse(
@@ -448,15 +448,15 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.execute(uri: "/hello", method: .delete) { response in
-                XCTAssertEqual(response.status, .preconditionRequired)
-                XCTAssertEqual(response.headers[.test], "value")
-                XCTAssertEqual(response.headers[.contentType], "application/json")
-                XCTAssertEqual(String(buffer: response.body), "Hello")
+                #expect(response.status == .preconditionRequired)
+                #expect(response.headers[.test] == "value")
+                #expect(response.headers[.contentType] == "application/json")
+                #expect(String(buffer: response.body) == "Hello")
             }
         }
     }
 
-    func testCodableTypedResponse() async throws {
+    @Test func testCodableTypedResponse() async throws {
         struct Result: ResponseEncodable {
             let value: String
         }
@@ -472,15 +472,15 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.router) { client in
 
             try await client.execute(uri: "/hello", method: .patch) { response in
-                XCTAssertEqual(response.status, .multipleChoices)
-                XCTAssertEqual(response.headers[.test], "value")
-                XCTAssertEqual(response.headers[.contentType], "application/json")
-                XCTAssertEqual(String(buffer: response.body), #"{"value":"true"}"#)
+                #expect(response.status == .multipleChoices)
+                #expect(response.headers[.test] == "value")
+                #expect(response.headers[.contentType] == "application/json")
+                #expect(String(buffer: response.body) == #"{"value":"true"}"#)
             }
         }
     }
 
-    func testMaxUploadSize() async throws {
+    @Test func testMaxUploadSize() async throws {
         struct MaxUploadRequestContext: RequestContext {
             init(source: Source) {
                 self.coreContext = .init(source: source)
@@ -502,16 +502,16 @@ final class ApplicationTests: XCTestCase {
             let buffer = Self.randomBuffer(size: 128 * 1024)
             // check non streamed route throws an error
             try await client.execute(uri: "/upload", method: .post, body: buffer) { response in
-                XCTAssertEqual(response.status, .contentTooLarge)
+                #expect(response.status == .contentTooLarge)
             }
             // check streamed route doesn't
             try await client.execute(uri: "/stream", method: .post, body: buffer) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
         }
     }
 
-    func testChunkedTransferEncoding() async throws {
+    @Test func testChunkedTransferEncoding() async throws {
         let router = Router()
             .get("chunked") { _, _ in
                 Response(
@@ -526,12 +526,12 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.live) { client in
             // check streamed route doesn't
             try await client.execute(uri: "/chunked", method: .get) { response in
-                XCTAssertEqual(response.headers[.transferEncoding], "chunked")
+                #expect(response.headers[.transferEncoding] == "chunked")
             }
         }
     }
 
-    func testRemoteAddress() async throws {
+    @Test func testRemoteAddress() async throws {
         /// Implementation of a basic request context that supports everything the Hummingbird library needs
         struct SocketAddressRequestContext: RequestContext {
             /// core context
@@ -559,16 +559,16 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.live) { client in
 
             try await client.execute(uri: "/", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
                 let address = String(buffer: response.body)
-                XCTAssert(address == "127.0.0.1" || address == "::1")
+                #expect(address == "127.0.0.1" || address == "::1")
             }
         }
     }
 
     /// test we can create an application and pass it around as a `some ApplicationProtocol`. This
     /// is more a compilation test than a runtime test
-    func testApplicationProtocolReturnValue() async throws {
+    @Test func testApplicationProtocolReturnValue() async throws {
         func createApplication() -> some ApplicationProtocol {
             let router = Router()
             router.get("/hello") { _, _ -> ByteBuffer in
@@ -579,14 +579,14 @@ final class ApplicationTests: XCTestCase {
         let app = createApplication()
         try await app.test(.live) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(String(buffer: response.body), "GET: Hello")
+                #expect(response.status == .ok)
+                #expect(String(buffer: response.body) == "GET: Hello")
             }
         }
     }
 
     /// test we can create out own application type conforming to ApplicationProtocol
-    func testApplicationProtocol() async throws {
+    @Test func testApplicationProtocol() async throws {
         struct MyApp: ApplicationProtocol {
             typealias Context = BasicRequestContext
 
@@ -601,14 +601,14 @@ final class ApplicationTests: XCTestCase {
         let app = MyApp()
         try await app.test(.live) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(String(buffer: response.body), "GET: Hello")
+                #expect(response.status == .ok)
+                #expect(String(buffer: response.body) == "GET: Hello")
             }
         }
     }
 
     /// test we can create an application that accepts a responder with an empty context
-    func testEmptyRequestContext() async throws {
+    @Test func testEmptyRequestContext() async throws {
         struct EmptyRequestContext: InitializableFromSource {
             typealias Source = ApplicationRequestContextSource
             init(source: Source) {}
@@ -620,12 +620,12 @@ final class ApplicationTests: XCTestCase {
         )
         try await app.test(.live) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
         }
     }
 
-    func testHummingbirdServices() async throws {
+    @Test func testHummingbirdServices() async throws {
         struct MyService: Service {
             static let started = ManagedAtomic(false)
             static let shutdown = ManagedAtomic(false)
@@ -639,15 +639,15 @@ final class ApplicationTests: XCTestCase {
         var app = Application(responder: router.buildResponder())
         app.addServices(MyService())
         try await app.test(.live) { _ in
-            XCTAssertEqual(MyService.started.load(ordering: .relaxed), true)
-            XCTAssertEqual(MyService.shutdown.load(ordering: .relaxed), false)
+            #expect(MyService.started.load(ordering: .relaxed) == true)
+            #expect(MyService.shutdown.load(ordering: .relaxed) == false)
             // shutting down immediately outputs an error
             try await Task.sleep(for: .milliseconds(10))
         }
-        XCTAssertEqual(MyService.shutdown.load(ordering: .relaxed), true)
+        #expect(MyService.shutdown.load(ordering: .relaxed) == true)
     }
 
-    func testOnServerRunning() async throws {
+    @Test func testOnServerRunning() async throws {
         let runOnServerRunning = ManagedAtomic(false)
         let router = Router()
         let app = Application(
@@ -660,16 +660,16 @@ final class ApplicationTests: XCTestCase {
             // shutting down immediately outputs an error
             try await Task.sleep(for: .milliseconds(10))
         }
-        XCTAssertEqual(runOnServerRunning.load(ordering: .relaxed), true)
+        #expect(runOnServerRunning.load(ordering: .relaxed) == true)
     }
 
-    func testRunBeforeServer() async throws {
+    @Test func testRunBeforeServer() async throws {
         let runBeforeServer = ManagedAtomic(false)
         let router = Router()
         var app = Application(
             responder: router.buildResponder(),
             onServerRunning: { _ in
-                XCTAssertEqual(runBeforeServer.load(ordering: .relaxed), true)
+                #expect(runBeforeServer.load(ordering: .relaxed) == true)
             }
         )
         app.beforeServerStarts {
@@ -682,7 +682,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     /// test we can create out own application type conforming to ApplicationProtocol
-    func testTLS() async throws {
+    @Test func testTLS() async throws {
         let router = Router()
         router.get("/") { _, _ -> String in
             "Hello"
@@ -693,15 +693,15 @@ final class ApplicationTests: XCTestCase {
         )
         try await app.test(.ahc(.https)) { client in
             try await client.execute(uri: "/", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
                 let string = String(buffer: response.body)
-                XCTAssertEqual(string, "Hello")
+                #expect(string == "Hello")
             }
         }
     }
 
     /// test we can create out own application type conforming to ApplicationProtocol
-    func testHTTP2() async throws {
+    @Test func testHTTP2() async throws {
         let router = Router()
         router.get("/") { _, _ -> String in
             "Hello"
@@ -712,15 +712,15 @@ final class ApplicationTests: XCTestCase {
         )
         try await app.test(.ahc(.https)) { client in
             try await client.execute(uri: "/", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
                 let string = String(buffer: response.body)
-                XCTAssertEqual(string, "Hello")
+                #expect(string == "Hello")
             }
         }
     }
 
     /// test we can create out own application type conforming to ApplicationProtocol
-    func testApplicationRouterInit() async throws {
+    @Test func testApplicationRouterInit() async throws {
         let router = Router()
         router.get("/") { _, _ -> String in
             "Hello"
@@ -728,15 +728,15 @@ final class ApplicationTests: XCTestCase {
         let app = Application(router: router)
         try await app.test(.live) { client in
             try await client.execute(uri: "/", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
                 let string = String(buffer: response.body)
-                XCTAssertEqual(string, "Hello")
+                #expect(string == "Hello")
             }
         }
     }
 
     /// test we can create out own application type conforming to ApplicationProtocol
-    func testBidirectionalStreaming() async throws {
+    @Test func testBidirectionalStreaming() async throws {
         let buffer = Self.randomBuffer(size: 1024 * 1024)
         let router = Router()
         router.post("/") { request, _ -> Response in
@@ -756,9 +756,8 @@ final class ApplicationTests: XCTestCase {
         let app = Application(router: router)
         try await app.test(.live) { client in
             try await client.execute(uri: "/", method: .post, body: buffer) { response in
-                XCTAssertEqual(
-                    response.body,
-                    ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 0xFF })
+                #expect(
+                    response.body == ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 0xFF })
                 )
             }
         }
@@ -787,7 +786,7 @@ final class ApplicationTests: XCTestCase {
         return tlsConfig
     }
 
-    func testHTTPError() async throws {
+    @Test func testHTTPError() async throws {
         struct HTTPErrorFormat: Decodable {
             struct ErrorFormat: Decodable {
                 let message: String
@@ -835,12 +834,12 @@ final class ApplicationTests: XCTestCase {
             let writer = CollatedResponseWriter()
             _ = try await response.body.write(writer)
             let format = try JSONDecoder().decodeByteBuffer(HTTPErrorFormat.self, from: writer.collated.withLockedValue { $0 })
-            XCTAssertEqual(format.error.message, message)
+            #expect(format.error.message == message)
         }
     }
 
     /// Test AsyncSequence returned by RequestBody.makeStream()
-    func testMakeStream() async throws {
+    @Test func testMakeStream() async throws {
         let router = Router()
         router.post("streaming") { request, context -> Response in
             let body = try await withThrowingTaskGroup(of: Void.self) { group in
@@ -866,14 +865,14 @@ final class ApplicationTests: XCTestCase {
 
             let buffer = Self.randomBuffer(size: 640_001)
             try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(response.body, buffer)
+                #expect(response.status == .ok)
+                #expect(response.body == buffer)
             }
         }
     }
 
     /// Test AsyncSequence returned by RequestBody.makeStream() and feeding it data from multiple processes
-    func testMakeStreamMultipleSources() async throws {
+    @Test func testMakeStreamMultipleSources() async throws {
         let router = Router()
         router.get("numbers") { request, context -> Response in
             let body = try await withThrowingTaskGroup(of: Void.self) { group in
@@ -913,14 +912,14 @@ final class ApplicationTests: XCTestCase {
 
         try await app.test(.router) { client in
             try await client.execute(uri: "/numbers", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
         }
     }
 
     #if compiler(>=6.0)
     /// Test consumeWithInboundCloseHandler
-    func testConsumeWithInboundHandler() async throws {
+    @Test func testConsumeWithInboundHandler() async throws {
         let router = Router()
         router.post("streaming") { request, context -> Response in
             Response(
@@ -939,14 +938,14 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.live) { client in
             let buffer = Self.randomBuffer(size: 640_001)
             try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(response.body, buffer)
+                #expect(response.status == .ok)
+                #expect(response.body == buffer)
             }
         }
     }
 
     /// Test consumeWithInboundCloseHandler
-    func testConsumeWithCancellationOnInboundClose() async throws {
+    @Test func testConsumeWithCancellationOnInboundClose() async throws {
         let router = Router()
         router.post("streaming") { request, context -> Response in
             Response(
@@ -964,14 +963,14 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.live) { client in
             let buffer = Self.randomBuffer(size: 640_001)
             try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(response.body, buffer)
+                #expect(response.status == .ok)
+                #expect(response.body == buffer)
             }
         }
     }
 
     /// Test consumeWithInboundHandler after having collected the Request body
-    func testConsumeWithInboundHandlerAfterCollect() async throws {
+    @Test func testConsumeWithInboundHandlerAfterCollect() async throws {
         let router = Router()
         router.post("streaming") { request, context -> Response in
             var request = request
@@ -993,14 +992,14 @@ final class ApplicationTests: XCTestCase {
         try await app.test(.live) { client in
             let buffer = Self.randomBuffer(size: 640_001)
             try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(response.body, buffer)
+                #expect(response.status == .ok)
+                #expect(response.body == buffer)
             }
         }
     }
 
     /// Test consumeWithInboundHandler after having replaced Request.body with a new streamed RequestBody
-    func testConsumeWithInboundHandlerAfterReplacingBody() async throws {
+    @Test func testConsumeWithInboundHandlerAfterReplacingBody() async throws {
         let router = Router()
         router.post("streaming") { request, context -> Response in
             var request = request
@@ -1028,14 +1027,14 @@ final class ApplicationTests: XCTestCase {
             let buffer = Self.randomBuffer(size: 640_001)
             let xorBuffer = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
             try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(response.body, xorBuffer)
+                #expect(response.status == .ok)
+                #expect(response.body == xorBuffer)
             }
         }
     }
     #endif
 
-    func testErrorInResponseWriterClosesConnection() async throws {
+    @Test func testErrorInResponseWriterClosesConnection() async throws {
         let router = Router()
         router.post("error") { request, context -> Response in
             Response(
@@ -1047,16 +1046,13 @@ final class ApplicationTests: XCTestCase {
         }
         let app = Application(router: router)
         try await app.test(.live) { client in
-            do {
+            _ = await #expect(throws: HTTPParserError.invalidEOFState) {
                 _ = try await client.execute(uri: "/error", method: .post)
-                XCTFail("Should not receive a response as the response writer failed before finishing")
-            } catch HTTPParserError.invalidEOFState {
-                // verify connection was closed before reading full response
             }
         }
     }
 
-    func testIfMatchEtagHeaders() async throws {
+    @Test func testIfMatchEtagHeaders() async throws {
         let router = Router()
         router.get("ifMatch") { request, context -> Response in
             try await request.ifMatch(eTag: "5678", context: context) {
@@ -1066,19 +1062,19 @@ final class ApplicationTests: XCTestCase {
         let app = Application(router: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/ifMatch", method: .get) { response in
-                XCTAssertEqual(response.status, .preconditionFailed)
+                #expect(response.status == .preconditionFailed)
             }
             try await client.execute(uri: "/ifMatch", method: .get, headers: [.ifMatch: "5678"]) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
             try await client.execute(uri: "/ifMatch", method: .get, headers: [.ifMatch: "5679"]) { response in
-                XCTAssertEqual(response.status, .preconditionFailed)
-                XCTAssertEqual(response.headers[.eTag], "5678")
+                #expect(response.status == .preconditionFailed)
+                #expect(response.headers[.eTag] == "5678")
             }
         }
     }
 
-    func testIfNoneMatchEtagHeaders() async throws {
+    @Test func testIfNoneMatchEtagHeaders() async throws {
         let router = Router()
         router.get("ifNoneMatch") { request, context -> Response in
             try await request.ifNoneMatch(eTag: "1234", context: context) {
@@ -1093,19 +1089,19 @@ final class ApplicationTests: XCTestCase {
         let app = Application(router: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/ifNoneMatch", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
             try await client.execute(uri: "/ifNoneMatch", method: .get, headers: [.ifNoneMatch: "1234"]) { response in
-                XCTAssertEqual(response.status, .notModified)
-                XCTAssertEqual(response.headers[.eTag], "1234")
+                #expect(response.status == .notModified)
+                #expect(response.headers[.eTag] == "1234")
             }
             try await client.execute(uri: "/ifNoneMatch", method: .get, headers: [.ifNoneMatch: "1235"]) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
         }
     }
 
-    func testIfUnmodifiedSinceHeaders() async throws {
+    @Test func testIfUnmodifiedSinceHeaders() async throws {
         let now = Date.now
         let router = Router()
         router.get("ifUnmodifiedSince") { request, context in
@@ -1116,19 +1112,19 @@ final class ApplicationTests: XCTestCase {
         let app = Application(router: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "ifUnmodifiedSince", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
             try await client.execute(uri: "ifUnmodifiedSince", method: .get, headers: [.ifUnmodifiedSince: (now - 2).httpHeader]) { response in
-                XCTAssertEqual(response.status, .preconditionFailed)
-                XCTAssertEqual(response.headers[.lastModified], now.httpHeader)
+                #expect(response.status == .preconditionFailed)
+                #expect(response.headers[.lastModified] == now.httpHeader)
             }
             try await client.execute(uri: "ifUnmodifiedSince", method: .get, headers: [.ifUnmodifiedSince: (now + 2).httpHeader]) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
         }
     }
 
-    func testIfModifiedSinceHeaders() async throws {
+    @Test func testIfModifiedSinceHeaders() async throws {
         let now = Date.now
         let router = Router()
         router.get("ifModifiedSince") { request, context in
@@ -1144,26 +1140,26 @@ final class ApplicationTests: XCTestCase {
         let app = Application(router: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "ifModifiedSince", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "Testing")
-                XCTAssertEqual(response.status, .ok)
+                #expect(String(buffer: response.body) == "Testing")
+                #expect(response.status == .ok)
             }
             try await client.execute(uri: "ifModifiedSince", method: .get, headers: [.ifModifiedSince: (now - 2).httpHeader]) { response in
-                XCTAssertEqual(String(buffer: response.body), "Testing")
-                XCTAssertEqual(response.status, .ok)
+                #expect(String(buffer: response.body) == "Testing")
+                #expect(response.status == .ok)
             }
             try await client.execute(uri: "ifModifiedSince", method: .get, headers: [.ifModifiedSince: (now + 2).httpHeader]) { response in
-                XCTAssertEqual(response.status, .notModified)
-                XCTAssertEqual(response.headers[.lastModified], now.httpHeader)
+                #expect(response.status == .notModified)
+                #expect(response.headers[.lastModified] == now.httpHeader)
             }
             // If-Modified-Since can only be used with a GET or HEAD
             try await client.execute(uri: "ifModifiedSince", method: .post, headers: [.ifModifiedSince: (now + 2).httpHeader]) { response in
-                XCTAssertEqual(String(buffer: response.body), "Testing")
-                XCTAssertEqual(response.status, .ok)
+                #expect(String(buffer: response.body) == "Testing")
+                #expect(response.status == .ok)
             }
         }
     }
 
-    func testHTTPProtocolParseError() async throws {
+    @Test func testHTTPProtocolParseError() async throws {
         final class CreateErrorHandler: ChannelInboundHandler, RemovableChannelHandler {
             typealias InboundIn = HTTPRequestPart
 
@@ -1190,20 +1186,19 @@ final class ApplicationTests: XCTestCase {
             // client should return badRequest and close the connection
             do {
                 try await client.execute(uri: "", method: .post, body: ByteBuffer(string: "Hello")) { response in
-                    XCTAssertEqual(response.status, .badRequest)
+                    #expect(response.status == .badRequest)
                 }
             } catch TestClient.Error.connectionClosing {
                 // sometimes connection close occurs before badRequest is received
             }
 
-            do {
+            await #expect(throws: ChannelError.ioOnClosedChannel) {
                 try await client.execute(uri: "", method: .post)
-                XCTFail("Connection should be closed")
-            } catch ChannelError.ioOnClosedChannel {}
+            }
         }
     }
 
-    func testCancelledRequest() async throws {
+    @Test func testCancelledRequest() async throws {
         let httpClient = HTTPClient()
         let (stream, cont) = AsyncStream.makeStream(of: Int.self)
 
