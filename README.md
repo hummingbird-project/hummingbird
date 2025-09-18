@@ -92,7 +92,7 @@ Or run the following commands on your package using SwiftPM, replacing `MyApp` w
 
 ```swift
 swift package add-dependency https://github.com/hummingbird-project/hummingbird.git --from 2.0.0
-swift package add-target-dependency Hummingbird MyApp
+swift package add-target-dependency Hummingbird MyApp --package hummingbird
 ```
 
 ## Contributing
