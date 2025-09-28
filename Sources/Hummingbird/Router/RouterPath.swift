@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Split router path into components
-public struct RouterPath: Sendable, ExpressibleByStringLiteral, ExpressibleByStringInterpolation, CustomStringConvertible {
+public struct RouterPath: Sendable, ExpressibleByStringLiteral, ExpressibleByStringInterpolation, CustomStringConvertible, Equatable {
     public struct Element: Equatable, Sendable, CustomStringConvertible {
         package enum _Internal: Equatable, Sendable {
             case path(Substring)

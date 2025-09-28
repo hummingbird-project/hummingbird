@@ -17,9 +17,9 @@ import Hummingbird
 import HummingbirdTesting
 import Logging
 import NIOCore
-import XCTest
+import Testing
 
-final class URLEncodedFormTests: XCTestCase {
+struct URLEncodedFormTests {
     struct User: ResponseCodable {
         let name: String
         let email: String
@@ -39,25 +39,25 @@ final class URLEncodedFormTests: XCTestCase {
 
     struct Error: Swift.Error {}
 
-    func testDecode() async throws {
+    @Test func testDecode() async throws {
         let router = Router(context: URLEncodedCodingRequestContext.self)
         router.put("/user") { request, context -> HTTPResponse.Status in
             guard let user = try? await request.decode(as: User.self, context: context) else { throw HTTPError(.badRequest) }
-            XCTAssertEqual(user.name, "John Smith")
-            XCTAssertEqual(user.email, "john.smith@email.com")
-            XCTAssertEqual(user.age, 25)
+            #expect(user.name == "John Smith")
+            #expect(user.email == "john.smith@email.com")
+            #expect(user.age == 25)
             return .ok
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             let body = "name=John%20Smith&email=john.smith%40email.com&age=25"
             try await client.execute(uri: "/user", method: .put, body: ByteBufferAllocator().buffer(string: body)) {
-                XCTAssertEqual($0.status, .ok)
+                #expect($0.status == .ok)
             }
         }
     }
 
-    func testEncode() async throws {
+    @Test func testEncode() async throws {
         let router = Router(context: URLEncodedCodingRequestContext.self)
         router.get("/user") { _, _ -> User in
             User(name: "John Smith", email: "john.smith@email.com", age: 25)
@@ -66,14 +66,14 @@ final class URLEncodedFormTests: XCTestCase {
         try await app.test(.router) { client in
             try await client.execute(uri: "/user", method: .get) { response in
                 let user = try URLEncodedFormDecoder().decode(User.self, from: String(buffer: response.body))
-                XCTAssertEqual(user.name, "John Smith")
-                XCTAssertEqual(user.email, "john.smith@email.com")
-                XCTAssertEqual(user.age, 25)
+                #expect(user.name == "John Smith")
+                #expect(user.email == "john.smith@email.com")
+                #expect(user.age == 25)
             }
         }
     }
 
-    func testDecodeQuery() async throws {
+    @Test func testDecodeQuery() async throws {
         let router = Router()
         router.post("/user") { request, context -> User in
             let user = try request.uri.decodeQuery(as: User.self, context: context)
@@ -83,14 +83,14 @@ final class URLEncodedFormTests: XCTestCase {
         try await app.test(.router) { client in
             try await client.execute(uri: "/user?name=John%20Smith&email=john.smith@email.com&age=25", method: .post) { response in
                 let user = try JSONDecoder().decode(User.self, from: Data(buffer: response.body))
-                XCTAssertEqual(user.name, "John Smith")
-                XCTAssertEqual(user.email, "john.smith@email.com")
-                XCTAssertEqual(user.age, 25)
+                #expect(user.name == "John Smith")
+                #expect(user.email == "john.smith@email.com")
+                #expect(user.age == 25)
             }
         }
     }
 
-    func testError() async throws {
+    @Test func testError() async throws {
         let router = Router(context: URLEncodedCodingRequestContext.self)
         router.get("/error") { _, _ -> User in
             throw HTTPError(.badRequest, message: "Bad Request")
@@ -98,9 +98,9 @@ final class URLEncodedFormTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/error", method: .get) { response in
-                XCTAssertEqual(response.status, .badRequest)
-                XCTAssertEqual(response.headers[.contentType], "application/x-www-form-urlencoded")
-                XCTAssertEqual(String(buffer: response.body), "error[message]=Bad%20Request")
+                #expect(response.status == .badRequest)
+                #expect(response.headers[.contentType] == "application/x-www-form-urlencoded")
+                #expect(String(buffer: response.body) == "error[message]=Bad%20Request")
             }
         }
     }

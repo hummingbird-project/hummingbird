@@ -15,10 +15,10 @@
 import HummingbirdCore
 import NIOCore
 import NIOHTTPTypes
-import XCTest
+import Testing
 
-final class RequestBodyTests: XCTestCase {
-    func testSingleRequestBody() async throws {
+struct RequestBodyTests {
+    @Test func testSingleRequestBody() async throws {
         try await withThrowingTaskGroup(of: Void.self) { group in
             let (httpSource, httpStream) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
             let httpSourceIterator = httpSource.makeAsyncIterator()
@@ -31,13 +31,13 @@ final class RequestBodyTests: XCTestCase {
             }
             group.addTask {
                 let buffer = try await requestBody.collect(upTo: .max)
-                XCTAssertEqual(String(buffer: buffer), "hello world")
+                #expect(String(buffer: buffer) == "hello world")
             }
             try await group.waitForAll()
         }
     }
 
-    func testMultipleRequestBodies() async throws {
+    @Test func testMultipleRequestBodies() async throws {
         try await withThrowingTaskGroup(of: Void.self) { group in
             let (httpSource, httpStream) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
             let httpSourceIterator = httpSource.makeAsyncIterator()
@@ -52,14 +52,14 @@ final class RequestBodyTests: XCTestCase {
             }
             group.addTask {
                 let buffer = try await requestBody.collect(upTo: .max)
-                XCTAssertEqual(String(buffer: buffer), "hello world")
+                #expect(String(buffer: buffer) == "hello world")
             }
             try await group.waitForAll()
         }
     }
 
     #if compiler(>=6.0)
-    func testInboundClosureParsingStream() async throws {
+    @Test func testInboundClosureParsingStream() async throws {
         try await withThrowingTaskGroup(of: Void.self) { group in
             let (httpSource, httpStream) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
             let httpSourceIterator = httpSource.makeAsyncIterator()
@@ -74,7 +74,7 @@ final class RequestBodyTests: XCTestCase {
             group.addTask {
                 try await requestBody.consumeWithInboundCloseHandler { requestBody in
                     let buffer = try await requestBody.collect(upTo: .max)
-                    XCTAssertEqual(String(buffer: buffer), "hello world")
+                    #expect(String(buffer: buffer) == "hello world")
                     await stream.first { _ in true }
                 } onInboundClosed: {
                     cont.yield()
@@ -84,7 +84,7 @@ final class RequestBodyTests: XCTestCase {
         }
     }
 
-    func testInboundClosureWithoutParsingStream() async throws {
+    @Test func testInboundClosureWithoutParsingStream() async throws {
         try await withThrowingTaskGroup(of: Void.self) { group in
             let (httpSource, httpStream) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
             let httpSourceIterator = httpSource.makeAsyncIterator()
@@ -107,7 +107,7 @@ final class RequestBodyTests: XCTestCase {
         }
     }
 
-    func testInboundClosureWithStreamError() async throws {
+    @Test func testInboundClosureWithStreamError() async throws {
         struct TestError: Error {}
         try await withThrowingTaskGroup(of: Void.self) { group in
             let (httpSource, httpStream) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
@@ -130,7 +130,7 @@ final class RequestBodyTests: XCTestCase {
         }
     }
 
-    func testInboundClosureWithStreamErrorIsPassedOn() async throws {
+    @Test func testInboundClosureWithStreamErrorIsPassedOn() async throws {
         struct TestError: Error {}
         try await withThrowingTaskGroup(of: Void.self) { group in
             let (httpSource, httpStream) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
@@ -144,11 +144,8 @@ final class RequestBodyTests: XCTestCase {
             }
             group.addTask {
                 try await requestBody.consumeWithInboundCloseHandler { requestBody in
-                    do {
-                        _ = try await requestBody.collect(upTo: .max)
-                        XCTFail("Should not get here")
-                    } catch is TestError {
-                        //
+                    await #expect(throws: TestError.self) {
+                        try await requestBody.collect(upTo: .max)
                     }
                     await stream.first { _ in true }
                 } onInboundClosed: {

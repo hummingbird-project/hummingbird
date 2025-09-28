@@ -12,12 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import Hummingbird
 import Logging
-import XCTest
+import Testing
 
-final class UUIDTests: XCTestCase {
-    func testGetUUID() async throws {
+@Suite("Test UUID as URL/query parameters")
+struct UUIDTests {
+    @Test func testGetUUID() async throws {
         let router = Router()
         router.get(":id") { _, context -> UUID? in
             context.parameters.get("id", as: UUID.self)
@@ -26,14 +28,13 @@ final class UUIDTests: XCTestCase {
         try await app.test(.router) { client in
             let uuid = UUID()
             try await client.execute(uri: "\(uuid)", method: .get) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(String(buffer: body), "\"\(uuid.uuidString)\"")
+                #expect(response.status == .ok)
+                #expect(String(buffer: response.body) == "\"\(uuid.uuidString)\"")
             }
         }
     }
 
-    func testRequireUUID() async throws {
+    @Test func testRequireUUID() async throws {
         let router = Router()
         router.get(":id") { _, context -> UUID in
             try context.parameters.require("id", as: UUID.self)
@@ -42,14 +43,13 @@ final class UUIDTests: XCTestCase {
         try await app.test(.router) { client in
             let uuid = UUID()
             try await client.execute(uri: "\(uuid)", method: .get) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(String(buffer: body), "\"\(uuid.uuidString)\"")
+                #expect(response.status == .ok)
+                #expect(String(buffer: response.body) == "\"\(uuid.uuidString)\"")
             }
         }
     }
 
-    func testGetUUIDs() async throws {
+    @Test func testGetUUIDs() async throws {
         let router = Router()
         router.get { request, _ -> [UUID] in
             let queryParameters = request.uri.queryParameters
@@ -60,14 +60,13 @@ final class UUIDTests: XCTestCase {
             let uuid = UUID()
             let uuid2 = UUID()
             try await client.execute(uri: "/?id=\(uuid)&id=\(uuid2)&id=Wrong", method: .get) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(String(buffer: body), "[\"\(uuid.uuidString)\",\"\(uuid2.uuidString)\"]")
+                #expect(response.status == .ok)
+                #expect(String(buffer: response.body) == "[\"\(uuid.uuidString)\",\"\(uuid2.uuidString)\"]")
             }
         }
     }
 
-    func testRequireUUIDs() async throws {
+    @Test func testRequireUUIDs() async throws {
         let router = Router()
         router.get { request, _ -> [UUID] in
             let queryParameters = request.uri.queryParameters
@@ -79,13 +78,12 @@ final class UUIDTests: XCTestCase {
             let uuid2 = UUID()
             // test good request
             try await client.execute(uri: "/?id=\(uuid)&id=\(uuid2)", method: .get) { response in
-                let body = try XCTUnwrap(response.body)
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(String(buffer: body), "[\"\(uuid.uuidString)\",\"\(uuid2.uuidString)\"]")
+                #expect(response.status == .ok)
+                #expect(String(buffer: response.body) == "[\"\(uuid.uuidString)\",\"\(uuid2.uuidString)\"]")
             }
             // test bad request
             try await client.execute(uri: "/?id=\(uuid)&id=\(uuid2)&id=Wrong", method: .get) { response in
-                XCTAssertEqual(response.status, .badRequest)
+                #expect(response.status == .badRequest)
             }
         }
     }
