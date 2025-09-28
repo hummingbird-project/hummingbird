@@ -24,6 +24,7 @@ import NIOPosix
 import ServiceLifecycle
 import Testing
 
+@Suite("HummingbirdCoreTests", .serialized)
 struct HummingbirdCoreTests {
     static let eventLoopGroup: EventLoopGroup = {
         #if os(iOS)

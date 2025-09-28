@@ -242,8 +242,13 @@ public struct TestClient: Sendable {
             let request = unwrapOutboundIn(data)
             context.write(wrapOutboundOut(.head(request.head)), promise: nil)
 
-            if let body = request.body, body.readableBytes > 0 {
-                context.write(self.wrapOutboundOut(.body(body)), promise: nil)
+            // break up large bodies so they are streamed
+            if var body = request.body, body.readableBytes > 0 {
+                while body.readableBytes > 0 {
+                    let size = min(body.readableBytes, 32768)
+                    let slice = body.readSlice(length: size)!
+                    context.write(self.wrapOutboundOut(.body(slice)), promise: nil)
+                }
             }
             context.write(self.wrapOutboundOut(.end(nil)), promise: promise)
         }
