@@ -28,11 +28,11 @@ import NIOTransportServices
 /// Where should the application get its EventLoopGroup from
 public enum EventLoopGroupProvider {
     /// Use this EventLoopGroup
-    case shared(EventLoopGroup)
+    case shared(any EventLoopGroup)
     /// Use one of the singleton EventLoopGroups
     case singleton
 
-    public var eventLoopGroup: EventLoopGroup {
+    public var eventLoopGroup: any EventLoopGroup {
         switch self {
         case .singleton:
             #if os(iOS)
@@ -59,13 +59,13 @@ public protocol ApplicationProtocol: Service where Context: InitializableFromSou
     var server: HTTPServerBuilder { get }
 
     /// event loop group used by application
-    var eventLoopGroup: EventLoopGroup { get }
+    var eventLoopGroup: any EventLoopGroup { get }
     /// Application configuration
     var configuration: ApplicationConfiguration { get }
     /// Logger
     var logger: Logger { get }
     /// This is called once the server is running and we have an active Channel
-    @Sendable func onServerRunning(_ channel: Channel) async
+    @Sendable func onServerRunning(_ channel: any Channel) async
     /// services attached to the application.
     var services: [any Service] { get }
     /// Array of processes run before we kick off the server. These tend to be processes that need
@@ -80,13 +80,13 @@ extension ApplicationProtocol {
 
 extension ApplicationProtocol {
     /// Default event loop group used by application
-    public var eventLoopGroup: EventLoopGroup { MultiThreadedEventLoopGroup.singleton }
+    public var eventLoopGroup: any EventLoopGroup { MultiThreadedEventLoopGroup.singleton }
     /// Default Configuration
     public var configuration: ApplicationConfiguration { .init() }
     /// Default Logger
     public var logger: Logger { Logger(label: self.configuration.serverName ?? "HummingBird") }
     /// Default onServerRunning that does nothing
-    public func onServerRunning(_: Channel) async {}
+    public func onServerRunning(_: any Channel) async {}
     /// Default to no extra services attached to the application.
     public var services: [any Service] { [] }
     /// Default to no processes being run before the server is setup
@@ -186,7 +186,7 @@ where Responder.Context: InitializableFromSource<ApplicationRequestContextSource
     // MARK: Member variables
 
     /// event loop group used by application
-    public let eventLoopGroup: EventLoopGroup
+    public let eventLoopGroup: any EventLoopGroup
     /// routes requests to responders based on URI
     public let responder: Responder
     /// Configuration
@@ -194,7 +194,7 @@ where Responder.Context: InitializableFromSource<ApplicationRequestContextSource
     /// Logger
     public var logger: Logger
     /// on server running
-    private var _onServerRunning: @Sendable (Channel) async -> Void
+    private var _onServerRunning: @Sendable (any Channel) async -> Void
     /// Server channel setup
     public let server: HTTPServerBuilder
     /// services attached to the application.
@@ -218,8 +218,8 @@ where Responder.Context: InitializableFromSource<ApplicationRequestContextSource
         responder: Responder,
         server: HTTPServerBuilder = .http1(),
         configuration: ApplicationConfiguration = ApplicationConfiguration(),
-        services: [Service] = [],
-        onServerRunning: @escaping @Sendable (Channel) async -> Void = { _ in },
+        services: [any Service] = [],
+        onServerRunning: @escaping @Sendable (any Channel) async -> Void = { _ in },
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton,
         logger: Logger? = nil
     ) {
@@ -256,8 +256,8 @@ where Responder.Context: InitializableFromSource<ApplicationRequestContextSource
         router: ResponderBuilder,
         server: HTTPServerBuilder = .http1(),
         configuration: ApplicationConfiguration = ApplicationConfiguration(),
-        services: [Service] = [],
-        onServerRunning: @escaping @Sendable (Channel) async -> Void = { _ in },
+        services: [any Service] = [],
+        onServerRunning: @escaping @Sendable (any Channel) async -> Void = { _ in },
         eventLoopGroupProvider: EventLoopGroupProvider = .singleton,
         logger: Logger? = nil
     ) where Responder == ResponderBuilder.Responder {
@@ -298,7 +298,7 @@ where Responder.Context: InitializableFromSource<ApplicationRequestContextSource
         self.responder
     }
 
-    public func onServerRunning(_ channel: Channel) async {
+    public func onServerRunning(_ channel: any Channel) async {
         await self._onServerRunning(channel)
     }
 }

@@ -38,19 +38,19 @@ public struct URLEncodedFormDecoder: Sendable {
         case formatted(DateFormatter)
 
         /// Decode the `Date` as a custom value encoded by the given closure.
-        case custom(@Sendable (_ decoder: Decoder) throws -> Date)
+        case custom(@Sendable (_ decoder: any Decoder) throws -> Date)
     }
 
     /// The strategy to use in Encoding dates. Defaults to `.deferredToDate`.
     public var dateDecodingStrategy: DateDecodingStrategy
 
     /// Contextual user-provided information for use during encoding.
-    public var userInfo: [CodingUserInfoKey: Sendable]
+    public var userInfo: [CodingUserInfoKey: any Sendable]
 
     /// Options set on the top-level encoder to pass down the encoding hierarchy.
     fileprivate struct _Options {
         let dateDecodingStrategy: DateDecodingStrategy
-        let userInfo: [CodingUserInfoKey: Sendable]
+        let userInfo: [CodingUserInfoKey: any Sendable]
     }
 
     /// The options set on the top-level encoder.
@@ -67,7 +67,7 @@ public struct URLEncodedFormDecoder: Sendable {
     ///   - userInfo: user info to supply to decoder
     public init(
         dateDecodingStrategy: URLEncodedFormDecoder.DateDecodingStrategy = .deferredToDate,
-        userInfo: [CodingUserInfoKey: Sendable] = [:]
+        userInfo: [CodingUserInfoKey: any Sendable] = [:]
     ) {
         self.dateDecodingStrategy = dateDecodingStrategy
         self.userInfo = userInfo
@@ -95,7 +95,7 @@ private class _URLEncodedFormDecoder: Decoder {
     fileprivate let options: URLEncodedFormDecoder._Options
 
     /// The path to the current point in encoding.
-    public fileprivate(set) var codingPath: [CodingKey]
+    public fileprivate(set) var codingPath: [any CodingKey]
 
     /// Contextual user-provided information for use during encoding.
     public var userInfo: [CodingUserInfoKey: Any] {
@@ -105,7 +105,7 @@ private class _URLEncodedFormDecoder: Decoder {
     // MARK: - Initialization
 
     /// Initializes `self` with the given top-level container and options.
-    fileprivate init(at codingPath: [CodingKey] = [], options: URLEncodedFormDecoder._Options) {
+    fileprivate init(at codingPath: [any CodingKey] = [], options: URLEncodedFormDecoder._Options) {
         self.codingPath = codingPath
         self.options = options
         self.storage = .init()
@@ -122,7 +122,7 @@ private class _URLEncodedFormDecoder: Decoder {
         }
     }
 
-    func unkeyedContainer() throws -> UnkeyedDecodingContainer {
+    func unkeyedContainer() throws -> any UnkeyedDecodingContainer {
         switch self.storage.topContainer {
         case .array(let array):
             UKDC(container: array, decoder: self)
@@ -133,12 +133,12 @@ private class _URLEncodedFormDecoder: Decoder {
         }
     }
 
-    func singleValueContainer() throws -> SingleValueDecodingContainer {
+    func singleValueContainer() throws -> any SingleValueDecodingContainer {
         self
     }
 
     struct KDC<Key: CodingKey>: KeyedDecodingContainerProtocol {
-        var codingPath: [CodingKey] { self.decoder.codingPath }
+        var codingPath: [any CodingKey] { self.decoder.codingPath }
         let decoder: _URLEncodedFormDecoder
         let container: URLEncodedFormNode.Map
 
@@ -284,7 +284,7 @@ private class _URLEncodedFormDecoder: Decoder {
             return KeyedDecodingContainer(container)
         }
 
-        func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
+        func nestedUnkeyedContainer(forKey key: Key) throws -> any UnkeyedDecodingContainer {
             self.decoder.codingPath.append(key)
             defer { self.decoder.codingPath.removeLast() }
 
@@ -297,11 +297,11 @@ private class _URLEncodedFormDecoder: Decoder {
             return UKDC(container: array, decoder: self.decoder)
         }
 
-        func superDecoder() throws -> Decoder {
+        func superDecoder() throws -> any Decoder {
             fatalError()
         }
 
-        func superDecoder(forKey key: Key) throws -> Decoder {
+        func superDecoder(forKey key: Key) throws -> any Decoder {
             fatalError()
         }
     }
@@ -309,7 +309,7 @@ private class _URLEncodedFormDecoder: Decoder {
     struct UKDC: UnkeyedDecodingContainer {
         let container: URLEncodedFormNode.Array
         let decoder: _URLEncodedFormDecoder
-        var codingPath: [CodingKey] { self.decoder.codingPath }
+        var codingPath: [any CodingKey] { self.decoder.codingPath }
         let count: Int?
         var isAtEnd: Bool { self.currentIndex == self.count }
         var currentIndex: Int
@@ -413,7 +413,7 @@ private class _URLEncodedFormDecoder: Decoder {
             return KeyedDecodingContainer(container)
         }
 
-        mutating func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
+        mutating func nestedUnkeyedContainer() throws -> any UnkeyedDecodingContainer {
             guard !self.isAtEnd else {
                 throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Unkeyed container index out of range"))
             }
@@ -425,7 +425,7 @@ private class _URLEncodedFormDecoder: Decoder {
             return UKDC(container: array, decoder: self.decoder)
         }
 
-        mutating func superDecoder() throws -> Decoder {
+        mutating func superDecoder() throws -> any Decoder {
             fatalError()
         }
     }
@@ -689,7 +689,7 @@ extension _URLEncodedFormDecoder {
         try self.unbox_(node, as: T.self) as! T
     }
 
-    func unbox_(_ node: URLEncodedFormNode, as type: Decodable.Type) throws -> Any {
+    func unbox_(_ node: URLEncodedFormNode, as type: any Decodable.Type) throws -> Any {
         if type == Data.self {
             return try self.unbox(node, as: Data.self)
         } else if type == Date.self {
