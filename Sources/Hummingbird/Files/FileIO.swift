@@ -16,15 +16,24 @@ import HummingbirdCore
 import Logging
 import NIOCore
 import NIOPosix
+import NIOFileSystem
 
 /// Manages File reading and writing.
 public struct FileIO: Sendable {
-    let fileIO: NonBlockingFileIO
+    struct FileError: Error {
+        internal enum Value {
+            case fileDoesNotExist
+        }
+        internal let value: Value
+
+        static var fileDoesNotExist: Self { .init(value: .fileDoesNotExist) }
+    }
+    let fileSystem: FileSystem
 
     /// Initialize FileIO
     /// - Parameter threadPool: ThreadPool to use for file operations
     public init(threadPool: NIOThreadPool = .singleton) {
-        self.fileIO = .init(threadPool: threadPool)
+        self.fileSystem = .init(threadPool: threadPool)
     }
 
     /// Load file and return response body
@@ -39,12 +48,12 @@ public struct FileIO: Sendable {
     public func loadFile(
         path: String,
         context: some RequestContext,
-        chunkLength: Int = NonBlockingFileIO.defaultChunkSize
+        chunkLength: Int = 128 * 1024
     ) async throws -> ResponseBody {
         do {
-            let stat = try await fileIO.stat(path: path)
-            guard stat.st_size > 0 else { return .init() }
-            return self.readFile(path: path, range: 0...numericCast(stat.st_size - 1), context: context, chunkLength: chunkLength)
+            guard let info = try await self.fileSystem.info(forFileAt: .init(path)) else { throw FileError.fileDoesNotExist }
+            guard info.size > 0 else { return .init() }
+            return self.readFile(path: path, range: 0...numericCast(info.size - 1), context: context, chunkLength: chunkLength)
         } catch {
             throw HTTPError(.notFound)
         }
@@ -64,12 +73,12 @@ public struct FileIO: Sendable {
         path: String,
         range: ClosedRange<Int>,
         context: some RequestContext,
-        chunkLength: Int = NonBlockingFileIO.defaultChunkSize
+        chunkLength: Int = 128 * 1024
     ) async throws -> ResponseBody {
         do {
-            let stat = try await fileIO.stat(path: path)
-            guard stat.st_size > 0 else { return .init() }
-            let fileRange: ClosedRange<Int> = 0...numericCast(stat.st_size - 1)
+            guard let info = try await self.fileSystem.info(forFileAt: .init(path)) else { throw FileError.fileDoesNotExist }
+            guard info.size > 0 else { return .init() }
+            let fileRange: ClosedRange<Int> = 0...numericCast(info.size - 1)
             let range = range.clamped(to: fileRange)
             return self.readFile(path: path, range: range, context: context, chunkLength: chunkLength)
         } catch {
@@ -89,9 +98,12 @@ public struct FileIO: Sendable {
         context: some RequestContext
     ) async throws where AS.Element == ByteBuffer {
         context.logger.debug("[FileIO] PUT", metadata: ["hb.file.path": .string(path)])
-        try await self.fileIO.withFileHandle(path: path, mode: .write, flags: .allowFileCreation()) { handle in
-            for try await buffer in contents {
-                try await self.fileIO.write(fileHandle: handle, buffer: buffer)
+        try await self.fileSystem.withFileHandle(
+            forWritingAt: .init(path),
+            options: .newFile(replaceExisting: true)
+        ) { fileHandle in
+            try await fileHandle.withBufferedWriter { writer in
+                _ = try await writer.write(contentsOf: contents)
             }
         }
     }
@@ -108,8 +120,11 @@ public struct FileIO: Sendable {
         context: some RequestContext
     ) async throws {
         context.logger.debug("[FileIO] PUT", metadata: ["hb.file.path": .string(path)])
-        try await self.fileIO.withFileHandle(path: path, mode: .write, flags: .allowFileCreation()) { handle in
-            try await self.fileIO.write(fileHandle: handle, buffer: buffer)
+        try await self.fileSystem.withFileHandle(
+            forWritingAt: .init(path),
+            options: .newFile(replaceExisting: true)
+        ) { fileHandle in
+            _ = try await fileHandle.write(contentsOf: buffer, toAbsoluteOffset: 0)
         }
     }
 
@@ -118,41 +133,18 @@ public struct FileIO: Sendable {
         path: String,
         range: ClosedRange<Int>,
         context: some RequestContext,
-        chunkLength: Int = NonBlockingFileIO.defaultChunkSize
+        chunkLength: Int
     ) -> ResponseBody {
         ResponseBody(contentLength: range.count) { writer in
-            try await self.fileIO.withFileHandle(path: path, mode: .read) { handle in
-                let endOffset = range.endIndex
-                let chunkLength = chunkLength
-                var fileOffset = range.startIndex
-                let allocator = ByteBufferAllocator()
+            try await self.fileSystem.withFileHandle(forReadingAt: .init(path)) { fileHandle in
+                let startOffset: Int64 = numericCast(range.lowerBound)
+                let endOffset: Int64 = numericCast(range.upperBound)
 
-                while case .inRange(let offset) = fileOffset {
-                    let bytesLeft = range.distance(from: fileOffset, to: endOffset)
-                    let bytesToRead = Swift.min(chunkLength, bytesLeft)
-                    let buffer = try await self.fileIO.read(
-                        fileHandle: handle,
-                        fromOffset: numericCast(offset),
-                        byteCount: bytesToRead,
-                        allocator: allocator
-                    )
-                    fileOffset = range.index(fileOffset, offsetBy: bytesToRead)
-                    try await writer.write(buffer)
+                for try await chunk in fileHandle.readChunks(in: startOffset...endOffset, chunkLength: .bytes(numericCast(chunkLength))) {
+                    try await writer.write(chunk)
                 }
                 try await writer.finish(nil)
             }
-        }
-    }
-}
-
-extension NonBlockingFileIO {
-    func stat(path: String) async throws -> stat {
-        let stat = try await self.lstat(path: path)
-        if stat.st_mode & S_IFMT == S_IFLNK {
-            let realPath = try await self.readlink(path: path)
-            return try await self.lstat(path: realPath)
-        } else {
-            return stat
         }
     }
 }
