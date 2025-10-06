@@ -7,7 +7,7 @@ that your contributions are licensed under the Apache 2.0 license (see [LICENSE]
 ## Contributor Conduct
 All contributors are expected to adhere to the project's [Code of Conduct](CODE_OF_CONDUCT.md).
 
-## Submitting a bug
+## Submitting a bug or issue
 Please ensure to include the following in your bug report
 - A consise description of the issue, what happened and what you expected.
 - Simple reproduction steps
