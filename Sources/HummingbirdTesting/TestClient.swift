@@ -182,7 +182,6 @@ public struct TestClient: Sendable {
                 let task = HTTPTask(request: self.cleanupRequest(request), responsePromise: promise)
                 try await channel.writeAndFlush(task).flatMapErrorThrowing { error in
                     promise.fail(error)
-                    throw error
                 }.get()
                 return try await promise.futureResult.get()
             }
@@ -243,8 +242,13 @@ public struct TestClient: Sendable {
             let request = unwrapOutboundIn(data)
             context.write(wrapOutboundOut(.head(request.head)), promise: nil)
 
-            if let body = request.body, body.readableBytes > 0 {
-                context.write(self.wrapOutboundOut(.body(body)), promise: nil)
+            // break up large bodies so they are streamed
+            if var body = request.body, body.readableBytes > 0 {
+                while body.readableBytes > 0 {
+                    let size = min(body.readableBytes, 32768)
+                    let slice = body.readSlice(length: size)!
+                    context.write(self.wrapOutboundOut(.body(slice)), promise: nil)
+                }
             }
             context.write(self.wrapOutboundOut(.end(nil)), promise: promise)
         }
@@ -345,7 +349,6 @@ public struct TestClient: Sendable {
             while let task = self.queue.popFirst() {
                 task.responsePromise.fail(error)
             }
-            context.close(promise: nil)
         }
 
         func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {

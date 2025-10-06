@@ -18,9 +18,9 @@ import HummingbirdRouter
 import HummingbirdTesting
 import Logging
 import NIOCore
-import XCTest
+import Testing
 
-final class RouterTests: XCTestCase {
+struct RouterTests {
     struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
         let output: String
 
@@ -36,7 +36,7 @@ final class RouterTests: XCTestCase {
     }
 
     /// Test endpointPath is set
-    func testEndpointPath() async throws {
+    @Test func testEndpointPath() async throws {
         struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 _ = try await next(request, context)
@@ -55,13 +55,13 @@ final class RouterTests: XCTestCase {
 
         try await app.test(.router) { client in
             try await client.execute(uri: "/test/1", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "/test/{number}")
+                #expect(String(buffer: response.body) == "/test/{number}")
             }
         }
     }
 
     /// Test endpointPath is prefixed with a "/"
-    func testEndpointPathPrefix() async throws {
+    @Test func testEndpointPathPrefix() async throws {
         struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 _ = try await next(request, context)
@@ -86,19 +86,19 @@ final class RouterTests: XCTestCase {
 
         try await app.test(.router) { client in
             try await client.execute(uri: "/", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "/")
+                #expect(String(buffer: response.body) == "/")
             }
             try await client.execute(uri: "/test/", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "/test")
+                #expect(String(buffer: response.body) == "/test")
             }
             try await client.execute(uri: "/test2/", method: .post) { response in
-                XCTAssertEqual(String(buffer: response.body), "/test2")
+                #expect(String(buffer: response.body) == "/test2")
             }
         }
     }
 
     /// Test endpointPath doesn't have "/" at end
-    func testEndpointPathSuffix() async throws {
+    @Test func testEndpointPathSuffix() async throws {
         struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 guard let endpointPath = context.endpointPath else { return try await next(request, context) }
@@ -128,25 +128,25 @@ final class RouterTests: XCTestCase {
         let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/test/", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "/test")
+                #expect(String(buffer: response.body) == "/test")
             }
 
             try await client.execute(uri: "/test2/", method: .post) { response in
-                XCTAssertEqual(String(buffer: response.body), "/test2")
+                #expect(String(buffer: response.body) == "/test2")
             }
 
             try await client.execute(uri: "/testGroup/", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "/testGroup")
+                #expect(String(buffer: response.body) == "/testGroup")
             }
 
             try await client.execute(uri: "/testGroup2", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "/testGroup2")
+                #expect(String(buffer: response.body) == "/testGroup2")
             }
         }
     }
 
     /// Test correct endpoints are called from group
-    func testMethodEndpoint() async throws {
+    @Test func testMethodEndpoint() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             RouteGroup("/endpoint") {
                 Get { _, _ in
@@ -160,18 +160,18 @@ final class RouterTests: XCTestCase {
         let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/endpoint", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "GET")
+                #expect(String(buffer: response.body) == "GET")
             }
 
             try await client.execute(uri: "/endpoint", method: .put) { response in
-                XCTAssertEqual(String(buffer: response.body), "PUT")
+                #expect(String(buffer: response.body) == "PUT")
             }
         }
     }
 
     /// Test middle in group is applied to group but not to routes outside
     /// group
-    func testGroupMiddleware() async throws {
+    @Test func testGroupMiddleware() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             RouteGroup("/group") {
                 TestMiddleware()
@@ -186,16 +186,16 @@ final class RouterTests: XCTestCase {
         let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/group", method: .get) { response in
-                XCTAssertEqual(response.headers[.middleware], "TestMiddleware")
+                #expect(response.headers[.middleware] == "TestMiddleware")
             }
 
             try await client.execute(uri: "/not-group", method: .get) { response in
-                XCTAssertEqual(response.headers[.middleware], nil)
+                #expect(response.headers[.middleware] == nil)
             }
         }
     }
 
-    func testEndpointMiddleware() async throws {
+    @Test func testEndpointMiddleware() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             RouteGroup("/group") {
                 TestMiddleware()
@@ -207,13 +207,13 @@ final class RouterTests: XCTestCase {
         let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/group", method: .head) { response in
-                XCTAssertEqual(response.headers[.middleware], "TestMiddleware")
+                #expect(response.headers[.middleware] == "TestMiddleware")
             }
         }
     }
 
     /// Test middleware in parent group is applied to routes in child group
-    func testGroupGroupMiddleware() async throws {
+    @Test func testGroupGroupMiddleware() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             RouteGroup("/test") {
                 TestMiddleware()
@@ -227,13 +227,13 @@ final class RouterTests: XCTestCase {
         let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/test/group", method: .get) { response in
-                XCTAssertEqual(response.headers[.middleware], "TestMiddleware")
+                #expect(response.headers[.middleware] == "TestMiddleware")
             }
         }
     }
 
     /// Test adding middleware to group doesn't affect middleware in parent groups
-    func testGroupGroupMiddleware2() async throws {
+    @Test func testGroupGroupMiddleware2() async throws {
         struct TestGroupMiddleware: RouterMiddleware {
             typealias Context = TestRouterContext2
             let output: String
@@ -262,16 +262,16 @@ final class RouterTests: XCTestCase {
         let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/test/group", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "route2")
+                #expect(String(buffer: response.body) == "route2")
             }
             try await client.execute(uri: "/test", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "route1")
+                #expect(String(buffer: response.body) == "route1")
             }
         }
     }
 
     /// Test context transform
-    func testGroupTransformingGroupMiddleware() async throws {
+    @Test func testGroupTransformingGroupMiddleware() async throws {
         struct TestRouterContext2: RequestContext, RouterRequestContext {
             /// router context
             var routerContext: RouterBuilderContext
@@ -311,14 +311,14 @@ final class RouterTests: XCTestCase {
         let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/test/group", method: .get, headers: [.middleware2: "Transforming"]) { response in
-                XCTAssertEqual(response.headers[.middleware], "TestMiddleware")
-                XCTAssertEqual(response.headers[.middleware2], "Transforming")
+                #expect(response.headers[.middleware] == "TestMiddleware")
+                #expect(response.headers[.middleware2] == "Transforming")
             }
         }
     }
 
     /// Test throwing context transform
-    func testThrowingTransformingGroupMiddleware() async throws {
+    @Test func testThrowingTransformingGroupMiddleware() async throws {
         struct TestRouterContext: RequestContext, RouterRequestContext {
             /// router context
             var routerContext: RouterBuilderContext
@@ -367,16 +367,16 @@ final class RouterTests: XCTestCase {
         let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/group", method: .get, headers: [.middleware2: "Transforming"]) { response in
-                XCTAssertEqual(response.headers[.middleware2], "Transforming")
+                #expect(response.headers[.middleware2] == "Transforming")
             }
             try await client.execute(uri: "/group", method: .get) { response in
-                XCTAssertEqual(response.status, .badRequest)
+                #expect(response.status == .badRequest)
             }
         }
     }
 
     /// Test adding middleware to group doesn't affect middleware in parent groups
-    func testRouteBuilder() async throws {
+    @Test func testRouteBuilder() async throws {
         struct TestGroupMiddleware: RouterMiddleware {
             typealias Context = TestRouterContext2
             let output: String
@@ -408,16 +408,16 @@ final class RouterTests: XCTestCase {
         let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/test", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "route1")
+                #expect(String(buffer: response.body) == "route1")
             }
             try await client.execute(uri: "/test", method: .post) { response in
-                XCTAssertEqual(String(buffer: response.body), "route2")
+                #expect(String(buffer: response.body) == "route2")
             }
         }
     }
 
     /// Test the hummingbird core parser against possible overflows of the percent encoder. this issue was introduced in pr #404 in the context of query parameters but I've thrown in some other random overflow scenarios in here too for good measure. if it doesn't crash, its a win.
-    func testQueryParameterOverflow() async throws {
+    @Test func testQueryParameterOverflow() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Get("overflow") { req, _ in
                 let currentQP = req.uri.queryParameters["query"]
@@ -427,18 +427,18 @@ final class RouterTests: XCTestCase {
         let app = Application(router: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/overflow?query=value%", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "value%")
+                #expect(String(buffer: response.body) == "value%")
             }
             try await client.execute(uri: "/overflow?query%=value%", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "")
+                #expect(String(buffer: response.body) == "")
             }
             try await client.execute(uri: "/overflow?%&", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "")
+                #expect(String(buffer: response.body) == "")
             }
         }
     }
 
-    func testParameters() async throws {
+    @Test func testParameters() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Delete("/user/:id") { _, context -> String? in
                 context.parameters.get("id", as: String.self)
@@ -447,30 +447,30 @@ final class RouterTests: XCTestCase {
         let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/user/1234", method: .delete) { response in
-                XCTAssertEqual(String(buffer: response.body), "1234")
+                #expect(String(buffer: response.body) == "1234")
             }
         }
     }
 
-    func testParameterCollection() async throws {
+    @Test func testParameterCollection() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Delete("/user/:username/:id") { _, context -> String? in
-                XCTAssertEqual(context.parameters.count, 2)
+                #expect(context.parameters.count == 2)
                 return context.parameters.get("id", as: String.self)
             }
         }
         let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/user/john/1234", method: .delete) { response in
-                XCTAssertEqual(String(buffer: response.body), "1234")
+                #expect(String(buffer: response.body) == "1234")
             }
         }
     }
 
-    func testPartialCapture() async throws {
+    @Test func testPartialCapture() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Route(.get, "/files/file.{ext}/{name}.jpg") { _, context -> String in
-                XCTAssertEqual(context.parameters.count, 2)
+                #expect(context.parameters.count == 2)
                 let ext = try context.parameters.require("ext")
                 let name = try context.parameters.require("name")
                 return "\(name).\(ext)"
@@ -479,12 +479,12 @@ final class RouterTests: XCTestCase {
         let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/files/file.doc/test.jpg", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "test.doc")
+                #expect(String(buffer: response.body) == "test.doc")
             }
         }
     }
 
-    func testPartialWildcard() async throws {
+    @Test func testPartialWildcard() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Get("/files/file.*/*.jpg") { _, _ -> HTTPResponse.Status in
                 .ok
@@ -493,16 +493,16 @@ final class RouterTests: XCTestCase {
         let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/files/file.doc/test.jpg", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
             try await client.execute(uri: "/files/file.doc/test.png", method: .get) { response in
-                XCTAssertEqual(response.status, .notFound)
+                #expect(response.status == .notFound)
             }
         }
     }
 
     /// Test we have a request id and that it increments with each request
-    func testRequestId() async throws {
+    @Test func testRequestId() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Get("id") { _, context in
                 context.id.description
@@ -515,13 +515,13 @@ final class RouterTests: XCTestCase {
             }
             try await client.execute(uri: "/id", method: .get) { response in
                 let id2 = String(buffer: response.body)
-                XCTAssertNotEqual(id2, id)
+                #expect(id2 != id)
             }
         }
     }
 
     // Test redirect response
-    func testRedirect() async throws {
+    @Test func testRedirect() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Get("redirect") { _, _ in
                 Response.redirect(to: "/other")
@@ -530,13 +530,13 @@ final class RouterTests: XCTestCase {
         let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/redirect", method: .get) { response in
-                XCTAssertEqual(response.headers[.location], "/other")
-                XCTAssertEqual(response.status, .seeOther)
+                #expect(response.headers[.location] == "/other")
+                #expect(response.status == .seeOther)
             }
         }
     }
 
-    func testResponderBuilder() async throws {
+    @Test func testResponderBuilder() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Get("hello") { _, _ in
                 "hello"
@@ -545,13 +545,13 @@ final class RouterTests: XCTestCase {
         let app = Application(router: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "hello")
+                #expect(String(buffer: response.body) == "hello")
             }
         }
     }
 
     // Test case insensitive router works
-    func testCaseInsensitive() async throws {
+    @Test func testCaseInsensitive() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self, options: .caseInsensitive) {
             Get("Uppercased") { _, _ in
                 HTTPResponse.Status.ok
@@ -568,13 +568,13 @@ final class RouterTests: XCTestCase {
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/uppercased", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
             try await client.execute(uri: "/LOWERCASED", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
             try await client.execute(uri: "/Group/uppercased", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
         }
     }

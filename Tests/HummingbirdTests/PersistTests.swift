@@ -12,11 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import Hummingbird
 import HummingbirdTesting
-import XCTest
+import Testing
 
-final class PersistTests: XCTestCase {
+struct PersistTests {
     static let redisHostname = Environment().get("REDIS_HOSTNAME") ?? "localhost"
 
     func createRouter(
@@ -50,19 +51,19 @@ final class PersistTests: XCTestCase {
         return (router, persist)
     }
 
-    func testSetGet() async throws {
+    @Test func testSetGet() async throws {
         let (router, _) = try createRouter()
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             let tag = UUID().uuidString
             try await client.execute(uri: "/persist/\(tag)", method: .put, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
             try await client.execute(uri: "/persist/\(tag)", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "Persist")
+                #expect(String(buffer: response.body) == "Persist")
             }
         }
     }
 
-    func testCreateGet() async throws {
+    @Test func testCreateGet() async throws {
         let (router, persist) = try createRouter()
 
         router.put("/create/:tag") { request, context -> HTTPResponse.Status in
@@ -76,12 +77,12 @@ final class PersistTests: XCTestCase {
             let tag = UUID().uuidString
             try await client.execute(uri: "/create/\(tag)", method: .put, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
             try await client.execute(uri: "/persist/\(tag)", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "Persist")
+                #expect(String(buffer: response.body) == "Persist")
             }
         }
     }
 
-    func testDoubleCreateFail() async throws {
+    @Test func testDoubleCreateFail() async throws {
         let (router, persist) = try createRouter()
         router.put("/create/:tag") { request, context -> HTTPResponse.Status in
             let buffer = try await request.body.collect(upTo: .max)
@@ -97,15 +98,15 @@ final class PersistTests: XCTestCase {
         try await app.test(.router) { client in
             let tag = UUID().uuidString
             try await client.execute(uri: "/create/\(tag)", method: .put, body: ByteBufferAllocator().buffer(string: "Persist")) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
             try await client.execute(uri: "/create/\(tag)", method: .put, body: ByteBufferAllocator().buffer(string: "Persist")) { response in
-                XCTAssertEqual(response.status, .conflict)
+                #expect(response.status == .conflict)
             }
         }
     }
 
-    func testSetTwice() async throws {
+    @Test func testSetTwice() async throws {
         let (router, _) = try createRouter()
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -113,15 +114,15 @@ final class PersistTests: XCTestCase {
             let tag = UUID().uuidString
             try await client.execute(uri: "/persist/\(tag)", method: .put, body: ByteBufferAllocator().buffer(string: "test1")) { _ in }
             try await client.execute(uri: "/persist/\(tag)", method: .put, body: ByteBufferAllocator().buffer(string: "test2")) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
             try await client.execute(uri: "/persist/\(tag)", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "test2")
+                #expect(String(buffer: response.body) == "test2")
             }
         }
     }
 
-    func testExpires() async throws {
+    @Test func testExpires() async throws {
         let (router, _) = try createRouter()
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -133,15 +134,15 @@ final class PersistTests: XCTestCase {
             try await client.execute(uri: "/persist/\(tag2)/10", method: .put, body: ByteBufferAllocator().buffer(string: "ThisIsTest2")) { _ in }
             try await Task.sleep(nanoseconds: 1_000_000_000)
             try await client.execute(uri: "/persist/\(tag1)", method: .get) { response in
-                XCTAssertEqual(response.status, .noContent)
+                #expect(response.status == .noContent)
             }
             try await client.execute(uri: "/persist/\(tag2)", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "ThisIsTest2")
+                #expect(String(buffer: response.body) == "ThisIsTest2")
             }
         }
     }
 
-    func testCodable() async throws {
+    @Test func testCodable() async throws {
         struct TestCodable: Codable {
             let buffer: String
         }
@@ -164,12 +165,12 @@ final class PersistTests: XCTestCase {
             let tag = UUID().uuidString
             try await client.execute(uri: "/codable/\(tag)", method: .put, body: ByteBufferAllocator().buffer(string: "Persist")) { _ in }
             try await client.execute(uri: "/codable/\(tag)", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "Persist")
+                #expect(String(buffer: response.body) == "Persist")
             }
         }
     }
 
-    func testInvalidGetAs() async throws {
+    @Test func testInvalidGetAs() async throws {
         struct TestCodable: Codable {
             let buffer: String
         }
@@ -189,12 +190,12 @@ final class PersistTests: XCTestCase {
         try await app.test(.router) { client in
             try await client.execute(uri: "/invalid", method: .put)
             try await client.execute(uri: "/invalid", method: .get) { response in
-                XCTAssertEqual(response.status, .badRequest)
+                #expect(response.status == .badRequest)
             }
         }
     }
 
-    func testRemove() async throws {
+    @Test func testRemove() async throws {
         let (router, _) = try createRouter()
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -202,12 +203,12 @@ final class PersistTests: XCTestCase {
             try await client.execute(uri: "/persist/\(tag)", method: .put, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { _ in }
             try await client.execute(uri: "/persist/\(tag)", method: .delete) { _ in }
             try await client.execute(uri: "/persist/\(tag)", method: .get) { response in
-                XCTAssertEqual(response.status, .noContent)
+                #expect(response.status == .noContent)
             }
         }
     }
 
-    func testExpireAndAdd() async throws {
+    @Test func testExpireAndAdd() async throws {
         let (router, _) = try createRouter()
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -216,19 +217,19 @@ final class PersistTests: XCTestCase {
             try await client.execute(uri: "/persist/\(tag)/0", method: .put, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { _ in }
             try await Task.sleep(nanoseconds: 1_000_000_000)
             try await client.execute(uri: "/persist/\(tag)", method: .get) { response in
-                XCTAssertEqual(response.status, .noContent)
+                #expect(response.status == .noContent)
             }
             try await client.execute(uri: "/persist/\(tag)/10", method: .put, body: ByteBufferAllocator().buffer(string: "ThisIsTest1")) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
             try await client.execute(uri: "/persist/\(tag)", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(String(buffer: response.body), "ThisIsTest1")
+                #expect(response.status == .ok)
+                #expect(String(buffer: response.body) == "ThisIsTest1")
             }
         }
     }
 
-    func testTidy() async throws {
+    @Test func testTidy() async throws {
         let (router, persist) = try createRouter(configuration: .init(tidyFrequency: .milliseconds(1)))
         let app = Application(responder: router.buildResponder(), services: [persist])
         try await app.test(.router) { client in
@@ -236,7 +237,7 @@ final class PersistTests: XCTestCase {
             try await client.execute(uri: "/persist/\(tag)/10", method: .put, body: ByteBufferAllocator().buffer(string: "NotExpired")) { _ in }
             try await Task.sleep(for: .milliseconds(20))
             try await client.execute(uri: "/persist/\(tag)", method: .get) { response in
-                XCTAssertEqual(String(buffer: response.body), "NotExpired")
+                #expect(String(buffer: response.body) == "NotExpired")
             }
         }
     }
