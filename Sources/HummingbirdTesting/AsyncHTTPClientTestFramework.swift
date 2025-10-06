@@ -56,7 +56,7 @@ final class AsyncHTTPClientTestFramework<App: ApplicationProtocol>: ApplicationT
     }
 
     /// Start tests
-    func run<Value>(_ test: @Sendable (TestClientProtocol) async throws -> Value) async throws -> Value {
+    func run<Value>(_ test: @Sendable (Client) async throws -> Value) async throws -> Value {
         try await withThrowingTaskGroup(of: Void.self) { group in
             let serviceGroup = ServiceGroup(
                 configuration: .init(

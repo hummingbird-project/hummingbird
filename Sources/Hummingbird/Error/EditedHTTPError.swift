@@ -17,20 +17,20 @@ import HummingbirdCore
 
 /// Error generated from another error that adds additional headers to the response
 struct EditedHTTPError: HTTPResponseError {
-    let originalError: Error
+    let originalError: any Error
     var status: HTTPResponse.Status {
-        (self.originalError as? HTTPResponseError)?.status ?? .internalServerError
+        (self.originalError as? (any HTTPResponseError))?.status ?? .internalServerError
     }
 
     let additionalHeaders: HTTPFields
 
-    init(originalError: Error, additionalHeaders: HTTPFields) {
+    init(originalError: any Error, additionalHeaders: HTTPFields) {
         self.originalError = originalError
         self.additionalHeaders = additionalHeaders
     }
 
     func response(from request: Request, context: some RequestContext) throws -> Response {
-        if let originalError = originalError as? HTTPResponseError {
+        if let originalError = originalError as? (any HTTPResponseError) {
             var response = try originalError.response(from: request, context: context)
             response.headers.append(contentsOf: self.additionalHeaders)
             return response

@@ -24,8 +24,8 @@ import NIOSSL
 /// This HTTP client is used for internal testing of Hummingbird and is also
 /// the client used by `.live` testing framework.
 public struct TestClient: Sendable {
-    public let channelPromise: EventLoopPromise<Channel>
-    let eventLoopGroup: EventLoopGroup
+    public let channelPromise: EventLoopPromise<any Channel>
+    let eventLoopGroup: any EventLoopGroup
     let eventLoopGroupProvider: NIOEventLoopGroupProvider
     let host: String
     let port: Int
@@ -111,7 +111,7 @@ public struct TestClient: Sendable {
                 .channelInitializer { channel in
                     channel.pipeline.addHTTPClientHandlers()
                         .flatMapThrowing {
-                            let handlers: [ChannelHandler] = [
+                            let handlers: [any ChannelHandler] = [
                                 HTTP1ToHTTPClientCodec(),
                                 HTTPClientRequestSerializer(),
                                 HTTPClientResponseHandler(),
@@ -207,7 +207,7 @@ public struct TestClient: Sendable {
         return try await channel.close(mode: mode)
     }
 
-    public func getChannel() async throws -> Channel {
+    public func getChannel() async throws -> any Channel {
         try await self.channelPromise.futureResult.get()
     }
 
@@ -340,7 +340,7 @@ public struct TestClient: Sendable {
             }
         }
 
-        func errorCaught(context: ChannelHandlerContext, error: Swift.Error) {
+        func errorCaught(context: ChannelHandlerContext, error: any Swift.Error) {
             // if error caught, pass to all tasks in progress and close channel
             while let task = self.queue.popFirst() {
                 task.responsePromise.fail(error)

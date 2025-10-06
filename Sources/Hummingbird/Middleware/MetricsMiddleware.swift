@@ -53,7 +53,7 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
             return response
         } catch {
             let errorType: String
-            if let httpError = error as? HTTPResponseError {
+            if let httpError = error as? any HTTPResponseError {
                 errorType = httpError.status.code.description
             } else {
                 errorType = "500"

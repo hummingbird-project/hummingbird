@@ -48,7 +48,7 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
     }
 
     /// Run test
-    func run<Value>(_ test: @Sendable (TestClientProtocol) async throws -> Value) async throws -> Value {
+    func run<Value>(_ test: @Sendable (Client) async throws -> Value) async throws -> Value {
         let client = Client(
             responder: self.responder,
             logger: self.logger,

@@ -87,11 +87,11 @@ public actor MemoryPersistDriver<C: Clock>: PersistDriver where C.Duration == Du
 
     struct Item {
         /// value stored
-        let value: Codable & Sendable
+        let value: any Codable & Sendable
         /// time when item expires
         let expires: C.Instant?
 
-        init(value: Codable & Sendable, expires: C.Instant?) {
+        init(value: any Codable & Sendable, expires: C.Instant?) {
             self.value = value
             self.expires = expires
         }

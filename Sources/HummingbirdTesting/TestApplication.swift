@@ -36,13 +36,13 @@ internal struct TestApplication<BaseApp: ApplicationProtocol>: ApplicationProtoc
     }
 
     /// Event loop group used by application
-    var eventLoopGroup: EventLoopGroup { self.base.eventLoopGroup }
+    var eventLoopGroup: any EventLoopGroup { self.base.eventLoopGroup }
     /// Configuration
     var configuration: ApplicationConfiguration { self.base.configuration.with(address: .hostname("localhost", port: 0)) }
     /// Logger
     var logger: Logger { self.base.logger }
     /// On server running
-    @Sendable func onServerRunning(_ channel: Channel) async {
+    @Sendable func onServerRunning(_ channel: any Channel) async {
         await self.base.onServerRunning(channel)
         self.portPromise.complete(channel.localAddress!.port!)
     }
