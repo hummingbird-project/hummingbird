@@ -26,7 +26,7 @@ extension HTTP2Channel.Configuration {
     ///   - `h2.graceful.close.timeout` (double optional): Time in seconds to wait for client response after
     ///     all streams have been closed.
     ///   - `h2.max.age.timeout` (double optional): Maximum time in seconds a connection can stay open.
-    ///   - `h2.stream`: HTTP2 stream options. See ``HTTP1Channel/Configuration/init(reader:)``
+    ///   - `h2.stream`: HTTP2 stream options. See ``HummingbirdCore/HTTP1Channel/Configuration/init(reader:)``
     ///
     /// - Parameters
     ///   - reader: ConfigReader
