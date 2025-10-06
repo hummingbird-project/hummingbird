@@ -15,7 +15,7 @@
 import Hummingbird
 import HummingbirdTesting
 import XCTest
-import _NIOFileSystem
+import NIOFileSystem
 
 final class FileIOTests: XCTestCase {
     static func randomBuffer(size: Int) -> ByteBuffer {

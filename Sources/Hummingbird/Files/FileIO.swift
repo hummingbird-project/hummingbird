@@ -16,7 +16,7 @@ import HummingbirdCore
 import Logging
 import NIOCore
 import NIOPosix
-import _NIOFileSystem
+import NIOFileSystem
 
 /// Manages File reading and writing.
 public struct FileIO: Sendable {

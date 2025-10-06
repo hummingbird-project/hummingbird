@@ -16,9 +16,9 @@ import Foundation
 import HTTPTypes
 import Hummingbird
 import HummingbirdTesting
+import NIOFileSystem
 import NIOPosix
 import XCTest
-import _NIOFileSystem
 
 final class FileMiddlewareTests: XCTestCase {
     static func randomBuffer(size: Int) -> ByteBuffer {
