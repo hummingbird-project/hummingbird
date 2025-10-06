@@ -8,7 +8,7 @@
 
 import HummingbirdCore
 import NIOCore
-import _NIOFileSystem
+import NIOFileSystem
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials

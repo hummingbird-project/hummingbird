@@ -10,10 +10,10 @@ import Foundation
 import HTTPTypes
 import Hummingbird
 import HummingbirdTesting
+import NIOFileSystem
 import NIOFoundationEssentialsCompat
 import NIOPosix
 import Testing
-import _NIOFileSystem
 
 struct FileMiddlewareTests {
     static func randomBuffer(size: Int) -> ByteBuffer {

@@ -10,8 +10,8 @@ import CNIOLinux
 public import HummingbirdCore
 import Logging
 import NIOCore
+import NIOFileSystem
 public import NIOPosix
-import _NIOFileSystem
 
 /// Manages File reading and writing.
 public struct FileIO: Sendable {

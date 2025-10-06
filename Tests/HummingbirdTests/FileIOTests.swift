@@ -9,9 +9,9 @@
 import Foundation
 import Hummingbird
 import HummingbirdTesting
+import NIOFileSystem
 import NIOPosix
 import Testing
-import _NIOFileSystem
 
 struct FileIOTests {
     static func randomBuffer(size: Int) -> ByteBuffer {
