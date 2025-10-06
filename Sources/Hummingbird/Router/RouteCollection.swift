@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
+public import HTTPTypes
 
 /// Collection of routes
 public final class RouteCollection<Context: RequestContext>: RouterMethods {

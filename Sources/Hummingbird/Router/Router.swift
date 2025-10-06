@@ -12,9 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
-import HummingbirdCore
-import NIOCore
+public import HTTPTypes
+public import HummingbirdCore
 
 /// Create rules for routing requests and then create `Responder` that will follow these rules.
 ///

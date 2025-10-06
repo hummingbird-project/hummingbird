@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HummingbirdCore
+public import HummingbirdCore
 public import Logging
-import NIOCore
+public import NIOCore
 import NIOHTTP1
 import NIOHTTPTypes
 import NIOPosix

@@ -14,8 +14,8 @@
 
 import Foundation
 public import HTTPTypes
-import HummingbirdCore
-import NIOCore
+public import HummingbirdCore
+public import NIOCore
 public import Tracing
 
 /// Middleware creating Distributed Tracing spans for each request.

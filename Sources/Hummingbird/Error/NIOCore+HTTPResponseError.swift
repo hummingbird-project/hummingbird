@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
-import NIOCore
+public import HTTPTypes
+public import NIOCore
 
 // If we catch a too many bytes error report that as payload too large
 extension NIOTooManyBytesError: HTTPResponseError {

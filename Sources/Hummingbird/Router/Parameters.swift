@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HummingbirdCore
+public import HummingbirdCore
 
 /// Parameters is a special case of FlatDictionary where both the key
 /// and value types are Substrings. It is used for parameters extracted

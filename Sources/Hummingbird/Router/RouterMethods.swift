@@ -12,9 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
-import HummingbirdCore
-import NIOCore
+public import HTTPTypes
+public import HummingbirdCore
 
 /// Conform to `RouterMethods` to add standard router verb (get, post ...) methods
 @preconcurrency

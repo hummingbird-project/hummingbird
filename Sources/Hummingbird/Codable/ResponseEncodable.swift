@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HummingbirdCore
+public import HummingbirdCore
 
 /// Protocol for encodable object that can generate a response. The router will encode
 /// the response using the encoder stored in `Application.encoder`.

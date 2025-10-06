@@ -12,9 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
-import HummingbirdCore
-import NIOCore
+public import HTTPTypes
+public import HummingbirdCore
 
 /// Used to group together routes under a single path. Additional middleware can be added to the endpoint and each route can add a
 /// suffix to the endpoint path

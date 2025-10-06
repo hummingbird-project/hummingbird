@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
+public import HTTPTypes
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials

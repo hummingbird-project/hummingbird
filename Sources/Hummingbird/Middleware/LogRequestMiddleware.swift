@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
+public import HTTPTypes
 public import Logging
 
 /// Middleware outputting to log for every call to server.

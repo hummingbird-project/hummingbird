@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
-import NIOCore
+public import HTTPTypes
+public import NIOCore
 
 /// Middleware implementing Cross-Origin Resource Sharing (CORS) headers.
 ///
