@@ -22,6 +22,7 @@ import NIOHTTP1
 import NIOPosix
 import NIOSSL
 import ServiceLifecycle
+import UnixSignals
 
 /// Test using a live server and AsyncHTTPClient as a client
 final class AsyncHTTPClientTestFramework<App: ApplicationProtocol>: ApplicationTestFramework {

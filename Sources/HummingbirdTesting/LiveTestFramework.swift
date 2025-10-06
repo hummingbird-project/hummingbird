@@ -19,6 +19,7 @@ import Logging
 import NIOCore
 import NIOPosix
 import ServiceLifecycle
+import UnixSignals
 
 /// Test using a live server
 final class LiveTestFramework<App: ApplicationProtocol>: ApplicationTestFramework {

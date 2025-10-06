@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import HummingbirdCore
+import Logging
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials

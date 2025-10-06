@@ -17,6 +17,12 @@ import HummingbirdCore
 import NIOCore
 import Tracing
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
+
 /// Middleware creating Distributed Tracing spans for each request.
 ///
 /// Creates a span for each request, including attributes such as the HTTP method.

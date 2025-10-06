@@ -15,6 +15,7 @@
 import AsyncAlgorithms
 import Atomics
 import NIOCore
+import ServiceLifecycle
 
 /// In memory driver for persist system for storing persistent cross request key/value pairs
 public actor MemoryPersistDriver<C: Clock>: PersistDriver where C.Duration == Duration {

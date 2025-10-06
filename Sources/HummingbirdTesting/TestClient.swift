@@ -14,6 +14,7 @@
 
 import HTTPTypes
 import NIOCore
+import NIOHTTP1
 import NIOHTTPTypes
 import NIOHTTPTypesHTTP1
 import NIOPosix

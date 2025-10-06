@@ -4,7 +4,12 @@
 import PackageDescription
 
 let swiftSettings: [SwiftSetting] = [
-    .enableUpcomingFeature("ExistentialAny")
+    // https://github.com/apple/swift-evolution/blob/main/proposals/0335-existential-any.md
+    .enableUpcomingFeature("ExistentialAny"),
+
+    // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0444-member-import-visibility.md
+    .enableUpcomingFeature("MemberImportVisibility"),
+
 ]
 
 let package = Package(

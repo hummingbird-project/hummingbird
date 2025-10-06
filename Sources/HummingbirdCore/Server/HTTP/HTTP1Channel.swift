@@ -15,6 +15,7 @@
 import HTTPTypes
 import Logging
 import NIOCore
+import NIOHTTP1
 import NIOHTTPTypes
 import NIOHTTPTypesHTTP1
 
