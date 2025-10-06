@@ -99,7 +99,7 @@ public struct TLSChannelConfiguration: Sendable {
     // Manages configuration of TLS
     public let tlsConfiguration: TLSConfiguration
     /// A custom verification callback that allows completely overriding the certificate verification logic of BoringSSL.
-    public let customVerificationCallback: CustomVerificationCallback?
+    public var customVerificationCallback: CustomVerificationCallback?
 
     ///  Initialize TLSChannel.Configuration
     ///
