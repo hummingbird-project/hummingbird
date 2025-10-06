@@ -40,7 +40,7 @@ final class TracingTests: XCTestCase {
             }
             let app = Application(responder: router.buildResponder())
             try await app.test(.router) { client in
-                try await client.execute(uri: "/users/42", method: .get) { response in
+                try await client.execute(uri: "/users/42", method: .get, headers: [.userAgent: "42"]) { response in
                     XCTAssertEqual(response.status, .ok)
                     XCTAssertEqual(String(buffer: response.body), "42")
                 }
@@ -58,12 +58,14 @@ final class TracingTests: XCTestCase {
             XCTAssertSpanAttributesEqual(
                 span.attributes,
                 [
-                    "http.method": "GET",
-                    "http.target": "/users/42",
-                    "http.status_code": 200,
-                    "http.response_content_length": 2,
+                    "http.request.method": "GET",
+                    "http.route": "/users/{id}",
+                    "url.path": "/users/42",
+                    "http.response.status_code": 200,
+                    "http.response.body.size": 2,
                     "net.host.name": "127.0.0.1",
                     "net.host.port": 8080,
+                    "user_agent.original": "42",
                 ]
             )
         }
@@ -98,12 +100,95 @@ final class TracingTests: XCTestCase {
             XCTAssertSpanAttributesEqual(
                 span.attributes,
                 [
-                    "http.method": "GET",
-                    "http.target": "/users/42",
-                    "http.status_code": 200,
-                    "http.response_content_length": 2,
+                    "http.request.method": "GET",
+                    "http.route": "/users/{id}",
+                    "url.path": "/users/42",
+                    "http.response.status_code": 200,
+                    "http.response.body.size": 2,
                     "net.host.name": "127.0.0.1",
                     "net.host.port": 8080,
+                ]
+            )
+        }
+    }
+
+    func testTracingMiddlewareWithQueryParameters() async throws {
+        try await Self.testTracer.withUnique {
+            let expectation = expectation(description: "Expected span to be ended.")
+            Self.testTracer.onEndSpan = { _ in expectation.fulfill() }
+
+            let router = Router()
+            router.middlewares.add(TracingMiddleware())
+            router.get("users") { _, _ -> String in
+                "42"
+            }
+            let app = Application(responder: router.buildResponder())
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/users?q=42&s=asc", method: .get) { response in
+                    XCTAssertEqual(response.status, .ok)
+                    XCTAssertEqual(String(buffer: response.body), "42")
+                }
+            }
+
+            await fulfillment(of: [expectation], timeout: 1)
+
+            let span = try XCTUnwrap(Self.testTracer.spans.first)
+
+            XCTAssertEqual(span.operationName, "/users")
+            XCTAssertEqual(span.kind, .server)
+            XCTAssertNil(span.status)
+            XCTAssertTrue(span.recordedErrors.isEmpty)
+
+            XCTAssertSpanAttributesEqual(
+                span.attributes,
+                [
+                    "http.request.method": "GET",
+                    "http.route": "/users",
+                    "url.path": "/users",
+                    "url.query": "q=42&s=asc",
+                    "http.response.status_code": 200,
+                    "http.response.body.size": 2,
+                ]
+            )
+        }
+    }
+
+    func testTracingMiddlewareWithRedactedQueryParameters() async throws {
+        try await Self.testTracer.withUnique {
+            let expectation = expectation(description: "Expected span to be ended.")
+            Self.testTracer.onEndSpan = { _ in expectation.fulfill() }
+
+            let router = Router()
+            router.middlewares.add(TracingMiddleware(redactingQueryParameters: ["secret"]))
+            router.get("users") { _, _ -> String in
+                "42"
+            }
+            let app = Application(responder: router.buildResponder())
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/users?q=42&secret=foo&s=asc", method: .get) { response in
+                    XCTAssertEqual(response.status, .ok)
+                    XCTAssertEqual(String(buffer: response.body), "42")
+                }
+            }
+
+            await fulfillment(of: [expectation], timeout: 1)
+
+            let span = try XCTUnwrap(Self.testTracer.spans.first)
+
+            XCTAssertEqual(span.operationName, "/users")
+            XCTAssertEqual(span.kind, .server)
+            XCTAssertNil(span.status)
+            XCTAssertTrue(span.recordedErrors.isEmpty)
+
+            XCTAssertSpanAttributesEqual(
+                span.attributes,
+                [
+                    "http.request.method": "GET",
+                    "http.route": "/users",
+                    "url.path": "/users",
+                    "url.query": "q=42&secret=REDACTED&s=asc",
+                    "http.response.status_code": 200,
+                    "http.response.body.size": 2,
                 ]
             )
         }
@@ -144,10 +229,11 @@ final class TracingTests: XCTestCase {
             XCTAssertSpanAttributesEqual(
                 span.attributes,
                 [
-                    "http.method": "GET",
-                    "http.target": "/\(filename)",
-                    "http.status_code": 200,
-                    "http.response_content_length": .int64(Int64(text.count)),
+                    "http.request.method": "GET",
+                    "http.route": "FileMiddleware",
+                    "url.path": "/\(filename)",
+                    "http.response.status_code": 200,
+                    "http.response.body.size": .int64(Int64(text.count)),
                     "net.host.name": "127.0.0.1",
                     "net.host.port": 8080,
                 ]
@@ -192,10 +278,11 @@ final class TracingTests: XCTestCase {
             XCTAssertSpanAttributesEqual(
                 span.attributes,
                 [
-                    "http.method": "GET",
-                    "http.target": "/test/this",
-                    "http.status_code": 200,
-                    "http.response_content_length": 0,
+                    "http.request.method": "GET",
+                    "http.route": "/test",
+                    "url.path": "/test/this",
+                    "http.response.status_code": 200,
+                    "http.response.body.size": 0,
                 ]
             )
         }
@@ -234,10 +321,11 @@ final class TracingTests: XCTestCase {
             XCTAssertSpanAttributesEqual(
                 span.attributes,
                 [
-                    "http.method": "POST",
-                    "http.target": "/users",
-                    "http.status_code": 500,
-                    "http.request_content_length": 2,
+                    "http.request.method": "POST",
+                    "http.route": "/users",
+                    "url.path": "/users",
+                    "http.response.status_code": 500,
+                    "http.request.body.size": 2,
                 ]
             )
         }
@@ -288,10 +376,11 @@ final class TracingTests: XCTestCase {
             XCTAssertSpanAttributesEqual(
                 span.attributes,
                 [
-                    "http.method": "GET",
-                    "http.target": "/users/42",
-                    "http.status_code": 200,
-                    "http.response_content_length": 2,
+                    "http.request.method": "GET",
+                    "http.route": "/users/{id}",
+                    "url.path": "/users/42",
+                    "http.response.status_code": 200,
+                    "http.response.body.size": 2,
                     "http.request.header.accept": .stringArray(["text/plain", "application/json"]),
                     "http.request.header.cache_control": "no-cache",
                     "http.response.header.content_type": "text/plain",
@@ -331,10 +420,11 @@ final class TracingTests: XCTestCase {
             XCTAssertSpanAttributesEqual(
                 span.attributes,
                 [
-                    "http.method": "POST",
-                    "http.target": "/users",
-                    "http.status_code": 204,
-                    "http.response_content_length": 0,
+                    "http.request.method": "POST",
+                    "http.route": "/users",
+                    "url.path": "/users",
+                    "http.response.status_code": 204,
+                    "http.response.body.size": 0,
                 ]
             )
         }
@@ -370,10 +460,11 @@ final class TracingTests: XCTestCase {
             XCTAssertSpanAttributesEqual(
                 span.attributes,
                 [
-                    "http.method": "GET",
-                    "http.target": "/",
-                    "http.status_code": 200,
-                    "http.response_content_length": 0,
+                    "http.request.method": "GET",
+                    "http.route": "/",
+                    "url.path": "/",
+                    "http.response.status_code": 200,
+                    "http.response.body.size": 0,
                 ]
             )
         }
@@ -408,9 +499,9 @@ final class TracingTests: XCTestCase {
             XCTAssertSpanAttributesEqual(
                 span.attributes,
                 [
-                    "http.method": "GET",
-                    "http.target": "/",
-                    "http.status_code": 404,
+                    "http.request.method": "GET",
+                    "url.path": "/",
+                    "http.response.status_code": 404,
                 ]
             )
         }

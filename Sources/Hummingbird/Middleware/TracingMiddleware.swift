@@ -30,6 +30,7 @@ import Tracing
 /// A list of implementations is available in the swift-distributed-tracing repository's README.
 public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
     private let headerNamesToRecord: Set<RecordingHeader>
+    private let queryParametersToRedact: Set<Substring>
     private let attributes: SpanAttributes?
 
     /// Intialize a new TracingMiddleware.
@@ -39,8 +40,29 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
     ///         are being recorded.
     ///     - parameters: A list of static parameters added to every span. These could be the "net.host.name",
     ///         "net.host.port" or "http.scheme"
-    public init(recordingHeaders headerNamesToRecord: some Collection<HTTPField.Name> = [], attributes: SpanAttributes? = nil) {
+    public init(
+        recordingHeaders headerNamesToRecord: some Collection<HTTPField.Name> = [],
+        attributes: SpanAttributes? = nil
+    ) {
+        self.init(recordingHeaders: headerNamesToRecord, redactingQueryParameters: [], attributes: attributes)
+    }
+
+    /// Intialize a new TracingMiddleware.
+    ///
+    /// - Parameters
+    ///     - recordingHeaders: A list of HTTP header names to be recorded as span attributes. By default, no headers
+    ///         are being recorded.
+    ///     - redactingQueryParameters: A set of query parameter keys to redact. By default, all query parameters are
+    ///         being recorded without redaction.
+    ///     - parameters: A list of static parameters added to every span. These could be the "net.host.name",
+    ///         "net.host.port" or "http.scheme"
+    public init(
+        recordingHeaders headerNamesToRecord: some Collection<HTTPField.Name> = [],
+        redactingQueryParameters queryParametersToRedact: Set<String> = [],
+        attributes: SpanAttributes? = nil
+    ) {
         self.headerNamesToRecord = Set(headerNamesToRecord.map(RecordingHeader.init))
+        self.queryParametersToRedact = Set(queryParametersToRedact.map { $0[...] })
         self.attributes = attributes
     }
 
@@ -56,13 +78,23 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
             if let staticAttributes = self.attributes {
                 attributes.merge(staticAttributes)
             }
-            attributes["http.method"] = request.method.rawValue
-            attributes["http.target"] = request.uri.path
+            attributes["http.request.method"] = request.method.rawValue
+            attributes["url.path"] = request.uri.path
+            if self.queryParametersToRedact.isEmpty {
+                attributes["url.query"] = request.uri.query
+            } else {
+                attributes["url.query"] = request.uri.queryParameters
+                    .lazy
+                    .map { (key, value) in
+                        self.queryParametersToRedact.contains(key) ? "\(key)=REDACTED" : "\(key)=\(value)"
+                    }
+                    .joined(separator: "&")
+            }
             // TODO: Get HTTP version and scheme
             // attributes["http.flavor"] = "\(request.version.major).\(request.version.minor)"
-            // attributes["http.scheme"] = request.uri.scheme?.rawValue
-            attributes["http.user_agent"] = request.headers[.userAgent]
-            attributes["http.request_content_length"] = request.headers[.contentLength].map { Int($0) } ?? nil
+            // attributes["url.scheme"] = request.uri.scheme?.rawValue
+            attributes["user_agent.original"] = request.headers[.userAgent]
+            attributes["http.request.body.size"] = request.headers[.contentLength].map { Int($0) } ?? nil
 
             if let remoteAddress = (context as? any RemoteAddressRequestContext)?.remoteAddress {
                 attributes["net.sock.peer.port"] = remoteAddress.port
@@ -90,10 +122,11 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
                     span.operationName = endpointPath
                 }
                 span.updateAttributes { attributes in
+                    attributes["http.route"] = context.endpointPath
                     attributes = self.recordHeaders(response.headers, toSpanAttributes: attributes, withPrefix: "http.response.header.")
 
-                    attributes["http.status_code"] = Int(response.status.code)
-                    attributes["http.response_content_length"] = response.body.contentLength
+                    attributes["http.response.status_code"] = Int(response.status.code)
+                    attributes["http.response.body.size"] = response.body.contentLength
                 }
                 let spanWrapper = UnsafeTransfer(SpanWrapper(span))
                 response.body = response.body.withPostWriteClosure {
@@ -106,7 +139,10 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
                 span.operationName = endpointPath
             }
             let statusCode = (error as? HTTPResponseError)?.status.code ?? 500
-            span.attributes["http.status_code"] = statusCode
+            span.updateAttributes { attributes in
+                attributes["http.route"] = context.endpointPath
+                attributes["http.response.status_code"] = statusCode
+            }
             if 500..<600 ~= statusCode {
                 span.setStatus(.init(code: .error))
             }
