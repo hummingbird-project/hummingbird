@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import CNIOLinux
 public import HummingbirdCore
 import Logging
 public import NIOCore
