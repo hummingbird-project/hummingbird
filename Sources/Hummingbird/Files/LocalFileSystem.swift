@@ -17,6 +17,7 @@ public import NIOPosix
 
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
+import CNIOLinux
 #else
 public import Foundation
 #endif
