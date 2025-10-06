@@ -138,7 +138,7 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
             if let endpointPath = context.endpointPath {
                 span.operationName = endpointPath
             }
-            let statusCode = (error as? HTTPResponseError)?.status.code ?? 500
+            let statusCode = (error as? any HTTPResponseError)?.status.code ?? 500
             span.updateAttributes { attributes in
                 attributes["http.route"] = context.endpointPath
                 attributes["http.response.status_code"] = statusCode

@@ -93,5 +93,5 @@ protocol ApplicationTestFramework {
     associatedtype Client: TestClientProtocol
 
     /// Run test server
-    func run<Value>(_ test: @Sendable (any TestClientProtocol) async throws -> Value) async throws -> Value
+    func run<Value>(_ test: @Sendable (Client) async throws -> Value) async throws -> Value
 }

@@ -75,7 +75,7 @@ extension RouterBuilder: HTTPResponder, HTTPResponderBuilder {
             return try await self.handle(request, context: context) { _, _ in
                 throw HTTPError(.notFound)
             }
-        } catch let error as HTTPResponseError {
+        } catch let error as any HTTPResponseError {
             return try error.response(from: request, context: context)
         }
     }

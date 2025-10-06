@@ -36,7 +36,7 @@ public struct ApplicationConfiguration: Sendable {
     public var reuseAddress: Bool
     /// Object deciding on when we should accept new connection. Use ``HummingbirdCore/MaximumAvailableConnections``
     /// to set the maximum allowed connections.
-    public var availableConnectionsDelegate: AvailableConnectionsDelegate?
+    public var availableConnectionsDelegate: (any AvailableConnectionsDelegate)?
     #if canImport(Network)
     /// TLS options for NIO Transport services
     public var tlsOptions: TSTLSOptions
@@ -59,7 +59,7 @@ public struct ApplicationConfiguration: Sendable {
         serverName: String? = nil,
         backlog: Int = 256,
         reuseAddress: Bool = true,
-        availableConnectionsDelegate: AvailableConnectionsDelegate? = nil
+        availableConnectionsDelegate: (any AvailableConnectionsDelegate)? = nil
     ) {
         self.address = address
         self.serverName = serverName
@@ -85,7 +85,7 @@ public struct ApplicationConfiguration: Sendable {
         address: BindAddress = .hostname(),
         serverName: String? = nil,
         reuseAddress: Bool = true,
-        availableConnectionsDelegate: AvailableConnectionsDelegate? = nil,
+        availableConnectionsDelegate: (any AvailableConnectionsDelegate)? = nil,
         tlsOptions: TSTLSOptions
     ) {
         self.address = address

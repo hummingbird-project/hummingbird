@@ -17,6 +17,7 @@ import Testing
 
 @testable import Hummingbird
 
+@Suite("EnvironmentTests", .serialized)
 struct EnvironmentTests {
     @Test func testInitFromEnvironment() {
         #expect(setenv("testInitFromEnvironment", "testSetFromEnvironment", 1) == 0)

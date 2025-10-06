@@ -289,7 +289,7 @@ extension RequestBody {
         ///
         /// - Parameter error: The error to throw
         @inlinable
-        public func finish(_ error: Error) {
+        public func finish(_ error: any Error) {
             self.source.finish(error)
         }
     }

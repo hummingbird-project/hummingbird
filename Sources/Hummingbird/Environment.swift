@@ -85,7 +85,7 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
     }
 
     /// Initialize from Decodable
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         self.values = Self.getEnvironment()
         let container = try decoder.singleValueContainer()
         let decodedValues = try container.decode([String: String].self)

@@ -28,6 +28,6 @@ public struct ApplicationRequestContextSource: RequestContextSource {
         self.logger = logger
     }
 
-    public let channel: Channel
+    public let channel: any Channel
     public let logger: Logger
 }

@@ -36,7 +36,7 @@ struct PreludeService<S: Service>: Service, CustomStringConvertible {
 
 extension Service {
     /// Build existential ``PreludeService`` from an existential `Service`
-    func withPrelude(_ prelude: @escaping @Sendable () async throws -> Void) -> Service {
+    func withPrelude(_ prelude: @escaping @Sendable () async throws -> Void) -> any Service {
         PreludeService(service: self, prelude: prelude)
     }
 }
