@@ -14,6 +14,7 @@
 
 #if canImport(Network)
 
+import Foundation
 import HummingbirdCore
 import HummingbirdTesting
 import Logging
@@ -21,16 +22,16 @@ import Network
 import NIOCore
 import NIOSSL
 import NIOTransportServices
-import XCTest
+import Testing
 
-final class TransportServicesTests: XCTestCase {
+struct TransportServicesTests {
     func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
         data = data.map { _ in UInt8.random(in: 0...255) }
         return ByteBufferAllocator().buffer(bytes: data)
     }
 
-    func testConnect() async throws {
+    @Test func testConnect() async throws {
         try await testServer(
             responder: helloResponder,
             configuration: .init(address: .hostname(port: 0)),
@@ -38,30 +39,28 @@ final class TransportServicesTests: XCTestCase {
             logger: Logger(label: "Hummingbird")
         ) { client in
             let response = try await client.get("/")
-            var body = try XCTUnwrap(response.body)
-            XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
+            var body = try #require(response.body)
+            #expect(body.readString(length: body.readableBytes) == "Hello")
         }
     }
 
-    func testTLS() async throws {
+    @Test func testTLS() async throws {
         let p12Path = Bundle.module.path(forResource: "server", ofType: "p12")!
-        let tlsOptions: TSTLSOptions
-        do {
+        await withKnownIssue("Loading p12 files in CI can fail with `interactionNotAllowed` error", isIntermittent: true) {
             let identity = try TSTLSOptions.Identity.p12(filename: p12Path, password: "HBTests")
-            tlsOptions = try XCTUnwrap(TSTLSOptions.options(serverIdentity: identity))
-        } catch let error as TSTLSOptions.Error where error == .interactionNotAllowed {
-            throw XCTSkip("Unable to import PKCS12 bundle: no interaction allowed")
-        }
-        try await testServer(
-            responder: helloResponder,
-            configuration: .init(address: .hostname(port: 0), serverName: testServerName, tlsOptions: tlsOptions),
-            eventLoopGroup: NIOSingletons.transportServicesEventLoopGroup,
-            logger: Logger(label: "Hummingbird"),
-            clientConfiguration: .init(tlsConfiguration: self.getClientTLSConfiguration(), serverName: testServerName)
-        ) { client in
-            let response = try await client.get("/")
-            var body = try XCTUnwrap(response.body)
-            XCTAssertEqual(body.readString(length: body.readableBytes), "Hello")
+            let tlsOptions = try #require(TSTLSOptions.options(serverIdentity: identity))
+
+            try await testServer(
+                responder: helloResponder,
+                configuration: .init(address: .hostname(port: 0), serverName: testServerName, tlsOptions: tlsOptions),
+                eventLoopGroup: NIOSingletons.transportServicesEventLoopGroup,
+                logger: Logger(label: "Hummingbird"),
+                clientConfiguration: .init(tlsConfiguration: self.getClientTLSConfiguration(), serverName: testServerName)
+            ) { client in
+                let response = try await client.get("/")
+                var body = try #require(response.body)
+                #expect(body.readString(length: body.readableBytes) == "Hello")
+            }
         }
     }
 

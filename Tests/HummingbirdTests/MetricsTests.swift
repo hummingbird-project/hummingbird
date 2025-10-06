@@ -12,11 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import Hummingbird
 import HummingbirdTesting
 import Metrics
 import NIOConcurrencyHelpers
-import XCTest
+import Testing
 
 final class TestMetrics: MetricsFactory {
     private let lock = NIOLock()
@@ -302,14 +303,14 @@ final class TaskUniqueTestMetrics: MetricsFactory {
 
 }
 
-final class MetricsTests: XCTestCase {
+struct MetricsTests {
     static let testMetrics = {
         let metrics = TaskUniqueTestMetrics()
         MetricsSystem.bootstrap(metrics)
         return metrics
     }()
 
-    func testCounter() async throws {
+    @Test func testCounter() async throws {
         try await Self.testMetrics.withUnique {
             let router = Router()
             router.middlewares.add(MetricsMiddleware())
@@ -321,16 +322,16 @@ final class MetricsTests: XCTestCase {
                 try await client.execute(uri: "/hello", method: .get) { _ in }
             }
 
-            let counter = try XCTUnwrap(Self.testMetrics.counters["hb.requests"] as? TestCounter)
-            XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
-            XCTAssertEqual(counter.dimensions[0].0, "http.route")
-            XCTAssertEqual(counter.dimensions[0].1, "/hello")
-            XCTAssertEqual(counter.dimensions[1].0, "http.request.method")
-            XCTAssertEqual(counter.dimensions[1].1, "GET")
+            let counter = try #require(Self.testMetrics.counters["hb.requests"] as? TestCounter)
+            #expect(counter.values.withLockedValue { $0 }[0].1 == 1)
+            #expect(counter.dimensions[0].0 == "http.route")
+            #expect(counter.dimensions[0].1 == "/hello")
+            #expect(counter.dimensions[1].0 == "http.request.method")
+            #expect(counter.dimensions[1].1 == "GET")
         }
     }
 
-    func testError() async throws {
+    @Test func testError() async throws {
         try await Self.testMetrics.withUnique {
             let router = Router()
             router.middlewares.add(MetricsMiddleware())
@@ -342,25 +343,25 @@ final class MetricsTests: XCTestCase {
                 try await client.execute(uri: "/hello", method: .get) { _ in }
             }
 
-            let counter = try XCTUnwrap(Self.testMetrics.counters["hb.requests"] as? TestCounter)
-            XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
-            XCTAssertEqual(counter.dimensions[0].0, "http.route")
-            XCTAssertEqual(counter.dimensions[0].1, "/hello")
-            XCTAssertEqual(counter.dimensions[1].0, "http.request.method")
-            XCTAssertEqual(counter.dimensions[1].1, "GET")
-            XCTAssertEqual(counter.dimensions[2].0, "http.response.status_code")
-            XCTAssertEqual(counter.dimensions[2].1, "400")
-            let errorCounter = try XCTUnwrap(Self.testMetrics.counters["hb.request.errors"] as? TestCounter)
-            XCTAssertEqual(errorCounter.values.withLockedValue { $0 }.count, 1)
-            XCTAssertEqual(errorCounter.values.withLockedValue { $0 }[0].1, 1)
-            XCTAssertEqual(errorCounter.dimensions[0].0, "http.route")
-            XCTAssertEqual(errorCounter.dimensions[0].1, "/hello")
-            XCTAssertEqual(errorCounter.dimensions[1].0, "http.request.method")
-            XCTAssertEqual(errorCounter.dimensions[1].1, "GET")
+            let counter = try #require(Self.testMetrics.counters["hb.requests"] as? TestCounter)
+            #expect(counter.values.withLockedValue { $0 }[0].1 == 1)
+            #expect(counter.dimensions[0].0 == "http.route")
+            #expect(counter.dimensions[0].1 == "/hello")
+            #expect(counter.dimensions[1].0 == "http.request.method")
+            #expect(counter.dimensions[1].1 == "GET")
+            #expect(counter.dimensions[2].0 == "http.response.status_code")
+            #expect(counter.dimensions[2].1 == "400")
+            let errorCounter = try #require(Self.testMetrics.counters["hb.request.errors"] as? TestCounter)
+            #expect(errorCounter.values.withLockedValue { $0 }.count == 1)
+            #expect(errorCounter.values.withLockedValue { $0 }[0].1 == 1)
+            #expect(errorCounter.dimensions[0].0 == "http.route")
+            #expect(errorCounter.dimensions[0].1 == "/hello")
+            #expect(errorCounter.dimensions[1].0 == "http.request.method")
+            #expect(errorCounter.dimensions[1].1 == "GET")
         }
     }
 
-    func testNotFoundError() async throws {
+    @Test func testNotFoundError() async throws {
         try await Self.testMetrics.withUnique {
             let router = Router()
             router.middlewares.add(MetricsMiddleware())
@@ -372,28 +373,28 @@ final class MetricsTests: XCTestCase {
                 try await client.execute(uri: "/hello2", method: .get) { _ in }
             }
 
-            let counter = try XCTUnwrap(Self.testMetrics.counters["hb.requests"] as? TestCounter)
-            XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
-            XCTAssertEqual(counter.dimensions[0].0, "http.route")
-            XCTAssertEqual(counter.dimensions[0].1, "NotFound")
-            XCTAssertEqual(counter.dimensions[1].0, "http.request.method")
-            XCTAssertEqual(counter.dimensions[1].1, "GET")
-            XCTAssertEqual(counter.dimensions[2].0, "http.response.status_code")
-            XCTAssertEqual(counter.dimensions[2].1, "404")
-            let errorCounter = try XCTUnwrap(Self.testMetrics.counters["hb.request.errors"] as? TestCounter)
-            XCTAssertEqual(errorCounter.values.withLockedValue { $0 }.count, 1)
-            XCTAssertEqual(errorCounter.values.withLockedValue { $0 }[0].1, 1)
-            XCTAssertEqual(errorCounter.dimensions.count, 3)
-            XCTAssertEqual(errorCounter.dimensions[0].0, "http.route")
-            XCTAssertEqual(errorCounter.dimensions[0].1, "NotFound")
-            XCTAssertEqual(errorCounter.dimensions[1].0, "http.request.method")
-            XCTAssertEqual(errorCounter.dimensions[1].1, "GET")
-            XCTAssertEqual(errorCounter.dimensions[2].0, "error.type")
-            XCTAssertEqual(errorCounter.dimensions[2].1, "404")
+            let counter = try #require(Self.testMetrics.counters["hb.requests"] as? TestCounter)
+            #expect(counter.values.withLockedValue { $0 }[0].1 == 1)
+            #expect(counter.dimensions[0].0 == "http.route")
+            #expect(counter.dimensions[0].1 == "NotFound")
+            #expect(counter.dimensions[1].0 == "http.request.method")
+            #expect(counter.dimensions[1].1 == "GET")
+            #expect(counter.dimensions[2].0 == "http.response.status_code")
+            #expect(counter.dimensions[2].1 == "404")
+            let errorCounter = try #require(Self.testMetrics.counters["hb.request.errors"] as? TestCounter)
+            #expect(errorCounter.values.withLockedValue { $0 }.count == 1)
+            #expect(errorCounter.values.withLockedValue { $0 }[0].1 == 1)
+            #expect(errorCounter.dimensions.count == 3)
+            #expect(errorCounter.dimensions[0].0 == "http.route")
+            #expect(errorCounter.dimensions[0].1 == "NotFound")
+            #expect(errorCounter.dimensions[1].0 == "http.request.method")
+            #expect(errorCounter.dimensions[1].1 == "GET")
+            #expect(errorCounter.dimensions[2].0 == "error.type")
+            #expect(errorCounter.dimensions[2].1 == "404")
         }
     }
 
-    func testParameterEndpoint() async throws {
+    @Test func testParameterEndpoint() async throws {
         try await Self.testMetrics.withUnique {
             let router = Router()
             router.middlewares.add(MetricsMiddleware())
@@ -405,20 +406,20 @@ final class MetricsTests: XCTestCase {
                 try await client.execute(uri: "/user/765", method: .get) { _ in }
             }
 
-            let counter = try XCTUnwrap(Self.testMetrics.counters["hb.request.errors"] as? TestCounter)
-            XCTAssertEqual(counter.values.withLockedValue { $0 }.count, 1)
-            XCTAssertEqual(counter.values.withLockedValue { $0 }[0].1, 1)
-            XCTAssertEqual(counter.dimensions.count, 3)
-            XCTAssertEqual(counter.dimensions[0].0, "http.route")
-            XCTAssertEqual(counter.dimensions[0].1, "/user/{id}")
-            XCTAssertEqual(counter.dimensions[1].0, "http.request.method")
-            XCTAssertEqual(counter.dimensions[1].1, "GET")
-            XCTAssertEqual(counter.dimensions[2].0, "error.type")
-            XCTAssertEqual(counter.dimensions[2].1, "400")
+            let counter = try #require(Self.testMetrics.counters["hb.request.errors"] as? TestCounter)
+            #expect(counter.values.withLockedValue { $0 }.count == 1)
+            #expect(counter.values.withLockedValue { $0 }[0].1 == 1)
+            #expect(counter.dimensions.count == 3)
+            #expect(counter.dimensions[0].0 == "http.route")
+            #expect(counter.dimensions[0].1 == "/user/{id}")
+            #expect(counter.dimensions[1].0 == "http.request.method")
+            #expect(counter.dimensions[1].1 == "GET")
+            #expect(counter.dimensions[2].0 == "error.type")
+            #expect(counter.dimensions[2].1 == "400")
         }
     }
 
-    func testRecordingBodyWriteTime() async throws {
+    @Test func testRecordingBodyWriteTime() async throws {
         try await Self.testMetrics.withUnique {
             let router = Router()
             router.middlewares.add(MetricsMiddleware())
@@ -435,12 +436,12 @@ final class MetricsTests: XCTestCase {
                 try await client.execute(uri: "/hello", method: .get) { _ in }
             }
 
-            let timer = try XCTUnwrap(Self.testMetrics.timers["http.server.request.duration"] as? TestTimer)
-            XCTAssertGreaterThan(timer.values.withLockedValue { $0 }[0].1, 5_000_000)
+            let timer = try #require(Self.testMetrics.timers["http.server.request.duration"] as? TestTimer)
+            #expect(timer.values.withLockedValue { $0 }[0].1 > 5_000_000)
         }
     }
 
-    func testActiveRequestsMetric() async throws {
+    @Test func testActiveRequestsMetric() async throws {
         try await Self.testMetrics.withUnique {
             let router = Router()
             router.middlewares.add(MetricsMiddleware())
@@ -452,10 +453,10 @@ final class MetricsTests: XCTestCase {
                 try await client.execute(uri: "/hello", method: .get) { _ in }
             }
 
-            let meter = try XCTUnwrap(Self.testMetrics.meters["http.server.active_requests"] as? TestMeter)
+            let meter = try #require(Self.testMetrics.meters["http.server.active_requests"] as? TestMeter)
             let values = meter.values.withLockedValue { $0 }.map { $0.1 }
             let maxValue = values.max() ?? 0.0
-            XCTAssertGreaterThan(maxValue, 0.0)
+            #expect(maxValue > 0.0)
         }
     }
 }

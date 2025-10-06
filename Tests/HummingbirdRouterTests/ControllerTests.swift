@@ -15,10 +15,10 @@
 import Hummingbird
 import HummingbirdRouter
 import HummingbirdTesting
-import XCTest
+import Testing
 
-final class ControllerTests: XCTestCase {
-    func testRouterControllerWithSingleRoute() async throws {
+struct ControllerTests {
+    @Test func testRouterControllerWithSingleRoute() async throws {
         struct TestController: RouterController {
             typealias Context = BasicRouterRequestContext
             var body: some RouterMiddleware<Context> {
@@ -33,12 +33,12 @@ final class ControllerTests: XCTestCase {
         let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/foo", method: .get) {
-                XCTAssertEqual(String(buffer: $0.body), "foo")
+                #expect(String(buffer: $0.body) == "foo")
             }
         }
     }
 
-    func testRouterControllerWithMultipleRoutes() async throws {
+    @Test func testRouterControllerWithMultipleRoutes() async throws {
         struct TestController: RouterController {
             typealias Context = BasicRouterRequestContext
             var body: some RouterMiddleware<Context> {
@@ -54,16 +54,16 @@ final class ControllerTests: XCTestCase {
         let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/foo", method: .get) {
-                XCTAssertEqual(String(buffer: $0.body), "foo")
+                #expect(String(buffer: $0.body) == "foo")
             }
 
             try await client.execute(uri: "/bar", method: .get) {
-                XCTAssertEqual(String(buffer: $0.body), "bar")
+                #expect(String(buffer: $0.body) == "bar")
             }
         }
     }
 
-    func testRouterControllerWithGenericChildren() async throws {
+    @Test func testRouterControllerWithGenericChildren() async throws {
         struct ChildController: RouterController {
             typealias Context = BasicRouterRequestContext
             let name: String
@@ -99,13 +99,13 @@ final class ControllerTests: XCTestCase {
         try await app.test(.router) { client in
             for letter in "abcd" {
                 try await client.execute(uri: "/parent/child_\(letter)", method: .get) {
-                    XCTAssertEqual(String(buffer: $0.body), "child_\(letter)")
+                    #expect(String(buffer: $0.body) == "child_\(letter)")
                 }
             }
         }
     }
 
-    func testRouterControllerWithMiddleware() async throws {
+    @Test func testRouterControllerWithMiddleware() async throws {
         struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 var response = try await next(request, context)
@@ -139,13 +139,13 @@ final class ControllerTests: XCTestCase {
         let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/parent/foo", method: .get) {
-                XCTAssertEqual($0.headers[.middleware], "TestMiddleware")
-                XCTAssertEqual(String(buffer: $0.body), "foo")
+                #expect($0.headers[.middleware] == "TestMiddleware")
+                #expect(String(buffer: $0.body) == "foo")
             }
 
             try await client.execute(uri: "/parent/bar", method: .get) {
-                XCTAssertEqual($0.headers[.middleware], "TestMiddleware")
-                XCTAssertEqual(String(buffer: $0.body), "bar")
+                #expect($0.headers[.middleware] == "TestMiddleware")
+                #expect(String(buffer: $0.body) == "bar")
             }
         }
     }
