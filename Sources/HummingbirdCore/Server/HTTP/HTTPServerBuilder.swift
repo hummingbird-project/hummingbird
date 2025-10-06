@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
-import NIOCore
-import ServiceLifecycle
+public import Logging
+public import NIOCore
+public import ServiceLifecycle
 
 /// Build server that takes an HTTP responder
 ///

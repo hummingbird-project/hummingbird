@@ -12,10 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
-import Hummingbird
-import NIOCore
-import ServiceLifecycle
+public import HTTPTypes
+public import Hummingbird
 
 /// Response structure returned by testing framework
 public struct TestResponse: Sendable {

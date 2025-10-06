@@ -12,10 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
+public import HTTPTypes
 import HummingbirdCore
 import NIOCore
-import Tracing
+public import Tracing
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials

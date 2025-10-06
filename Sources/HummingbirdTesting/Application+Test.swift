@@ -12,9 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Hummingbird
-import HummingbirdCore
-import NIOCore
+public import Hummingbird
 
 /// HTTP Scheme to use with AsyncHTTPClient test framework
 public enum TestHTTPScheme: String {

@@ -12,9 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Hummingbird
-import Logging
-import NIOCore
+public import Hummingbird
 
 /// Context data required by `RouterBuilder`
 public struct RouterBuilderContext: Sendable {

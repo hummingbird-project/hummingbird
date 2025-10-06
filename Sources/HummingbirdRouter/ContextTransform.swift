@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Hummingbird
+public import Hummingbird
 
 /// Router middleware that transforms the ``Hummingbird/RequestContext`` and uses it with the contained
 /// Middleware chain

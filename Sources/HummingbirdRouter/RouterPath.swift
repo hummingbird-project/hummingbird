@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Hummingbird
+public import Hummingbird
 
 extension RouterPath {
     func matchAll<Context: RouterRequestContext>(_ context: Context) -> Context? {

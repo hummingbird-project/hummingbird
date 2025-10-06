@@ -13,13 +13,13 @@
 //===----------------------------------------------------------------------===//
 
 import HummingbirdCore
-import Logging
+public import Logging
 import NIOCore
 import NIOHTTP1
 import NIOHTTPTypes
 import NIOPosix
-import ServiceLifecycle
-import UnixSignals
+public import ServiceLifecycle
+public import UnixSignals
 
 #if os(iOS)
 import NIOTransportServices

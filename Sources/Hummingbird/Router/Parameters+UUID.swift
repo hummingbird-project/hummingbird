@@ -13,9 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// It is common for UUID's to be passed in as parameters. So lets add helper

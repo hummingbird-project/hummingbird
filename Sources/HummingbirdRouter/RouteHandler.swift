@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Hummingbird
+public import Hummingbird
 
 /// Protocol for route handler object.
 ///

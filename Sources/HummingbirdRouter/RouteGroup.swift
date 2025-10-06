@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Hummingbird
+public import Hummingbird
 
 /// Router middleware that applies a middleware chain to URIs with a specified prefix
 public struct RouteGroup<Context: RouterRequestContext, Handler: MiddlewareProtocol>: RouterMiddleware

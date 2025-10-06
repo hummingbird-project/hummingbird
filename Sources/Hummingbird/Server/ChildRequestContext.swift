@@ -11,7 +11,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 //===----------------------------------------------------------------------===//
-import Logging
+public import Logging
 
 /// A RequestContext that can be initialized from another RequestContext.
 ///

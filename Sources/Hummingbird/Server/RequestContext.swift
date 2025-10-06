@@ -13,15 +13,15 @@
 //===----------------------------------------------------------------------===//
 
 import Atomics
-import Logging
+public import Logging
 import NIOConcurrencyHelpers
 import NIOCore
 import Tracing
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// Endpoint path storage

@@ -12,13 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
-import NIOCore
+public import HTTPTypes
+public import NIOCore
 import NIOHTTP1
 import NIOHTTPTypes
 import NIOHTTPTypesHTTP1
-import NIOPosix
-import NIOSSL
+public import NIOPosix
+public import NIOSSL
 
 /// Bare bones single connection HTTP client.
 ///

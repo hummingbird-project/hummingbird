@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
+public import HTTPTypes
 
 /// Holds all the required to generate a HTTP Response
 public struct Response: Sendable {
