@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import HTTPTypes
-import NIOCore
+public import NIOCore
 
 /// Response body
 public struct ResponseBody: Sendable {

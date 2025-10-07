@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
+
 /// Error thrown from parsing URLEncoded forms
 public struct URLEncodedFormError: Error, CustomStringConvertible, Equatable {
     public struct Code: Sendable, Equatable {

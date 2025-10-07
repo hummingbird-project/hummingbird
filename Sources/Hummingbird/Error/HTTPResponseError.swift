@@ -12,8 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
-import NIOCore
+public import HTTPTypes
 
 /// An error that is capable of generating an HTTP response
 ///

@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HummingbirdCore
+public import HummingbirdCore
 
 extension Response {
     /// Specifies the type of redirect that the client should receive.

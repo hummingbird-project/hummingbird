@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
-import Hummingbird
+public import HTTPTypes
+public import Hummingbird
 
 /// Route definition
 public struct Route<Handler: _RouteHandlerProtocol, Context: RouterRequestContext>: RouterMiddleware where Handler.Context == Context {

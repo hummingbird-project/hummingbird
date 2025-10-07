@@ -13,15 +13,15 @@
 //===----------------------------------------------------------------------===//
 
 import HTTPTypes
-import HummingbirdCore
-import Logging
+public import HummingbirdCore
+public import Logging
 import NIOCore
-import NIOPosix
+public import NIOPosix
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// Protocol for all the file attributes required by ``FileMiddleware``

@@ -13,11 +13,11 @@
 //===----------------------------------------------------------------------===//
 
 import HTTPTypes
-import Logging
+public import Logging
 import NIOConcurrencyHelpers
-import NIOCore
+public import NIOCore
 import NIOHTTP1
-import NIOHTTPTypes
+public import NIOHTTPTypes
 import ServiceLifecycle
 
 /// Protocol for HTTP channels

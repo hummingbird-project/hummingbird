@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Hummingbird
+public import Hummingbird
 
 /// Router Options
 public struct RouterBuilderOptions: OptionSet, Sendable {

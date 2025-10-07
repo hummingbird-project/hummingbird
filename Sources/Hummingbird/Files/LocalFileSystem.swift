@@ -12,13 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
-import NIOPosix
+public import Logging
+public import NIOPosix
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
+import CNIOLinux
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// Local file system file provider used by FileMiddleware. All file accesses are relative to a root folder

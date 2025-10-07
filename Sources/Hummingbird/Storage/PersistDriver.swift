@@ -12,8 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIOCore
-import ServiceLifecycle
+public import ServiceLifecycle
 
 /// Protocol for driver supporting persistent Key/Value pairs across requests
 public protocol PersistDriver: Service {

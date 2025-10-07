@@ -12,7 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HummingbirdCore
+public import HummingbirdCore
+import Logging
 
 extension URI {
     /// Decode request query using ``Hummingbird/URLEncodedFormDecoder``.

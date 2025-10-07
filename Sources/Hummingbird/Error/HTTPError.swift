@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
+public import HTTPTypes
 import NIOCore
 
 /// Default HTTP error. Provides an HTTP status and a message

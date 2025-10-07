@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import HTTPTypes
-import HummingbirdCore
+public import HTTPTypes
+public import HummingbirdCore
 
 /// Object that can generate a `Response`.
 ///

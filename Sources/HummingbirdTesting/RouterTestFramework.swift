@@ -23,6 +23,7 @@ import NIOEmbedded
 import NIOHTTPTypes
 import NIOPosix
 import ServiceLifecycle
+import UnixSignals
 
 /// Test sending requests directly to router. This does not setup a live server
 struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework where Responder.Context: InitializableFromSource {

@@ -13,9 +13,10 @@
 //===----------------------------------------------------------------------===//
 
 import HTTPTypes
-import Logging
-import NIOCore
-import NIOHTTPTypes
+public import Logging
+public import NIOCore
+import NIOHTTP1
+public import NIOHTTPTypes
 import NIOHTTPTypesHTTP1
 
 /// Child channel for processing HTTP1
