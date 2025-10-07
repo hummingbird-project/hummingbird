@@ -1,6 +1,7 @@
 // swift-tools-version:6.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
+import Foundation
 import PackageDescription
 
 let swiftSettings: [SwiftSetting] = [
@@ -15,6 +16,19 @@ let swiftSettings: [SwiftSetting] = [
 
 ]
 
+// Should we enable all traits.
+let enableAllTraitsExplicitly = ProcessInfo.processInfo.environment["ENABLE_ALL_TRAITS"] != nil
+let enableAllTraitsInCI = ProcessInfo.processInfo.environment["CI"] != nil
+let enableAllTraits = enableAllTraitsExplicitly || enableAllTraitsInCI
+// Construct trait set
+var traits: Set<Trait> = [
+    .trait(name: "ExperimentalConfiguration")
+]
+let defaultTraits: Trait = .default(enabledTraits: [])
+if enableAllTraits {
+    traits.insert(enableAllTraits ? .default(enabledTraits: Set(traits.map(\.name))) : defaultTraits)
+}
+
 let package = Package(
     name: "hummingbird",
     platforms: [.macOS(.v15), .iOS(.v17), .macCatalyst(.v17), .tvOS(.v17), .visionOS(.v1)],
@@ -27,10 +41,7 @@ let package = Package(
         .library(name: "HummingbirdTesting", targets: ["HummingbirdTesting"]),
         .executable(name: "PerformanceTest", targets: ["PerformanceTest"]),
     ],
-    traits: [
-        .trait(name: "ExperimentalConfiguration"),
-        .default(enabledTraits: ["ExperimentalConfiguration"]),
-    ],
+    traits: traits,
     dependencies: [
         .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "1.0.2"),
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.0.0"),
