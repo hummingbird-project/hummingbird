@@ -21,13 +21,13 @@ extension HTTP1Channel.Configuration {
     /// Initialize a HTTP1Channel.Configuration from a ConfigReader
     ///
     /// - Configuration keys
-    ///   - `idle.timeout` (double, optional): Time in seconds a connection can be left idle before closing
+    ///   - `idleTimeout` (double, optional): Time in seconds a connection can be left idle before closing
     ///
     /// - Parameters
     ///   - reader: ConfigReader
     public init(reader: ConfigReader) {
         var configuration = Self()
-        if let idleTimeout = reader.double(forKey: "idle.timeout") {
+        if let idleTimeout = reader.double(forKey: "idleTimeout") {
             configuration.idleTimeout = .nanoseconds(Int64(idleTimeout * 1_000_000_000))
         }
         self = configuration

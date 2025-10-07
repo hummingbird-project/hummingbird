@@ -29,7 +29,7 @@ struct ConfigReaderTests {
                 InMemoryProvider(values: [
                     "http.host": "0.0.0.0",
                     "http.port": 12300,
-                    "http.server.name": "Test HB",
+                    "http.serverName": "Test HB",
                 ])
             ]
         )
@@ -45,7 +45,7 @@ struct ConfigReaderTests {
         let configReader = ConfigReader(
             providers: [
                 InMemoryProvider(values: [
-                    "http.unix.domain.socket": "/tmp/hb"
+                    "http.unixDomainSocket": "/tmp/hb"
                 ])
             ]
         )
@@ -60,7 +60,7 @@ struct ConfigReaderTests {
         let configReader = ConfigReader(
             providers: [
                 InMemoryProvider(values: [
-                    "idle.timeout": 65.0
+                    "idleTimeout": 65.0
                 ])
             ]
         )

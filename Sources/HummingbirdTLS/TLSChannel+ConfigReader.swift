@@ -32,20 +32,20 @@ extension TLSChannelConfiguration {
     /// Initialize a TLSChannelConfiguration from a ConfigReader
     ///
     /// - Configuration Keys
-    ///   - `tls.certificate.chain` (string, required): TLS certificate chain in PEM format
-    ///   - `tls.private.key` (string required): TLS private key in PEM format
-    ///   - `tls.trust.roots` (string optional): TLS trust roots in PEM format
+    ///   - `tls.certificateChain` (string, required): TLS certificate chain in PEM format
+    ///   - `tls.privateKey` (string required): TLS private key in PEM format
+    ///   - `tls.trustRoots` (string optional): TLS trust roots in PEM format
     ///
     /// - Parameter reader: ConfigReader
     /// - Throws: TLSConfigError if "tls.certificate.chain" or "tls.private.key" values are missing
     public init(reader: ConfigReader) throws {
-        guard let certificateChainPEM = reader.string(forKey: "tls.certificate.chain") else {
+        guard let certificateChainPEM = reader.string(forKey: "tls.certificateChain") else {
             throw TLSConfigError.missingCertificateChain
         }
-        guard let privateKeyPEM = reader.string(forKey: "tls.private.key") else {
+        guard let privateKeyPEM = reader.string(forKey: "tls.privateKey") else {
             throw TLSConfigError.missingPrivateKey
         }
-        let trustRootsPEM = reader.string(forKey: "tls.trust.roots")
+        let trustRootsPEM = reader.string(forKey: "tls.trustRoots")
 
         let certificateChain = try NIOSSLCertificate.fromPEMBytes([UInt8](certificateChainPEM.utf8))
         let privateKey = try NIOSSLPrivateKey(bytes: [UInt8](privateKeyPEM.utf8), format: .pem)

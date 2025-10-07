@@ -26,9 +26,9 @@ struct ConfigReaderTests {
         let configReader = ConfigReader(
             providers: [
                 InMemoryProvider(values: [
-                    "tls.certificate.chain": .init(stringLiteral: serverCertificateData),
-                    "tls.private.key": .init(stringLiteral: serverPrivateKeyData),
-                    "tls.trust.roots": .init(stringLiteral: caCertificateData),
+                    "tls.certificateChain": .init(stringLiteral: serverCertificateData),
+                    "tls.privateKey": .init(stringLiteral: serverPrivateKeyData),
+                    "tls.trustRoots": .init(stringLiteral: caCertificateData),
                 ])
             ]
         )
@@ -46,10 +46,10 @@ struct ConfigReaderTests {
         let configReader = ConfigReader(
             providers: [
                 InMemoryProvider(values: [
-                    "h2.idle.timeout": 46.0,
-                    "h2.max.age.timeout": 500.5,
-                    "h2.graceful.close.timeout": 2.25,
-                    "h2.stream.idle.timeout": 15.0,
+                    "http2.idleTimeout": 46.0,
+                    "http2.maxAgeTimeout": 500.5,
+                    "http2.gracefulCloseTimeout": 2.25,
+                    "http2.stream.idleTimeout": 15.0,
                 ])
             ]
         )
