@@ -46,7 +46,7 @@ public enum EventLoopGroupProvider {
     }
 }
 
-/// Protocol for an Application. Brings together all the components of Hummingbird together
+/// Protocol for an Application. Brings all the components of Hummingbird together
 public protocol ApplicationProtocol: Service where Context: InitializableFromSource<ApplicationRequestContextSource> {
     /// Responder that generates a response from a requests and context
     associatedtype Responder: HTTPResponder
