@@ -15,6 +15,7 @@
 #if ExperimentalConfiguration
 
 public import Configuration
+import NIOCore
 
 @available(macOS 15, iOS 18, macCatalyst 18, tvOS 18, visionOS 2, *)
 extension HTTP1Channel.Configuration {
