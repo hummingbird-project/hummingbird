@@ -34,6 +34,9 @@ public protocol RouterMethods<Context>: _HB_SendableMetatype {
     ) -> Self where Responder.Context == Context
 
     /// add middleware
+    ///
+    /// This middleware will only be applied to endpoints added after this call.
+    /// - Parameter middleware: Middleware we are adding
     func add(middleware: any MiddlewareProtocol<Request, Response, Context>) -> Self
 }
 
@@ -122,6 +125,8 @@ extension RouterMethods {
     /// }
     /// ```
     /// This gives a slight performance boost over adding them individually.
+    ///
+    /// The middleware will only be applied to endpoints added after this call.
     ///
     /// - Parameter buildMiddlewareStack: Middleware stack result builder
     /// - Returns: router
