@@ -280,6 +280,12 @@ where Responder.Context: InitializableFromSource<ApplicationRequestContextSource
         self.services.append(contentsOf: services)
     }
 
+    ///  Add service to be managed by application ServiceGroup
+    /// - Parameter services: list of services to be added
+    public mutating func addServices(_ services: some Sequence<any Service>) {
+        self.services.append(contentsOf: services)
+    }
+
     /// Add a process to run before we kick off the server service
     ///
     /// This is for processes that might need another Service running but need
