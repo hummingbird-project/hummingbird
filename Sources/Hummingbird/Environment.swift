@@ -29,6 +29,9 @@ import Musl
 import Darwin.C
 #elseif canImport(Android)
 import Android
+#elseif canImport(ucrt)
+import ucrt
+import WinSDK
 #else
 #error("Unsupported platform")
 #endif
@@ -139,9 +142,17 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
     public mutating func set(_ s: String, value: String?) {
         self.values[s.lowercased()] = value
         if let value {
+            #if os(Windows)
+            _putenv("\(s)=\(value)")
+            #else
             setenv(s, value, 1)
+            #endif
         } else {
+            #if os(Windows)
+            _putenv("\(s)=")
+            #else
             unsetenv(s)
+            #endif
         }
     }
 
@@ -180,7 +191,11 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
             let contents = try fileHandle.withUnsafeFileDescriptor { descriptor in
                 [UInt8](unsafeUninitializedCapacity: fileRegion.readableBytes) { bytes, size in
                     size = fileRegion.readableBytes
+                    #if os(Windows)
+                    read(descriptor, .init(bytes.baseAddress), UInt32(size))
+                    #else
                     read(descriptor, .init(bytes.baseAddress), size)
+                    #endif
                 }
             }
             return String(bytes: contents, encoding: .utf8)
