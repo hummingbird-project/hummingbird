@@ -26,8 +26,11 @@ public typealias HBApplicationConfiguration = ApplicationConfiguration
 public typealias HBApplicationProtocol = ApplicationProtocol
 @_documentation(visibility: internal) @available(*, unavailable, renamed: "Environment")
 public typealias HBEnvironment = Environment
+
+#if !os(Windows)
 @_documentation(visibility: internal) @available(*, unavailable, renamed: "FileIO")
 public typealias HBFileIO = FileIO
+#endif
 
 @_documentation(visibility: internal) @available(*, unavailable, renamed: "RequestContext")
 public typealias HBBaseRequestContext = RequestContext
@@ -62,8 +65,10 @@ public typealias HBRouterPath = RouterPath
 
 @_documentation(visibility: internal) @available(*, unavailable, renamed: "CORSMiddleware")
 public typealias HBCORSMiddleware = CORSMiddleware
+#if !os(Windows)
 @_documentation(visibility: internal) @available(*, unavailable, renamed: "FileMiddleware")
 public typealias HBFileMiddleware = FileMiddleware
+#endif
 @_documentation(visibility: internal) @available(*, unavailable, renamed: "LogRequestsMiddleware")
 public typealias HBLogRequestsMiddleware = LogRequestsMiddleware
 @_documentation(visibility: internal) @available(*, unavailable, renamed: "MetricsMiddleware")

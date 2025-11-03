@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if !os(Windows)
 public import Logging
 public import NIOPosix
 
@@ -126,3 +127,4 @@ public struct LocalFileSystem: FileProvider {
         try await self.fileIO.loadFile(path: path, range: range, context: context)
     }
 }
+#endif
