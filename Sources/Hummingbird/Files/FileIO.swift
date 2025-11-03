@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+#if !os(Windows)
 import CNIOLinux
 public import HummingbirdCore
 import Logging
