@@ -24,6 +24,9 @@ import Musl
 import Darwin.C
 #elseif canImport(Android)
 import Android
+#elseif canImport(ucrt)
+import ucrt
+import WinSDK
 #else
 #error("Unsupported platform")
 #endif
@@ -134,9 +137,17 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
     public mutating func set(_ s: String, value: String?) {
         self.values[s.lowercased()] = value
         if let value {
+            #if os(Windows)
+            _putenv("\(s)=\(value)")
+            #else
             setenv(s, value, 1)
+            #endif
         } else {
+            #if os(Windows)
+            _putenv("\(s)=")
+            #else
             unsetenv(s)
+            #endif
         }
     }
 
