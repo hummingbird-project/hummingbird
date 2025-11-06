@@ -441,13 +441,80 @@ struct RouterTests {
     @Test func testParameters() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Delete("/user/:id") { _, context -> String? in
-                context.parameters.get("id", as: String.self)
+                context.parameters.get("id")
             }
         }
         let app = Application(responder: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/user/1234", method: .delete) { response in
                 #expect(String(buffer: response.body) == "1234")
+            }
+        }
+    }
+
+    @Test func testParametersAs() async throws {
+        enum TestEnumString: String {  // for RawRepresentable
+            case hummingbird
+        }
+        enum TestEnumLosslessStringConvertible: LosslessStringConvertible {
+            case hummingbird
+            init?(_ description: String) {
+                if description == "hummingbird" {
+                    self = .hummingbird
+                } else {
+                    return nil
+                }
+            }
+            var description: String { "hummingbird" }
+        }
+        enum TestEnumBoth: String, LosslessStringConvertible {
+            case hummingbird
+            init?(_ description: String) {
+                if description == "hummingbird" {
+                    self = .hummingbird
+                } else {
+                    return nil
+                }
+            }
+            var description: String { "hummingbird" }
+        }
+        let router = RouterBuilder(context: BasicRouterRequestContext.self) {
+            Get("/stringoptional/:id") { _, context -> String? in
+                context.parameters.get("id", as: String.self)
+            }
+            Get("/string/:id") { _, context throws -> String in
+                try context.parameters.require("id", as: String.self)
+            }
+            Get("/enumstring/:id") { _, context throws -> String in
+                (try context.parameters.require("id", as: TestEnumString.self)).rawValue
+            }
+            Get("/enumlosslessstringconvertible/:id") { _, context throws -> String in
+                (try context.parameters.require("id", as: TestEnumLosslessStringConvertible.self)).description
+            }
+            Get("/enumboth/:id") { _, context throws -> String in
+                // this fails as `- error: ambiguous use of 'require(_:as:)'` without the @_disfavoredOverload
+                (try context.parameters.require("id", as: TestEnumBoth.self)).description
+            }
+        }
+        let app = Application(responder: router)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/stringoptional/1234", method: .get) { response in
+                #expect(String(buffer: response.body) == "1234")
+            }
+            try await client.execute(uri: "/string/1234", method: .get) { response in
+                #expect(String(buffer: response.body) == "1234")
+            }
+            try await client.execute(uri: "/enumstring/hummingbird", method: .get) { response in
+                #expect(String(buffer: response.body) == "hummingbird")
+            }
+            try await client.execute(uri: "/enumstring/swiftbird", method: .get) { response in
+                #expect(response.status == .badRequest)
+            }
+            try await client.execute(uri: "/enumlosslessstringconvertible/hummingbird", method: .get) { response in
+                #expect(String(buffer: response.body) == "hummingbird")
+            }
+            try await client.execute(uri: "/enumboth/hummingbird", method: .get) { response in
+                #expect(String(buffer: response.body) == "hummingbird")
             }
         }
     }
