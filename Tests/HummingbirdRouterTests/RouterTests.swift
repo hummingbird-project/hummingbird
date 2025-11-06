@@ -453,7 +453,7 @@ struct RouterTests {
     }
 
     @Test func testParametersAs() async throws {
-        enum TestEnumString: String { // for RawRepresentable
+        enum TestEnumString: String {  // for RawRepresentable
             case hummingbird
         }
         enum TestEnumLosslessStringConvertible: LosslessStringConvertible {
