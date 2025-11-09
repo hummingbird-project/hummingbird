@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import Foundation
 import HTTPTypes
 import Hummingbird
 import HummingbirdCore
@@ -23,12 +24,6 @@ import NIOPosix
 import NIOSSL
 import ServiceLifecycle
 import UnixSignals
-
-#if canImport(FoundationEssentials)
-@_implementationOnly import FoundationEssentials
-#else
-import Foundation
-#endif
 
 /// Test using a live server and AsyncHTTPClient as a client
 final class AsyncHTTPClientTestFramework<App: ApplicationProtocol>: ApplicationTestFramework {

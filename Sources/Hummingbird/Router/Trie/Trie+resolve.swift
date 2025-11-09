@@ -12,13 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIOCore
-
-#if canImport(FoundationEssentials)
-internal import FoundationEssentials
-#else
 internal import Foundation
-#endif
+import NIOCore
 
 extension RouterTrie {
     /// Resolve a path to a `Value` if available
