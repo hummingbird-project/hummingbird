@@ -18,6 +18,12 @@ import NIOSSL
 import ServiceLifecycle
 import UnixSignals
 
+#if canImport(FoundationEssentials)
+@_implementationOnly import FoundationEssentials
+#else
+import Foundation
+#endif
+
 /// Test using a live server and AsyncHTTPClient as a client
 @available(hummingbird 2.0, *)
 final class AsyncHTTPClientTestFramework<App: ApplicationProtocol>: ApplicationTestFramework {
@@ -215,7 +221,7 @@ extension HTTPFields {
         self.reserveCapacity(count)
         var firstHost = true
         for field in oldHeaders {
-            if firstHost, field.name.lowercased() == "host" {
+            if firstHost, field.name.caseInsensitiveCompare("host") == .orderedSame {
                 firstHost = false
                 continue
             }
