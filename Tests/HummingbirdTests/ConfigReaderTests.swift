@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if ExperimentalConfiguration
+#if ConfigurationSupport
 
 import Configuration
 import Hummingbird

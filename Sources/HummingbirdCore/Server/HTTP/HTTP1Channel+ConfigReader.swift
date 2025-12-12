@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if ExperimentalConfiguration
+#if ConfigurationSupport
 
 public import Configuration
 import NIOCore
