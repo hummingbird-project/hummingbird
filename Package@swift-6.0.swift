@@ -1,7 +1,6 @@
-// swift-tools-version:6.2
+// swift-tools-version:6.0
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
-import Foundation
 import PackageDescription
 
 let swiftSettings: [SwiftSetting] = [
@@ -16,22 +15,9 @@ let swiftSettings: [SwiftSetting] = [
 
 ]
 
-// Should we enable all traits.
-let enableAllTraitsExplicitly = ProcessInfo.processInfo.environment["ENABLE_ALL_TRAITS"] != nil
-let enableAllTraitsInCI = ProcessInfo.processInfo.environment["CI"] != nil
-let enableAllTraits = enableAllTraitsExplicitly || enableAllTraitsInCI
-// Construct trait set
-var traits: Set<Trait> = [
-    .trait(name: "ConfigurationSupport")
-]
-let defaultTraits: Trait = .default(enabledTraits: ["ConfigurationSupport"])
-if enableAllTraits {
-    traits.insert(enableAllTraits ? .default(enabledTraits: Set(traits.map(\.name))) : defaultTraits)
-}
-
 let package = Package(
     name: "hummingbird",
-    platforms: [.macOS(.v15), .iOS(.v17), .macCatalyst(.v17), .tvOS(.v17), .visionOS(.v1)],
+    platforms: [.macOS(.v14), .iOS(.v17), .macCatalyst(.v17), .tvOS(.v17), .visionOS(.v1)],
     products: [
         .library(name: "Hummingbird", targets: ["Hummingbird"]),
         .library(name: "HummingbirdCore", targets: ["HummingbirdCore"]),
@@ -41,7 +27,6 @@ let package = Package(
         .library(name: "HummingbirdTesting", targets: ["HummingbirdTesting"]),
         .executable(name: "PerformanceTest", targets: ["PerformanceTest"]),
     ],
-    traits: traits,
     dependencies: [
         .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "1.0.2"),
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.0.0"),
@@ -57,7 +42,6 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.20.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.0.0"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.19.0"),
-        .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0"),
     ],
     targets: [
         .target(
@@ -67,7 +51,6 @@ let package = Package(
                 .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
                 .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                 .product(name: "Atomics", package: "swift-atomics"),
-                .product(name: "Configuration", package: "swift-configuration", condition: .when(traits: ["ConfigurationSupport"])),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "Metrics", package: "swift-metrics"),
@@ -82,7 +65,6 @@ let package = Package(
             dependencies: [
                 .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                 .product(name: "Collections", package: "swift-collections"),
-                .product(name: "Configuration", package: "swift-configuration", condition: .when(traits: ["ConfigurationSupport"])),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "NIOCore", package: "swift-nio"),
@@ -128,7 +110,6 @@ let package = Package(
             name: "HummingbirdHTTP2",
             dependencies: [
                 .byName(name: "HummingbirdCore"),
-                .product(name: "Configuration", package: "swift-configuration", condition: .when(traits: ["ConfigurationSupport"])),
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOHTTP2", package: "swift-nio-http2"),
                 .product(name: "NIOHTTPTypes", package: "swift-nio-extras"),
@@ -141,7 +122,6 @@ let package = Package(
             name: "HummingbirdTLS",
             dependencies: [
                 .byName(name: "HummingbirdCore"),
-                .product(name: "Configuration", package: "swift-configuration", condition: .when(traits: ["ConfigurationSupport"])),
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOSSL", package: "swift-nio-ssl"),
             ],
