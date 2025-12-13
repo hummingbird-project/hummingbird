@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if !os(Windows)
 import CNIOLinux
 public import HummingbirdCore
 import Logging
@@ -157,3 +158,4 @@ extension NonBlockingFileIO {
         }
     }
 }
+#endif
