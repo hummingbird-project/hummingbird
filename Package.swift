@@ -31,7 +31,7 @@ if enableAllTraits {
 
 let package = Package(
     name: "hummingbird",
-    platforms: [.macOS(.v15), .iOS(.v17), .macCatalyst(.v17), .tvOS(.v17), .visionOS(.v1)],
+    platforms: [.macOS(.v14), .iOS(.v17), .macCatalyst(.v17), .tvOS(.v17), .visionOS(.v1)],
     products: [
         .library(name: "Hummingbird", targets: ["Hummingbird"]),
         .library(name: "HummingbirdCore", targets: ["HummingbirdCore"]),
