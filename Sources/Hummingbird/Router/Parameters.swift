@@ -30,6 +30,7 @@ extension Parameters {
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
+    @_disfavoredOverload
     public func get<T: LosslessStringConvertible>(_ s: String, as: T.Type) -> T? {
         self[s[...]].map { T(String($0)) } ?? nil
     }
@@ -38,7 +39,6 @@ extension Parameters {
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
-    @_disfavoredOverload
     public func get<T: RawRepresentable>(_ s: String, as: T.Type) -> T? where T.RawValue == String {
         self[s[...]].map { T(rawValue: String($0)) } ?? nil
     }
@@ -56,6 +56,7 @@ extension Parameters {
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
+    @_disfavoredOverload
     public func require<T: LosslessStringConvertible>(_ s: String, as: T.Type) throws -> T {
         guard let param = self[s[...]] else {
             throw HTTPError(.badRequest, message: "Expected parameter does not exist")
@@ -71,7 +72,6 @@ extension Parameters {
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
-    @_disfavoredOverload
     public func require<T: RawRepresentable>(_ s: String, as: T.Type) throws -> T where T.RawValue == String {
         guard let param = self[s[...]] else {
             throw HTTPError(.badRequest, message: "Expected parameter does not exist")
@@ -94,6 +94,7 @@ extension Parameters {
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
+    @_disfavoredOverload
     public func getAll<T: LosslessStringConvertible>(_ s: String, as: T.Type) -> [T] {
         self[values: s[...]].compactMap { T(String($0)) }
     }
@@ -102,7 +103,6 @@ extension Parameters {
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
-    @_disfavoredOverload
     public func getAll<T: RawRepresentable>(_ s: String, as: T.Type) -> [T] where T.RawValue == String {
         self[values: s[...]].compactMap { T(rawValue: String($0)) }
     }
@@ -111,6 +111,7 @@ extension Parameters {
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
+    @_disfavoredOverload
     public func requireAll<T: LosslessStringConvertible>(_ s: String, as: T.Type) throws -> [T] {
         try self[values: s[...]].map {
             guard let result = T(String($0)) else {
@@ -124,7 +125,6 @@ extension Parameters {
     /// - Parameters:
     ///   - s: parameter id
     ///   - as: type we want returned
-    @_disfavoredOverload
     public func requireAll<T: RawRepresentable>(_ s: String, as: T.Type) throws -> [T] where T.RawValue == String {
         try self[values: s[...]].map {
             guard let result = T(rawValue: String($0)) else {
