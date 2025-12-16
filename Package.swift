@@ -23,9 +23,7 @@ var traits: Set<Trait> = [
     .trait(name: "ConfigurationSupport")
 ]
 let defaultTraits: Trait = .default(enabledTraits: ["ConfigurationSupport"])
-if enableAllTraits {
-    traits.insert(enableAllTraits ? .default(enabledTraits: Set(traits.map(\.name))) : defaultTraits)
-}
+traits.insert(enableAllTraits ? .default(enabledTraits: Set(traits.map(\.name))) : defaultTraits)
 
 let package = Package(
     name: "hummingbird",
