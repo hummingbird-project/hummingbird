@@ -13,6 +13,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-benchmark
   cancel-in-progress: true
     
+env:
+  HB_ENABLE_ALL_TRAITS: "true"
+
 jobs:
   benchmark-delta:
 
