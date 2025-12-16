@@ -1,8 +1,5 @@
 name: Benchmark PR vs main
 
-env:
-  HUMMINGBIRD_CI: 1
-
 on:
   workflow_dispatch:
   pull_request:
@@ -16,6 +13,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-benchmark
   cancel-in-progress: true
     
+env:
+  HB_ENABLE_ALL_TRAITS: "true"
+
 jobs:
   benchmark-delta:
 

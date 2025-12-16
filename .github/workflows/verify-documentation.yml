@@ -1,14 +1,14 @@
 name: Verify Documentation
 
-env:
-  HUMMINGBIRD_CI: 1
-
 on:
   pull_request:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-verifydocs
   cancel-in-progress: true
   
+env:
+  HB_ENABLE_ALL_TRAITS: true
+
 jobs:
   linux:
     runs-on: ubuntu-latest

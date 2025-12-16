@@ -1,10 +1,10 @@
 name: Swift nightly build
 
-env:
-  HUMMINGBIRD_CI: 1
-
 on:
   workflow_dispatch:
+
+env:
+  HB_ENABLE_ALL_TRAITS: true
 
 jobs:
   linux:

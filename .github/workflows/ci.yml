@@ -1,8 +1,5 @@
 name: CI
 
-env:
-  HUMMINGBIRD_CI: 1
-
 on:
   push:
     branches:
@@ -15,6 +12,9 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-ci
   cancel-in-progress: true
+
+env:
+  HB_ENABLE_ALL_TRAITS: true
 
 jobs:
   linux:

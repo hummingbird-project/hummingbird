@@ -1,8 +1,5 @@
 name: Validity Check
 
-env:
-  HUMMINGBIRD_CI: 1
-
 on:
   pull_request:
 concurrency:
