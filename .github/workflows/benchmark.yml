@@ -1,5 +1,8 @@
 name: Benchmark PR vs main
 
+env:
+  HUMMINGBIRD_CI: 1
+
 on:
   workflow_dispatch:
   pull_request:

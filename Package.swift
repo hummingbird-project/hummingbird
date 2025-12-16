@@ -18,7 +18,7 @@ let swiftSettings: [SwiftSetting] = [
 
 // Should we enable all traits.
 let enableAllTraitsExplicitly = ProcessInfo.processInfo.environment["ENABLE_ALL_TRAITS"] != nil
-let enableAllTraitsInCI = ProcessInfo.processInfo.environment["CI"] != nil
+let enableAllTraitsInCI = ProcessInfo.processInfo.environment["HUMMINGBIRD_CI"] != nil
 let enableAllTraits = enableAllTraitsExplicitly || enableAllTraitsInCI
 // Construct trait set
 var traits: Set<Trait> = [

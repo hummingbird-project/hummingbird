@@ -1,5 +1,8 @@
 name: Verify Documentation
 
+env:
+  HUMMINGBIRD_CI: 1
+
 on:
   pull_request:
 concurrency:
