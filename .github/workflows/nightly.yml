@@ -3,6 +3,9 @@ name: Swift nightly build
 on:
   workflow_dispatch:
 
+env:
+  HB_ENABLE_ALL_TRAITS: true
+
 jobs:
   linux:
     runs-on: ubuntu-latest

@@ -17,9 +17,7 @@ let swiftSettings: [SwiftSetting] = [
 ]
 
 // Should we enable all traits.
-let enableAllTraitsExplicitly = ProcessInfo.processInfo.environment["ENABLE_ALL_TRAITS"] != nil
-let enableAllTraitsInCI = ProcessInfo.processInfo.environment["CI"] != nil
-let enableAllTraits = enableAllTraitsExplicitly || enableAllTraitsInCI
+let enableAllTraits = ProcessInfo.processInfo.environment["HB_ENABLE_ALL_TRAITS"] != nil
 // Construct trait set
 var traits: Set<Trait> = [
     .trait(name: "ConfigurationSupport")
