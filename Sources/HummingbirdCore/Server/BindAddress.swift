@@ -20,7 +20,7 @@ import NIOTransportServices
 /// Address to bind server to
 public struct BindAddress: Sendable, Equatable {
     enum _Internal: Equatable {
-        case hostname(_ host: String, port: Int)
+        case hostname(_ host: String = "127.0.0.1", port: Int = 8080)
         case unixDomainSocket(path: String)
         #if canImport(Network)
         case nwEndpoint(NWEndpoint)
@@ -32,13 +32,8 @@ public struct BindAddress: Sendable, Equatable {
         self.value = value
     }
 
-    /// Address defined by host and port
-    /// - Parameters:
-    ///   - host: Hostname or IP to bind server to, defaults to "127.0.0.1" if not provided
-    ///   - port: Port to bind server to, defaults to 8080 if not provided
-    public static func hostname(_ host: String? = nil, port: Int? = nil) -> Self {
-        .init(.hostname(host ?? "127.0.0.1", port: port ?? 8080))
-    }
+    // Address define by host and port
+    public static func hostname(_ host: String = "127.0.0.1", port: Int = 8080) -> Self { .init(.hostname(host, port: port)) }
 
     // Address defined by unix domain socket
     public static func unixDomainSocket(path: String) -> Self { .init(.unixDomainSocket(path: path)) }
