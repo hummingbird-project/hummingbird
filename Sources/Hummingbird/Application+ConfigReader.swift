@@ -31,7 +31,7 @@ extension ApplicationConfiguration {
     public init(reader: ConfigReader) {
         var configuration = Self()
         let hostname = reader.string(forKey: "host")
-        let port: Int? = reader.int(forKey: "port")
+        let port = reader.int(forKey: "port")
         if hostname != nil || port != nil {
             configuration.address = .hostname(hostname ?? "127.0.0.1", port: port ?? 8080)
         } else if let unixDomainSocket = reader.string(forKey: "unixDomainSocket") {
