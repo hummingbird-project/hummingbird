@@ -41,6 +41,36 @@ struct ConfigReaderTests {
 
     @Test
     @available(macOS 15, iOS 18, macCatalyst 18, tvOS 18, visionOS 2, *)
+    func testApplicationConfigReaderHostOnly() throws {
+        let configReader = ConfigReader(
+            providers: [
+                InMemoryProvider(values: [
+                    "http.host": "0.0.0.0"
+                ])
+            ]
+        )
+
+        let appConfig = ApplicationConfiguration(reader: configReader.scoped(to: "http"))
+        #expect(appConfig.address == .hostname("0.0.0.0", port: 8080))
+    }
+
+    @Test
+    @available(macOS 15, iOS 18, macCatalyst 18, tvOS 18, visionOS 2, *)
+    func testApplicationConfigReaderPortOnly() throws {
+        let configReader = ConfigReader(
+            providers: [
+                InMemoryProvider(values: [
+                    "http.port": 9000
+                ])
+            ]
+        )
+
+        let appConfig = ApplicationConfiguration(reader: configReader.scoped(to: "http"))
+        #expect(appConfig.address == .hostname("127.0.0.1", port: 9000))
+    }
+
+    @Test
+    @available(macOS 15, iOS 18, macCatalyst 18, tvOS 18, visionOS 2, *)
     func testApplicationUnixDomainSocketConfigReader() throws {
         let configReader = ConfigReader(
             providers: [

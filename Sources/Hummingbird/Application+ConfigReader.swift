@@ -30,9 +30,10 @@ extension ApplicationConfiguration {
     ///   - reader: ConfigReader
     public init(reader: ConfigReader) {
         var configuration = Self()
-        if let hostname = reader.string(forKey: "host") {
-            let port = reader.int(forKey: "port", default: 8080)
-            configuration.address = .hostname(hostname, port: port)
+        let hostname = reader.string(forKey: "host")
+        let port = reader.int(forKey: "port")
+        if hostname != nil || port != nil {
+            configuration.address = .hostname(hostname ?? "127.0.0.1", port: port ?? 8080)
         } else if let unixDomainSocket = reader.string(forKey: "unixDomainSocket") {
             configuration.address = .unixDomainSocket(path: unixDomainSocket)
         }

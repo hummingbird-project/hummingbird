@@ -34,6 +34,7 @@ public struct BindAddress: Sendable, Equatable {
 
     // Address define by host and port
     public static func hostname(_ host: String = "127.0.0.1", port: Int = 8080) -> Self { .init(.hostname(host, port: port)) }
+
     // Address defined by unix domain socket
     public static func unixDomainSocket(path: String) -> Self { .init(.unixDomainSocket(path: path)) }
     #if canImport(Network)
