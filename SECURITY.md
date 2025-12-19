@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Currently we support versions 1.x.x and above of Hummingbird. These will receive security updates as and when needed.
+Currently we support versions 2.0.0 and above of Hummingbird. These will receive security updates as and when needed.
 
 ## Reporting a Vulnerability
 
@@ -23,6 +23,6 @@ If you believe you have found a security vulnerability in Hummingbird or any of 
   and the [SSWG][sswg] will announce the vulnerability on the [Swift
   forums][swift-forums-sec].
 
-[sswg]: https://github.com/swift-server/sswg
-[sswg-security]: https://github.com/swift-server/sswg/blob/main/process/incubation.md#security-best-practices
+[sswg]: https://www.swift.org/sswg/
+[sswg-security]: https://www.swift.org/sswg/security/
 [swift-forums-sec]: https://forums.swift.org/c/server/security-updates/
