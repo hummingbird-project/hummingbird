@@ -14,14 +14,58 @@
 
 import NIOCore
 
-/// Represents a position within a path string for iteration.
+/// A sequence that iterates over path components separated by '/'.
 @usableFromInline
-struct PathPosition: Sendable {
-    @usableFromInline var currentIndex: String.Index
+struct PathComponentSequence: Sequence {
+    @usableFromInline let path: String
 
     @inlinable
-    init(_ index: String.Index) {
-        self.currentIndex = index
+    init(_ path: String) {
+        self.path = path
+    }
+
+    @inlinable
+    func makeIterator() -> Iterator {
+        Iterator(path: path)
+    }
+
+    @usableFromInline
+    struct Iterator: IteratorProtocol {
+        @usableFromInline let path: String
+        @usableFromInline let endIndex: String.Index
+        @usableFromInline var currentIndex: String.Index
+
+        @inlinable
+        init(path: String) {
+            self.path = path
+            self.endIndex = path.endIndex
+            // Skip leading slashes
+            var index = path.startIndex
+            while index < path.endIndex && path[index] == "/" {
+                path.formIndex(after: &index)
+            }
+            self.currentIndex = index
+        }
+
+        @inlinable
+        mutating func next() -> Substring? {
+            guard currentIndex < endIndex else { return nil }
+
+            let start = currentIndex
+            // Find next slash or end
+            while currentIndex < endIndex && path[currentIndex] != "/" {
+                path.formIndex(after: &currentIndex)
+            }
+
+            let component = path[start..<currentIndex]
+
+            // Skip trailing slashes
+            while currentIndex < endIndex && path[currentIndex] == "/" {
+                path.formIndex(after: &currentIndex)
+            }
+
+            return component
+        }
     }
 }
 
@@ -36,56 +80,21 @@ extension RouterTrie {
     @usableFromInline
     struct ResolveContext {
         @usableFromInline let path: String
-        @usableFromInline let endIndex: String.Index
         @usableFromInline let trie: Trie
         @usableFromInline let values: [Value?]
         @usableFromInline var parameters = Parameters()
 
         @usableFromInline init(path: String, trie: Trie, values: [Value?]) {
             self.path = path
-            self.endIndex = path.endIndex
             self.trie = trie
             self.values = values
         }
 
-        /// Get the initial position, skipping any leading slashes
-        @inlinable
-        func initialPosition() -> PathPosition {
-            var index = self.path.startIndex
-            while index < self.endIndex && self.path[index] == "/" {
-                self.path.formIndex(after: &index)
-            }
-            return PathPosition(index)
-        }
-
-        /// Get the next path component starting from the given position
-        @inlinable
-        func nextComponent(from position: inout PathPosition) -> Substring? {
-            guard position.currentIndex < self.endIndex else {
-                return nil
-            }
-
-            let start = position.currentIndex
-            // Find the next slash or end of string
-            while position.currentIndex < self.endIndex && self.path[position.currentIndex] != "/" {
-                self.path.formIndex(after: &position.currentIndex)
-            }
-
-            let component = self.path[start..<position.currentIndex]
-
-            // Skip trailing slashes
-            while position.currentIndex < self.endIndex && self.path[position.currentIndex] == "/" {
-                self.path.formIndex(after: &position.currentIndex)
-            }
-
-            return component
-        }
-
         @inlinable
         mutating func resolve() -> (value: Value, parameters: Parameters)? {
-            var position = initialPosition()
+            var iterator = PathComponentSequence(path).makeIterator()
 
-            guard let component = nextComponent(from: &position) else {
+            guard let component = iterator.next() else {
                 // Empty path - check root node
                 guard let value = values[trie.nodes[0].valueIndex] else {
                     return nil
@@ -97,7 +106,7 @@ extension RouterTrie {
             guard
                 let node = descend(
                     component: component,
-                    position: position,
+                    iterator: iterator,
                     nodeIndex: &nodeIndex
                 )
             else {
@@ -114,27 +123,27 @@ extension RouterTrie {
         @inlinable
         mutating func descend(
             component: Substring,
-            position: PathPosition,
+            iterator: PathComponentSequence.Iterator,
             nodeIndex: inout Int
         ) -> TrieNode? {
             var node = self.matchComponent(component, atNodeIndex: &nodeIndex)
-            var position = position
+            var iterator = iterator
 
             if node.token == .recursiveWildcard {
                 // we have found a recursive wildcard. Go through all the path components until we match one of them
                 // or reach the end of the path component array
                 var range = component.startIndex..<component.endIndex
 
-                while let component = nextComponent(from: &position) {
+                while let nextComponent = iterator.next() {
                     var _nodeIndex = nodeIndex
-                    let recursiveNode = self.matchComponent(component, atNodeIndex: &_nodeIndex)
+                    let recursiveNode = self.matchComponent(nextComponent, atNodeIndex: &_nodeIndex)
                     if recursiveNode.token != .deadEnd {
                         node = recursiveNode
                         nodeIndex = _nodeIndex
                         break
                     }
                     // extend range of catch all text
-                    range = range.lowerBound..<component.endIndex
+                    range = range.lowerBound..<nextComponent.endIndex
                 }
                 self.parameters.setCatchAll(self.path[range])
             }
@@ -143,7 +152,7 @@ extension RouterTrie {
                 return nil
             }
 
-            if let nextComponent = nextComponent(from: &position) {
+            if let nextComponent = iterator.next() {
                 // There's another component to the route
                 var nextIndex = nodeIndex
 
@@ -151,7 +160,7 @@ extension RouterTrie {
                 while self.trie.nodes[nextIndex].token != .deadEnd {
                     if let node = descend(
                         component: nextComponent,
-                        position: position,
+                        iterator: iterator,
                         nodeIndex: &nodeIndex
                     ) {
                         return node
