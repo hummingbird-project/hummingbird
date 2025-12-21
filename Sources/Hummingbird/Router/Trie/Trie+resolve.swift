@@ -14,6 +14,17 @@
 
 import NIOCore
 
+/// Represents a position within a path string for iteration.
+@usableFromInline
+struct PathPosition: Sendable {
+    @usableFromInline var currentIndex: String.Index
+
+    @inlinable
+    init(_ index: String.Index) {
+        self.currentIndex = index
+    }
+}
+
 extension RouterTrie {
     /// Resolve a path to a `Value` if available
     @inlinable
@@ -25,35 +36,60 @@ extension RouterTrie {
     @usableFromInline
     struct ResolveContext {
         @usableFromInline let path: String
-        @usableFromInline let pathComponents: [Substring]
+        @usableFromInline let endIndex: String.Index
         @usableFromInline let trie: Trie
         @usableFromInline let values: [Value?]
         @usableFromInline var parameters = Parameters()
 
         @usableFromInline init(path: String, trie: Trie, values: [Value?]) {
             self.path = path
+            self.endIndex = path.endIndex
             self.trie = trie
-            self.pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
             self.values = values
         }
 
-        @usableFromInline func nextPathComponent(advancingIndex index: inout Int) -> Substring? {
-            if index >= self.pathComponents.count {
+        /// Get the initial position, skipping any leading slashes
+        @inlinable
+        func initialPosition() -> PathPosition {
+            var index = self.path.startIndex
+            while index < self.endIndex && self.path[index] == "/" {
+                self.path.formIndex(after: &index)
+            }
+            return PathPosition(index)
+        }
+
+        /// Get the next path component starting from the given position
+        @inlinable
+        func nextComponent(from position: inout PathPosition) -> Substring? {
+            guard position.currentIndex < self.endIndex else {
                 return nil
             }
 
-            let component = self.pathComponents[index]
-            index += 1
+            let start = position.currentIndex
+            // Find the next slash or end of string
+            while position.currentIndex < self.endIndex && self.path[position.currentIndex] != "/" {
+                self.path.formIndex(after: &position.currentIndex)
+            }
+
+            let component = self.path[start..<position.currentIndex]
+
+            // Skip trailing slashes
+            while position.currentIndex < self.endIndex && self.path[position.currentIndex] == "/" {
+                self.path.formIndex(after: &position.currentIndex)
+            }
+
             return component
         }
 
         @inlinable
         mutating func resolve() -> (value: Value, parameters: Parameters)? {
-            guard let component = pathComponents.first else {
+            var position = initialPosition()
+
+            guard let component = nextComponent(from: &position) else {
+                // Empty path - check root node
                 guard let value = values[trie.nodes[0].valueIndex] else {
                     return nil
                 }
-
                 return (value: value, parameters: self.parameters)
             }
 
@@ -61,7 +97,7 @@ extension RouterTrie {
             guard
                 let node = descend(
                     component: component,
-                    nextPathComponentIndex: 1,
+                    position: position,
                     nodeIndex: &nodeIndex
                 )
             else {
@@ -78,18 +114,18 @@ extension RouterTrie {
         @inlinable
         mutating func descend(
             component: Substring,
-            nextPathComponentIndex: Int,
+            position: PathPosition,
             nodeIndex: inout Int
         ) -> TrieNode? {
             var node = self.matchComponent(component, atNodeIndex: &nodeIndex)
-            var nextPathComponentIndex = nextPathComponentIndex
+            var position = position
 
             if node.token == .recursiveWildcard {
                 // we have found a recursive wildcard. Go through all the path components until we match one of them
                 // or reach the end of the path component array
                 var range = component.startIndex..<component.endIndex
 
-                while let component = nextPathComponent(advancingIndex: &nextPathComponentIndex) {
+                while let component = nextComponent(from: &position) {
                     var _nodeIndex = nodeIndex
                     let recursiveNode = self.matchComponent(component, atNodeIndex: &_nodeIndex)
                     if recursiveNode.token != .deadEnd {
@@ -107,7 +143,7 @@ extension RouterTrie {
                 return nil
             }
 
-            if let nextComponent = nextPathComponent(advancingIndex: &nextPathComponentIndex) {
+            if let nextComponent = nextComponent(from: &position) {
                 // There's another component to the route
                 var nextIndex = nodeIndex
 
@@ -115,7 +151,7 @@ extension RouterTrie {
                 while self.trie.nodes[nextIndex].token != .deadEnd {
                     if let node = descend(
                         component: nextComponent,
-                        nextPathComponentIndex: nextPathComponentIndex,
+                        position: position,
                         nodeIndex: &nodeIndex
                     ) {
                         return node
