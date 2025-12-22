@@ -1242,7 +1242,7 @@ struct ApplicationTests {
                     }
                     var request = HTTPClientRequest(url: "http://localhost:\(port)")
                     request.method = .POST
-                    request.body = .stream(stream, length: .known(Int64(4096)))
+                    request.body = .stream(stream, length: .known(4096))
                     let response = try await httpClient.execute(request, deadline: .now() + .minutes(30))
                     let result = try await response.body.collect(upTo: .max)
                     print("Result size: \(result.readableBytes)")

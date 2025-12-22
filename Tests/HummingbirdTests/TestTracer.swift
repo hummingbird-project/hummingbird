@@ -222,10 +222,6 @@ final class TaskUniqueTestTracer: Tracer {
         )
     }
 
-    func activeSpan(identifiedBy context: ServiceContextModule.ServiceContext) -> Span? {
-        TaskUniqueTestTracer.current.activeSpan(identifiedBy: context)
-    }
-
     func forceFlush() {
         TaskUniqueTestTracer.current.forceFlush()
     }
