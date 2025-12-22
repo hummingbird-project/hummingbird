@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=6.0)
-
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
@@ -328,68 +326,3 @@ extension FormatStyle where Self == HTTPHeaderDateFormatStyle {
 extension ParseStrategy where Self == HTTPHeaderDateFormatStyle {
     static var rfc9110: Self { .init() }
 }
-
-#else
-
-import Foundation
-
-extension Date {
-    init?(httpHeader: String) {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "EEE, dd MMM yyy HH:mm:ss z"
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        guard let date = formatter.date(from: httpHeader) else { return nil }
-        self = date
-    }
-
-    var httpHeader: String {
-        var epochTime = Int(self.timeIntervalSince1970)
-        var timeStruct = tm.init()
-        gmtime_r(&epochTime, &timeStruct)
-        let year = Int(timeStruct.tm_year + 1900)
-        let day = Self.dayNames[numericCast(timeStruct.tm_wday)]
-        let month = Self.monthNames[numericCast(timeStruct.tm_mon)]
-        var formatted = day
-        formatted.reserveCapacity(30)
-        formatted += ", "
-        formatted += Self.numberNames[numericCast(timeStruct.tm_mday)]
-        formatted += " "
-        formatted += month
-        formatted += " "
-        formatted += Self.numberNames[year / 100]
-        formatted += Self.numberNames[year % 100]
-        formatted += " "
-        formatted += Self.numberNames[numericCast(timeStruct.tm_hour)]
-        formatted += ":"
-        formatted += Self.numberNames[numericCast(timeStruct.tm_min)]
-        formatted += ":"
-        formatted += Self.numberNames[numericCast(timeStruct.tm_sec)]
-        formatted += " GMT"
-
-        return formatted
-    }
-
-    private static let dayNames = [
-        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
-    ]
-
-    private static let monthNames = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-    ]
-
-    private static let numberNames = [
-        "00", "01", "02", "03", "04", "05", "06", "07", "08", "09",
-        "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
-        "20", "21", "22", "23", "24", "25", "26", "27", "28", "29",
-        "30", "31", "32", "33", "34", "35", "36", "37", "38", "39",
-        "40", "41", "42", "43", "44", "45", "46", "47", "48", "49",
-        "50", "51", "52", "53", "54", "55", "56", "57", "58", "59",
-        "60", "61", "62", "63", "64", "65", "66", "67", "68", "69",
-        "70", "71", "72", "73", "74", "75", "76", "77", "78", "79",
-        "80", "81", "82", "83", "84", "85", "86", "87", "88", "89",
-        "90", "91", "92", "93", "94", "95", "96", "97", "98", "99",
-    ]
-}
-
-#endif  // #if swift(>=6.0)
