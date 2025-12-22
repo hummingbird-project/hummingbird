@@ -326,11 +326,7 @@ extension _URLEncodedFormEncoder {
         case .secondsSince1970:
             try self.encode(Double(date.timeIntervalSince1970).description)
         case .iso8601:
-            #if compiler(>=6.0)
             try self.encode(date.formatted(.iso8601))
-            #else
-            try self.encode(URLEncodedForm.iso8601Formatter.string(from: date))
-            #endif
         case .formatted(let formatter):
             try self.encode(formatter.string(from: date))
         case .custom(let closure):

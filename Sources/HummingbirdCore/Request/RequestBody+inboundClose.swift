@@ -17,7 +17,6 @@ import NIOConcurrencyHelpers
 import NIOCore
 import NIOHTTPTypes
 
-#if compiler(>=6.0)
 extension RequestBody {
     /// Run provided closure but cancel it if the inbound request part stream is closed.
     ///
@@ -167,4 +166,3 @@ extension RequestBody {
         return .inboundClosed
     }
 }
-#endif  // compiler(>=6.0)
