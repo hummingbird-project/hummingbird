@@ -14,65 +14,6 @@
 
 import NIOCore
 
-/// A sequence that iterates over path components separated by a given character.
-@usableFromInline
-struct PathComponentSequence: Sequence {
-    @usableFromInline let path: String
-    @usableFromInline let separator: Character
-
-    @inlinable
-    init(_ path: String, separator: Character = "/") {
-        self.path = path
-        self.separator = separator
-    }
-
-    @inlinable
-    func makeIterator() -> Iterator {
-        Iterator(path: path, separator: separator)
-    }
-
-    @usableFromInline
-    struct Iterator: IteratorProtocol {
-        @usableFromInline let path: String
-        @usableFromInline let separator: Character
-        @usableFromInline let endIndex: String.Index
-        @usableFromInline var currentIndex: String.Index
-
-        @inlinable
-        init(path: String, separator: Character) {
-            self.path = path
-            self.separator = separator
-            self.endIndex = path.endIndex
-            // Skip leading separators
-            var index = path.startIndex
-            while index < path.endIndex && path[index] == separator {
-                path.formIndex(after: &index)
-            }
-            self.currentIndex = index
-        }
-
-        @inlinable
-        mutating func next() -> Substring? {
-            guard currentIndex < endIndex else { return nil }
-
-            let start = currentIndex
-            // Find next separator or end
-            while currentIndex < endIndex && path[currentIndex] != separator {
-                path.formIndex(after: &currentIndex)
-            }
-
-            let component = path[start..<currentIndex]
-
-            // Skip trailing separators
-            while currentIndex < endIndex && path[currentIndex] == separator {
-                path.formIndex(after: &currentIndex)
-            }
-
-            return component
-        }
-    }
-}
-
 extension RouterTrie {
     /// Resolve a path to a `Value` if available
     @inlinable
@@ -96,7 +37,7 @@ extension RouterTrie {
 
         @inlinable
         mutating func resolve() -> (value: Value, parameters: Parameters)? {
-            var iterator = PathComponentSequence(path).makeIterator()
+            var iterator = SplitStringOmittingEmptySequence(path).makeIterator()
 
             guard let component = iterator.next() else {
                 // Empty path - check root node
@@ -127,7 +68,7 @@ extension RouterTrie {
         @inlinable
         mutating func descend(
             component: Substring,
-            iterator: PathComponentSequence.Iterator,
+            iterator: SplitStringOmittingEmptySequence.Iterator,
             nodeIndex: inout Int
         ) -> TrieNode? {
             var node = self.matchComponent(component, atNodeIndex: &nodeIndex)
