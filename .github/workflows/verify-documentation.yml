@@ -5,9 +5,6 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-verifydocs
   cancel-in-progress: true
-  
-env:
-  HB_ENABLE_ALL_TRAITS: true
 
 jobs:
   linux:
@@ -35,4 +32,4 @@ jobs:
         cd documentation
         swift package edit ${GITHUB_REPOSITORY#*/} --path ../package
         ./scripts/build-docc.sh -e
-      
+

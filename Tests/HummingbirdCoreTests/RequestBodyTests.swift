@@ -58,7 +58,6 @@ struct RequestBodyTests {
         }
     }
 
-    #if compiler(>=6.0)
     @Test func testInboundClosureParsingStream() async throws {
         try await withThrowingTaskGroup(of: Void.self) { group in
             let (httpSource, httpStream) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
@@ -155,5 +154,4 @@ struct RequestBodyTests {
             try await group.waitForAll()
         }
     }
-    #endif  // compiler(>=6.0)
 }

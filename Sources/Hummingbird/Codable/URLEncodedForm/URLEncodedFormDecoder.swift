@@ -644,19 +644,11 @@ extension _URLEncodedFormDecoder {
             return Date(timeIntervalSince1970: seconds)
         case .iso8601:
             let dateString = try unbox(node, as: String.self)
-            #if compiler(>=6.0)
             guard let date = try? Date(dateString, strategy: .iso8601) else {
                 throw DecodingError.dataCorrupted(
                     .init(codingPath: self.codingPath, debugDescription: "Expected date string to be ISO8601-formatted.")
                 )
             }
-            #else
-            guard let date = URLEncodedForm.iso8601Formatter.date(from: dateString) else {
-                throw DecodingError.dataCorrupted(
-                    .init(codingPath: self.codingPath, debugDescription: "Expected date string to be ISO8601-formatted.")
-                )
-            }
-            #endif
             return date
         case .formatted(let formatter):
             let dateString = try unbox(node, as: String.self)
