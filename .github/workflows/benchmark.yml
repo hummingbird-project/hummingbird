@@ -12,9 +12,6 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-benchmark
   cancel-in-progress: true
-    
-env:
-  HB_ENABLE_ALL_TRAITS: "true"
 
 jobs:
   benchmark-delta:
@@ -31,10 +28,10 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         image: ["swift:latest"]
-        
+
     container:
       image: ${{ matrix.image }}
-      
+
     steps:
       - uses: actions/checkout@v6
         with:
@@ -48,7 +45,7 @@ jobs:
         # https://github.com/actions/checkout/issues/766
       - name: Mark the workspace as safe
         run: git config --global --add safe.directory ${GITHUB_WORKSPACE}
-        
+
       - name: Miscellaneous
         run: |
           [ -d Benchmarks ] && echo "hasBenchmark=1" >> $GITHUB_ENV
@@ -56,24 +53,24 @@ jobs:
       - name: Run benchmarks for PR branch
         if: ${{ env.hasBenchmark == '1' }}
         run: |
-          cd Benchmarks          
+          cd Benchmarks
           swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update pull_request
       - name: Checkout main
         run: |
-          git checkout main 
+          git checkout main
       - name: Run benchmarks for branch 'main'
         if: ${{ env.hasBenchmark == '1' }}
         run: |
-          cd Benchmarks          
+          cd Benchmarks
           swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update main
       - name: Compare PR and main
         if: ${{ env.hasBenchmark == '1' }}
         id: benchmark
         run: |
           set +e
-          cd Benchmarks          
+          cd Benchmarks
           # if we had access to fd 3 we could do this in one call eg { var=$(cmd 3>&2 2>&1 1>&3); }  2>&1
-          # but unfortunately we don't so we have to run the baseline check twice once to extract stdout 
+          # but unfortunately we don't so we have to run the baseline check twice once to extract stdout
           # and once to extract stderr
           BENCHMARK_STDERR=$(swift package benchmark baseline check main pull_request 2>&1)
           echo "exit-status=$?" >> $GITHUB_OUTPUT
@@ -131,4 +128,3 @@ jobs:
       - name: Exit with correct status
         run: |
           exit ${{env.exitStatus}}
-          
