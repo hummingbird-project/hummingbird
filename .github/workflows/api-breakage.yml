@@ -6,9 +6,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-apibreakage
   cancel-in-progress: true
 
-env:
-  HB_ENABLE_ALL_TRAITS: true
-
 jobs:
   linux:
     runs-on: ubuntu-latest
