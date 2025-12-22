@@ -177,6 +177,7 @@ let package = Package(
             dependencies: [
                 .byName(name: "HummingbirdCore"),
                 .byName(name: "HummingbirdHTTP2"),
+                .byName(name: "HummingbirdTLS"),
                 .byName(name: "HummingbirdTesting"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
             ]
