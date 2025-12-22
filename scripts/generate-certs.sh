@@ -151,9 +151,7 @@ generateCA "/C=UK/ST=Edinburgh/L=Edinburgh/O=Hummingbird/OU=CA/CN=${SERVER}"
 generateServerCertificate "/C=UK/ST=Edinburgh/L=Edinburgh/O=Hummingbird/OU=Server/CN=${SERVER}" server
 generateClientCertificate "/C=UK/ST=Edinburgh/L=Edinburgh/O=Hummingbird/OU=Client/CN=${SERVER}" client
 
-CERTIFICATES_SWIFT=$FULL_HOME/../Tests/HummingbirdCoreTests/Certificates.swift
-createCertSwiftFile $CERTIFICATES_SWIFT
-cp $CERTIFICATES_SWIFT $FULL_HOME/../Tests/HummingbirdTests/Certificates.swift
-cp $CERTIFICATES_SWIFT $FULL_HOME/../Tests/HummingbirdHTTP2Tests/Certificates.swift
+createCertSwiftFile $FULL_HOME/../Tests/HummingbirdCoreTests/Certificates.swift
+cp $FULL_HOME/../Tests/HummingbirdCoreTests/Certificates.swift $FULL_HOME/../Tests/HummingbirdHTTP2Tests/Certificates.swift
 
 rm -rf "$TMPDIR"
