@@ -16,7 +16,6 @@
 
 import Configuration
 import HummingbirdHTTP2
-import HummingbirdTLS
 import Testing
 
 struct ConfigReaderTests {

@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import NIOSSL
+
 let testServerName = "hummingbird.codes"
 
 let caCertificateData =
@@ -152,3 +154,23 @@ let clientPrivateKeyData =
     exHN+mnZFXk8FgxAyAitGLRt
     -----END PRIVATE KEY-----
     """
+
+func getServerTLSConfiguration() throws -> TLSConfiguration {
+    let caCertificate = try NIOSSLCertificate(bytes: [UInt8](caCertificateData.utf8), format: .pem)
+    let certificate = try NIOSSLCertificate(bytes: [UInt8](serverCertificateData.utf8), format: .pem)
+    let privateKey = try NIOSSLPrivateKey(bytes: [UInt8](serverPrivateKeyData.utf8), format: .pem)
+    var tlsConfig = TLSConfiguration.makeServerConfiguration(certificateChain: [.certificate(certificate)], privateKey: .privateKey(privateKey))
+    tlsConfig.trustRoots = .certificates([caCertificate])
+    return tlsConfig
+}
+
+func getClientTLSConfiguration() throws -> TLSConfiguration {
+    let caCertificate = try NIOSSLCertificate(bytes: [UInt8](caCertificateData.utf8), format: .pem)
+    let certificate = try NIOSSLCertificate(bytes: [UInt8](clientCertificateData.utf8), format: .pem)
+    let privateKey = try NIOSSLPrivateKey(bytes: [UInt8](clientPrivateKeyData.utf8), format: .pem)
+    var tlsConfig = TLSConfiguration.makeClientConfiguration()
+    tlsConfig.trustRoots = .certificates([caCertificate])
+    tlsConfig.certificateChain = [.certificate(certificate)]
+    tlsConfig.privateKey = .privateKey(privateKey)
+    return tlsConfig
+}
