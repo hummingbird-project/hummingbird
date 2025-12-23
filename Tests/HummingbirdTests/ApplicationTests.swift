@@ -917,7 +917,6 @@ struct ApplicationTests {
         }
     }
 
-    #if compiler(>=6.0)
     /// Test consumeWithInboundCloseHandler
     @Test func testConsumeWithInboundHandler() async throws {
         let router = Router()
@@ -1032,7 +1031,6 @@ struct ApplicationTests {
             }
         }
     }
-    #endif
 
     @Test func testErrorInResponseWriterClosesConnection() async throws {
         let router = Router()

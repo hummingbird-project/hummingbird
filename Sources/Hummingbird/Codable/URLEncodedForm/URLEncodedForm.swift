@@ -46,13 +46,4 @@ internal enum URLEncodedForm {
 
         fileprivate static let `super` = Key(stringValue: "super")!
     }
-
-    #if compiler(<6.0)
-    /// ISO8601 data formatter used throughout URL encoded form code
-    static var iso8601Formatter: ISO8601DateFormatter {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = .withInternetDateTime
-        return formatter
-    }
-    #endif
 }
