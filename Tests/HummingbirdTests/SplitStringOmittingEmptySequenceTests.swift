@@ -12,8 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import Hummingbird
 import Testing
+
+@testable import Hummingbird
 
 struct SplitStringOmittingEmptySequenceTests {
     // MARK: - Basic Splitting
@@ -191,7 +192,7 @@ struct SplitStringOmittingEmptySequenceTests {
 
         #expect(iterator.next() != nil)
         #expect(iterator.next() == nil)
-        #expect(iterator.next() == nil) // Should remain nil
+        #expect(iterator.next() == nil)  // Should remain nil
     }
 
     @Test func multipleIteratorsIndependent() {
@@ -202,7 +203,7 @@ struct SplitStringOmittingEmptySequenceTests {
 
         #expect(iterator1.next() == "a")
         #expect(iterator1.next() == "b")
-        #expect(iterator2.next() == "a") // iterator2 is independent
+        #expect(iterator2.next() == "a")  // iterator2 is independent
         #expect(iterator1.next() == "c")
         #expect(iterator2.next() == "b")
     }
