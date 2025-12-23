@@ -37,7 +37,7 @@ extension RouterTrie {
 
         @inlinable
         mutating func resolve() -> (value: Value, parameters: Parameters)? {
-            var iterator = SplitStringOmittingEmptySequence(path).makeIterator()
+            var iterator = path.splitSequence(separator: "/").makeIterator()
 
             guard let component = iterator.next() else {
                 // Empty path - check root node
@@ -68,7 +68,7 @@ extension RouterTrie {
         @inlinable
         mutating func descend(
             component: Substring,
-            iterator: SplitStringOmittingEmptySequence<String>.Iterator,
+            iterator: SplitStringSequence<String>.Iterator,
             nodeIndex: inout Int
         ) -> TrieNode? {
             var node = self.matchComponent(component, atNodeIndex: &nodeIndex)
