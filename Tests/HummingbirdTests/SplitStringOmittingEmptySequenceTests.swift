@@ -277,4 +277,11 @@ struct SplitStringOmittingEmptySequenceTests {
         #expect(components[0].count == 1000)
         #expect(components[1].count == 1000)
     }
+
+    @Test(parameters: [
+        "/test/"
+    ])
+    func testSplitStringMaxSplitsSequence(string: String) {
+        #expect(string.split(separator: "/", maxSplits: 4).elementsEqual(SplitStringMaxSplitsSequence(string)))
+    }
 }

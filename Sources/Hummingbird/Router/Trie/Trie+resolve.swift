@@ -68,7 +68,7 @@ extension RouterTrie {
         @inlinable
         mutating func descend(
             component: Substring,
-            iterator: SplitStringOmittingEmptySequence.Iterator,
+            iterator: SplitStringOmittingEmptySequence<String>.Iterator,
             nodeIndex: inout Int
         ) -> TrieNode? {
             var node = self.matchComponent(component, atNodeIndex: &nodeIndex)

@@ -15,12 +15,12 @@
 /// A sequence that iterates over string components separated by a given character,
 /// omitting empty components.
 @usableFromInline
-struct SplitStringOmittingEmptySequence: Sequence {
-    @usableFromInline let base: String
+struct SplitStringOmittingEmptySequence<S: StringProtocol>: Sequence {
+    @usableFromInline let base: S
     @usableFromInline let separator: Character
 
     @inlinable
-    init(_ base: String, separator: Character = "/") {
+    init(_ base: S, separator: Character = "/") {
         self.base = base
         self.separator = separator
     }
@@ -32,13 +32,13 @@ struct SplitStringOmittingEmptySequence: Sequence {
 
     @usableFromInline
     struct Iterator: IteratorProtocol {
-        @usableFromInline let base: String
+        @usableFromInline let base: S
+        @usableFromInline let endIndex: S.Index
+        @usableFromInline var currentIndex: S.Index
         @usableFromInline let separator: Character
-        @usableFromInline let endIndex: String.Index
-        @usableFromInline var currentIndex: String.Index
 
         @inlinable
-        init(base: String, separator: Character) {
+        init(base: S, separator: Character) {
             self.base = base
             self.separator = separator
             self.endIndex = base.endIndex
@@ -51,7 +51,7 @@ struct SplitStringOmittingEmptySequence: Sequence {
         }
 
         @inlinable
-        mutating func next() -> Substring? {
+        mutating func next() -> S.SubSequence? {
             guard currentIndex < endIndex else { return nil }
 
             let start = currentIndex
@@ -66,6 +66,75 @@ struct SplitStringOmittingEmptySequence: Sequence {
             while currentIndex < endIndex && base[currentIndex] == separator {
                 base.formIndex(after: &currentIndex)
             }
+
+            return component
+        }
+    }
+}
+
+/// A sequence that iterates over string components separated by a given character,
+/// omitting empty components.
+@usableFromInline
+struct SplitStringMaxSplitsSequence<S: StringProtocol>: Sequence {
+    @usableFromInline let base: S
+    @usableFromInline let separator: Character
+    @usableFromInline let maxSplits: Int
+
+    @inlinable
+    init(_ base: S, separator: Character, maxSplits: Int) {
+        self.base = base
+        self.separator = separator
+        self.maxSplits = maxSplits
+    }
+
+    @inlinable
+    func makeIterator() -> Iterator {
+        Iterator(base: self.base, separator: self.separator, maxSplits: self.maxSplits)
+    }
+
+    @usableFromInline
+    struct Iterator: IteratorProtocol {
+        @usableFromInline let base: S
+        @usableFromInline let endIndex: S.Index
+        @usableFromInline var currentIndex: S.Index
+        @usableFromInline var availableSplits: Int
+        @usableFromInline let separator: Character
+
+        @inlinable
+        init(base: S, separator: Character, maxSplits: Int) {
+            self.base = base
+            self.separator = separator
+            self.endIndex = base.endIndex
+            // Skip leading separator
+            var index = base.startIndex
+            if base.first == separator {
+                base.formIndex(after: &index)
+            }
+            self.currentIndex = index
+            self.availableSplits = maxSplits
+        }
+
+        @inlinable
+        mutating func next() -> S.SubSequence? {
+            guard self.currentIndex < self.endIndex, self.availableSplits > 0 else { return nil }
+
+            self.availableSplits -= 1
+            if self.availableSplits == 0 {
+                let component = base[self.currentIndex...]
+                self.currentIndex = self.endIndex
+                return component
+            }
+
+            let start = self.currentIndex
+            // Find next separator or end
+            while currentIndex < endIndex && base[currentIndex] != separator {
+                base.formIndex(after: &self.currentIndex)
+            }
+
+            let component = base[start..<currentIndex]
+
+            // skip separator
+            self.base.formIndex(after: &self.currentIndex)
 
             return component
         }
