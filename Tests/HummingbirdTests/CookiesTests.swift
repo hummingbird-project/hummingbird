@@ -67,6 +67,30 @@ extension HTTPTests {
             #expect(cookie?.sameSite == .strict)
         }
 
+        @Test func testSingleRequestCookie() throws {
+            let cookies = Cookies(from: ["name=value"])
+            let cookie = try #require(cookies["name"])
+            #expect(cookie.value == "value")
+        }
+
+        @Test func testMultipleRequestCookie() throws {
+            let cookies = Cookies(from: ["name=value; name2=value2"])
+            let cookie = try #require(cookies["name"])
+            #expect(cookie.value == "value")
+            let cookie2 = try #require(cookies["name2"])
+            #expect(cookie2.value == "value2")
+        }
+
+        @Test func testMultipleHeadersRequestCookie() throws {
+            let cookies = Cookies(from: ["name=value; name2=value2", "name3=value3"])
+            let cookie = try #require(cookies["name"])
+            #expect(cookie.value == "value")
+            let cookie2 = try #require(cookies["name2"])
+            #expect(cookie2.value == "value2")
+            let cookie3 = try #require(cookies["name3"])
+            #expect(cookie3.value == "value3")
+        }
+
         @Test func testSetCookie() async throws {
             let router = Router()
             router.post("/") { _, _ -> Response in

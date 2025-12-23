@@ -18,10 +18,12 @@
 public struct Cookies: Sendable {
     /// Construct cookies accessor from `Request`
     /// - Parameter request: request to get cookies from
-    init(from request: Request) {
-        self.cookieStrings = request.headers[values: .cookie].flatMap {
-            $0.split(separator: ";").map { $0.drop { $0.isWhitespace } }
-        }
+    public init(from request: Request) {
+        self = Cookies(from: request.headers[values: .cookie])
+    }
+
+    public init(from cookieHeaders: [String]) {
+        self.cookieStrings = cookieHeaders.flatMap { $0.splitSequence(separator: ";").map { $0.drop { $0.isWhitespace } } }
     }
 
     /// access cookies via dictionary subscript
