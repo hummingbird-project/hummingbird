@@ -15,7 +15,7 @@
 /// A sequence that iterates over string components separated by a given character,
 /// omitting empty components.
 @usableFromInline
-struct SplitStringOmittingEmptySequence<S: StringProtocol>: Sequence {
+struct SplitStringSequence<S: StringProtocol>: Sequence {
     @usableFromInline let base: S
     @usableFromInline let separator: Character
 
@@ -107,11 +107,11 @@ struct SplitStringMaxSplitsSequence<S: StringProtocol>: Sequence {
             self.endIndex = base.endIndex
             // Skip leading separator
             var index = base.startIndex
-            if base.first == separator {
+            while index < base.endIndex && base[index] == separator {
                 base.formIndex(after: &index)
             }
             self.currentIndex = index
-            self.availableSplits = maxSplits
+            self.availableSplits = maxSplits + 1
         }
 
         @inlinable
@@ -125,18 +125,32 @@ struct SplitStringMaxSplitsSequence<S: StringProtocol>: Sequence {
                 return component
             }
 
-            let start = self.currentIndex
+            let start = currentIndex
             // Find next separator or end
             while currentIndex < endIndex && base[currentIndex] != separator {
-                base.formIndex(after: &self.currentIndex)
+                base.formIndex(after: &currentIndex)
             }
 
             let component = base[start..<currentIndex]
 
-            // skip separator
-            self.base.formIndex(after: &self.currentIndex)
+            // Skip trailing separators
+            while currentIndex < endIndex && base[currentIndex] == separator {
+                base.formIndex(after: &currentIndex)
+            }
 
             return component
         }
+    }
+}
+
+extension StringProtocol {
+    @inlinable
+    func splitSequence(separator: Character) -> SplitStringSequence<Self> {
+        SplitStringSequence(self, separator: separator)
+    }
+
+    @inlinable
+    func splitMaxSplitsSequence(separator: Character, maxSplits: Int) -> SplitStringMaxSplitsSequence<Self> {
+        SplitStringMaxSplitsSequence(self, separator: separator, maxSplits: maxSplits)
     }
 }
