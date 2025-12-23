@@ -23,7 +23,7 @@ public struct Cookies: Sendable {
     }
 
     package init(from cookieHeaders: [String]) {
-        self.cookieStrings = cookieHeaders.flatMap { $0.split(separator: ";").map { $0.drop { $0.isWhitespace } } }
+        self.cookieStrings = cookieHeaders.flatMap { $0.splitSequence(separator: ";").map { $0.drop { $0.isWhitespace } } }
     }
 
     /// access cookies via dictionary subscript
