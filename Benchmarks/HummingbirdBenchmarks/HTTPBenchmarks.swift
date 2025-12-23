@@ -31,11 +31,11 @@ func httpBenchmarks() {
         }
     }
 
-    /*Benchmark("HTTP:Cookie:Decode", configuration: .init(scalingFactor: .kilo)) { benchmark in
+    Benchmark("HTTP:Cookie:Decode", configuration: .init(scalingFactor: .kilo)) { benchmark in
         benchmark.startMeasurement()
         for _ in benchmark.scaledIterations {
             let cookies = Cookies(from: ["name=value; name2=value2; name3=value3"])
             blackHole(cookies["name"])
         }
-    }*/
+    }
 }
