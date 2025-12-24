@@ -16,7 +16,7 @@ import Benchmark
 import Foundation
 import Hummingbird
 
-let benchmarks = {
+let benchmarks: @Sendable () -> Void = {
     Benchmark.defaultConfiguration = .init(
         metrics: ProcessInfo.processInfo.environment["CI"] != nil
             ? [
@@ -32,4 +32,6 @@ let benchmarks = {
     )
     trieRouterBenchmarks()
     routerBenchmarks()
+    httpBenchmarks()
+    urlEncodedFormBenchmarks()
 }

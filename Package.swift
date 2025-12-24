@@ -183,3 +183,24 @@ let package = Package(
         ),
     ]
 )
+
+if Context.environment["ENABLE_HB_BENCHMARKS"] != nil {
+    package.dependencies.append(
+        .package(url: "https://github.com/ordo-one/package-benchmark", from: "1.0.0")
+    )
+    package.targets.append(
+        .executableTarget(
+            name: "HummingbirdBenchmarks",
+            dependencies: [
+                "Hummingbird",
+                "HummingbirdRouter",
+                .product(name: "Benchmark", package: "package-benchmark"),
+            ],
+            path: "Benchmarks/HummingbirdBenchmarks",
+            swiftSettings: swiftSettings,
+            plugins: [
+                .plugin(name: "BenchmarkPlugin", package: "package-benchmark")
+            ]
+        )
+    )
+}

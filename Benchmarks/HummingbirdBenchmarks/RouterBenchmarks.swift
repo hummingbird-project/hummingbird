@@ -34,7 +34,7 @@ struct BasicBenchmarkContext: RequestContext {
     }
 }
 
-public struct BenchmarkRequestContextSource: RequestContextSource {
+struct BenchmarkRequestContextSource: RequestContextSource {
     public let logger = Logger(label: "Benchmark")
 }
 
