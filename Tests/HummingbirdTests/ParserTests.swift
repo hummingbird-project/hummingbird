@@ -74,11 +74,11 @@ struct ParserTests {
     }
 
     @Test func testRetreat() throws {
-        var parser = Parser("abcdef")
+        var parser = Parser("abcdefgh")
         #expect(throws: (any Error).self) { try parser.retreat() }
         _ = try parser.read(count: 4)
-        try parser.retreat(by: 3)
-        #expect(try parser.read(count: 4).string == "bcde")
+        try parser.retreat()
+        #expect(try parser.read(count: 4).string == "defg")
     }
 
     @Test func testCopy() throws {
