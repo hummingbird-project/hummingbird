@@ -16,35 +16,35 @@ import Testing
 
 @testable import Hummingbird
 
-struct SplitStringOmittingEmptySequenceTests {
+struct SplitStringSequenceTests {
     // MARK: - Basic Splitting
 
     @Test func basicPathSplitting() {
-        let sequence = SplitStringOmittingEmptySequence("/a/b/c")
+        let sequence = SplitStringSequence("/a/b/c")
         let components = Array(sequence)
         #expect(components.map(String.init) == ["a", "b", "c"])
     }
 
     @Test func pathWithoutLeadingSeparator() {
-        let sequence = SplitStringOmittingEmptySequence("a/b/c")
+        let sequence = SplitStringSequence("a/b/c")
         let components = Array(sequence)
         #expect(components.map(String.init) == ["a", "b", "c"])
     }
 
     @Test func trailingSeparatorWithoutLeading() {
-        let sequence = SplitStringOmittingEmptySequence("a/b/")
+        let sequence = SplitStringSequence("a/b/")
         let components = Array(sequence)
         #expect(components.map(String.init) == ["a", "b"])
     }
 
     @Test func singleComponent() {
-        let sequence = SplitStringOmittingEmptySequence("component")
+        let sequence = SplitStringSequence("component")
         let components = Array(sequence)
         #expect(components.map(String.init) == ["component"])
     }
 
     @Test func singleComponentWithSeparators() {
-        let sequence = SplitStringOmittingEmptySequence("/component/")
+        let sequence = SplitStringSequence("/component/")
         let components = Array(sequence)
         #expect(components.map(String.init) == ["component"])
     }
@@ -52,19 +52,19 @@ struct SplitStringOmittingEmptySequenceTests {
     // MARK: - Empty and Edge Cases
 
     @Test func emptyString() {
-        let sequence = SplitStringOmittingEmptySequence("")
+        let sequence = SplitStringSequence("")
         let components = Array(sequence)
         #expect(components.isEmpty)
     }
 
     @Test func rootPathOnly() {
-        let sequence = SplitStringOmittingEmptySequence("/")
+        let sequence = SplitStringSequence("/")
         let components = Array(sequence)
         #expect(components.isEmpty)
     }
 
     @Test func multipleSeparatorsOnly() {
-        let sequence = SplitStringOmittingEmptySequence("///")
+        let sequence = SplitStringSequence("///")
         let components = Array(sequence)
         #expect(components.isEmpty)
     }
@@ -72,25 +72,25 @@ struct SplitStringOmittingEmptySequenceTests {
     // MARK: - Multiple Consecutive Separators
 
     @Test func multipleConsecutiveSeparatorsInMiddle() {
-        let sequence = SplitStringOmittingEmptySequence("/a//b///c")
+        let sequence = SplitStringSequence("/a//b///c")
         let components = Array(sequence)
         #expect(components.map(String.init) == ["a", "b", "c"])
     }
 
     @Test func multipleLeadingSeparators() {
-        let sequence = SplitStringOmittingEmptySequence("///a/b")
+        let sequence = SplitStringSequence("///a/b")
         let components = Array(sequence)
         #expect(components.map(String.init) == ["a", "b"])
     }
 
     @Test func multipleTrailingSeparators() {
-        let sequence = SplitStringOmittingEmptySequence("a/b///")
+        let sequence = SplitStringSequence("a/b///")
         let components = Array(sequence)
         #expect(components.map(String.init) == ["a", "b"])
     }
 
     @Test func multipleLeadingAndTrailingSeparators() {
-        let sequence = SplitStringOmittingEmptySequence("///a/b///")
+        let sequence = SplitStringSequence("///a/b///")
         let components = Array(sequence)
         #expect(components.map(String.init) == ["a", "b"])
     }
@@ -98,31 +98,31 @@ struct SplitStringOmittingEmptySequenceTests {
     // MARK: - Custom Separator
 
     @Test func dotSeparator() {
-        let sequence = SplitStringOmittingEmptySequence("a.b.c", separator: ".")
+        let sequence = SplitStringSequence("a.b.c", separator: ".")
         let components = Array(sequence)
         #expect(components.map(String.init) == ["a", "b", "c"])
     }
 
     @Test func colonSeparator() {
-        let sequence = SplitStringOmittingEmptySequence(":path:to:resource:", separator: ":")
+        let sequence = SplitStringSequence(":path:to:resource:", separator: ":")
         let components = Array(sequence)
         #expect(components.map(String.init) == ["path", "to", "resource"])
     }
 
     @Test func spaceSeparator() {
-        let sequence = SplitStringOmittingEmptySequence("  hello   world  ", separator: " ")
+        let sequence = SplitStringSequence("  hello   world  ", separator: " ")
         let components = Array(sequence)
         #expect(components.map(String.init) == ["hello", "world"])
     }
 
     @Test func customSeparatorWithMultipleConsecutive() {
-        let sequence = SplitStringOmittingEmptySequence("a...b..c", separator: ".")
+        let sequence = SplitStringSequence("a...b..c", separator: ".")
         let components = Array(sequence)
         #expect(components.map(String.init) == ["a", "b", "c"])
     }
 
     @Test func defaultSeparatorInComponentWithCustomSeparator() {
-        let sequence = SplitStringOmittingEmptySequence("path/to.file.txt", separator: ".")
+        let sequence = SplitStringSequence("path/to.file.txt", separator: ".")
         let components = Array(sequence)
         #expect(components.map(String.init) == ["path/to", "file", "txt"])
     }
@@ -130,19 +130,19 @@ struct SplitStringOmittingEmptySequenceTests {
     // MARK: - Unicode Support
 
     @Test func unicodePathComponents() {
-        let sequence = SplitStringOmittingEmptySequence("/hello/世界/мир")
+        let sequence = SplitStringSequence("/hello/世界/мир")
         let components = Array(sequence)
         #expect(components.map(String.init) == ["hello", "世界", "мир"])
     }
 
     @Test func emojiPathComponents() {
-        let sequence = SplitStringOmittingEmptySequence("/🎉/🚀/🌟")
+        let sequence = SplitStringSequence("/🎉/🚀/🌟")
         let components = Array(sequence)
         #expect(components.map(String.init) == ["🎉", "🚀", "🌟"])
     }
 
     @Test func unicodeSeparator() {
-        let sequence = SplitStringOmittingEmptySequence("a→b→c", separator: "→")
+        let sequence = SplitStringSequence("a→b→c", separator: "→")
         let components = Array(sequence)
         #expect(components.map(String.init) == ["a", "b", "c"])
     }
@@ -150,19 +150,19 @@ struct SplitStringOmittingEmptySequenceTests {
     // MARK: - Real-World URL Paths
 
     @Test func typicalAPIPath() {
-        let sequence = SplitStringOmittingEmptySequence("/api/v1/users/123/posts")
+        let sequence = SplitStringSequence("/api/v1/users/123/posts")
         let components = Array(sequence)
         #expect(components.map(String.init) == ["api", "v1", "users", "123", "posts"])
     }
 
     @Test func pathWithQueryLikeComponent() {
-        let sequence = SplitStringOmittingEmptySequence("/search/query=test")
+        let sequence = SplitStringSequence("/search/query=test")
         let components = Array(sequence)
         #expect(components.map(String.init) == ["search", "query=test"])
     }
 
     @Test func pathWithSpecialCharacters() {
-        let sequence = SplitStringOmittingEmptySequence("/path/with-dashes/and_underscores/file.txt")
+        let sequence = SplitStringSequence("/path/with-dashes/and_underscores/file.txt")
         let components = Array(sequence)
         #expect(components.map(String.init) == ["path", "with-dashes", "and_underscores", "file.txt"])
     }
@@ -171,7 +171,7 @@ struct SplitStringOmittingEmptySequenceTests {
 
     @Test func iteratorReturnsSubstrings() {
         let path = "/first/second"
-        let sequence = SplitStringOmittingEmptySequence(path)
+        let sequence = SplitStringSequence(path)
         var iterator = sequence.makeIterator()
 
         let first = iterator.next()
@@ -187,7 +187,7 @@ struct SplitStringOmittingEmptySequenceTests {
     }
 
     @Test func iteratorExhaustion() {
-        let sequence = SplitStringOmittingEmptySequence("/a")
+        let sequence = SplitStringSequence("/a")
         var iterator = sequence.makeIterator()
 
         #expect(iterator.next() != nil)
@@ -196,7 +196,7 @@ struct SplitStringOmittingEmptySequenceTests {
     }
 
     @Test func multipleIteratorsIndependent() {
-        let sequence = SplitStringOmittingEmptySequence("/a/b/c")
+        let sequence = SplitStringSequence("/a/b/c")
 
         var iterator1 = sequence.makeIterator()
         var iterator2 = sequence.makeIterator()
@@ -211,7 +211,7 @@ struct SplitStringOmittingEmptySequenceTests {
     // MARK: - Sequence Conformance
 
     @Test func forInLoopWorks() {
-        let sequence = SplitStringOmittingEmptySequence("/x/y/z")
+        let sequence = SplitStringSequence("/x/y/z")
         var results: [String] = []
         for component in sequence {
             results.append(String(component))
@@ -220,25 +220,25 @@ struct SplitStringOmittingEmptySequenceTests {
     }
 
     @Test func mapWorks() {
-        let sequence = SplitStringOmittingEmptySequence("/a/bb/ccc")
+        let sequence = SplitStringSequence("/a/bb/ccc")
         let lengths = sequence.map { $0.count }
         #expect(lengths == [1, 2, 3])
     }
 
     @Test func filterWorks() {
-        let sequence = SplitStringOmittingEmptySequence("/short/a/longer/b")
+        let sequence = SplitStringSequence("/short/a/longer/b")
         let longComponents = sequence.filter { $0.count > 1 }.map(String.init)
         #expect(longComponents == ["short", "longer"])
     }
 
     @Test func reduceWorks() {
-        let sequence = SplitStringOmittingEmptySequence("/a/b/c")
+        let sequence = SplitStringSequence("/a/b/c")
         let joined = sequence.reduce("") { $0 + String($1) }
         #expect(joined == "abc")
     }
 
     @Test func countByIterating() {
-        let sequence = SplitStringOmittingEmptySequence("/a/b/c/d/e")
+        let sequence = SplitStringSequence("/a/b/c/d/e")
         var count = 0
         for _ in sequence {
             count += 1
@@ -250,7 +250,7 @@ struct SplitStringOmittingEmptySequenceTests {
 
     @Test func substringsShareStorageWithOriginal() {
         let path = "/users/profile/settings"
-        let sequence = SplitStringOmittingEmptySequence(path)
+        let sequence = SplitStringSequence(path)
         let components = Array(sequence)
 
         // Substrings should reference ranges within the original string
@@ -264,17 +264,39 @@ struct SplitStringOmittingEmptySequenceTests {
     @Test func longPath() {
         let components = (1...100).map { "segment\($0)" }
         let path = "/" + components.joined(separator: "/")
-        let sequence = SplitStringOmittingEmptySequence(path)
+        let sequence = SplitStringSequence(path)
         let result = Array(sequence).map(String.init)
         #expect(result == components)
     }
 
     @Test func longComponentNames() {
         let longName = String(repeating: "a", count: 1000)
-        let sequence = SplitStringOmittingEmptySequence("/\(longName)/\(longName)")
+        let sequence = SplitStringSequence("/\(longName)/\(longName)")
         let components = Array(sequence)
         #expect(components.count == 2)
         #expect(components[0].count == 1000)
         #expect(components[1].count == 1000)
+    }
+
+    @Test(arguments: [
+        "/test/",
+        "test",
+        "//test",
+        "/test//this",
+        "/test/this",
+        "/test/this/",
+        "/test//this",
+        "/test/this//",
+        "/test/this/string",
+        "/test/this/string/",
+        "/test/this/string/works",
+        "/test/this/string/works/",
+        "/test/this/string/works/fine",
+        "/🎉/🚀/🌟",
+        "/🎉/🚀/🌟🎉/🚀/🌟",
+    ])
+    func testSplitStringMaxSplitsSequence(string: String) {
+        let split = string.split(separator: "/", maxSplits: 3)
+        #expect(split.elementsEqual(string.splitMaxSplitsSequence(separator: "/", maxSplits: 3)))
     }
 }

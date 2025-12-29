@@ -258,20 +258,22 @@ public struct Cookie: Sendable, CustomStringConvertible {
     /// Construct cookie from cookie header value
     /// - Parameter header: cookie header value
     internal init?(from header: Substring) {
-        let elements = header.split(separator: ";")
-        guard elements.count > 0 else { return nil }
-        let keyValue = elements[0].split(separator: "=", maxSplits: 1)
-        guard keyValue.count == 2 else { return nil }
-        self.name = String(keyValue[0])
-        self.value = String(keyValue[1])
+        var iterator = header.splitSequence(separator: ";").makeIterator()
+        guard let keyValue = iterator.next() else { return nil }
+        var keyValueIterator = keyValue.splitMaxSplitsSequence(separator: "=", maxSplits: 1).makeIterator()
+        guard let key = keyValueIterator.next() else { return nil }
+        guard let value = keyValueIterator.next() else { return nil }
+        self.name = String(key)
+        self.value = String(value)
 
         var properties = Properties()
         // extract elements
-        for element in elements.dropFirst() {
-            let keyValue = element.split(separator: "=", maxSplits: 1)
-            let key = keyValue[0].drop { $0 == " " }
-            if keyValue.count == 2 {
-                properties[key] = String(keyValue[1])
+        while let element = iterator.next() {
+            var keyValueIterator = element.splitMaxSplitsSequence(separator: "=", maxSplits: 1).makeIterator()
+            guard var key = keyValueIterator.next() else { return nil }
+            key = key.drop(while: \.isWhitespace)
+            if let value = keyValueIterator.next() {
+                properties[key] = String(value)
             } else {
                 properties[key] = ""
             }
