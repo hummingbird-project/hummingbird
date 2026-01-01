@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if !os(Windows)
 import HTTPTypes
 public import HummingbirdCore
 public import Logging
@@ -402,3 +403,4 @@ extension FileMiddleware {
         return nil
     }
 }
+#endif
