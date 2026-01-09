@@ -12,7 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
+
 public import HTTPTypes
 public import HummingbirdCore
 public import NIOCore
@@ -203,7 +208,7 @@ struct RecordingHeader: Hashable {
 
     init(name: HTTPField.Name) {
         self.name = name
-        self.attributeName = name.canonicalName.replacingOccurrences(of: "-", with: "_")
+        self.attributeName = String(name.canonicalName.replacing("-", with: "_"))
     }
 }
 
