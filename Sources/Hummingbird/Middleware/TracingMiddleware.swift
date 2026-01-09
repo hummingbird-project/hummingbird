@@ -12,16 +12,16 @@
 //
 //===----------------------------------------------------------------------===//
 
+public import HTTPTypes
+public import HummingbirdCore
+public import NIOCore
+public import Tracing
+
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
 import Foundation
 #endif
-
-public import HTTPTypes
-public import HummingbirdCore
-public import NIOCore
-public import Tracing
 
 /// Middleware creating Distributed Tracing spans for each request.
 ///
