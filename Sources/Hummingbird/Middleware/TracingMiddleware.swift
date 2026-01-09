@@ -208,7 +208,7 @@ struct RecordingHeader: Hashable {
 
     init(name: HTTPField.Name) {
         self.name = name
-        self.attributeName = String(name.canonicalName.replacing("-", with: "_"))
+        self.attributeName = name.canonicalName.replacing("-", with: "_")
     }
 }
 
