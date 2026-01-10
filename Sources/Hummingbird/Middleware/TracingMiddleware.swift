@@ -12,11 +12,16 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 public import HTTPTypes
 public import HummingbirdCore
 public import NIOCore
 public import Tracing
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Middleware creating Distributed Tracing spans for each request.
 ///
@@ -203,7 +208,7 @@ struct RecordingHeader: Hashable {
 
     init(name: HTTPField.Name) {
         self.name = name
-        self.attributeName = name.canonicalName.replacingOccurrences(of: "-", with: "_")
+        self.attributeName = name.canonicalName.replacing("-", with: "_")
     }
 }
 

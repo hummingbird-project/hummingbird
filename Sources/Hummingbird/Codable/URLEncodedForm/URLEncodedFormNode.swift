@@ -12,7 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Error thrown from parsing URLEncoded forms
 public struct URLEncodedFormError: Error, CustomStringConvertible, Equatable {
@@ -102,7 +106,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
             if let equals = element.firstIndex(of: "=") {
                 let before = element[..<equals].removingURLPercentEncoding()
                 let afterEquals = element.index(after: equals)
-                let after = element[afterEquals...].replacingOccurrences(of: "+", with: " ")
+                let after = element[afterEquals...].replacing("+", with: " ")
                 guard let key = before else { throw URLEncodedFormError(code: .failedToPercentDecode, value: element[..<equals]) }
 
                 guard let keys = KeyParser.parse(key) else { throw URLEncodedFormError(code: .corruptKeyValue, value: key) }
@@ -205,7 +209,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
             self.value = String(describing: value)
         }
 
-        init?(percentEncoded value: String) {
+        init?(percentEncoded value: some StringProtocol) {
             guard let value = value.removingURLPercentEncoding() else { return nil }
             self.value = value
         }
