@@ -35,10 +35,11 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "1.0.2"),
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-collections.git", from: "1.0.0"),
-        .package(url: "https://github.com/apple/swift-log.git", from: "1.4.0"),
-        .package(url: "https://github.com/apple/swift-http-types.git", from: "1.0.0"),
-        .package(url: "https://github.com/apple/swift-metrics.git", from: "2.5.0"),
+        .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0", traits: []),
         .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.3.0"),
+        .package(url: "https://github.com/apple/swift-http-types.git", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.4.0"),
+        .package(url: "https://github.com/apple/swift-metrics.git", from: "2.5.0"),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.83.0"),
         .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.20.0"),
         .package(url: "https://github.com/apple/swift-nio-http2.git", from: "1.38.0"),
@@ -46,7 +47,6 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.20.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.0.0"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.30.0"),
-        .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0"),
     ],
     targets: [
         .target(
