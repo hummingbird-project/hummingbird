@@ -101,4 +101,4 @@ We welcome contributions to Hummingbird! Please read our [contributing guideline
 
 ## License
 
-Hummingbird is released under the [Apache 2.0 license](LICENSE).
+Hummingbird is released under the [Apache 2.0 license](LICENSE.txt).
