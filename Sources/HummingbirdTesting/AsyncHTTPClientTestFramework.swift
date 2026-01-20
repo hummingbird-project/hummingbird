@@ -7,6 +7,7 @@
 //
 
 import AsyncHTTPClient
+import Foundation
 import HTTPTypes
 import Hummingbird
 import HummingbirdCore
@@ -214,7 +215,7 @@ extension HTTPFields {
         self.reserveCapacity(count)
         var firstHost = true
         for field in oldHeaders {
-            if firstHost, field.name.lowercased() == "host" {
+            if firstHost, field.name.caseInsensitiveCompare("host") == .orderedSame {
                 firstHost = false
                 continue
             }
