@@ -13,6 +13,9 @@ let swiftSettings: [SwiftSetting] = [
     // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0409-access-level-on-imports.md
     .enableUpcomingFeature("InternalImportsByDefault"),
 
+    // https://forums.swift.org/t/experimental-support-for-lifetime-dependencies-in-swift-6-2-and-beyond/78638
+    .enableExperimentalFeature("Lifetimes"),
+
 ]
 
 let package = Package(

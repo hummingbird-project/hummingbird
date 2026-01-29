@@ -118,6 +118,108 @@ struct ParserTests {
     }
 }
 
+struct SpanParserTests {
+    @available(macOS 26, *)
+    @Test func testCharacter() throws {
+        let string = "TestString"
+        var parser = SpanParser(string)
+        #expect(try parser.character() == "T")
+        #expect(try parser.character() == "e")
+    }
+
+    @available(macOS 26, *)
+    @Test func testSubstring() throws {
+        let string = "TestString"
+        var parser = SpanParser(string)
+        #expect(throws: (any Error).self) { try parser.read(count: 23) }
+        #expect(try parser.read(count: 3).string == "Tes")
+        #expect(try parser.read(count: 5).string == "tStri")
+        #expect(throws: (any Error).self) { try parser.read(count: 3) }
+        #expect(throws: Never.self) { try parser.read(count: 2) }
+    }
+
+    @available(macOS 26, *)
+    @Test func testReadCharacter() throws {
+        let string = "TestString"
+        var parser = SpanParser(string)
+        #expect(throws: Never.self) { try parser.read("T") }
+        #expect(throws: Never.self) { try parser.read("e") }
+        #expect(try parser.read("e") == false)
+        #expect(try parser.read(Set("hgs")) == true)
+    }
+
+    @available(macOS 26, *)
+    @Test func testReadUntilCharacter() throws {
+        let string = "TestString"
+        var parser = SpanParser(string)
+        #expect(try parser.read(until: "S").string == "Test")
+        #expect(try parser.read(until: "n").string == "Stri")
+        #expect(throws: (any Error).self) { try parser.read(until: "!") }
+    }
+
+    @available(macOS 26, *)
+    @Test func testReadUntilCharacterSet() throws {
+        let string = "TestString"
+        var parser = SpanParser(string)
+        #expect(try parser.read(until: Set("Sr")).string == "Test")
+        #expect(try parser.read(until: Set("abcdefg")).string == "Strin")
+    }
+
+    /*@available(macOS 26, *)
+    @Test func testReadUntilString() throws {
+        var parser = SpanParser("<!-- check for -comment end -->")
+        #expect(try parser.read(untilString: "-->").string == "<!-- check for -comment end ")
+        #expect(try parser.read("-->") == true)
+    }*/
+
+    @available(macOS 26, *)
+    @Test func testReadWhileCharacter() throws {
+        let string = "122333"
+        var parser = SpanParser(string)
+        #expect(parser.read(while: "1") == 1)
+        #expect(parser.read(while: "2") == 2)
+        #expect(parser.read(while: "3") == 3)
+    }
+
+    @available(macOS 26, *)
+    @Test func testReadWhileCharacterSet() throws {
+        let string = "aabbcdd836de"
+        var parser = SpanParser(string)
+        #expect(parser.read(while: Set("abcdef")).string == "aabbcdd")
+        #expect(parser.read(while: Set("123456789")).string == "836")
+        #expect(parser.read(while: Set("abcdef")).string == "de")
+    }
+
+    @available(macOS 26, *)
+    @Test func testRetreat() throws {
+        let string = "abcdef"
+        var parser = SpanParser(string)
+        #expect(throws: (any Error).self) { try parser.retreat() }
+        _ = try parser.read(count: 4)
+        try parser.retreat(by: 3)
+        #expect(try parser.read(count: 4).string == "bcde")
+    }
+
+    @available(macOS 26, *)
+    @Test func testPerformance() throws {
+        let text =
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+        var count = 0
+        for _ in 0..<10000 {
+            var parser = SpanParser(text)
+            while true {
+                do {
+                    let output = try parser.read(until: "e")
+                    count += output.count
+                } catch {
+                    break
+                }
+            }
+        }
+        print(count)
+    }
+}
+
 extension Character {
     var isAlphaNumeric: Bool {
         isLetter || isNumber
