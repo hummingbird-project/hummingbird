@@ -677,6 +677,27 @@ struct RouterTests {
         }
     }
 
+    // Test HEAD endpoints don't have their content-length set to zero
+    @Test func testReturningHead() async throws {
+        let router = Router(options: .autoGenerateHeadEndpoints)
+        router.addMiddleware {
+            LogRequestsMiddleware(.debug)
+            MetricsMiddleware()
+            TracingMiddleware()
+            CORSMiddleware()
+        }
+        router.head("test") { _, _ in
+            Response(status: .ok, headers: [.contentLength: "45", .contentLanguage: "en"])
+        }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.live) { client in
+            try await client.execute(uri: "/test", method: .head) { response in
+                #expect(response.status == .ok)
+                #expect(response.headers[.contentLength] == "45")
+            }
+        }
+    }
+
     // Test auto generation of HEAD endpoints works
     @Test func testAutoGenerateHeadEndpoints() async throws {
         let router = Router(options: .autoGenerateHeadEndpoints)
