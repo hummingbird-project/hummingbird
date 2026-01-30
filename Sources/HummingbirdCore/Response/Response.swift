@@ -23,13 +23,17 @@ public struct Response: Sendable {
             self.headers = newValue.headerFields
         }
     }
-
+    @usableFromInline
+    /*private*/ var _body: ResponseBody
     /// Response body
+    @inlinable
     public var body: ResponseBody {
-        didSet {
-            if let contentLength = body.contentLength {
+        get { _body }
+        set {
+            if let contentLength = newValue.contentLength, self.body.contentLength != newValue.contentLength {
                 self.headers[.contentLength] = String(describing: contentLength)
             }
+            self._body = newValue
         }
     }
 
@@ -38,7 +42,7 @@ public struct Response: Sendable {
     public init(status: HTTPResponse.Status, headers: HTTPFields = .init(), body: ResponseBody = .init()) {
         self.status = status
         self.headers = headers
-        self.body = body
+        self._body = body
         if let contentLength = body.contentLength, !self.headers.contains(.contentLength) {
             self.headers[.contentLength] = String(describing: contentLength)
         }
