@@ -30,8 +30,12 @@ public struct Response: Sendable {
     public var body: ResponseBody {
         get { _body }
         set {
-            if let contentLength = newValue.contentLength, self.body.contentLength != newValue.contentLength {
-                self.headers[.contentLength] = String(describing: contentLength)
+            if self.body.contentLength != newValue.contentLength {
+                if let contentLength = newValue.contentLength {
+                    self.headers[.contentLength] = String(describing: contentLength)
+                } else {
+                    self.headers[.contentLength] = nil
+                }
             }
             self._body = newValue
         }
