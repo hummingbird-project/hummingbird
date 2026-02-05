@@ -81,10 +81,6 @@ public final class Router<Context: RequestContext>: RouterMethods, HTTPResponder
         method: HTTPRequest.Method,
         responder: Responder
     ) -> Self where Responder.Context == Context {
-        var path = path
-        if self.options.contains(.caseInsensitive) {
-            path = path.lowercased()
-        }
         self.trie.addEntry(path, value: EndpointResponders(path: path)) { node in
             node.value!.addResponder(for: method, responder: self.middlewares.constructResponder(finalResponder: responder))
         }
