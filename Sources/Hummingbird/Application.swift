@@ -91,6 +91,12 @@ extension ApplicationProtocol {
 extension ApplicationProtocol {
     /// Construct application and run it
     public func run() async throws {
+        // `#available()` logic must be placed within this method as Service
+        // protocol requires `run()` method is available from iOS 13+
+        guard #available(iOS 17.0, *) else {
+            return
+        }
+        
         let dateCache = DateCache()
         let responder = try await self.responder
 

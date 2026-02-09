@@ -34,6 +34,7 @@ public protocol RouterMethods<Context>: _HB_SendableMetatype {
     func add(middleware: any MiddlewareProtocol<Request, Response, Context>) -> Self
 }
 
+@available(iOS 16, *)
 extension RouterMethods {
     /// Add path for async closure
     @discardableResult public func on(

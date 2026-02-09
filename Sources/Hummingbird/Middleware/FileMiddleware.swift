@@ -40,6 +40,7 @@ public protocol FileMiddlewareFileAttributes {
 /// "if-modified-since", "if-none-match", "if-range" and 'range" headers. It will output "content-length",
 /// "modified-date", "eTag", "content-type", "cache-control" and "content-range" headers where
 /// they are relevant.
+@available(iOS 16, *)
 public struct FileMiddleware<Context: RequestContext, Provider: FileProvider>: RouterMiddleware
 where Provider.FileAttributes: FileMiddlewareFileAttributes {
     let cacheControl: CacheControl
@@ -221,6 +222,7 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
     }
 }
 
+@available(iOS 16, *)
 extension FileMiddleware {
     /// Whether to return data from the file or a not modified response
     private enum FileResult {

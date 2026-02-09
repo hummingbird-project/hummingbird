@@ -32,6 +32,7 @@ public struct HTTPServerBuilder: Sendable {
     ///   - responder: HTTP responder
     ///   - onServerRunning: Closure to run once server is up and running
     /// - Returns: Server Service
+    @available(iOS 17, *)
     public func buildServer(
         configuration: ServerConfiguration,
         eventLoopGroup: any EventLoopGroup,

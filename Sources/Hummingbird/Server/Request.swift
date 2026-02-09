@@ -58,6 +58,7 @@ extension Request {
     }
 }
 
+@available(iOS 16, *)
 extension Request {
     /// Conditional request which will only be processed if the eTag supplied is not in the
     /// `If-None-Match` request header.

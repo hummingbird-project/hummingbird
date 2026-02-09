@@ -18,6 +18,7 @@ import NIOTransportServices
 #endif
 
 /// HTTP server class
+@available(iOS 17, *)
 public actor Server<ChildChannel: ServerChildChannel>: Service {
     public typealias AsyncChildChannel = ChildChannel.Value
     public typealias AsyncServerChannel = NIOAsyncChannel<AsyncChildChannel, Never>
@@ -361,6 +362,7 @@ extension NIOTSListenerBootstrap: ServerBootstrapProtocol {
 }
 #endif
 
+@available(iOS 17, *)
 extension Server: CustomStringConvertible {
     public nonisolated var description: String {
         "Hummingbird"
