@@ -9,14 +9,14 @@
 public import Hummingbird
 
 /// HTTP Scheme to use with AsyncHTTPClient test framework
-public enum TestHTTPScheme: String {
+public enum TestHTTPScheme: String, Sendable {
     case http
     case https
 }
 
 /// Type of test framework
-public struct TestingSetup {
-    enum Internal {
+public struct TestingSetup: Sendable {
+    enum Internal: Sendable {
         case router
         case live
         case ahc(TestHTTPScheme)
