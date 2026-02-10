@@ -9,7 +9,7 @@
 public import ServiceLifecycle
 
 /// Protocol for driver supporting persistent Key/Value pairs across requests
-@available(iOS 16, *)
+@available(macOS 13, iOS 16, tvOS 16, *)
 public protocol PersistDriver: Service {
     /// shutdown driver
     func shutdown() async throws
@@ -41,7 +41,7 @@ public protocol PersistDriver: Service {
     func remove(key: String) async throws
 }
 
-@available(iOS 16, *)
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension PersistDriver {
     /// default implemenation of shutdown()
     public func shutdown() async throws {}

@@ -9,7 +9,7 @@
 public import HummingbirdCore
 import Logging
 
-@available(iOS 16, *)
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension URI {
     /// Decode request query using ``Hummingbird/URLEncodedFormDecoder``.
     /// - Parameters

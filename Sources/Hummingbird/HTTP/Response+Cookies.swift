@@ -8,7 +8,7 @@
 
 public import HummingbirdCore
 
-@available(iOS 16, *)
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension Response {
     /// Set cookie on response
     public mutating func setCookie(_ cookie: Cookie) {
@@ -16,7 +16,7 @@ extension Response {
     }
 }
 
-@available(iOS 16, *)
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension EditedResponse {
     /// Set cookie on reponse patch
     ///

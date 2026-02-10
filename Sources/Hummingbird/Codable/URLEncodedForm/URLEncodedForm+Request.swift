@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-@available(iOS 16, *)
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension URLEncodedFormEncoder: ResponseEncoder {
     /// Extend URLEncodedFormEncoder to support generating a ``HummingbirdCore/Response``. Sets body and header values
     /// - Parameters:
@@ -27,7 +27,7 @@ extension URLEncodedFormEncoder: ResponseEncoder {
     }
 }
 
-@available(iOS 16, *)
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension URLEncodedFormDecoder: RequestDecoder {
     /// Extend URLEncodedFormDecoder to decode from ``HummingbirdCore/Request``.
     /// - Parameters:

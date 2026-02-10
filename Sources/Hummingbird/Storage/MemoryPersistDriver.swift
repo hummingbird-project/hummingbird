@@ -12,7 +12,7 @@ import NIOCore
 import ServiceLifecycle
 
 /// In memory driver for persist system for storing persistent cross request key/value pairs
-@available(iOS 16, *)
+@available(macOS 13, iOS 16, tvOS 16, *)
 public actor MemoryPersistDriver<C: Clock>: PersistDriver where C.Duration == Duration {
     public struct Configuration: Sendable {
         /// amount of time between each call to tidy

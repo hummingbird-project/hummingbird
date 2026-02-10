@@ -14,7 +14,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
-@available(iOS 16, *)
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension Router {
     /// Route description
     public struct RouteDescription: CustomStringConvertible {

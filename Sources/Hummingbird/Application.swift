@@ -93,7 +93,7 @@ extension ApplicationProtocol {
     public func run() async throws {
         // `#available()` logic must be placed within this method as Service
         // protocol requires `run()` method is available from iOS 13+
-        guard #available(iOS 17.0, *) else {
+        guard #available(macOS 13, iOS 17, tvOS 16, *) else {
             return
         }
         

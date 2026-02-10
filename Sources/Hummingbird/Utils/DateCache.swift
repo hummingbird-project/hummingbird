@@ -22,7 +22,7 @@ import Foundation
 ///
 /// Getting the current date formatted is an expensive operation. This creates a task that will
 /// update a cached version of the date in the format as detailed in RFC9110 once every second.
-@available(iOS 16, *)
+@available(macOS 13, iOS 16, tvOS 16, *)
 final class DateCache: Service {
     final class DateContainer: AtomicReference, Sendable {
         let date: String

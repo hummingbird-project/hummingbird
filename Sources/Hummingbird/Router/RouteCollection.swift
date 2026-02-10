@@ -9,7 +9,7 @@
 public import HTTPTypes
 
 /// Collection of routes
-@available(iOS 16, *)
+@available(macOS 13, iOS 16, tvOS 16, *)
 public final class RouteCollection<Context: RequestContext>: RouterMethods {
     /// Initialize RouteCollection
     public init(context: Context.Type = BasicRequestContext.self) {
@@ -53,7 +53,7 @@ public final class RouteCollection<Context: RequestContext>: RouterMethods {
     let middlewares: MiddlewareGroup<Context>
 }
 
-@available(iOS 16, *)
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension RouterMethods {
     /// Add route collection to router
     /// - Parameters

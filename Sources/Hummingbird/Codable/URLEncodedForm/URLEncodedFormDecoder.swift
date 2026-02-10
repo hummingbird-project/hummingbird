@@ -9,7 +9,7 @@
 public import Foundation
 
 /// The wrapper struct for decoding URL encoded form data to Codable classes
-@available(iOS 16, *)
+@available(macOS 13, iOS 16, tvOS 16, *)
 public struct URLEncodedFormDecoder: Sendable {
     /// The strategy to use for decoding `Date` values.
     public enum DateDecodingStrategy: Sendable {
@@ -76,7 +76,7 @@ public struct URLEncodedFormDecoder: Sendable {
     }
 }
 
-@available(iOS 16, *)
+@available(macOS 13, iOS 16, tvOS 16, *)
 private class _URLEncodedFormDecoder: Decoder {
     // MARK: Properties
 
@@ -423,7 +423,7 @@ private class _URLEncodedFormDecoder: Decoder {
     }
 }
 
-@available(iOS 16, *)
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension _URLEncodedFormDecoder: SingleValueDecodingContainer {
     func decodeNil() -> Bool {
         (try? self.unboxNil(self.storage.topContainer)) ?? false
@@ -490,7 +490,7 @@ extension _URLEncodedFormDecoder: SingleValueDecodingContainer {
     }
 }
 
-@available(iOS 16, *)
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension _URLEncodedFormDecoder {
     func unboxNil(_ node: URLEncodedFormNode) throws -> Bool {
         switch node {
@@ -690,7 +690,7 @@ extension _URLEncodedFormDecoder {
     }
 }
 
-@available(iOS 16, *)
+@available(macOS 13, iOS 16, tvOS 16, *)
 private struct URLEncodedFormDecodingStorage {
     /// the container stack
     private var containers: [URLEncodedFormNode] = []

@@ -8,7 +8,7 @@
 
 public import HummingbirdCore
 
-@available(iOS 16, *)
+@available(macOS 13, iOS 16, tvOS 16, *)
 extension Request {
     /// access cookies from request. When accessing this for the first time the Cookies struct will be created
     public var cookies: Cookies {

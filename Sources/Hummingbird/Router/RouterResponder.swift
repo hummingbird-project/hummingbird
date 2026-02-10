@@ -8,7 +8,7 @@
 
 import NIOCore
 
-@available(iOS 16, *)
+@available(macOS 13, iOS 16, tvOS 16, *)
 public struct RouterResponder<Context: RequestContext>: HTTPResponder {
     @usableFromInline
     let trie: RouterTrie<EndpointResponders<Context>>
