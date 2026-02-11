@@ -17,6 +17,7 @@ import NIOSSL
 import NIOTLS
 
 /// Child channel for processing HTTP1 with the option of upgrading to HTTP2 via ALPN
+@available(macOS 14, iOS 17, tvOS 17, *)
 public struct HTTP2UpgradeChannel: HTTPChannelHandler {
     public typealias Configuration = HTTP2ChannelConfiguration
     typealias HTTP1Connection = HTTP1Channel.Value
