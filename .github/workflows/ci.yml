@@ -13,9 +13,21 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-ci
   cancel-in-progress: true
 
-env:
-  ENABLE_HB_BENCHMARKS: true
 jobs:
+  macOS:
+    runs-on: macos-26
+    timeout-minutes: 15
+    steps:
+    - name: Select appropriate Xcode version
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+    - name: Checkout
+      uses: actions/checkout@v6
+    - name: Build
+      run: |
+        swift build
+
   linux:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -24,6 +36,8 @@ jobs:
         image: ["swift:6.0", "swift:6.1", "swift:6.2"]
     container:
       image: ${{ matrix.image }}
+    env:
+      ENABLE_HB_BENCHMARKS: true
     steps:
     - name: Checkout
       uses: actions/checkout@v6
@@ -31,6 +45,7 @@ jobs:
       run: |
         apt-get -q update
         apt-get install -y libjemalloc-dev
+
     - name: Test
       run: |
         swift test --enable-code-coverage

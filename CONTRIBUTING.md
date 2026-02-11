@@ -15,18 +15,20 @@ Please ensure to include the following in your bug report
 - Contextual information (Swift version, OS etc)
 
 ## Adding a Feature
-Prior to adding features to Hummingbird, please discuss the feature request in an issue and/or on our Discord server. That way we can shape the new feature together, make it fit the project, and validate it's within our vision of the framework.
+Prior to adding features please discuss the feature request in an issue and/or on our Discord server. That way we can shape the new feature together, make it fit the project, and validate it's within our vision of the framework.
 
 ## Submitting a Pull Request
+
 Please ensure to include the following in your Pull Request
 - A link referencing the issue (bug or feature request) it fixes
 - A description of the code changes
 - Documentation on how these changes are being tested
 - Additional tests to show your code working and to ensure future changes don't break your code.
 
-Please keep your PRs to a minimal number of changes, this helps us review and merge it timely. If a PR is large try to split it up into smaller PRs. Don't move code around unnecessarily as it makes comparing old with new very hard.
+Please keep your PRs to a minimal number of changes. This helps us review and merge them in a timely fashion. If a PR is large try to split it up into smaller PRs. Don't move code around unnecessarily as it makes comparing old with new very hard.
 
 The main development branch of the repository is  `main`.
 
 ### Formatting
-We use Apple's swift-format for formatting code. PRs will not be accepted until they're formatted.
+
+We use Apple's swift-format for formatting code. PRs will not be accepted if they haven't be formatted.
