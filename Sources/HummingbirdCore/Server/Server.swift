@@ -239,7 +239,20 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
                         logger: self.logger
                     )
                 }
-                self.logger.info("Server started and listening on \(host):\(asyncChannel.channel.localAddress?.port ?? port)")
+
+                var printableHostname = host
+
+                switch host {
+                case "0.0.0.0":
+                    printableHostname = "127.0.0.1"
+                case "::":
+                    printableHostname = "::1"
+                default:
+                    ()
+                }
+
+                self.logger.info("Server started and listening on http://\(printableHostname):\(asyncChannel.channel.localAddress?.port ?? port)")
+                
                 return (asyncChannel, quiescingHelper)
 
             case .unixDomainSocket(let path):
