@@ -6,6 +6,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+internal import Foundation
+
 /// Split router path into components
 public struct RouterPath: Sendable, ExpressibleByStringLiteral, ExpressibleByStringInterpolation, CustomStringConvertible, Equatable {
     public struct Element: Equatable, Sendable, CustomStringConvertible {
@@ -141,6 +143,38 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, ExpressibleByStr
             case .path(let lhs):
                 return lhs == rhs
             default:
+                return false
+            }
+        }
+
+        public func caseInsensitiveEquals(_ rhs: some StringProtocol) -> Bool {
+            switch value {
+            case .path(let lhs):
+                return lhs.caseInsensitiveCompare(rhs) == .orderedSame
+            default:
+                return false
+            }
+        }
+
+        public func caseInsensitiveMatch(_ rhs: some StringProtocol) -> Bool {
+            switch value {
+            case .path(let lhs):
+                return lhs.caseInsensitiveCompare(rhs) == .orderedSame
+            case .capture:
+                return true
+            case .prefixCapture(let suffix, _):
+                return rhs.hasSuffix(suffix)
+            case .suffixCapture(let prefix, _):
+                return rhs.hasPrefix(prefix)
+            case .wildcard:
+                return true
+            case .prefixWildcard(let suffix):
+                return rhs.hasSuffix(suffix)
+            case .suffixWildcard(let prefix):
+                return rhs.hasPrefix(prefix)
+            case .recursiveWildcard:
+                return true
+            case .null:
                 return false
             }
         }
