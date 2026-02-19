@@ -29,6 +29,7 @@ let package = Package(
     ],
     traits: [
         .trait(name: "ConfigurationSupport", description: "Enable support for swift-configuration package."),
+        .trait(name: "NonThrowingRouteHandlers", description: "Don't allow throwing inside Router's get/post/etc. callback handlers."),
         .default(enabledTraits: ["ConfigurationSupport"]),
     ],
     dependencies: [
