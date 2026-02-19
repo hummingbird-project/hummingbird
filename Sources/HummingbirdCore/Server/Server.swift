@@ -18,7 +18,7 @@ import NIOTransportServices
 #endif
 
 /// HTTP server class
-@available(iOS 17, *)
+@available(macOS 14, iOS 17, tvOS 17, *)
 public actor Server<ChildChannel: ServerChildChannel>: Service {
     public typealias AsyncChildChannel = ChildChannel.Value
     public typealias AsyncServerChannel = NIOAsyncChannel<AsyncChildChannel, Never>
@@ -89,13 +89,8 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
         self.logger = logger
     }
 
+    @available(macOS 14, iOS 17, tvOS 17, *)
     public func run() async throws {
-        // `#available()` logic must be placed within this method as Service
-        // protocol requires `run()` method is available from iOS 13+
-        guard #available(macOS 14, iOS 15, tvOS 17, *) else {
-            return
-        }
-        
         switch self.state {
         case .initial(let childChannelSetup, let configuration, let onServerRunning):
             self.state = .starting
@@ -368,7 +363,7 @@ extension NIOTSListenerBootstrap: ServerBootstrapProtocol {
 }
 #endif
 
-@available(iOS 17, *)
+@available(macOS 14, iOS 17, tvOS 17, *)
 extension Server: CustomStringConvertible {
     public nonisolated var description: String {
         "Hummingbird"
