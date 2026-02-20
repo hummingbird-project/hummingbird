@@ -34,6 +34,7 @@ public protocol ServerChildChannel: Sendable {
     func handle(value: Value, logger: Logger) async
 }
 
+@available(macOS 14, iOS 17, tvOS 17, *)
 extension ServerChildChannel {
     /// Build existential ``Server`` from existential `ServerChildChannel`
     ///

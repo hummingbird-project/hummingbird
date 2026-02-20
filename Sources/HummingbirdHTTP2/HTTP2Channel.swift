@@ -15,6 +15,7 @@ import NIOHTTPTypesHTTP2
 import NIOSSL
 
 /// HTTP2 configuration
+@available(macOS 13, iOS 16, tvOS 16, *)
 public struct HTTP2ChannelConfiguration: Sendable {
     /// Idle timeout, how long connection is kept idle before closing
     public var idleTimeout: Duration?
@@ -44,6 +45,7 @@ public struct HTTP2ChannelConfiguration: Sendable {
 }
 
 /// Child channel for processing HTTP2
+@available(macOS 14, iOS 17, tvOS 17, *)
 public struct HTTP2Channel: ServerChildChannel {
     public typealias Configuration = HTTP2ChannelConfiguration
     typealias HTTP2Connection = NIOHTTP2Handler.AsyncStreamMultiplexer<HTTP2StreamChannel.Value>
