@@ -16,7 +16,9 @@ public struct Cookies: Sendable {
         self = Cookies(from: request.headers[values: .cookie])
     }
 
-    package init(from cookieHeaders: [String]) {
+    /// Construct cookies accessor from cookie header strings
+    /// - Parameter cookieHeaders: An array of cookie header strings
+    public init(from cookieHeaders: [String]) {
         self.cookieStrings = cookieHeaders.flatMap { $0.splitSequence(separator: ";").map { $0.drop { $0.isWhitespace } } }
     }
 
