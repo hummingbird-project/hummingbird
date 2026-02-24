@@ -12,7 +12,7 @@ import NIOHTTP2
 /// HTTP2 server connection manager
 ///
 /// This is heavily based off the ServerConnectionManagementHandler from https://github.com/grpc/grpc-swift-nio-transport
-@available(macOS 13, iOS 16, tvOS 16, *)
+@available(macOS 14, iOS 17, tvOS 17, *)
 final class HTTP2ServerConnectionManager: ChannelDuplexHandler {
     package typealias InboundIn = HTTP2Frame
     package typealias InboundOut = HTTP2Frame
@@ -226,7 +226,7 @@ final class HTTP2ServerConnectionManager: ChannelDuplexHandler {
     }
 }
 
-@available(macOS 13, iOS 16, tvOS 16, *)
+@available(macOS 14, iOS 17, tvOS 17, *)
 extension HTTP2ServerConnectionManager {
     struct LoopBoundHandler: @unchecked Sendable {
         let handler: HTTP2ServerConnectionManager
@@ -242,7 +242,7 @@ extension HTTP2ServerConnectionManager {
     }
 }
 
-@available(macOS 13, iOS 16, tvOS 16, *)
+@available(macOS 14, iOS 17, tvOS 17, *)
 extension HTTP2ServerConnectionManager {
     /// Stream delegate
     struct HTTP2StreamDelegate: NIOHTTP2StreamDelegate, @unchecked Sendable {

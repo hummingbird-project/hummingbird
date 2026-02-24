@@ -13,7 +13,7 @@ public import Foundation
 #endif
 
 /// Structure holding a single cookie
-@available(macOS 13, iOS 16, tvOS 16, *)
+@available(macOS 14, iOS 17, tvOS 17, *)
 public struct Cookie: Sendable, CustomStringConvertible {
     public struct ValidationError: Error {
         enum Reason {

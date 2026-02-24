@@ -10,7 +10,7 @@ public import HTTPTypes
 public import NIOCore
 
 /// HTTP client types
-@available(macOS 13, iOS 16, tvOS 16, *)
+@available(macOS 14, iOS 17, tvOS 17, *)
 extension TestClient {
     public enum Error: Swift.Error {
         case invalidURL

@@ -18,7 +18,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
-@available(macOS 13, iOS 16, tvOS 16, *)
+@available(macOS 14, iOS 17, tvOS 17, *)
 extension Date {
     init?(httpHeader: String) {
         try? self.init(httpHeader, strategy: .rfc9110)
@@ -31,7 +31,7 @@ extension Date {
 
 struct HTTPHeaderDateParsingError: Error {}
 
-@available(macOS 13, iOS 16, tvOS 16, *)
+@available(macOS 14, iOS 17, tvOS 17, *)
 struct HTTPHeaderDateFormatStyle {
     let calendar: Calendar
 
@@ -42,7 +42,7 @@ struct HTTPHeaderDateFormatStyle {
     }
 }
 
-@available(macOS 13, iOS 16, tvOS 16, *)
+@available(macOS 14, iOS 17, tvOS 17, *)
 extension HTTPHeaderDateFormatStyle: ParseStrategy {
     func parse(_ input: String) throws -> Date {
         guard let components = self.components(from: input) else {
@@ -278,7 +278,7 @@ let timezoneOffsetMap: [[UInt8]: Int] = [
     Array("PDT".utf8): -7 * 60,
 ]
 
-@available(macOS 13, iOS 16, tvOS 16, *)
+@available(macOS 14, iOS 17, tvOS 17, *)
 extension HTTPHeaderDateFormatStyle: FormatStyle {
     //let calendar: Calendar
 
@@ -323,12 +323,12 @@ extension HTTPHeaderDateFormatStyle: FormatStyle {
     ]
 }
 
-@available(macOS 13, iOS 16, tvOS 16, *)
+@available(macOS 14, iOS 17, tvOS 17, *)
 extension FormatStyle where Self == HTTPHeaderDateFormatStyle {
     static var rfc9110: Self { .init() }
 }
 
-@available(macOS 13, iOS 16, tvOS 16, *)
+@available(macOS 14, iOS 17, tvOS 17, *)
 extension ParseStrategy where Self == HTTPHeaderDateFormatStyle {
     static var rfc9110: Self { .init() }
 }

@@ -9,7 +9,7 @@
 /// Structure holding an array of cookies
 ///
 /// Cookies can be accessed from request via `Request.cookies`.
-@available(macOS 13, iOS 16, tvOS 16, *)
+@available(macOS 14, iOS 17, tvOS 17, *)
 public struct Cookies: Sendable {
     /// Construct cookies accessor from `Request`
     /// - Parameter request: request to get cookies from

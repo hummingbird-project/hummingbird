@@ -71,7 +71,7 @@ extension URLEncodedFormError {
     }
 }
 /// Internal representation of URL encoded form data used by both encode and decode
-@available(macOS 13, iOS 16, tvOS 16, *)
+@available(macOS 14, iOS 17, tvOS 17, *)
 enum URLEncodedFormNode: CustomStringConvertible, Equatable {
     /// holds a value
     case leaf(NodeValue?)

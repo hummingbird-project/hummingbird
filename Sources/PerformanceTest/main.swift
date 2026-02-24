@@ -11,7 +11,7 @@ import Logging
 import NIOCore
 import NIOPosix
 
-if #available(macOS 13, iOS 16, tvOS 16, *) {
+if #available(macOS 14, iOS 17, tvOS 17, *) {
     // get environment
     let env = Environment()
     let hostname = env.get("SERVER_HOSTNAME") ?? "127.0.0.1"
@@ -67,4 +67,6 @@ if #available(macOS 13, iOS 16, tvOS 16, *) {
     
     // run app
     try await app.runService()
+} else {
+    fatalError("Hummingbird requires macOS 14, iOS 17 or tvOS 17")
 }

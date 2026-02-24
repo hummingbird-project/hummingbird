@@ -36,7 +36,7 @@ public import HummingbirdCore
 /// Both of these match routes which start with "/user" and the next path segment being anything.
 /// The second version extracts the path segment out and adds it to `Request.parameters` with the
 /// key "id".
-@available(macOS 13, iOS 16, tvOS 16, *)
+@available(macOS 14, iOS 17, tvOS 17, *)
 public final class Router<Context: RequestContext>: RouterMethods, HTTPResponderBuilder {
     var trie: RouterPathTrieBuilder<EndpointResponders<Context>>
     public let middlewares: MiddlewareGroup<Context>
