@@ -37,14 +37,22 @@ public actor MemoryPersistDriver<C: Clock>: PersistDriver where C.Duration == Du
 
     /// Initialize MemoryPersistDriver
     /// - Parameters:
+    ///   - configuration: Configuration of driver
+    public init(configuration: Configuration = .init()) where C == ContinuousClock {
+        self.values = [:]
+        self.clock = .continuous
+        self.configuration = configuration
+    }
+
+    /// Initialize MemoryPersistDriver
+    /// - Parameters:
     ///   - clock: Clock to use when calculating expiration dates
     ///   - configuration: Configuration of driver
-    public init(_ clock: C = .continuous, configuration: Configuration = .init()) {
+    public init(_ clock: C, configuration: Configuration = .init()) {
         self.values = [:]
         self.clock = clock
         self.configuration = configuration
     }
-
     public func create(key: String, value: some Codable & Sendable, expires: Duration?) async throws {
         guard self.values[key] == nil else { throw PersistError.duplicate }
         self.values[key] = .init(value: value, expires: expires.map { self.clock.now.advanced(by: $0) })

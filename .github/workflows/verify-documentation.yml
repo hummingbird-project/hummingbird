@@ -6,6 +6,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-verifydocs
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   linux:
     runs-on: ubuntu-latest

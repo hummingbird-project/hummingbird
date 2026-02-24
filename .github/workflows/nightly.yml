@@ -3,6 +3,9 @@ name: Swift nightly build
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   linux:
     runs-on: ubuntu-latest
@@ -12,9 +15,16 @@ jobs:
         image: ['nightly-focal', 'nightly-jammy', 'nightly-amazonlinux2']
     container:
       image: swiftlang/swift:${{ matrix.image }}
+    env:
+      ENABLE_HB_BENCHMARKS: true
     steps:
     - name: Checkout
       uses: actions/checkout@v6
+    - name: Install libjemalloc-dev
+      run: |
+        apt-get -q update
+        apt-get install -y libjemalloc-dev
+
     - name: Test
       run: |
         swift test
