@@ -15,6 +15,7 @@ import Logging
 import NIOCore
 import NIOHTTPTypes
 import NIOPosix
+import NIOTransportServices
 import ServiceLifecycle
 import Testing
 
