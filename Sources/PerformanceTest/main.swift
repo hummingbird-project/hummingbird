@@ -45,12 +45,14 @@ router.get("json") { _, _ in
     Object(message: "Hello, world")
 }
 
+#if !NonThrowingRouteHandlers
 // return JSON
 // ./wrk -c 128 -d 15s -t 8 http://localhost:8080/json
 router.get("wait") { _, _ in
     try await Task.sleep(for: .seconds(8))
     return "I waited"
 }
+#endif
 
 var app = Application(
     responder: router.buildResponder(),
