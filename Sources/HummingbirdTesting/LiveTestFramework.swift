@@ -16,6 +16,7 @@ import ServiceLifecycle
 import UnixSignals
 
 /// Test using a live server
+@available(macOS 14, iOS 17, tvOS 17, *)
 final class LiveTestFramework<App: ApplicationProtocol>: ApplicationTestFramework {
     struct Client: TestClientProtocol {
         let client: TestClient

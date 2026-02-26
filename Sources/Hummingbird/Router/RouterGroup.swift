@@ -23,6 +23,7 @@ public import HummingbirdCore
 /// .put(":id", use: todoController.update)
 /// .delete(":id", use: todoController.delete)
 /// ```
+@available(macOS 14, iOS 17, tvOS 17, *)
 public struct RouterGroup<Context: RequestContext>: RouterMethods {
     let path: RouterPath
     let parent: any RouterMethods<Context>

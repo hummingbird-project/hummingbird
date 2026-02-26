@@ -10,6 +10,7 @@ import HummingbirdCore
 import NIOCore
 import NIOSSL
 
+@available(macOS 14, iOS 17, tvOS 17, *)
 extension HTTPServerBuilder {
     /// Build HTTP channel with HTTP2 upgrade
     ///

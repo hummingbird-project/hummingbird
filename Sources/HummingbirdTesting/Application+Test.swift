@@ -36,6 +36,7 @@ public struct TestingSetup: Sendable {
 }
 
 /// Extends `ApplicationProtocol` to support testing of applications
+@available(macOS 14, iOS 17, tvOS 17, *)
 extension ApplicationProtocol {
     // MARK: Initialization
 
