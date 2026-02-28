@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+#if !os(Windows)
 import HTTPTypes
 public import HummingbirdCore
 public import Logging
@@ -396,3 +397,4 @@ extension FileMiddleware {
         return nil
     }
 }
+#endif
