@@ -19,6 +19,7 @@ import ServiceLifecycle
 import UnixSignals
 
 /// Test using a live server and AsyncHTTPClient as a client
+@available(macOS 14, iOS 17, tvOS 17, *)
 final class AsyncHTTPClientTestFramework<App: ApplicationProtocol>: ApplicationTestFramework {
     struct Client: TestClientProtocol {
         let client: HTTPClient

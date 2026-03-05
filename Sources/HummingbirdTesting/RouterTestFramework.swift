@@ -20,6 +20,7 @@ import ServiceLifecycle
 import UnixSignals
 
 /// Test sending requests directly to router. This does not setup a live server
+@available(macOS 14, iOS 17, tvOS 17, *)
 struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework where Responder.Context: InitializableFromSource {
     let responder: Responder
     let makeContext: @Sendable (Logger) -> Responder.Context
