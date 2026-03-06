@@ -32,7 +32,7 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
                 // need to create dimensions once request has been responded to ensure
                 // we have the correct endpoint path
                 let dimensions: [(String, String)] = [
-                    ("http.route", context.endpointPath ?? request.uri.path),
+                    ("http.route", context.endpointPath ?? "Unknown"),
                     ("http.request.method", request.method.rawValue),
                     ("http.response.status_code", responseStatus.code.description),
                 ]
