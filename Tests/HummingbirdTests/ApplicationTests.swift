@@ -1197,56 +1197,60 @@ struct ApplicationTests {
         let router = Router()
         router.post("/") { request, context in
             let b = try await request.body.collect(upTo: .max)
-            return Response(status: .ok, body: .init(byteBuffer: b))
+            return Response(
+                status: .ok,
+                body: .init { writer in
+                    try await writer.write(b)
+                    try await writer.finish(nil)
+                }
+            )
         }
         var httpConfiguration = HTTP1Channel.Configuration()
-        httpConfiguration.pipliningAssistance = true
+        httpConfiguration.pipliningAssistance = false
         let app = Application(
             router: router,
             server: .http1(configuration: httpConfiguration),
             onServerRunning: { cont.yield($0.localAddress!.port!) }
         )
-        do {
-            try await withThrowingTaskGroup(of: Void.self) { group in
-                let serviceGroup = ServiceGroup(
-                    configuration: .init(
-                        services: [app],
-                        gracefulShutdownSignals: [.sigterm, .sigint],
-                        logger: Logger(label: "SG")
-                    )
+        await withThrowingTaskGroup(of: Void.self) { group in
+            let serviceGroup = ServiceGroup(
+                configuration: .init(
+                    services: [app],
+                    gracefulShutdownSignals: [.sigterm, .sigint],
+                    logger: Logger(label: "SG")
                 )
+            )
 
-                group.addTask {
-                    try await serviceGroup.run()
-                }
-
-                let port = await stream.first { _ in true }!
-                let task = Task {
-                    let count = ManagedAtomic(0)
-                    let stream = AsyncStream {
-                        let value = count.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
-                        if value < 16 {
-                            try? await Task.sleep(for: .milliseconds(100))
-                            return ByteBuffer(repeating: 0, count: 256)
-                        } else {
-                            return nil
-                        }
-                    }
-                    var request = HTTPClientRequest(url: "http://localhost:\(port)")
-                    request.method = .POST
-                    request.body = .stream(stream, length: .known(Int64(4096)))
-                    let response = try await httpClient.execute(request, deadline: .now() + .minutes(30))
-                    let result = try await response.body.collect(upTo: .max)
-                    print("Result size: \(result.readableBytes)")
-                }
-
-                try await Task.sleep(for: .seconds(1))
-                task.cancel()
-                await serviceGroup.triggerGracefulShutdown()
+            group.addTask {
+                try await serviceGroup.run()
             }
-        } catch {
-            try await httpClient.shutdown()
-            throw error
+
+            let port = await stream.first { _ in true }!
+            let (stream, cont) = AsyncStream<Void>.makeStream(of: Void.self)
+            let task = Task {
+                let count = ManagedAtomic(0)
+                let bodyStream = AsyncStream {
+                    let value = count.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
+                    if value == 2 {
+                        cont.yield()
+                    }
+                    if value < 16 {
+                        try? await Task.sleep(for: .milliseconds(100))
+                        return ByteBuffer(repeating: 0, count: 256)
+                    } else {
+                        return nil
+                    }
+                }
+                var request = HTTPClientRequest(url: "http://localhost:\(port)")
+                request.method = .POST
+                request.body = .stream(bodyStream, length: .known(Int64(4096)))
+                let response = try await httpClient.execute(request, deadline: .now() + .minutes(30))
+                let result = try await response.body.collect(upTo: .max)
+                print("Result size: \(result.readableBytes)")
+            }
+            await stream.first { _ in true }
+            task.cancel()
+            await serviceGroup.triggerGracefulShutdown()
         }
         try await httpClient.shutdown()
     }
