@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-import Collections
+internal import DequeModule
 public import NIOConcurrencyHelpers
 public import NIOCore
 package import NIOHTTPTypes
