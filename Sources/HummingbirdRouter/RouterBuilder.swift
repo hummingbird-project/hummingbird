@@ -66,7 +66,8 @@ where Handler.Input == Request, Handler.Output == Response, Handler.Context == C
 extension RouterBuilder: HTTPResponder, HTTPResponderBuilder {
     public func respond(to request: Input, context: Context) async throws -> Output {
         do {
-            return try await self.handle(request, context: context) { _, _ in
+            return try await self.handle(request, context: context) { _, context in
+                context.coreContext.endpointPath.value = "NotFound"
                 throw HTTPError(.notFound)
             }
         } catch let error as any HTTPResponseError {

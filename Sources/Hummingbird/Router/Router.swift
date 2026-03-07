@@ -105,6 +105,7 @@ public final class Router<Context: RequestContext>: RouterMethods, HTTPResponder
 /// Responder that return a not found error
 struct NotFoundResponder<Context: RequestContext>: HTTPResponder {
     func respond(to request: Request, context: Context) throws -> Response {
+        context.coreContext.endpointPath.value = "NotFound"
         throw HTTPError(.notFound)
     }
 }

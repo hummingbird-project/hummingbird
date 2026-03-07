@@ -42,8 +42,9 @@ where M0.Input == Request, M0.Output == Response, M0.Context: RouterRequestConte
 
     /// Dummy function passed to middleware handle
     @usableFromInline
-    static func notFound(_: Request, _: Context) -> Response {
-        .init(status: .notFound)
+    static func notFound(_: Request, context: Context) -> Response {
+        context.coreContext.endpointPath.value = "NotFound"
+        return .init(status: .notFound)
     }
 
     @usableFromInline
