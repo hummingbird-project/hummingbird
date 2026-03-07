@@ -464,7 +464,7 @@ struct TracingTests {
             }
             let span = try #require(Self.testTracer.spans.first)
 
-            #expect(span.operationName == "HTTP GET route not found")
+            #expect(span.operationName == "NotFound")
             #expect(span.kind == .server)
             #expect(span.status == nil)
 
@@ -476,6 +476,7 @@ struct TracingTests {
                 span.attributes,
                 [
                     "http.request.method": "GET",
+                    "http.route": "NotFound",
                     "url.path": "/",
                     "http.response.status_code": 404,
                 ]
