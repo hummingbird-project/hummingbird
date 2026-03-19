@@ -19,7 +19,7 @@ if #available(macOS 14, iOS 17, tvOS 17, *) {
 
     // create app
     let elg = MultiThreadedEventLoopGroup(numberOfThreads: 4)
-    var router = Router()
+    let router = Router()
     router.addMiddleware {
         FileMiddleware()
     }

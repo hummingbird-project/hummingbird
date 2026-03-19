@@ -15,8 +15,11 @@ import Logging
 import Network
 import NIOCore
 import NIOSSL
-import NIOTransportServices
 import Testing
+
+#if canImport(Network)
+import NIOTransportServices
+#endif
 
 struct TransportServicesTests {
     func randomBuffer(size: Int) -> ByteBuffer {

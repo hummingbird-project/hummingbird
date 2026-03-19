@@ -15,9 +15,12 @@ import Logging
 import NIOCore
 import NIOHTTPTypes
 import NIOPosix
-import NIOTransportServices
 import ServiceLifecycle
 import Testing
+
+#if canImport(Network)
+import NIOTransportServices
+#endif
 
 @Suite("HummingbirdCoreTests", .serialized)
 struct HummingbirdCoreTests {
