@@ -32,3 +32,7 @@ The main development branch of the repository is  `main`.
 ### Formatting
 
 We use Apple's swift-format for formatting code. PRs will not be accepted if they haven't be formatted.
+
+### Usage of AI Tools
+
+We have a separate [AI_POLICY.md](AI_POLICY.md) document. If you are using AI assistance you should read this. 

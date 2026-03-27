@@ -3,7 +3,7 @@
 ##
 ## This source file is part of the Hummingbird server framework project
 ##
-## Copyright (c) 2021-2024 the Hummingbird authors
+## Copyright (c) 2021-2026 the Hummingbird authors
 ## Licensed under Apache License v2.0
 ##
 ## See LICENSE.txt for license information
@@ -25,8 +25,6 @@
 ## SPDX-License-Identifier: Apache-2.0
 ##
 ##===----------------------------------------------------------------------===##
-
-SWIFT_FORMAT_VERSION=0.53.10
 
 set -eu
 here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
