@@ -1,0 +1,44 @@
+name: Generate Sponsors README
+on:
+  workflow_dispatch:
+  # Commented out until we have some backers. schedule:
+  #  - cron: 0 1 * * 0
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+
+    - name: Create token
+      id: create-token
+      uses: actions/create-github-app-token@v3
+      with:
+        app-id: ${{ secrets.HB_APP_ID }}
+        private-key: ${{ secrets.HB_APP_PRIVATE_KEY }}
+
+    - name: Generate Sponsors
+      uses: JamesIves/github-sponsors-readme-action@v1
+      with:
+        token: ${{ steps.create-token.outputs.token }}
+        file: "README.md"
+        minimum: 500
+        maximum: 9900
+        marker: "backers"
+        organization: true
+    - name: Commit and create PR
+      uses: peter-evans/create-pull-request@v8
+      with:
+        token: ${{ steps.create-token.outputs.token }}
+        commit-message: "Update README with new sponsor"
+        committer: "GitHub <noreply@github.com>"
+        author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+        branch: update-sponsors
+        title: Update README with new sponsor/backer
+        body: Automated update of README with new sponsor/backer
+        labels: sponsors
