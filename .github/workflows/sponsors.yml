@@ -1,8 +1,8 @@
 name: Generate Sponsors README
 on:
   workflow_dispatch:
-  # Commented out until we have some backers. schedule:
-  #  - cron: 0 1 * * 0
+  schedule:
+    - cron: 0 1 * * 0
 
 permissions:
   id-token: write
