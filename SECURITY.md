@@ -6,7 +6,7 @@ Currently we support versions 2.0.0 and above of Hummingbird. These will receive
 
 ## Reporting a Vulnerability
 
-If you believe you have found a security vulnerability in Hummingbird or any of its related repositories please do not post this in a public forum, do not create a GitHub Issue. Instead you should email [admin@opticalaberration.com](mailto:admin@opticalaberration.com) with details of the issue.
+If you believe you have found a security vulnerability in Hummingbird or any of its related repositories please do not post this in a public forum, do not create a GitHub Issue. Instead you should submit a security advisory via [GitHub](https://github.com/hummingbird-project/hummingbird/security/advisories/new) with details of the issue.
 
 #### What happens next?
 

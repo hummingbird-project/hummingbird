@@ -97,8 +97,19 @@ swift package add-target-dependency Hummingbird MyApp --package hummingbird
 
 ## Contributing
 
-We welcome contributions to Hummingbird! Please read our [contributing guidelines](CONTRIBUTING.md) before submitting a pull request.
+We welcome all contributions to Hummingbird!
+- Submit an [Issue](https://github.com/hummingbird-project/hummingbird/issues/new) for feature requests or to report bugs or issues.
+- Submit pull requests to help push development forward.
+- If you find a security vulnerability then submit a report via [GitHub](https://github.com/hummingbird-project/hummingbird/security/advisories/new).
+ 
+Please read our [contributing guidelines](CONTRIBUTING.md), before making a contribution to the project.
 
-## License
+## Sponsors
 
-Hummingbird is released under the [Apache 2.0 license](LICENSE.txt).
+Support development of Hummingbird by becoming a [sponsor](https://github.com/sponsors/hummingbird-project).
+
+## Backers
+
+Support development of Hummingbird by becoming a [backer](https://github.com/sponsors/hummingbird-project).
+
+<!-- backers --><!-- backers -->
