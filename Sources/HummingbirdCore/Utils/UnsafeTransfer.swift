@@ -38,19 +38,3 @@ extension UnsafeTransfer: @unchecked Sendable {}
 
 extension UnsafeTransfer: Equatable where Wrapped: Equatable {}
 extension UnsafeTransfer: Hashable where Wrapped: Hashable {}
-
-/// ``UnsafeMutableTransferBox`` can be used to make non-`Sendable` values `Sendable` and mutable.
-/// It can be used to capture local mutable values in a `@Sendable` closure and mutate them from within the closure.
-/// As the name implies, the usage of this is unsafe because it disables the sendable checking of the compiler and does not add any synchronisation.
-@usableFromInline
-package final class UnsafeMutableTransferBox<Wrapped> {
-    @usableFromInline
-    package var wrappedValue: Wrapped
-
-    @inlinable
-    package init(_ wrappedValue: Wrapped) {
-        self.wrappedValue = wrappedValue
-    }
-}
-
-extension UnsafeMutableTransferBox: @unchecked Sendable {}

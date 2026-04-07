@@ -7,14 +7,6 @@
 //
 
 extension StringProtocol {
-    func dropPrefix(_ prefix: String) -> Self.SubSequence {
-        if hasPrefix(prefix) {
-            return self.dropFirst(prefix.count)
-        } else {
-            return self[...]
-        }
-    }
-
     func dropSuffix(_ suffix: String) -> Self.SubSequence {
         if hasSuffix(suffix) {
             return self.dropLast(suffix.count)
