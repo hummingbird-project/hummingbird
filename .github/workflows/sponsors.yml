@@ -27,11 +27,9 @@ jobs:
       with:
         token: ${{ steps.create-token.outputs.token }}
         file: "README.md"
-        minimum: 0
         maximum: 9900
         marker: "backers"
         organization: true
-        active-only: false
     - name: Commit and create PR
       uses: peter-evans/create-pull-request@v8
       with:
