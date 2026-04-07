@@ -27,7 +27,6 @@ jobs:
       with:
         token: ${{ steps.create-token.outputs.token }}
         file: "README.md"
-        minimum: 500
         maximum: 9900
         marker: "backers"
         organization: true
