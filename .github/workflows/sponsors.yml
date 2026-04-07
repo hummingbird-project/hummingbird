@@ -27,7 +27,8 @@ jobs:
       with:
         token: ${{ steps.create-token.outputs.token }}
         file: "README.md"
-        maximum: 99
+        minimum: 500
+        maximum: 9900
         marker: "backers"
         organization: true
     - name: Commit and create PR
