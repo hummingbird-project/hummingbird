@@ -22,7 +22,7 @@
 
 /// ``UnsafeTransfer`` can be used to make non-`Sendable` values `Sendable`.
 /// As the name implies, the usage of this is unsafe because it disables the sendable checking of the compiler.
-/// It can be used similar to `@unsafe Sendable` but for values instead of types.
+/// It can be used similar to `@unchecked Sendable` but for values instead of types.
 @usableFromInline
 package struct UnsafeTransfer<Wrapped> {
     @usableFromInline
