@@ -61,7 +61,7 @@ extension RouterMethods {
     /// For the transform to work the `Source` of the transformed `RequestContext` needs
     /// to be the original `RequestContext` eg
     /// ```
-    /// struct TransformedRequestContext {
+    /// struct TransformedRequestContext: RequestContext {
     ///     typealias Source = BasicRequestContext
     ///     var coreContext: CoreRequestContextStorage
     ///     init(source: Source) {
@@ -91,7 +91,7 @@ extension RouterMethods {
     ///     typealias ParentContext = BasicRequestContext
     ///     var coreContext: CoreRequestContextStorage
     ///     init(context: ParentContext) throws {
-    ///         self.coreContext = .init(source: source)
+    ///         self.coreContext = .init(source: context)
     ///     }
     /// }
     /// ```
