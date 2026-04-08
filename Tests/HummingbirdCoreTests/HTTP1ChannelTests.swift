@@ -17,7 +17,7 @@ import Testing
 struct HTTP1ChannelTests {
     func testHTTP1Channel(
         _ test: (NIOAsyncTestingChannel) async throws -> Void,
-        responder: @escaping HTTPChannelHandler.Responder = { (request: Request, writer: consuming ResponseWriter, channel: Channel) in
+        responder: @escaping HTTPChannelHandler.Responder = { (request: Request, writer: consuming ResponseWriter, channel: any Channel) in
             let body = try await request.body.collect(upTo: .max)
             try await writer.writeResponse(
                 .init(

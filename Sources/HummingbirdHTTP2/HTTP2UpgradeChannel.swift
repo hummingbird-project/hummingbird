@@ -7,24 +7,24 @@
 //
 
 import HTTPTypes
-import HummingbirdCore
-import Logging
-import NIOCore
+public import HummingbirdCore
+public import Logging
+public import NIOCore
 import NIOHTTP1
-import NIOHTTP2
+public import NIOHTTP2
 import NIOHTTPTypesHTTP1
 import NIOSSL
-import NIOTLS
+public import NIOTLS
 
 /// Child channel for processing HTTP1 with the option of upgrading to HTTP2 via ALPN
-@available(macOS 14, iOS 17, tvOS 17, *)
+@available(hummingbird 2.0, *)
 public struct HTTP2UpgradeChannel: HTTPChannelHandler {
     public typealias Configuration = HTTP2ChannelConfiguration
     typealias HTTP1Connection = HTTP1Channel.Value
     typealias HTTP2Connection = HTTP2Channel.Value
     public struct Value: ServerChildChannelValue {
         let negotiatedHTTPVersion: EventLoopFuture<NIONegotiatedHTTPVersion<HTTP1Connection, HTTP2Connection>>
-        public let channel: Channel
+        public let channel: any Channel
     }
 
     private let tlsChannelConfiguration: TLSChannelInternalConfiguration
@@ -102,7 +102,7 @@ public struct HTTP2UpgradeChannel: HTTPChannelHandler {
     ///   - channel: Child channel
     ///   - logger: Logger used during setup
     /// - Returns: Object to process input/output on child channel
-    public func setup(channel: Channel, logger: Logger) -> EventLoopFuture<Value> {
+    public func setup(channel: any Channel, logger: Logger) -> EventLoopFuture<Value> {
         do {
             try channel.pipeline.syncOperations.addHandler(
                 NIOSSLServerHandler(

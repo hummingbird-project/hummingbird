@@ -7,6 +7,7 @@
 //
 
 import AsyncHTTPClient
+import HTTPTypes
 import HummingbirdCore
 import HummingbirdTesting
 import Logging
@@ -14,14 +15,14 @@ import NIOCore
 import NIOPosix
 import NIOSSL
 import ServiceLifecycle
-import XCTest
+import UnixSignals
 
 public enum TestErrors: Error {
     case timeout
 }
 
 /// Basic responder that just returns "Hello" in body
-@Sendable public func helloResponder(to request: Request, responseWriter: consuming ResponseWriter, channel: Channel) async throws {
+@Sendable func helloResponder(to request: Request, responseWriter: consuming ResponseWriter, channel: any Channel) async throws {
     let responseBody = channel.allocator.buffer(string: "Hello")
     var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
     try await bodyWriter.write(responseBody)
@@ -29,11 +30,11 @@ public enum TestErrors: Error {
 }
 
 /// Helper function for testing a server
-public func testServer<Value: Sendable>(
+func testServer<Value: Sendable>(
     responder: @escaping HTTPChannelHandler.Responder,
     httpChannelSetup: HTTPServerBuilder,
     configuration: ServerConfiguration,
-    eventLoopGroup: EventLoopGroup,
+    eventLoopGroup: any EventLoopGroup,
     logger: Logger,
     test: @escaping @Sendable (Int) async throws -> Value
 ) async throws -> Value {
@@ -65,7 +66,7 @@ public func testServer<Value: Sendable>(
 
 func withHTTPClient<Value>(
     _ configuration: HTTPClient.Configuration,
-    eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
+    eventLoopGroup: any EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
     _ process: (HTTPClient) async throws -> Value
 ) async throws -> Value {
     let httpClient = HTTPClient(
@@ -87,7 +88,7 @@ func withHTTPClient<Value>(
 /// - Parameters:
 ///   - timeout: Amount of time before timeout error is thrown
 ///   - process: Process to run
-public func withTimeout(_ timeout: TimeAmount, _ process: @escaping @Sendable () async throws -> Void) async throws {
+func withTimeout(_ timeout: TimeAmount, _ process: @escaping @Sendable () async throws -> Void) async throws {
     try await withThrowingTaskGroup(of: Void.self) { group in
         group.addTask {
             try await Task.sleep(nanoseconds: numericCast(timeout.nanoseconds))

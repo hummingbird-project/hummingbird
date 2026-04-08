@@ -636,20 +636,13 @@ struct TestLogHandler: LogHandler {
         self.accumalator = accumalator
     }
 
-    public func log(
-        level: Logger.Level,
-        message: Logger.Message,
-        metadata explicitMetadata: Logger.Metadata?,
-        source: String,
-        file: String,
-        function: String,
-        line: UInt
-    ) {
+    public func log(event: LogEvent) {
         var metadata = self.metadata
-        if let explicitMetadata, !explicitMetadata.isEmpty {
+        if let explicitMetadata = event.metadata, !explicitMetadata.isEmpty {
             metadata.merge(explicitMetadata, uniquingKeysWith: { _, explicit in explicit })
         }
-        self.accumalator.addEntry(.init(level: level, message: message, metadata: metadata))
+        self.accumalator.addEntry(.init(level: event.level, message: event.message, metadata: metadata))
+
     }
 
     var logLevel: Logger.Level

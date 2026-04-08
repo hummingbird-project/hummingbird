@@ -641,16 +641,16 @@ struct RouterTests {
     }
 }
 
-public struct TestRouterContext2: RouterRequestContext, RequestContext {
+struct TestRouterContext2: RouterRequestContext, RequestContext {
     /// router context
-    public var routerContext: RouterBuilderContext
+    var routerContext: RouterBuilderContext
     /// core context
-    public var coreContext: CoreRequestContextStorage
+    var coreContext: CoreRequestContextStorage
 
     /// additional data
-    public var string: String
+    var string: String
 
-    public init(source: Source) {
+    init(source: Source) {
         self.routerContext = .init()
         self.coreContext = .init(source: source)
         self.string = ""

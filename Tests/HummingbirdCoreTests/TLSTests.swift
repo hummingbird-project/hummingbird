@@ -37,7 +37,7 @@ struct HummingBirdTLSTests {
     @Test func testGracefulShutdownWithDanglingConnection() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
         defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
-        let clientChannel: NIOLockedValueBox<Channel?> = .init(nil)
+        let clientChannel: NIOLockedValueBox<(any Channel)?> = .init(nil)
         try await testServer(
             responder: helloResponder,
             httpChannelSetup: .tls(tlsConfiguration: getServerTLSConfiguration()),

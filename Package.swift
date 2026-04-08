@@ -1,9 +1,11 @@
-// swift-tools-version:6.2
+// swift-tools-version:6.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let swiftSettings: [SwiftSetting] = [
+    .enableExperimentalFeature("AvailabilityMacro=hummingbird 2.0:macOS 14.0, iOS 17.0, tvOS 17.0, visionOS 1.0"),
+
     // https://github.com/apple/swift-evolution/blob/main/proposals/0335-existential-any.md
     .enableUpcomingFeature("ExistentialAny"),
 
@@ -12,7 +14,6 @@ let swiftSettings: [SwiftSetting] = [
 
     // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0409-access-level-on-imports.md
     .enableUpcomingFeature("InternalImportsByDefault"),
-
 ]
 
 let package = Package(
@@ -124,7 +125,8 @@ let package = Package(
                 .product(name: "NIOHTTPTypesHTTP1", package: "swift-nio-extras"),
                 .product(name: "NIOHTTPTypesHTTP2", package: "swift-nio-extras"),
                 .product(name: "NIOSSL", package: "swift-nio-ssl"),
-            ]
+            ],
+            swiftSettings: swiftSettings
         ),
         .target(
             name: "HummingbirdTLS",
@@ -134,7 +136,7 @@ let package = Package(
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOSSL", package: "swift-nio-ssl"),
             ],
-            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+            swiftSettings: swiftSettings
         ),
         .executableTarget(
             name: "PerformanceTest",
@@ -142,7 +144,7 @@ let package = Package(
                 .byName(name: "Hummingbird"),
                 .product(name: "NIOPosix", package: "swift-nio"),
             ],
-            swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]
+            swiftSettings: swiftSettings
         ),
         // test targets
         .testTarget(
@@ -153,14 +155,16 @@ let package = Package(
                 .byName(name: "HummingbirdHTTP2"),
                 .byName(name: "HummingbirdTesting"),
                 .byName(name: "HummingbirdRouter"),
-            ]
+            ],
+            swiftSettings: swiftSettings
         ),
         .testTarget(
             name: "HummingbirdRouterTests",
             dependencies: [
                 .byName(name: "HummingbirdRouter"),
                 .byName(name: "HummingbirdTesting"),
-            ]
+            ],
+            swiftSettings: swiftSettings
         ),
         .testTarget(
             name: "HummingbirdCoreTests",
@@ -170,7 +174,8 @@ let package = Package(
                 .byName(name: "HummingbirdTesting"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
             ],
-            resources: [.process("Certificates")]
+            resources: [.process("Certificates")],
+            swiftSettings: swiftSettings
         ),
         .testTarget(
             name: "HummingbirdHTTP2Tests",
@@ -179,7 +184,8 @@ let package = Package(
                 .byName(name: "HummingbirdHTTP2"),
                 .byName(name: "HummingbirdTesting"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
-            ]
+            ],
+            swiftSettings: swiftSettings
         ),
     ]
 )

@@ -255,7 +255,7 @@ extension URLEncodedFormTests {
                     self.age = age
                 }
 
-                init(from decoder: Decoder) throws {
+                init(from decoder: any Decoder) throws {
                     let container = try decoder.container(keyedBy: CodingKeys.self)
                     let nameContainer = try container.nestedContainer(keyedBy: NameCodingKeys.self, forKey: .name)
                     self.forename = try nameContainer.decode(String.self, forKey: .forename)

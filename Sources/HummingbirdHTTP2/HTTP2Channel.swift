@@ -7,15 +7,15 @@
 //
 
 import HTTPTypes
-import HummingbirdCore
-import Logging
-import NIOCore
+public import HummingbirdCore
+public import Logging
+public import NIOCore
 import NIOHTTP2
 import NIOHTTPTypesHTTP2
 import NIOSSL
 
 /// HTTP2 configuration
-@available(macOS 14, iOS 17, tvOS 17, *)
+@available(hummingbird 2.0, *)
 public struct HTTP2ChannelConfiguration: Sendable {
     /// Idle timeout, how long connection is kept idle before closing
     public var idleTimeout: Duration?
@@ -45,13 +45,13 @@ public struct HTTP2ChannelConfiguration: Sendable {
 }
 
 /// Child channel for processing HTTP2
-@available(macOS 14, iOS 17, tvOS 17, *)
+@available(hummingbird 2.0, *)
 public struct HTTP2Channel: ServerChildChannel {
     public typealias Configuration = HTTP2ChannelConfiguration
     typealias HTTP2Connection = NIOHTTP2Handler.AsyncStreamMultiplexer<HTTP2StreamChannel.Value>
     public struct Value: ServerChildChannelValue {
         let http2Connection: HTTP2Connection
-        public let channel: Channel
+        public let channel: any Channel
     }
 
     private let http2Stream: HTTP2StreamChannel
@@ -74,7 +74,7 @@ public struct HTTP2Channel: ServerChildChannel {
     ///   - channel: Child channel
     ///   - logger: Logger used during setup
     /// - Returns: Object to process input/output on child channel
-    public func setup(channel: Channel, logger: Logger) -> EventLoopFuture<Value> {
+    public func setup(channel: any Channel, logger: Logger) -> EventLoopFuture<Value> {
         channel.eventLoop.makeCompletedFuture {
             let connectionManager = HTTP2ServerConnectionManager(
                 eventLoop: channel.eventLoop,

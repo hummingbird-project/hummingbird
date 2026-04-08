@@ -6,10 +6,10 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-import HummingbirdCore
-import Logging
-import NIOCore
-import NIOSSL
+public import HummingbirdCore
+public import Logging
+public import NIOCore
+public import NIOSSL
 
 /// Sets up child channel to use TLS before accessing base channel setup
 public struct TLSChannel<BaseChannel: ServerChildChannel>: ServerChildChannel {
@@ -39,7 +39,7 @@ public struct TLSChannel<BaseChannel: ServerChildChannel>: ServerChildChannel {
     ///   - logger: Logger used during setup
     /// - Returns: Object to process input/output on child channel
     @inlinable
-    public func setup(channel: Channel, logger: Logger) -> EventLoopFuture<Value> {
+    public func setup(channel: any Channel, logger: Logger) -> EventLoopFuture<Value> {
         channel.eventLoop.makeCompletedFuture {
             try channel.pipeline.syncOperations.addHandler(
                 NIOSSLServerHandler(

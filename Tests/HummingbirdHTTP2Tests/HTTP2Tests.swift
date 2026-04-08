@@ -7,6 +7,7 @@
 //
 
 import AsyncHTTPClient
+import HTTPTypes
 import HummingbirdCore
 import HummingbirdHTTP2
 import HummingbirdTesting
@@ -19,6 +20,7 @@ import NIOPosix
 import NIOSSL
 import ServiceLifecycle
 import Testing
+import UnixSignals
 
 struct HummingBirdHTTP2Tests {
     @Test func testConnect() async throws {

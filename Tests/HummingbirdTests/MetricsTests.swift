@@ -15,30 +15,30 @@ import Testing
 
 final class TestMetrics: MetricsFactory {
     private let lock = NIOLock()
-    private let _counters = NIOLockedValueBox([String: CounterHandler]())
-    private let _meters = NIOLockedValueBox([String: MeterHandler]())
-    private let _recorders = NIOLockedValueBox([String: RecorderHandler]())
-    private let _timers = NIOLockedValueBox([String: TimerHandler]())
+    private let _counters = NIOLockedValueBox([String: any CounterHandler]())
+    private let _meters = NIOLockedValueBox([String: any MeterHandler]())
+    private let _recorders = NIOLockedValueBox([String: any RecorderHandler]())
+    private let _timers = NIOLockedValueBox([String: any TimerHandler]())
 
-    public var counters: [String: CounterHandler] { _counters.withLockedValue { $0 } }
-    public var meters: [String: MeterHandler] { _meters.withLockedValue { $0 } }
-    public var recorders: [String: RecorderHandler] { _recorders.withLockedValue { $0 } }
-    public var timers: [String: TimerHandler] { _timers.withLockedValue { $0 } }
+    public var counters: [String: any CounterHandler] { _counters.withLockedValue { $0 } }
+    public var meters: [String: any MeterHandler] { _meters.withLockedValue { $0 } }
+    public var recorders: [String: any RecorderHandler] { _recorders.withLockedValue { $0 } }
+    public var timers: [String: any TimerHandler] { _timers.withLockedValue { $0 } }
 
-    public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
+    public func makeCounter(label: String, dimensions: [(String, String)]) -> any CounterHandler {
         self._counters.withLockedValue { counters in
             self.make(label: label, dimensions: dimensions, registry: &counters, maker: TestCounter.init)
         }
     }
 
-    public func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
+    public func makeMeter(label: String, dimensions: [(String, String)]) -> any MeterHandler {
         self._meters.withLockedValue { counters in
             self.make(label: label, dimensions: dimensions, registry: &counters, maker: TestMeter.init)
         }
     }
 
-    public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
-        let maker = { (label: String, dimensions: [(String, String)]) -> RecorderHandler in
+    public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> any RecorderHandler {
+        let maker = { (label: String, dimensions: [(String, String)]) -> any RecorderHandler in
             TestRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
         }
         return self._recorders.withLockedValue { recorders in
@@ -46,7 +46,7 @@ final class TestMetrics: MetricsFactory {
         }
     }
 
-    public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
+    public func makeTimer(label: String, dimensions: [(String, String)]) -> any TimerHandler {
         self._timers.withLockedValue { timers in
             self.make(label: label, dimensions: dimensions, registry: &timers, maker: TestTimer.init)
         }
@@ -63,7 +63,7 @@ final class TestMetrics: MetricsFactory {
         return item
     }
 
-    func destroyCounter(_ handler: CounterHandler) {
+    func destroyCounter(_ handler: any CounterHandler) {
         if let testCounter = handler as? TestCounter {
             _ = self._counters.withLockedValue { counters in
                 counters.removeValue(forKey: testCounter.label)
@@ -71,7 +71,7 @@ final class TestMetrics: MetricsFactory {
         }
     }
 
-    func destroyMeter(_ handler: MeterHandler) {
+    func destroyMeter(_ handler: any MeterHandler) {
         if let testMeter = handler as? TestMeter {
             _ = self._counters.withLockedValue { counters in
                 counters.removeValue(forKey: testMeter.label)
@@ -79,7 +79,7 @@ final class TestMetrics: MetricsFactory {
         }
     }
 
-    func destroyRecorder(_ handler: RecorderHandler) {
+    func destroyRecorder(_ handler: any RecorderHandler) {
         if let testRecorder = handler as? TestRecorder {
             _ = self._recorders.withLockedValue { recorders in
                 recorders.removeValue(forKey: testRecorder.label)
@@ -87,7 +87,7 @@ final class TestMetrics: MetricsFactory {
         }
     }
 
-    func destroyTimer(_ handler: TimerHandler) {
+    func destroyTimer(_ handler: any TimerHandler) {
         if let testTimer = handler as? TestTimer {
             _ = self._timers.withLockedValue { timers in
                 timers.removeValue(forKey: testTimer.label)
@@ -258,42 +258,42 @@ final class TaskUniqueTestMetrics: MetricsFactory {
         }
     }
 
-    func makeCounter(label: String, dimensions: [(String, String)]) -> any CoreMetrics.CounterHandler {
+    func makeCounter(label: String, dimensions: [(String, String)]) -> any CounterHandler {
         TaskUniqueTestMetrics.current.makeCounter(label: label, dimensions: dimensions)
     }
 
-    public func makeMeter(label: String, dimensions: [(String, String)]) -> MeterHandler {
+    public func makeMeter(label: String, dimensions: [(String, String)]) -> any MeterHandler {
         TaskUniqueTestMetrics.current.makeMeter(label: label, dimensions: dimensions)
     }
 
-    func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> any CoreMetrics.RecorderHandler {
+    func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> any RecorderHandler {
         TaskUniqueTestMetrics.current.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
     }
 
-    func makeTimer(label: String, dimensions: [(String, String)]) -> any CoreMetrics.TimerHandler {
+    func makeTimer(label: String, dimensions: [(String, String)]) -> any TimerHandler {
         TaskUniqueTestMetrics.current.makeTimer(label: label, dimensions: dimensions)
     }
 
-    func destroyCounter(_ handler: any CoreMetrics.CounterHandler) {
+    func destroyCounter(_ handler: any CounterHandler) {
         TaskUniqueTestMetrics.current.destroyCounter(handler)
     }
 
-    func destroyMeter(_ handler: MeterHandler) {
+    func destroyMeter(_ handler: any MeterHandler) {
         TaskUniqueTestMetrics.current.destroyMeter(handler)
     }
 
-    func destroyRecorder(_ handler: any CoreMetrics.RecorderHandler) {
+    func destroyRecorder(_ handler: any RecorderHandler) {
         TaskUniqueTestMetrics.current.destroyRecorder(handler)
     }
 
-    func destroyTimer(_ handler: any CoreMetrics.TimerHandler) {
+    func destroyTimer(_ handler: any TimerHandler) {
         TaskUniqueTestMetrics.current.destroyTimer(handler)
     }
 
-    public var counters: [String: CounterHandler] { TaskUniqueTestMetrics.current.counters }
-    public var meters: [String: MeterHandler] { TaskUniqueTestMetrics.current.meters }
-    public var recorders: [String: RecorderHandler] { TaskUniqueTestMetrics.current.recorders }
-    public var timers: [String: TimerHandler] { TaskUniqueTestMetrics.current.timers }
+    public var counters: [String: any CounterHandler] { TaskUniqueTestMetrics.current.counters }
+    public var meters: [String: any MeterHandler] { TaskUniqueTestMetrics.current.meters }
+    public var recorders: [String: any RecorderHandler] { TaskUniqueTestMetrics.current.recorders }
+    public var timers: [String: any TimerHandler] { TaskUniqueTestMetrics.current.timers }
 
 }
 

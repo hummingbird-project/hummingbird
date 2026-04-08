@@ -35,7 +35,7 @@ struct HTTP2StreamChannel: ServerChildChannel {
     ///   - channel: Child channel
     ///   - logger: Logger used during setup
     /// - Returns: Object to process input/output on child channel
-    func setup(channel: Channel, logger: Logger) -> EventLoopFuture<Value> {
+    func setup(channel: any Channel, logger: Logger) -> EventLoopFuture<Value> {
         channel.eventLoop.makeCompletedFuture {
             try channel.pipeline.syncOperations.addHandler(HTTP2FramePayloadToHTTPServerCodec())
             try channel.pipeline.syncOperations.addHandlers(self.configuration.additionalChannelHandlers())

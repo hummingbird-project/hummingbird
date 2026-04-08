@@ -6,8 +6,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-import NIOCore
-import NIOSSL
+public import NIOCore
+public import NIOSSL
 
 /// TLSChannel configuration
 public struct TLSChannelConfiguration: Sendable {
