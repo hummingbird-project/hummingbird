@@ -3,9 +3,7 @@
 
 import PackageDescription
 
-let swiftSettings: [SwiftSetting] = [
-    .enableExperimentalFeature("AvailabilityMacro=hummingbird 2.0:macOS 14.0, iOS 17.0, tvOS 17.0, visionOS 1.0, Android 28"),
-
+var swiftSettings: [SwiftSetting] = [
     // https://github.com/apple/swift-evolution/blob/main/proposals/0335-existential-any.md
     .enableUpcomingFeature("ExistentialAny"),
 
@@ -15,6 +13,16 @@ let swiftSettings: [SwiftSetting] = [
     // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0409-access-level-on-imports.md
     .enableUpcomingFeature("InternalImportsByDefault"),
 ]
+
+#if compiler(>=6.3)
+swiftSettings.append(contentsOf: [
+    .enableExperimentalFeature("AvailabilityMacro=hummingbird 2.0:macOS 14.0, iOS 17.0, tvOS 17.0, visionOS 1.0, Android 28")
+])
+#else
+swiftSettings.append(contentsOf: [
+    .enableExperimentalFeature("AvailabilityMacro=hummingbird 2.0:macOS 14.0, iOS 17.0, tvOS 17.0, visionOS 1.0")
+])
+#endif
 
 let package = Package(
     name: "hummingbird",
