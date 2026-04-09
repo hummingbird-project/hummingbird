@@ -28,7 +28,7 @@ import Foundation
 /// Swift-Distributed-Tracing has a flexible backend, which will need to be initialized before any traces are recorded.
 ///
 /// A list of implementations is available in the swift-distributed-tracing repository's README.
-@available(macOS 14, iOS 17, tvOS 17, *)
+@available(hummingbird 2.0, *)
 public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
     private let headerNamesToRecord: Set<RecordingHeader>
     private let queryParametersToRedact: Set<Substring>
@@ -197,7 +197,7 @@ public protocol RemoteAddressRequestContext: RequestContext {
     var remoteAddress: SocketAddress? { get }
 }
 
-@available(macOS 14, iOS 17, tvOS 17, *)
+@available(hummingbird 2.0, *)
 struct RecordingHeader: Hashable {
     let name: HTTPField.Name
     let attributeName: String

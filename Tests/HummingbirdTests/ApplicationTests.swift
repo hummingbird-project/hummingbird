@@ -23,6 +23,7 @@ import NIOHTTPTypes
 import NIOSSL
 import ServiceLifecycle
 import Testing
+import UnixSignals
 
 @testable import Hummingbird
 

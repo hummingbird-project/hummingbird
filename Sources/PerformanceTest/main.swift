@@ -11,7 +11,7 @@ import Logging
 import NIOCore
 import NIOPosix
 
-if #available(macOS 14, iOS 17, tvOS 17, *) {
+if #available(hummingbird 2.0, *) {
     // get environment
     let env = Environment()
     let hostname = env.get("SERVER_HOSTNAME") ?? "127.0.0.1"

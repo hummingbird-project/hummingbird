@@ -18,7 +18,7 @@ public import NIOSSL
 ///
 /// This HTTP client is used for internal testing of Hummingbird and is also
 /// the client used by `.live` testing framework.
-@available(macOS 14, iOS 17, tvOS 17, *)
+@available(hummingbird 2.0, *)
 public struct TestClient: Sendable {
     public let channelPromise: EventLoopPromise<any Channel>
     let eventLoopGroup: any EventLoopGroup

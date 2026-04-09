@@ -9,7 +9,9 @@
 #if ConfigurationSupport
 
 import Configuration
+import HummingbirdCore
 import HummingbirdHTTP2
+import NIOCore
 import Testing
 
 struct ConfigReaderTests {

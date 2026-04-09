@@ -58,7 +58,7 @@ extension Request {
     }
 }
 
-@available(macOS 14, iOS 17, tvOS 17, *)
+@available(hummingbird 2.0, *)
 extension Request {
     /// Conditional request which will only be processed if the eTag supplied is not in the
     /// `If-None-Match` request header.

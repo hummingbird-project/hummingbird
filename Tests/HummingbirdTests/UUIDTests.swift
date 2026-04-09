@@ -8,6 +8,7 @@
 
 import Foundation
 import Hummingbird
+import HummingbirdTesting
 import Logging
 import Testing
 

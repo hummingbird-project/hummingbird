@@ -41,7 +41,7 @@ public enum EventLoopGroupProvider {
 }
 
 /// Protocol for an Application. Brings all the components of Hummingbird together
-@available(macOS 14, iOS 17, tvOS 17, *)
+@available(hummingbird 2.0, *)
 public protocol ApplicationProtocol: Service where Context: InitializableFromSource<ApplicationRequestContextSource> {
     /// Responder that generates a response from a requests and context
     associatedtype Responder: HTTPResponder
@@ -68,13 +68,13 @@ public protocol ApplicationProtocol: Service where Context: InitializableFromSou
     var processesRunBeforeServerStart: [@Sendable () async throws -> Void] { get }
 }
 
-@available(macOS 14, iOS 17, tvOS 17, *)
+@available(hummingbird 2.0, *)
 extension ApplicationProtocol {
     /// Server channel setup
     public var server: HTTPServerBuilder { .http1() }
 }
 
-@available(macOS 14, iOS 17, tvOS 17, *)
+@available(hummingbird 2.0, *)
 extension ApplicationProtocol {
     /// Default event loop group used by application
     public var eventLoopGroup: any EventLoopGroup { MultiThreadedEventLoopGroup.singleton }
@@ -91,7 +91,7 @@ extension ApplicationProtocol {
 }
 
 /// Conform to `Service` from `ServiceLifecycle`.
-@available(macOS 14, iOS 17, tvOS 17, *)
+@available(hummingbird 2.0, *)
 extension ApplicationProtocol {
     /// Construct application and run it
     public func run() async throws {
@@ -179,7 +179,7 @@ extension ApplicationProtocol {
 /// try await app.runService()
 /// ```
 /// Editing the application setup after calling `runService` will produce undefined behaviour.
-@available(macOS 14, iOS 17, tvOS 17, *)
+@available(hummingbird 2.0, *)
 public struct Application<Responder: HTTPResponder>: ApplicationProtocol
 where Responder.Context: InitializableFromSource<ApplicationRequestContextSource> {
     // MARK: Member variables
@@ -308,7 +308,7 @@ where Responder.Context: InitializableFromSource<ApplicationRequestContextSource
     }
 }
 
-@available(macOS 14, iOS 17, tvOS 17, *)
+@available(hummingbird 2.0, *)
 extension Application: CustomStringConvertible {
     public var description: String { "Application" }
 }

@@ -9,6 +9,7 @@
 import Foundation
 import Hummingbird
 import HummingbirdTesting
+import NIOPosix
 import Testing
 
 struct FileIOTests {

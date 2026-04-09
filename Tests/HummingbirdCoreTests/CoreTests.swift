@@ -17,6 +17,7 @@ import NIOHTTPTypes
 import NIOPosix
 import ServiceLifecycle
 import Testing
+import UnixSignals
 
 #if canImport(Network)
 import NIOTransportServices
@@ -24,7 +25,7 @@ import NIOTransportServices
 
 @Suite("HummingbirdCoreTests", .serialized)
 struct HummingbirdCoreTests {
-    static let eventLoopGroup: EventLoopGroup = {
+    static let eventLoopGroup: any EventLoopGroup = {
         #if os(iOS)
         NIOTSEventLoopGroup.singleton
         #else
@@ -121,7 +122,7 @@ struct HummingbirdCoreTests {
             }
         }
         /// Basic responder that waits 10 milliseconds and returns "Hello" in body
-        @Sendable func helloResponder(to request: Request, responseWriter: consuming ResponseWriter, channel: Channel) async throws {
+        @Sendable func helloResponder(to request: Request, responseWriter: consuming ResponseWriter, channel: any Channel) async throws {
             try? await Task.sleep(for: .milliseconds(10))
             let responseBody = channel.allocator.buffer(string: "Hello")
             var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))

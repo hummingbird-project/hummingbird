@@ -108,7 +108,7 @@ final class TestSpan: Span {
     public private(set) var status: SpanStatus?
     public private(set) var endTime: UInt64?
 
-    private(set) var recordedErrors: [(Error, SpanAttributes)] = []
+    private(set) var recordedErrors: [(any Error, SpanAttributes)] = []
 
     var operationName: String
     let context: ServiceContext
@@ -159,7 +159,7 @@ final class TestSpan: Span {
     }
 
     func recordError(
-        _ error: Error,
+        _ error: any Error,
         attributes: SpanAttributes,
         at instant: @autoclosure () -> some TracerInstant
     ) {

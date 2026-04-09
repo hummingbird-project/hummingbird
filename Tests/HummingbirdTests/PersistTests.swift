@@ -16,7 +16,7 @@ struct PersistTests {
 
     func createRouter(
         configuration: MemoryPersistDriver<ContinuousClock>.Configuration = .init()
-    ) throws -> (Router<BasicRequestContext>, PersistDriver) {
+    ) throws -> (Router<BasicRequestContext>, any PersistDriver) {
         let router = Router()
         let persist = MemoryPersistDriver(configuration: configuration)
 

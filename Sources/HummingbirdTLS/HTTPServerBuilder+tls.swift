@@ -6,8 +6,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-import HummingbirdCore
-import NIOSSL
+public import HummingbirdCore
+public import NIOSSL
 
 extension HTTPServerBuilder {
     /// Build server supporting HTTP with TLS

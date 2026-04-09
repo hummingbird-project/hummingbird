@@ -123,16 +123,16 @@ extension URLEncodedFormNode: ExpressibleByStringLiteral {
     }
 }
 extension URLEncodedFormNode: ExpressibleByDictionaryLiteral {
-    public typealias Key = String
-    public typealias Value = URLEncodedFormNode
+    typealias Key = String
+    typealias Value = URLEncodedFormNode
 
-    public init(dictionaryLiteral elements: (String, URLEncodedFormNode)...) {
+    init(dictionaryLiteral elements: (String, URLEncodedFormNode)...) {
         self = .map(.init(values: .init(elements) { first, _ in first }))
     }
 
 }
 extension URLEncodedFormNode: ExpressibleByArrayLiteral {
-    public init(arrayLiteral elements: URLEncodedFormNode...) {
+    init(arrayLiteral elements: URLEncodedFormNode...) {
         self = .array(.init(values: .init(elements)))
     }
 }

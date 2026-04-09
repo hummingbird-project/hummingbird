@@ -9,7 +9,7 @@
 public import HTTPTypes
 
 /// Stores endpoint responders for each HTTP method
-@available(macOS 14, iOS 17, tvOS 17, *)
+@available(hummingbird 2.0, *)
 @usableFromInline
 struct EndpointResponders<Context>: Sendable {
     init(path: RouterPath) {
