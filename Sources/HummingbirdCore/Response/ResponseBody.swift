@@ -12,8 +12,22 @@ public import NIOCore
 /// Response body
 public struct ResponseBody: Sendable {
     @usableFromInline
-    let _write: @Sendable (inout any ResponseBodyWriter) async throws -> Void
-    public let contentLength: Int?
+    enum _Backing: Sendable {
+        case byteBuffer(ByteBuffer)
+        case empty
+        case closure(Int?, @Sendable (inout any ResponseBodyWriter) async throws -> Void)
+    }
+
+    @usableFromInline
+    let _backing: _Backing
+
+    public var contentLength: Int? {
+        switch _backing {
+        case .byteBuffer(let buf): return buf.readableBytes
+        case .empty: return 0
+        case .closure(let len, _): return len
+        }
+    }
 
     /// Initialise ResponseBody with closure writing body contents.
     ///
@@ -31,32 +45,25 @@ public struct ResponseBody: Sendable {
     ///   - contentLength: Optional length of body
     ///   - write: closure provided with `writer` type that can be used to write to response body
     public init(contentLength: Int? = nil, _ write: @Sendable @escaping (inout any ResponseBodyWriter) async throws -> Void) {
-        self._write = { writer in
-            try await write(&writer)
-        }
-        self.contentLength = contentLength
+        self._backing = .closure(contentLength, write)
     }
 
     /// Initialise empty ResponseBody
     public init() {
-        self.init(contentLength: 0) { writer in
-            try await writer.finish(nil)
-        }
+        self._backing = .empty
     }
 
     /// Initialise ResponseBody that contains a single ByteBuffer
     /// - Parameter byteBuffer: ByteBuffer to write
     public init(byteBuffer: ByteBuffer) {
-        self.init(contentLength: byteBuffer.readableBytes) { writer in
-            try await writer.write(byteBuffer)
-            try await writer.finish(nil)
-        }
+        self._backing = .byteBuffer(byteBuffer)
     }
 
     /// Initialise ResponseBody that contains a sequence of ByteBuffers
     /// - Parameter byteBuffers: Sequence of ByteBuffers to write
     public init<BufferSequence: Sequence & Sendable>(contentsOf byteBuffers: BufferSequence) where BufferSequence.Element == ByteBuffer {
-        self.init(contentLength: byteBuffers.map(\.readableBytes).reduce(0, +)) { writer in
+        let contentLength = byteBuffers.map(\.readableBytes).reduce(0, +)
+        self._backing = .closure(contentLength) { writer in
             try await writer.write(contentsOf: byteBuffers)
             try await writer.finish(nil)
         }
@@ -65,7 +72,7 @@ public struct ResponseBody: Sendable {
     /// Initialise ResponseBody with an AsyncSequence of ByteBuffers
     /// - Parameter asyncSequence: ByteBuffer AsyncSequence
     public init<BufferSequence: AsyncSequence & Sendable>(asyncSequence: BufferSequence) where BufferSequence.Element == ByteBuffer {
-        self.init { writer in
+        self._backing = .closure(nil) { writer in
             try await writer.write(asyncSequence)
             try await writer.finish(nil)
         }
@@ -73,7 +80,15 @@ public struct ResponseBody: Sendable {
 
     @inlinable
     public consuming func write(_ writer: consuming any ResponseBodyWriter) async throws {
-        try await self._write(&writer)
+        switch self._backing {
+        case .byteBuffer(let buf):
+            try await writer.write(buf)
+            try await writer.finish(nil)
+        case .empty:
+            try await writer.finish(nil)
+        case .closure(_, let fn):
+            try await fn(&writer)
+        }
     }
 
     /// Returns a ResponseBody containing the results of mapping the given closure over the sequence of
@@ -103,7 +118,6 @@ public struct ResponseBody: Sendable {
                 await postWrite()
                 throw error
             }
-            return
         }
     }
 }
