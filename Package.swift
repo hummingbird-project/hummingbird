@@ -4,7 +4,7 @@
 import PackageDescription
 
 let swiftSettings: [SwiftSetting] = [
-    .enableExperimentalFeature("AvailabilityMacro=hummingbird 2.0:macOS 14.0, iOS 17.0, tvOS 17.0, visionOS 1.0, android 28"),
+    .enableExperimentalFeature("AvailabilityMacro=hummingbird 2.0:macOS 14.0, iOS 17.0, tvOS 17.0, visionOS 1.0, Android 28"),
 
     // https://github.com/apple/swift-evolution/blob/main/proposals/0335-existential-any.md
     .enableUpcomingFeature("ExistentialAny"),
