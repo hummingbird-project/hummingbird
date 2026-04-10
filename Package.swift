@@ -79,7 +79,7 @@ let package = Package(
             name: "HummingbirdCore",
             dependencies: [
                 .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
-                .product(name: "Collections", package: "swift-collections"),
+                .product(name: "DequeModule", package: "swift-collections"),
                 .product(name: "Configuration", package: "swift-configuration", condition: .when(traits: ["ConfigurationSupport"])),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "Logging", package: "swift-log"),

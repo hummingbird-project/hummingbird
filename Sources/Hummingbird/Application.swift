@@ -130,9 +130,8 @@ extension ApplicationProtocol {
                 response.headers[.server] = serverName
             }
             do {
-                // Write response
-                let bodyWriter = try await responseWriter.writeHead(response.head)
-                try await response.body.write(bodyWriter)
+                // Write response — fast path for ByteBuffer/empty bodies (1 write instead of 3)
+                try await responseWriter.write(response: response.head, body: response.body)
             } catch is HTTPParserError {
                 // cannot throw the parser error, as that will cause another response
                 // to be written

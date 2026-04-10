@@ -20,9 +20,6 @@ if #available(hummingbird 2.0, *) {
     // create app
     let elg = MultiThreadedEventLoopGroup(numberOfThreads: 4)
     let router = Router()
-    router.addMiddleware {
-        FileMiddleware()
-    }
 
     // number of raw requests
     // ./wrk -c 128 -d 15s -t 8 http://localhost:8080
