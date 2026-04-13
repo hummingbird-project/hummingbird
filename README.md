@@ -6,7 +6,7 @@
 </p>  
 <p align="center">
 <a href="https://swift.org">
-  <img src="https://img.shields.io/badge/swift-5.10+-f05138.svg"/>
+  <img src="https://img.shields.io/badge/swift-6.1+-f05138.svg"/>
 </a>
 <a href="https://github.com/hummingbird-project/hummingbird/actions?query=workflow%3ACI">
   <img src="https://github.com/hummingbird-project/hummingbird/actions/workflows/ci.yml/badge.svg?branch=main"/>
