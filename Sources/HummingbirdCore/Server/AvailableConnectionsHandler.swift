@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+public import Logging
 public import NIOCore
 
 /// Delegate for `AvailableConnectionsChannelHandler` that defines if we should accept
@@ -26,7 +27,7 @@ extension AvailableConnectionsDelegate {
 }
 
 /// Implementation of ``AvailableConnectionsDelegate`` that sets a maximum limit to the number
-/// of open connections
+/// of open connections. This is useful way to ensure your server doesn't get overloaded
 public struct MaximumAvailableConnections: AvailableConnectionsDelegate {
     let maxConnections: Int
     var connectionCount: Int
@@ -46,6 +47,46 @@ public struct MaximumAvailableConnections: AvailableConnectionsDelegate {
 
     public func isAcceptingNewConnections() -> Bool {
         self.connectionCount < self.maxConnections
+    }
+}
+
+extension AvailableConnectionsDelegate where Self == MaximumAvailableConnections {
+    public static func maximum(_ maxConnections: Int) -> Self {
+        MaximumAvailableConnections(maxConnections)
+    }
+}
+
+/// Implementation of ``AvailableConnectionsDelegate`` that logs when a connection is opened
+/// and when a connection is closed
+public struct LoggingConnections: AvailableConnectionsDelegate {
+    let logger: Logger
+    let logLevel: Logger.Level
+    var connectionCount: Int
+
+    public init(_ logger: Logger, logLevel: Logger.Level = .debug) {
+        self.logger = logger
+        self.logLevel = logLevel
+        self.connectionCount = 0
+    }
+
+    public mutating func connectionOpened() {
+        self.connectionCount += 1
+        self.logger.log(level: logLevel, "Connection opened.", metadata: ["NumConnections": .stringConvertible(self.connectionCount)])
+    }
+
+    public mutating func connectionClosed() {
+        self.connectionCount -= 1
+        self.logger.log(level: logLevel, "Connection closed.", metadata: ["NumConnections": .stringConvertible(self.connectionCount)])
+    }
+
+    public func isAcceptingNewConnections() -> Bool {
+        true
+    }
+}
+
+extension AvailableConnectionsDelegate where Self == LoggingConnections {
+    public static func logging(_ logger: Logger, logLevel: Logger.Level = .debug) -> Self {
+        LoggingConnections(logger, logLevel: logLevel)
     }
 }
 
