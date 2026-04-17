@@ -32,16 +32,17 @@ Supply-chain and CI/CD incidents are always treated as **Critical** regardless o
 
 ### Mitigate
 
-1. Report to [SSWG](https://www.swift.org/sswg/security/) (Swift Server Working Group)
-2. Use a private repo, or private pull request via GitHub advisory reporting to generate a patch.
-3. Ask the reporter to verify patch
-4. Alert important and trusted adopters
+1. Report to [SSWG](https://www.swift.org/sswg/security/) (Swift Server Working Group).
+2. Use a private repo, or private pull request via GitHub advisory reporting to generate a patch. 
+3. Ask the reporter to verify patch.
+4. Alert important and trusted adopters.
 5. Prepare advisory
     - Title: {Affected package} {version vulnerability is fixed in} {description}
     - Summary: Summary of vulnerability, What versions are impacted, severity
     - Details: More detailed description of vulnerability
     - Timeline
     - Acknowledge reporter
+6. We aim to resolve any issue within 30 days, but this may not always be possible.
 
 ### Remediation and Disclosure
 
