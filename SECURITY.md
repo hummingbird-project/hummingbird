@@ -8,4 +8,4 @@ Currently we support versions 2.0.0 and above of Hummingbird. These will receive
 
 If you believe you have found a security vulnerability in Hummingbird or any of its related repositories please do not post this in a public forum, do not create a GitHub Issue. Instead you should submit a security advisory via [GitHub](https://github.com/hummingbird-project/hummingbird/security/advisories/new) with details of the issue.
 
-To see how we respond to a security vulnerabity report you can read our [incident_response.txt](docs/incident_response.txt) document.
+To see how we respond to a security vulnerabity report you can read our [incident_response.md](docs/incident_response.md) document.
