@@ -16,6 +16,8 @@ jobs:
     container:
       image: swift:latest
     steps:
+    - name: Action permissions
+      uses: GitHubSecurityLab/actions-permissions/monitor@v1
     - name: Install rsync 📚
       run: |
         apt-get update && apt-get install -y rsync bc

@@ -21,6 +21,8 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 15
     steps:
+    - name: Action permissions
+      uses: GitHubSecurityLab/actions-permissions/monitor@v1
     - name: Select appropriate Xcode version
       uses: maxim-lobanov/setup-xcode@v1
       with:
@@ -42,6 +44,8 @@ jobs:
     env:
       ENABLE_HB_BENCHMARKS: true
     steps:
+    - name: Action permissions
+      uses: GitHubSecurityLab/actions-permissions/monitor@v1
     - name: Checkout
       uses: actions/checkout@v6
     - name: Install libjemalloc-dev
