@@ -18,6 +18,7 @@ import Logging
 import NIOConcurrencyHelpers
 import NIOCore
 import NIOEmbedded
+import NIOFoundationEssentialsCompat
 import NIOHTTP1
 import NIOHTTPTypes
 import NIOSSL
@@ -212,7 +213,7 @@ struct ApplicationTests {
         let app = Application(router: router)
         try await app.test(.router) { client in
             try await client.execute(uri: "/error", method: .get) { response in
-                let error = try JSONDecoder().decodeByteBuffer(ErrorMessage.self, from: response.body)
+                let error = try JSONDecoder().decode(ErrorMessage.self, from: response.body)
                 #expect(error.error.message == "BAD!")
             }
         }
@@ -828,7 +829,7 @@ struct ApplicationTests {
             let response = try error.response(from: request, context: context)
             let writer = CollatedResponseWriter()
             _ = try await response.body.write(writer)
-            let format = try JSONDecoder().decodeByteBuffer(HTTPErrorFormat.self, from: writer.collated.withLockedValue { $0 })
+            let format = try JSONDecoder().decode(HTTPErrorFormat.self, from: writer.collated.withLockedValue { $0 })
             #expect(format.error.message == message)
         }
     }

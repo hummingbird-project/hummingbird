@@ -6,6 +6,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+private import NIOFoundationEssentialsCompat
+
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
 #else
@@ -40,6 +42,6 @@ extension JSONDecoder: RequestDecoder {
     ///   - context: Request context
     public func decode<T: Decodable>(_ type: T.Type, from request: Request, context: some RequestContext) async throws -> T {
         let buffer = try await request.body.collect(upTo: context.maxUploadSize)
-        return try self.decodeByteBuffer(T.self, from: buffer)
+        return try self.decode(T.self, from: buffer)
     }
 }
