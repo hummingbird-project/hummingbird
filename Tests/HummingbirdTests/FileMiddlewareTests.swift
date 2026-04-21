@@ -10,8 +10,8 @@ import Foundation
 import HTTPTypes
 import Hummingbird
 import HummingbirdTesting
-import NIOPosix
 import NIOFoundationEssentialsCompat
+import NIOPosix
 import Testing
 
 struct FileMiddlewareTests {
