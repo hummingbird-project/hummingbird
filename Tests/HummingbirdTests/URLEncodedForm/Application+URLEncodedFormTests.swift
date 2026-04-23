@@ -11,6 +11,7 @@ import Hummingbird
 import HummingbirdTesting
 import Logging
 import NIOCore
+import NIOFoundationEssentialsCompat
 import Testing
 
 struct URLEncodedFormTests {

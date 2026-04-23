@@ -13,6 +13,7 @@ import HummingbirdRouter
 import HummingbirdTesting
 import Logging
 import NIOCore
+import NIOFoundationEssentialsCompat
 import Testing
 
 struct MiddlewareTests {
@@ -118,7 +119,7 @@ struct MiddlewareTests {
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
                 #expect(response.status == .notFound)
-                let error = try JSONDecoder().decodeByteBuffer(ErrorMessage.self, from: response.body)
+                let error = try JSONDecoder().decode(ErrorMessage.self, from: response.body)
                 #expect(error.error.message == "Edited error")
             }
         }
