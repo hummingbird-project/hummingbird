@@ -30,19 +30,29 @@ extension AvailableConnectionsDelegate {
 /// of open connections. This is useful way to ensure your server doesn't get overloaded
 public struct MaximumAvailableConnections: AvailableConnectionsDelegate {
     let maxConnections: Int
+    let logger: Logger
     var connectionCount: Int
 
     public init(_ maxConnections: Int) {
         self.maxConnections = maxConnections
         self.connectionCount = 0
+        self.logger = Logger(label: "Connections")
+    }
+
+    public init(_ maxConnections: Int, logger: Logger) {
+        self.maxConnections = maxConnections
+        self.connectionCount = 0
+        self.logger = logger
     }
 
     public mutating func connectionOpened() {
         self.connectionCount += 1
+        self.logger.log(level: .trace, "Connection opened.", metadata: ["hb.connections": .stringConvertible(self.connectionCount)])
     }
 
     public mutating func connectionClosed() {
         self.connectionCount -= 1
+        self.logger.log(level: .trace, "Connection closed.", metadata: ["hb.connections": .stringConvertible(self.connectionCount)])
     }
 
     public func isAcceptingNewConnections() -> Bool {
@@ -53,40 +63,6 @@ public struct MaximumAvailableConnections: AvailableConnectionsDelegate {
 extension AvailableConnectionsDelegate where Self == MaximumAvailableConnections {
     public static func maximum(_ maxConnections: Int) -> Self {
         MaximumAvailableConnections(maxConnections)
-    }
-}
-
-/// Implementation of ``AvailableConnectionsDelegate`` that logs when a connection is opened
-/// and when a connection is closed
-public struct LoggingConnections: AvailableConnectionsDelegate {
-    let logger: Logger
-    let logLevel: Logger.Level
-    var connectionCount: Int
-
-    public init(_ logger: Logger, logLevel: Logger.Level = .debug) {
-        self.logger = logger
-        self.logLevel = logLevel
-        self.connectionCount = 0
-    }
-
-    public mutating func connectionOpened() {
-        self.connectionCount += 1
-        self.logger.log(level: logLevel, "Connection opened.", metadata: ["NumConnections": .stringConvertible(self.connectionCount)])
-    }
-
-    public mutating func connectionClosed() {
-        self.connectionCount -= 1
-        self.logger.log(level: logLevel, "Connection closed.", metadata: ["NumConnections": .stringConvertible(self.connectionCount)])
-    }
-
-    public func isAcceptingNewConnections() -> Bool {
-        true
-    }
-}
-
-extension AvailableConnectionsDelegate where Self == LoggingConnections {
-    public static func logging(_ logger: Logger, logLevel: Logger.Level = .debug) -> Self {
-        LoggingConnections(logger, logLevel: logLevel)
     }
 }
 
