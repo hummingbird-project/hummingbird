@@ -61,8 +61,8 @@ public struct MaximumAvailableConnections: AvailableConnectionsDelegate {
 }
 
 extension AvailableConnectionsDelegate where Self == MaximumAvailableConnections {
-    public static func maximum(_ maxConnections: Int) -> Self {
-        MaximumAvailableConnections(maxConnections)
+    public static func maximum(_ maxConnections: Int, logger: Logger) -> Self {
+        MaximumAvailableConnections(maxConnections, logger: logger)
     }
 }
 
