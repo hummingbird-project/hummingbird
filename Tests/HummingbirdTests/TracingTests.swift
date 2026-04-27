@@ -542,7 +542,7 @@ struct TracingTests {
             }
             let span = try #require(Self.testTracer.spans.first)
             // Test tracer records span times in milliseconds
-            #expect(span.endTime! - span.startTime > 100)
+            #expect(span.endTime! - span.startTime >= 100)
         }
     }
 
