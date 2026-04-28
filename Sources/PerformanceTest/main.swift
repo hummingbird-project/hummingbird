@@ -26,7 +26,7 @@ if #available(hummingbird 2.0, *) {
     }
     // number of raw requests
     // ./wrk -c 128 -d 15s -t 8 http://localhost:8080
-    router.get { request, _ in
+    router.get { _, _ in
         "Hello, world"
     }
 
@@ -53,15 +53,8 @@ if #available(hummingbird 2.0, *) {
         return "I waited"
     }
 
-    router.get("{other}") { request, context in
-        let query = request.uri.queryParameters.first.flatMap { "\($0.key)=\($0.value)" } ?? ""
-        let other = try context.parameters.require("other")
-        return "\(other):\(query)"
-    }
-
     var app = Application(
         responder: router.buildResponder(),
-        server: .http1(configuration: .init(idleTimeout: .seconds(15))),
         configuration: .init(
             address: .hostname(hostname, port: port),
             serverName: "Hummingbird"
