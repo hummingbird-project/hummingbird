@@ -350,7 +350,7 @@ public struct TestClient: Sendable {
 
         func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
             switch event {
-            case is HTTPIdleStateHandler.IdleStateEvent:
+            case is HTTPConnectionStateHandler.IdleStateEvent:
                 while let task = self.queue.popFirst() {
                     task.responsePromise.fail(TestClient.Error.readTimeout)
                 }

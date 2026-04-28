@@ -9,6 +9,7 @@
 public import HummingbirdCore
 public import NIOSSL
 
+@available(hummingbird 2.0, *)
 extension HTTPServerBuilder {
     /// Build server supporting HTTP with TLS
     ///
