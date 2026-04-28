@@ -7,6 +7,7 @@
 //
 
 import HTTPTypes
+public import Logging
 public import NIOCore
 public import NIOHTTPTypes
 
@@ -24,23 +25,24 @@ public final class HTTPConnectionStateHandler: ChannelDuplexHandler, RemovableCh
         case read
     }
 
-    public let readIdleTimeout: TimeAmount?
-    public let readBodyRateRequirement: (start: TimeAmount, rate: Double)?
-
-    private var startedReadingBody: NIODeadline = .distantPast
-    private var bodyReadAmount: Int = 0
-    private var lastActiveTime: NIODeadline = .distantPast
+    let logger: Logger
+    var state: StateMachine<ContinuousClock>
     private var scheduledReaderTask: Optional<Scheduled<Void>>
 
-    public init(idleTimeout: TimeAmount? = nil, readBodyRateRequirement: (start: TimeAmount, rate: Double)? = nil) {
-        self.readIdleTimeout = idleTimeout
-        self.readBodyRateRequirement = readBodyRateRequirement
+    public init(idleTimeout: Duration? = nil, logger: Logger) {
+        self.logger = logger
+        self.state = .init(idleTimeout: idleTimeout, clock: .init())
         self.scheduledReaderTask = nil
     }
 
     public func handlerAdded(context: ChannelHandlerContext) {
         if context.channel.isActive {
-            initIdleTasks(context)
+            switch self.state.setActive() {
+            case .scheduleTimeout(let deadline):
+                self.scheduleIdleTask(context, deadline: deadline)
+            case .doNothing:
+                break
+            }
         }
     }
 
@@ -49,94 +51,82 @@ public final class HTTPConnectionStateHandler: ChannelDuplexHandler, RemovableCh
     }
 
     public func channelActive(context: ChannelHandlerContext) {
-        initIdleTasks(context)
+        switch self.state.setActive() {
+        case .scheduleTimeout(let deadline):
+            self.scheduleIdleTask(context, deadline: deadline)
+        case .doNothing:
+            break
+        }
         context.fireChannelActive()
     }
 
+    public func channelInactive(context: ChannelHandlerContext) {
+        self.state.setInactive()
+    }
     public func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let part = unwrapInboundIn(data)
-        switch part {
-        case .head:
-            self.startedReadingBody = .now()
-            self.bodyReadAmount = 0
-        case .body(let buffer):
-            if let readBodyRateRequirement {
-                self.bodyReadAmount += buffer.readableBytes
-                let timeSinceStartingToReadBody = NIODeadline.now() - self.startedReadingBody
-                if timeSinceStartingToReadBody > readBodyRateRequirement.start {
-
-                }
-            }
-        case .end:
-            break
-        }
-        self.lastActiveTime = .now()
+        self.state.readHTTPPart(part)
         context.fireChannelRead(data)
     }
 
     public func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
         let part = unwrapOutboundIn(data)
-        switch part {
-        case .head:
-            break
-        case .body:
-            break
-        case .end:
-            break
+        switch self.state.writeHTTPPart(part) {
+        case .scheduleTimeout(let deadline):
+            self.scheduleIdleTask(context, deadline: deadline)
+            context.write(data, promise: promise)
+        case .closeConnection:
+            context.writeAndFlush(data, promise: promise)
+            context.close(promise: nil)
+        case .doNothing:
+            context.write(data, promise: promise)
         }
-
-        self.lastActiveTime = .now()
-        context.write(data, promise: promise)
     }
 
-    private func shouldReschedule(_ context: ChannelHandlerContext) -> Bool {
-        context.channel.isActive
-    }
-
-    private func makeIdleTimeoutTask(_ context: ChannelHandlerContext, _ timeout: TimeAmount) -> (() -> Void) {
+    private func makeIdleTimeoutTask(_ context: ChannelHandlerContext) -> (() -> Void) {
         {
-            guard self.shouldReschedule(context) else {
-                return
-            }
-            let diff = .now() - self.lastActiveTime
-            if diff >= timeout {
-                // Reader is idle - set a new timeout and trigger an event through the pipeline
-                self.scheduledReaderTask = context.eventLoop.assumeIsolatedUnsafeUnchecked().scheduleTask(
-                    in: timeout,
-                    self.makeIdleTimeoutTask(context, timeout)
-                )
-
-                context.fireUserInboundEventTriggered(IdleStateEvent.read)
-            } else {
-                // Read occurred before the timeout - set a new timeout with shorter delay.
-                self.scheduledReaderTask = context.eventLoop.assumeIsolatedUnsafeUnchecked().scheduleTask(
-                    deadline: self.lastActiveTime + timeout,
-                    self.makeIdleTimeoutTask(context, timeout)
-                )
+            self.scheduledReaderTask = nil
+            switch self.state.timeoutTriggered() {
+            case .rescheduleTimeout(let deadline):
+                self.scheduleIdleTask(context, deadline: deadline)
+            case .closeConnection:
+                context.close(promise: nil)
+            case .doNothing:
+                break
             }
         }
     }
 
-    private func schedule(
+    private func scheduleIdleTask(
         _ context: ChannelHandlerContext,
-        _ amount: TimeAmount?,
-        _ body: @escaping (ChannelHandlerContext, TimeAmount) -> (() -> Void)
-    ) -> Scheduled<Void>? {
-        if let timeout = amount {
-            return context.eventLoop.assumeIsolatedUnsafeUnchecked().scheduleTask(in: timeout, body(context, timeout))
+        deadline: ContinuousClock.Instant
+    ) {
+        if self.scheduledReaderTask == nil {
+            self.scheduledReaderTask = context.eventLoop.assumeIsolatedUnsafeUnchecked().scheduleTask(
+                in: .init(deadline - .now),
+                makeIdleTimeoutTask(context)
+            )
         }
-        return nil
-    }
-
-    private func initIdleTasks(_ context: ChannelHandlerContext) {
-        let now = NIODeadline.now()
-        lastActiveTime = now
-        scheduledReaderTask = schedule(context, readIdleTimeout, makeIdleTimeoutTask)
     }
 
     private func cancelIdleTasks(_ context: ChannelHandlerContext) {
         scheduledReaderTask?.cancel()
         scheduledReaderTask = nil
+    }
+
+    public func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
+        switch event {
+        case is ChannelShouldQuiesceEvent:
+            switch self.state.receivingQuiesceEvent() {
+            case .closeConnection:
+                context.close(promise: nil)
+            case .doNothing:
+                break
+            }
+
+        default:
+            context.fireUserInboundEventTriggered(event)
+        }
     }
 }
 
@@ -150,6 +140,7 @@ extension HTTPConnectionStateHandler {
         var isRequestBeingRead: Bool = false
         var lastActiveTime: C.Instant
         var isActive: Bool = false
+        var closeAfterResponseWritten: Bool = false
 
         @inlinable
         init(idleTimeout: C.Duration?, clock: C) {
@@ -194,6 +185,7 @@ extension HTTPConnectionStateHandler {
 
         enum WritePartAction: Equatable {
             case scheduleTimeout(deadline: C.Instant)
+            case closeConnection
             case doNothing
         }
 
@@ -206,9 +198,14 @@ extension HTTPConnectionStateHandler {
                 break
             case .end:
                 self.requestsInProgress -= 1
-                if self.requestsInProgress == 0, let idleTimeout, self.isActive {
-                    self.lastActiveTime = clock.now
-                    return .scheduleTimeout(deadline: clock.now.advanced(by: idleTimeout))
+                if self.requestsInProgress == 0 {
+                    if self.closeAfterResponseWritten {
+                        return .closeConnection
+                    }
+                    if let idleTimeout, self.isActive {
+                        self.lastActiveTime = clock.now
+                        return .scheduleTimeout(deadline: clock.now.advanced(by: idleTimeout))
+                    }
                 }
             }
             return .doNothing
@@ -224,6 +221,7 @@ extension HTTPConnectionStateHandler {
         mutating func timeoutTriggered() -> TimeoutTriggeredAction {
             guard let idleTimeout, self.isActive else { return .doNothing }
 
+            // if we've read the request and are still responding do nothing
             if self.isRequestBeingRead == false, self.requestsInProgress > 0 {
                 return .doNothing
             }
@@ -232,6 +230,23 @@ extension HTTPConnectionStateHandler {
                 return .closeConnection
             }
             return .rescheduleTimeout(deadline: self.lastActiveTime.advanced(by: idleTimeout))
+        }
+
+        enum ReceivedQuiesceAction: Equatable {
+            case closeConnection
+            case doNothing
+        }
+
+        @inlinable
+        mutating func receivingQuiesceEvent() -> ReceivedQuiesceAction {
+            // we received a quiesce event. If we have any requests in progress we should
+            // wait for them to finish
+            if self.requestsInProgress > 0 {
+                self.closeAfterResponseWritten = true
+                return .doNothing
+            } else {
+                return .closeConnection
+            }
         }
     }
 }

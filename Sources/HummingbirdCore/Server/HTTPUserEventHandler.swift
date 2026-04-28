@@ -11,6 +11,7 @@ public import NIOCore
 public import NIOHTTPTypes
 
 @available(hummingbird 2.0, *)
+@available(*, deprecated, message: "Use HTTPConnectionStateHandler instead")
 public final class HTTPUserEventHandler: ChannelDuplexHandler, RemovableChannelHandler {
     public typealias InboundIn = HTTPRequestPart
     public typealias InboundOut = HTTPRequestPart

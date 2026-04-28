@@ -81,10 +81,9 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
             )
             try channel.pipeline.syncOperations.addHandler(HTTP1ToHTTPServerCodec(secure: false))
             try channel.pipeline.syncOperations.addHandlers(self.configuration.additionalChannelHandlers())
-            if let idleTimeout = self.configuration.idleTimeout {
-                try channel.pipeline.syncOperations.addHandler(HTTPConnectionStateHandler(idleTimeout: idleTimeout))
-            }
-            try channel.pipeline.syncOperations.addHandler(HTTPUserEventHandler(logger: logger))
+            try channel.pipeline.syncOperations.addHandler(
+                HTTPConnectionStateHandler(idleTimeout: self.configuration.idleTimeout.map { .init($0) }, logger: logger)
+            )
             return try NIOAsyncChannel(
                 wrappingChannelSynchronously: channel,
                 configuration: .init(isOutboundHalfClosureEnabled: true)

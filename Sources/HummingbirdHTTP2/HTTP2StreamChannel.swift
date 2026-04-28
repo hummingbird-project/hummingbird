@@ -40,10 +40,9 @@ struct HTTP2StreamChannel: ServerChildChannel {
         channel.eventLoop.makeCompletedFuture {
             try channel.pipeline.syncOperations.addHandler(HTTP2FramePayloadToHTTPServerCodec())
             try channel.pipeline.syncOperations.addHandlers(self.configuration.additionalChannelHandlers())
-            if let idleTimeout = self.configuration.idleTimeout {
-                try channel.pipeline.syncOperations.addHandler(HTTPConnectionStateHandler(idleTimeout: idleTimeout))
-            }
-            try channel.pipeline.syncOperations.addHandler(HTTPUserEventHandler(logger: logger))
+            try channel.pipeline.syncOperations.addHandler(
+                HTTPConnectionStateHandler(idleTimeout: self.configuration.idleTimeout.map { .init($0) }, logger: logger)
+            )
             return try HTTP1Channel.Value(wrappingChannelSynchronously: channel)
         }
     }
