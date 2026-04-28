@@ -9,6 +9,7 @@
 import Foundation
 import Hummingbird
 import HummingbirdTesting
+import NIOFoundationEssentialsCompat
 import NIOPosix
 import Testing
 

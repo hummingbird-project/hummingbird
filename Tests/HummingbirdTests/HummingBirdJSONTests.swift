@@ -10,6 +10,7 @@ import Foundation
 import Hummingbird
 import HummingbirdTesting
 import Logging
+import NIOFoundationEssentialsCompat
 import Testing
 
 struct JSONCodingTests {
@@ -47,7 +48,7 @@ struct JSONCodingTests {
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/user", method: .get) { response in
-                let user = try JSONDecoder().decodeByteBuffer(User.self, from: response.body)
+                let user = try JSONDecoder().decode(User.self, from: response.body)
                 #expect(user.name == "John Smith")
                 #expect(user.email == "john.smith@email.com")
                 #expect(user.age == 25)
