@@ -10,8 +10,8 @@
 ///
 /// ```
 /// let csp: ContentSecurityPolicy = [
-///     .scriptSrc: [.nonce(someString)],
-///     .objectSrc: [.none],
+///     .scriptSrc: [.hash(.sha256, base64: hash), .strictDynamic],
+///     .fontSrc: [.scheme(.https)],
 ///     .reportTo, "csp-endpoint"
 /// ]
 /// ```
