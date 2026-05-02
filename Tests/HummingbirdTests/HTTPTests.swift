@@ -149,7 +149,7 @@ struct HTTPTests {
         (ContentSecurityPolicy([.defaultSrc: [.none]]), "default-src 'none'"),
         (ContentSecurityPolicy([.formAction: [.scheme(.https)]]), "form-action https:"),
         (ContentSecurityPolicy([.imgSrc: [.none, .unsafeEval]]), "img-src 'none' 'unsafe-eval'"),
-        (ContentSecurityPolicy([.scriptSrc: ["https://example.com"]]), "script-src https://example.com"),
+        (ContentSecurityPolicy([.scriptSrc: "https://example.com"]), "script-src https://example.com"),
         (
             ContentSecurityPolicy([.styleSrc: [.nonce("416d1177-4d12-4e3b-b7c9-f6c409789fb8")]]),
             "style-src 'nonce-416d1177-4d12-4e3b-b7c9-f6c409789fb8'"

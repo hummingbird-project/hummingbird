@@ -7,6 +7,14 @@
 //
 
 /// Helper to build content-security-policy header
+///
+/// ```
+/// let csp: ContentSecurityPolicy = [
+///     .scriptSrc: [.nonce(someString)],
+///     .objectSrc: [.none],
+///     .reportTo, "csp-endpoint"
+/// ]
+/// ```
 public struct ContentSecurityPolicy: Sendable, CustomStringConvertible, ExpressibleByDictionaryLiteral {
     /// Content-security-policy directive
     public struct Directive: Sendable, Hashable, CustomStringConvertible {
@@ -162,10 +170,10 @@ public struct ContentSecurityPolicy: Sendable, CustomStringConvertible, Expressi
     /// Content-security-policy directive value
     ///
     /// These are to be used with fetch directives. All other directives expect a raw string eg
-    /// ```swift
+    /// ```
     /// let csp: ContentSecurityPolicy = [
     ///     .defaultSrc: [.self],
-    ///     .reportTo: ["csp-reports"]
+    ///     .reportTo: "csp-reports"
     /// ]
     /// ```
     public struct DirectiveValue: Sendable, CustomStringConvertible, ExpressibleByStringLiteral {
@@ -276,28 +284,51 @@ public struct ContentSecurityPolicy: Sendable, CustomStringConvertible, Expressi
             self.value = .raw(value)
         }
     }
-    let policyDirectives: [(Directive, [DirectiveValue])]
+
+    /// Collection of DirectiveValues
+    ///
+    /// Can be initialized with either a array literal of `DirectiveValue`, or a String literal.
+    public struct DirectiveValues: Sendable, CustomStringConvertible, ExpressibleByStringLiteral, ExpressibleByArrayLiteral {
+        public init(_ elements: DirectiveValue...) {
+            self.values = elements
+        }
+
+        public init(arrayLiteral elements: DirectiveValue...) {
+            self.values = elements
+        }
+
+        public init(stringLiteral value: String) {
+            self.values = [.init(.raw(value))]
+        }
+
+        let values: [DirectiveValue]
+
+        public var description: String {
+            self.values.lazy.map { $0.description }.joined(separator: " ")
+        }
+    }
+    let policyDirectives: [(Directive, DirectiveValues)]
 
     ///  Initialize Content Security Policy from an array of directive and directive value array pairs
     /// - Parameter policyDirectives: Array of directive and directive value array pairs
-    public init(_ policyDirectives: [(Directive, [DirectiveValue])]) {
+    public init(_ policyDirectives: [(Directive, DirectiveValues)]) {
         self.policyDirectives = policyDirectives
     }
 
     ///  Initialize Content Security Policy from a dictionary of directive and directive value array pairs
     /// - Parameter policyDirectives: Dictionary of directive and directive value array pairs
-    public init(_ policyDirectives: [Directive: [DirectiveValue]]) {
+    public init(_ policyDirectives: [Directive: DirectiveValues]) {
         self.policyDirectives = policyDirectives.map { $0 }
     }
 
     ///  Initialize Content Security Policy from a dictionary literal of directive and directive value array pairs
     /// - Parameter policyDirectives: Array of directive and directive value array pairs
-    public init(dictionaryLiteral elements: (Directive, [DirectiveValue])...) {
+    public init(dictionaryLiteral elements: (Directive, DirectiveValues)...) {
         self.policyDirectives = elements
     }
 
     /// Formatted output for content-security-policy header
     public var description: String {
-        self.policyDirectives.map { "\($0.0) \($0.1.map { $0.description }.joined(separator: " "))" }.joined(separator: "; ")
+        self.policyDirectives.lazy.map { "\($0.0) \($0.1)" }.joined(separator: "; ")
     }
 }
