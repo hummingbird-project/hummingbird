@@ -12,7 +12,7 @@
 /// let csp: ContentSecurityPolicy = [
 ///     .scriptSrc: [.hash(.sha256, base64: hash), .strictDynamic],
 ///     .fontSrc: [.scheme(.https)],
-///     .reportTo, "csp-endpoint"
+///     .reportTo: "csp-endpoint"
 /// ]
 /// ```
 public struct ContentSecurityPolicy: Sendable, CustomStringConvertible, ExpressibleByDictionaryLiteral {
@@ -40,12 +40,12 @@ public struct ContentSecurityPolicy: Sendable, CustomStringConvertible, Expressi
             case baseUri = "base-uri"
             case sandbox = "sandbox"
             case formAction = "form-action"
-            case formAncestors = "form-ancestors"
+            case frameAncestors = "frame-ancestors"
             case reportTo = "report-to"
             case requireTrustedTypesFor = "require-trusted-types-for"
             case trustedTypes = "trusted-types"
             case upgradeInsecureRequests = "upgrade-insecure-requests"
-            case blockAllMixedContent = "block-mixed-content"
+            case blockAllMixedContent = "block-all-mixed-content"
             case reportUri = "report-uri"
         }
 
