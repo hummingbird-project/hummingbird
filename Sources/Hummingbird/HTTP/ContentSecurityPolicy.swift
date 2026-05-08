@@ -8,9 +8,12 @@
 
 /// Helper to build content-security-policy header
 ///
-/// Helps reduce XSS attacks by declaring where you can load dynamic resources from.
+/// The content-security-policy header can help reduce XSS attacks by declaring where you can
+/// load dynamic resources from.
 ///
-/// See https://content-security-policy.com for more details
+/// See https://content-security-policy.com or
+/// https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy
+/// for more details
 ///
 /// ```
 /// let csp: ContentSecurityPolicy = [
@@ -67,16 +70,24 @@ public struct ContentSecurityPolicy: Sendable, CustomStringConvertible, Expressi
             self.value = value
         }
 
+        @inlinable static func description(_ directive: String, values: some Collection<some CustomStringConvertible>) -> String {
+            if values.count > 0 {
+                "\(directive) \(values.lazy.map { $0.description }.joined(separator: " "))"
+            } else {
+                directive
+            }
+        }
+
         @inlinable public var description: String {
             switch self.value {
-            case .fetch(let directive, let values): "\(directive.rawValue) \(values.lazy.map { $0.description }.joined(separator: " "))"
-            case .baseURI(let values): "base-uri \(values.lazy.map { $0.description }.joined(separator: " "))"
-            case .sandbox(let values): "sandbox \(values.lazy.map { $0.description }.joined(separator: " ")))"
-            case .formAction(let values): "form-action \(values.lazy.map { $0.description }.joined(separator: " "))"
-            case .frameAncestors(let values): "frame-ancestors \(values.lazy.map { $0.description }.joined(separator: " "))"
+            case .fetch(let directive, let values): Self.description(directive.rawValue, values: values)
+            case .baseURI(let values): Self.description("base-uri", values: values)
+            case .sandbox(let values): Self.description("sandbox", values: values)
+            case .formAction(let values): Self.description("form-action", values: values)
+            case .frameAncestors(let values): Self.description("frame-ancestors", values: values)
             case .reportTo(let endpoint): "report-to \(endpoint)"
-            case .requireTrustedTypesFor(let values): "require-trusted-types-for \(values.lazy.map { $0.description }.joined(separator: " "))"
-            case .trustedTypes(let values): "trusted-types \(values.lazy.map { $0.description }.joined(separator: " "))"
+            case .requireTrustedTypesFor(let values): Self.description("require-trusted-types-for", values: values)
+            case .trustedTypes(let values): Self.description("trusted-types", values: values)
             case .upgradeInsecureRequests: "upgrade-insecure-requests"
             case .blockAllMixedContent: "block-all-mixed-content"
             case .reportUri(let endpoint): "report-uri \(endpoint)"
@@ -510,7 +521,7 @@ public struct ContentSecurityPolicy: Sendable, CustomStringConvertible, Expressi
     }
 
     ///  Initialize Content Security Policy from a array literal of directives
-    /// - Parameter policyDirectives: Array of directives
+    /// - Parameter elements: Array of directives
     @inlinable
     public init(arrayLiteral elements: Directive...) {
         self.policyDirectives = elements
