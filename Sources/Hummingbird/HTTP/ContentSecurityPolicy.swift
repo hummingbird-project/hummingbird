@@ -8,8 +8,8 @@
 
 /// Helper to build content-security-policy header
 ///
-/// The content-security-policy header can help reduce XSS attacks by declaring where you can
-/// load dynamic resources from.
+/// The content-security-policy header can help mitigate against cross site scripting(XSS) attacks by
+/// declaring where you can load dynamic resources from.
 ///
 /// See https://content-security-policy.com or
 /// https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy
@@ -341,6 +341,7 @@ public struct ContentSecurityPolicy: Sendable, CustomStringConvertible, Expressi
         }
     }
 
+    /// Possible values for uri directives like `base-uri` and `form-action`
     public struct URIRestrictionValue: Sendable, CustomStringConvertible, ExpressibleByStringLiteral {
         @usableFromInline
         enum Internal: Sendable {
@@ -382,6 +383,7 @@ public struct ContentSecurityPolicy: Sendable, CustomStringConvertible, Expressi
         }
     }
 
+    /// Possible values for `sandbox` directive
     public struct SandboxValue: Sendable, CustomStringConvertible {
         @usableFromInline
         enum Internal: String, Sendable {
