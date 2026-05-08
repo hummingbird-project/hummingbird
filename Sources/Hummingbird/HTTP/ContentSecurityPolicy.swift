@@ -8,11 +8,15 @@
 
 /// Helper to build content-security-policy header
 ///
+/// Helps reduce XSS attacks by declaring where you can load dynamic resources from.
+///
+/// See https://content-security-policy.com for more details
+///
 /// ```
 /// let csp: ContentSecurityPolicy = [
-///     .scriptSrc: [.hash(.sha256, base64: hash), .strictDynamic],
-///     .fontSrc: [.scheme(.https)],
-///     .reportTo: "csp-endpoint"
+///     .scriptSrc(.hash(.sha256, base64: hash), .strictDynamic),
+///     .fontSrc(.scheme(.https)),
+///     .reportTo("csp-endpoint")
 /// ]
 /// ```
 public struct ContentSecurityPolicy: Sendable, CustomStringConvertible, ExpressibleByArrayLiteral {
@@ -22,7 +26,7 @@ public struct ContentSecurityPolicy: Sendable, CustomStringConvertible, Expressi
         enum Internal: Sendable {
             case fetch(FetchDirective, [FetchDirectiveValue])
             case baseURI([URIRestrictionValue])
-            case sandbox(SandboxValue?)
+            case sandbox([SandboxValue])
             case formAction([URIRestrictionValue])
             case frameAncestors([URIRestrictionValue])
             case reportTo(String)
@@ -67,7 +71,7 @@ public struct ContentSecurityPolicy: Sendable, CustomStringConvertible, Expressi
             switch self.value {
             case .fetch(let directive, let values): "\(directive.rawValue) \(values.lazy.map { $0.description }.joined(separator: " "))"
             case .baseURI(let values): "base-uri \(values.lazy.map { $0.description }.joined(separator: " "))"
-            case .sandbox(let value): "sandbox\(value.map { " \($0.description)"} ?? "")"
+            case .sandbox(let values): "sandbox \(values.lazy.map { $0.description }.joined(separator: " ")))"
             case .formAction(let values): "form-action \(values.lazy.map { $0.description }.joined(separator: " "))"
             case .frameAncestors(let values): "frame-ancestors \(values.lazy.map { $0.description }.joined(separator: " "))"
             case .reportTo(let endpoint): "report-to \(endpoint)"
@@ -128,7 +132,7 @@ public struct ContentSecurityPolicy: Sendable, CustomStringConvertible, Expressi
         /// Restricts the URLs which can be used in a document's \<base\> element.
         @inlinable public static func baseURI(_ values: URIRestrictionValue...) -> Self { .init(value: .baseURI(values)) }
         /// Enables a sandbox for the requested resource similar to the \<iframe\> sandbox attribute.
-        @inlinable public static func sandbox(_ value: SandboxValue?) -> Self { .init(value: .sandbox(value)) }
+        @inlinable public static func sandbox(_ values: SandboxValue...) -> Self { .init(value: .sandbox(values)) }
 
         /// Navigation directives
         ///
@@ -398,19 +402,45 @@ public struct ContentSecurityPolicy: Sendable, CustomStringConvertible, Expressi
             self.value.rawValue
         }
 
+        /// Allows downloading files through an <a> or <area> element with the download attribute, as well as through
+        /// the navigation that leads to a download of a file. This works regardless of whether the user clicked on
+        /// the link, or JS code initiated it without user interaction.
         @inlinable public static var allowDownloads: Self { .init(.allowDownloads) }
+        /// Allows the page to submit forms. If this keyword is not used, form will be displayed as normal, but
+        /// submitting it will not trigger input validation, sending data to a web server or closing a dialog.
         @inlinable public static var allowForms: Self { .init(.allowForms) }
+        /// Allows the page to open modal windows by Window.alert(), Window.confirm(), Window.print() and Window.prompt(),
+        /// while opening a <dialog> is allowed regardless of this keyword. It also allows the page to receive BeforeUnloadEvent
+        /// event.
         @inlinable public static var allowModals: Self { .init(.allowModals) }
+        /// Lets the resource lock the screen orientation.
         @inlinable public static var allowOrientationLock: Self { .init(.allowOrientationLock) }
+        /// Allows the page to use the Pointer Lock API.
         @inlinable public static var allowPointerLock: Self { .init(.allowPointerLock) }
+        /// Allows popups (created, for example, by Window.open() or target="_blank"). If this keyword is not used, popup
+        /// display will silently fail.
         @inlinable public static var allowPopups: Self { .init(.allowPopups) }
+        /// Allows a sandboxed document to open new windows without forcing the sandboxing flags upon them. This will allow,
+        /// for example, a third-party advertisement to be safely sandboxed without forcing the same restrictions upon the
+        /// page the ad links to.
         @inlinable public static var allowPopupsToEscapeSandbox: Self { .init(.allowPopupsToEscapeSandbox) }
+        /// Allows embedders to have control over whether an iframe can start a presentation session.
         @inlinable public static var allowPresentation: Self { .init(.allowPresentation) }
+        /// Allows a sandboxed resource to retain its origin. A sandboxed resource is otherwise treated as being from an
+        /// opaque origin, which ensures that it will always fail same-origin policy checks, and hence cannot access
+        /// localstorage and document.cookie and some JavaScript APIs. The Origin of sandboxed resources without the
+        /// allow-same-origin keyword is null.
         @inlinable public static var allowSameOrigin: Self { .init(.allowSameOrigin) }
+        /// Allows the page to run scripts (but not create pop-up windows). If this keyword is not used, this operation is not allowed.
         @inlinable public static var allowScripts: Self { .init(.allowScripts) }
+        /// Lets the resource request access to the parent's storage capabilities with the Storage Access API.
         @inlinable public static var allowStorageAccessByUserActivation: Self { .init(.allowStorageAccessByUserActivation) }
+        /// Lets the resource navigate the top-level browsing context (the one named _top).
         @inlinable public static var allowTopNavigation: Self { .init(.allowTopNavigation) }
+        /// Lets the resource navigate the top-level browsing context, but only if initiated by a user gesture.
         @inlinable public static var allowTopNavigationByUserNavigation: Self { .init(.allowTopNavigationByUserNavigation) }
+        /// Allows navigations to non-http protocols built into browser or registered by a website. This feature is also activated by
+        /// allow-popups or allow-top-navigation keyword.
         @inlinable public static var allowTopNavigationToCustomProtocols: Self { .init(.allowTopNavigationToCustomProtocols) }
     }
 
