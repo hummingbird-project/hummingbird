@@ -10,6 +10,8 @@ public import Logging
 public import NIOCore
 public import NIOHTTPTypes
 
+@available(hummingbird 2.0, *)
+@available(*, deprecated, message: "Use HTTPConnectionStateHandler instead")
 public final class HTTPUserEventHandler: ChannelDuplexHandler, RemovableChannelHandler {
     public typealias InboundIn = HTTPRequestPart
     public typealias InboundOut = HTTPRequestPart
@@ -64,7 +66,7 @@ public final class HTTPUserEventHandler: ChannelDuplexHandler, RemovableChannelH
                 context.close(promise: nil)
             }
 
-        case IdleStateHandler.IdleStateEvent.read:
+        case HTTPConnectionStateHandler.IdleStateEvent.read:
             // if we get an idle read event and we haven't completed reading the request
             // close the connection, or a request hasnt been initiated
             if self.requestsBeingRead > 0 || self.requestsInProgress == 0 {
