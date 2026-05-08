@@ -146,15 +146,16 @@ struct HTTPTests {
     }
 
     @Test(arguments: [
-        (ContentSecurityPolicy([.defaultSrc: [.none]]), "default-src 'none'"),
-        (ContentSecurityPolicy([.formAction: [.scheme(.https)]]), "form-action https:"),
-        (ContentSecurityPolicy([.imgSrc: [.none, .unsafeEval]]), "img-src 'none' 'unsafe-eval'"),
-        (ContentSecurityPolicy([.scriptSrc: "https://example.com"]), "script-src https://example.com"),
+        (ContentSecurityPolicy([.defaultSrc(.none)]), "default-src 'none'"),
+        (ContentSecurityPolicy([.formAction(.scheme(.https))]), "form-action https:"),
+        (ContentSecurityPolicy([.scriptSrc(.none, .unsafeEval)]), "script-src 'none' 'unsafe-eval'"),
+        (ContentSecurityPolicy([.imgSrc("https://example.com")]), "img-src https://example.com"),
         (
-            ContentSecurityPolicy([.styleSrc: [.nonce("416d1177-4d12-4e3b-b7c9-f6c409789fb8")]]),
+            ContentSecurityPolicy([.styleSrc(.nonce("416d1177-4d12-4e3b-b7c9-f6c409789fb8"))]),
             "style-src 'nonce-416d1177-4d12-4e3b-b7c9-f6c409789fb8'"
         ),
-        (ContentSecurityPolicy([.scriptSrcElem: [.hash(.sha384, base64: "af5b120bb3")]]), "script-src-elem 'sha384-af5b120bb3'"),
+        (ContentSecurityPolicy([.scriptSrcElem(.hash(.sha384, base64: "af5b120bb3"))]), "script-src-elem 'sha384-af5b120bb3'"),
+        (ContentSecurityPolicy([.baseURI(.none)]), "base-uri 'none'"),
     ])
     func cspSingleDirective(_ csp: ContentSecurityPolicy, expectedOutput: String) {
         #expect(csp.description == expectedOutput)
@@ -162,16 +163,16 @@ struct HTTPTests {
 
     @Test(arguments: [
         (
-            ContentSecurityPolicy([
-                (.defaultSrc, [.self, "http://example.com"]), (.connectSrc, [.none]),
-            ]),
+            ContentSecurityPolicy([.defaultSrc(.self, "http://example.com"), .connectSrc(.none)]),
             "default-src 'self' http://example.com; connect-src 'none'"
         ),
         (
-            ContentSecurityPolicy([
-                (.defaultSrc, [.scheme(.https), .unsafeEval, .unsafeInline]), (.objectSrc, [.none]),
-            ]),
+            ContentSecurityPolicy([.defaultSrc(.scheme(.https), .unsafeEval, .unsafeInline), .objectSrc(.none)]),
             "default-src https: 'unsafe-eval' 'unsafe-inline'; object-src 'none'"
+        ),
+        (
+            ContentSecurityPolicy([.trustedTypes(.policyName("MyPolicy"), .allowDuplicates), .requireTrustedTypesFor(.script)]),
+            "trusted-types MyPolicy 'allow-duplicates'; require-trusted-types-for 'script'"
         ),
     ])
     func cspMultipleDirectives(_ csp: ContentSecurityPolicy, expectedOutput: String) {
