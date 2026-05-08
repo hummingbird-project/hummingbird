@@ -45,6 +45,7 @@ public struct HTTPServerBuilder: Sendable {
     }
 }
 
+@available(hummingbird 2.0, *)
 extension HTTPServerBuilder {
     ///  Return a `HTTPServerBuilder` that will build a HTTP1 server
     ///

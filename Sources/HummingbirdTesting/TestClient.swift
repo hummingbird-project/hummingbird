@@ -7,6 +7,7 @@
 //
 
 public import HTTPTypes
+import HummingbirdCore
 public import NIOCore
 import NIOHTTP1
 import NIOHTTPTypes
@@ -349,7 +350,7 @@ public struct TestClient: Sendable {
 
         func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
             switch event {
-            case let evt as IdleStateHandler.IdleStateEvent where evt == .read:
+            case is HTTPConnectionStateHandler.IdleStateEvent:
                 while let task = self.queue.popFirst() {
                     task.responsePromise.fail(TestClient.Error.readTimeout)
                 }
