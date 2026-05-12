@@ -236,6 +236,29 @@ struct MiddlewareTests {
         }
     }
 
+    @Test func testCORSUseOneOf() async throws {
+        let router = Router()
+        router.add(middleware: CORSMiddleware(allowOrigin: .oneOf("https://foo.com", "https://bar.com")))
+        router.get("/hello") { _, _ -> String in
+            "Hello"
+        }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/hello", method: .get, headers: [.origin: "https://foo.com"]) { response in
+                // headers come back in opposite order as middleware is applied to responses in that order
+                #expect(response.headers[.accessControlAllowOrigin] == "https://foo.com")
+            }
+            try await client.execute(uri: "/hello", method: .get, headers: [.origin: "https://bar.com"]) { response in
+                // headers come back in opposite order as middleware is applied to responses in that order
+                #expect(response.headers[.accessControlAllowOrigin] == "https://bar.com")
+            }
+            try await client.execute(uri: "/hello", method: .get, headers: [.origin: "https://baz.com"]) { response in
+                // headers come back in opposite order as middleware is applied to responses in that order
+                #expect(response.headers[.accessControlAllowOrigin] == nil)
+            }
+        }
+    }
+
     @Test func testCORSUseAll() async throws {
         let router = Router()
         router.add(middleware: CORSMiddleware(allowOrigin: .all))
