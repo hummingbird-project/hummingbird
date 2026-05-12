@@ -20,10 +20,48 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
 
     /// HTTP1Channel configuration
     public struct Configuration: Sendable {
+        public struct IdleConfiguration: Sendable {
+            public struct MinimumBodyStreamRate: Sendable {
+                /// Time before testing for minimum rate
+                public var timeBeforeCheck: Duration
+                /// Expected minimum rate of body bytes per second
+                public var expectedBytesPerSecond: Int
+
+                ///  Initialize MinimumBodyStreamRate
+                /// - Parameters:
+                ///   - timeBeforeCheck: Time before testing for minimum rate
+                ///   - expectedBytesPerSecond: Expected minimum rate of bytes
+                public init(timeBeforeCheck: Duration, expectedBytesPerSecond: Int) {
+                    self.timeBeforeCheck = timeBeforeCheck
+                    self.expectedBytesPerSecond = expectedBytesPerSecond
+                }
+            }
+
+            ///  Initialize IdleConfiguration
+            /// - Parameters:
+            ///   - idleTimeout: Idle timeout that triggers a channel close
+            ///   - minimumBodyStreamRate: Expected minimum rate of body bytes per second.
+            public init(idleTimeout: Duration? = nil, minimumBodyStreamRate: MinimumBodyStreamRate? = nil) {
+                self.idleTimeout = idleTimeout
+                self.minimumBodyStreamRate = minimumBodyStreamRate
+            }
+
+            /// Idle timeout that triggers a channel close
+            public var idleTimeout: Duration?
+            /// Expected minimum rate of body bytes per second
+            ///
+            /// If we don't receive bytes fast enough we close the channel
+            public var minimumBodyStreamRate: MinimumBodyStreamRate?
+        }
         /// Additional channel handlers to add to channel pipeline after HTTP part decoding and before HTTP request handling
         public var additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
+        /// idle channel configuration
+        public var idle: IdleConfiguration
         /// Time before closing an idle channel.
-        public var idleTimeout: TimeAmount?
+        public var idleTimeout: TimeAmount? {
+            get { self.idle.idleTimeout.map { .init($0) } }
+            set { self.idle.idleTimeout = newValue.map { .init($0) } }
+        }
         /// Internal flag for enabling/disabling pipeline assistance
         package var pipliningAssistance: Bool = false
 
@@ -37,7 +75,20 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
             idleTimeout: TimeAmount? = nil
         ) {
             self.additionalChannelHandlers = additionalChannelHandlers
-            self.idleTimeout = idleTimeout
+            self.idle = .init(idleTimeout: idleTimeout.map { .init($0) })
+        }
+
+        ///  Initialize HTTP1Channel.Configuration
+        /// - Parameters:
+        ///   - additionalChannelHandlers: Additional channel handlers to add to channel pipeline after HTTP part decoding and
+        ///         before HTTP request processing
+        ///   - idleTimeout: Time before closing an idle channel
+        public init(
+            additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = [],
+            idleConfiguration: IdleConfiguration
+        ) {
+            self.additionalChannelHandlers = additionalChannelHandlers
+            self.idle = idleConfiguration
         }
     }
 
@@ -82,7 +133,7 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
             try channel.pipeline.syncOperations.addHandler(HTTP1ToHTTPServerCodec(secure: false))
             try channel.pipeline.syncOperations.addHandlers(self.configuration.additionalChannelHandlers())
             try channel.pipeline.syncOperations.addHandler(
-                HTTPConnectionStateHandler(idleTimeout: self.configuration.idleTimeout.map { .init($0) }, logger: logger)
+                HTTPConnectionStateHandler(idleConfiguration: self.configuration.idle, logger: logger)
             )
             return try NIOAsyncChannel(
                 wrappingChannelSynchronously: channel,

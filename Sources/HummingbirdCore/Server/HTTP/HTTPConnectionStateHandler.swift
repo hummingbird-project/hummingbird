@@ -19,19 +19,13 @@ public final class HTTPConnectionStateHandler: ChannelDuplexHandler, RemovableCh
     public typealias OutboundIn = HTTPResponsePart
     public typealias OutboundOut = HTTPResponsePart
 
-    ///A user event triggered by IdleStateHandler when a Channel is idle.
-    public enum IdleStateEvent: Sendable {
-        /// Will be triggered when no read was performed for the specified amount of time
-        case read
-    }
-
     let logger: Logger
     var state: StateMachine<ContinuousClock>
     private var scheduledReaderTask: Optional<Scheduled<Void>>
 
-    public init(idleTimeout: Duration? = nil, logger: Logger) {
+    public init(idleConfiguration: HTTP1Channel.Configuration.IdleConfiguration, logger: Logger) {
         self.logger = logger
-        self.state = .init(idleTimeout: idleTimeout, clock: .init())
+        self.state = .init(idleConfiguration: idleConfiguration, clock: .init())
         self.scheduledReaderTask = nil
     }
 
@@ -65,7 +59,12 @@ public final class HTTPConnectionStateHandler: ChannelDuplexHandler, RemovableCh
     }
     public func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let part = unwrapInboundIn(data)
-        self.state.readHTTPPart(part)
+        switch self.state.readHTTPPart(part) {
+        case .closeConnection:
+            context.close(promise: nil)
+        case .doNothing:
+            break
+        }
         context.fireChannelRead(data)
     }
 
@@ -132,21 +131,25 @@ public final class HTTPConnectionStateHandler: ChannelDuplexHandler, RemovableCh
 
 @available(hummingbird 2.0, *)
 extension HTTPConnectionStateHandler {
-    struct StateMachine<C: Clock> {
-        let idleTimeout: C.Duration?
+    struct StateMachine<C: Clock> where C.Duration == Duration {
+        let idleConfiguration: HTTP1Channel.Configuration.IdleConfiguration
         let clock: C
 
         var requestsInProgress: Int = 0
         var isRequestBeingRead: Bool = false
         var lastActiveTime: C.Instant
+        var headTime: C.Instant
+        var bodyStreamedSoFar: Int
         var isActive: Bool = false
         var closeAfterResponseWritten: Bool = false
 
         @inlinable
-        init(idleTimeout: C.Duration?, clock: C) {
+        init(idleConfiguration: HTTP1Channel.Configuration.IdleConfiguration, clock: C) {
             self.clock = clock
-            self.idleTimeout = idleTimeout
+            self.idleConfiguration = idleConfiguration
             self.lastActiveTime = clock.now
+            self.headTime = clock.now
+            self.bodyStreamedSoFar = 0
         }
 
         enum SetActiveAction: Equatable {
@@ -157,7 +160,7 @@ extension HTTPConnectionStateHandler {
         @inlinable
         mutating func setActive() -> SetActiveAction {
             self.isActive = true
-            if let idleTimeout {
+            if let idleTimeout = idleConfiguration.idleTimeout {
                 return .scheduleTimeout(deadline: clock.now.advanced(by: idleTimeout))
             } else {
                 return .doNothing
@@ -169,18 +172,34 @@ extension HTTPConnectionStateHandler {
             self.isActive = false
         }
 
+        enum ReadPartAction: Equatable {
+            case closeConnection
+            case doNothing
+        }
         @inlinable
-        mutating func readHTTPPart(_ part: HTTPRequestPart) {
+        mutating func readHTTPPart(_ part: HTTPRequestPart) -> ReadPartAction {
             self.lastActiveTime = clock.now
             switch part {
             case .head:
                 self.isRequestBeingRead = true
                 self.requestsInProgress += 1
-            case .body(_):
+                self.bodyStreamedSoFar = 0
+                self.headTime = clock.now
+            case .body(let buffer):
+                guard let minimumBodyStreamRate = idleConfiguration.minimumBodyStreamRate else { return .doNothing }
+                self.bodyStreamedSoFar += buffer.readableBytes
+                let timeSinceHead = self.headTime.duration(to: clock.now)
+                if timeSinceHead > minimumBodyStreamRate.timeBeforeCheck {
+                    let rate = Double(self.bodyStreamedSoFar) / (timeSinceHead / .seconds(1))
+                    if minimumBodyStreamRate.expectedBytesPerSecond > Int(rate) {
+                        return .closeConnection
+                    }
+                }
                 break
             case .end:
                 self.isRequestBeingRead = false
             }
+            return .doNothing
         }
 
         enum WritePartAction: Equatable {
@@ -202,7 +221,7 @@ extension HTTPConnectionStateHandler {
                     if self.closeAfterResponseWritten {
                         return .closeConnection
                     }
-                    if let idleTimeout, self.isActive {
+                    if let idleTimeout = idleConfiguration.idleTimeout, self.isActive {
                         self.lastActiveTime = clock.now
                         return .scheduleTimeout(deadline: clock.now.advanced(by: idleTimeout))
                     }
@@ -219,7 +238,7 @@ extension HTTPConnectionStateHandler {
 
         @inlinable
         mutating func timeoutTriggered() -> TimeoutTriggeredAction {
-            guard let idleTimeout, self.isActive else { return .doNothing }
+            guard let idleTimeout = idleConfiguration.idleTimeout, self.isActive else { return .doNothing }
 
             // if we've read the request and are still responding do nothing
             if self.isRequestBeingRead == false, self.requestsInProgress > 0 {

@@ -41,7 +41,7 @@ struct HTTP2StreamChannel: ServerChildChannel {
             try channel.pipeline.syncOperations.addHandler(HTTP2FramePayloadToHTTPServerCodec())
             try channel.pipeline.syncOperations.addHandlers(self.configuration.additionalChannelHandlers())
             try channel.pipeline.syncOperations.addHandler(
-                HTTPConnectionStateHandler(idleTimeout: self.configuration.idleTimeout.map { .init($0) }, logger: logger)
+                HTTPConnectionStateHandler(idleConfiguration: self.configuration.idle, logger: logger)
             )
             return try HTTP1Channel.Value(wrappingChannelSynchronously: channel)
         }
