@@ -19,12 +19,6 @@ public final class HTTPConnectionStateHandler: ChannelDuplexHandler, RemovableCh
     public typealias OutboundIn = HTTPResponsePart
     public typealias OutboundOut = HTTPResponsePart
 
-    ///A user event triggered by IdleStateHandler when a Channel is idle.
-    public enum IdleStateEvent: Sendable {
-        /// Will be triggered when no read was performed for the specified amount of time
-        case read
-    }
-
     let logger: Logger
     var state: StateMachine<ContinuousClock>
     private var scheduledReaderTask: Optional<Scheduled<Void>>

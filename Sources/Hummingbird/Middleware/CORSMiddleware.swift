@@ -17,6 +17,7 @@ public import NIOCore
 /// "access-control-allow-origin" header
 public struct CORSMiddleware<Context: RequestContext>: RouterMiddleware {
     /// Defines what origins are allowed
+    @available(*, deprecated, renamed: "AllowOriginExtended")
     public enum AllowOrigin: Sendable {
         case none
         case all
@@ -39,8 +40,73 @@ public struct CORSMiddleware<Context: RequestContext>: RouterMiddleware {
         }
     }
 
+    /// Defines what should be returned in `Access-Control-Allow-Origin` header
+    public struct AllowOriginExtended: Sendable {
+        enum Internal {
+            case none
+            case all
+            case originBased
+            case oneOf([String])
+            case custom(String)
+        }
+        let value: Internal
+
+        init(value: Internal) {
+            self.value = value
+        }
+
+        @available(*, deprecated)
+        init(_ allowOrigin: AllowOrigin) {
+            switch allowOrigin {
+            case .none: self.value = .none
+            case .all: self.value = .all
+            case .originBased: self.value = .originBased
+            case .custom(let string): self.value = .custom(string)
+            }
+        }
+
+        /// Don't return header.
+        public static var none: Self { .init(value: .none) }
+        /// Return a wildcard `*`.
+        public static var all: Self { .init(value: .all) }
+        /// Return the request origin header, if request origin header isn't set to `null`.
+        public static var originBased: Self { .init(value: .originBased) }
+        /// Return request origin header if it is in the list of origins
+        public static func oneOf(_ origins: String...) -> Self { .init(value: .oneOf(origins)) }
+        /// Return a custom value
+        public static func custom(_ endpoint: String) -> Self { .init(value: .custom(endpoint)) }
+
+        func value(for request: Request) -> String? {
+            switch self.value {
+            case .none:
+                return nil
+            case .all:
+                return "*"
+            case .originBased:
+                let origin = request.headers[.origin]
+                if origin == "null" { return nil }
+                return origin
+            case .oneOf(let origins):
+                let origin = request.headers[.origin]
+                if origin == "null" { return nil }
+                return origins.first { $0 == origin }
+            case .custom(let value):
+                return value
+            }
+        }
+
+        var shouldAddToVaryHeader: Bool {
+            switch self.value {
+            case .oneOf, .originBased, .custom:
+                return true
+            case .none, .all:
+                return false
+            }
+        }
+    }
+
     /// What origins are allowed, header `Access-Control-Allow-Origin`
-    let allowOrigin: AllowOrigin
+    let allowOrigin: AllowOriginExtended
     /// What headers are allowed, header `Access-Control-Allow-Headers`
     let allowHeaders: String
     /// What methods are allowed, header `Access-Control-Allow-Methods`
@@ -62,7 +128,7 @@ public struct CORSMiddleware<Context: RequestContext>: RouterMiddleware {
     ///   - exposedHeaders: array of headers that can be exposed back to the browser
     ///   - maxAge: how long the results of a pre-flight request can be cached
     public init(
-        allowOrigin: AllowOrigin = .originBased,
+        allowOrigin: AllowOriginExtended = .originBased,
         allowHeaders: [HTTPField.Name] = [.accept, .authorization, .contentType, .origin],
         allowMethods: [HTTPRequest.Method] = [.get, .post, .head, .options],
         allowCredentials: Bool = false,
@@ -70,6 +136,33 @@ public struct CORSMiddleware<Context: RequestContext>: RouterMiddleware {
         maxAge: TimeAmount? = nil
     ) {
         self.allowOrigin = allowOrigin
+        self.allowHeaders = allowHeaders.map(\.canonicalName).joined(separator: ", ")
+        self.allowMethods = allowMethods.map(\.rawValue).joined(separator: ", ")
+        self.allowCredentials = allowCredentials
+        self.exposedHeaders = exposedHeaders?.joined(separator: ", ")
+        self.maxAge = maxAge.map { String(describing: $0.nanoseconds / 1_000_000_000) }
+    }
+
+    /// Initialize CORS middleware
+    ///
+    /// - Parameters:
+    ///   - allowOrigin: allow origin enum
+    ///   - allowHeaders: array of headers that are allowed
+    ///   - allowMethods: array of methods that are allowed
+    ///   - allowCredentials: are credentials alloed
+    ///   - exposedHeaders: array of headers that can be exposed back to the browser
+    ///   - maxAge: how long the results of a pre-flight request can be cached
+    @_disfavoredOverload
+    @available(*, deprecated, message: "Use init that uses `AllowOriginExtended`.")
+    public init(
+        allowOrigin: AllowOrigin = .originBased,
+        allowHeaders: [HTTPField.Name] = [.accept, .authorization, .contentType, .origin],
+        allowMethods: [HTTPRequest.Method] = [.get, .post, .head, .options],
+        allowCredentials: Bool = false,
+        exposedHeaders: [String]? = nil,
+        maxAge: TimeAmount? = nil
+    ) {
+        self.allowOrigin = .init(allowOrigin)
         self.allowHeaders = allowHeaders.map(\.canonicalName).joined(separator: ", ")
         self.allowMethods = allowMethods.map(\.rawValue).joined(separator: ", ")
         self.allowCredentials = allowCredentials
@@ -102,7 +195,7 @@ public struct CORSMiddleware<Context: RequestContext>: RouterMiddleware {
             if let exposedHeaders = self.exposedHeaders {
                 headers[.accessControlExposeHeaders] = exposedHeaders
             }
-            if case .originBased = self.allowOrigin {
+            if self.allowOrigin.shouldAddToVaryHeader {
                 headers[.vary] = "Origin"
             }
 
@@ -115,8 +208,8 @@ public struct CORSMiddleware<Context: RequestContext>: RouterMiddleware {
                 if self.allowCredentials {
                     response.headers[.accessControlAllowCredentials] = "true"
                 }
-                if case .originBased = self.allowOrigin {
-                    response.headers[.vary] = "Origin"
+                if self.allowOrigin.shouldAddToVaryHeader {
+                    response.headers[values: .vary].append("Origin")
                 }
                 return response
             } catch {
@@ -126,7 +219,7 @@ public struct CORSMiddleware<Context: RequestContext>: RouterMiddleware {
                 if self.allowCredentials {
                     additionalHeaders[.accessControlAllowCredentials] = "true"
                 }
-                if case .originBased = self.allowOrigin {
+                if self.allowOrigin.shouldAddToVaryHeader {
                     additionalHeaders[.vary] = "Origin"
                 }
                 throw EditedHTTPError(
