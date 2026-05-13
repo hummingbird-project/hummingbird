@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import HTTPTypes
 import HummingbirdTesting
 import Logging
 import NIOConcurrencyHelpers
@@ -469,6 +470,54 @@ struct MiddlewareTests {
                 let logs = logAccumalator.filter { $0.metadata?["hb.request.path"]?.description == "/test" }
                 let firstLog = try #require(logs.first)
                 #expect(firstLog.metadata?["hb.request.headers"] == .stringConvertible(["hbtest": "One, Two"]))
+            }
+        }
+    }
+
+    @Test func testSecurityMiddlewareDefaults() async throws {
+        let router = Router()
+        router.add(middleware: SecurityMiddleware())
+        router.get("/") { _, _ in
+            HTTPResponse.Status.ok
+        }
+        let app = Application(router: router)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/", method: .get) { response in
+                #expect(response.headers[.contentSecurityPolicy] == "default-src 'self'; form-action 'self'; frame-ancestors 'self'")
+                #expect(response.headers[.crossOriginResourcePolicy] == "same-site")
+                #expect(response.headers[.xContentTypeOptions] == "nosniff")
+                #expect(response.headers[HTTPField.Name("Reporting-Endpoints")!] == nil)
+            }
+        }
+    }
+
+    @Test func testSecurityMiddleware() async throws {
+        let router = Router()
+        router.add(
+            middleware: SecurityMiddleware(
+                contentSecurityPolicy: [.upgradeInsecureRequests, .reportTo("csp-endpoint")],
+                crossOriginResourcePolicy: .sameOrigin,
+                reportingEndpoints: [
+                    "csp-endpoint": "http://example.com/csp-reports", "permissions-endpoint": "http://example.com/permissions-reports",
+                ]
+            )
+        )
+        router.get("/") { _, _ in
+            HTTPResponse.Status.ok
+        }
+        let app = Application(router: router)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/", method: .get) { response in
+                #expect(response.headers[.contentSecurityPolicy] == "upgrade-insecure-requests; report-to csp-endpoint")
+                #expect(response.headers[.crossOriginResourcePolicy] == "same-origin")
+                #expect(response.headers[.xContentTypeOptions] == "nosniff")
+                #expect(
+                    response.headers[HTTPField.Name("Reporting-Endpoints")!]
+                        == "csp-endpoint=\"http://example.com/csp-reports\",permissions-endpoint=\"http://example.com/permissions-reports\""
+                        || response.headers[HTTPField.Name("Reporting-Endpoints")!]
+                            == "permissions-endpoint=\"http://example.com/permissions-reports\",csp-endpoint=\"http://example.com/csp-reports\""
+
+                )
             }
         }
     }
