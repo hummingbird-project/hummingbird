@@ -19,11 +19,11 @@ jobs:
       id: create-token
       uses: actions/create-github-app-token@v3
       with:
-        app-id: ${{ secrets.HB_APP_ID }}
+        client-id: ${{ secrets.HB_APP_ID }}
         private-key: ${{ secrets.HB_APP_PRIVATE_KEY }}
 
     - name: Generate Sponsors
-      uses: JamesIves/github-sponsors-readme-action@v1
+      uses: JamesIves/github-sponsors-readme-action@2fd9142e765f755780202122261dc85e78459405 #v1.6.0
       with:
         token: ${{ steps.create-token.outputs.token }}
         file: "README.md"
@@ -31,7 +31,7 @@ jobs:
         marker: "backers"
         organization: true
     - name: Commit and create PR
-      uses: peter-evans/create-pull-request@v8
+      uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 #v8.1.1
       with:
         token: ${{ steps.create-token.outputs.token }}
         commit-message: "Update README with new sponsor"
