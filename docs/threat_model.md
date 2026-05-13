@@ -71,5 +71,5 @@ Memory exhaustion because an application collates an unbounded request payload i
 We are not responsible for the contents of a request being passed onto third party services by user application
 - For example we are not responsible for vulnerabilities like SQL injection.
 
-Cross-Site Request Forgery (CSRF)
-- CSRF attacks are not something that the server framework can protect against. The application is responsible for protecting against these.
+Cross-Site scripting (XSS)
+- XSS attacks are not something that the server framework can directly protect against. We do supply support for building content-security-policy headers which can help it avoiding these and the swift-mustache package that is part of the Hummingbird framework will neutralize any HTML grammar, to avoid scripts being inserted into web pages.
