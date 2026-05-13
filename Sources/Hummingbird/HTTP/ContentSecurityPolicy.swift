@@ -531,6 +531,6 @@ public struct ContentSecurityPolicy: Sendable, CustomStringConvertible, Expressi
 
     /// Formatted output for content-security-policy header
     @inlinable public var description: String {
-        self.policyDirectives.lazy.map { "\($0)" }.joined(separator: "; ")
+        self.policyDirectives.lazy.map { "\($0)" }.joined(separator: ";")
     }
 }
