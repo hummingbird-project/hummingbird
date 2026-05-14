@@ -23,6 +23,8 @@ where Handler.Input == Request, Handler.Output == Response, Handler.Context == C
     /// Group handler
     @usableFromInline
     let handler: Handler
+    /// Route options
+    public let options: RouterBuilderOptions
 
     /// Create RouteGroup from result builder
     /// - Parameters:
@@ -41,6 +43,7 @@ where Handler.Input == Request, Handler.Output == Response, Handler.Context == C
             builder()
         }
         self.routerPath = routerPath
+        self.options = RouterBuilderState.current?.options ?? []
     }
 
     /// Create RouteGroup from RequestContext transform and result builder
@@ -75,6 +78,7 @@ where Handler.Input == Request, Handler.Output == Response, Handler.Context == C
             ThrowingContextTransform(to: ChildHandler.Context.self, builder: builder)
         }
         self.routerPath = routerPath
+        self.options = RouterBuilderState.current?.options ?? []
     }
 
     /// Process HTTP request and return an HTTP response
