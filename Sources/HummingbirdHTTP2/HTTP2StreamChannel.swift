@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2024 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 import HTTPTypes
 import HummingbirdCore
@@ -20,6 +14,7 @@ import NIOHTTPTypes
 import NIOHTTPTypesHTTP2
 
 /// HTTP2 Child channel for processing an HTTP2 stream
+@available(hummingbird 2.0, *)
 struct HTTP2StreamChannel: ServerChildChannel {
     typealias Value = NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>
     typealias Configuration = HTTP1Channel.Configuration
@@ -41,14 +36,13 @@ struct HTTP2StreamChannel: ServerChildChannel {
     ///   - channel: Child channel
     ///   - logger: Logger used during setup
     /// - Returns: Object to process input/output on child channel
-    func setup(channel: Channel, logger: Logger) -> EventLoopFuture<Value> {
+    func setup(channel: any Channel, logger: Logger) -> EventLoopFuture<Value> {
         channel.eventLoop.makeCompletedFuture {
             try channel.pipeline.syncOperations.addHandler(HTTP2FramePayloadToHTTPServerCodec())
             try channel.pipeline.syncOperations.addHandlers(self.configuration.additionalChannelHandlers())
-            if let idleTimeout = self.configuration.idleTimeout {
-                try channel.pipeline.syncOperations.addHandler(IdleStateHandler(readTimeout: idleTimeout))
-            }
-            try channel.pipeline.syncOperations.addHandler(HTTPUserEventHandler(logger: logger))
+            try channel.pipeline.syncOperations.addHandler(
+                HTTPConnectionStateHandler(idleTimeout: self.configuration.idleTimeout.map { .init($0) }, logger: logger)
+            )
             return try HTTP1Channel.Value(wrappingChannelSynchronously: channel)
         }
     }

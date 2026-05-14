@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2021 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 import CNIOLinux
 public import HummingbirdCore
@@ -47,6 +41,7 @@ public struct FileIO: Sendable {
             guard stat.st_size > 0 else { return .init() }
             return self.readFile(path: path, range: 0...numericCast(stat.st_size - 1), context: context, chunkLength: chunkLength)
         } catch {
+            context.coreContext.endpointPath.value = "NotFound"
             throw HTTPError(.notFound)
         }
     }
@@ -74,6 +69,7 @@ public struct FileIO: Sendable {
             let range = range.clamped(to: fileRange)
             return self.readFile(path: path, range: range, context: context, chunkLength: chunkLength)
         } catch {
+            context.coreContext.endpointPath.value = "NotFound"
             throw HTTPError(.notFound)
         }
     }

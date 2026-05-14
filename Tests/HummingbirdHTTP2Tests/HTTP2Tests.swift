@@ -1,18 +1,13 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2023 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import HTTPTypes
 import HummingbirdCore
 import HummingbirdHTTP2
 import HummingbirdTesting
@@ -25,6 +20,7 @@ import NIOPosix
 import NIOSSL
 import ServiceLifecycle
 import Testing
+import UnixSignals
 
 struct HummingBirdHTTP2Tests {
     @Test func testConnect() async throws {

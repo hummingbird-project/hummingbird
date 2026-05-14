@@ -1,20 +1,15 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2024 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 public import Foundation
 
 /// The wrapper struct for decoding URL encoded form data to Codable classes
+@available(hummingbird 2.0, *)
 public struct URLEncodedFormDecoder: Sendable {
     /// The strategy to use for decoding `Date` values.
     public enum DateDecodingStrategy: Sendable {
@@ -81,6 +76,7 @@ public struct URLEncodedFormDecoder: Sendable {
     }
 }
 
+@available(hummingbird 2.0, *)
 private class _URLEncodedFormDecoder: Decoder {
     // MARK: Properties
 
@@ -427,6 +423,7 @@ private class _URLEncodedFormDecoder: Decoder {
     }
 }
 
+@available(hummingbird 2.0, *)
 extension _URLEncodedFormDecoder: SingleValueDecodingContainer {
     func decodeNil() -> Bool {
         (try? self.unboxNil(self.storage.topContainer)) ?? false
@@ -493,6 +490,7 @@ extension _URLEncodedFormDecoder: SingleValueDecodingContainer {
     }
 }
 
+@available(hummingbird 2.0, *)
 extension _URLEncodedFormDecoder {
     func unboxNil(_ node: URLEncodedFormNode) throws -> Bool {
         switch node {
@@ -644,19 +642,11 @@ extension _URLEncodedFormDecoder {
             return Date(timeIntervalSince1970: seconds)
         case .iso8601:
             let dateString = try unbox(node, as: String.self)
-            #if compiler(>=6.0)
             guard let date = try? Date(dateString, strategy: .iso8601) else {
                 throw DecodingError.dataCorrupted(
                     .init(codingPath: self.codingPath, debugDescription: "Expected date string to be ISO8601-formatted.")
                 )
             }
-            #else
-            guard let date = URLEncodedForm.iso8601Formatter.date(from: dateString) else {
-                throw DecodingError.dataCorrupted(
-                    .init(codingPath: self.codingPath, debugDescription: "Expected date string to be ISO8601-formatted.")
-                )
-            }
-            #endif
             return date
         case .formatted(let formatter):
             let dateString = try unbox(node, as: String.self)
@@ -700,6 +690,7 @@ extension _URLEncodedFormDecoder {
     }
 }
 
+@available(hummingbird 2.0, *)
 private struct URLEncodedFormDecodingStorage {
     /// the container stack
     private var containers: [URLEncodedFormNode] = []

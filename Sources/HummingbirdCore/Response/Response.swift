@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2021 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 public import HTTPTypes
 
@@ -29,13 +23,21 @@ public struct Response: Sendable {
             self.headers = newValue.headerFields
         }
     }
-
+    @usableFromInline
+    /*private*/ var _body: ResponseBody
     /// Response body
+    @inlinable
     public var body: ResponseBody {
-        didSet {
-            if let contentLength = body.contentLength {
-                self.headers[.contentLength] = String(describing: contentLength)
+        get { _body }
+        set {
+            if self.body.contentLength != newValue.contentLength {
+                if let contentLength = newValue.contentLength {
+                    self.headers[.contentLength] = String(describing: contentLength)
+                } else {
+                    self.headers[.contentLength] = nil
+                }
             }
+            self._body = newValue
         }
     }
 
@@ -44,7 +46,7 @@ public struct Response: Sendable {
     public init(status: HTTPResponse.Status, headers: HTTPFields = .init(), body: ResponseBody = .init()) {
         self.status = status
         self.headers = headers
-        self.body = body
+        self._body = body
         if let contentLength = body.contentLength, !self.headers.contains(.contentLength) {
             self.headers[.contentLength] = String(describing: contentLength)
         }

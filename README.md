@@ -6,7 +6,7 @@
 </p>  
 <p align="center">
 <a href="https://swift.org">
-  <img src="https://img.shields.io/badge/swift-5.10+-f05138.svg"/>
+  <img src="https://img.shields.io/badge/swift-6.1+-f05138.svg"/>
 </a>
 <a href="https://github.com/hummingbird-project/hummingbird/actions?query=workflow%3ACI">
   <img src="https://github.com/hummingbird-project/hummingbird/actions/workflows/ci.yml/badge.svg?branch=main"/>
@@ -97,8 +97,19 @@ swift package add-target-dependency Hummingbird MyApp --package hummingbird
 
 ## Contributing
 
-We welcome contributions to Hummingbird! Please read our [contributing guidelines](CONTRIBUTING.md) before submitting a pull request.
+We welcome all contributions to Hummingbird!
+- Submit an [Issue](https://github.com/hummingbird-project/hummingbird/issues/new) for feature requests or to report bugs or issues.
+- Submit pull requests to help push development forward.
+- If you find a security vulnerability then submit a report via [GitHub](https://github.com/hummingbird-project/hummingbird/security/advisories/new).
+ 
+Please read our [contributing guidelines](CONTRIBUTING.md), before making a contribution to the project.
 
-## License
+## Sponsors
 
-Hummingbird is released under the [Apache 2.0 license](LICENSE).
+Support development of Hummingbird by becoming a [sponsor](https://github.com/sponsors/hummingbird-project).
+
+## Backers
+
+Support development of Hummingbird by becoming a [backer](https://github.com/sponsors/hummingbird-project).
+
+<!-- backers --><a href="https://github.com/thoven87"><img src="https:&#x2F;&#x2F;github.com&#x2F;thoven87.png" width="60px" alt="User avatar: Stevenson Michel" /></a><a href="https://github.com/mattmassicotte"><img src="https:&#x2F;&#x2F;github.com&#x2F;mattmassicotte.png" width="60px" alt="User avatar: Matt Massicotte" /></a><a href="https://github.com/slashmo"><img src="https:&#x2F;&#x2F;github.com&#x2F;slashmo.png" width="60px" alt="User avatar: Moritz Lang" /></a><a href="https://github.com/zaneenders"><img src="https:&#x2F;&#x2F;github.com&#x2F;zaneenders.png" width="60px" alt="User avatar: Zane Enders" /></a><a href="https://github.com/czechboy0"><img src="https:&#x2F;&#x2F;github.com&#x2F;czechboy0.png" width="60px" alt="User avatar: Honza Dvorsky" /></a><!-- backers -->

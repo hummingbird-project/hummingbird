@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2023 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 public import Logging
 public import NIOCore
@@ -40,6 +34,7 @@ public protocol ServerChildChannel: Sendable {
     func handle(value: Value, logger: Logger) async
 }
 
+@available(hummingbird 2.0, *)
 extension ServerChildChannel {
     /// Build existential ``Server`` from existential `ServerChildChannel`
     ///

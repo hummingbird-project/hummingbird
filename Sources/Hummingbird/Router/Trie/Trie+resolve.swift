@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2024 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 internal import Foundation
 import NIOCore
@@ -31,7 +25,6 @@ extension RouterTrie {
     @usableFromInline
     struct ResolveContext {
         @usableFromInline let path: String
-        @usableFromInline let pathComponents: [Substring]
         @usableFromInline let trie: Trie
         @usableFromInline let values: [Value?]
         @usableFromInline var parameters = Parameters()
@@ -45,28 +38,19 @@ extension RouterTrie {
         ) {
             self.path = path
             self.trie = trie
-            self.pathComponents = path.split(separator: "/", omittingEmptySubsequences: true)
             self.values = values
             self.caseInsensitive = caseInsensitive
         }
 
-        @usableFromInline func nextPathComponent(advancingIndex index: inout Int) -> Substring? {
-            if index >= self.pathComponents.count {
-                return nil
-            }
-
-            let component = self.pathComponents[index]
-            index += 1
-            return component
-        }
-
         @inlinable
         mutating func resolve() -> (value: Value, parameters: Parameters)? {
-            guard let component = pathComponents.first else {
+            var iterator = path.splitSequence(separator: "/").makeIterator()
+
+            guard let component = iterator.next() else {
+                // Empty path - check root node
                 guard let value = values[trie.nodes[0].valueIndex] else {
                     return nil
                 }
-
                 return (value: value, parameters: self.parameters)
             }
 
@@ -74,7 +58,7 @@ extension RouterTrie {
             guard
                 let node = descend(
                     component: component,
-                    nextPathComponentIndex: 1,
+                    iterator: iterator,
                     nodeIndex: &nodeIndex
                 )
             else {
@@ -91,27 +75,27 @@ extension RouterTrie {
         @inlinable
         mutating func descend(
             component: Substring,
-            nextPathComponentIndex: Int,
+            iterator: SplitStringSequence<String>.Iterator,
             nodeIndex: inout Int
         ) -> TrieNode? {
             var node = self.matchComponent(component, atNodeIndex: &nodeIndex)
-            var nextPathComponentIndex = nextPathComponentIndex
+            var iterator = iterator
 
             if node.token == .recursiveWildcard {
                 // we have found a recursive wildcard. Go through all the path components until we match one of them
                 // or reach the end of the path component array
                 var range = component.startIndex..<component.endIndex
 
-                while let component = nextPathComponent(advancingIndex: &nextPathComponentIndex) {
+                while let nextComponent = iterator.next() {
                     var _nodeIndex = nodeIndex
-                    let recursiveNode = self.matchComponent(component, atNodeIndex: &_nodeIndex)
+                    let recursiveNode = self.matchComponent(nextComponent, atNodeIndex: &_nodeIndex)
                     if recursiveNode.token != .deadEnd {
                         node = recursiveNode
                         nodeIndex = _nodeIndex
                         break
                     }
                     // extend range of catch all text
-                    range = range.lowerBound..<component.endIndex
+                    range = range.lowerBound..<nextComponent.endIndex
                 }
                 self.parameters.setCatchAll(self.path[range])
             }
@@ -120,7 +104,7 @@ extension RouterTrie {
                 return nil
             }
 
-            if let nextComponent = nextPathComponent(advancingIndex: &nextPathComponentIndex) {
+            if let nextComponent = iterator.next() {
                 // There's another component to the route
                 var nextIndex = nodeIndex
 
@@ -128,7 +112,7 @@ extension RouterTrie {
                 while self.trie.nodes[nextIndex].token != .deadEnd {
                     if let node = descend(
                         component: nextComponent,
-                        nextPathComponentIndex: nextPathComponentIndex,
+                        iterator: iterator,
                         nodeIndex: &nodeIndex
                     ) {
                         return node

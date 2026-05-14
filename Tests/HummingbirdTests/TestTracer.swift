@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2023 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the Swift Distributed Tracing open source project
@@ -114,7 +108,7 @@ final class TestSpan: Span {
     public private(set) var status: SpanStatus?
     public private(set) var endTime: UInt64?
 
-    private(set) var recordedErrors: [(Error, SpanAttributes)] = []
+    private(set) var recordedErrors: [(any Error, SpanAttributes)] = []
 
     var operationName: String
     let context: ServiceContext
@@ -165,7 +159,7 @@ final class TestSpan: Span {
     }
 
     func recordError(
-        _ error: Error,
+        _ error: any Error,
         attributes: SpanAttributes,
         at instant: @autoclosure () -> some TracerInstant
     ) {

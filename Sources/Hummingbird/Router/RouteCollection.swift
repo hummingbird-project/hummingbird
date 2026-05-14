@@ -1,20 +1,15 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2024 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 public import HTTPTypes
 
 /// Collection of routes
+@available(hummingbird 2.0, *)
 public final class RouteCollection<Context: RequestContext>: RouterMethods {
     /// Initialize RouteCollection
     public init(context: Context.Type = BasicRequestContext.self) {
@@ -58,6 +53,7 @@ public final class RouteCollection<Context: RequestContext>: RouterMethods {
     let middlewares: MiddlewareGroup<Context>
 }
 
+@available(hummingbird 2.0, *)
 extension RouterMethods {
     /// Add route collection to router
     /// - Parameters

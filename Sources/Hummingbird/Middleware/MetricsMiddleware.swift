@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2023 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 import Dispatch
 import Metrics
@@ -38,7 +32,7 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
                 // need to create dimensions once request has been responded to ensure
                 // we have the correct endpoint path
                 let dimensions: [(String, String)] = [
-                    ("http.route", context.endpointPath ?? request.uri.path),
+                    ("http.route", context.endpointPath ?? "Unknown"),
                     ("http.request.method", request.method.rawValue),
                     ("http.response.status_code", responseStatus.code.description),
                 ]

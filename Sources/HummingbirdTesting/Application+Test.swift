@@ -1,28 +1,22 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2021 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 public import Hummingbird
 
 /// HTTP Scheme to use with AsyncHTTPClient test framework
-public enum TestHTTPScheme: String {
+public enum TestHTTPScheme: String, Sendable {
     case http
     case https
 }
 
 /// Type of test framework
-public struct TestingSetup {
-    enum Internal {
+public struct TestingSetup: Sendable {
+    enum Internal: Sendable {
         case router
         case live
         case ahc(TestHTTPScheme)
@@ -42,6 +36,7 @@ public struct TestingSetup {
 }
 
 /// Extends `ApplicationProtocol` to support testing of applications
+@available(hummingbird 2.0, *)
 extension ApplicationProtocol {
     // MARK: Initialization
 

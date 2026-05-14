@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2024 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 import NIOCore
 import NIOHTTP2
@@ -18,6 +12,7 @@ import NIOHTTP2
 /// HTTP2 server connection manager
 ///
 /// This is heavily based off the ServerConnectionManagementHandler from https://github.com/grpc/grpc-swift-nio-transport
+@available(hummingbird 2.0, *)
 final class HTTP2ServerConnectionManager: ChannelDuplexHandler {
     package typealias InboundIn = HTTP2Frame
     package typealias InboundOut = HTTP2Frame
@@ -33,7 +28,7 @@ final class HTTP2ServerConnectionManager: ChannelDuplexHandler {
     /// Maximum amount of time we wait before closing the connection
     var gracefulCloseTimer: Timer?
     /// EventLoop connection manager running on
-    var eventLoop: EventLoop
+    var eventLoop: any EventLoop
     /// Channel handler context
     var channelHandlerContext: ChannelHandlerContext?
     /// Are we reading
@@ -42,7 +37,7 @@ final class HTTP2ServerConnectionManager: ChannelDuplexHandler {
     var flushPending: Bool
 
     init(
-        eventLoop: EventLoop,
+        eventLoop: any EventLoop,
         idleTimeout: Duration?,
         maxAgeTimeout: Duration?,
         gracefulCloseTimeout: Duration?
@@ -231,6 +226,7 @@ final class HTTP2ServerConnectionManager: ChannelDuplexHandler {
     }
 }
 
+@available(hummingbird 2.0, *)
 extension HTTP2ServerConnectionManager {
     struct LoopBoundHandler: @unchecked Sendable {
         let handler: HTTP2ServerConnectionManager
@@ -246,13 +242,14 @@ extension HTTP2ServerConnectionManager {
     }
 }
 
+@available(hummingbird 2.0, *)
 extension HTTP2ServerConnectionManager {
     /// Stream delegate
     struct HTTP2StreamDelegate: NIOHTTP2StreamDelegate, @unchecked Sendable {
         let handler: HTTP2ServerConnectionManager
 
         /// A new HTTP/2 stream was created with the given ID.
-        func streamCreated(_ id: HTTP2StreamID, channel: Channel) {
+        func streamCreated(_ id: HTTP2StreamID, channel: any Channel) {
             if self.handler.eventLoop.inEventLoop {
                 self.handler._streamCreated(id, channel: channel)
             } else {
@@ -263,7 +260,7 @@ extension HTTP2ServerConnectionManager {
         }
 
         /// An HTTP/2 stream with the given ID was closed.
-        func streamClosed(_ id: HTTP2StreamID, channel: Channel) {
+        func streamClosed(_ id: HTTP2StreamID, channel: any Channel) {
             if self.handler.eventLoop.inEventLoop {
                 self.handler._streamClosed(id, channel: channel)
             } else {
@@ -279,13 +276,13 @@ extension HTTP2ServerConnectionManager {
     }
 
     /// A new HTTP/2 stream was created with the given ID.
-    func _streamCreated(_ id: HTTP2StreamID, channel: Channel) {
+    func _streamCreated(_ id: HTTP2StreamID, channel: any Channel) {
         self.state.streamOpened(id)
         self.idleTimer?.cancel()
     }
 
     /// An HTTP/2 stream with the given ID was closed.
-    func _streamClosed(_ id: HTTP2StreamID, channel: Channel) {
+    func _streamClosed(_ id: HTTP2StreamID, channel: any Channel) {
         switch self.state.streamClosed(id) {
         case .startIdleTimer:
             let loopBoundHandler = LoopBoundHandler(self)
@@ -310,7 +307,7 @@ struct Timer {
         self.scheduled = nil
     }
 
-    mutating func schedule(on eventLoop: EventLoop, _ task: @escaping @Sendable () throws -> Void) {
+    mutating func schedule(on eventLoop: any EventLoop, _ task: @escaping @Sendable () throws -> Void) {
         self.cancel()
         self.scheduled = eventLoop.scheduleTask(in: self.delay, task)
     }

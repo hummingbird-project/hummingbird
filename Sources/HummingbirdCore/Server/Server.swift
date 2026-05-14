@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2023 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 public import Logging
 public import NIOCore
@@ -24,6 +18,7 @@ import NIOTransportServices
 #endif
 
 /// HTTP server class
+@available(hummingbird 2.0, *)
 public actor Server<ChildChannel: ServerChildChannel>: Service {
     public typealias AsyncChildChannel = ChildChannel.Value
     public typealias AsyncServerChannel = NIOAsyncChannel<AsyncChildChannel, Never>
@@ -94,6 +89,7 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
         self.logger = logger
     }
 
+    @available(hummingbird 2.0, *)
     public func run() async throws {
         switch self.state {
         case .initial(let childChannelSetup, let configuration, let onServerRunning):
@@ -224,6 +220,9 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
         let quiescingHelper = ServerQuiescingHelper(group: self.eventLoopGroup)
         bootstrap = bootstrap.serverChannelInitializer { channel in
             channel.eventLoop.makeCompletedFuture {
+                #if os(macOS)
+                try channel.pipeline.syncOperations.addHandler(ServerErrorHandler(logger: self.logger))
+                #endif
                 if let availableConnectionsDelegate = configuration.availableConnectionsDelegate {
                     let handler = availableConnectionsDelegate.availableConnectionsChannelHandler
                     try channel.pipeline.syncOperations.addHandler(handler)
@@ -251,7 +250,7 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
             case .unixDomainSocket(let path):
                 let asyncChannel = try await bootstrap.bind(
                     unixDomainSocketPath: path,
-                    cleanupExistingSocketFile: false,
+                    cleanupExistingSocketFile: true,
                     serverBackPressureStrategy: nil
                 ) { channel in
                     childChannelSetup.setup(
@@ -294,7 +293,6 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
             // Specify backlog and enable SO_REUSEADDR for the server itself
             .serverChannelOption(ChannelOptions.backlog, value: numericCast(configuration.backlog))
             .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: configuration.reuseAddress ? 1 : 0)
-            .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: configuration.reuseAddress ? 1 : 0)
             .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
     }
 
@@ -307,7 +305,6 @@ public actor Server<ChildChannel: ServerChildChannel>: Service {
             let bootstrap = NIOTSListenerBootstrap(validatingGroup: self.eventLoopGroup)?
                 .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: configuration.reuseAddress ? 1 : 0)
                 // Set the handlers that are applied to the accepted Channels
-                .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: configuration.reuseAddress ? 1 : 0)
                 .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: true)
         else {
             return nil
@@ -367,6 +364,7 @@ extension NIOTSListenerBootstrap: ServerBootstrapProtocol {
 }
 #endif
 
+@available(hummingbird 2.0, *)
 extension Server: CustomStringConvertible {
     public nonisolated var description: String {
         "Hummingbird"

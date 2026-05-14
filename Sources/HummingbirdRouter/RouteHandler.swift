@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2023-2024 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 public import Hummingbird
 
@@ -48,8 +42,9 @@ where M0.Input == Request, M0.Output == Response, M0.Context: RouterRequestConte
 
     /// Dummy function passed to middleware handle
     @usableFromInline
-    static func notFound(_: Request, _: Context) -> Response {
-        .init(status: .notFound)
+    static func notFound(_: Request, context: Context) -> Response {
+        context.coreContext.endpointPath.value = "NotFound"
+        return .init(status: .notFound)
     }
 
     @usableFromInline

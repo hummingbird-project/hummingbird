@@ -1,17 +1,12 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2023 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
+public import Logging
 public import NIOCore
 
 /// Delegate for `AvailableConnectionsChannelHandler` that defines if we should accept
@@ -32,26 +27,42 @@ extension AvailableConnectionsDelegate {
 }
 
 /// Implementation of ``AvailableConnectionsDelegate`` that sets a maximum limit to the number
-/// of open connections
+/// of open connections. This is useful way to ensure your server doesn't get overloaded
 public struct MaximumAvailableConnections: AvailableConnectionsDelegate {
     let maxConnections: Int
+    let logger: Logger
     var connectionCount: Int
 
     public init(_ maxConnections: Int) {
         self.maxConnections = maxConnections
         self.connectionCount = 0
+        self.logger = Logger(label: "Connections")
+    }
+
+    public init(_ maxConnections: Int, logger: Logger) {
+        self.maxConnections = maxConnections
+        self.connectionCount = 0
+        self.logger = logger
     }
 
     public mutating func connectionOpened() {
         self.connectionCount += 1
+        self.logger.log(level: .trace, "Connection opened.", metadata: ["hb.connections": .stringConvertible(self.connectionCount)])
     }
 
     public mutating func connectionClosed() {
         self.connectionCount -= 1
+        self.logger.log(level: .trace, "Connection closed.", metadata: ["hb.connections": .stringConvertible(self.connectionCount)])
     }
 
     public func isAcceptingNewConnections() -> Bool {
         self.connectionCount < self.maxConnections
+    }
+}
+
+extension AvailableConnectionsDelegate where Self == MaximumAvailableConnections {
+    public static func maximum(_ maxConnections: Int, logger: Logger) -> Self {
+        MaximumAvailableConnections(maxConnections, logger: logger)
     }
 }
 

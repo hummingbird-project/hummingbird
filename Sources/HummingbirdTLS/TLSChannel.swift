@@ -1,21 +1,15 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2024 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
-import HummingbirdCore
-import Logging
-import NIOCore
-import NIOSSL
+public import HummingbirdCore
+public import Logging
+public import NIOCore
+public import NIOSSL
 
 /// Sets up child channel to use TLS before accessing base channel setup
 public struct TLSChannel<BaseChannel: ServerChildChannel>: ServerChildChannel {
@@ -45,7 +39,7 @@ public struct TLSChannel<BaseChannel: ServerChildChannel>: ServerChildChannel {
     ///   - logger: Logger used during setup
     /// - Returns: Object to process input/output on child channel
     @inlinable
-    public func setup(channel: Channel, logger: Logger) -> EventLoopFuture<Value> {
+    public func setup(channel: any Channel, logger: Logger) -> EventLoopFuture<Value> {
         channel.eventLoop.makeCompletedFuture {
             try channel.pipeline.syncOperations.addHandler(
                 NIOSSLServerHandler(
@@ -99,7 +93,7 @@ public struct TLSChannelConfiguration: Sendable {
     // Manages configuration of TLS
     public let tlsConfiguration: TLSConfiguration
     /// A custom verification callback that allows completely overriding the certificate verification logic of BoringSSL.
-    public let customVerificationCallback: CustomVerificationCallback?
+    public var customVerificationCallback: CustomVerificationCallback?
 
     ///  Initialize TLSChannel.Configuration
     ///

@@ -6,13 +6,16 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-validate
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
     - name: Checkout
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         fetch-depth: 1
     - name: run script

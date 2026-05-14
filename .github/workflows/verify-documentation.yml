@@ -5,7 +5,10 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-verifydocs
   cancel-in-progress: true
-  
+
+permissions:
+  contents: read
+
 jobs:
   linux:
     runs-on: ubuntu-latest
@@ -17,12 +20,12 @@ jobs:
       run: |
         apt-get update && apt-get install -y rsync bc
     - name: Checkout
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         fetch-depth: 0
         path: "package"
     - name: Checkout
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         repository: "hummingbird-project/hummingbird-docs"
         fetch-depth: 0
@@ -32,4 +35,4 @@ jobs:
         cd documentation
         swift package edit ${GITHUB_REPOSITORY#*/} --path ../package
         ./scripts/build-docc.sh -e
-      
+

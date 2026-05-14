@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2021 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
@@ -19,6 +13,7 @@ public import Foundation
 #endif
 
 /// Structure holding a single cookie
+@available(hummingbird 2.0, *)
 public struct Cookie: Sendable, CustomStringConvertible {
     public struct ValidationError: Error {
         enum Reason {
@@ -258,20 +253,22 @@ public struct Cookie: Sendable, CustomStringConvertible {
     /// Construct cookie from cookie header value
     /// - Parameter header: cookie header value
     internal init?(from header: Substring) {
-        let elements = header.split(separator: ";")
-        guard elements.count > 0 else { return nil }
-        let keyValue = elements[0].split(separator: "=", maxSplits: 1)
-        guard keyValue.count == 2 else { return nil }
-        self.name = String(keyValue[0])
-        self.value = String(keyValue[1])
+        var iterator = header.splitSequence(separator: ";").makeIterator()
+        guard let keyValue = iterator.next() else { return nil }
+        var keyValueIterator = keyValue.splitMaxSplitsSequence(separator: "=", maxSplits: 1).makeIterator()
+        guard let key = keyValueIterator.next() else { return nil }
+        guard let value = keyValueIterator.next() else { return nil }
+        self.name = String(key)
+        self.value = String(value)
 
         var properties = Properties()
         // extract elements
-        for element in elements.dropFirst() {
-            let keyValue = element.split(separator: "=", maxSplits: 1)
-            let key = keyValue[0].drop { $0 == " " }
-            if keyValue.count == 2 {
-                properties[key] = String(keyValue[1])
+        while let element = iterator.next() {
+            var keyValueIterator = element.splitMaxSplitsSequence(separator: "=", maxSplits: 1).makeIterator()
+            guard var key = keyValueIterator.next() else { return nil }
+            key = key.drop(while: \.isWhitespace)
+            if let value = keyValueIterator.next() {
+                properties[key] = String(value)
             } else {
                 properties[key] = ""
             }

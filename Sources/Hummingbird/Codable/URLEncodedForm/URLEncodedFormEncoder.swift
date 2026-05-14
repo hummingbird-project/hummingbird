@@ -1,20 +1,15 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2024 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 public import Foundation
 
 /// The wrapper struct for encoding Codable classes to URL encoded form data
+@available(hummingbird 2.0, *)
 public struct URLEncodedFormEncoder: Sendable {
     /// The strategy to use for encoding `Date` values.
     public enum DateEncodingStrategy: Sendable {
@@ -86,6 +81,7 @@ public struct URLEncodedFormEncoder: Sendable {
 }
 
 /// Internal QueryEncoder class. Does all the heavy lifting
+@available(hummingbird 2.0, *)
 private class _URLEncodedFormEncoder: Encoder {
     var codingPath: [any CodingKey]
 
@@ -279,6 +275,7 @@ private class _URLEncodedFormEncoder: Encoder {
     }
 }
 
+@available(hummingbird 2.0, *)
 extension _URLEncodedFormEncoder: SingleValueEncodingContainer {
     func encodeResult(_ value: URLEncodedFormNode) {
         self.storage.push(container: value)
@@ -316,6 +313,7 @@ extension _URLEncodedFormEncoder: SingleValueEncodingContainer {
     }
 }
 
+@available(hummingbird 2.0, *)
 extension _URLEncodedFormEncoder {
     func box(_ date: Date) throws -> URLEncodedFormNode {
         switch self.options.dateEncodingStrategy {
@@ -326,11 +324,7 @@ extension _URLEncodedFormEncoder {
         case .secondsSince1970:
             try self.encode(Double(date.timeIntervalSince1970).description)
         case .iso8601:
-            #if compiler(>=6.0)
             try self.encode(date.formatted(.iso8601))
-            #else
-            try self.encode(URLEncodedForm.iso8601Formatter.string(from: date))
-            #endif
         case .formatted(let formatter):
             try self.encode(formatter.string(from: date))
         case .custom(let closure):
@@ -365,6 +359,7 @@ extension _URLEncodedFormEncoder {
 }
 
 /// storage for Query Encoder. Stores a stack of QueryEncoder containers, plus leaf objects
+@available(hummingbird 2.0, *)
 private struct URLEncodedFormEncoderStorage {
     /// the container stack
     private var containers: [URLEncodedFormNode] = []

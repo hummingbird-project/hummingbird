@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2021 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 import Foundation
 import HummingbirdTesting
@@ -83,7 +77,6 @@ extension HTTPTests {
             ]
             try checkDates(dates)
 
-            #if compiler(>=6.0)
             let dates2 = [
                 ("Mon, 1 Jun 2020 04:05:06 -0600 (EDT)", "Mon, 01 Jun 2020 10:05:06 GMT"),
                 ("30 Oct 2020 08:09:10 -1000", "Fri, 30 Oct 2020 18:09:10 GMT"),
@@ -91,7 +84,6 @@ extension HTTPTests {
                 ("30 Dec 2020 10:11:12 -1200 (HST)", "Wed, 30 Dec 2020 22:11:12 GMT"),
             ]
             try checkDates(dates2)
-            #endif
         }
     }
 }

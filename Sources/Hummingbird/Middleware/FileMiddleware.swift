@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2024 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 import HTTPTypes
 public import HummingbirdCore
@@ -46,6 +40,7 @@ public protocol FileMiddlewareFileAttributes {
 /// "if-modified-since", "if-none-match", "if-range" and 'range" headers. It will output "content-length",
 /// "modified-date", "eTag", "content-type", "cache-control" and "content-range" headers where
 /// they are relevant.
+@available(hummingbird 2.0, *)
 public struct FileMiddleware<Context: RequestContext, Provider: FileProvider>: RouterMiddleware
 where Provider.FileAttributes: FileMiddlewareFileAttributes {
     let cacheControl: CacheControl
@@ -227,6 +222,7 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
     }
 }
 
+@available(hummingbird 2.0, *)
 extension FileMiddleware {
     /// Whether to return data from the file or a not modified response
     private enum FileResult {

@@ -1,20 +1,15 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2024 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 import NIOCore
 import NIOHTTP2
 
+@available(hummingbird 2.0, *)
 extension HTTP2ServerConnectionManager {
     struct StateMachine: ~Copyable {
         var state: State
@@ -202,6 +197,7 @@ extension HTTP2ServerConnectionManager {
     }
 }
 
+@available(hummingbird 2.0, *)
 extension HTTP2ServerConnectionManager.StateMachine {
     enum State: ~Copyable {
         struct ActiveState {
@@ -238,6 +234,7 @@ extension HTTP2ServerConnectionManager.StateMachine {
     }
 }
 
+@available(hummingbird 2.0, *)
 extension HTTP2ServerConnectionManager.StateMachine {
     struct Keepalive {
         /// Allow the client to send keep alive pings when there are no active calls.
@@ -309,6 +306,7 @@ extension HTTP2ServerConnectionManager.StateMachine {
     }
 }
 
+@available(hummingbird 2.0, *)
 extension HTTP2ServerConnectionManager.StateMachine {
     //     case active(ActiveState)
     //     case closing(ClosingState)

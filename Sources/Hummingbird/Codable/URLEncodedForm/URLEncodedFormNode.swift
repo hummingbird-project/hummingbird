@@ -1,18 +1,16 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2024 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Error thrown from parsing URLEncoded forms
 public struct URLEncodedFormError: Error, CustomStringConvertible, Equatable {
@@ -73,6 +71,7 @@ extension URLEncodedFormError {
     }
 }
 /// Internal representation of URL encoded form data used by both encode and decode
+@available(hummingbird 2.0, *)
 enum URLEncodedFormNode: CustomStringConvertible, Equatable {
     /// holds a value
     case leaf(NodeValue?)
@@ -96,13 +95,13 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
     /// Create `URLEncodedFormNode` from URL encoded form data
     /// - Parameter string: URL encoded form data
     private static func decode(_ string: String) throws -> URLEncodedFormNode {
-        let split = string.split(separator: "&")
+        let split = string.splitSequence(separator: "&")
         let node = Self.map(.init())
         for element in split {
             if let equals = element.firstIndex(of: "=") {
                 let before = element[..<equals].removingURLPercentEncoding()
                 let afterEquals = element.index(after: equals)
-                let after = element[afterEquals...].replacingOccurrences(of: "+", with: " ")
+                let after = element[afterEquals...].replacing("+", with: " ")
                 guard let key = before else { throw URLEncodedFormError(code: .failedToPercentDecode, value: element[..<equals]) }
 
                 guard let keys = KeyParser.parse(key) else { throw URLEncodedFormError(code: .corruptKeyValue, value: key) }
@@ -205,7 +204,7 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
             self.value = String(describing: value)
         }
 
-        init?(percentEncoded value: String) {
+        init?(percentEncoded value: some StringProtocol) {
             guard let value = value.removingURLPercentEncoding() else { return nil }
             self.value = value
         }

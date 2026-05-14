@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2021 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 import Foundation
 import HummingbirdTesting
@@ -65,6 +59,30 @@ extension HTTPTests {
         @Test func testSameSite() {
             let cookie = Cookie(from: "name=value; SameSite=Strict")
             #expect(cookie?.sameSite == .strict)
+        }
+
+        @Test func testSingleRequestCookie() throws {
+            let cookies = Cookies(from: ["name=value"])
+            let cookie = try #require(cookies["name"])
+            #expect(cookie.value == "value")
+        }
+
+        @Test func testMultipleRequestCookie() throws {
+            let cookies = Cookies(from: ["name=value; name2=value2"])
+            let cookie = try #require(cookies["name"])
+            #expect(cookie.value == "value")
+            let cookie2 = try #require(cookies["name2"])
+            #expect(cookie2.value == "value2")
+        }
+
+        @Test func testMultipleHeadersRequestCookie() throws {
+            let cookies = Cookies(from: ["name=value; name2=value2", "name3=value3"])
+            let cookie = try #require(cookies["name"])
+            #expect(cookie.value == "value")
+            let cookie2 = try #require(cookies["name2"])
+            #expect(cookie2.value == "value2")
+            let cookie3 = try #require(cookies["name3"])
+            #expect(cookie3.value == "value3")
         }
 
         @Test func testSetCookie() async throws {

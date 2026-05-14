@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2023 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 import Foundation
 import HTTPTypes
@@ -470,7 +464,7 @@ struct TracingTests {
             }
             let span = try #require(Self.testTracer.spans.first)
 
-            #expect(span.operationName == "HTTP GET route not found")
+            #expect(span.operationName == "NotFound")
             #expect(span.kind == .server)
             #expect(span.status == nil)
 
@@ -482,6 +476,7 @@ struct TracingTests {
                 span.attributes,
                 [
                     "http.request.method": "GET",
+                    "http.route": "NotFound",
                     "url.path": "/",
                     "http.response.status_code": 404,
                 ]
@@ -547,7 +542,7 @@ struct TracingTests {
             }
             let span = try #require(Self.testTracer.spans.first)
             // Test tracer records span times in milliseconds
-            #expect(span.endTime! - span.startTime > 100)
+            #expect(span.endTime! - span.startTime >= 100)
         }
     }
 

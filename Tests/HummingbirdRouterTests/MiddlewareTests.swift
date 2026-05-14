@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2023 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 import Foundation
 import HTTPTypes
@@ -19,6 +13,7 @@ import HummingbirdRouter
 import HummingbirdTesting
 import Logging
 import NIOCore
+import NIOFoundationEssentialsCompat
 import Testing
 
 struct MiddlewareTests {
@@ -124,7 +119,7 @@ struct MiddlewareTests {
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
                 #expect(response.status == .notFound)
-                let error = try JSONDecoder().decodeByteBuffer(ErrorMessage.self, from: response.body)
+                let error = try JSONDecoder().decode(ErrorMessage.self, from: response.body)
                 #expect(error.error.message == "Edited error")
             }
         }

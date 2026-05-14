@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2023 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 import HTTPTypes
 import Hummingbird
@@ -647,16 +641,16 @@ struct RouterTests {
     }
 }
 
-public struct TestRouterContext2: RouterRequestContext, RequestContext {
+struct TestRouterContext2: RouterRequestContext, RequestContext {
     /// router context
-    public var routerContext: RouterBuilderContext
+    var routerContext: RouterBuilderContext
     /// core context
-    public var coreContext: CoreRequestContextStorage
+    var coreContext: CoreRequestContextStorage
 
     /// additional data
-    public var string: String
+    var string: String
 
-    public init(source: Source) {
+    init(source: Source) {
         self.routerContext = .init()
         self.coreContext = .init(source: source)
         self.string = ""

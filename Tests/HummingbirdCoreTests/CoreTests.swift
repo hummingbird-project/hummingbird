@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2023 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 import AsyncAlgorithms
 import Atomics
@@ -23,10 +17,15 @@ import NIOHTTPTypes
 import NIOPosix
 import ServiceLifecycle
 import Testing
+import UnixSignals
+
+#if canImport(Network)
+import NIOTransportServices
+#endif
 
 @Suite("HummingbirdCoreTests", .serialized)
 struct HummingbirdCoreTests {
-    static let eventLoopGroup: EventLoopGroup = {
+    static let eventLoopGroup: any EventLoopGroup = {
         #if os(iOS)
         NIOTSEventLoopGroup.singleton
         #else
@@ -123,7 +122,7 @@ struct HummingbirdCoreTests {
             }
         }
         /// Basic responder that waits 10 milliseconds and returns "Hello" in body
-        @Sendable func helloResponder(to request: Request, responseWriter: consuming ResponseWriter, channel: Channel) async throws {
+        @Sendable func helloResponder(to request: Request, responseWriter: consuming ResponseWriter, channel: any Channel) async throws {
             try? await Task.sleep(for: .milliseconds(10))
             let responseBody = channel.allocator.buffer(string: "Hello")
             var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
@@ -568,7 +567,6 @@ struct HummingbirdCoreTests {
         }
     }
 
-    #if compiler(>=6.0)
     /// Test running withInboundCloseHandler with closing input
     @Test func testWithCloseInboundHandlerWithoutClose() async throws {
         try await testServer(
@@ -686,7 +684,6 @@ struct HummingbirdCoreTests {
             try await client.close()
         }
     }
-    #endif  // compiler(>=6.0)
 }
 
 struct DelayAsyncSequence<CoreSequence: AsyncSequence>: AsyncSequence {

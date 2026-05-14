@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2023 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 public import HTTPTypes
 public import HummingbirdCore
@@ -40,6 +34,7 @@ public protocol RouterMethods<Context>: _HB_SendableMetatype {
     func add(middleware: any MiddlewareProtocol<Request, Response, Context>) -> Self
 }
 
+@available(hummingbird 2.0, *)
 extension RouterMethods {
     /// Add path for async closure
     @discardableResult public func on(
@@ -66,7 +61,7 @@ extension RouterMethods {
     /// For the transform to work the `Source` of the transformed `RequestContext` needs
     /// to be the original `RequestContext` eg
     /// ```
-    /// struct TransformedRequestContext {
+    /// struct TransformedRequestContext: RequestContext {
     ///     typealias Source = BasicRequestContext
     ///     var coreContext: CoreRequestContextStorage
     ///     init(source: Source) {
@@ -96,7 +91,7 @@ extension RouterMethods {
     ///     typealias ParentContext = BasicRequestContext
     ///     var coreContext: CoreRequestContextStorage
     ///     init(context: ParentContext) throws {
-    ///         self.coreContext = .init(source: source)
+    ///         self.coreContext = .init(source: context)
     ///     }
     /// }
     /// ```
@@ -191,11 +186,5 @@ extension RouterMethods {
             let output = try await closure(request, context)
             return try output.response(from: request, context: context)
         }
-    }
-
-    internal func combinePaths(_ path1: String, _ path2: String) -> String {
-        let path1 = path1.dropSuffix("/")
-        let path2 = path2.dropPrefix("/")
-        return "\(path1)/\(path2)"
     }
 }

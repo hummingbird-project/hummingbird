@@ -1,21 +1,16 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2024 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 import Foundation
 import HummingbirdTesting
 import Logging
 import NIOConcurrencyHelpers
+import NIOFoundationEssentialsCompat
 import Testing
 
 @testable import Hummingbird
@@ -119,7 +114,7 @@ struct MiddlewareTests {
         try await app.test(.router) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
                 #expect(response.status == .notFound)
-                let error = try JSONDecoder().decodeByteBuffer(ErrorMessage.self, from: response.body)
+                let error = try JSONDecoder().decode(ErrorMessage.self, from: response.body)
                 #expect(error.error.message == "Edited error")
             }
         }
@@ -237,6 +232,29 @@ struct MiddlewareTests {
             try await client.execute(uri: "/hello", method: .get, headers: [.origin: "foo.com"]) { response in
                 // headers come back in opposite order as middleware is applied to responses in that order
                 #expect(response.headers[.accessControlAllowOrigin] == "foo.com")
+            }
+        }
+    }
+
+    @Test func testCORSUseOneOf() async throws {
+        let router = Router()
+        router.add(middleware: CORSMiddleware(allowOrigin: .oneOf("https://foo.com", "https://bar.com")))
+        router.get("/hello") { _, _ -> String in
+            "Hello"
+        }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/hello", method: .get, headers: [.origin: "https://foo.com"]) { response in
+                // headers come back in opposite order as middleware is applied to responses in that order
+                #expect(response.headers[.accessControlAllowOrigin] == "https://foo.com")
+            }
+            try await client.execute(uri: "/hello", method: .get, headers: [.origin: "https://bar.com"]) { response in
+                // headers come back in opposite order as middleware is applied to responses in that order
+                #expect(response.headers[.accessControlAllowOrigin] == "https://bar.com")
+            }
+            try await client.execute(uri: "/hello", method: .get, headers: [.origin: "https://baz.com"]) { response in
+                // headers come back in opposite order as middleware is applied to responses in that order
+                #expect(response.headers[.accessControlAllowOrigin] == nil)
             }
         }
     }
@@ -642,20 +660,13 @@ struct TestLogHandler: LogHandler {
         self.accumalator = accumalator
     }
 
-    public func log(
-        level: Logger.Level,
-        message: Logger.Message,
-        metadata explicitMetadata: Logger.Metadata?,
-        source: String,
-        file: String,
-        function: String,
-        line: UInt
-    ) {
+    public func log(event: LogEvent) {
         var metadata = self.metadata
-        if let explicitMetadata, !explicitMetadata.isEmpty {
+        if let explicitMetadata = event.metadata, !explicitMetadata.isEmpty {
             metadata.merge(explicitMetadata, uniquingKeysWith: { _, explicit in explicit })
         }
-        self.accumalator.addEntry(.init(level: level, message: message, metadata: metadata))
+        self.accumalator.addEntry(.init(level: event.level, message: event.message, metadata: metadata))
+
     }
 
     var logLevel: Logger.Level

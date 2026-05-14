@@ -1,22 +1,16 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2021 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 import Benchmark
 import Foundation
 import Hummingbird
 
-let benchmarks = {
+let benchmarks: @Sendable () -> Void = {
     Benchmark.defaultConfiguration = .init(
         metrics: ProcessInfo.processInfo.environment["CI"] != nil
             ? [
@@ -32,4 +26,6 @@ let benchmarks = {
     )
     trieRouterBenchmarks()
     routerBenchmarks()
+    httpBenchmarks()
+    urlEncodedFormBenchmarks()
 }

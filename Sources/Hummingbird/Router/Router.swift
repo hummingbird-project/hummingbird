@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2023 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 public import HTTPTypes
 public import HummingbirdCore
@@ -42,6 +36,7 @@ public import HummingbirdCore
 /// Both of these match routes which start with "/user" and the next path segment being anything.
 /// The second version extracts the path segment out and adds it to `Request.parameters` with the
 /// key "id".
+@available(hummingbird 2.0, *)
 public final class Router<Context: RequestContext>: RouterMethods, HTTPResponderBuilder {
     var trie: RouterPathTrieBuilder<EndpointResponders<Context>>
     public let middlewares: MiddlewareGroup<Context>
@@ -106,6 +101,7 @@ public final class Router<Context: RequestContext>: RouterMethods, HTTPResponder
 /// Responder that return a not found error
 struct NotFoundResponder<Context: RequestContext>: HTTPResponder {
     func respond(to request: Request, context: Context) throws -> Response {
+        context.coreContext.endpointPath.value = "NotFound"
         throw HTTPError(.notFound)
     }
 }

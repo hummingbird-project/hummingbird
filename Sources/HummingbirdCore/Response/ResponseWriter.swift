@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2024 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 public import HTTPTypes
 public import NIOCore
@@ -51,6 +45,29 @@ public struct ResponseWriter: ~Copyable {
     @inlinable
     public consuming func writeResponse(_ head: HTTPResponse) async throws {
         try await self.outbound.write(contentsOf: [.head(head), .end(nil)])
+    }
+
+    /// Write a complete HTTP response, using a fast path for ByteBuffer and empty bodies.
+    ///
+    /// For single-ByteBuffer and empty bodies, head + body + end are sent as a single
+    /// batched write (1 encoder pass instead of 3). Streaming and closure-backed bodies
+    /// fall through to the standard path.
+    ///
+    /// - Parameters:
+    ///   - head: Response head
+    ///   - body: Response body
+    @inlinable
+    public consuming func write(response head: HTTPResponse, body: consuming ResponseBody) async throws {
+        switch body._backing {
+        case .byteBuffer(let buf):
+            try await self.outbound.write(contentsOf: [.head(head), .body(buf), .end(nil)])
+        case .empty:
+            try await self.outbound.write(contentsOf: [.head(head), .end(nil)])
+        case .closure(_, let fn):
+            let bodyWriter = try await self.writeHead(head)
+            var w: any ResponseBodyWriter = bodyWriter
+            try await fn(&w)
+        }
     }
 }
 

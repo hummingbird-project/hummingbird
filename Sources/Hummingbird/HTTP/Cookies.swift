@@ -1,27 +1,26 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2021 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 /// Structure holding an array of cookies
 ///
 /// Cookies can be accessed from request via `Request.cookies`.
+@available(hummingbird 2.0, *)
 public struct Cookies: Sendable {
     /// Construct cookies accessor from `Request`
     /// - Parameter request: request to get cookies from
     init(from request: Request) {
-        self.cookieStrings = request.headers[values: .cookie].flatMap {
-            $0.split(separator: ";").map { $0.drop { $0.isWhitespace } }
-        }
+        self = Cookies(from: request.headers[values: .cookie])
+    }
+
+    /// Construct cookies accessor from cookie header strings
+    /// - Parameter cookieHeaders: An array of cookie header strings
+    public init(from cookieHeaders: [String]) {
+        self.cookieStrings = cookieHeaders.flatMap { $0.splitSequence(separator: ";").map { $0.drop { $0.isWhitespace } } }
     }
 
     /// access cookies via dictionary subscript

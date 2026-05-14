@@ -1,16 +1,10 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2023 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
 import Atomics
 import Hummingbird
@@ -679,6 +673,27 @@ struct RouterTests {
             }
             try await client.execute(uri: "/api/v1/a/b/d/e/f/jane/subpath", method: .get) { response in
                 #expect(String(buffer: response.body) == "Jane a/b/d/e/f")
+            }
+        }
+    }
+
+    // Test HEAD endpoints don't have their content-length set to zero
+    @Test func testReturningHead() async throws {
+        let router = Router(options: .autoGenerateHeadEndpoints)
+        router.addMiddleware {
+            LogRequestsMiddleware(.debug)
+            MetricsMiddleware()
+            TracingMiddleware()
+            CORSMiddleware()
+        }
+        router.head("test") { _, _ in
+            Response(status: .ok, headers: [.contentLength: "45", .contentLanguage: "en"])
+        }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.live) { client in
+            try await client.execute(uri: "/test", method: .head) { response in
+                #expect(response.status == .ok)
+                #expect(response.headers[.contentLength] == "45")
             }
         }
     }

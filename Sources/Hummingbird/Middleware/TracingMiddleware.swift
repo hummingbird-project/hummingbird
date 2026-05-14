@@ -1,22 +1,21 @@
-//===----------------------------------------------------------------------===//
 //
 // This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2023 the Hummingbird authors
-// Licensed under Apache License v2.0
+// Copyright (c) the Hummingbird authors
 //
 // See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
 
-import Foundation
 public import HTTPTypes
 public import HummingbirdCore
 public import NIOCore
 public import Tracing
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Middleware creating Distributed Tracing spans for each request.
 ///
@@ -29,6 +28,7 @@ public import Tracing
 /// Swift-Distributed-Tracing has a flexible backend, which will need to be initialized before any traces are recorded.
 ///
 /// A list of implementations is available in the swift-distributed-tracing repository's README.
+@available(hummingbird 2.0, *)
 public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
     private let headerNamesToRecord: Set<RecordingHeader>
     private let queryParametersToRedact: Set<Substring>
@@ -197,13 +197,14 @@ public protocol RemoteAddressRequestContext: RequestContext {
     var remoteAddress: SocketAddress? { get }
 }
 
+@available(hummingbird 2.0, *)
 struct RecordingHeader: Hashable {
     let name: HTTPField.Name
     let attributeName: String
 
     init(name: HTTPField.Name) {
         self.name = name
-        self.attributeName = name.canonicalName.replacingOccurrences(of: "-", with: "_")
+        self.attributeName = name.canonicalName.replacing("-", with: "_")
     }
 }
 
