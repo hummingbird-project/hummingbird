@@ -32,12 +32,8 @@ where Handler.Input == Request, Handler.Output == Response, Handler.Context == C
         _ routerPath: RouterPath,
         @MiddlewareFixedTypeBuilder<Request, Response, Context> builder: () -> Handler
     ) {
-        var routerPath = routerPath
         // Get builder state from service context
         var routerBuildState = RouterBuilderState.current ?? .init(options: [])
-        if routerBuildState.options.contains(.caseInsensitive) {
-            routerPath = routerPath.lowercased()
-        }
         let parentGroupPath = routerBuildState.routeGroupPath
         self.fullPath = parentGroupPath.appendingPath(routerPath)
         routerBuildState.routeGroupPath = self.fullPath
@@ -70,12 +66,8 @@ where Handler.Input == Request, Handler.Output == Response, Handler.Context == C
         context: ChildContext.Type,
         @MiddlewareFixedTypeBuilder<Request, Response, ChildContext> builder: () -> ChildHandler
     ) where ChildContext == ChildContext, Handler == ThrowingContextTransform<Context, ChildContext, ChildHandler> {
-        var routerPath = routerPath
         // Get builder state from service context
         var routerBuildState = RouterBuilderState.current ?? .init(options: [])
-        if routerBuildState.options.contains(.caseInsensitive) {
-            routerPath = routerPath.lowercased()
-        }
         let parentGroupPath = routerBuildState.routeGroupPath
         self.fullPath = parentGroupPath.appendingPath(routerPath)
         routerBuildState.routeGroupPath = self.fullPath

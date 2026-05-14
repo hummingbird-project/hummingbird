@@ -6,7 +6,11 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+#if canImport(FoundationEssentials)
+internal import FoundationEssentials
+#else
 internal import Foundation
+#endif
 
 /// Split router path into components
 public struct RouterPath: Sendable, ExpressibleByStringLiteral, ExpressibleByStringInterpolation, CustomStringConvertible, Equatable {
@@ -146,56 +150,6 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, ExpressibleByStr
                 return false
             }
         }
-
-        public func caseInsensitiveEquals(_ rhs: some StringProtocol) -> Bool {
-            switch value {
-            case .path(let lhs):
-                return lhs.caseInsensitiveCompare(rhs) == .orderedSame
-            default:
-                return false
-            }
-        }
-
-        public func caseInsensitiveMatch(_ rhs: some StringProtocol) -> Bool {
-            switch value {
-            case .path(let lhs):
-                return lhs.caseInsensitiveCompare(rhs) == .orderedSame
-            case .capture:
-                return true
-            case .prefixCapture(let suffix, _):
-                return rhs.hasSuffix(suffix)
-            case .suffixCapture(let prefix, _):
-                return rhs.hasPrefix(prefix)
-            case .wildcard:
-                return true
-            case .prefixWildcard(let suffix):
-                return rhs.hasSuffix(suffix)
-            case .suffixWildcard(let prefix):
-                return rhs.hasPrefix(prefix)
-            case .recursiveWildcard:
-                return true
-            case .null:
-                return false
-            }
-        }
-
-        /// Return lowercased version of RouterPath component
-        public func lowercased() -> Self {
-            switch self.value {
-            case .path(let path):
-                .path(path.lowercased()[...])
-            case .prefixCapture(let suffix, let parameter):
-                .prefixCapture(suffix: suffix.lowercased()[...], parameter: parameter)
-            case .suffixCapture(let prefix, let parameter):
-                .suffixCapture(prefix: prefix.lowercased()[...], parameter: parameter)
-            case .prefixWildcard(let suffix):
-                .prefixWildcard(suffix)
-            case .suffixWildcard(let prefix):
-                .suffixWildcard(prefix)
-            default:
-                self
-            }
-        }
     }
 
     /// Array of RouterPath elements
@@ -217,11 +171,6 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, ExpressibleByStr
     /// Initialize RouterPath from String literal
     public init(stringLiteral value: String) {
         self.init(value)
-    }
-
-    /// Return lowercased version of RouterPath
-    public func lowercased() -> Self {
-        .init(components: self.map { $0.lowercased() })
     }
 
     /// Combine two RouterPaths
