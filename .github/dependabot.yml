@@ -4,6 +4,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
     ignore:
       - dependency-name: "codecov/codecov-action"
         update-types: ["version-update:semver-major"]
@@ -15,6 +17,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
     allow:
       - dependency-type: all
