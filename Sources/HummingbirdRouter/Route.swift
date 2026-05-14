@@ -19,7 +19,7 @@ public struct Route<Handler: _RouteHandlerProtocol, Context: RouterRequestContex
     public let method: HTTPRequest.Method
     /// Route handler
     public let handler: Handler
-    /// Is route comparison case insensitive
+    /// Route options
     public let options: RouterBuilderOptions
 
     /// Initialize Route
