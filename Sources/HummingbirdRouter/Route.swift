@@ -19,6 +19,8 @@ public struct Route<Handler: _RouteHandlerProtocol, Context: RouterRequestContex
     public let method: HTTPRequest.Method
     /// Route handler
     public let handler: Handler
+    /// Is route comparison case insensitive
+    public let options: RouterBuilderOptions
 
     /// Initialize Route
     /// - Parameters:
@@ -26,11 +28,7 @@ public struct Route<Handler: _RouteHandlerProtocol, Context: RouterRequestContex
     ///   - routerPath: Route path, relative to group route is defined in
     ///   - handler: Route handler
     init(_ method: HTTPRequest.Method, _ routerPath: RouterPath = "", handler: Handler) {
-        let options = RouterBuilderState.current?.options ?? []
-        var routerPath = routerPath
-        if options.contains(.caseInsensitive) {
-            routerPath = routerPath.lowercased()
-        }
+        self.options = RouterBuilderState.current?.options ?? []
         self.method = method
         self.routerPath = routerPath
         self.handler = handler

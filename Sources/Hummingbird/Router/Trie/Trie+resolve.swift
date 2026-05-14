@@ -6,8 +6,13 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-internal import Foundation
 import NIOCore
+
+#if canImport(FoundationEssentials)
+internal import FoundationEssentials
+#else
+internal import Foundation
+#endif
 
 extension RouterTrie {
     /// Resolve a path to a `Value` if available
