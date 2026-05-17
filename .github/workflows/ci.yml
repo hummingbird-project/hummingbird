@@ -22,11 +22,11 @@ jobs:
     timeout-minutes: 15
     steps:
     - name: Select appropriate Xcode version
-      uses: maxim-lobanov/setup-xcode@v1
+      uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
       with:
         xcode-version: latest-stable
     - name: Checkout
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
     - name: Build
       run: |
         swift build
@@ -43,7 +43,7 @@ jobs:
       ENABLE_HB_BENCHMARKS: true
     steps:
     - name: Checkout
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
     - name: Install libjemalloc-dev
       run: |
         apt-get -q update
@@ -60,7 +60,7 @@ jobs:
           -ignore-filename-regex="\/Benchmarks\/" \
           -instr-profile .build/debug/codecov/default.profdata > info.lcov
     - name: Upload to codecov.io
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 #v4.6.0
       with:
         files: info.lcov
         token: ${{ secrets.CODECOV_TOKEN }}
