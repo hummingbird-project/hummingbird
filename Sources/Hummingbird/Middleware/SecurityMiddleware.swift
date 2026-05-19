@@ -11,7 +11,7 @@ import HTTPTypes
 /// Middleware for setting up various security related response headers
 ///
 /// Currently sets headers `content-security-policy`, `cross-origin-resource-policy`, `x-content-type-options`
-/// and optionally sets `reporting-endpoints`.
+/// and optionally sets `content-security-policy-report-only` and `reporting-endpoints`.
 public struct SecurityMiddleware<Context: RequestContext>: RouterMiddleware {
     let headers: HTTPFields
 
@@ -43,8 +43,10 @@ public struct SecurityMiddleware<Context: RequestContext>: RouterMiddleware {
     /// Initialize the SecurityMiddleware
     ///
     /// - Parameters:
-    ///   - contentSecurityPolicy: Set `content-security-policy` header. Defines access to website resources.
-    ///   - crossOriginResourcePolicy: Set `cross-origin-resource-policy` header. Defines whether browser should drop body.
+    ///   - contentSecurityPolicy: Set `content-security-policy` header. Defines access to resources, from served HTML pages.
+    ///   - contentSecurityPolicyReportOnly: Set `content-security-policy-report-only` header. Reports access to resources, from served HTML pages.
+    ///   - crossOriginResourcePolicy: Set `cross-origin-resource-policy` header. Defines whether browser should block no-cors cross-origin or
+    ///         cross-site requests to the given resource.
     ///   - reportingEndpoints: Set `reporting-endpoints` header. If you are using content security policy directive `report-to` you
     ///         can use this to define your reporting endpoints.
     public init(
@@ -53,6 +55,7 @@ public struct SecurityMiddleware<Context: RequestContext>: RouterMiddleware {
             .formAction(.self),
             .frameAncestors(.self),
         ],
+        contentSecurityPolicyReportOnly: ContentSecurityPolicy? = nil,
         crossOriginResourcePolicy: CrossOriginResourcePolicy = .sameSite,
         reportingEndpoints: [String: String]? = nil
     ) {
@@ -61,6 +64,9 @@ public struct SecurityMiddleware<Context: RequestContext>: RouterMiddleware {
             .contentSecurityPolicy: contentSecurityPolicy.description,
             .xContentTypeOptions: "nosniff",
         ]
+        if let contentSecurityPolicyReportOnly {
+            headers[.contentSecurityPolicyReportOnly] = contentSecurityPolicyReportOnly.description
+        }
         if let reportingEndpoints {
             headers[HTTPField.Name("Reporting-Endpoints")!] = reportingEndpoints.map { "\($0.key)=\"\($0.value)\"" }.joined(separator: ",")
         }
