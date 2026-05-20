@@ -218,4 +218,5 @@ if Context.environment["ENABLE_HB_BENCHMARKS"] != nil {
             ]
         )
     )
+    package.platforms = [.macOS(.v13), .iOS(.v15), .macCatalyst(.v15), .tvOS(.v15), .visionOS(.v1)]
 }

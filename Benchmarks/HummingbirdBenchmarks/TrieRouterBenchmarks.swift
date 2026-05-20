@@ -9,6 +9,7 @@
 import Benchmark
 @_spi(Internal) import Hummingbird
 
+@available(macOS 14, *)
 func trieRouterBenchmarks() {
     var trie: RouterTrie<String>!
     Benchmark("TrieRouter:Routing", configuration: .init(scalingFactor: .kilo)) { benchmark in
