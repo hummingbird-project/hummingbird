@@ -10,6 +10,7 @@ import Benchmark
 @_spi(Internal) import Hummingbird
 import HummingbirdCore
 
+@available(macOS 14, *)
 func httpBenchmarks() {
     Benchmark("HTTP:URI:Decode", configuration: .init(scalingFactor: .kilo)) { benchmark in
         benchmark.startMeasurement()

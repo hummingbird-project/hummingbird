@@ -24,8 +24,10 @@ let benchmarks: @Sendable () -> Void = {
             ],
         warmupIterations: 10
     )
-    trieRouterBenchmarks()
-    routerBenchmarks()
-    httpBenchmarks()
-    urlEncodedFormBenchmarks()
+    if #available(macOS 14, *) {
+        trieRouterBenchmarks()
+        routerBenchmarks()
+        httpBenchmarks()
+        urlEncodedFormBenchmarks()
+    }
 }

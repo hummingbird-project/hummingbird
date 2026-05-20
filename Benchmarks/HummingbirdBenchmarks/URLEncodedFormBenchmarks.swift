@@ -9,6 +9,7 @@
 import Benchmark
 @_spi(Internal) import Hummingbird
 
+@available(macOS 14, *)
 func urlEncodedFormBenchmarks() {
     Benchmark("URLEncodedForm:Decode", configuration: .init(scalingFactor: .kilo)) { benchmark in
         benchmark.startMeasurement()

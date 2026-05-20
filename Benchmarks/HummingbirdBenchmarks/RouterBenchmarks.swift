@@ -108,6 +108,7 @@ extension HTTPField.Name {
     static let test = Self("Test")!
 }
 
+@available(macOS 14, *)
 func routerBenchmarks() {
     let buffer = ByteBufferAllocator().buffer(repeating: 0xFF, count: 10000)
     Benchmark(
