@@ -155,6 +155,13 @@ let package = Package(
             ],
             swiftSettings: swiftSettings
         ),
+        .executableTarget(
+            name: "Fuzzing",
+            dependencies: [
+                .byName(name: "Hummingbird")
+            ],
+            swiftSettings: swiftSettings
+        ),
         // test targets
         .testTarget(
             name: "HummingbirdTests",
