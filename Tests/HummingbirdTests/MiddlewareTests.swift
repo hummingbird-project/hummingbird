@@ -474,9 +474,9 @@ struct MiddlewareTests {
         }
     }
 
-    @Test func testSecurityMiddlewareDefaults() async throws {
+    @Test func testContentSecurityMiddlewareDefaults() async throws {
         let router = Router()
-        router.add(middleware: SecurityMiddleware())
+        router.add(middleware: ContentSecurityMiddleware())
         router.get("/") { _, _ in
             HTTPResponse.Status.ok
         }
@@ -484,19 +484,17 @@ struct MiddlewareTests {
         try await app.test(.router) { client in
             try await client.execute(uri: "/", method: .get) { response in
                 #expect(response.headers[.contentSecurityPolicy] == "default-src 'self'; form-action 'self'; frame-ancestors 'self'")
-                #expect(response.headers[.crossOriginResourcePolicy] == "same-site")
                 #expect(response.headers[.xContentTypeOptions] == "nosniff")
                 #expect(response.headers[HTTPField.Name("Reporting-Endpoints")!] == nil)
             }
         }
     }
 
-    @Test func testSecurityMiddleware() async throws {
+    @Test func testContentSecurityMiddleware() async throws {
         let router = Router()
         router.add(
-            middleware: SecurityMiddleware(
+            middleware: ContentSecurityMiddleware(
                 contentSecurityPolicy: [.upgradeInsecureRequests, .reportTo("csp-endpoint")],
-                crossOriginResourcePolicy: .sameOrigin,
                 reportingEndpoints: [
                     "csp-endpoint": "http://example.com/csp-reports", "permissions-endpoint": "http://example.com/permissions-reports",
                 ]
@@ -509,7 +507,6 @@ struct MiddlewareTests {
         try await app.test(.router) { client in
             try await client.execute(uri: "/", method: .get) { response in
                 #expect(response.headers[.contentSecurityPolicy] == "upgrade-insecure-requests; report-to csp-endpoint")
-                #expect(response.headers[.crossOriginResourcePolicy] == "same-origin")
                 #expect(response.headers[.xContentTypeOptions] == "nosniff")
                 #expect(
                     response.headers[HTTPField.Name("Reporting-Endpoints")!]
