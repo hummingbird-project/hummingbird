@@ -56,8 +56,23 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
         ///   - idleTimeout: Time before closing an idle channel
         public init(
             additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = [],
+            idleTimeout: TimeAmount? = nil
+        ) {
+            self.additionalChannelHandlers = additionalChannelHandlers
+            self.idleTimeout = idleTimeout
+            self.httpDecoder = .init()
+        }
+
+        ///  Initialize HTTP1Channel.Configuration
+        /// - Parameters:
+        ///   - additionalChannelHandlers: Additional channel handlers to add to channel pipeline after HTTP part decoding and
+        ///         before HTTP request processing
+        ///   - idleTimeout: Time before closing an idle channel
+        ///   - httpDecoderConfiguration: HTTP decoder configuration
+        public init(
+            additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = [],
             idleTimeout: TimeAmount? = nil,
-            httpDecoderConfiguration: DecoderConfiguration = .init()
+            httpDecoderConfiguration: DecoderConfiguration
         ) {
             self.additionalChannelHandlers = additionalChannelHandlers
             self.idleTimeout = idleTimeout
