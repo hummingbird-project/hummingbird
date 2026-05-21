@@ -20,8 +20,6 @@ public struct ContentSecurityMiddleware<Context: RequestContext>: RouterMiddlewa
     /// - Parameters:
     ///   - contentSecurityPolicy: Set `content-security-policy` header. Defines access to resources, from served HTML pages.
     ///   - contentSecurityPolicyReportOnly: Set `content-security-policy-report-only` header. Reports access to resources, from served HTML pages.
-    ///   - crossOriginResourcePolicy: Set `cross-origin-resource-policy` header. Defines whether browser should block no-cors cross-origin or
-    ///         cross-site requests to the given resource.
     ///   - reportingEndpoints: Set `reporting-endpoints` header. If you are using content security policy directive `report-to` you
     ///         can use this to define your reporting endpoints.
     public init(
