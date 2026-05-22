@@ -1192,6 +1192,40 @@ struct ApplicationTests {
         }
     }
 
+    @Test func testUnboundedHTTPHeaders() async throws {
+        let router = Router()
+            .post { request, _ in
+                Issue.record("Shouldn't get here")
+                return HTTPResponse.Status.ok
+            }
+        let httpConfiguration = HTTP1Channel.Configuration(httpDecoderConfiguration: .init(maxHeaderFieldCount: 4))
+        let app = Application(
+            router: router,
+            server: .http1(configuration: httpConfiguration)
+        )
+        try await app.test(.live) { client in
+            // client should return badRequest and close the connection
+            do {
+                try await client.execute(
+                    uri: "",
+                    method: .post,
+                    headers: [
+                        .accept: "application/json", .acceptEncoding: "gzip", .userAgent: "me", .acceptLanguage: "en", .acceptRanges: "none",
+                    ],
+                    body: ByteBuffer(string: "Hello")
+                ) { response in
+                    #expect(response.status == .badRequest)
+                }
+            } catch TestClient.Error.connectionClosing {
+                // sometimes connection close occurs before badRequest is received
+            }
+
+            await #expect(throws: ChannelError.ioOnClosedChannel) {
+                try await client.execute(uri: "", method: .post)
+            }
+        }
+    }
+
     @Test func testCancelledRequest() async throws {
         let httpClient = HTTPClient()
         let (stream, cont) = AsyncStream.makeStream(of: Int.self)

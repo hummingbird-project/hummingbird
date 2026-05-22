@@ -20,12 +20,34 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
 
     /// HTTP1Channel configuration
     public struct Configuration: Sendable {
+        /// HTTP1 Decoder configuration
+        public struct DecoderConfiguration: Sendable {
+            /// Maximum size for a header field
+            public var maxHeaderFieldSize: Int
+            /// Maximum size for all header fields
+            public var maxHeaderListSize: Int
+            /// Maximum number of headers
+            public var maxHeaderFieldCount: Int
+
+            ///  Initialize DecoderConfiguration
+            /// - Parameters:
+            ///   - maxHeaderFieldSize: Maximum size for a header field
+            ///   - maxHeaderListSize: Maximum size for all header fields
+            ///   - maxHeaderFieldCount: Maximum number of headers
+            public init(maxHeaderFieldSize: Int = 80 * 1024, maxHeaderListSize: Int = 1024 * 1024, maxHeaderFieldCount: Int = 256) {
+                self.maxHeaderFieldSize = maxHeaderFieldSize
+                self.maxHeaderListSize = maxHeaderListSize
+                self.maxHeaderFieldCount = maxHeaderFieldCount
+            }
+        }
         /// Additional channel handlers to add to channel pipeline after HTTP part decoding and before HTTP request handling
         public var additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
         /// Time before closing an idle channel.
         public var idleTimeout: TimeAmount?
         /// Internal flag for enabling/disabling pipeline assistance
         package var pipliningAssistance: Bool = false
+        /// HTTP Decoder configuration
+        public var httpDecoder: DecoderConfiguration
 
         ///  Initialize HTTP1Channel.Configuration
         /// - Parameters:
@@ -38,6 +60,23 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
         ) {
             self.additionalChannelHandlers = additionalChannelHandlers
             self.idleTimeout = idleTimeout
+            self.httpDecoder = .init()
+        }
+
+        ///  Initialize HTTP1Channel.Configuration
+        /// - Parameters:
+        ///   - additionalChannelHandlers: Additional channel handlers to add to channel pipeline after HTTP part decoding and
+        ///         before HTTP request processing
+        ///   - idleTimeout: Time before closing an idle channel
+        ///   - httpDecoderConfiguration: HTTP decoder configuration
+        public init(
+            additionalChannelHandlers: @autoclosure @escaping @Sendable () -> [any RemovableChannelHandler] = [],
+            idleTimeout: TimeAmount? = nil,
+            httpDecoderConfiguration: DecoderConfiguration
+        ) {
+            self.additionalChannelHandlers = additionalChannelHandlers
+            self.idleTimeout = idleTimeout
+            self.httpDecoder = httpDecoderConfiguration
         }
     }
 
@@ -74,10 +113,16 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
     /// - Returns: Object to process input/output on child channel
     public func setup(channel: any Channel, logger: Logger) -> EventLoopFuture<Value> {
         channel.eventLoop.makeCompletedFuture {
+            var decoderLimitsConfiguration = NIOHTTPDecoderLimitConfiguration()
+            decoderLimitsConfiguration.maxHeaderFieldSize = self.configuration.httpDecoder.maxHeaderFieldSize
+            decoderLimitsConfiguration.maxHeaderListSize = self.configuration.httpDecoder.maxHeaderListSize
+            decoderLimitsConfiguration.maxHeaderFieldCount = self.configuration.httpDecoder.maxHeaderFieldCount
             try channel.pipeline.syncOperations.configureHTTPServerPipeline(
                 withPipeliningAssistance: self.configuration.pipliningAssistance,  // HTTP is pipelined by NIOAsyncChannel
                 withErrorHandling: false,  // We doing the error handling in Application
-                withOutboundHeaderValidation: false  // Swift HTTP Types are already doing this validation
+                withOutboundHeaderValidation: false,  // Swift HTTP Types are already doing this validation
+                withEncoderConfiguration: .init(),
+                withDecoderLimitConfiguration: decoderLimitsConfiguration
             )
             try channel.pipeline.syncOperations.addHandler(HTTP1ToHTTPServerCodec(secure: false))
             try channel.pipeline.syncOperations.addHandlers(self.configuration.additionalChannelHandlers())
