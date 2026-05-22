@@ -49,13 +49,13 @@ Memory exhaustion via large HTTP payloads
 - Hummingbird should stream request payloads and should use backpressure to ensure in-transit payload chunks don't consume too much memory while waiting to be processed.
 
 CPU/Memory exhaustion through connection floods
-- Hummingbird provides mechanisms to limit the number of connections a server will accept but these are not very well documented.
+- Hummingbird provides mechanisms to limit the number of connections a server will accept.
 
 CPU/Memory exhaustion through slowloris style behaviours.
-- Slowloris is an attack method where a single machine can bring down a server by opening many connections to the server and holding them open for as long as possible. Hummingbird provides mechanisms to close idle connections and thus limit the number of connections a single machine can keep open. These are currently not very well documented.
+- Slowloris is an attack method where a single machine can bring down a server by opening many connections to the server and holding them open for as long as possible. Hummingbird provides mechanisms to close idle connections and thus limit the number of connections a single machine can keep open. We do not currently have support for closing connections drip feeding bytes to the server.
 
 Passing untrusted data directly to upstream services
-- For example using the request uri as a dimension in a metric could inflict a denial of service on a metrics backend if an attacker hit the server with thousands of random URIs.
+- For example we don't use the request uri as a dimension in a metric as this could inflict a denial of service on a metrics backend if an attacker hit the server with thousands of random URIs. Instead we use the matched route path.
 
 HTTP request smuggling
 - SwiftNIO does our parsing of the HTTP requests and catches attempts at HTTP request smuggling and closes the connection.
@@ -72,4 +72,6 @@ We are not responsible for the contents of a request being passed onto third par
 - For example we are not responsible for vulnerabilities like SQL injection.
 
 Cross-Site scripting (XSS)
-- XSS attacks are not something that the server framework can directly protect against. We do supply support for building content-security-policy headers which can help it avoiding these and the swift-mustache package that is part of the Hummingbird framework will neutralize any HTML grammar, to avoid scripts being inserted into web pages.
+- XSS attacks are something that the server framework can not directly protect against. We do supply support for building content-security-policy headers which can help avoiding these and the swift-mustache package that is part of the Hummingbird framework will neutralize any HTML grammar, to avoid scripts being inserted into web pages.
+
+This is an active document, and will be updated throughout development.
