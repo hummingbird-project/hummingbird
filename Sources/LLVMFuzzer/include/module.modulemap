@@ -1,0 +1,4 @@
+module LLVMFuzzer [system] {
+  header "LLVMFuzzer.h"
+  export *
+}

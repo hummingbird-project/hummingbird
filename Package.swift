@@ -155,10 +155,12 @@ let package = Package(
             ],
             swiftSettings: swiftSettings
         ),
+        .target(name: "LLVMFuzzer"),
         .executableTarget(
             name: "Fuzzing",
             dependencies: [
-                .byName(name: "Hummingbird")
+                .byName(name: "LLVMFuzzer"),
+                .byName(name: "Hummingbird"),
             ],
             swiftSettings: swiftSettings
         ),
