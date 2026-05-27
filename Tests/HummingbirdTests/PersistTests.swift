@@ -39,7 +39,7 @@ struct PersistTests {
         }
         router.get("/persist/:tag/ttl") { _, context -> String? in
             guard let tag = context.parameters.get("tag", as: String.self) else { throw HTTPError(.badRequest) }
-            return try await persist.getWithTTL(key: tag, as: String.self).ttl.map { String($0.components.seconds) }
+            return try await persist.getWithTTL(key: tag, as: String.self)?.ttl.map { String($0.components.seconds) }
         }
         router.delete("/persist/:tag") { _, context -> HTTPResponse.Status in
             guard let tag = context.parameters.get("tag", as: String.self) else { throw HTTPError(.badRequest) }

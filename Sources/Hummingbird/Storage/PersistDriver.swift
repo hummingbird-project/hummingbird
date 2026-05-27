@@ -43,7 +43,7 @@ public protocol PersistDriver: Service {
     /// - Parameters:
     ///   - key: Key used to look for value
     ///   - as: Type you want value to be returned as. If it cannot be returned as this value then nil will be returned
-    func getWithTTL<Object: Codable & Sendable>(key: String, as: Object.Type) async throws -> (object: Object?, ttl: Duration?)
+    func getWithTTL<Object: Codable & Sendable>(key: String, as: Object.Type) async throws -> (object: Object, ttl: Duration?)?
 
     /// remove value associated with key
     /// - Parameters:
@@ -76,9 +76,9 @@ extension PersistDriver {
     /// - Parameters:
     ///   - key: Key used to look for value
     ///   - as: Type you want value to be returned as. If it cannot be returned as this value then nil will be returned
-    public func getWithTTL<Object: Codable & Sendable>(key: String, as type: Object.Type) async throws -> (object: Object?, ttl: Duration?) {
+    public func getWithTTL<Object: Codable & Sendable>(key: String, as type: Object.Type) async throws -> (object: Object, ttl: Duration?)? {
         let value = try await get(key: key, as: type)
-        return (value, nil)
+        return value.map { ($0, nil) }
     }
 
     public func run() async throws {
