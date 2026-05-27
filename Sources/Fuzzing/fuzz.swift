@@ -20,18 +20,42 @@ struct RandomNumberGeneratorWithSeed: RandomNumberGenerator {
     }
 }
 
+#if !(FUZZ_URL || FUZZ_PERCENTDECODE)
+@main
+enum LLVMFuzzer {
+    static func main() {
+        print("You should not run LLVMFuzzer.main")
+    }
+}
+
+#else
+
 @available(macOS 13, *)
 @_cdecl("LLVMFuzzerCustomMutator")
 public func mutate(data: UnsafeMutablePointer<UInt8>, size: Int, maxSize: Int, seed: UInt32) -> Int {
+    #if FUZZ_URL
     mutateRouterPath(data: data, size: size, maxSize: maxSize, seed: seed)
+    #elseif FUZZ_PERCENTDECODE
+    mutatePercentDecode(data: data, size: size, maxSize: maxSize, seed: seed)
+    #else
+    fatalError("Fuzz method not chosen. Use precompiler define.")
+    #endif
 }
 
 @available(macOS 13, *)
 @_cdecl("LLVMFuzzerTestOneInput")
 public func test(_ start: UnsafeRawPointer, _ count: Int) -> CInt {
     let bytes = UnsafeRawBufferPointer(start: start, count: count)
+    #if FUZZ_URL
     return testRouterPath(bytes)
+    #elseif FUZZ_PERCENTDECODE
+    return testPercentDecode(bytes)
+    #else
+    fatalError("Fuzz method not chosen. Use precompiler define.")
+    #endif
 }
+
+// MARK: URI/RouterPath
 
 /// Mutate random data so always starts with a "/" and everything is ascii 7 bit
 func mutateRouterPath(data: UnsafeMutablePointer<UInt8>, size: Int, maxSize: Int, seed: UInt32) -> Int {
@@ -58,10 +82,29 @@ func mutateRouterPath(data: UnsafeMutablePointer<UInt8>, size: Int, maxSize: Int
     return newSize
 }
 
-/// Takes random bytes, reduce all bytes to 7 bit ascii, adds random char from "/:{}%"
+/// test string converts to URI and then converts to RouterPath
 func testRouterPath(_ bytes: UnsafeRawBufferPointer) -> CInt {
     let uriString = String(decoding: bytes, as: UTF8.self)
     let uri = URI(uriString)
     blackHole(RouterPath(uri.path))
     return 0
 }
+
+// MARK: Percent decode
+
+/// Mutate so it is ascii 7 bit
+func mutatePercentDecode(data: UnsafeMutablePointer<UInt8>, size: Int, maxSize: Int, seed: UInt32) -> Int {
+    let newSize = LLVMFuzzerMutate(data, size, maxSize)
+    for index in 0..<newSize {
+        data[index] = data[index] & 0x7f
+    }
+    return newSize
+}
+
+func testPercentDecode(_ bytes: UnsafeRawBufferPointer) -> CInt {
+    let string = String(decoding: bytes, as: UTF8.self)
+    blackHole(string.removingURLPercentEncoding())
+    return 0
+}
+
+#endif
