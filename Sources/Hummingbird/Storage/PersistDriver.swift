@@ -35,6 +35,16 @@ public protocol PersistDriver: Service {
     ///   - as: Type you want value to be returned as. If it cannot be returned as this value then nil will be returned
     func get<Object: Codable & Sendable>(key: String, as: Object.Type) async throws -> Object?
 
+    /// get value and time to live for key
+    ///
+    /// There is a default version of this function which only returns the value. Persist drivers have to opt
+    /// into providing the time to live. Both Valkey and Postgres drivers will return the time to live.
+    ///
+    /// - Parameters:
+    ///   - key: Key used to look for value
+    ///   - as: Type you want value to be returned as. If it cannot be returned as this value then nil will be returned
+    func getWithTTL<Object: Codable & Sendable>(key: String, as: Object.Type) async throws -> (object: Object, ttl: Duration?)?
+
     /// remove value associated with key
     /// - Parameters:
     ///   - key: Key used to look for value
@@ -60,6 +70,15 @@ extension PersistDriver {
     ///   - value: Codable value to store
     public func set(key: String, value: some Codable & Sendable) async throws {
         try await self.set(key: key, value: value, expires: nil)
+    }
+
+    /// get value and time to live for key
+    /// - Parameters:
+    ///   - key: Key used to look for value
+    ///   - type: Type you want value to be returned as. If it cannot be returned as this value then nil will be returned
+    public func getWithTTL<Object: Codable & Sendable>(key: String, as type: Object.Type) async throws -> (object: Object, ttl: Duration?)? {
+        let value = try await get(key: key, as: type)
+        return value.map { ($0, nil) }
     }
 
     public func run() async throws {
