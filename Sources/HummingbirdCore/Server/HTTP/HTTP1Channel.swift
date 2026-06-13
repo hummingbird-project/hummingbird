@@ -34,7 +34,7 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
             ///   - maxHeaderFieldSize: Maximum size for a header field
             ///   - maxHeaderListSize: Maximum size for all header fields
             ///   - maxHeaderFieldCount: Maximum number of headers
-            public init(maxHeaderFieldSize: Int = 80 * 1024, maxHeaderListSize: Int = 1024 * 1024, maxHeaderFieldCount: Int = 256) {
+            public init(maxHeaderFieldSize: Int = 80 * 1024, maxHeaderListSize: Int = 80 * 1024, maxHeaderFieldCount: Int = 1000) {
                 self.maxHeaderFieldSize = maxHeaderFieldSize
                 self.maxHeaderListSize = maxHeaderListSize
                 self.maxHeaderFieldCount = maxHeaderFieldCount
