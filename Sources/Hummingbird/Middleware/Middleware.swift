@@ -6,10 +6,20 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-import NIOCore
+public protocol TransformingMiddlewareProtocol<Input, NextInput, Output, NextOutput, Context, NextContext>: Sendable {
+    associatedtype Input
+    associatedtype Output
+    associatedtype Context
+    associatedtype NextInput
+    associatedtype NextOutput
+    associatedtype NextContext
+
+    func handle(_ input: Input, context: Context, next: (NextInput, NextContext) async throws -> NextOutput) async throws -> Output
+}
 
 /// Middleware protocol with generic input, context and output types
-public protocol MiddlewareProtocol<Input, Output, Context>: Sendable {
+public protocol MiddlewareProtocol<Input, Output, Context>: TransformingMiddlewareProtocol
+where NextInput == Input, NextOutput == Output, NextContext == Context {
     associatedtype Input
     associatedtype Output
     associatedtype Context
@@ -45,6 +55,9 @@ public protocol MiddlewareProtocol<Input, Output, Context>: Sendable {
 
 /// Middleware protocol with Request as input and Response as output
 public protocol RouterMiddleware<Context>: MiddlewareProtocol where Input == Request, Output == Response {}
+/// Middleware protocol that can convert the context
+public protocol TransformingRouterMiddleware<Context, NextContext>: TransformingMiddlewareProtocol
+where Input == Request, Output == Response, NextInput == Request, NextOutput == Response {}
 
 struct MiddlewareResponder<Context>: HTTPResponder {
     let middleware: any MiddlewareProtocol<Request, Response, Context>

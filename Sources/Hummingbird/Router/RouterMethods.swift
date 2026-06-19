@@ -108,6 +108,22 @@ extension RouterMethods {
         )
     }
 
+    /// Return a group inside the current group that transforms the ``RequestContext``
+    /// using a middleware.
+    ///
+    /// - Parameters
+    ///   - path: path prefix to add to routes inside this group
+    ///   - middleware: Middleware
+    public func group<NextContext: RequestContext>(
+        _ path: RouterPath = "",
+        middleware: some TransformingRouterMiddleware<Context, NextContext>
+    ) -> RouterGroup<NextContext> {
+        RouterGroup(
+            path: path,
+            parent: TransformingMiddlewareRouterGroup(parent: self, middleware: middleware)
+        )
+    }
+
     /// Add middleware stack to router
     ///
     /// Add multiple middleware to the router using the middleware stack result builder

@@ -95,3 +95,48 @@ struct ThrowingTransformingRouterGroup<Context: ChildRequestContext, Parent: Rou
         return self
     }
 }
+
+/// Internally used to transform RequestContext
+struct TransformingMiddlewareRouterGroup<Context: RequestContext, Middleware: TransformingRouterMiddleware, Parent: RouterMethods>: RouterMethods
+where Middleware.NextContext == Context, Middleware.Context == Parent.Context {
+    struct ContextTransformingResponder: HTTPResponder {
+        typealias Context = Middleware.Context
+        let responder: any HTTPResponder<Middleware.NextContext>
+        let middleware: Middleware
+
+        func respond(to request: Request, context: Context) async throws -> Response {
+            try await self.middleware.handle(request, context: context) { request, context in
+                try await responder.respond(to: request, context: context)
+            }
+        }
+    }
+    let parent: Parent
+    let middleware: Middleware
+
+    init(parent: Parent, middleware: Middleware) {
+        self.parent = parent
+        self.middleware = middleware
+    }
+
+    /// Add middleware (Stub function as it isn't used)
+    @discardableResult func add(middleware: any MiddlewareProtocol<Request, Response, Middleware.NextContext>) -> Self {
+        preconditionFailure("Cannot add middleware to TransformingMiddlewareRouterGroup")
+    }
+
+    /// Add responder to call when path and method are matched
+    ///
+    /// - Parameters:
+    ///   - path: Path to match
+    ///   - method: Request method to match
+    ///   - responder: Responder to call if match is made
+    /// - Returns: self
+    @discardableResult func on<Responder: HTTPResponder>(
+        _ path: RouterPath,
+        method: HTTPRequest.Method,
+        responder: Responder
+    ) -> Self where Responder.Context == Context {
+        let transformResponder = ContextTransformingResponder(responder: responder, middleware: self.middleware)
+        self.parent.on(path, method: method, responder: transformResponder)
+        return self
+    }
+}
