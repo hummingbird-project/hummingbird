@@ -13,17 +13,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
 
     - name: Create token
       id: create-token
-      uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 #v3.2.0
+      uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1  # v3.2.0
       with:
         client-id: ${{ secrets.HB_APP_ID }}
         private-key: ${{ secrets.HB_APP_PRIVATE_KEY }}
 
     - name: Generate Sponsors
-      uses: JamesIves/github-sponsors-readme-action@2fd9142e765f755780202122261dc85e78459405 #v1.6.0
+      uses: JamesIves/github-sponsors-readme-action@2fd9142e765f755780202122261dc85e78459405  # v1.6.0
       with:
         token: ${{ steps.create-token.outputs.token }}
         file: "README.md"
@@ -31,7 +31,7 @@ jobs:
         marker: "backers"
         organization: true
     - name: Commit and create PR
-      uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 #v8.1.1
+      uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8.1.1
       with:
         token: ${{ steps.create-token.outputs.token }}
         commit-message: "Update README with new sponsor"
