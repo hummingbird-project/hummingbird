@@ -26,7 +26,7 @@ jobs:
       with:
         xcode-version: latest-stable
     - name: Checkout
-      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 #v6.0.3
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
     - name: Build
       run: |
         swift build
@@ -36,14 +36,16 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        image: ["swift:6.1", "swift:6.2", "swift:6.3"]
+        image: ["swift:6.1", "swift:6.2", "swift:6.3", "swiftlang/swift:nightly-6.4.x-noble"]
     container:
       image: ${{ matrix.image }}
     env:
       ENABLE_HB_BENCHMARKS: true
     steps:
+    - name: Install curl
+      run: apt-get update -yq && apt-get install -y curl
     - name: Checkout
-      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 #v6.0.3
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
     - name: Install libjemalloc-dev
       run: |
         apt-get -q update
@@ -52,15 +54,7 @@ jobs:
     - name: Test
       run: |
         swift test --enable-code-coverage
-    - name: Convert coverage files
-      run: |
-        llvm-cov export -format="lcov" \
-          .build/debug/hummingbirdPackageTests.xctest \
-          -ignore-filename-regex="\/Tests\/" \
-          -ignore-filename-regex="\/Benchmarks\/" \
-          -instr-profile .build/debug/codecov/default.profdata > info.lcov
-    - name: Upload to codecov.io
-      uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 #v4.6.0
+    - name: Upload coverage data
+      uses: vapor/swift-codecov-action@2f478f2fd22e06ca363967d0fb6c6593a8548cee  # v0.3.5
       with:
-        files: info.lcov
-        token: ${{ secrets.CODECOV_TOKEN }}
+        codecov_token: ${{ secrets.CODECOV_TOKEN }}

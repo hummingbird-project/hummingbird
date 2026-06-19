@@ -10,3 +10,4 @@ xcuserdata/
 Package.resolved
 /public
 .benchmarkBaselines
+.swift-version
