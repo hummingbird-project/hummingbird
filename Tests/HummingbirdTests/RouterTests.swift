@@ -272,7 +272,7 @@ struct RouterTests {
     }
 
     /// Test middleware in parent group is applied to routes in child group
-    @Test func testTransformingGroupMiddleware() async throws {
+    @Test func testTransformingGroupWithMiddleware() async throws {
         struct TestRouterContext2: RequestContext {
             typealias Source = BasicRequestContext
             init(source: Source) {
@@ -311,7 +311,7 @@ struct RouterTests {
     }
 
     /// Test middleware in parent group is applied to routes in child group
-    @Test func testThrowingTransformingGroupMiddleware() async throws {
+    @Test func testThrowingTransformingGroupWithMiddleware() async throws {
         struct TestRouterContext: RequestContext {
             init(source: Source) {
                 self.coreContext = .init(source: source)
@@ -358,6 +358,44 @@ struct RouterTests {
             }
             try await client.execute(uri: "/group", method: .get) { response in
                 #expect(response.status == .badRequest)
+            }
+        }
+    }
+
+    /// Test middleware in parent group is applied to routes in child group
+    @Test func testTransformingGroupMiddleware() async throws {
+        struct TestRouterContext2: ChildRequestContext {
+            typealias ParentContext = BasicRequestContext
+            init(context: ParentContext) throws {
+                self.coreContext = .init(source: context)
+                self.string = "hello"
+            }
+
+            /// parameters
+            var coreContext: CoreRequestContextStorage
+            /// additional data
+            var string: String
+        }
+        struct TestTransformMiddleware: TransformingRouterMiddleware {
+            func handle(
+                _ request: Request,
+                context: BasicRequestContext,
+                next: (Request, TestRouterContext2) async throws -> Response
+            ) async throws -> Response {
+                let newContext = try TestRouterContext2(context: context)
+                return try await next(request, newContext)
+            }
+        }
+        let router = Router(context: BasicRequestContext.self)
+        router
+            .group("/group", middleware: TestTransformMiddleware())
+            .get { _, context in
+                EditedResponse(headers: [.test: context.string], response: "hello")
+            }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/group", method: .get, headers: [.test: "test"]) { response in
+                #expect(response.headers[.test] == "hello")
             }
         }
     }
