@@ -47,7 +47,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.2", traits: []),
         .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.3.0"),
         .package(url: "https://github.com/apple/swift-http-types.git", from: "1.0.0"),
-        .package(url: "https://github.com/apple/swift-log.git", from: "1.11.0"),
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.14.0"),
         .package(url: "https://github.com/apple/swift-metrics.git", from: "2.5.0"),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.100.0"),
         .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.34.1"),
@@ -164,6 +164,7 @@ let package = Package(
                 .byName(name: "HummingbirdHTTP2"),
                 .byName(name: "HummingbirdTesting"),
                 .byName(name: "HummingbirdRouter"),
+                .product(name: "InMemoryLogging", package: "swift-log"),
             ],
             swiftSettings: swiftSettings
         ),

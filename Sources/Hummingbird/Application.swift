@@ -105,29 +105,32 @@ extension ApplicationProtocol {
             logger: self.logger
         ) { (request, responseWriter: consuming ResponseWriter, channel) in
             let logger = self.logger.with(metadataKey: "hb.request.id", value: .stringConvertible(RequestID()))
-            let context = Self.Responder.Context(
-                source: .init(
-                    channel: channel,
-                    logger: logger
+            let response = try await withLogger(logger) { logger in
+                let context = Self.Responder.Context(
+                    source: .init(
+                        channel: channel,
+                        logger: logger
+                    )
                 )
-            )
-            // respond to request
-            var response: Response
-            do {
-                response = try await responder.respond(to: request, context: context)
-            } catch let error as HTTPParserError {
-                throw error
-            } catch {
-                logger.debug("Unrecognised Error", metadata: ["error.type": "\(error)"])
-                response = Response(
-                    status: .internalServerError,
-                    body: .init()
-                )
-            }
-            response.headers[.date] = dateCache.date
-            // server name header
-            if let serverName = self.configuration.serverName {
-                response.headers[.server] = serverName
+                // respond to request
+                var response: Response
+                do {
+                    response = try await responder.respond(to: request, context: context)
+                } catch let error as HTTPParserError {
+                    throw error
+                } catch {
+                    logger.debug("Unrecognised Error", metadata: ["error.type": "\(error)"])
+                    response = Response(
+                        status: .internalServerError,
+                        body: .init()
+                    )
+                }
+                response.headers[.date] = dateCache.date
+                // server name header
+                if let serverName = self.configuration.serverName {
+                    response.headers[.server] = serverName
+                }
+                return response
             }
             do {
                 // Write response — fast path for ByteBuffer/empty bodies (1 write instead of 3)
@@ -137,6 +140,7 @@ extension ApplicationProtocol {
                 // to be written
                 throw HTTPChannelError.parseErrorWhileWritingResponse
             }
+
         } onServerRunning: {
             await self.onServerRunning($0)
         }

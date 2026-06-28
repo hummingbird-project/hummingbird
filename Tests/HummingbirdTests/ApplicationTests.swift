@@ -14,6 +14,7 @@ import HummingbirdCore
 import HummingbirdHTTP2
 import HummingbirdTLS
 import HummingbirdTesting
+import InMemoryLogging
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
@@ -1289,6 +1290,33 @@ struct ApplicationTests {
             await serviceGroup.triggerGracefulShutdown()
         }
         try await httpClient.shutdown()
+    }
+
+    @Test func testTaskLocalLogger() async throws {
+        let logHandler = InMemoryLogHandler()
+        let router = Router()
+        router.add(middleware: LogRequestsMiddleware(.info))
+        router.get("test") { _, _ in
+            Logger.current.info("OK")
+            return HTTPResponse.Status.ok
+        }
+        let app = Application(
+            responder: router.buildResponder(),
+            logger: Logger(label: "TestLogging") { _ in logHandler }
+        )
+        try await app.test(.live) { client in
+            try await client.execute(
+                uri: "/test",
+                method: .get,
+                headers: [.contentType: "application/json"],
+                body: .init(string: "{}")
+            ) { _ in
+                let requestLogs = logHandler.entries.filter { $0.metadata["hb.request.id"] != nil }
+                #expect(requestLogs.count >= 2)
+                #expect(requestLogs[0].metadata["hb.request.id"] == requestLogs[1].metadata["hb.request.id"])
+                #expect(requestLogs[1].message.description == "OK")
+            }
+        }
     }
 }
 
