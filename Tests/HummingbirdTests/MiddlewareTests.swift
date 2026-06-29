@@ -9,6 +9,7 @@
 import Foundation
 import HTTPTypes
 import HummingbirdTesting
+import InMemoryLogging
 import Logging
 import NIOConcurrencyHelpers
 import NIOFoundationEssentialsCompat
@@ -320,7 +321,7 @@ struct MiddlewareTests {
     }
 
     @Test func testLogRequestMiddleware() async throws {
-        let logAccumalator = TestLogHandler.LogAccumalator()
+        let logHandler = InMemoryLogHandler()
         let router = Router()
         router.add(middleware: LogRequestsMiddleware(.info))
         router.get("test") { _, _ in
@@ -328,9 +329,7 @@ struct MiddlewareTests {
         }
         let app = Application(
             responder: router.buildResponder(),
-            logger: Logger(label: "TestLogging") { label in
-                TestLogHandler(label, accumalator: logAccumalator)
-            }
+            logger: Logger(label: "TestLogging") { _ in logHandler }
         )
         try await app.test(.router) { client in
             try await client.execute(
@@ -339,16 +338,16 @@ struct MiddlewareTests {
                 headers: [.contentType: "application/json"],
                 body: .init(string: "{}")
             ) { _ in
-                let logs = logAccumalator.filter { $0.metadata?["hb.request.path"]?.description == "/test" }
+                let logs = logHandler.entries.filter { $0.metadata["hb.request.path"]?.description == "/test" }
                 let firstLog = try #require(logs.first)
-                #expect(firstLog.metadata?["hb.request.method"]?.description == "GET")
-                #expect(firstLog.metadata?["hb.request.id"] != nil)
+                #expect(firstLog.metadata["hb.request.method"]?.description == "GET")
+                #expect(firstLog.metadata["hb.request.id"] != nil)
             }
         }
     }
 
     @Test func testLogRequestMiddlewareHeaderFiltering() async throws {
-        let logAccumalator = TestLogHandler.LogAccumalator()
+        let logHandler = InMemoryLogHandler()
         let router = Router()
         router.group()
             .add(middleware: LogRequestsMiddleware(.info, includeHeaders: .all(except: [.connection])))
@@ -361,9 +360,7 @@ struct MiddlewareTests {
             .get("some") { _, _ in HTTPResponse.Status.ok }
         let app = Application(
             responder: router.buildResponder(),
-            logger: Logger(label: "TestLogging") { label in
-                TestLogHandler(label, accumalator: logAccumalator)
-            }
+            logger: Logger(label: "TestLogging") { _ in logHandler }
         )
         try await app.test(.live) { client in
             try await client.execute(
@@ -372,8 +369,8 @@ struct MiddlewareTests {
                 headers: [.contentType: "application/json"],
                 body: .init(string: "{}")
             ) { _ in
-                let logEntries = logAccumalator.filter { $0.metadata?["hb.request.path"]?.description == "/some" }
-                #expect(logEntries.first?.metadata?["hb.request.headers"] == .stringConvertible(["content-type": "application/json"]))
+                let logEntries = logHandler.entries.filter { $0.metadata["hb.request.path"]?.description == "/some" }
+                #expect(logEntries.first?.metadata["hb.request.headers"] == .stringConvertible(["content-type": "application/json"]))
             }
             try await client.execute(
                 uri: "/none",
@@ -381,8 +378,8 @@ struct MiddlewareTests {
                 headers: [.contentType: "application/json"],
                 body: .init(string: "{}")
             ) { _ in
-                let logEntries = logAccumalator.filter { $0.metadata?["hb.request.path"]?.description == "/none" }
-                #expect(logEntries.first?.metadata?["hb.request.headers"] == nil)
+                let logEntries = logHandler.entries.filter { $0.metadata["hb.request.path"]?.description == "/none" }
+                #expect(logEntries.first?.metadata["hb.request.headers"] == nil)
             }
             try await client.execute(
                 uri: "/all",
@@ -390,9 +387,10 @@ struct MiddlewareTests {
                 headers: [.contentType: "application/json"],
                 body: .init(string: "{}")
             ) { _ in
-                let logEntries = logAccumalator.filter { $0.metadata?["hb.request.path"]?.description == "/all" }
-                guard case .stringConvertible(let headers) = logEntries.first?.metadata?["hb.request.headers"] else {
-                    fatalError("Should never get here")
+                let logEntries = logHandler.entries.filter { $0.metadata["hb.request.path"]?.description == "/all" }
+                guard case .stringConvertible(let headers) = logEntries.first?.metadata["hb.request.headers"] else {
+                    Issue.record("Should never get here")
+                    return
                 }
                 let reportedHeaders = try #require(headers as? [String: String])
                 #expect(reportedHeaders["content-type"] == "application/json")
@@ -403,7 +401,7 @@ struct MiddlewareTests {
     }
 
     @Test func testLogRequestMiddlewareHeaderRedaction() async throws {
-        let logAccumalator = TestLogHandler.LogAccumalator()
+        let logHandler = InMemoryLogHandler()
         let router = Router()
         router.group()
             .add(middleware: LogRequestsMiddleware(.info, includeHeaders: .all(), redactHeaders: [.authorization]))
@@ -413,9 +411,7 @@ struct MiddlewareTests {
             .get("some") { _, _ in HTTPResponse.Status.ok }
         let app = Application(
             responder: router.buildResponder(),
-            logger: Logger(label: "TestLogging") { label in
-                TestLogHandler(label, accumalator: logAccumalator)
-            }
+            logger: Logger(label: "TestLogging") { _ in logHandler }
         )
         try await app.test(.live) { client in
             try await client.execute(
@@ -424,8 +420,8 @@ struct MiddlewareTests {
                 headers: [.authorization: "basic okhasdf87654"],
                 body: .init(string: "{}")
             ) { _ in
-                let logEntries = logAccumalator.filter { $0.metadata?["hb.request.path"]?.description == "/some" }
-                #expect(logEntries.first?.metadata?["hb.request.headers"] == .stringConvertible(["authorization": "***"]))
+                let logEntries = logHandler.entries.filter { $0.metadata["hb.request.path"]?.description == "/some" }
+                #expect(logEntries.first?.metadata["hb.request.headers"] == .stringConvertible(["authorization": "***"]))
             }
             try await client.execute(
                 uri: "/all",
@@ -433,9 +429,10 @@ struct MiddlewareTests {
                 headers: [.authorization: "basic kjhdfi7udsfkhj"],
                 body: .init(string: "{}")
             ) { _ in
-                let logEntries = logAccumalator.filter { $0.metadata?["hb.request.path"]?.description == "/all" }
-                guard case .stringConvertible(let headers) = logEntries.first?.metadata?["hb.request.headers"] else {
-                    fatalError("Should never get here")
+                let logEntries = logHandler.entries.filter { $0.metadata["hb.request.path"]?.description == "/all" }
+                guard case .stringConvertible(let headers) = logEntries.first?.metadata["hb.request.headers"] else {
+                    Issue.record("Should never get here")
+                    return
                 }
                 let reportedHeaders = try #require(headers as? [String: String])
                 #expect(reportedHeaders["authorization"] == "***")
@@ -445,7 +442,7 @@ struct MiddlewareTests {
     }
 
     @Test func testLogRequestMiddlewareMultipleHeaders() async throws {
-        let logAccumalator = TestLogHandler.LogAccumalator()
+        let logHandler = InMemoryLogHandler()
         let router = Router()
         router.add(middleware: LogRequestsMiddleware(.info, includeHeaders: [.test]))
         router.get("test") { _, _ in
@@ -453,9 +450,7 @@ struct MiddlewareTests {
         }
         let app = Application(
             responder: router.buildResponder(),
-            logger: Logger(label: "TestLogging") { label in
-                TestLogHandler(label, accumalator: logAccumalator)
-            }
+            logger: Logger(label: "TestLogging") { _ in logHandler }
         )
         try await app.test(.router) { client in
             var headers = HTTPFields()
@@ -467,9 +462,9 @@ struct MiddlewareTests {
                 headers: headers,
                 body: .init(string: "{}")
             ) { _ in
-                let logs = logAccumalator.filter { $0.metadata?["hb.request.path"]?.description == "/test" }
+                let logs = logHandler.entries.filter { $0.metadata["hb.request.path"]?.description == "/test" }
                 let firstLog = try #require(logs.first)
-                #expect(firstLog.metadata?["hb.request.headers"] == .stringConvertible(["hbtest": "One, Two"]))
+                #expect(firstLog.metadata["hb.request.headers"] == .stringConvertible(["hbtest": "One, Two"]))
             }
         }
     }
@@ -660,62 +655,4 @@ struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
         response.headers[values: .test].append(self.string)
         return response
     }
-}
-
-/// LogHandler used in tests. Stores all log entries in provided `LogAccumalator``
-struct TestLogHandler: LogHandler {
-    struct LogEntry {
-        let level: Logger.Level
-        let message: Logger.Message
-        let metadata: Logger.Metadata?
-    }
-
-    /// Used to store Logs
-    final class LogAccumalator: Sendable {
-        let logEntries: NIOLockedValueBox<[LogEntry]>
-
-        init() {
-            self.logEntries = .init([])
-        }
-
-        func addEntry(_ entry: LogEntry) {
-            self.logEntries.withLockedValue { value in
-                value.append(entry)
-            }
-        }
-
-        func filter(_ isIncluded: (LogEntry) -> Bool) -> [LogEntry] {
-            self.logEntries.withLockedValue { logs in
-                logs.filter(isIncluded)
-            }
-        }
-    }
-
-    subscript(metadataKey key: String) -> Logger.Metadata.Value? {
-        get {
-            self.metadata[key]
-        }
-        set(newValue) {
-            self.metadata[key] = newValue
-        }
-    }
-
-    init(_: String, accumalator: LogAccumalator) {
-        self.logLevel = .info
-        self.metadata = [:]
-        self.accumalator = accumalator
-    }
-
-    public func log(event: LogEvent) {
-        var metadata = self.metadata
-        if let explicitMetadata = event.metadata, !explicitMetadata.isEmpty {
-            metadata.merge(explicitMetadata, uniquingKeysWith: { _, explicit in explicit })
-        }
-        self.accumalator.addEntry(.init(level: event.level, message: event.message, metadata: metadata))
-
-    }
-
-    var logLevel: Logger.Level
-    var metadata: Logger.Metadata
-    let accumalator: LogAccumalator
 }
