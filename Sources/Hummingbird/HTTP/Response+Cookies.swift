@@ -18,7 +18,7 @@ extension Response {
 
 @available(hummingbird 2.0, *)
 extension EditedResponse {
-    /// Set cookie on reponse patch
+    /// Set cookie on response patch
     ///
     /// Can be accessed via `request.response.setCookie(myCookie)`
     public mutating func setCookie(_ cookie: Cookie) {

@@ -19,7 +19,7 @@ extension String {
     ///
     /// - parameters:
     ///     - radix: radix base to use for conversion.
-    ///     - padding: the desired lenght of the resulting string.
+    ///     - padding: the desired length of the resulting string.
     @inlinable
     internal init(_ value: some BinaryInteger, radix: Int, padding: Int) {
         let formatted = String(value, radix: radix)
