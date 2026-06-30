@@ -31,7 +31,7 @@ public struct RouterResponder<Context: RequestContext>: HTTPResponder {
     }
 
     /// Respond to request by calling correct handler
-    /// - Parameters
+    /// - Parameters:
     ///   - request: HTTP request
     ///   - context: Request context
     /// - Returns: Response

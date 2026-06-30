@@ -18,7 +18,7 @@ extension HTTP1Channel.Configuration {
     /// - Configuration keys
     ///   - `idleTimeout` (double, optional): Time in seconds a connection can be left idle before closing
     ///
-    /// - Parameters
+    /// - Parameters:
     ///   - reader: ConfigReader
     public init(reader: ConfigReader) {
         var configuration = Self()

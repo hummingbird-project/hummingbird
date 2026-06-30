@@ -30,7 +30,7 @@ extension Request {
     }
 
     /// Decode request using decoder stored at ``Hummingbird/RequestContext/requestDecoder``.
-    /// - Parameters
+    /// - Parameters:
     ///   - type: Type you want to decode to
     ///   - context: Request context
     public func decode<Type: Decodable>(as type: Type.Type, context: some RequestContext) async throws -> Type {
