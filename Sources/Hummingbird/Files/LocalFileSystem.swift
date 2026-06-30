@@ -101,7 +101,7 @@ public struct LocalFileSystem: FileProvider {
         }
     }
 
-    /// Return a reponse body that will write the file body
+    /// Return a response body that will write the file body
     /// - Parameters:
     ///   - path: FileIdentifier
     ///   - context: Request context
@@ -110,7 +110,7 @@ public struct LocalFileSystem: FileProvider {
         try await self.fileIO.loadFile(path: path, context: context)
     }
 
-    /// Return a reponse body that will write a partial file body
+    /// Return a response body that will write a partial file body
     /// - Parameters:
     ///   - path: FileIdentifier
     ///   - range: Part of file to return

@@ -25,14 +25,14 @@ public protocol FileProvider: Sendable {
     /// - Returns: File attributes
     func getAttributes(id: FileIdentifier) async throws -> FileAttributes?
 
-    /// Return a reponse body that will write the file body
+    /// Return a response body that will write the file body
     /// - Parameters:
     ///   - id: File identifier
     ///   - context: Request context
     /// - Returns: Response body
     func loadFile(id: FileIdentifier, context: some RequestContext) async throws -> ResponseBody
 
-    /// Return a reponse body that will write a partial file body
+    /// Return a response body that will write a partial file body
     /// - Parameters:
     ///   - id: File identifier
     ///   - range: Part of file to return
