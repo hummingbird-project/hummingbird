@@ -20,10 +20,10 @@ extension RequestBody {
     ///
     /// If the response finishes the connection will be closed.
     ///
-    /// - Parameters
+    /// - Parameters:
     ///   - isolation: The isolation of the method. Defaults to the isolation of the caller.
     ///   - operation: The actual operation
-    ///   = onInboundClose: handler invoked when inbound is closed
+    ///   - onInboundClosed: handler invoked when inbound is closed
     /// - Returns: Return value of operation
     public func consumeWithInboundCloseHandler<Value: Sendable>(
         isolation: isolated (any Actor)? = #isolation,
@@ -69,7 +69,7 @@ extension RequestBody {
     ///
     /// If the response finishes the connection will be closed.
     ///
-    /// - Parameters
+    /// - Parameters:
     ///   - isolation: The isolation of the method. Defaults to the isolation of the caller.
     ///   - operation: The actual operation to run
     /// - Returns: Return value of operation

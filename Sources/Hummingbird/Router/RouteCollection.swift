@@ -56,7 +56,7 @@ public final class RouteCollection<Context: RequestContext>: RouterMethods {
 @available(hummingbird 2.0, *)
 extension RouterMethods {
     /// Add route collection to router
-    /// - Parameters
+    /// - Parameters:
     ///   - collection: Route collection
     ///   - path: Root path to add routes to
     @discardableResult public func addRoutes(_ collection: RouteCollection<Context>, atPath path: RouterPath = "") -> Self {

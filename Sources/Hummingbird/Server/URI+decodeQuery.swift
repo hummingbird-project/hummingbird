@@ -12,7 +12,7 @@ import Logging
 @available(hummingbird 2.0, *)
 extension URI {
     /// Decode request query using ``Hummingbird/URLEncodedFormDecoder``.
-    /// - Parameters
+    /// - Parameters:
     ///   - type: Type you want to decode to
     ///   - context: Request context
     public func decodeQuery<Type: Decodable>(as type: Type.Type = Type.self, context: some RequestContext) throws -> Type {

@@ -22,7 +22,7 @@ extension HTTP2Channel.Configuration {
     ///   - `h2.maxAgeTimeout` (double optional): Maximum time in seconds a connection can stay open.
     ///   - `h2.stream`: HTTP2 stream options. See ``HummingbirdCore/HTTP1Channel/Configuration/init(reader:)``
     ///
-    /// - Parameters
+    /// - Parameters:
     ///   - reader: ConfigReader
     public init(reader: ConfigReader) {
         var configuration = Self()

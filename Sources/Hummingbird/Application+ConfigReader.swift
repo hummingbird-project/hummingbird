@@ -20,7 +20,7 @@ extension ApplicationConfiguration {
     ///   - `unixDomainSocket` (string, optional): Unix domain socket name
     ///   - `serverName` (string, optional): Server name reported in HTTP headers
     ///
-    /// - Parameters
+    /// - Parameters:
     ///   - reader: ConfigReader
     public init(reader: ConfigReader) {
         var configuration = Self()

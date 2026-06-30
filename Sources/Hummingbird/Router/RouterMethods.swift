@@ -69,7 +69,7 @@ extension RouterMethods {
     ///     }
     /// }
     /// ```
-    /// - Parameters
+    /// - Parameters:
     ///   - path: path prefix to add to routes inside this group
     ///   - convertContext: Function converting context
     public func group<TargetContext>(
@@ -95,7 +95,7 @@ extension RouterMethods {
     ///     }
     /// }
     /// ```
-    /// - Parameters
+    /// - Parameters:
     ///   - path: path prefix to add to routes inside this group
     ///   - convertContext: Function converting context
     public func group<TargetContext: ChildRequestContext>(
