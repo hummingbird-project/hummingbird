@@ -6,13 +6,19 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+internal import Foundation
 import NIOCore
 
 extension RouterTrie {
     /// Resolve a path to a `Value` if available
     @inlinable
     public func resolve(_ path: String) -> (value: Value, parameters: Parameters)? {
-        var context = ResolveContext(path: path, trie: trie, values: values)
+        var context = ResolveContext(
+            path: path,
+            trie: trie,
+            values: values,
+            caseInsensitive: self.options.contains(.caseInsensitive)
+        )
         return context.resolve()
     }
 
@@ -22,11 +28,18 @@ extension RouterTrie {
         @usableFromInline let trie: Trie
         @usableFromInline let values: [Value?]
         @usableFromInline var parameters = Parameters()
+        @usableFromInline let caseInsensitive: Bool
 
-        @usableFromInline init(path: String, trie: Trie, values: [Value?]) {
+        @usableFromInline init(
+            path: String,
+            trie: Trie,
+            values: [Value?],
+            caseInsensitive: Bool
+        ) {
             self.path = path
             self.trie = trie
             self.values = values
+            self.caseInsensitive = caseInsensitive
         }
 
         @inlinable
@@ -138,12 +151,39 @@ extension RouterTrie {
             case match, mismatch, ignore, deadEnd
         }
 
+        @usableFromInline
+        func equals(_ lhs: Substring, _ rhs: Substring) -> Bool {
+            if self.caseInsensitive {
+                return lhs.caseInsensitiveCompare(rhs) == .orderedSame
+            } else {
+                return lhs == rhs
+            }
+        }
+
+        @usableFromInline
+        func hasPrefix(_ lhs: Substring, _ rhs: Substring) -> Bool {
+            if self.caseInsensitive {
+                return lhs.prefix(rhs.count).caseInsensitiveCompare(rhs) == .orderedSame
+            } else {
+                return lhs.hasPrefix(rhs)
+            }
+        }
+
+        @usableFromInline
+        func hasSuffix(_ lhs: Substring, _ rhs: Substring) -> Bool {
+            if self.caseInsensitive {
+                return lhs.suffix(rhs.count).caseInsensitiveCompare(rhs) == .orderedSame
+            } else {
+                return lhs.hasSuffix(rhs)
+            }
+        }
+
         @inlinable
         mutating func matchComponent(_ component: Substring, node: TrieNode) -> MatchResult {
             switch node.token {
             case .path(let constant):
                 // The current node is a constant
-                if self.trie.stringValues[Int(constant)] == component {
+                if equals(self.trie.stringValues[Int(constant)], component) {
                     return .match
                 }
 
@@ -154,7 +194,7 @@ extension RouterTrie {
             case .prefixCapture(let parameter, let suffix):
                 let suffix = self.trie.stringValues[Int(suffix)]
 
-                if component.hasSuffix(suffix) {
+                if hasSuffix(component, suffix) {
                     self.parameters[self.trie.stringValues[Int(parameter)]] = component.dropLast(suffix.count)
                     return .match
                 }
@@ -162,7 +202,7 @@ extension RouterTrie {
                 return .mismatch
             case .suffixCapture(let prefix, let parameter):
                 let prefix = self.trie.stringValues[Int(prefix)]
-                if component.hasPrefix(prefix) {
+                if hasPrefix(component, prefix) {
                     self.parameters[self.trie.stringValues[Int(parameter)]] = component.dropFirst(prefix.count)
                     return .match
                 }
@@ -172,13 +212,13 @@ extension RouterTrie {
                 // Always matches, descend
                 return .match
             case .prefixWildcard(let suffix):
-                if component.hasSuffix(self.trie.stringValues[Int(suffix)]) {
+                if hasSuffix(component, self.trie.stringValues[Int(suffix)]) {
                     return .match
                 }
 
                 return .mismatch
             case .suffixWildcard(let prefix):
-                if component.hasPrefix(self.trie.stringValues[Int(prefix)]) {
+                if hasPrefix(component, self.trie.stringValues[Int(prefix)]) {
                     return .match
                 }
 

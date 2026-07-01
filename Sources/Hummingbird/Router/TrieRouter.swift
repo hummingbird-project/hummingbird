@@ -74,7 +74,7 @@ import HummingbirdCore
             if let child = self.children.first(where: { $0.key == key }) {
                 return child
             }
-            return self.children.first { $0.key ~= key }
+            return self.children.first { $0.key.caseInsensitiveMatch(key) }
         }
 
         func forEach(_ process: (Node) throws -> Void) rethrows {
