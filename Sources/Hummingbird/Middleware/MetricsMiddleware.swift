@@ -123,13 +123,25 @@ final class MetricsCache: Sendable {
 
     func getMethodMetrics(id: MethodMetrics.ID) -> MethodMetrics {
         self.methodMetricsStorage.withLockedValue { metricsMap in
-            metricsMap[id, default: .init(id: id)]
+            if let metrics = metricsMap[id] {
+                return metrics
+            } else {
+                let value = MethodMetrics(id: id)
+                metricsMap[id] = value
+                return value
+            }
         }
     }
 
     func getEndpointMetrics(id: EndpointMetrics.ID) -> EndpointMetrics {
         self.endpointMetricsStorage.withLockedValue { metricsMap in
-            metricsMap[id, default: .init(id: id)]
+            if let metrics = metricsMap[id] {
+                return metrics
+            } else {
+                let value = EndpointMetrics(id: id)
+                metricsMap[id] = value
+                return value
+            }
         }
     }
 }
