@@ -35,6 +35,45 @@ struct MetricsTests {
         #expect(counter.values[0] == 1)
     }
 
+    @Test func testCounter2() async throws {
+        let metrics = TestMetrics()
+        try await withMetricsFactory(metrics) {
+            let router = Router()
+            router.middlewares.add(MetricsMiddleware())
+            router.get("/hello") { _, _ -> HTTPResponse.Status in
+                switch Int.random(in: 0..<4) {
+                case 0: HTTPResponse.Status.ok
+                case 1: HTTPResponse.Status.badRequest
+                case 2: HTTPResponse.Status.forbidden
+                default: throw HTTPError(.notFound)
+                }
+            }
+            let app = Application(responder: router.buildResponder())
+            try await app.test(.router) { client in
+                for _ in 0..<1000 {
+                    try await client.execute(uri: "/hello", method: .get) { _ in }
+                }
+            }
+        }
+        let counter1 = try metrics.expectCounter(
+            "hb.requests",
+            [("http.route", "/hello"), ("http.request.method", "GET"), ("http.response.status_code", "200")]
+        )
+        let counter2 = try metrics.expectCounter(
+            "hb.requests",
+            [("http.route", "/hello"), ("http.request.method", "GET"), ("http.response.status_code", "400")]
+        )
+        let counter3 = try metrics.expectCounter(
+            "hb.requests",
+            [("http.route", "/hello"), ("http.request.method", "GET"), ("http.response.status_code", "403")]
+        )
+        let counter4 = try metrics.expectCounter(
+            "hb.requests",
+            [("http.route", "/hello"), ("http.request.method", "GET"), ("http.response.status_code", "404")]
+        )
+        #expect(counter1.values.count + counter2.values.count + counter3.values.count + counter4.values.count == 1000)
+    }
+
     @Test func testError() async throws {
         let metrics = TestMetrics()
         try await withMetricsFactory(metrics) {
