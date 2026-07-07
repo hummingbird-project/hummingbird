@@ -12,6 +12,8 @@ import Hummingbird
 import HummingbirdCore
 import HummingbirdRouter
 import Logging
+import Metrics
+import MetricsTestKit
 import NIOCore
 import NIOEmbedded
 import NIOHTTPTypes
@@ -59,10 +61,15 @@ extension Benchmark {
         configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
         request: HTTPRequest,
         writeBody: (@Sendable (ByteBufferWriter) async throws -> Void)? = nil,
-        createRouter: @escaping @Sendable () async throws -> ResponderBuilder
+        createRouter: @escaping @Sendable () -> ResponderBuilder
     ) where ResponderBuilder.Responder.Context: RequestContext, ResponderBuilder.Responder.Context.Source == BenchmarkRequestContextSource {
+        let responder = createRouter().buildResponder()
+
+        let (requestBody, source) = RequestBody.makeStream()
+        let hbRequest = Request(head: request, body: requestBody)
+        source.finish()
+
         self.init(name, configuration: configuration) { benchmark in
-            let responder = try await createRouter().buildResponder()
 
             if let writeBody {
                 let context = ResponderBuilder.Responder.Context(source: BenchmarkRequestContextSource())
@@ -72,24 +79,21 @@ extension Benchmark {
                 for _ in benchmark.scaledIterations {
                     for _ in 0..<50 {
                         let (requestBody, source) = RequestBody.makeStream()
-                        let Request = Request(head: request, body: requestBody)
+                        let request = Request(head: request, body: requestBody)
                         try await writeBody(source.yield)
                         source.finish()
-                        let response = try await responder.respond(to: Request, context: context)
+                        let response = try await responder.respond(to: request, context: context)
                         _ = try await response.body.write(BenchmarkBodyWriter())
                     }
                 }
             } else {
                 let context = ResponderBuilder.Responder.Context(source: BenchmarkRequestContextSource())
-                let (requestBody, source) = RequestBody.makeStream()
-                let Request = Request(head: request, body: requestBody)
-                source.finish()
 
                 benchmark.startMeasurement()
 
                 for _ in benchmark.scaledIterations {
                     for _ in 0..<50 {
-                        let response = try await responder.respond(to: Request, context: context)
+                        let response = try await responder.respond(to: hbRequest, context: context)
                         _ = try await response.body.write(BenchmarkBodyWriter())
                     }
                 }
@@ -110,6 +114,7 @@ extension HTTPField.Name {
 
 @available(macOS 14, *)
 func routerBenchmarks() {
+    MetricsSystem.bootstrap(TestMetrics())
     let buffer = ByteBufferAllocator().buffer(repeating: 0xFF, count: 10000)
     Benchmark(
         "Router:GET",
@@ -191,6 +196,24 @@ func routerBenchmarks() {
         router.middlewares.add(EmptyMiddleware())
         router.get { _, _ in
             HTTPResponse.Status.ok
+        }
+        return router
+    }
+
+    Benchmark(
+        "Router:MetricsMiddleware",
+        configuration: .init(warmupIterations: 10),
+        request: .init(method: .get, scheme: "http", authority: "localhost", path: "/test")
+    ) {
+        let router = Router(context: BasicBenchmarkContext.self)
+        router.add(middleware: MetricsMiddleware())
+        router.get("/test") { _, _ in
+            switch Int.random(in: 0..<4) {
+            case 0: HTTPResponse.Status.ok
+            case 1: HTTPResponse.Status.badRequest
+            case 2: HTTPResponse.Status.forbidden
+            default: throw HTTPError(.notFound)
+            }
         }
         return router
     }

@@ -212,6 +212,7 @@ if Context.environment["ENABLE_HB_BENCHMARKS"] != nil {
                 "Hummingbird",
                 "HummingbirdRouter",
                 .product(name: "Benchmark", package: "benchmark"),
+                .product(name: "MetricsTestKit", package: "swift-metrics"),
             ],
             path: "Benchmarks/HummingbirdBenchmarks",
             swiftSettings: swiftSettings,
