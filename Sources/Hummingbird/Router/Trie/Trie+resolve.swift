@@ -159,7 +159,7 @@ extension RouterTrie {
         @usableFromInline
         func equals(_ lhs: Substring, _ rhs: Substring) -> Bool {
             if self.caseInsensitive {
-                return lhs.caseInsensitiveCompare(rhs) == .orderedSame
+                return lhs.compare(rhs, options: .caseInsensitive) == .orderedSame
             } else {
                 return lhs == rhs
             }
@@ -168,7 +168,7 @@ extension RouterTrie {
         @usableFromInline
         func hasPrefix(_ lhs: Substring, _ rhs: Substring) -> Bool {
             if self.caseInsensitive {
-                return lhs.prefix(rhs.count).caseInsensitiveCompare(rhs) == .orderedSame
+                return lhs.prefix(rhs.count).compare(rhs, options: .caseInsensitive) == .orderedSame
             } else {
                 return lhs.hasPrefix(rhs)
             }
@@ -177,7 +177,7 @@ extension RouterTrie {
         @usableFromInline
         func hasSuffix(_ lhs: Substring, _ rhs: Substring) -> Bool {
             if self.caseInsensitive {
-                return lhs.suffix(rhs.count).caseInsensitiveCompare(rhs) == .orderedSame
+                return lhs.suffix(rhs.count).compare(rhs, options: .caseInsensitive) == .orderedSame
             } else {
                 return lhs.hasSuffix(rhs)
             }
