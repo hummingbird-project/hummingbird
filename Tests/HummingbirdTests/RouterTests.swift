@@ -641,6 +641,12 @@ struct RouterTests {
         router.get("lowercased") { _, _ in
             HTTPResponse.Status.ok
         }
+        router.get("{test}cased") { _, context in
+            try context.parameters.require("test")
+        }
+        router.get("upper{test}") { _, context in
+            try context.parameters.require("test")
+        }
         router.group("group").get("Uppercased") { _, _ in
             HTTPResponse.Status.ok
         }
@@ -651,6 +657,14 @@ struct RouterTests {
             }
             try await client.execute(uri: "/LOWERCASED", method: .get) { response in
                 #expect(response.status == .ok)
+            }
+            try await client.execute(uri: "/Upperclass", method: .get) { response in
+                #expect(response.status == .ok)
+                #expect(String(buffer: response.body) == "class")
+            }
+            try await client.execute(uri: "/thisCased", method: .get) { response in
+                #expect(response.status == .ok)
+                #expect(String(buffer: response.body) == "this")
             }
             try await client.execute(uri: "/Group/uppercased", method: .get) { response in
                 #expect(response.status == .ok)
