@@ -40,7 +40,7 @@ jobs:
     container:
       image: ${{ matrix.image }}
     env:
-      ENABLE_HB_BENCHMARKS: true
+      ENABLE_HB_BENCHMARKS: false
     steps:
     - name: Install curl
       run: apt-get update -yq && apt-get install -y curl
