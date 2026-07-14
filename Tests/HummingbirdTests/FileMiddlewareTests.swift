@@ -377,7 +377,7 @@ struct FileMiddlewareTests {
                 Response(status: self.status)
             }
         }
-        router.get { _, _ -> String in
+        router.get("/ThrowCustom404.html") { _, _ -> String in
             throw Custom404Error()
         }
         let app = Application(responder: router.buildResponder())
