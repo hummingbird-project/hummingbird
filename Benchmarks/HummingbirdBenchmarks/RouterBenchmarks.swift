@@ -185,6 +185,18 @@ func routerBenchmarks() {
     }
 
     Benchmark(
+        "Router:CaseInsensitive",
+        configuration: .init(warmupIterations: 10),
+        request: .init(method: .get, scheme: "http", authority: "localhost", path: "/TEST/CaSe/insensitive/perFORmance1")
+    ) {
+        let router = Router(context: BasicBenchmarkContext.self, options: .caseInsensitive)
+        router.get("/test/case/Insensitive/performance1") { _, _ in
+            HTTPResponse.Status.ok
+        }
+        return router
+    }
+
+    Benchmark(
         "Router:Middleware",
         configuration: .init(warmupIterations: 10),
         request: .init(method: .get, scheme: "http", authority: "localhost", path: "/")

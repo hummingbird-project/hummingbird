@@ -39,8 +39,8 @@ jobs:
         image: ["swift:6.1", "swift:6.2", "swift:6.3", "swiftlang/swift:nightly-6.4.x-noble"]
     container:
       image: ${{ matrix.image }}
-    env:
-      ENABLE_HB_BENCHMARKS: true
+    #env:
+    #  ENABLE_HB_BENCHMARKS: true
     steps:
     - name: Install curl
       run: apt-get update -yq && apt-get install -y curl
