@@ -31,20 +31,20 @@ struct FileMiddlewareTests {
     }
 
     static func withFile<Buffer: Sequence & Sendable, ReturnValue>(
-        _ path: String,
+        _ path: FilePath,
         contents: Buffer,
         process: () async throws -> ReturnValue
     ) async throws -> ReturnValue where Buffer.Element == UInt8 {
-        let fileSystem = FileSystem(threadPool: .singleton)
-        try await fileSystem.withFileHandle(forWritingAt: .init(path)) { write in
+        let fileSystem = FileSystem.shared
+        try await fileSystem.withFileHandle(forWritingAt: path) { write in
             _ = try await write.write(contentsOf: contents, toAbsoluteOffset: 0)
         }
         do {
             let value = try await process()
-            _ = try? await fileSystem.removeItem(at: .init(path))
+            _ = try? await fileSystem.removeItem(at: path)
             return value
         } catch {
-            _ = try? await fileSystem.removeItem(at: .init(path))
+            _ = try? await fileSystem.removeItem(at: path)
             throw error
         }
     }
@@ -226,7 +226,7 @@ struct FileMiddlewareTests {
         let filename = "\(#function).txt"
         let buffer = Self.randomBuffer(size: 16200)
 
-        try await Self.withFile(filename, contents: buffer.readableBytesView) {
+        try await Self.withFile(.init(filename), contents: buffer.readableBytesView) {
             try await app.test(.router) { client in
                 let eTag = try await client.execute(uri: filename, method: .head) { response in
                     try #require(response.headers[.eTag])
@@ -383,9 +383,9 @@ struct FileMiddlewareTests {
         let app = Application(responder: router.buildResponder())
         let text = "Test file contents"
 
-        try await FileIOTests.withFile("index.html", contents: text.utf8) {
+        try await FileIOTests.withFile("ThrowCustom404.html", contents: text.utf8) {
             try await app.test(.router) { client in
-                try await client.execute(uri: "/", method: .get) { response in
+                try await client.execute(uri: "/ThrowCustom404.html", method: .get) { response in
                     #expect(String(buffer: response.body) == text)
                 }
             }

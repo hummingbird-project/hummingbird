@@ -141,7 +141,7 @@ struct FileIOTests {
 
         let buffer = ByteBuffer()
 
-        try await FileIOTests.withFile("empty.txt", contents: buffer.readableBytesView) {
+        try await FileIOTests.withFile("testReadEmptyFile.txt", contents: buffer.readableBytesView) {
             try await app.test(.router) { client in
                 try await client.execute(uri: "/empty.txt", method: .get) { response in
                     #expect(response.status == .ok)
@@ -154,7 +154,7 @@ struct FileIOTests {
         let router = Router()
         router.get("empty.txt") { _, context -> Response in
             let fileIO = FileIO(threadPool: .singleton)
-            let body = try await fileIO.loadFile(path: "empty.txt", range: 0...10, context: context)
+            let body = try await fileIO.loadFile(path: "testReadEmptyFilePart.txt", range: 0...10, context: context)
             return .init(status: .ok, headers: [:], body: body)
         }
 
@@ -162,7 +162,7 @@ struct FileIOTests {
 
         let buffer = ByteBuffer()
 
-        try await FileIOTests.withFile("empty.txt", contents: buffer.readableBytesView) {
+        try await FileIOTests.withFile("testReadEmptyFilePart.txt", contents: buffer.readableBytesView) {
             try await app.test(.router) { client in
                 try await client.execute(uri: "/empty.txt", method: .get) { response in
                     #expect(response.status == .ok)
