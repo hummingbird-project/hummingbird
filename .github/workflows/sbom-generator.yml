@@ -1,9 +1,13 @@
 name: API breaking changes
 
 on:
+  push:
+    branches:
+    - main
+    paths:
+    - '**.swift'
+  pull_request:
   workflow_dispatch:
-  schedule:
-    - cron: 0 1 * * 0
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-sbom
   cancel-in-progress: true
