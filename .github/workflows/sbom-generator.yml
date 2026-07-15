@@ -1,0 +1,49 @@
+name: API breaking changes
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 0 1 * * 0
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-sbom
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: swiftlang/swift:nightly-6.4.x-noble
+    steps:
+    - name: Checkout
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+
+    - name: Create token
+      id: create-token
+      uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1  # v3.2.0
+      with:
+        client-id: ${{ secrets.HB_APP_ID }}
+        private-key: ${{ secrets.HB_APP_PRIVATE_KEY }}
+
+    - name: Generate SBOM
+      run: |
+        rm docs/cyclonedx
+        rm docs/spdx
+        swift build --sbom-spec cyclonedx --sbom-output-dir docs
+        swift build --sbom-spec spdx --sbom-output-dir docs
+
+    - name: Commit and create PR
+      uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8.1.1
+      with:
+        token: ${{ steps.create-token.outputs.token }}
+        commit-message: "Update Software Bill of Materials (SBOM)"
+        committer: "GitHub <noreply@github.com>"
+        author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+        branch: update-sbom
+        title: Update Software Bill of Materials (SBOM)
+        body: Automated update of Update Software Bill of Materials (SBOM)
+        labels: sbom
