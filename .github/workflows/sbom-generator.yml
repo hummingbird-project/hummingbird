@@ -35,8 +35,8 @@ jobs:
 
     - name: Generate SBOM
       run: |
-        rm docs/cyclonedx
-        rm docs/spdx
+        rm -f docs/cyclonedx*
+        rm -f docs/spdx*
         swift build --sbom-spec cyclonedx --sbom-output-dir docs
         swift build --sbom-spec spdx --sbom-output-dir docs
 
