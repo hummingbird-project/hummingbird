@@ -1,11 +1,6 @@
 name: Generate SBOM
 
 on:
-  push:
-    branches:
-    - main
-    paths:
-    - '**.swift'
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-sbom
