@@ -6,7 +6,6 @@ on:
     - main
     paths:
     - '**.swift'
-  pull_request:
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-sbom
@@ -48,6 +47,7 @@ jobs:
         committer: "GitHub <noreply@github.com>"
         author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
         branch: update-sbom
+        base: main
         title: Update Software Bill of Materials (SBOM)
         body: Automated update of Update Software Bill of Materials (SBOM)
         labels: sbom
