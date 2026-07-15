@@ -1,4 +1,4 @@
-name: API breaking changes
+name: Generate SBOM
 
 on:
   push:
