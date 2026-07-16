@@ -5,6 +5,7 @@
 // See LICENSE.txt for license information
 // SPDX-License-Identifier: Apache-2.0
 //
+#if TLSSupport
 
 public import HummingbirdCore
 public import Logging
@@ -147,3 +148,5 @@ package struct TLSChannelInternalConfiguration: Sendable {
         self.customVerificationCallback = configuration.customVerificationCallback
     }
 }
+
+#endif

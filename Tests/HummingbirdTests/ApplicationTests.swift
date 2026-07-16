@@ -21,12 +21,15 @@ import NIOEmbedded
 import NIOFoundationEssentialsCompat
 import NIOHTTP1
 import NIOHTTPTypes
-import NIOSSL
 import ServiceLifecycle
 import Testing
 import UnixSignals
 
 @testable import Hummingbird
+
+#if TLSSupport
+import NIOSSL
+#endif
 
 #if AsyncHTTPClientSupport
 import AsyncHTTPClient
@@ -681,7 +684,7 @@ struct ApplicationTests {
         }
     }
 
-    #if AsyncHTTPClientSupport
+    #if AsyncHTTPClientSupport && TLSSupport
     /// test we can create out own application type conforming to ApplicationProtocol
     @Test func testTLS() async throws {
         let router = Router()
@@ -702,7 +705,7 @@ struct ApplicationTests {
     }
     #endif
 
-    #if AsyncHTTPClientSupport
+    #if AsyncHTTPClientSupport && TLSSupport
     /// test we can create out own application type conforming to ApplicationProtocol
     @Test func testHTTP2() async throws {
         let router = Router()
@@ -768,7 +771,7 @@ struct ApplicationTests {
     }
 
     // MARK: Helper functions
-
+    #if TLSSupport
     func getServerTLSConfiguration() throws -> TLSConfiguration {
         let caCertificate = try NIOSSLCertificate(
             bytes: [UInt8](caCertificateData.utf8),
@@ -789,7 +792,7 @@ struct ApplicationTests {
         tlsConfig.trustRoots = .certificates([caCertificate])
         return tlsConfig
     }
-
+    #endif
     @Test func testHTTPError() async throws {
         struct HTTPErrorFormat: Decodable {
             struct ErrorFormat: Decodable {

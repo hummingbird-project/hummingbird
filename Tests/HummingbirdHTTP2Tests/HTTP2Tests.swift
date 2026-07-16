@@ -6,6 +6,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+#if AsyncHTTPClientSupport && TLSSupport
+
 import HTTPTypes
 import HummingbirdCore
 import HummingbirdHTTP2
@@ -21,12 +23,9 @@ import ServiceLifecycle
 import Testing
 import UnixSignals
 
-#if AsyncHTTPClientSupport
 import AsyncHTTPClient
-#endif
 
 struct HummingBirdHTTP2Tests {
-    #if AsyncHTTPClientSupport
     @Test func testConnect() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
         defer {
@@ -297,5 +296,6 @@ struct HummingBirdHTTP2Tests {
             }
         }
     }
-    #endif
 }
+
+#endif

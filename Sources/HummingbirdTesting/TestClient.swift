@@ -13,7 +13,10 @@ import NIOHTTP1
 import NIOHTTPTypes
 import NIOHTTPTypesHTTP1
 public import NIOPosix
+
+#if TLSSupport
 public import NIOSSL
+#endif
 
 /// Bare bones single connection HTTP client.
 ///
@@ -30,6 +33,7 @@ public struct TestClient: Sendable {
 
     /// TestClient configuration
     public struct Configuration: Sendable {
+        #if TLSSupport
         public init(
             tlsConfiguration: TLSConfiguration? = nil,
             timeout: Duration = .seconds(15),
@@ -39,9 +43,20 @@ public struct TestClient: Sendable {
             self.timeout = timeout
             self.serverName = serverName
         }
+        #else
+        public init(
+            timeout: Duration = .seconds(15),
+            serverName: String? = nil
+        ) {
+            self.timeout = timeout
+            self.serverName = serverName
+        }
+        #endif
 
+        #if TLSSupport
         /// TLS confguration
         public let tlsConfiguration: TLSConfiguration?
+        #endif
         /// read timeout. If connection has no read events for indicated time throw timeout error
         public let timeout: Duration
         /// server name
@@ -216,6 +231,7 @@ public struct TestClient: Sendable {
     }
 
     private func getBootstrap() throws -> NIOClientTCPBootstrap {
+        #if TLSSupport
         if let tlsConfiguration = self.configuration.tlsConfiguration {
             let sslContext = try NIOSSLContext(configuration: tlsConfiguration)
             let tlsProvider = try NIOSSLClientTLSProvider<ClientBootstrap>(
@@ -228,6 +244,9 @@ public struct TestClient: Sendable {
         } else {
             return NIOClientTCPBootstrap(ClientBootstrap(group: self.eventLoopGroup), tls: NIOInsecureNoTLS())
         }
+        #else
+        return NIOClientTCPBootstrap(ClientBootstrap(group: self.eventLoopGroup), tls: NIOInsecureNoTLS())
+        #endif
     }
 
     /// Channel Handler for serializing request header and data

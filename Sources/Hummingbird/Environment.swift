@@ -8,7 +8,10 @@
 
 import HummingbirdCore
 import NIOCore
+
+#if FileSystemSupport
 import _NIOFileSystem
+#endif
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials
@@ -177,6 +180,7 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
 
     /// Load `.env` file into string
     internal static func loadDotEnv(_ dotEnvPath: String = ".env") async -> String? {
+        #if FileSystemSupport
         do {
             return try await FileSystem.shared.withFileHandle(forReadingAt: .init(dotEnvPath)) { fileHandle in
                 let buffer = try await fileHandle.readToEnd(maximumSizeAllowed: .unlimited)
@@ -185,6 +189,9 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
         } catch {
             return nil
         }
+        #else
+        return nil
+        #endif
     }
 
     /// Parse a `.env` file
