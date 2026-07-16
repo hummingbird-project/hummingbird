@@ -119,7 +119,7 @@ public struct TestClient: Sendable {
     public func connect() {
         do {
             try self.getBootstrap()
-                .channelOption(ChannelOptions.socket(SocketOptionLevel(IPPROTO_TCP), TCP_NODELAY), value: 1)
+                .channelOption(ChannelOptions.tcpOption(.tcp_nodelay), value: 1)
                 .channelInitializer { channel in
                     channel.pipeline.addHTTPClientHandlers()
                         .flatMapThrowing {
