@@ -49,5 +49,5 @@ jobs:
         branch: update-sbom
         base: main
         title: Update Software Bill of Materials (SBOM)
-        body: Automated update of Update Software Bill of Materials (SBOM)
+        body: Automated update of Software Bill of Materials (SBOM)
         labels: sbom
