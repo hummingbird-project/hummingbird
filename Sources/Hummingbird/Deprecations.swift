@@ -59,7 +59,7 @@ public typealias HBRouterPath = RouterPath
 
 @_documentation(visibility: internal) @available(*, unavailable, renamed: "CORSMiddleware")
 public typealias HBCORSMiddleware = CORSMiddleware
-#if !os(Windows)
+#if FileSystemSupport
 @_documentation(visibility: internal) @available(*, unavailable, renamed: "FileMiddleware")
 public typealias HBFileMiddleware = FileMiddleware
 #endif

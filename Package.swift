@@ -197,7 +197,7 @@ let package = Package(
                 .byName(name: "HummingbirdCore"),
                 .byName(name: "HummingbirdHTTP2"),
                 .byName(name: "HummingbirdTesting"),
-                .product(name: "AsyncHTTPClient", package: "async-http-client"),
+                .product(name: "AsyncHTTPClient", package: "async-http-client", condition: .when(traits: ["AsyncHTTPClientSupport"])),
             ],
             swiftSettings: swiftSettings
         ),
