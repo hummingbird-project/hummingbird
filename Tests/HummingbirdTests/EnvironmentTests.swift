@@ -77,6 +77,7 @@ struct EnvironmentTests {
         #expect(env.get("testcaseinsensitive") == "testSetFromEnvironment")
     }
 
+    #if FileSystemSupport
     @Test func testDotEnvLoading() async throws {
         let dotenv = """
             TEST=this
@@ -93,7 +94,7 @@ struct EnvironmentTests {
         #expect(result.get("test") == "this")
         #expect(result.get("credentials") == "sdkfjh")
     }
-
+    #endif
     @Test func testDotEnvParsingError() throws {
         let dotenv = """
             TEST #thse
@@ -158,6 +159,7 @@ struct EnvironmentTests {
         #expect(result.count == 1)
     }
 
+    #if FileSystemSupport
     @Test func testDotEnvOverridingEnvironment() async throws {
         let dotenv = """
             testDotEnvOverridingEnvironment=testDotEnvOverridingEnvironment
@@ -174,4 +176,5 @@ struct EnvironmentTests {
         #expect(env.get("testDotEnvOverridingEnvironment") == "testDotEnvOverridingEnvironment")
         #expect(env.get("testDotEnvOverridingEnvironment2") == "testSetFromEnvironment2")
     }
+    #endif
 }
