@@ -6,6 +6,10 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+#if TLSSupport
+
 @_exported @_documentation(visibility: internal) import class NIOSSL.NIOSSLCertificate
 @_exported @_documentation(visibility: internal) import class NIOSSL.NIOSSLPrivateKey
 @_exported @_documentation(visibility: internal) import struct NIOSSL.TLSConfiguration
+
+#endif

@@ -12,7 +12,6 @@ import HummingbirdTesting
 import Logging
 import NIOCore
 import NIOPosix
-import NIOSSL
 import ServiceLifecycle
 import UnixSignals
 
