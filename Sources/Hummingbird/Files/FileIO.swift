@@ -146,3 +146,4 @@ public struct FileIO: Sendable {
         }
     }
 }
+#endif
