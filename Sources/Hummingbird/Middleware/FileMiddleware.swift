@@ -6,7 +6,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#if !os(Windows)
+#if FileSystemSupport
+
 import HTTPTypes
 public import HummingbirdCore
 public import Logging

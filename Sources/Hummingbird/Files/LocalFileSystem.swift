@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#if !os(Windows)
+#if FileSystemSupport
 public import Logging
 public import NIOPosix
 import _NIOFileSystem

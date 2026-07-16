@@ -5,6 +5,7 @@
 // See LICENSE.txt for license information
 // SPDX-License-Identifier: Apache-2.0
 //
+#if AsyncHTTPClientSupport
 
 import AsyncHTTPClient
 import Foundation
@@ -244,3 +245,5 @@ extension HTTPResponse {
         self.init(status: status, headerFields: HTTPFields(oldResponse.headers, splitCookie: false))
     }
 }
+
+#endif  // AsyncHTTPClientSupport
