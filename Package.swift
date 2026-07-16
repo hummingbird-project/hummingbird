@@ -37,6 +37,8 @@ let package = Package(
         .executable(name: "PerformanceTest", targets: ["PerformanceTest"]),
     ],
     traits: [
+        .trait(name: "FileSystemSupport", description: "Enable support for file access."),
+        .trait(name: "AsyncHTTPClientSupport", description: "Enable support for async-http-client."),
         .trait(name: "ConfigurationSupport", description: "Enable support for swift-configuration package."),
         .default(enabledTraits: ["ConfigurationSupport"]),
     ],
@@ -112,7 +114,7 @@ let package = Package(
             name: "HummingbirdTesting",
             dependencies: [
                 .byName(name: "Hummingbird"),
-                .product(name: "AsyncHTTPClient", package: "async-http-client"),
+                .product(name: "AsyncHTTPClient", package: "async-http-client", condition: .when(traits: ["AsyncHTTPClientSupport"])),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
@@ -184,7 +186,7 @@ let package = Package(
                 .byName(name: "HummingbirdCore"),
                 .byName(name: "HummingbirdTLS"),
                 .byName(name: "HummingbirdTesting"),
-                .product(name: "AsyncHTTPClient", package: "async-http-client"),
+                .product(name: "AsyncHTTPClient", package: "async-http-client", condition: .when(traits: ["AsyncHTTPClientSupport"])),
             ],
             resources: [.process("Certificates")],
             swiftSettings: swiftSettings

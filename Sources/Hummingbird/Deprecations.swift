@@ -21,7 +21,7 @@ public typealias HBApplicationProtocol = ApplicationProtocol
 @_documentation(visibility: internal) @available(*, unavailable, renamed: "Environment")
 public typealias HBEnvironment = Environment
 
-#if !os(Windows)
+#if FileSystemSupport
 @_documentation(visibility: internal) @available(*, unavailable, renamed: "FileIO")
 public typealias HBFileIO = FileIO
 #endif

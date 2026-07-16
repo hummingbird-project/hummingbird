@@ -6,7 +6,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-import AsyncHTTPClient
 import Atomics
 import Foundation
 import HTTPTypes
@@ -28,6 +27,10 @@ import Testing
 import UnixSignals
 
 @testable import Hummingbird
+
+#if AsyncHTTPClientSupport
+import AsyncHTTPClient
+#endif
 
 struct ApplicationTests {
     static func randomBuffer(size: Int) -> ByteBuffer {
@@ -678,6 +681,7 @@ struct ApplicationTests {
         }
     }
 
+    #if AsyncHTTPClientSupport
     /// test we can create out own application type conforming to ApplicationProtocol
     @Test func testTLS() async throws {
         let router = Router()
@@ -696,7 +700,9 @@ struct ApplicationTests {
             }
         }
     }
+    #endif
 
+    #if AsyncHTTPClientSupport
     /// test we can create out own application type conforming to ApplicationProtocol
     @Test func testHTTP2() async throws {
         let router = Router()
@@ -715,6 +721,7 @@ struct ApplicationTests {
             }
         }
     }
+    #endif
 
     /// test we can create out own application type conforming to ApplicationProtocol
     @Test func testApplicationRouterInit() async throws {
@@ -1227,6 +1234,7 @@ struct ApplicationTests {
         }
     }
 
+    #if AsyncHTTPClientSupport
     @Test func testCancelledRequest() async throws {
         let httpClient = HTTPClient()
         let (stream, cont) = AsyncStream.makeStream(of: Int.self)
@@ -1291,6 +1299,7 @@ struct ApplicationTests {
         }
         try await httpClient.shutdown()
     }
+    #endif
 
     @Test func testTaskLocalLogger() async throws {
         let logHandler = InMemoryLogHandler()
