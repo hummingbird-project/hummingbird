@@ -13,7 +13,7 @@ import NIOPosix
 import Testing
 import _NIOFileSystem
 
-#if !os(Windows)
+#if FileSystemSupport
 
 struct FileIOTests {
     static func randomBuffer(size: Int) -> ByteBuffer {
