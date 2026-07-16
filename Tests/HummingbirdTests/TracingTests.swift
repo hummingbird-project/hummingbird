@@ -186,6 +186,7 @@ struct TracingTests {
         }
     }
 
+    #if FileSystemSupport
     @Test func testTracingMiddlewareWithFile() async throws {
         let filename = "\(#function).jpg"
         let text = "Test file contents"
@@ -230,6 +231,7 @@ struct TracingTests {
             )
         }
     }
+    #endif
 
     @Test func testMiddlewareSkippingEndpoint() async throws {
         struct DeadendMiddleware<Context: RequestContext>: RouterMiddleware {
