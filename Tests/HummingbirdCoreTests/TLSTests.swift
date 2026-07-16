@@ -6,6 +6,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+#if TLSSupport
+
 import HummingbirdCore
 import HummingbirdTLS
 import HummingbirdTesting
@@ -102,3 +104,5 @@ struct HummingBirdTLSTests {
         }
     }
 }
+
+#endif

@@ -39,6 +39,7 @@ let package = Package(
     traits: [
         .trait(name: "FileSystemSupport", description: "Enable support for file access."),
         .trait(name: "AsyncHTTPClientSupport", description: "Enable support for async-http-client."),
+        .trait(name: "TLSSupport", description: "Enable support for TLS."),
         .trait(name: "ConfigurationSupport", description: "Enable support for swift-configuration package."),
         .default(enabledTraits: ["ConfigurationSupport"]),
     ],
@@ -73,7 +74,7 @@ let package = Package(
                 .product(name: "Metrics", package: "swift-metrics"),
                 .product(name: "Tracing", package: "swift-distributed-tracing"),
                 .product(name: "NIOCore", package: "swift-nio"),
-                .product(name: "_NIOFileSystem", package: "swift-nio"),
+                .product(name: "_NIOFileSystem", package: "swift-nio", condition: .when(traits: ["FileSystemSupport"])),
                 .product(name: "NIOPosix", package: "swift-nio"),
                 .product(name: "NIOFoundationEssentialsCompat", package: "swift-nio"),
             ],
@@ -122,7 +123,7 @@ let package = Package(
                 .product(name: "NIOHTTPTypes", package: "swift-nio-extras"),
                 .product(name: "NIOHTTPTypesHTTP1", package: "swift-nio-extras"),
                 .product(name: "NIOPosix", package: "swift-nio"),
-                .product(name: "NIOSSL", package: "swift-nio-ssl"),
+                .product(name: "NIOSSL", package: "swift-nio-ssl", condition: .when(traits: ["TLSSupport"])),
             ],
             swiftSettings: swiftSettings
         ),
@@ -136,7 +137,7 @@ let package = Package(
                 .product(name: "NIOHTTPTypes", package: "swift-nio-extras"),
                 .product(name: "NIOHTTPTypesHTTP1", package: "swift-nio-extras"),
                 .product(name: "NIOHTTPTypesHTTP2", package: "swift-nio-extras"),
-                .product(name: "NIOSSL", package: "swift-nio-ssl"),
+                .product(name: "NIOSSL", package: "swift-nio-ssl", condition: .when(traits: ["TLSSupport"])),
             ],
             swiftSettings: swiftSettings
         ),
@@ -146,7 +147,7 @@ let package = Package(
                 .byName(name: "HummingbirdCore"),
                 .product(name: "Configuration", package: "swift-configuration", condition: .when(traits: ["ConfigurationSupport"])),
                 .product(name: "NIOCore", package: "swift-nio"),
-                .product(name: "NIOSSL", package: "swift-nio-ssl"),
+                .product(name: "NIOSSL", package: "swift-nio-ssl", condition: .when(traits: ["TLSSupport"])),
             ],
             swiftSettings: swiftSettings
         ),
