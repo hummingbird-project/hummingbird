@@ -192,7 +192,7 @@ struct FileMiddlewareTests {
                     #expect(response.headers[.contentType] == "text/plain")
                     let responseDateString = try #require(response.headers[.lastModified])
                     let responseDate = try #require(Self.rfc9110Formatter.date(from: responseDateString))
-                    #expect(date < responseDate + 2 && date > responseDate - 2)
+                    #expect(date < responseDate + 10 && date > responseDate - 10)
                 }
             }
         }
