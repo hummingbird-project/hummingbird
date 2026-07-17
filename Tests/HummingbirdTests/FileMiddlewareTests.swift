@@ -373,7 +373,7 @@ struct FileMiddlewareTests {
         struct Custom404Error: HTTPResponseError {
             var status: HTTPResponse.Status { .notFound }
 
-            func response(from request: Request, context: some RequestContext) throws -> Response {
+            func response(from request: HTTPRequest, context: some RequestContext) throws -> Response {
                 Response(status: self.status)
             }
         }

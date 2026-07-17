@@ -122,7 +122,7 @@ struct HummingbirdCoreTests {
             }
         }
         /// Basic responder that waits 10 milliseconds and returns "Hello" in body
-        @Sendable func helloResponder(to request: Request, responseWriter: consuming ResponseWriter, channel: any Channel) async throws {
+        @Sendable func helloResponder(to request: consuming Request, responseWriter: consuming ResponseWriter, channel: any Channel) async throws {
             try? await Task.sleep(for: .milliseconds(10))
             let responseBody = channel.allocator.buffer(string: "Hello")
             var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))

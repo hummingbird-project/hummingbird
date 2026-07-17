@@ -34,10 +34,11 @@ public protocol RouterController<Context> {
 
 // MARK: MiddlewareFixedTypeBuilder + RouterController Builders
 
-extension MiddlewareFixedTypeBuilder {
+extension MiddlewareFixedTypeBuilder where Input: ~Copyable {
     public static func buildExpression<C0: RouterController>(
         _ c0: C0
-    ) -> C0.Body where C0.Body.Input == Input, C0.Body.Output == Output, C0.Body.Context == Context {
+    ) -> C0.Body
+    where C0.Body.Input == Input, C0.Body.Output == Output, C0.Body.Context == Context, C0.Body.Input: ~Copyable {
         c0.body
     }
 }

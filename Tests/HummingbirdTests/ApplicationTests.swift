@@ -331,9 +331,9 @@ struct ApplicationTests {
     @Test func testCollectBody() async throws {
         struct CollateMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(
-                _ request: Request,
+                _ request: consuming Request,
                 context: Context,
-                next: (Request, Context) async throws -> Response
+                next: (consuming Request, Context) async throws -> Response
             ) async throws -> Response {
                 var request = request
                 _ = try await request.collectBody(upTo: context.maxUploadSize)
@@ -611,7 +611,7 @@ struct ApplicationTests {
             init(source: Source) {}
         }
         let app = Application(
-            responder: CallbackResponder { (_: Request, _: EmptyRequestContext) in
+            responder: CallbackResponder { (_: consuming Request, _: EmptyRequestContext) in
                 Response(status: .ok)
             }
         )
@@ -827,7 +827,7 @@ struct ApplicationTests {
 
         for message in messages {
             let error = HTTPError(.internalServerError, message: message)
-            let response = try error.response(from: request, context: context)
+            let response = try error.response(from: request.head, context: context)
             let writer = CollatedResponseWriter()
             _ = try await response.body.write(writer)
             let format = try JSONDecoder().decode(HTTPErrorFormat.self, from: writer.collated.withLockedValue { $0 })

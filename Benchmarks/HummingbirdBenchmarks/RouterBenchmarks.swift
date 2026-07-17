@@ -65,10 +65,6 @@ extension Benchmark {
     ) where ResponderBuilder.Responder.Context: RequestContext, ResponderBuilder.Responder.Context.Source == BenchmarkRequestContextSource {
         let responder = createRouter().buildResponder()
 
-        let (requestBody, source) = RequestBody.makeStream()
-        let hbRequest = Request(head: request, body: requestBody)
-        source.finish()
-
         self.init(name, configuration: configuration) { benchmark in
 
             if let writeBody {
@@ -93,6 +89,10 @@ extension Benchmark {
 
                 for _ in benchmark.scaledIterations {
                     for _ in 0..<50 {
+                        let (requestBody, source) = RequestBody.makeStream()
+                        let hbRequest = Request(head: request, body: requestBody)
+                        source.finish()
+
                         let response = try await responder.respond(to: hbRequest, context: context)
                         _ = try await response.body.write(BenchmarkBodyWriter())
                     }
@@ -103,7 +103,8 @@ extension Benchmark {
 }
 
 struct EmptyMiddleware<Context>: RouterMiddleware {
-    func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+    func handle(_ request: consuming Request, context: Context, next: (consuming Request, Context) async throws -> Response) async throws -> Response
+    {
         try await next(request, context)
     }
 }

@@ -17,6 +17,7 @@ extension Request {
     }
 }
 
+@available(hummingbird 2.0, *)
 extension HTTPRequest {
     /// access cookies from request. When accessing this for the first time the Cookies struct will be created
     public var cookies: Cookies {

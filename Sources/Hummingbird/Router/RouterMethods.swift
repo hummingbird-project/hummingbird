@@ -180,11 +180,12 @@ extension RouterMethods {
     }
 
     internal func constructResponder(
-        use closure: @Sendable @escaping (borrowing Request, Context) async throws -> some ResponseGenerator
+        use closure: @Sendable @escaping (consuming Request, Context) async throws -> some ResponseGenerator
     ) -> CallbackResponder<Context> {
         CallbackResponder { request, context in
+            let head = request.head
             let output = try await closure(request, context)
-            return try output.response(from: request.head, context: context)
+            return try output.response(from: head, context: context)
         }
     }
 }

@@ -14,7 +14,7 @@ public import Hummingbird
 @_documentation(visibility: internal)
 public protocol _RouteHandlerProtocol<Context>: Sendable {
     associatedtype Context: RouterRequestContext
-    func handle(_ request: Request, context: Context) async throws -> Response
+    func handle(_ request: consuming Request, context: Context) async throws -> Response
 }
 
 /// Implementatinon of ``_RouteHandlerProtocol`` that uses a closure to produce a response.
@@ -23,11 +23,12 @@ public protocol _RouteHandlerProtocol<Context>: Sendable {
 @_documentation(visibility: internal)
 public struct _RouteHandlerClosure<RouteOutput: ResponseGenerator, Context: RouterRequestContext>: _RouteHandlerProtocol {
     @usableFromInline
-    let closure: @Sendable (Request, Context) async throws -> RouteOutput
+    let closure: @Sendable (consuming Request, Context) async throws -> RouteOutput
 
     @inlinable
-    public func handle(_ request: Request, context: Context) async throws -> Response {
-        try await self.closure(request, context).response(from: request, context: context)
+    public func handle(_ request: consuming Request, context: Context) async throws -> Response {
+        let requestHead = request.head
+        return try await self.closure(request, context).response(from: requestHead, context: context)
     }
 }
 
@@ -42,7 +43,7 @@ where M0.Input == Request, M0.Output == Response, M0.Context: RouterRequestConte
 
     /// Dummy function passed to middleware handle
     @usableFromInline
-    static func notFound(_: Request, context: Context) -> Response {
+    static func notFound(_: consuming Request, context: Context) -> Response {
         context.coreContext.endpointPath.value = "NotFound"
         return .init(status: .notFound)
     }
@@ -51,7 +52,7 @@ where M0.Input == Request, M0.Output == Response, M0.Context: RouterRequestConte
     let middleware: M0
 
     @inlinable
-    public func handle(_ request: Request, context: Context) async throws -> Response {
+    public func handle(_ request: consuming Request, context: Context) async throws -> Response {
         try await self.middleware.handle(request, context: context, next: Self.notFound)
     }
 }

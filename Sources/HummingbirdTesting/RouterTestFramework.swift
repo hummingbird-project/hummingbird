@@ -103,17 +103,16 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
                 let iterator = stream.makeAsyncIterator()
                 let requestBody = NIOAsyncChannelRequestBody(iterator: iterator)
 
-                //let (stream, source) = RequestBody.makeStream()
-                let request = Request(
-                    head: .init(method: method, scheme: "http", authority: "localhost", path: uri, headerFields: headers),
-                    body: RequestBody(nioAsyncChannelInbound: requestBody)
-                )
                 let logger = self.logger.with(metadataKey: "hb.request.id", value: .stringConvertible(RequestID()))
                 let context = self.makeContext(logger)
 
                 group.addTask {
                     let response: Response
                     do {
+                        let request = Request(
+                            head: .init(method: method, scheme: "http", authority: "localhost", path: uri, headerFields: headers),
+                            body: RequestBody(nioAsyncChannelInbound: requestBody)
+                        )
                         response = try await self.responder.respond(to: request, context: context)
                     } catch {
                         response = Response(status: .internalServerError)

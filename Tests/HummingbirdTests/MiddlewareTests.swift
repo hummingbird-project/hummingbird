@@ -26,7 +26,11 @@ struct MiddlewareTests {
 
     @Test func testMiddleware() async throws {
         struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
-            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+            public func handle(
+                _ request: consuming Request,
+                context: Context,
+                next: (consuming Request, Context) async throws -> Response
+            ) async throws -> Response {
                 var response = try await next(request, context)
                 response.headers[.test] = "TestMiddleware"
                 return response
@@ -48,7 +52,11 @@ struct MiddlewareTests {
     @Test func testMiddlewareOrder() async throws {
         struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
             let string: String
-            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+            public func handle(
+                _ request: consuming Request,
+                context: Context,
+                next: (consuming Request, Context) async throws -> Response
+            ) async throws -> Response {
                 var response = try await next(request, context)
                 response.headers[values: .test].append(self.string)
                 return response
@@ -72,7 +80,11 @@ struct MiddlewareTests {
 
     @Test func testMiddlewareRunOnce() async throws {
         struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
-            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+            public func handle(
+                _ request: consuming Request,
+                context: Context,
+                next: (consuming Request, Context) async throws -> Response
+            ) async throws -> Response {
                 var response = try await next(request, context)
                 #expect(response.headers[.test] == nil)
                 response.headers[.test] = "alreadyRun"
@@ -101,7 +113,11 @@ struct MiddlewareTests {
             let error: Details
         }
         struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
-            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+            public func handle(
+                _ request: consuming Request,
+                context: Context,
+                next: (consuming Request, Context) async throws -> Response
+            ) async throws -> Response {
                 do {
                     return try await next(request, context)
                 } catch let error as HTTPError where error.status == .notFound {
@@ -124,7 +140,11 @@ struct MiddlewareTests {
 
     @Test func testEndpointPathInGroup() async throws {
         struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
-            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+            public func handle(
+                _ request: consuming Request,
+                context: Context,
+                next: (consuming Request, Context) async throws -> Response
+            ) async throws -> Response {
                 #expect(context.endpointPath != nil)
                 return try await next(request, context)
             }
@@ -156,7 +176,11 @@ struct MiddlewareTests {
             }
         }
         struct TransformMiddleware<Context: RequestContext>: RouterMiddleware {
-            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+            public func handle(
+                _ request: consuming Request,
+                context: Context,
+                next: (consuming Request, Context) async throws -> Response
+            ) async throws -> Response {
                 let response = try await next(request, context)
                 var editedResponse = response
                 editedResponse.body = .init { writer in
@@ -197,7 +221,11 @@ struct MiddlewareTests {
             }
         }
         struct TransformMiddleware<Context: RequestContext>: RouterMiddleware {
-            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+            public func handle(
+                _ request: consuming Request,
+                context: Context,
+                next: (consuming Request, Context) async throws -> Response
+            ) async throws -> Response {
                 let response = try await next(request, context)
                 var editedResponse = response
                 editedResponse.body = editedResponse.body.map {
@@ -650,7 +678,11 @@ struct MiddlewareTests {
 /// Middleware used in tests. Adds the provided `String` to the header's `.test` value.
 struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
     let string: String
-    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+    public func handle(
+        _ request: consuming Request,
+        context: Context,
+        next: (consuming Request, Context) async throws -> Response
+    ) async throws -> Response {
         var response = try await next(request, context)
         response.headers[values: .test].append(self.string)
         return response

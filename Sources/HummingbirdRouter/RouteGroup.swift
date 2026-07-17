@@ -92,7 +92,7 @@ where Handler.Input == Request, Handler.Output == Response, Handler.Context == C
     ///   - next: Next middleware to run, if no route handler is found
     /// - Returns: Response
     @inlinable
-    public func handle(_ input: Input, context: Context, next: (Input, Context) async throws -> Output) async throws -> Output {
+    public func handle(_ input: consuming Input, context: Context, next: (consuming Input, Context) async throws -> Output) async throws -> Output {
         if let updatedContext = self.routerPath.matchPrefix(context) {
             context.coreContext.endpointPath.value = self.fullPath.description
             return try await self.handler.handle(input, context: updatedContext) { input, _ in

@@ -49,7 +49,7 @@ where Handler.Input == Request, Handler.Output == Response, Handler.Context == H
     ///   - next: Next middleware to run, if no route handler is found
     /// - Returns: Response
     @inlinable
-    public func handle(_ input: Input, context: Context, next: (Input, Context) async throws -> Output) async throws -> Output {
+    public func handle(_ input: consuming Input, context: Context, next: (consuming Input, Context) async throws -> Output) async throws -> Output {
         let handlerContext = Handler.Context(source: context)
         return try await self.handler.handle(input, context: handlerContext) { input, _ in
             try await next(input, context)
@@ -90,7 +90,7 @@ where Handler.Input == Request, Handler.Output == Response, Handler.Context == H
     ///   - next: Next middleware to run, if no route handler is found
     /// - Returns: Response
     @inlinable
-    public func handle(_ input: Input, context: Context, next: (Input, Context) async throws -> Output) async throws -> Output {
+    public func handle(_ input: consuming Input, context: Context, next: (consuming Input, Context) async throws -> Output) async throws -> Output {
         let handlerContext = try Handler.Context(context: context)
         return try await self.handler.handle(input, context: handlerContext) { input, _ in
             try await next(input, context)

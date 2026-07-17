@@ -22,7 +22,11 @@ struct RouterTests {
             self.output = output
         }
 
-        func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+        func handle(
+            _ request: consuming Request,
+            context: Context,
+            next: (consuming Request, Context) async throws -> Response
+        ) async throws -> Response {
             var response = try await next(request, context)
             response.headers[.middleware] = self.output
             return response
@@ -32,9 +36,13 @@ struct RouterTests {
     /// Test endpointPath is set
     @Test func testEndpointPath() async throws {
         struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
-            func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-                _ = try await next(request, context)
-                guard let endpointPath = context.endpointPath else { return try await next(request, context) }
+            func handle(
+                _ request: consuming Request,
+                context: Context,
+                next: (consuming Request, Context) async throws -> Response
+            ) async throws -> Response {
+                let response = try await next(request, context)
+                guard let endpointPath = context.endpointPath else { return response }
                 return .init(status: .ok, body: .init(byteBuffer: ByteBuffer(string: endpointPath)))
             }
         }
@@ -57,9 +65,13 @@ struct RouterTests {
     /// Test endpointPath is prefixed with a "/"
     @Test func testEndpointPathPrefix() async throws {
         struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
-            func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-                _ = try await next(request, context)
-                guard let endpointPath = context.endpointPath else { return try await next(request, context) }
+            func handle(
+                _ request: consuming Request,
+                context: Context,
+                next: (consuming Request, Context) async throws -> Response
+            ) async throws -> Response {
+                let response = try await next(request, context)
+                guard let endpointPath = context.endpointPath else { return response }
                 return .init(status: .ok, body: .init(byteBuffer: ByteBuffer(string: endpointPath)))
             }
         }
@@ -94,7 +106,11 @@ struct RouterTests {
     /// Test endpointPath doesn't have "/" at end
     @Test func testEndpointPathSuffix() async throws {
         struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
-            func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+            func handle(
+                _ request: consuming Request,
+                context: Context,
+                next: (consuming Request, Context) async throws -> Response
+            ) async throws -> Response {
                 guard let endpointPath = context.endpointPath else { return try await next(request, context) }
                 return .init(status: .ok, body: .init(byteBuffer: ByteBuffer(string: endpointPath)))
             }
@@ -232,7 +248,11 @@ struct RouterTests {
             typealias Context = TestRouterContext2
             let output: String
 
-            func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+            func handle(
+                _ request: consuming Request,
+                context: Context,
+                next: (consuming Request, Context) async throws -> Response
+            ) async throws -> Response {
                 var context = context
                 context.string = self.output
                 return try await next(request, context)
@@ -283,7 +303,11 @@ struct RouterTests {
         }
         struct TestTransformMiddleware: RouterMiddleware {
             typealias Context = TestRouterContext2
-            func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+            func handle(
+                _ request: consuming Request,
+                context: Context,
+                next: (consuming Request, Context) async throws -> Response
+            ) async throws -> Response {
                 var context = context
                 context.string = request.headers[.middleware2] ?? ""
                 return try await next(request, context)
@@ -344,7 +368,11 @@ struct RouterTests {
         }
         struct TestTransformMiddleware: RouterMiddleware {
             typealias Context = TestRouterContext
-            func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+            func handle(
+                _ request: consuming Request,
+                context: Context,
+                next: (consuming Request, Context) async throws -> Response
+            ) async throws -> Response {
                 var context = context
                 context.string = request.headers[.middleware2]
                 return try await next(request, context)
@@ -375,14 +403,18 @@ struct RouterTests {
             typealias Context = TestRouterContext2
             let output: String
 
-            func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+            func handle(
+                _ request: consuming Request,
+                context: Context,
+                next: (consuming Request, Context) async throws -> Response
+            ) async throws -> Response {
                 var context = context
                 context.string += self.output
                 return try await next(request, context)
             }
         }
 
-        @Sendable func handle(_: Request, _ context: TestRouterContext2) async throws -> String {
+        @Sendable func handle(_: consuming Request, _ context: TestRouterContext2) async throws -> String {
             context.string
         }
         let router = RouterBuilder(context: TestRouterContext2.self) {
