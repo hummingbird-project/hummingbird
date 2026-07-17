@@ -17,7 +17,7 @@
 /// Generates a middleware stack from the elements inside the result builder. The input,
 /// context and output types passed through the middleware stack are fixed and cannot be changed.
 @resultBuilder
-public enum MiddlewareFixedTypeBuilder<Input, Output, Context> {
+public enum MiddlewareFixedTypeBuilder<Input, Output, Context> where Input: ~Copyable, Context: ~Copyable {
     public static func buildExpression<M0: MiddlewareProtocol>(_ m0: M0) -> M0 where M0.Input == Input, M0.Output == Output, M0.Context == Context {
         m0
     }

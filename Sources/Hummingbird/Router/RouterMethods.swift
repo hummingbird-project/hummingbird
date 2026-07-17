@@ -40,7 +40,7 @@ extension RouterMethods {
     @discardableResult public func on(
         _ path: RouterPath,
         method: HTTPRequest.Method,
-        use closure: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
+        use closure: @Sendable @escaping (consuming Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
         let responder = self.constructResponder(use: closure)
         self.on(path, method: method, responder: responder)
@@ -134,7 +134,7 @@ extension RouterMethods {
     /// GET path for async closure returning type conforming to ResponseGenerator
     @discardableResult public func get(
         _ path: RouterPath = "",
-        use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
+        use handler: @Sendable @escaping (consuming Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
         self.on(path, method: .get, use: handler)
     }
@@ -142,7 +142,7 @@ extension RouterMethods {
     /// PUT path for async closure returning type conforming to ResponseGenerator
     @discardableResult public func put(
         _ path: RouterPath = "",
-        use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
+        use handler: @Sendable @escaping (consuming Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
         self.on(path, method: .put, use: handler)
     }
@@ -150,7 +150,7 @@ extension RouterMethods {
     /// DELETE path for async closure returning type conforming to ResponseGenerator
     @discardableResult public func delete(
         _ path: RouterPath = "",
-        use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
+        use handler: @Sendable @escaping (consuming Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
         self.on(path, method: .delete, use: handler)
     }
@@ -158,7 +158,7 @@ extension RouterMethods {
     /// HEAD path for async closure returning type conforming to ResponseGenerator
     @discardableResult public func head(
         _ path: RouterPath = "",
-        use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
+        use handler: @Sendable @escaping (consuming Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
         self.on(path, method: .head, use: handler)
     }
@@ -166,7 +166,7 @@ extension RouterMethods {
     /// POST path for async closure returning type conforming to ResponseGenerator
     @discardableResult public func post(
         _ path: RouterPath = "",
-        use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
+        use handler: @Sendable @escaping (consuming Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
         self.on(path, method: .post, use: handler)
     }
@@ -174,17 +174,17 @@ extension RouterMethods {
     /// PATCH path for async closure returning type conforming to ResponseGenerator
     @discardableResult public func patch(
         _ path: RouterPath = "",
-        use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
+        use handler: @Sendable @escaping (consuming Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
         self.on(path, method: .patch, use: handler)
     }
 
     internal func constructResponder(
-        use closure: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
+        use closure: @Sendable @escaping (borrowing Request, Context) async throws -> some ResponseGenerator
     ) -> CallbackResponder<Context> {
         CallbackResponder { request, context in
             let output = try await closure(request, context)
-            return try output.response(from: request, context: context)
+            return try output.response(from: request.head, context: context)
         }
     }
 }

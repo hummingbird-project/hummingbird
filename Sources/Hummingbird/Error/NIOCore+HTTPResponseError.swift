@@ -14,7 +14,7 @@ extension NIOTooManyBytesError: HTTPResponseError {
     public var status: HTTPResponse.Status { .contentTooLarge }
     public var headers: HTTPFields { [:] }
 
-    public func response(from request: Request, context: some RequestContext) throws -> Response {
+    public func response(from request: HTTPRequest, context: some RequestContext) throws -> Response {
         Response(status: self.status)
     }
 }

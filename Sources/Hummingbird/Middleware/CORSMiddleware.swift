@@ -24,14 +24,14 @@ public struct CORSMiddleware<Context: RequestContext>: RouterMiddleware {
         case originBased
         case custom(String)
 
-        func value(for request: Request) -> String? {
+        func value(for request: HTTPRequest) -> String? {
             switch self {
             case .none:
                 return nil
             case .all:
                 return "*"
             case .originBased:
-                let origin = request.headers[.origin]
+                let origin = request.headerFields[.origin]
                 if origin == "null" { return nil }
                 return origin
             case .custom(let value):
@@ -76,18 +76,18 @@ public struct CORSMiddleware<Context: RequestContext>: RouterMiddleware {
         /// Return a custom value
         public static func custom(_ endpoint: String) -> Self { .init(value: .custom(endpoint)) }
 
-        func value(for request: Request) -> String? {
+        func value(for request: HTTPRequest) -> String? {
             switch self.value {
             case .none:
                 return nil
             case .all:
                 return "*"
             case .originBased:
-                let origin = request.headers[.origin]
+                let origin = request.headerFields[.origin]
                 if origin == "null" { return nil }
                 return origin
             case .oneOf(let origins):
-                let origin = request.headers[.origin]
+                let origin = request.headerFields[.origin]
                 if origin == "null" { return nil }
                 return origins.first { $0 == origin }
             case .custom(let value):
@@ -171,7 +171,11 @@ public struct CORSMiddleware<Context: RequestContext>: RouterMiddleware {
     }
 
     /// apply CORS middleware
-    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+    public func handle(
+        _ request: consuming Request,
+        context: Context,
+        next: (consuming Request, Context) async throws -> Response
+    ) async throws -> Response {
         // if no origin header then don't apply CORS
         guard request.headers.contains(.origin) else {
             return try await next(request, context)
@@ -183,7 +187,7 @@ public struct CORSMiddleware<Context: RequestContext>: RouterMiddleware {
                 .accessControlAllowHeaders: self.allowHeaders,
                 .accessControlAllowMethods: self.allowMethods,
             ]
-            if let allowOrigin = allowOrigin.value(for: request) {
+            if let allowOrigin = allowOrigin.value(for: request.head) {
                 headers[.accessControlAllowOrigin] = allowOrigin
             }
             if self.allowCredentials {
@@ -201,10 +205,11 @@ public struct CORSMiddleware<Context: RequestContext>: RouterMiddleware {
 
             return Response(status: .noContent, headers: headers, body: .init())
         } else {
+            let requestHead = request.head
             // if not OPTIONS then run rest of middleware chain and add origin value at the end
             do {
                 var response = try await next(request, context)
-                response.headers[.accessControlAllowOrigin] = self.allowOrigin.value(for: request)
+                response.headers[.accessControlAllowOrigin] = self.allowOrigin.value(for: requestHead)
                 if self.allowCredentials {
                     response.headers[.accessControlAllowCredentials] = "true"
                 }
@@ -215,7 +220,7 @@ public struct CORSMiddleware<Context: RequestContext>: RouterMiddleware {
             } catch {
                 // If next throws an error add headers to error
                 var additionalHeaders = HTTPFields()
-                additionalHeaders[.accessControlAllowOrigin] = self.allowOrigin.value(for: request)
+                additionalHeaders[.accessControlAllowOrigin] = self.allowOrigin.value(for: requestHead)
                 if self.allowCredentials {
                     additionalHeaders[.accessControlAllowCredentials] = "true"
                 }

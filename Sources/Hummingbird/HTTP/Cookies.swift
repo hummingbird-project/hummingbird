@@ -6,15 +6,17 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import HTTPTypes
+
 /// Structure holding an array of cookies
 ///
 /// Cookies can be accessed from request via `Request.cookies`.
 @available(hummingbird 2.0, *)
 public struct Cookies: Sendable {
-    /// Construct cookies accessor from `Request`
+    /// Construct cookies accessor from `HTTPRequest`
     /// - Parameter request: request to get cookies from
-    init(from request: Request) {
-        self = Cookies(from: request.headers[values: .cookie])
+    init(from request: HTTPRequest) {
+        self = Cookies(from: request.headerFields[values: .cookie])
     }
 
     /// Construct cookies accessor from cookie header strings

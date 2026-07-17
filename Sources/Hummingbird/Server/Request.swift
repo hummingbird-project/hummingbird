@@ -92,7 +92,7 @@ extension Request {
                 return Response(status: status, headers: headers)
             }
         }
-        var response = try await process().response(from: self, context: context)
+        var response = try await process().response(from: self.head, context: context)
         response.headers.append(contentsOf: headers)
         return response
     }
@@ -124,7 +124,7 @@ extension Request {
         if !self.headers[values: .ifMatch].contains(eTag) {
             return Response(status: .preconditionFailed, headers: headers)
         }
-        var response = try await process().response(from: self, context: context)
+        var response = try await process().response(from: self.head, context: context)
         response.headers.append(contentsOf: headers)
         return response
     }
@@ -161,7 +161,7 @@ extension Request {
                 }
             }
         }
-        var response = try await process().response(from: self, context: context)
+        var response = try await process().response(from: self.head, context: context)
         response.headers.append(contentsOf: headers)
         return response
     }
@@ -197,7 +197,7 @@ extension Request {
                 }
             }
         }
-        var response = try await process().response(from: self, context: context)
+        var response = try await process().response(from: self.head, context: context)
         response.headers.append(contentsOf: headers)
         return response
     }

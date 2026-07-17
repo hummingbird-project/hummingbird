@@ -105,6 +105,7 @@ extension ApplicationProtocol {
             logger: self.logger
         ) { (request, responseWriter: consuming ResponseWriter, channel) in
             let logger = self.logger.with(metadataKey: "hb.request.id", value: .stringConvertible(RequestID()))
+            var request2: Request? = request
             let response = try await withLogger(logger) { logger in
                 let context = Self.Responder.Context(
                     source: .init(
@@ -115,7 +116,7 @@ extension ApplicationProtocol {
                 // respond to request
                 var response: Response
                 do {
-                    response = try await responder.respond(to: request, context: context)
+                    response = try await responder.respond(to: request2.take()!, context: context)
                 } catch let error as HTTPParserError {
                     throw error
                 } catch {

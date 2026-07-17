@@ -36,7 +36,8 @@ public struct RouterResponder<Context: RequestContext>: HTTPResponder {
     ///   - context: Request context
     /// - Returns: Response
     @inlinable
-    public func respond(to request: Request, context: Context) async throws -> Response {
+    public func respond(to request: consuming Request, context: Context) async throws -> Response {
+        let requestHead = request.head
         do {
             let path: String
             if self.options.contains(.caseInsensitive) {
@@ -56,7 +57,7 @@ public struct RouterResponder<Context: RequestContext>: HTTPResponder {
             context.coreContext.endpointPath.value = responderChain.path.description
             return try await responder.respond(to: request, context: context)
         } catch let error as any HTTPResponseError {
-            return try error.response(from: request, context: context)
+            return try error.response(from: requestHead, context: context)
         }
     }
 }

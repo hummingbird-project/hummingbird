@@ -17,7 +17,7 @@ public protocol ResponseCodable: ResponseEncodable, Decodable {}
 
 /// Extend ResponseEncodable to conform to ResponseGenerator
 extension ResponseEncodable {
-    public func response(from request: Request, context: some RequestContext) throws -> Response {
+    public func response(from request: HTTPRequest, context: some RequestContext) throws -> Response {
         try context.responseEncoder.encode(self, from: request, context: context)
     }
 }
@@ -27,7 +27,7 @@ extension Array: ResponseGenerator where Element: Encodable {}
 
 /// Extend Array to conform to ResponseEncodable
 extension Array: ResponseEncodable where Element: Encodable {
-    public func response(from request: Request, context: some RequestContext) throws -> Response {
+    public func response(from request: HTTPRequest, context: some RequestContext) throws -> Response {
         try context.responseEncoder.encode(self, from: request, context: context)
     }
 }
@@ -37,7 +37,7 @@ extension Dictionary: ResponseGenerator where Key: Encodable, Value: Encodable {
 
 /// Extend Array to conform to ResponseEncodable
 extension Dictionary: ResponseEncodable where Key: Encodable, Value: Encodable {
-    public func response(from request: Request, context: some RequestContext) throws -> Response {
+    public func response(from request: HTTPRequest, context: some RequestContext) throws -> Response {
         try context.responseEncoder.encode(self, from: request, context: context)
     }
 }

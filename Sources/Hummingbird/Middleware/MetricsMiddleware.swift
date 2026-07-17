@@ -26,16 +26,21 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
         self.metricsCache = .init()
     }
 
-    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+    public func handle(
+        _ request: consuming Request,
+        context: Context,
+        next: (consuming Request, Context) async throws -> Response
+    ) async throws -> Response {
         let startTime = DispatchTime.now().uptimeNanoseconds
         let activeRequestMeter = self.metricsCache.getMethodMetrics(id: .init(method: request.method)).activeRequestMeter
         activeRequestMeter.increment()
+        let method = request.method
         do {
             var response = try await next(request, context)
             let responseStatus = response.status
             response.body = response.body.withPostWriteClosure {
                 let metrics = self.metricsCache.getEndpointMetrics(
-                    id: .init(endpoint: context.endpointPath ?? "Unknown", method: request.method, status: responseStatus)
+                    id: .init(endpoint: context.endpointPath ?? "Unknown", method: method, status: responseStatus)
                 )
                 metrics.counter.increment()
                 metrics.timer.recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
@@ -50,7 +55,7 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
                 errorType = .internalServerError
             }
             let metrics = self.metricsCache.getEndpointMetrics(
-                id: .init(endpoint: context.endpointPath ?? "NotFound", method: request.method, status: errorType)
+                id: .init(endpoint: context.endpointPath ?? "NotFound", method: method, status: errorType)
             )
             metrics.counter.increment()
             metrics.errorCounter.increment()

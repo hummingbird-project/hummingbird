@@ -67,7 +67,11 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
         self.attributes = attributes
     }
 
-    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+    public func handle(
+        _ request: consuming Request,
+        context: Context,
+        next: (consuming Request, Context) async throws -> Response
+    ) async throws -> Response {
         var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
         InstrumentationSystem.instrument.extract(request.headers, into: &serviceContext, using: HTTPHeadersExtractor())
 
@@ -116,9 +120,10 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
             attributes = self.recordHeaders(request.headers, toSpanAttributes: attributes, withPrefix: "http.request.header.")
         }
 
+        var request2: Request? = request
         do {
             return try await ServiceContext.$current.withValue(span.context) {
-                var response = try await next(request, context)
+                var response = try await next(request2.take()!, context)
                 if let endpointPath = context.endpointPath {
                     span.operationName = endpointPath
                 }

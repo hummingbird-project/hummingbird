@@ -23,7 +23,7 @@ struct EditedHTTPError: HTTPResponseError {
         self.additionalHeaders = additionalHeaders
     }
 
-    func response(from request: Request, context: some RequestContext) throws -> Response {
+    func response(from request: HTTPRequest, context: some RequestContext) throws -> Response {
         if let originalError = originalError as? (any HTTPResponseError) {
             var response = try originalError.response(from: request, context: context)
             response.headers.append(contentsOf: self.additionalHeaders)

@@ -20,7 +20,7 @@
 /// ```
 @_documentation(visibility: internal)
 public struct _Middleware2<M0: MiddlewareProtocol, M1: MiddlewareProtocol>: MiddlewareProtocol
-where M0.Input == M1.Input, M0.Context == M1.Context, M0.Output == M1.Output {
+where M0.Input == M1.Input, M0.Context == M1.Context, M0.Output == M1.Output, M0.Input: ~Copyable, M0.Context: ~Copyable {
     public typealias Input = M0.Input
     public typealias Output = M0.Output
     public typealias Context = M0.Context
@@ -35,7 +35,11 @@ where M0.Input == M1.Input, M0.Context == M1.Context, M0.Output == M1.Output {
     }
 
     @inlinable
-    public func handle(_ input: M0.Input, context: M0.Context, next: (M0.Input, M0.Context) async throws -> M0.Output) async throws -> M0.Output {
+    public func handle(
+        _ input: consuming M0.Input,
+        context: consuming M0.Context,
+        next: (consuming M0.Input, consuming M0.Context) async throws -> M0.Output
+    ) async throws -> M0.Output {
         try await self.m0.handle(input, context: context) { input, context in
             try await self.m1.handle(input, context: context, next: next)
         }

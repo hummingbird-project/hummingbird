@@ -22,7 +22,7 @@
 /// }
 /// ```
 @_documentation(visibility: internal)
-public struct _OptionalMiddleware<M0: MiddlewareProtocol>: MiddlewareProtocol {
+public struct _OptionalMiddleware<M0: MiddlewareProtocol>: MiddlewareProtocol where M0.Input: ~Copyable, M0.Context: ~Copyable {
     public typealias Input = M0.Input
     public typealias Output = M0.Output
     public typealias Context = M0.Context
@@ -30,7 +30,11 @@ public struct _OptionalMiddleware<M0: MiddlewareProtocol>: MiddlewareProtocol {
     public let middleware: M0?
 
     @inlinable
-    public func handle(_ input: M0.Input, context: M0.Context, next: (M0.Input, M0.Context) async throws -> M0.Output) async throws -> M0.Output {
+    public func handle(
+        _ input: consuming M0.Input,
+        context: consuming M0.Context,
+        next: (consuming M0.Input, consuming M0.Context) async throws -> M0.Output
+    ) async throws -> M0.Output {
         guard let middleware else {
             return try await next(input, context)
         }
