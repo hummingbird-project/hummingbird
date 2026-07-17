@@ -44,7 +44,11 @@ public struct ContentSecurityMiddleware<Context: RequestContext>: RouterMiddlewa
         self.headers = headers
     }
 
-    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+    public func handle(
+        _ request: consuming Request,
+        context: Context,
+        next: (consuming Request, Context) async throws -> Response
+    ) async throws -> Response {
         var response = try await next(request, context)
         response.headers.append(contentsOf: headers)
         return response

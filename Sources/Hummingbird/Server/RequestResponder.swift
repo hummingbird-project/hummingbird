@@ -15,18 +15,18 @@ import ServiceContextModule
 public protocol HTTPResponder<Context>: Sendable {
     associatedtype Context
     /// Return response to the request supplied
-    @Sendable func respond(to request: Request, context: Context) async throws -> Response
+    @Sendable func respond(to request: consuming Request, context: Context) async throws -> Response
 }
 
 /// Responder that calls supplied closure
 public struct CallbackResponder<Context>: HTTPResponder {
-    let callback: @Sendable (Request, Context) async throws -> Response
+    let callback: @Sendable (consuming Request, Context) async throws -> Response
 
-    public init(callback: @escaping @Sendable (Request, Context) async throws -> Response) {
+    public init(callback: @escaping @Sendable (consuming Request, Context) async throws -> Response) {
         self.callback = callback
     }
 
-    public func respond(to request: Request, context: Context) async throws -> Response {
+    public func respond(to request: consuming Request, context: Context) async throws -> Response {
         try await self.callback(request, context)
     }
 }

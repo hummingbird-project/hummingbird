@@ -15,7 +15,7 @@ public import Hummingbird
 public struct Handle<HandlerOutput: ResponseGenerator, Context: RouterRequestContext>: Sendable, MiddlewareProtocol {
     public typealias Input = Request
     public typealias Output = Response
-    public typealias Handler = @Sendable (Input, Context) async throws -> HandlerOutput
+    public typealias Handler = @Sendable (consuming Input, Context) async throws -> HandlerOutput
 
     let handler: Handler
 
@@ -31,8 +31,9 @@ public struct Handle<HandlerOutput: ResponseGenerator, Context: RouterRequestCon
     ///   - context: Request context
     ///   - next: Next middleware to run, if no route handler is found
     /// - Returns: Response
-    public func handle(_ input: Input, context: Context, next: (Input, Context) async throws -> Output) async throws -> Output {
-        try await self.handler(input, context).response(from: input, context: context)
+    public func handle(_ input: consuming Input, context: Context, next: (consuming Input, Context) async throws -> Output) async throws -> Output {
+        let requestHead = input.head
+        return try await self.handler(input, context).response(from: requestHead, context: context)
     }
 }
 
@@ -46,13 +47,13 @@ public enum RouteBuilder<Context: RouterRequestContext> {
     /// Provide generic requirements for MiddlewareProtocol
     public static func buildExpression<M0: MiddlewareProtocol>(
         _ m0: M0
-    ) -> M0 where M0.Input == Request, M0.Output == Response, M0.Context == Context {
+    ) -> M0 where M0.Input == Request, M0.Output == Response, M0.Context == Context, M0.Input: ~Copyable {
         m0
     }
 
     /// Build a ``Handle`` from a closure
     public static func buildExpression<HandlerOutput: ResponseGenerator>(
-        _ handler: @escaping @Sendable (Request, Context) async throws -> HandlerOutput
+        _ handler: @escaping @Sendable (consuming Request, Context) async throws -> HandlerOutput
     ) -> Handle<HandlerOutput, Context> {
         .init(handler)
     }
@@ -61,14 +62,14 @@ public enum RouteBuilder<Context: RouterRequestContext> {
         m0
     }
 
-    public static func buildPartialBlock<M0: MiddlewareProtocol>(first: M0) -> M0 {
+    public static func buildPartialBlock<M0: MiddlewareProtocol>(first: M0) -> M0 where M0.Input: ~Copyable {
         first
     }
 
     public static func buildPartialBlock<M0: MiddlewareProtocol, M1: MiddlewareProtocol>(
         accumulated m0: M0,
         next m1: M1
-    ) -> _Middleware2<M0, M1> where M0.Input == M1.Input, M0.Output == M1.Output, M0.Context == M1.Context {
+    ) -> _Middleware2<M0, M1> where M0.Input == M1.Input, M0.Output == M1.Output, M0.Context == M1.Context, M0.Input: ~Copyable {
         _Middleware2(m0, m1)
     }
 
@@ -80,7 +81,7 @@ public enum RouteBuilder<Context: RouterRequestContext> {
     /// Build the final result where input is multiple middleware with the final middleware being a ``Handle`` middleware.
     public static func buildFinalResult<M0: MiddlewareProtocol, RouteOutput: ResponseGenerator>(
         _ m0: _Middleware2<M0, Handle<RouteOutput, M0.Context>>
-    ) -> _Middleware2<M0, Handle<RouteOutput, M0.Context>> {
+    ) -> _Middleware2<M0, Handle<RouteOutput, M0.Context>> where M0.Input: ~Copyable {
         m0
     }
 }

@@ -11,7 +11,7 @@ public import NIOCore
 package import NIOHTTPTypes
 
 /// Holds all the values required to process a request
-public struct Request: Sendable {
+public struct Request: Sendable, ~Copyable {
     // MARK: Member variables
 
     /// URI path
@@ -84,7 +84,7 @@ public struct Request: Sendable {
     }
 }
 
-extension Request: CustomStringConvertible {
+extension Request {
     public var description: String {
         "uri: \(self.uri), method: \(self.method), headers: \(self.headers), body: \(self.body)"
     }

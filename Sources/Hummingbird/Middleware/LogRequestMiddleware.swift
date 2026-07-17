@@ -65,7 +65,11 @@ public struct LogRequestsMiddleware<Context: RequestContext>: RouterMiddleware {
             }
     }
 
-    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+    public func handle(
+        _ request: consuming Request,
+        context: Context,
+        next: (consuming Request, Context) async throws -> Response
+    ) async throws -> Response {
         switch self.includeHeaders.value {
         case .none:
             context.logger.log(

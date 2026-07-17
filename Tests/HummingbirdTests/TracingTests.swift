@@ -233,7 +233,11 @@ struct TracingTests {
 
     @Test func testMiddlewareSkippingEndpoint() async throws {
         struct DeadendMiddleware<Context: RequestContext>: RouterMiddleware {
-            func handle(_ input: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+            func handle(
+                _ input: consuming Request,
+                context: Context,
+                next: (consuming Request, Context) async throws -> Response
+            ) async throws -> Response {
                 .init(status: .ok)
             }
         }
@@ -487,7 +491,11 @@ struct TracingTests {
     /// Test span is ended even if the response body with the span end is not run
     @Test func testTracingMiddlewareDropResponse() async throws {
         struct ErrorMiddleware<Context: RequestContext>: RouterMiddleware {
-            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+            public func handle(
+                _ request: consuming Request,
+                context: Context,
+                next: (consuming Request, Context) async throws -> Response
+            ) async throws -> Response {
                 _ = try await next(request, context)
                 throw HTTPError(.badRequest)
             }
@@ -615,15 +623,16 @@ struct TracingTests {
     @Test func testServiceContextPropagationInMiddleware() async throws {
         struct SpanMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(
-                _ request: Request,
+                _ request: consuming Request,
                 context: Context,
-                next: (Request, Context) async throws -> Response
+                next: (consuming Request, Context) async throws -> Response
             ) async throws -> Response {
                 var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
                 serviceContext.testID = "testMiddleware"
 
+                var request2: Request? = request
                 return try await InstrumentationSystem.tracer.withSpan("TestSpan", context: serviceContext, ofKind: .server) { _ in
-                    try await next(request, context)
+                    try await next(request2.take()!, context)
                 }
             }
         }

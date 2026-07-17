@@ -101,7 +101,11 @@ struct ControllerTests {
 
     @Test func testRouterControllerWithMiddleware() async throws {
         struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
-            func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+            func handle(
+                _ request: consuming Request,
+                context: Context,
+                next: (consuming Request, Context) async throws -> Response
+            ) async throws -> Response {
                 var response = try await next(request, context)
                 response.headers[.middleware] = "TestMiddleware"
                 return response

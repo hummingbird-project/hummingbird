@@ -165,8 +165,13 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
     }
 
     /// Handle request
-    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+    public func handle(
+        _ request: consuming Request,
+        context: Context,
+        next: (consuming Request, Context) async throws -> Response
+    ) async throws -> Response {
         let fallbackResult: Result<Response, any Error>
+        let requestHead = request.head
         do {
             let response = try await next(request, context)
             if self.serveOnNotFoundResponse, response.status == .notFound {
@@ -182,16 +187,16 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
             fallbackResult = .failure(error)
         }
 
-        return try await self.serveFile(for: request, context: context, fallbackResult: fallbackResult)
+        return try await self.serveFile(for: requestHead, context: context, fallbackResult: fallbackResult)
     }
 
-    private func serveFile(for request: Request, context: Context, fallbackResult: Result<Response, any Error>) async throws -> Response {
+    private func serveFile(for request: HTTPRequest, context: Context, fallbackResult: Result<Response, any Error>) async throws -> Response {
         guard request.method == .get || request.method == .head else {
             return try fallbackResult.get()
         }
 
         // Remove percent encoding from URI path
-        guard var path = request.uri.path.removingURLPercentEncoding() else {
+        guard var path = request.path?.removingURLPercentEncoding() else {
             throw HTTPError(.badRequest, message: "Invalid percent encoding in URL")
         }
 
@@ -299,7 +304,7 @@ extension FileMiddleware {
     }
 
     /// Parse request headers and generate response headers
-    private func constructResponse(path: String, attributes: Provider.FileAttributes, request: Request) async throws -> FileResult {
+    private func constructResponse(path: String, attributes: Provider.FileAttributes, request: HTTPRequest) async throws -> FileResult {
         let eTag = self.createETag([
             String(describing: attributes.modificationDate.timeIntervalSince1970),
             String(describing: attributes.size),
@@ -332,7 +337,7 @@ extension FileMiddleware {
 
         // verify if-none-match. No need to verify if-match as this is used for state changing
         // operations. Also the eTag we generate is considered weak.
-        let ifNoneMatch = request.headers[values: .ifNoneMatch]
+        let ifNoneMatch = request.headerFields[values: .ifNoneMatch]
         if ifNoneMatch.count > 0 {
             for match in ifNoneMatch {
                 if eTag == match {
@@ -341,7 +346,7 @@ extension FileMiddleware {
             }
         }
         // verify if-modified-since
-        else if let ifModifiedSince = request.headers[.ifModifiedSince] {
+        else if let ifModifiedSince = request.headerFields[.ifModifiedSince] {
             if let ifModifiedSinceDate = Date(httpHeader: ifModifiedSince) {
                 // round modification date of file down to seconds for comparison
                 let modificationDateTimeInterval = attributes.modificationDate.timeIntervalSince1970.rounded(.down)
@@ -352,12 +357,12 @@ extension FileMiddleware {
             }
         }
 
-        if let rangeHeader = request.headers[.range] {
+        if let rangeHeader = request.headerFields[.range] {
             guard let range = getRangeFromHeaderValue(rangeHeader) else {
                 throw HTTPError(.rangeNotSatisfiable, message: "Unable to read range requested from file")
             }
             // range request conditional on etag or modified date being equal to value in if-range
-            if let ifRange = request.headers[.ifRange], ifRange != headers[.eTag], ifRange != headers[.lastModified] {
+            if let ifRange = request.headerFields[.ifRange], ifRange != headers[.eTag], ifRange != headers[.lastModified] {
                 // do nothing and drop down to returning full file
             } else {
                 let lowerBound = max(range.lowerBound, 0)

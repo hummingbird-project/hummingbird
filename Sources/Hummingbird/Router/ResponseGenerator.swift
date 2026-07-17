@@ -15,19 +15,19 @@ public import HummingbirdCore
 @preconcurrency
 public protocol ResponseGenerator: _HB_SendableMetatype {
     /// Generate response based on the request this object came from
-    func response(from request: Request, context: some RequestContext) throws -> Response
+    func response(from request: HTTPRequest, context: some RequestContext) throws -> Response
 }
 
 /// Extend Response to conform to ResponseGenerator
 extension Response: ResponseGenerator {
     /// Return self as the response
-    public func response(from request: Request, context: some RequestContext) -> Response { self }
+    public func response(from request: HTTPRequest, context: some RequestContext) -> Response { self }
 }
 
 /// Extend String to conform to ResponseGenerator
 extension String: ResponseGenerator {
     /// Generate response holding string
-    public func response(from request: Request, context: some RequestContext) -> Response {
+    public func response(from request: HTTPRequest, context: some RequestContext) -> Response {
         let buffer = ByteBuffer(string: self)
         return Response(
             status: .ok,
@@ -43,7 +43,7 @@ extension String: ResponseGenerator {
 /// Extend String to conform to ResponseGenerator
 extension Substring: ResponseGenerator {
     /// Generate response holding string
-    public func response(from request: Request, context: some RequestContext) -> Response {
+    public func response(from request: HTTPRequest, context: some RequestContext) -> Response {
         let buffer = ByteBuffer(substring: self)
         return Response(
             status: .ok,
@@ -59,7 +59,7 @@ extension Substring: ResponseGenerator {
 /// Extend ByteBuffer to conform to ResponseGenerator
 extension ByteBuffer: ResponseGenerator {
     /// Generate response holding bytebuffer
-    public func response(from request: Request, context: some RequestContext) -> Response {
+    public func response(from request: HTTPRequest, context: some RequestContext) -> Response {
         Response(
             status: .ok,
             headers: .defaultHummingbirdHeaders(
@@ -74,14 +74,14 @@ extension ByteBuffer: ResponseGenerator {
 /// Extend HTTPResponse.Status to conform to ResponseGenerator
 extension HTTPResponse.Status: ResponseGenerator {
     /// Generate response with this response status code
-    public func response(from request: Request, context: some RequestContext) -> Response {
+    public func response(from request: HTTPRequest, context: some RequestContext) -> Response {
         Response(status: self, headers: [:], body: .init())
     }
 }
 
 /// Extend Optional to conform to ResponseGenerator
 extension Optional: ResponseGenerator where Wrapped: ResponseGenerator {
-    public func response(from request: Request, context: some RequestContext) throws -> Response {
+    public func response(from request: HTTPRequest, context: some RequestContext) throws -> Response {
         switch self {
         case .some(let wrapped):
             return try wrapped.response(from: request, context: context)
@@ -106,7 +106,7 @@ public struct EditedResponse<Generator: ResponseGenerator>: ResponseGenerator {
         self.responseGenerator = response
     }
 
-    public func response(from request: Request, context: some RequestContext) throws -> Response {
+    public func response(from request: HTTPRequest, context: some RequestContext) throws -> Response {
         var response = try responseGenerator.response(from: request, context: context)
         if let status = self.status {
             response.status = status

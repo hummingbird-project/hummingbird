@@ -20,7 +20,7 @@ struct TransformingRouterGroup<Context: RequestContext, Parent: RouterMethods<Co
         typealias Context = InputContext
         let responder: any HTTPResponder<TransformContext>
 
-        func respond(to request: Request, context: InputContext) async throws -> Response {
+        func respond(to request: consuming Request, context: InputContext) async throws -> Response {
             let newContext = TransformContext(source: context)
             return try await self.responder.respond(to: request, context: newContext)
         }
@@ -63,7 +63,7 @@ struct ThrowingTransformingRouterGroup<Context: ChildRequestContext, Parent: Rou
         typealias Context = InputContext
         let responder: any HTTPResponder<TransformContext>
 
-        func respond(to request: Request, context: InputContext) async throws -> Response {
+        func respond(to request: consuming Request, context: InputContext) async throws -> Response {
             let newContext = try TransformContext(context: context)
             return try await self.responder.respond(to: request, context: newContext)
         }

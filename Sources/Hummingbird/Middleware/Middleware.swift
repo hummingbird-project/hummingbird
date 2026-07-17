@@ -9,12 +9,16 @@
 import NIOCore
 
 /// Middleware protocol with generic input, context and output types
-public protocol MiddlewareProtocol<Input, Output, Context>: Sendable {
+public protocol MiddlewareProtocol<Input, Output, Context>: Sendable where Input: ~Copyable, Context: ~Copyable {
     associatedtype Input
     associatedtype Output
     associatedtype Context
 
-    func handle(_ input: Input, context: Context, next: (Input, Context) async throws -> Output) async throws -> Output
+    func handle(
+        _ input: consuming Input,
+        context: consuming Context,
+        next: (consuming Input, consuming Context) async throws -> Output
+    ) async throws -> Output
 }
 
 /// Applied to `Request` before it is dealt with by the router. Middleware passes the processed request onto the next responder
@@ -48,9 +52,9 @@ public protocol RouterMiddleware<Context>: MiddlewareProtocol where Input == Req
 
 struct MiddlewareResponder<Context>: HTTPResponder {
     let middleware: any MiddlewareProtocol<Request, Response, Context>
-    let next: @Sendable (Request, Context) async throws -> Response
+    let next: @Sendable (consuming Request, Context) async throws -> Response
 
-    func respond(to request: Request, context: Context) async throws -> Response {
+    func respond(to request: consuming Request, context: Context) async throws -> Response {
         try await self.middleware.handle(request, context: context) { request, context in
             try await self.next(request, context)
         }

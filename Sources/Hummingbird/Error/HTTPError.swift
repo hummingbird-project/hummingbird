@@ -57,7 +57,7 @@ public struct HTTPError: Error, HTTPResponseError, Sendable {
         let error: ErrorFormat
     }
 
-    public func response(from request: Request, context: some RequestContext) throws -> Response {
+    public func response(from request: HTTPRequest, context: some RequestContext) throws -> Response {
         if let body {
             let codable = CodableFormat(error: CodableFormat.ErrorFormat(message: body))
             var response = try context.responseEncoder.encode(codable, from: request, context: context)
