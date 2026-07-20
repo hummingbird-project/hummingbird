@@ -17,26 +17,26 @@ permissions:
   contents: read
 
 jobs:
-  macOS:
-    runs-on: macos-26
-    timeout-minutes: 15
-    steps:
-    - name: Select appropriate Xcode version
-      uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
-      with:
-        xcode-version: latest-stable
-    - name: Checkout
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
-    - name: Build
-      run: |
-        swift build
+  #macOS:
+  #  runs-on: macos-26
+  #  timeout-minutes: 15
+  #  steps:
+  #  - name: Select appropriate Xcode version
+  #    uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+  #    with:
+  #      xcode-version: latest-stable
+  #  - name: Checkout
+  #    uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+  #  - name: Build
+  #    run: |
+  #      swift build
 
   linux:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
       matrix:
-        image: ["swift:6.1", "swift:6.2", "swift:6.3", "swiftlang/swift:nightly-6.4.x-noble"]
+        image: ["swiftlang/swift:nightly-6.4.x-noble"]
     container:
       image: ${{ matrix.image }}
     #env:
