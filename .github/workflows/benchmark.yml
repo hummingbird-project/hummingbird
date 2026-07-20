@@ -29,7 +29,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        image: ["swift:latest"]
+        image: ["swiftlang/swift:nightly-6.4.x-noble"]
 
     container:
       image: ${{ matrix.image }}
