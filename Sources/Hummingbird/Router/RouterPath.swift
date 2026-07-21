@@ -150,6 +150,24 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, ExpressibleByStr
                 return false
             }
         }
+
+        /// Return lowercased version of RouterPath component
+        public func lowercased() -> Self {
+            switch self.value {
+            case .path(let path):
+                .path(path.lowercased()[...])
+            case .prefixCapture(let suffix, let parameter):
+                .prefixCapture(suffix: suffix.lowercased()[...], parameter: parameter)
+            case .suffixCapture(let prefix, let parameter):
+                .suffixCapture(prefix: prefix.lowercased()[...], parameter: parameter)
+            case .prefixWildcard(let suffix):
+                .prefixWildcard(suffix)
+            case .suffixWildcard(let prefix):
+                .suffixWildcard(prefix)
+            default:
+                self
+            }
+        }
     }
 
     /// Array of RouterPath elements
@@ -171,6 +189,11 @@ public struct RouterPath: Sendable, ExpressibleByStringLiteral, ExpressibleByStr
     /// Initialize RouterPath from String literal
     public init(stringLiteral value: String) {
         self.init(value)
+    }
+
+    /// Return lowercased version of RouterPath
+    public func lowercased() -> Self {
+        .init(components: self.map { $0.lowercased() })
     }
 
     /// Combine two RouterPaths

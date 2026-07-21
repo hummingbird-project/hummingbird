@@ -159,7 +159,7 @@ extension RouterTrie {
         @usableFromInline
         func equals(_ lhs: Substring, _ rhs: Substring) -> Bool {
             if self.caseInsensitive {
-                return lhs._caseInsensitveCompare(rhs)
+                return lhs._routerCaseInsensitiveCompare(rhs)
             } else {
                 return lhs == rhs
             }
@@ -168,7 +168,7 @@ extension RouterTrie {
         @usableFromInline
         func hasPrefix(_ lhs: Substring, _ rhs: Substring) -> Bool {
             if self.caseInsensitive {
-                return lhs.prefix(rhs.count)._caseInsensitveCompare(rhs)
+                return lhs.prefix(rhs.count)._routerCaseInsensitiveCompare(rhs)
             } else {
                 return lhs.hasPrefix(rhs)
             }
@@ -177,7 +177,7 @@ extension RouterTrie {
         @usableFromInline
         func hasSuffix(_ lhs: Substring, _ rhs: Substring) -> Bool {
             if self.caseInsensitive {
-                return lhs.suffix(rhs.count)._caseInsensitveCompare(rhs)
+                return lhs.suffix(rhs.count)._routerCaseInsensitiveCompare(rhs)
             } else {
                 return lhs.hasSuffix(rhs)
             }
@@ -241,7 +241,7 @@ extension RouterTrie {
 
 extension StringProtocol {
     @inlinable
-    package func _caseInsensitveCompare<OtherString: StringProtocol>(_ other: OtherString) -> Bool {
+    package func _routerCaseInsensitiveCompare<OtherString: StringProtocol>(_ other: OtherString) -> Bool {
         guard self.count == other.count else { return false }
 
         var iterator = self.makeIterator()
