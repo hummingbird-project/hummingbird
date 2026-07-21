@@ -240,7 +240,8 @@ extension RouterTrie {
 }
 
 extension StringProtocol {
-    internal func _caseInsensitveCompare(_ other: Self) -> Bool {
+    @inlinable
+    package func _caseInsensitveCompare<OtherString: StringProtocol>(_ other: OtherString) -> Bool {
         guard self.count == other.count else { return false }
 
         var iterator = self.makeIterator()

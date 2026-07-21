@@ -43,7 +43,7 @@ extension RouterPath {
             switch component.value {
             case .path(let lhs):
                 if context.routerContext.caseInsensitive {
-                    if lhs.compare(pathIterator.next()!, options: .caseInsensitive) != .orderedSame {
+                    if !lhs._caseInsensitveCompare(pathIterator.next()!) {
                         return nil
                     }
                 } else {
@@ -122,12 +122,12 @@ extension StringProtocol {
     func hasCaseInsensitivePrefix<Prefix>(_ prefix: Prefix) -> Bool where Prefix: StringProtocol {
         guard prefix.count <= self.count else { return false }
         let prefixEndIndex = self.index(self.startIndex, offsetBy: prefix.count)
-        return prefix.compare(self[..<prefixEndIndex], options: .caseInsensitive) == .orderedSame
+        return prefix._caseInsensitveCompare(self[..<prefixEndIndex])
     }
 
     func hasCaseInsensitiveSuffix<Suffix>(_ suffix: Suffix) -> Bool where Suffix: StringProtocol {
         guard suffix.count <= self.count else { return false }
         let suffixStartIndex = self.index(self.endIndex, offsetBy: -suffix.count)
-        return suffix.compare(self[suffixStartIndex...], options: .caseInsensitive) == .orderedSame
+        return suffix._caseInsensitveCompare(self[suffixStartIndex...])
     }
 }
