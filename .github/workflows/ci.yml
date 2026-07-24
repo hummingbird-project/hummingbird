@@ -26,7 +26,7 @@ jobs:
       with:
         xcode-version: latest-stable
     - name: Checkout
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
     - name: Build
       run: |
         swift build
@@ -39,13 +39,13 @@ jobs:
         image: ["swift:6.1", "swift:6.2", "swift:6.3", "swiftlang/swift:nightly-6.4.x-noble"]
     container:
       image: ${{ matrix.image }}
-    #env:
-    #  ENABLE_HB_BENCHMARKS: true
+    env:
+      ENABLE_HB_BENCHMARKS: true
     steps:
     - name: Install curl
       run: apt-get update -yq && apt-get install -y curl
     - name: Checkout
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
     - name: Install libjemalloc-dev
       run: |
         apt-get -q update
