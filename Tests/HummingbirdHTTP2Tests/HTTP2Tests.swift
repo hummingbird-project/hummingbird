@@ -48,6 +48,7 @@ struct HummingBirdHTTP2Tests {
                 let request = HTTPClientRequest(url: "https://localhost:\(port)/")
                 let response = try await httpClient.execute(request, deadline: .now() + .seconds(30))
                 #expect(response.status == .ok)
+                #expect(response.version == .http2)
             }
         }
     }
@@ -86,6 +87,7 @@ struct HummingBirdHTTP2Tests {
                 let request = HTTPClientRequest(url: "https://localhost:\(port)/")
                 let response = try await httpClient.execute(request, deadline: .now() + .seconds(30))
                 #expect(response.status == .ok)
+                #expect(response.version == .http2)
             }
             // set certicate verification to fail
             verifiedResult.withLockedValue { $0 = .failed }
@@ -132,6 +134,7 @@ struct HummingBirdHTTP2Tests {
                     let response = try await httpClient.execute(request, deadline: .now() + .seconds(30))
                     _ = try await response.body.collect(upTo: .max)
                     #expect(response.status == .ok)
+                    #expect(response.version == .http2)
                 }
             }
         }
@@ -164,6 +167,7 @@ struct HummingBirdHTTP2Tests {
                             let response = try await httpClient.execute(request, deadline: .now() + .seconds(30))
                             _ = try await response.body.collect(upTo: .max)
                             #expect(response.status == .ok)
+                            #expect(response.version == .http2)
                         }
                     }
                     try await group.waitForAll()
@@ -197,6 +201,7 @@ struct HummingBirdHTTP2Tests {
                     let request = HTTPClientRequest(url: "https://localhost:\(port)/")
                     let response = try await httpClient.execute(request, deadline: .now() + .seconds(30))
                     #expect(response.status == .ok)
+                    #expect(response.version == .http2)
                 }
             }
         )

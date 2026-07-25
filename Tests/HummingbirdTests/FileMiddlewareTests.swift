@@ -392,6 +392,80 @@ struct FileMiddlewareTests {
         }
     }
 
+    @Test func testOnReturnNotFoundResponse() async throws {
+        let router = Router()
+        router.middlewares.add(FileMiddleware(".").withServeOnNotFoundResponse())
+        router.get("testOnReturnNotFoundResponse.html") { _, _ in
+            Response(status: .notFound)
+        }
+        let app = Application(responder: router.buildResponder())
+        let text = "Test file contents"
+
+        try await FileIOTests.withFile("testOnReturnNotFoundResponse.html", contents: text.utf8) {
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/testOnReturnNotFoundResponse.html", method: .get) { response in
+                    #expect(response.status == .ok)
+                    #expect(String(buffer: response.body) == text)
+                }
+            }
+        }
+    }
+
+    @Test func testOnReturnNotFoundResponseFallsBackWhenFileMissing() async throws {
+        let router = Router()
+        router.middlewares.add(FileMiddleware(".").withServeOnNotFoundResponse())
+        router.get("testOnReturnNotFoundResponseFallsBack.html") { _, _ in
+            Response(status: .notFound, body: .init(byteBuffer: .init(string: "custom not found")))
+        }
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/testOnReturnNotFoundResponseFallsBack.html", method: .get) { response in
+                #expect(response.status == .notFound)
+                #expect(String(buffer: response.body) == "custom not found")
+            }
+        }
+    }
+
+    @Test func testOnReturnNotFoundResponseDisabledByDefault() async throws {
+        let router = Router()
+        router.middlewares.add(FileMiddleware("."))
+        router.get("testOnReturnNotFoundResponseDisabledByDefault.html") { _, _ in
+            Response(status: .notFound)
+        }
+        let app = Application(responder: router.buildResponder())
+        let text = "Test file contents"
+
+        try await FileIOTests.withFile("testOnReturnNotFoundResponseDisabledByDefault.html", contents: text.utf8) {
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/testOnReturnNotFoundResponseDisabledByDefault.html", method: .get) { response in
+                    #expect(response.status == .notFound)
+                    #expect(response.body.readableBytes == 0)
+                }
+            }
+        }
+    }
+
+    @Test func testOnReturnNotFoundResponseHead() async throws {
+        let router = Router()
+        router.middlewares.add(FileMiddleware(".").withServeOnNotFoundResponse())
+        router.get("testOnReturnNotFoundResponseHead.txt") { _, _ in
+            Response(status: .notFound)
+        }
+        let app = Application(responder: router.buildResponder())
+        let text = "Test file contents"
+
+        try await FileIOTests.withFile("testOnReturnNotFoundResponseHead.txt", contents: text.utf8) {
+            try await app.test(.router) { client in
+                try await client.execute(uri: "/testOnReturnNotFoundResponseHead.txt", method: .head) { response in
+                    #expect(response.status == .ok)
+                    #expect(response.body.readableBytes == 0)
+                    #expect(response.headers[.contentLength] == text.utf8.count.description)
+                }
+            }
+        }
+    }
+
     @Test func testFolder() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware(".", searchForIndexHtml: false))

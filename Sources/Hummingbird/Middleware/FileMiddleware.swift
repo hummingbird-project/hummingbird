@@ -45,6 +45,7 @@ public struct FileMiddleware<Context: RequestContext, Provider: FileProvider>: R
 where Provider.FileAttributes: FileMiddlewareFileAttributes {
     let cacheControl: CacheControl
     let searchForIndexHtml: Bool
+    let serveOnNotFoundResponse: Bool
     let urlBasePath: String?
     let fileProvider: Provider
     let mediaTypeFileExtensionMap: [MediaType.FileExtension: MediaType]
@@ -74,6 +75,7 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
             urlBasePath: urlBasePath,
             cacheControl: cacheControl,
             searchForIndexHtml: searchForIndexHtml,
+            serveOnNotFoundResponse: false,
             mediaTypeFileExtensionMap: [:]
         )
     }
@@ -95,6 +97,7 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
             urlBasePath: urlBasePath,
             cacheControl: cacheControl,
             searchForIndexHtml: searchForIndexHtml,
+            serveOnNotFoundResponse: false,
             mediaTypeFileExtensionMap: [:]
         )
     }
@@ -104,10 +107,12 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
         urlBasePath: String? = nil,
         cacheControl: CacheControl = .init([]),
         searchForIndexHtml: Bool = false,
+        serveOnNotFoundResponse: Bool = false,
         mediaTypeFileExtensionMap: [MediaType.FileExtension: MediaType]
     ) {
         self.cacheControl = cacheControl
         self.searchForIndexHtml = searchForIndexHtml
+        self.serveOnNotFoundResponse = serveOnNotFoundResponse
         self.urlBasePath = urlBasePath.map { String($0.dropSuffix("/")) }
         self.fileProvider = fileProvider
         self.mediaTypeFileExtensionMap = mediaTypeFileExtensionMap
@@ -140,84 +145,116 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
             urlBasePath: urlBasePath,
             cacheControl: cacheControl,
             searchForIndexHtml: searchForIndexHtml,
+            serveOnNotFoundResponse: serveOnNotFoundResponse,
             mediaTypeFileExtensionMap: extensions
+        )
+    }
+
+    /// Enable serving static files when a route handler returns a 404 response instead of throwing.
+    ///
+    /// - Parameter enabled: When `true`, attempt to serve a file for returned 404 responses.
+    public func withServeOnNotFoundResponse(_ enabled: Bool = true) -> FileMiddleware {
+        FileMiddleware(
+            fileProvider: fileProvider,
+            urlBasePath: urlBasePath,
+            cacheControl: cacheControl,
+            searchForIndexHtml: searchForIndexHtml,
+            serveOnNotFoundResponse: enabled,
+            mediaTypeFileExtensionMap: mediaTypeFileExtensionMap
         )
     }
 
     /// Handle request
     public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+        let fallbackResult: Result<Response, any Error>
         do {
-            return try await next(request, context)
+            let response = try await next(request, context)
+            if self.serveOnNotFoundResponse, response.status == .notFound {
+                fallbackResult = .success(response)
+            } else {
+                return response
+            }
         } catch {
             // Guard that error is HTTP error notFound
             guard let httpError = error as? any HTTPResponseError, httpError.status == .notFound else {
                 throw error
             }
+            fallbackResult = .failure(error)
+        }
 
-            guard request.method == .get || request.method == .head else {
-                throw error
+        return try await self.serveFile(for: request, context: context, fallbackResult: fallbackResult)
+    }
+
+    private func serveFile(for request: Request, context: Context, fallbackResult: Result<Response, any Error>) async throws -> Response {
+        guard request.method == .get || request.method == .head else {
+            return try fallbackResult.get()
+        }
+
+        // Remove percent encoding from URI path
+        guard var path = request.uri.path.removingURLPercentEncoding() else {
+            throw HTTPError(.badRequest, message: "Invalid percent encoding in URL")
+        }
+
+        // file paths that contain ".." are considered illegal
+        guard !path.contains("..") else {
+            throw HTTPError(.badRequest)
+        }
+
+        // Do we have a prefix to remove from the path
+        if let urlBasePath {
+            // If path doesn't have prefix then return fallbackResult
+            guard path.hasPrefix(urlBasePath) else {
+                return try fallbackResult.get()
             }
-
-            // Remove percent encoding from URI path
-            guard var path = request.uri.path.removingURLPercentEncoding() else {
-                throw HTTPError(.badRequest, message: "Invalid percent encoding in URL")
+            let subPath = path.dropFirst(urlBasePath.count)
+            if subPath.first == nil {
+                path = "/"
+            } else if subPath.first == "/" {
+                path = String(subPath)
+            } else {
+                // If first character isn't a "/" then the base path isn't a complete folder name
+                // in this situation, so isn't inside the specified folder
+                return try fallbackResult.get()
             }
+        }
+        // get file attributes and actual file path and ID (It might be an index.html)
+        let action: GetFileAttributesAction
+        do {
+            action = try await self.getFileAttributes(path)
+        } catch let httpError as any HTTPResponseError where httpError.status == .notFound {
+            return try fallbackResult.get()
+        }
 
-            // file paths that contain ".." are considered illegal
-            guard !path.contains("..") else {
-                throw HTTPError(.badRequest)
-            }
+        switch action {
+        case .returnFile(let actualPath, let actualID, let attributes):
+            // we have a file so indicate it came from the FileMiddleware
+            context.coreContext.endpointPath.value = "FileMiddleware"
+            // get how we should respond
+            let fileResult = try await self.constructResponse(path: actualPath, attributes: attributes, request: request)
 
-            // Do we have a prefix to remove from the path
-            if let urlBasePath {
-                // If path doesnt have prefix then throw error
-                guard path.hasPrefix(urlBasePath) else {
-                    throw error
-                }
-                let subPath = path.dropFirst(urlBasePath.count)
-                if subPath.first == nil {
-                    path = "/"
-                } else if subPath.first == "/" {
-                    path = String(subPath)
-                } else {
-                    // If first character isn't a "/" then the base path isn't a complete folder name
-                    // in this situation, so isn't inside the specified folder
-                    throw error
-                }
-            }
-            // get file attributes and actual file path and ID (It might be an index.html)
-            let action = try await self.getFileAttributes(path)
-            switch action {
-            case .returnFile(let actualPath, let actualID, let attributes):
-                // we have a file so indicate it came from the FileMiddleware
-                context.coreContext.endpointPath.value = "FileMiddleware"
-                // get how we should respond
-                let fileResult = try await self.constructResponse(path: actualPath, attributes: attributes, request: request)
-
-                switch fileResult {
-                case .notModified(let headers):
-                    return Response(status: .notModified, headers: headers)
-                case .loadFile(let headers, let range):
-                    switch request.method {
-                    case .get:
-                        if let range {
-                            let body = try await self.fileProvider.loadFile(id: actualID, range: range, context: context)
-                            return Response(status: .partialContent, headers: headers, body: body)
-                        }
-
-                        let body = try await self.fileProvider.loadFile(id: actualID, context: context)
-                        return Response(status: .ok, headers: headers, body: body)
-
-                    case .head:
-                        return Response(status: .ok, headers: headers, body: .init())
-
-                    default:
-                        throw error
+            switch fileResult {
+            case .notModified(let headers):
+                return Response(status: .notModified, headers: headers)
+            case .loadFile(let headers, let range):
+                switch request.method {
+                case .get:
+                    if let range {
+                        let body = try await self.fileProvider.loadFile(id: actualID, range: range, context: context)
+                        return Response(status: .partialContent, headers: headers, body: body)
                     }
+
+                    let body = try await self.fileProvider.loadFile(id: actualID, context: context)
+                    return Response(status: .ok, headers: headers, body: body)
+
+                case .head:
+                    return Response(status: .ok, headers: headers, body: .init())
+
+                default:
+                    return try fallbackResult.get()
                 }
-            case .redirect(let path):
-                return .redirect(to: path, type: .permanent)
             }
+        case .redirect(let path):
+            return .redirect(to: path, type: .permanent)
         }
     }
 }
