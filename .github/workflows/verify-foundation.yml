@@ -1,0 +1,22 @@
+name: Verify not using Foundation
+
+on:
+  pull_request:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-foundation
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: swift:latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+    - name: run script
+      run: ./scripts/verify-foundation.sh
