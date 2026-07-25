@@ -14,9 +14,6 @@ let swiftSettings: [SwiftSetting] = [
 
     // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0409-access-level-on-imports.md
     .enableUpcomingFeature("InternalImportsByDefault"),
-
-    // Used to fake the trait on Swift 6.1
-    .define("FullFoundation"),
 ]
 
 let package = Package(
@@ -30,6 +27,10 @@ let package = Package(
         .library(name: "HummingbirdRouter", targets: ["HummingbirdRouter"]),
         .library(name: "HummingbirdTesting", targets: ["HummingbirdTesting"]),
         .executable(name: "PerformanceTest", targets: ["PerformanceTest"]),
+    ],
+    traits: [
+        .trait(name: "FullFoundation", description: "Enable functionality that requires full Foundation."),
+        .default(enabledTraits: ["FullFoundation"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "1.0.2"),
