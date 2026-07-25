@@ -37,22 +37,27 @@ Supply-chain and CI/CD incidents are always treated as **Critical** regardless o
 3. Ask the reporter to verify patch.
 4. Alert important and trusted adopters.
 5. Prepare advisory
-    - Title: {Affected package} {version vulnerability is fixed in} {description}
-    - Summary: Summary of vulnerability, What versions are impacted, severity
-    - Details: More detailed description of vulnerability
-    - Timeline
-    - Acknowledge reporter
-6. We aim to resolve any issue within 30 days, but this may not always be possible.
+    - Title: {description}
+    - Summary: Summary of vulnerability, severity.
+    - Details: More detailed description of vulnerability.
+    - Impact: How does this issue impact users of Hummingbird.
+    - Mitigations: Are there ways to mitigate against this issue without updating. 
+    - Timeline: When reported, patch written, CVE request, received and published.
+    - Set affected versions and version fix will be in.
+    - Select CWE.
+    - Add credits where due.
+6. Request CVE       
+7. We aim to resolve any issue within 30 days, but this may not always be possible.
 
 ### Remediation and Disclosure
 
 - Merge pull request and release versions of affected library with fix included. Security fixes are only applied to the **latest** stable releases of Hummingbird. End users will be required to upgrade to latest once a release is made. 
 - Release CVE advisory.
-- Report on [Swift Forums](https://forums.swift.org/c/server/security-updates/) and Hummingbird Discord.
+- Report on [Swift Forums](https://forums.swift.org/c/server/security-updates/), Hummingbird Discord and social media accounts.
 
 ## Learn
 
-- How was the vunerability introduced? 
+- How was the vulnerability introduced? 
 - What could we have done to prevent it?
 - Is there anything we can to ensure it doesn't happen again.
 - What did we do well during the process?
