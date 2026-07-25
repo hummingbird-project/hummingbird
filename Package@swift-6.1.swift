@@ -15,6 +15,8 @@ let swiftSettings: [SwiftSetting] = [
     // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0409-access-level-on-imports.md
     .enableUpcomingFeature("InternalImportsByDefault"),
 
+    // Used to fake the trait on Swift 6.1
+    .define("FullFoundation"),
 ]
 
 let package = Package(

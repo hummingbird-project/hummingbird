@@ -38,8 +38,8 @@ let package = Package(
     ],
     traits: [
         .trait(name: "ConfigurationSupport", description: "Enable support for swift-configuration package."),
-        .trait(name: "FullFoundationSupport", description: "Enable support for functionality that requires all of Foundation."),
-        .default(enabledTraits: ["ConfigurationSupport", "FullFoundationSupport"]),
+        .trait(name: "FullFoundation", description: "Enable functionality that requires full Foundation."),
+        .default(enabledTraits: ["ConfigurationSupport", "FullFoundation"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "1.0.2"),

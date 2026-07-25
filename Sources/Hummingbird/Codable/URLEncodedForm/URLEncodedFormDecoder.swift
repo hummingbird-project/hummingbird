@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#if canImport(FoundationEssentials) && !FullFoundationSupport
+#if canImport(FoundationEssentials) && !FullFoundation
 public import FoundationEssentials
 #else
 public import Foundation
@@ -29,7 +29,7 @@ public struct URLEncodedFormDecoder: Sendable {
         /// Decode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
         case iso8601
 
-        #if !canImport(FoundationEssentials) || FullFoundationSupport
+        #if !canImport(FoundationEssentials) || FullFoundation
         /// Decode the `Date` as a string parsed by the given formatter.
         case formatted(DateFormatter)
         #endif
@@ -654,7 +654,7 @@ extension _URLEncodedFormDecoder {
                 )
             }
             return date
-        #if !canImport(FoundationEssentials) || FullFoundationSupport
+        #if !canImport(FoundationEssentials) || FullFoundation
         case .formatted(let formatter):
             let dateString = try unbox(node, as: String.self)
             guard let date = formatter.date(from: dateString) else {
