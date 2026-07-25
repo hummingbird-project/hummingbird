@@ -6,7 +6,11 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+#if canImport(FoundationEssentials) && !FullFoundationSupport
+public import FoundationEssentials
+#else
 public import Foundation
+#endif
 
 /// The wrapper struct for decoding URL encoded form data to Codable classes
 @available(hummingbird 2.0, *)
@@ -25,8 +29,10 @@ public struct URLEncodedFormDecoder: Sendable {
         /// Decode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
         case iso8601
 
+        #if !canImport(FoundationEssentials) || FullFoundationSupport
         /// Decode the `Date` as a string parsed by the given formatter.
         case formatted(DateFormatter)
+        #endif
 
         /// Decode the `Date` as a custom value encoded by the given closure.
         case custom(@Sendable (_ decoder: any Decoder) throws -> Date)
@@ -648,12 +654,14 @@ extension _URLEncodedFormDecoder {
                 )
             }
             return date
+        #if !canImport(FoundationEssentials) || FullFoundationSupport
         case .formatted(let formatter):
             let dateString = try unbox(node, as: String.self)
             guard let date = formatter.date(from: dateString) else {
                 throw DecodingError.dataCorrupted(.init(codingPath: self.codingPath, debugDescription: "Invalid date format"))
             }
             return date
+        #endif
         case .custom(let closure):
             self.storage.push(container: node)
             defer { self.storage.popContainer() }

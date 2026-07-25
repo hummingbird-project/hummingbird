@@ -224,7 +224,9 @@ extension URLEncodedFormTests {
             dateFormatter.locale = Locale(identifier: "en_US_POSIX")
             dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
             dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+            #if !canImport(FoundationEssentials) || FullFoundationSupport
             self.testForm(test, query: "d=2001-01-28T15%3A14%3A03.000Z", decoder: .init(dateDecodingStrategy: .formatted(dateFormatter)))
+            #endif
             self.testForm(test, query: "d=2001-01-28T15%3A14%3A03Z", decoder: .init(dateDecodingStrategy: .parseStrategy(.iso8601)))
         }
 
