@@ -390,7 +390,8 @@ extension FileMiddleware {
                 return lowerBound...Int.max
             } else {
                 guard let lowerBound = Int(lower),
-                    let upperBound = Int(upper)
+                    let upperBound = Int(upper),
+                    lowerBound <= upperBound
                 else { return nil }
                 return lowerBound...upperBound
             }
