@@ -43,9 +43,9 @@ Supply-chain and CI/CD incidents are always treated as **Critical** regardless o
     - Impact: How does this issue impact users of Hummingbird.
     - Mitigations: Are there ways to mitigate against this issue without updating. 
     - Timeline: When reported, patch written, CVE request, received and published.
-    - Set affected versions and version fix will be in.
+    - Patches: Details of patched versions and patch.
+    - Credit: Add credit to reporter
     - Select CWE.
-    - Add credits where due.
 6. Request CVE       
 7. We aim to resolve any issue within 30 days, but this may not always be possible.
 
