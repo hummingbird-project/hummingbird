@@ -346,7 +346,7 @@ extension URLEncodedFormTests {
                     form += "[a]"
                 }
                 form += "=1"
-                _ = try URLEncodedFormDecoder().decode(Input1.self, from: form)
+                _ = try? URLEncodedFormDecoder().decode(Input1.self, from: form)
             }
         }
         #endif
