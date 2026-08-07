@@ -42,21 +42,21 @@ struct OutputBuffer<T>: ~Copyable  // ~Escapable
 extension OutputBuffer {
     mutating func appendElement(_ value: T) {
         precondition(initialized < capacity, "Output buffer overflow")
-        start.advanced(by: initialized).initialize(to: value)
+        unsafe start.advanced(by: initialized).initialize(to: value)
         initialized &+= 1
     }
 
     mutating func deinitializeLastElement() -> T? {
         guard initialized > 0 else { return nil }
         initialized &-= 1
-        return start.advanced(by: initialized).move()
+        return unsafe start.advanced(by: initialized).move()
     }
 }
 
 extension OutputBuffer {
     mutating func deinitialize() {
-        let b = UnsafeMutableBufferPointer(start: start, count: initialized)
-        b.deinitialize()
+        let b = unsafe UnsafeMutableBufferPointer(start: start, count: initialized)
+        unsafe b.deinitialize()
         initialized = 0
     }
 }
@@ -75,7 +75,7 @@ extension OutputBuffer {
     ) {
         while initialized < capacity {
             guard let element = elements.next() else { break }
-            start.advanced(by: initialized).initialize(to: element)
+            unsafe start.advanced(by: initialized).initialize(to: element)
             initialized &+= 1
         }
     }
@@ -92,8 +92,8 @@ extension OutputBuffer {
                 $0.count <= available,
                 "buffer cannot contain every element from source."
             )
-            let tail = start.advanced(by: initialized)
-            tail.initialize(from: sourceAddress, count: $0.count)
+            let tail = unsafe start.advanced(by: initialized)
+            unsafe tail.initialize(from: sourceAddress, count: $0.count)
             return $0.count
         }
         if let count {
@@ -102,8 +102,8 @@ extension OutputBuffer {
         }
 
         let available = capacity &- initialized
-        let tail = start.advanced(by: initialized)
-        let suffix = UnsafeMutableBufferPointer(start: tail, count: available)
+        let tail = unsafe start.advanced(by: initialized)
+        let suffix = unsafe UnsafeMutableBufferPointer(start: tail, count: available)
         var (iterator, copied) = source._copyContents(initializing: suffix)
         precondition(
             iterator.next() == nil,
@@ -124,15 +124,15 @@ extension OutputBuffer {
             source.count <= available,
             "buffer cannot contain every element from source."
         )
-        let tail = start.advanced(by: initialized)
-        tail.moveInitialize(from: sourceAddress, count: source.count)
+        let tail = unsafe start.advanced(by: initialized)
+        unsafe tail.moveInitialize(from: sourceAddress, count: source.count)
         initialized &+= source.count
     }
 
     mutating func moveAppend(
         fromContentsOf source: Slice<UnsafeMutableBufferPointer<T>>
     ) {
-        moveAppend(fromContentsOf: UnsafeMutableBufferPointer(rebasing: source))
+        unsafe moveAppend(fromContentsOf: UnsafeMutableBufferPointer(rebasing: source))
     }
 }
 
@@ -154,17 +154,17 @@ extension OutputBuffer<UInt8> /* where T: BitwiseCopyable */ {
             (capacity &- initialized) >= q,
             "buffer cannot contain every byte of value."
         )
-        let p = UnsafeMutableRawPointer(start.advanced(by: initialized))
-        p.storeBytes(of: value, as: Value.self)
+        let p = unsafe UnsafeMutableRawPointer(start.advanced(by: initialized))
+        unsafe p.storeBytes(of: value, as: Value.self)
         initialized &+= q
     }
 }
 
 extension OutputBuffer {
     consuming func relinquishBorrowedMemory() -> UnsafeMutableBufferPointer<T> {
-        let start = self.start
+        let start = unsafe self.start
         let initialized = self.initialized
         discard self
-        return .init(start: start, count: initialized)
+        return unsafe UnsafeMutableBufferPointer(start: start, count: initialized)
     }
 }
