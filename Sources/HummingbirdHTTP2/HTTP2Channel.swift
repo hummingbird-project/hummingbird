@@ -12,7 +12,6 @@ public import Logging
 public import NIOCore
 import NIOHTTP2
 import NIOHTTPTypesHTTP2
-import NIOSSL
 
 /// HTTP2 configuration
 @available(hummingbird 2.0, *)

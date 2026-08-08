@@ -6,6 +6,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+#if FileSystemSupport
+
 import Foundation
 import Hummingbird
 import HummingbirdTesting
@@ -171,3 +173,5 @@ struct FileIOTests {
         }
     }
 }
+
+#endif
