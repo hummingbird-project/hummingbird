@@ -53,7 +53,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-log.git", from: "1.14.0"),
         .package(url: "https://github.com/apple/swift-metrics.git", from: "2.9.0"),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.101.3"),
-        .package(url: "https://github.com/Joannis/swift-nio-extras.git", branch: "jo/windows-ucrt"),
+        .package(url: "https://github.com/apple/swift-nio-extras.git", branch: "main"),
         .package(url: "https://github.com/apple/swift-nio-http2.git", from: "1.44.0"),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.14.0"),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.20.0"),
