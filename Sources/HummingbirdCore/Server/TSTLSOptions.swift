@@ -49,7 +49,7 @@ public struct TSTLSOptions: Sendable {
             let data = try Data(contentsOf: URL(fileURLWithPath: filename))
             let options: [String: String] = [kSecImportExportPassphrase as String: password]
             var rawItems: CFArray?
-            let result = SecPKCS12Import(data as CFData, options as CFDictionary, &rawItems)
+            let result = unsafe SecPKCS12Import(data as CFData, options as CFDictionary, &rawItems)
             switch result {
             case errSecSuccess:
                 break
@@ -121,7 +121,7 @@ public struct TSTLSOptions: Sendable {
         guard let secIdentity = sec_identity_create(clientIdentity.secIdentity) else { return nil }
         sec_protocol_options_set_local_identity(options.securityProtocolOptions, secIdentity)
         if let serverName {
-            sec_protocol_options_set_tls_server_name(options.securityProtocolOptions, serverName)
+            unsafe sec_protocol_options_set_tls_server_name(options.securityProtocolOptions, serverName)
         }
         // sec_protocol_options_set
         sec_protocol_options_set_local_identity(options.securityProtocolOptions, secIdentity)
@@ -131,7 +131,7 @@ public struct TSTLSOptions: Sendable {
             sec_protocol_options_set_verify_block(
                 options.securityProtocolOptions,
                 { _, sec_trust, sec_protocol_verify_complete in
-                    let trust = sec_trust_copy_ref(sec_trust).takeRetainedValue()
+                    let trust = unsafe sec_trust_copy_ref(sec_trust).takeRetainedValue()
                     SecTrustSetAnchorCertificates(trust, trustRoots.certificates as CFArray)
                     SecTrustEvaluateAsyncWithError(trust, Self.tlsDispatchQueue) { _, result, error in
                         if let error {
