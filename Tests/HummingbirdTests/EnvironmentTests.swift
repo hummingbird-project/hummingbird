@@ -14,8 +14,16 @@ import Testing
 
 @Suite("EnvironmentTests", .serialized)
 struct EnvironmentTests {
+    func setEnvironment(_ variable: String, value: String) {
+        #if os(Windows)
+        _putenv("\(variable)=\(value)")
+        #else
+        #expect(setenv(variable, value, 1) == 0)
+        #endif
+    }
+
     @Test func testInitFromEnvironment() {
-        #expect(setenv("testInitFromEnvironment", "testSetFromEnvironment", 1) == 0)
+        setEnvironment("testInitFromEnvironment", value: "testSetFromEnvironment")
         let env = Environment()
         #expect(env.get("testInitFromEnvironment") == "testSetFromEnvironment")
     }
@@ -71,12 +79,13 @@ struct EnvironmentTests {
     }
 
     @Test func testCaseInsensitive() {
-        #expect(setenv("testCaseInsensitive", "testSetFromEnvironment", 1) == 0)
+        setEnvironment("testCaseInsensitive", value: "testSetFromEnvironment")
         let env = Environment()
         #expect(env.get("TESTCaseInsensitive") == "testSetFromEnvironment")
         #expect(env.get("testcaseinsensitive") == "testSetFromEnvironment")
     }
 
+    #if FileSystemSupport
     @Test func testDotEnvLoading() async throws {
         let dotenv = """
             TEST=this
@@ -93,7 +102,7 @@ struct EnvironmentTests {
         #expect(result.get("test") == "this")
         #expect(result.get("credentials") == "sdkfjh")
     }
-
+    #endif
     @Test func testDotEnvParsingError() throws {
         let dotenv = """
             TEST #thse
@@ -158,6 +167,7 @@ struct EnvironmentTests {
         #expect(result.count == 1)
     }
 
+    #if FileSystemSupport
     @Test func testDotEnvOverridingEnvironment() async throws {
         let dotenv = """
             testDotEnvOverridingEnvironment=testDotEnvOverridingEnvironment
@@ -168,10 +178,11 @@ struct EnvironmentTests {
         defer {
             try? FileManager.default.removeItem(at: envURL)
         }
-        #expect(setenv("testDotEnvOverridingEnvironment", "testSetFromEnvironment", 1) == 0)
-        #expect(setenv("testDotEnvOverridingEnvironment2", "testSetFromEnvironment2", 1) == 0)
+        setEnvironment("testDotEnvOverridingEnvironment", value: "testSetFromEnvironment")
+        setEnvironment("testDotEnvOverridingEnvironment2", value: "testSetFromEnvironment2")
         let env = try await Environment().merging(with: .dotEnv(".override.env"))
         #expect(env.get("testDotEnvOverridingEnvironment") == "testDotEnvOverridingEnvironment")
         #expect(env.get("testDotEnvOverridingEnvironment2") == "testSetFromEnvironment2")
     }
+    #endif
 }

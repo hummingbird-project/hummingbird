@@ -58,3 +58,16 @@ jobs:
       uses: vapor/swift-codecov-action@2f478f2fd22e06ca363967d0fb6c6593a8548cee  # v0.3.5
       with:
         codecov_token: ${{ secrets.CODECOV_TOKEN }}
+
+  windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        swift-version: ["6.3"]
+    steps:
+      - uses: compnerd/gha-setup-swift@eeda069c5bc95ac8a9ac5cea7d4f588ae5420ca5  # v0.4.0
+        with:
+          swift-version: swift-${{ matrix.swift-version }}-release
+          swift-build: ${{ matrix.swift-version }}-RELEASE
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - run: swift test

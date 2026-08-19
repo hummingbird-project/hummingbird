@@ -6,7 +6,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-import AsyncHTTPClient
 import Atomics
 import Foundation
 import HTTPTypes
@@ -22,12 +21,19 @@ import NIOEmbedded
 import NIOFoundationEssentialsCompat
 import NIOHTTP1
 import NIOHTTPTypes
-import NIOSSL
 import ServiceLifecycle
 import Testing
 import UnixSignals
 
 @testable import Hummingbird
+
+#if TLSSupport
+import NIOSSL
+#endif
+
+#if AsyncHTTPClientSupport
+import AsyncHTTPClient
+#endif
 
 struct ApplicationTests {
     static func randomBuffer(size: Int) -> ByteBuffer {
@@ -678,6 +684,7 @@ struct ApplicationTests {
         }
     }
 
+    #if AsyncHTTPClientSupport && TLSSupport
     /// test we can create out own application type conforming to ApplicationProtocol
     @Test func testTLS() async throws {
         let router = Router()
@@ -696,7 +703,9 @@ struct ApplicationTests {
             }
         }
     }
+    #endif
 
+    #if AsyncHTTPClientSupport && TLSSupport
     /// test we can create out own application type conforming to ApplicationProtocol
     @Test func testHTTP2() async throws {
         let router = Router()
@@ -715,6 +724,7 @@ struct ApplicationTests {
             }
         }
     }
+    #endif
 
     /// test we can create out own application type conforming to ApplicationProtocol
     @Test func testApplicationRouterInit() async throws {
@@ -761,7 +771,7 @@ struct ApplicationTests {
     }
 
     // MARK: Helper functions
-
+    #if TLSSupport
     func getServerTLSConfiguration() throws -> TLSConfiguration {
         let caCertificate = try NIOSSLCertificate(
             bytes: [UInt8](caCertificateData.utf8),
@@ -782,7 +792,7 @@ struct ApplicationTests {
         tlsConfig.trustRoots = .certificates([caCertificate])
         return tlsConfig
     }
-
+    #endif
     @Test func testHTTPError() async throws {
         struct HTTPErrorFormat: Decodable {
             struct ErrorFormat: Decodable {
@@ -1227,6 +1237,7 @@ struct ApplicationTests {
         }
     }
 
+    #if AsyncHTTPClientSupport
     @Test func testCancelledRequest() async throws {
         let httpClient = HTTPClient()
         let (stream, cont) = AsyncStream.makeStream(of: Int.self)
@@ -1291,6 +1302,7 @@ struct ApplicationTests {
         }
         try await httpClient.shutdown()
     }
+    #endif
 
     @Test func testTaskLocalLogger() async throws {
         let logHandler = InMemoryLogHandler()

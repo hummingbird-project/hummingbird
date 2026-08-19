@@ -37,6 +37,9 @@ let package = Package(
         .executable(name: "PerformanceTest", targets: ["PerformanceTest"]),
     ],
     traits: [
+        .trait(name: "FileSystemSupport", description: "Enable support for file access."),
+        .trait(name: "AsyncHTTPClientSupport", description: "Enable support for async-http-client."),
+        .trait(name: "TLSSupport", description: "Enable support for TLS."),
         .trait(name: "ConfigurationSupport", description: "Enable support for swift-configuration package."),
         .default(enabledTraits: ["ConfigurationSupport"]),
     ],
@@ -49,12 +52,12 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-http-types.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.14.0"),
         .package(url: "https://github.com/apple/swift-metrics.git", from: "2.9.0"),
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.100.0"),
-        .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.34.1"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.101.3"),
+        .package(url: "https://github.com/apple/swift-nio-extras.git", branch: "main"),
         .package(url: "https://github.com/apple/swift-nio-http2.git", from: "1.44.0"),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.14.0"),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.20.0"),
-        .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.0.0"),
+        .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.9.1"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.30.0"),
     ],
     targets: [
@@ -71,7 +74,7 @@ let package = Package(
                 .product(name: "Metrics", package: "swift-metrics"),
                 .product(name: "Tracing", package: "swift-distributed-tracing"),
                 .product(name: "NIOCore", package: "swift-nio"),
-                .product(name: "_NIOFileSystem", package: "swift-nio"),
+                .product(name: "_NIOFileSystem", package: "swift-nio", condition: .when(traits: ["FileSystemSupport"])),
                 .product(name: "NIOPosix", package: "swift-nio"),
                 .product(name: "NIOFoundationEssentialsCompat", package: "swift-nio"),
             ],
@@ -112,7 +115,7 @@ let package = Package(
             name: "HummingbirdTesting",
             dependencies: [
                 .byName(name: "Hummingbird"),
-                .product(name: "AsyncHTTPClient", package: "async-http-client"),
+                .product(name: "AsyncHTTPClient", package: "async-http-client", condition: .when(traits: ["AsyncHTTPClientSupport"])),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
@@ -120,7 +123,7 @@ let package = Package(
                 .product(name: "NIOHTTPTypes", package: "swift-nio-extras"),
                 .product(name: "NIOHTTPTypesHTTP1", package: "swift-nio-extras"),
                 .product(name: "NIOPosix", package: "swift-nio"),
-                .product(name: "NIOSSL", package: "swift-nio-ssl"),
+                .product(name: "NIOSSL", package: "swift-nio-ssl", condition: .when(traits: ["TLSSupport"])),
             ],
             swiftSettings: swiftSettings
         ),
@@ -134,7 +137,7 @@ let package = Package(
                 .product(name: "NIOHTTPTypes", package: "swift-nio-extras"),
                 .product(name: "NIOHTTPTypesHTTP1", package: "swift-nio-extras"),
                 .product(name: "NIOHTTPTypesHTTP2", package: "swift-nio-extras"),
-                .product(name: "NIOSSL", package: "swift-nio-ssl"),
+                .product(name: "NIOSSL", package: "swift-nio-ssl", condition: .when(traits: ["TLSSupport"])),
             ],
             swiftSettings: swiftSettings
         ),
@@ -144,7 +147,7 @@ let package = Package(
                 .byName(name: "HummingbirdCore"),
                 .product(name: "Configuration", package: "swift-configuration", condition: .when(traits: ["ConfigurationSupport"])),
                 .product(name: "NIOCore", package: "swift-nio"),
-                .product(name: "NIOSSL", package: "swift-nio-ssl"),
+                .product(name: "NIOSSL", package: "swift-nio-ssl", condition: .when(traits: ["TLSSupport"])),
             ],
             swiftSettings: swiftSettings
         ),
@@ -184,7 +187,7 @@ let package = Package(
                 .byName(name: "HummingbirdCore"),
                 .byName(name: "HummingbirdTLS"),
                 .byName(name: "HummingbirdTesting"),
-                .product(name: "AsyncHTTPClient", package: "async-http-client"),
+                .product(name: "AsyncHTTPClient", package: "async-http-client", condition: .when(traits: ["AsyncHTTPClientSupport"])),
             ],
             resources: [.process("Certificates")],
             swiftSettings: swiftSettings
@@ -195,7 +198,7 @@ let package = Package(
                 .byName(name: "HummingbirdCore"),
                 .byName(name: "HummingbirdHTTP2"),
                 .byName(name: "HummingbirdTesting"),
-                .product(name: "AsyncHTTPClient", package: "async-http-client"),
+                .product(name: "AsyncHTTPClient", package: "async-http-client", condition: .when(traits: ["AsyncHTTPClientSupport"])),
             ],
             swiftSettings: swiftSettings
         ),

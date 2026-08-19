@@ -7,11 +7,15 @@
 //
 
 public import HummingbirdCore
+
+#if TLSSupport
 public import NIOCore
 public import NIOSSL
+#endif
 
 @available(hummingbird 2.0, *)
 extension HTTPServerBuilder {
+    #if TLSSupport
     /// Build HTTP channel with HTTP2 upgrade
     ///
     /// Use in ``Hummingbird/Application`` initialization.
@@ -91,6 +95,7 @@ extension HTTPServerBuilder {
             )
         }
     }
+    #endif
 
     /// Build plaintext HTTP2 channel
     ///

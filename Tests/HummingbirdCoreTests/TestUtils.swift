@@ -11,7 +11,6 @@ import HummingbirdCore
 import HummingbirdTesting
 import Logging
 import NIOCore
-import NIOSSL
 import ServiceLifecycle
 import UnixSignals
 
