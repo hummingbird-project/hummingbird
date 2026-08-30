@@ -27,9 +27,9 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
     }
 
     public func handle(
-        _ request: consuming Request,
+        _ request: borrowing Request,
         context: Context,
-        next: (consuming Request, Context) async throws -> Response
+        next: (borrowing Request, Context) async throws -> Response
     ) async throws -> Response {
         let startTime = DispatchTime.now().uptimeNanoseconds
         let activeRequestMeter = self.metricsCache.getMethodMetrics(id: .init(method: request.method)).activeRequestMeter

@@ -15,7 +15,7 @@ public import Hummingbird
 public struct Handle<HandlerOutput: ResponseGenerator, Context: RouterRequestContext>: Sendable, MiddlewareProtocol {
     public typealias Input = Request
     public typealias Output = Response
-    public typealias Handler = @Sendable (consuming Input, Context) async throws -> HandlerOutput
+    public typealias Handler = @Sendable (borrowing Input, Context) async throws -> HandlerOutput
 
     let handler: Handler
 
@@ -31,9 +31,8 @@ public struct Handle<HandlerOutput: ResponseGenerator, Context: RouterRequestCon
     ///   - context: Request context
     ///   - next: Next middleware to run, if no route handler is found
     /// - Returns: Response
-    public func handle(_ input: consuming Input, context: Context, next: (consuming Input, Context) async throws -> Output) async throws -> Output {
-        let requestHead = input.head
-        return try await self.handler(input, context).response(from: requestHead, context: context)
+    public func handle(_ input: borrowing Input, context: Context, next: (borrowing Input, Context) async throws -> Output) async throws -> Output {
+        try await self.handler(input, context).response(from: input.head, context: context)
     }
 }
 
@@ -53,7 +52,7 @@ public enum RouteBuilder<Context: RouterRequestContext> {
 
     /// Build a ``Handle`` from a closure
     public static func buildExpression<HandlerOutput: ResponseGenerator>(
-        _ handler: @escaping @Sendable (consuming Request, Context) async throws -> HandlerOutput
+        _ handler: @escaping @Sendable (borrowing Request, Context) async throws -> HandlerOutput
     ) -> Handle<HandlerOutput, Context> {
         .init(handler)
     }

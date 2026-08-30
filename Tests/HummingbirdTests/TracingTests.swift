@@ -234,9 +234,9 @@ struct TracingTests {
     @Test func testMiddlewareSkippingEndpoint() async throws {
         struct DeadendMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(
-                _ input: consuming Request,
+                _ input: borrowing Request,
                 context: Context,
-                next: (consuming Request, Context) async throws -> Response
+                next: (borrowing Request, Context) async throws -> Response
             ) async throws -> Response {
                 .init(status: .ok)
             }
@@ -492,9 +492,9 @@ struct TracingTests {
     @Test func testTracingMiddlewareDropResponse() async throws {
         struct ErrorMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(
-                _ request: consuming Request,
+                _ request: borrowing Request,
                 context: Context,
-                next: (consuming Request, Context) async throws -> Response
+                next: (borrowing Request, Context) async throws -> Response
             ) async throws -> Response {
                 _ = try await next(request, context)
                 throw HTTPError(.badRequest)
@@ -623,16 +623,15 @@ struct TracingTests {
     @Test func testServiceContextPropagationInMiddleware() async throws {
         struct SpanMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(
-                _ request: consuming Request,
+                _ request: borrowing Request,
                 context: Context,
-                next: (consuming Request, Context) async throws -> Response
+                next: (borrowing Request, Context) async throws -> Response
             ) async throws -> Response {
                 var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
                 serviceContext.testID = "testMiddleware"
 
-                var request2: Request? = request
                 return try await InstrumentationSystem.tracer.withSpan("TestSpan", context: serviceContext, ofKind: .server) { _ in
-                    try await next(request2.take()!, context)
+                    try await next(request, context)
                 }
             }
         }

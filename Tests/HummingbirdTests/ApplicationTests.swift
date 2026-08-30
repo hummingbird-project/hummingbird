@@ -331,11 +331,11 @@ struct ApplicationTests {
     @Test func testCollectBody() async throws {
         struct CollateMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(
-                _ request: consuming Request,
+                _ request: borrowing Request,
                 context: Context,
-                next: (consuming Request, Context) async throws -> Response
+                next: (borrowing Request, Context) async throws -> Response
             ) async throws -> Response {
-                var request = request
+                var request = request.clone()
                 _ = try await request.collectBody(upTo: context.maxUploadSize)
                 return try await next(request, context)
             }
@@ -360,7 +360,7 @@ struct ApplicationTests {
     @Test func testDoubleStreaming() async throws {
         let router = Router()
         router.post("size") { request, context -> String in
-            var request = request
+            var request = request.clone()
             _ = try await request.collectBody(upTo: context.maxUploadSize)
             var size = 0
             for try await buffer in request.body {
@@ -611,7 +611,7 @@ struct ApplicationTests {
             init(source: Source) {}
         }
         let app = Application(
-            responder: CallbackResponder { (_: consuming Request, _: EmptyRequestContext) in
+            responder: CallbackResponder { (_: borrowing Request, _: EmptyRequestContext) in
                 Response(status: .ok)
             }
         )
@@ -737,10 +737,11 @@ struct ApplicationTests {
         let buffer = Self.randomBuffer(size: 1024 * 1024)
         let router = Router()
         router.post("/") { request, _ -> Response in
-            .init(
+            let body = request.body
+            return .init(
                 status: .ok,
                 body: .init { writer in
-                    for try await buffer in request.body {
+                    for try await buffer in body {
                         let processed = ByteBuffer(
                             bytes: buffer.readableBytesView.map { $0 ^ 0xFF }
                         )
@@ -841,8 +842,9 @@ struct ApplicationTests {
         router.post("streaming") { request, context -> Response in
             let body = try await withThrowingTaskGroup(of: Void.self) { group in
                 let (requestBody, source) = RequestBody.makeStream()
+                let originalBody = request.body
                 group.addTask {
-                    for try await buffer in request.body {
+                    for try await buffer in originalBody {
                         await source.yield(buffer)
                     }
                     source.finish()
@@ -918,10 +920,11 @@ struct ApplicationTests {
     @Test func testConsumeWithInboundHandler() async throws {
         let router = Router()
         router.post("streaming") { request, context -> Response in
-            Response(
+            let body = request.body
+            return Response(
                 status: .ok,
                 body: .init { writer in
-                    try await request.body.consumeWithInboundCloseHandler { body in
+                    try await body.consumeWithInboundCloseHandler { body in
                         try await writer.write(body)
                     } onInboundClosed: {
                     }
@@ -944,10 +947,11 @@ struct ApplicationTests {
     @Test func testConsumeWithCancellationOnInboundClose() async throws {
         let router = Router()
         router.post("streaming") { request, context -> Response in
-            Response(
+            let body = request.body
+            return Response(
                 status: .ok,
                 body: .init { writer in
-                    try await request.body.consumeWithCancellationOnInboundClose { body in
+                    try await body.consumeWithCancellationOnInboundClose { body in
                         try await writer.write(body)
                     }
                     try await writer.finish(nil)
@@ -969,13 +973,13 @@ struct ApplicationTests {
     @Test func testConsumeWithInboundHandlerAfterCollect() async throws {
         let router = Router()
         router.post("streaming") { request, context -> Response in
-            var request = request
+            var request = request.clone()
             _ = try await request.collectBody(upTo: .max)
-            let request2 = request
+            let body = request.body
             return Response(
                 status: .ok,
                 body: .init { writer in
-                    try await request2.body.consumeWithInboundCloseHandler { body in
+                    try await body.consumeWithInboundCloseHandler { body in
                         try await writer.write(body)
                     } onInboundClosed: {
                     }
@@ -998,18 +1002,18 @@ struct ApplicationTests {
     @Test func testConsumeWithInboundHandlerAfterReplacingBody() async throws {
         let router = Router()
         router.post("streaming") { request, context -> Response in
-            var request = request
-            request.body = .init(
+            var request = request.clone()
+            request.body = RequestBody(
                 asyncSequence: request.body.map {
                     let view = $0.readableBytesView.map { $0 ^ 255 }
                     return ByteBuffer(bytes: view)
                 }
             )
-            let request2 = request
+            let requestBody = request.body
             return Response(
                 status: .ok,
                 body: .init { writer in
-                    try await request2.body.consumeWithInboundCloseHandler { body in
+                    try await requestBody.consumeWithInboundCloseHandler { body in
                         try await writer.write(body)
                     } onInboundClosed: {
                     }

@@ -16,7 +16,7 @@ import ServiceLifecycle
 
 /// Protocol for HTTP channels
 public protocol HTTPChannelHandler: ServerChildChannel {
-    typealias Responder = @Sendable (consuming Request, consuming ResponseWriter, any Channel) async throws -> Void
+    typealias Responder = @Sendable (borrowing Request, consuming ResponseWriter, any Channel) async throws -> Void
     /// HTTP Request responder
     var responder: Responder { get }
 }

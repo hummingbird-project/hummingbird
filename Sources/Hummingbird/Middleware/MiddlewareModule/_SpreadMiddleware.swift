@@ -29,17 +29,17 @@ public struct _SpreadMiddleware<M0: MiddlewareProtocol>: MiddlewareProtocol wher
     let middlewares: [M0]
 
     public func handle(
-        _ input: consuming Input,
+        _ input: borrowing Input,
         context: consuming Context,
-        next: (consuming Input, consuming Context) async throws -> Output
+        next: (borrowing Input, consuming Context) async throws -> Output
     ) async throws -> Output {
         return try await handle(middlewares: self.middlewares, input: input, context: context, next: next)
 
         func handle(
             middlewares: some Collection<M0>,
-            input: consuming Input,
+            input: borrowing Input,
             context: consuming Context,
-            next: (consuming Input, consuming Context) async throws -> Output
+            next: (borrowing Input, consuming Context) async throws -> Output
         ) async throws -> Output {
             guard let current = middlewares.first else {
                 return try await next(input, context)

@@ -43,7 +43,7 @@ public struct Route<Handler: _RouteHandlerProtocol, Context: RouterRequestContex
     public init<RouteOutput: ResponseGenerator>(
         _ method: HTTPRequest.Method,
         _ routerPath: RouterPath = "",
-        handler: @escaping @Sendable (consuming Input, Context) async throws -> RouteOutput
+        handler: @escaping @Sendable (borrowing Input, Context) async throws -> RouteOutput
     ) where Handler == _RouteHandlerClosure<RouteOutput, Context> {
         self.init(
             method,
@@ -76,9 +76,9 @@ public struct Route<Handler: _RouteHandlerProtocol, Context: RouterRequestContex
     ///   - next: Next middleware to call if route method and path is not matched
     /// - Returns: Response
     public func handle(
-        _ input: consuming Request,
+        _ input: borrowing Request,
         context: Context,
-        next: (consuming Request, Context) async throws -> Response
+        next: (borrowing Request, Context) async throws -> Response
     ) async throws -> Response {
         if input.method == self.method, let context = self.routerPath.matchAll(context) {
             context.coreContext.endpointPath.value = self.fullPath
@@ -102,7 +102,7 @@ public struct Route<Handler: _RouteHandlerProtocol, Context: RouterRequestContex
 ///   - handler: Router handler closure
 public func Get<RouteOutput: ResponseGenerator, Context: RouterRequestContext>(
     _ routerPath: RouterPath = "",
-    handler: @escaping @Sendable (consuming Request, Context) async throws -> RouteOutput
+    handler: @escaping @Sendable (borrowing Request, Context) async throws -> RouteOutput
 ) -> Route<_RouteHandlerClosure<RouteOutput, Context>, Context> {
     .init(.get, routerPath, handler: handler)
 }
@@ -124,7 +124,7 @@ public func Get<M0: MiddlewareProtocol, Context: RouterRequestContext>(
 ///   - handler: Router handler closure
 public func Head<RouteOutput: ResponseGenerator, Context: RouterRequestContext>(
     _ routerPath: RouterPath = "",
-    handler: @escaping @Sendable (consuming Request, Context) async throws -> RouteOutput
+    handler: @escaping @Sendable (borrowing Request, Context) async throws -> RouteOutput
 ) -> Route<_RouteHandlerClosure<RouteOutput, Context>, Context> {
     .init(.head, routerPath, handler: handler)
 }
@@ -146,7 +146,7 @@ public func Head<M0: MiddlewareProtocol, Context: RouterRequestContext>(
 ///   - handler: Router handler closure
 public func Put<RouteOutput: ResponseGenerator, Context: RouterRequestContext>(
     _ routerPath: RouterPath = "",
-    handler: @escaping @Sendable (consuming Request, Context) async throws -> RouteOutput
+    handler: @escaping @Sendable (borrowing Request, Context) async throws -> RouteOutput
 ) -> Route<_RouteHandlerClosure<RouteOutput, Context>, Context> {
     .init(.put, routerPath, handler: handler)
 }
@@ -168,7 +168,7 @@ public func Put<M0: MiddlewareProtocol, Context: RouterRequestContext>(
 ///   - handler: Router handler closure
 public func Post<RouteOutput: ResponseGenerator, Context: RouterRequestContext>(
     _ routerPath: RouterPath = "",
-    handler: @escaping @Sendable (consuming Request, Context) async throws -> RouteOutput
+    handler: @escaping @Sendable (borrowing Request, Context) async throws -> RouteOutput
 ) -> Route<_RouteHandlerClosure<RouteOutput, Context>, Context> {
     .init(.post, routerPath, handler: handler)
 }
@@ -190,7 +190,7 @@ public func Post<M0: MiddlewareProtocol, Context: RouterRequestContext>(
 ///   - handler: Router handler closure
 public func Patch<RouteOutput: ResponseGenerator, Context: RouterRequestContext>(
     _ routerPath: RouterPath = "",
-    handler: @escaping @Sendable (consuming Request, Context) async throws -> RouteOutput
+    handler: @escaping @Sendable (borrowing Request, Context) async throws -> RouteOutput
 ) -> Route<_RouteHandlerClosure<RouteOutput, Context>, Context> {
     .init(.patch, routerPath, handler: handler)
 }
@@ -212,7 +212,7 @@ public func Patch<M0: MiddlewareProtocol, Context: RouterRequestContext>(
 ///   - handler: Router handler closure
 public func Delete<RouteOutput: ResponseGenerator, Context: RouterRequestContext>(
     _ routerPath: RouterPath = "",
-    handler: @escaping @Sendable (consuming Request, Context) async throws -> RouteOutput
+    handler: @escaping @Sendable (borrowing Request, Context) async throws -> RouteOutput
 ) -> Route<_RouteHandlerClosure<RouteOutput, Context>, Context> {
     .init(.delete, routerPath, handler: handler)
 }

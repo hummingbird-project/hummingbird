@@ -103,7 +103,7 @@ extension Benchmark {
 }
 
 struct EmptyMiddleware<Context>: RouterMiddleware {
-    func handle(_ request: consuming Request, context: Context, next: (consuming Request, Context) async throws -> Response) async throws -> Response
+    func handle(_ request: borrowing Request, context: Context, next: (borrowing Request, Context) async throws -> Response) async throws -> Response
     {
         try await next(request, context)
     }
@@ -171,11 +171,12 @@ func routerBenchmarks() {
     } createRouter: {
         let router = Router(context: BasicBenchmarkContext.self)
         router.post { request, _ in
-            Response(
+            let body = request.body
+            return Response(
                 status: .ok,
                 headers: [:],
                 body: .init { writer in
-                    for try await buffer in request.body {
+                    for try await buffer in body {
                         try await writer.write(buffer)
                     }
                     try await writer.finish(nil)

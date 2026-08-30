@@ -26,9 +26,9 @@ struct MiddlewareTests {
     @Test func testMiddleware() async throws {
         struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(
-                _ request: consuming Request,
+                _ request: borrowing Request,
                 context: Context,
-                next: (consuming Request, Context) async throws -> Response
+                next: (borrowing Request, Context) async throws -> Response
             ) async throws -> Response {
                 var response = try await next(request, context)
                 response.headers[.middleware] = "TestMiddleware"
@@ -53,9 +53,9 @@ struct MiddlewareTests {
         struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
             let string: String
             func handle(
-                _ request: consuming Request,
+                _ request: borrowing Request,
                 context: Context,
-                next: (consuming Request, Context) async throws -> Response
+                next: (borrowing Request, Context) async throws -> Response
             ) async throws -> Response {
                 var response = try await next(request, context)
                 response.headers[values: .middleware].append(self.string)
@@ -82,9 +82,9 @@ struct MiddlewareTests {
     @Test func testMiddlewareRunOnce() async throws {
         struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(
-                _ request: consuming Request,
+                _ request: borrowing Request,
                 context: Context,
-                next: (consuming Request, Context) async throws -> Response
+                next: (borrowing Request, Context) async throws -> Response
             ) async throws -> Response {
                 var response = try await next(request, context)
                 #expect(response.headers[.alreadyRun] == nil)
@@ -116,9 +116,9 @@ struct MiddlewareTests {
         }
         struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(
-                _ request: consuming Request,
+                _ request: borrowing Request,
                 context: Context,
-                next: (consuming Request, Context) async throws -> Response
+                next: (borrowing Request, Context) async throws -> Response
             ) async throws -> Response {
                 do {
                     return try await next(request, context)
@@ -158,9 +158,9 @@ struct MiddlewareTests {
         }
         struct TransformMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(
-                _ request: consuming Request,
+                _ request: borrowing Request,
                 context: Context,
-                next: (consuming Request, Context) async throws -> Response
+                next: (borrowing Request, Context) async throws -> Response
             ) async throws -> Response {
                 let response = try await next(request, context)
                 var editedResponse = response
@@ -175,10 +175,11 @@ struct MiddlewareTests {
             RouteGroup("") {
                 TransformMiddleware()
                 Get("test") { request, _ in
-                    Response(
+                    let body = request.body
+                    return Response(
                         status: .ok,
                         body: .init { writer in
-                            try await writer.write(request.body)
+                            try await writer.write(body)
                             try await writer.finish([.middleware: "test"])
                         }
                     )

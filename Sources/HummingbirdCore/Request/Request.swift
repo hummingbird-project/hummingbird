@@ -69,6 +69,10 @@ public struct Request: Sendable, ~Copyable {
         self._body = .init(nioAsyncChannelInbound: .init(iterator: bodyIterator))
     }
 
+    public func clone() -> Request {
+        Request(head: self.head, body: self._body)
+    }
+
     /// Collapse body into one ByteBuffer.
     ///
     /// This will store the collated ByteBuffer back into the request so is a mutating method. If

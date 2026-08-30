@@ -31,9 +31,9 @@ public struct _OptionalMiddleware<M0: MiddlewareProtocol>: MiddlewareProtocol wh
 
     @inlinable
     public func handle(
-        _ input: consuming M0.Input,
+        _ input: borrowing M0.Input,
         context: consuming M0.Context,
-        next: (consuming M0.Input, consuming M0.Context) async throws -> M0.Output
+        next: (borrowing M0.Input, consuming M0.Context) async throws -> M0.Output
     ) async throws -> M0.Output {
         guard let middleware else {
             return try await next(input, context)

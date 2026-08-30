@@ -36,12 +36,10 @@ public struct RouterResponder<Context: RequestContext>: HTTPResponder {
     ///   - context: Request context
     /// - Returns: Response
     @inlinable
-    public func respond(to request: consuming Request, context: Context) async throws -> Response {
-        let requestHead = request.head
+    public func respond(to request: borrowing Request, context: Context) async throws -> Response {
         do {
-            let path = request.uri.path
             guard
-                let (responderChain, parameters) = trie.resolve(path),
+                let (responderChain, parameters) = trie.resolve(request.uri.path),
                 let responder = responderChain.getResponder(for: request.method)
             else {
                 return try await self.notFoundResponder.respond(to: request, context: context)
@@ -52,7 +50,7 @@ public struct RouterResponder<Context: RequestContext>: HTTPResponder {
             context.coreContext.endpointPath.value = responderChain.path.description
             return try await responder.respond(to: request, context: context)
         } catch let error as any HTTPResponseError {
-            return try error.response(from: requestHead, context: context)
+            return try error.response(from: request.head, context: context)
         }
     }
 }

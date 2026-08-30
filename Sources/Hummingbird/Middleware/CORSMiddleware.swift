@@ -172,9 +172,9 @@ public struct CORSMiddleware<Context: RequestContext>: RouterMiddleware {
 
     /// apply CORS middleware
     public func handle(
-        _ request: consuming Request,
+        _ request: borrowing Request,
         context: Context,
-        next: (consuming Request, Context) async throws -> Response
+        next: (borrowing Request, Context) async throws -> Response
     ) async throws -> Response {
         // if no origin header then don't apply CORS
         guard request.headers.contains(.origin) else {

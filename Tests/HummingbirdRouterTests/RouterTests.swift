@@ -23,9 +23,9 @@ struct RouterTests {
         }
 
         func handle(
-            _ request: consuming Request,
+            _ request: borrowing Request,
             context: Context,
-            next: (consuming Request, Context) async throws -> Response
+            next: (borrowing Request, Context) async throws -> Response
         ) async throws -> Response {
             var response = try await next(request, context)
             response.headers[.middleware] = self.output
@@ -37,9 +37,9 @@ struct RouterTests {
     @Test func testEndpointPath() async throws {
         struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(
-                _ request: consuming Request,
+                _ request: borrowing Request,
                 context: Context,
-                next: (consuming Request, Context) async throws -> Response
+                next: (borrowing Request, Context) async throws -> Response
             ) async throws -> Response {
                 let response = try await next(request, context)
                 guard let endpointPath = context.endpointPath else { return response }
@@ -66,9 +66,9 @@ struct RouterTests {
     @Test func testEndpointPathPrefix() async throws {
         struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(
-                _ request: consuming Request,
+                _ request: borrowing Request,
                 context: Context,
-                next: (consuming Request, Context) async throws -> Response
+                next: (borrowing Request, Context) async throws -> Response
             ) async throws -> Response {
                 let response = try await next(request, context)
                 guard let endpointPath = context.endpointPath else { return response }
@@ -107,9 +107,9 @@ struct RouterTests {
     @Test func testEndpointPathSuffix() async throws {
         struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(
-                _ request: consuming Request,
+                _ request: borrowing Request,
                 context: Context,
-                next: (consuming Request, Context) async throws -> Response
+                next: (borrowing Request, Context) async throws -> Response
             ) async throws -> Response {
                 guard let endpointPath = context.endpointPath else { return try await next(request, context) }
                 return .init(status: .ok, body: .init(byteBuffer: ByteBuffer(string: endpointPath)))
@@ -249,9 +249,9 @@ struct RouterTests {
             let output: String
 
             func handle(
-                _ request: consuming Request,
+                _ request: borrowing Request,
                 context: Context,
-                next: (consuming Request, Context) async throws -> Response
+                next: (borrowing Request, Context) async throws -> Response
             ) async throws -> Response {
                 var context = context
                 context.string = self.output
@@ -304,9 +304,9 @@ struct RouterTests {
         struct TestTransformMiddleware: RouterMiddleware {
             typealias Context = TestRouterContext2
             func handle(
-                _ request: consuming Request,
+                _ request: borrowing Request,
                 context: Context,
-                next: (consuming Request, Context) async throws -> Response
+                next: (borrowing Request, Context) async throws -> Response
             ) async throws -> Response {
                 var context = context
                 context.string = request.headers[.middleware2] ?? ""
@@ -369,9 +369,9 @@ struct RouterTests {
         struct TestTransformMiddleware: RouterMiddleware {
             typealias Context = TestRouterContext
             func handle(
-                _ request: consuming Request,
+                _ request: borrowing Request,
                 context: Context,
-                next: (consuming Request, Context) async throws -> Response
+                next: (borrowing Request, Context) async throws -> Response
             ) async throws -> Response {
                 var context = context
                 context.string = request.headers[.middleware2]
@@ -404,9 +404,9 @@ struct RouterTests {
             let output: String
 
             func handle(
-                _ request: consuming Request,
+                _ request: borrowing Request,
                 context: Context,
-                next: (consuming Request, Context) async throws -> Response
+                next: (borrowing Request, Context) async throws -> Response
             ) async throws -> Response {
                 var context = context
                 context.string += self.output
@@ -414,7 +414,7 @@ struct RouterTests {
             }
         }
 
-        @Sendable func handle(_: consuming Request, _ context: TestRouterContext2) async throws -> String {
+        @Sendable func handle(_: borrowing Request, _ context: TestRouterContext2) async throws -> String {
             context.string
         }
         let router = RouterBuilder(context: TestRouterContext2.self) {

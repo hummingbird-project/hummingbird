@@ -51,7 +51,7 @@ where Handler.Input == Request, Handler.Output == Response, Handler.Context == C
     ///   - context: Request context
     ///   - next: Next middleware to call if router doesn't hit a route
     /// - Returns: HTTP Response
-    public func handle(_ input: consuming Input, context: Context, next: (consuming Input, Context) async throws -> Output) async throws -> Output {
+    public func handle(_ input: borrowing Input, context: Context, next: (borrowing Input, Context) async throws -> Output) async throws -> Output {
         var context = context
         context.routerContext.caseInsensitive = self.options.contains(.caseInsensitive)
         context.routerContext.remainingPathComponents = input.uri.path.split(separator: "/")[...]
@@ -61,15 +61,14 @@ where Handler.Input == Request, Handler.Output == Response, Handler.Context == C
 
 /// extend Router to conform to Responder so we can use it to process `Request``
 extension RouterBuilder: HTTPResponder, HTTPResponderBuilder {
-    public func respond(to request: consuming Input, context: Context) async throws -> Output {
-        let requestHead = request.head
+    public func respond(to request: borrowing Input, context: Context) async throws -> Output {
         do {
             return try await self.handle(request, context: context) { _, context in
                 context.coreContext.endpointPath.value = "NotFound"
                 throw HTTPError(.notFound)
             }
         } catch let error as any HTTPResponseError {
-            return try error.response(from: requestHead, context: context)
+            return try error.response(from: request.head, context: context)
         }
     }
 

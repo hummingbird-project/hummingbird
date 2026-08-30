@@ -15,9 +15,9 @@ public protocol MiddlewareProtocol<Input, Output, Context>: Sendable where Input
     associatedtype Context
 
     func handle(
-        _ input: consuming Input,
+        _ input: borrowing Input,
         context: consuming Context,
-        next: (consuming Input, consuming Context) async throws -> Output
+        next: (borrowing Input, consuming Context) async throws -> Output
     ) async throws -> Output
 }
 
@@ -52,9 +52,9 @@ public protocol RouterMiddleware<Context>: MiddlewareProtocol where Input == Req
 
 struct MiddlewareResponder<Context>: HTTPResponder {
     let middleware: any MiddlewareProtocol<Request, Response, Context>
-    let next: @Sendable (consuming Request, Context) async throws -> Response
+    let next: @Sendable (borrowing Request, Context) async throws -> Response
 
-    func respond(to request: consuming Request, context: Context) async throws -> Response {
+    func respond(to request: borrowing Request, context: Context) async throws -> Response {
         try await self.middleware.handle(request, context: context) { request, context in
             try await self.next(request, context)
         }

@@ -166,12 +166,11 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
 
     /// Handle request
     public func handle(
-        _ request: consuming Request,
+        _ request: borrowing Request,
         context: Context,
-        next: (consuming Request, Context) async throws -> Response
+        next: (borrowing Request, Context) async throws -> Response
     ) async throws -> Response {
         let fallbackResult: Result<Response, any Error>
-        let requestHead = request.head
         do {
             let response = try await next(request, context)
             if self.serveOnNotFoundResponse, response.status == .notFound {
@@ -187,7 +186,7 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
             fallbackResult = .failure(error)
         }
 
-        return try await self.serveFile(for: requestHead, context: context, fallbackResult: fallbackResult)
+        return try await self.serveFile(for: request.head, context: context, fallbackResult: fallbackResult)
     }
 
     private func serveFile(for request: HTTPRequest, context: Context, fallbackResult: Result<Response, any Error>) async throws -> Response {
