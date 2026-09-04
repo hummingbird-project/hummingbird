@@ -1,4 +1,4 @@
-// swift-tools-version:6.1
+// swift-tools-version:6.4
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -26,7 +26,6 @@ swiftSettings.append(contentsOf: [
 
 let package = Package(
     name: "hummingbird",
-    platforms: [.macOS(.v11), .iOS(.v15), .macCatalyst(.v15), .tvOS(.v15), .visionOS(.v1)],
     products: [
         .library(name: "Hummingbird", targets: ["Hummingbird"]),
         .library(name: "HummingbirdCore", targets: ["HummingbirdCore"]),
@@ -56,6 +55,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.20.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.0.0"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.30.0"),
+        .package(url: "https://github.com/apple/swift-http-api-proposal.git", from: "0.2.0"),
     ],
     targets: [
         .target(
