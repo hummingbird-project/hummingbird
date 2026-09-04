@@ -12,6 +12,9 @@ var swiftSettings: [SwiftSetting] = [
 
     // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0409-access-level-on-imports.md
     .enableUpcomingFeature("InternalImportsByDefault"),
+
+    // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0470-isolated-conformances.md
+    .enableUpcomingFeature("InferIsolatedConformances"),
 ]
 
 #if compiler(>=6.3)
