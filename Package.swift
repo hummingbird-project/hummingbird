@@ -1,4 +1,4 @@
-// swift-tools-version:6.1
+// swift-tools-version:6.4
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -12,6 +12,9 @@ var swiftSettings: [SwiftSetting] = [
 
     // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0409-access-level-on-imports.md
     .enableUpcomingFeature("InternalImportsByDefault"),
+
+    // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0470-isolated-conformances.md
+    .enableUpcomingFeature("InferIsolatedConformances"),
 ]
 
 #if compiler(>=6.3)
@@ -26,7 +29,6 @@ swiftSettings.append(contentsOf: [
 
 let package = Package(
     name: "hummingbird",
-    platforms: [.macOS(.v11), .iOS(.v15), .macCatalyst(.v15), .tvOS(.v15), .visionOS(.v1)],
     products: [
         .library(name: "Hummingbird", targets: ["Hummingbird"]),
         .library(name: "HummingbirdCore", targets: ["HummingbirdCore"]),
