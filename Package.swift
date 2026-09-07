@@ -15,20 +15,14 @@ var swiftSettings: [SwiftSetting] = [
 
     // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0470-isolated-conformances.md
     .enableUpcomingFeature("InferIsolatedConformances"),
-]
 
-#if compiler(>=6.3)
-swiftSettings.append(contentsOf: [
-    .enableExperimentalFeature("AvailabilityMacro=hummingbird 2.0:macOS 14.0, iOS 17.0, tvOS 17.0, visionOS 1.0, Android 28")
-])
-#else
-swiftSettings.append(contentsOf: [
-    .enableExperimentalFeature("AvailabilityMacro=hummingbird 2.0:macOS 14.0, iOS 17.0, tvOS 17.0, visionOS 1.0")
-])
-#endif
+    .enableExperimentalFeature("AvailabilityMacro=hummingbird 2.0:macOS 14.0, iOS 17.0, tvOS 17.0, visionOS 1.0, Android 28"),
+    .enableExperimentalFeature("AvailabilityMacro=hummingbird 3.0:anyAppleOS 26.0, Android 28"),
+]
 
 let package = Package(
     name: "hummingbird",
+    platforms: [.macOS(.v15), .iOS(.v18), .macCatalyst(.v18), .tvOS(.v18), .visionOS(.v2)],
     products: [
         .library(name: "Hummingbird", targets: ["Hummingbird"]),
         .library(name: "HummingbirdCore", targets: ["HummingbirdCore"]),
@@ -43,9 +37,9 @@ let package = Package(
         .default(enabledTraits: ["ConfigurationSupport"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "1.0.2"),
+        .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "1.1.5"),
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.0.0"),
-        .package(url: "https://github.com/apple/swift-collections.git", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-collections.git", from: "1.0.0", traits: [.defaults, "UnstableContainersPreview"]),
         .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.2", traits: []),
         .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.3.0"),
         .package(url: "https://github.com/apple/swift-http-types.git", from: "1.0.0"),
@@ -58,6 +52,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.20.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.0.0"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.30.0"),
+        .package(url: "https://github.com/swift-server/swift-http-server.git", from: "0.1.0"),
     ],
     targets: [
         .target(
@@ -76,6 +71,7 @@ let package = Package(
                 .product(name: "_NIOFileSystem", package: "swift-nio"),
                 .product(name: "NIOPosix", package: "swift-nio"),
                 .product(name: "NIOFoundationEssentialsCompat", package: "swift-nio"),
+                .product(name: "NIOHTTPServer", package: "swift-http-server"),
             ],
             swiftSettings: swiftSettings
         ),
@@ -99,6 +95,7 @@ let package = Package(
                     condition: .when(platforms: [.macOS, .iOS, .macCatalyst, .tvOS, .visionOS])
                 ),
                 .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
+                .product(name: "NIOHTTPServer", package: "swift-http-server"),
             ],
             swiftSettings: swiftSettings
         ),
@@ -224,5 +221,4 @@ if Context.environment["ENABLE_HB_BENCHMARKS"] != nil {
             ]
         )
     )
-    package.platforms = [.macOS(.v13), .iOS(.v15), .macCatalyst(.v15), .tvOS(.v15), .visionOS(.v1)]
 }
