@@ -15,10 +15,6 @@ var swiftSettings: [SwiftSetting] = [
 
     // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0470-isolated-conformances.md
     .enableUpcomingFeature("InferIsolatedConformances"),
-]
-
-    // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0470-isolated-conformances.md
-    .enableUpcomingFeature("InferIsolatedConformances"),
 
     .enableExperimentalFeature("AvailabilityMacro=hummingbird 2.0:macOS 14.0, iOS 17.0, tvOS 17.0, visionOS 1.0, Android 28"),
     .enableExperimentalFeature("AvailabilityMacro=hummingbird 3.0:anyAppleOS 26.0, Android 28"),
@@ -26,6 +22,7 @@ var swiftSettings: [SwiftSetting] = [
 
 let package = Package(
     name: "hummingbird",
+    platforms: [.macOS(.v15), .iOS(.v18), .macCatalyst(.v18), .tvOS(.v18), .visionOS(.v2)],
     products: [
         .library(name: "Hummingbird", targets: ["Hummingbird"]),
         .library(name: "HummingbirdCore", targets: ["HummingbirdCore"]),
