@@ -65,16 +65,19 @@ struct HTTP2StreamChannel: ServerChildChannel {
                     guard case .head(let head) = part else {
                         throw HTTPChannelError.unexpectedHTTPPart(part)
                     }
+                    let readerState = BaseRequestAsyncReader.ReaderState(iterator: iterator)
+                    let reader = BaseRequestAsyncReader(readerState: readerState)
                     let request = Request(
                         head: head,
-                        bodyIterator: iterator
+                        body: .init(.asyncReader(reader))
                     )
                     let responseWriter = ResponseWriter(outbound: outbound)
                     try await self.responder(request, responseWriter, asyncChannel.channel)
                     // Wait until inbound stream is finished. NIO will end the stream once
                     // it receives the HTTP part `.end`. This shouldnt be necessary as calling
                     // write should guarantee data is written
-                    while try await iterator.next() != nil {}
+                    guard var recoveredIterator = readerState.takeIterator() else { return }
+                    while try await recoveredIterator.next() != nil {}
                 }
             } onCancel: {
                 asyncChannel.channel.close(mode: .input, promise: nil)

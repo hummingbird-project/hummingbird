@@ -44,26 +44,28 @@ extension HTTPChannelHandler {
                         }
 
                         while true {
+                            let readerState = BaseRequestAsyncReader.ReaderState(iterator: iterator)
+                            let reader = BaseRequestAsyncReader(readerState: readerState)
                             let request = Request(
                                 head: head,
-                                bodyIterator: iterator
+                                body: .init(.asyncReader(reader))
                             )
                             let responseWriter = ResponseWriter(outbound: outbound)
                             try await self.responder(request, responseWriter, asyncChannel.channel)
                             if request.headers[.connection] == "close" {
                                 break
                             }
-
+                            guard var recoveredIterator = readerState.takeIterator() else { break }
                             // Flush current request
                             // read until we don't have a body part
                             var part: HTTPRequestPart?
                             while true {
-                                part = try await iterator.next()
+                                part = try await recoveredIterator.next()
                                 guard case .body = part else { break }
                             }
                             // if we have an end then read the next part
                             if case .end = part {
-                                part = try await iterator.next()
+                                part = try await recoveredIterator.next()
                             }
 
                             // if part is nil break out of loop
@@ -74,6 +76,8 @@ extension HTTPChannelHandler {
                             // part should be a head, if not throw error
                             guard case .head(let newHead) = part else { throw HTTPChannelError.unexpectedHTTPPart(part) }
                             head = newHead
+
+                            iterator = recoveredIterator
                         }
                     } catch is HTTPParserError {
                         // if we receive an HTTPParserError write badRequest and close connection

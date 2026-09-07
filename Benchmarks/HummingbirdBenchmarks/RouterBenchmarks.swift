@@ -65,7 +65,10 @@ extension Benchmark {
     ) where ResponderBuilder.Responder.Context: RequestContext, ResponderBuilder.Responder.Context.Source == BenchmarkRequestContextSource {
         let responder = createRouter().buildResponder()
 
-        let (requestBody, source) = RequestBody.makeStream()
+        let (stream, source) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
+        let iterator = stream.makeAsyncIterator()
+        let reader = BaseRequestAsyncReader(readerState: .init(iterator: iterator))
+        let requestBody = RequestBody(.asyncReader(reader))
         let hbRequest = Request(head: request, body: requestBody)
         source.finish()
 
@@ -78,9 +81,12 @@ extension Benchmark {
 
                 for _ in benchmark.scaledIterations {
                     for _ in 0..<50 {
-                        let (requestBody, source) = RequestBody.makeStream()
+                        let (stream, source) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
+                        let iterator = stream.makeAsyncIterator()
+                        let reader = BaseRequestAsyncReader(readerState: .init(iterator: iterator))
+                        let requestBody = RequestBody(.asyncReader(reader))
                         let request = Request(head: request, body: requestBody)
-                        try await writeBody(source.yield)
+                        try await writeBody { source.yield(.body($0)) }
                         source.finish()
                         let response = try await responder.respond(to: request, context: context)
                         _ = try await response.body.write(BenchmarkBodyWriter())
@@ -158,6 +164,7 @@ func routerBenchmarks() {
         return router
     }
 
+    /* TODO: Fixup for RequestAsyncReader
     Benchmark(
         "Router:Echo",
         configuration: .init(warmupIterations: 10),
@@ -183,7 +190,7 @@ func routerBenchmarks() {
         }
         return router
     }
-
+    */
     Benchmark(
         "Router:CaseInsensitive",
         configuration: .init(warmupIterations: 10),
