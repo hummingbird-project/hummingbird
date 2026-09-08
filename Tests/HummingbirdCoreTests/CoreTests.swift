@@ -8,6 +8,7 @@
 
 import AsyncAlgorithms
 import Atomics
+import BasicContainers
 import HTTPTypes
 import HummingbirdCore
 import HummingbirdTesting
@@ -162,7 +163,7 @@ struct HummingbirdCoreTests {
     @Test func testConsumeBody() async throws {
         try await testServer(
             responder: { (request, responseWriter: consuming ResponseWriter, _) in
-                let buffer: ByteBuffer
+                let buffer: UniqueArray<UInt8>
                 do {
                     buffer = try await request.body.collect(upTo: .max)
                 } catch {
@@ -170,7 +171,7 @@ struct HummingbirdCoreTests {
                     return
                 }
                 var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
-                try await bodyWriter.write(buffer)
+                try await bodyWriter.write(.init(buffer.span.bytes))
                 try await bodyWriter.finish(nil)
             },
             configuration: .init(address: .hostname(port: 0)),

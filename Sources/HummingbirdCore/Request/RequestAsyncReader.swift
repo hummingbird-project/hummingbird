@@ -61,11 +61,8 @@ public struct BaseRequestAsyncReader: RequestAsyncReader, ~Copyable {
     }
 
     public typealias ReadElement = UInt8
-
     public typealias Buffer = UniqueArray<UInt8>
-
     public typealias FinalElement = HTTPFields?
-
     public typealias ReadFailure = any Error
 
     private var state: ReaderState
@@ -133,6 +130,33 @@ public struct BaseRequestAsyncReader: RequestAsyncReader, ~Copyable {
 @available(*, unavailable)
 extension BaseRequestAsyncReader: Sendable {}
 
+struct CollatedRequestAsyncReader: RequestAsyncReader, ~Copyable {
+    public typealias ReadElement = UInt8
+    public typealias Buffer = UniqueArray<UInt8>
+    public typealias FinalElement = HTTPFields?
+    public typealias ReadFailure = any Error
+
+    let buffer: Mutex<Buffer?>
+    let finalElement: FinalElement?
+
+    init(_ array: consuming UniqueArray<UInt8>, finalElement: FinalElement = nil) {
+        // The force-unwrap is safe since final element must be set at this point
+        self.buffer = .init(array)
+        self.finalElement = finalElement
+    }
+
+    public mutating func read<Return: ~Copyable, Failure: Error>(
+        body: nonisolated(nonsending) (inout Buffer, consuming HTTPFields??) async throws(Failure) -> Return
+    ) async throws(EitherError<ReadFailure, Failure>) -> Return {
+        guard var buffer = self.buffer.withLock({ $0.take() }) else { throw .first(RequestAsyncReaderError.streamEndedBeforeReceivingRequestEnd) }
+        do {
+            return try await body(&buffer, finalElement)
+        } catch {
+            throw .second(error)
+        }
+    }
+}
+
 // This is a helper type to move a non-Sendable value across isolation regions.
 @usableFromInline
 struct Disconnected<Value: ~Copyable>: ~Copyable, Sendable {
@@ -167,5 +191,12 @@ enum RequestAsyncReaderError: Error, CustomStringConvertible {
         case .streamEndedBeforeReceivingRequestEnd:
             "The request stream unexpectedly ended before receiving a request end part."
         }
+    }
+}
+
+extension ByteBuffer {
+    package init(_ span: RawSpan) {
+        self = .init()
+        self.writeBytes(span)
     }
 }

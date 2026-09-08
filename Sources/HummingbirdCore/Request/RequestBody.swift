@@ -8,8 +8,8 @@
 
 public import AsyncStreaming
 public import BasicContainers
+import ContainersPreview
 internal import DequeModule
-public import NIOCore
 
 /// Request Body
 ///
@@ -17,15 +17,11 @@ public import NIOCore
 public final class RequestBody {
     @usableFromInline
     package enum _Backing: ~Copyable {
-        case byteBuffer(ByteBuffer)
         case asyncReader(any (RequestAsyncReader & ~Copyable))
         case consumed
 
         mutating func consumeReader() -> any (RequestAsyncReader & ~Copyable) {
             switch consume self {
-            case .byteBuffer:
-                // TODO: Return a reader here
-                fatalError("Cannot pass buffer as reader")
             case .asyncReader(let reader):
                 self = .consumed
                 return reader
@@ -46,6 +42,10 @@ public final class RequestBody {
     public func consumeBody() -> any (RequestAsyncReader & ~Copyable) {
         self._backing.consumeReader()
     }
+
+    package init(bytes: consuming UniqueArray<UInt8>) {
+        self._backing = .asyncReader(CollatedRequestAsyncReader(bytes))
+    }
 }
 
 extension RequestBody {
@@ -63,27 +63,26 @@ extension RequestBody {
 }
 
 extension RequestBody {
-    public func collect(upTo maxSize: Int) async throws -> ByteBuffer {
+    public func collect(upTo maxSize: Int) async throws -> UniqueArray<UInt8> {
         let reader = self._backing.consumeReader()
         return try await reader.collect(upTo: maxSize)
     }
 }
 
 extension AsyncReader where Self: ~Copyable, Buffer == UniqueArray<UInt8> {
-    consuming func collect(upTo: Int) async throws -> ByteBuffer {
+    consuming func collect(upTo: Int) async throws -> UniqueArray<UInt8> {
         var reader = self
         var finalElement: FinalElement? = nil
-        var byteBuffer = ByteBuffer()
+        var array = UniqueArray<UInt8>()
         while finalElement == nil {
             try await reader.read { (buffer, final) -> Void in
-                //buffer.consumeAll()
-                byteBuffer.writeBytes(buffer.span.bytes)
+                array.append(from: buffer.consumeAll())
                 if let final {
                     finalElement = final
                 }
             }
         }
         // The force-unwrap is safe since final element must be set at this point
-        return byteBuffer
+        return array
     }
 }
