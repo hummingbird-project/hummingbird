@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import BasicContainers
 import Benchmark
 import HTTPTypes
 import Hummingbird
@@ -159,7 +160,7 @@ func routerBenchmarks() {
         let router = Router(context: BasicBenchmarkContext.self)
         router.put { request, _ in
             let body = try await request.body.collect(upTo: .max)
-            return body.readableBytes.description
+            return body.count.description
         }
         return router
     }

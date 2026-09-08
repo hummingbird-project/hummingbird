@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import BasicContainers
 import Foundation
 import Hummingbird
 import HummingbirdTesting
@@ -23,14 +24,14 @@ struct PersistTests {
         router.put("/persist/:tag") { request, context -> HTTPResponse.Status in
             let buffer = try await request.body.collect(upTo: .max)
             let tag = try context.parameters.require("tag")
-            try await persist.set(key: tag, value: String(buffer: buffer))
+            try await persist.set(key: tag, value: String(buffer: .init(buffer.span.bytes)))
             return .ok
         }
         router.put("/persist/:tag/:time") { request, context -> HTTPResponse.Status in
             guard let time = context.parameters.get("time", as: Int.self) else { throw HTTPError(.badRequest) }
             let buffer = try await request.body.collect(upTo: .max)
             let tag = try context.parameters.require("tag")
-            try await persist.set(key: tag, value: String(buffer: buffer), expires: .seconds(time))
+            try await persist.set(key: tag, value: String(buffer: .init(buffer.span.bytes)), expires: .seconds(time))
             return .ok
         }
         router.get("/persist/:tag") { _, context -> String? in
@@ -67,7 +68,7 @@ struct PersistTests {
         router.put("/create/:tag") { request, context -> HTTPResponse.Status in
             let buffer = try await request.body.collect(upTo: .max)
             let tag = try context.parameters.require("tag")
-            try await persist.create(key: tag, value: String(buffer: buffer))
+            try await persist.create(key: tag, value: String(buffer: .init(buffer.span.bytes)))
             return .ok
         }
         let app = Application(responder: router.buildResponder())
@@ -86,7 +87,7 @@ struct PersistTests {
             let buffer = try await request.body.collect(upTo: .max)
             let tag = try context.parameters.require("tag")
             do {
-                try await persist.create(key: tag, value: String(buffer: buffer))
+                try await persist.create(key: tag, value: String(buffer: .init(buffer.span.bytes)))
             } catch let error as PersistError where error == .duplicate {
                 throw HTTPError(.conflict)
             }
@@ -163,7 +164,7 @@ struct PersistTests {
         router.put("/codable/:tag") { request, context -> HTTPResponse.Status in
             guard let tag = context.parameters.get("tag") else { throw HTTPError(.badRequest) }
             let buffer = try await request.body.collect(upTo: .max)
-            try await persist.set(key: tag, value: TestCodable(buffer: String(buffer: buffer)))
+            try await persist.set(key: tag, value: TestCodable(buffer: String(buffer: .init(buffer.span.bytes))))
             return .ok
         }
         router.get("/codable/:tag") { _, context -> String? in

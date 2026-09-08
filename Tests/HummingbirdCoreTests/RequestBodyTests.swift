@@ -5,6 +5,8 @@
 // See LICENSE.txt for license information
 // SPDX-License-Identifier: Apache-2.0
 //
+
+import BasicContainers
 import HTTPTypes
 import HummingbirdCore
 import NIOCore
@@ -12,6 +14,7 @@ import NIOHTTPTypes
 import Testing
 
 struct RequestBodyTests {
+    @available(anyAppleOS 26.0, *)
     @Test func testSingleRequestBody() async throws {
         try await withThrowingTaskGroup(of: Void.self) { group in
             let (httpSource, httpStream) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
@@ -26,12 +29,13 @@ struct RequestBodyTests {
             }
             group.addTask {
                 let buffer = try await requestBody.collect(upTo: .max)
-                #expect(String(buffer: buffer) == "hello world")
+                #expect(String(copying: UTF8Span(unchecked: buffer.span)) == "hello world")
             }
             try await group.waitForAll()
         }
     }
 
+    @available(anyAppleOS 26.0, *)
     @Test func testMultipleRequestBodies() async throws {
         try await withThrowingTaskGroup(of: Void.self) { group in
             let (httpSource, httpStream) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
@@ -48,7 +52,7 @@ struct RequestBodyTests {
             }
             group.addTask {
                 let buffer = try await requestBody.collect(upTo: .max)
-                #expect(String(buffer: buffer) == "hello world")
+                #expect(String(copying: UTF8Span(unchecked: buffer.span)) == "hello world")
             }
             try await group.waitForAll()
         }
