@@ -331,8 +331,7 @@ struct ApplicationTests {
         }
     }
     */
-    @Test(.disabled("TODO: Fixup for RequestAsyncReader"))
-    func testCollectBody() async throws {
+    @Test func testCollectBody() async throws {
         struct CollateMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(
                 _ request: Request,
@@ -361,8 +360,7 @@ struct ApplicationTests {
         }
     }
 
-    @Test(.disabled("TODO: Fixup for RequestAsyncReader"))
-    func testDoubleStreaming() async throws {
+    @Test func testDoubleStreaming() async throws {
         let router = Router()
         router.post("size") { request, context -> String in
             var request = request
