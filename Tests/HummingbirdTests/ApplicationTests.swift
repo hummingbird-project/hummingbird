@@ -242,7 +242,7 @@ struct ApplicationTests {
             .group("/echo-body")
             .post { request, _ -> Response in
                 let buffer = try await request.body.collect(upTo: .max)
-                return .init(status: .ok, headers: [:], body: .init(byteBuffer: buffer))
+                return .init(status: .ok, headers: [:], body: .init(byteBuffer: .init(buffer.span.bytes)))
             }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -331,7 +331,7 @@ struct ApplicationTests {
         }
     }
     */
-    @Test(.disabled("TODO: Re-enable after fixing RequestAsyncReader"))
+    @Test(.disabled("TODO: Fixup for RequestAsyncReader"))
     func testCollectBody() async throws {
         struct CollateMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(
@@ -340,7 +340,7 @@ struct ApplicationTests {
                 next: (Request, Context) async throws -> Response
             ) async throws -> Response {
                 var request = request
-                _ = try await request.collectBody(upTo: context.maxUploadSize)
+                try await request.collectBody(upTo: context.maxUploadSize) { _ in }
                 return try await next(request, context)
             }
         }
@@ -348,7 +348,7 @@ struct ApplicationTests {
         router.middlewares.add(CollateMiddleware())
         router.put("/hello") { request, _ -> String in
             let buffer = try await request.body.collect(upTo: .max)
-            return buffer.readableBytes.description
+            return buffer.count.description
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -361,12 +361,12 @@ struct ApplicationTests {
         }
     }
 
-    @Test(.disabled("TODO: Re-enable after fixing RequestAsyncReader"))
+    @Test(.disabled("TODO: Fixup for RequestAsyncReader"))
     func testDoubleStreaming() async throws {
         let router = Router()
         router.post("size") { request, context -> String in
             var request = request
-            _ = try await request.collectBody(upTo: context.maxUploadSize)
+            try await request.collectBody(upTo: context.maxUploadSize) { _ in }
             var size = 0
             try await request.body.read { buffer, _ in
                 size += buffer.count
@@ -389,7 +389,7 @@ struct ApplicationTests {
             .group("/echo-body")
             .post { request, _ -> ByteBuffer? in
                 let buffer = try await request.body.collect(upTo: .max)
-                return buffer.readableBytes > 0 ? buffer : nil
+                return buffer.count > 0 ? ByteBuffer(buffer.span.bytes) : nil
             }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -826,7 +826,7 @@ struct ApplicationTests {
 
         let request = Request(
             head: .init(method: .get, scheme: nil, authority: "example.com", path: "/"),
-            body: .init(.byteBuffer(ByteBuffer()))
+            body: .init(bytes: UniqueArray<UInt8>())
         )
         let context = BasicRequestContext(
             source: ApplicationRequestContextSource(
@@ -1182,8 +1182,7 @@ struct ApplicationTests {
         }
         let router = Router()
             .post { request, _ in
-                let buffer = try await request.body.collect(upTo: .max)
-                print(buffer.readableBytes)
+                _ = try await request.body.collect(upTo: .max)
                 return HTTPResponse.Status.ok
             }
         var httpConfiguration = HTTP1Channel.Configuration(additionalChannelHandlers: [CreateErrorHandler()])
@@ -1252,7 +1251,7 @@ struct ApplicationTests {
             return Response(
                 status: .ok,
                 body: .init { writer in
-                    try await writer.write(b)
+                    try await writer.write(ByteBuffer(b.span.bytes))
                     try await writer.finish(nil)
                 }
             )

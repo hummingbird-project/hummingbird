@@ -5,6 +5,7 @@
 // See LICENSE.txt for license information
 // SPDX-License-Identifier: Apache-2.0
 //
+import BasicContainers
 
 @available(hummingbird 2.0, *)
 extension URLEncodedFormEncoder: ResponseEncoder {
@@ -36,7 +37,9 @@ extension URLEncodedFormDecoder: RequestDecoder {
     ///   - context: Request context
     public func decode<T: Decodable>(_ type: T.Type, from request: Request, context: some RequestContext) async throws -> T {
         let buffer = try await request.body.collect(upTo: context.maxUploadSize)
-        let string = String(buffer: buffer)
-        return try self.decode(T.self, from: string)
+        return try buffer.span.withUnsafeBytes { bytes in
+            let string = String(decoding: bytes, as: UTF8.self)
+            return try self.decode(T.self, from: string)
+        }
     }
 }

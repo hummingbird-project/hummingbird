@@ -6,8 +6,9 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+public import BasicContainers
 public import HTTPTypes
-public import NIOCore
+import NIOCore
 
 /// Holds all the values required to process a request
 public struct Request {
@@ -41,18 +42,18 @@ public struct Request {
         self.body = body
     }
 
-    /// Collapse body into one ByteBuffer.
+    /// Collapse body into one UniqueArray.
     ///
     /// This will store the collated ByteBuffer back into the request so is a mutating method. If
     /// you don't need to store the collated ByteBuffer on the request then use
     /// `request.body.collect(maxSize:)`.
     ///
-    /// - Parameter maxSize: Maxiumum size of body to collect
-    /// - Returns: Collated body
-    public mutating func collectBody(upTo maxSize: Int) async throws -> ByteBuffer {
-        let byteBuffer = try await self.body.collect(upTo: maxSize)
-        self.body = .init(.byteBuffer(byteBuffer))
-        return byteBuffer
+    /// - Parameters
+    ///     - maxSize: Maxiumum size of body to collect
+    public mutating func collectBody(upTo maxSize: Int, process: (inout UniqueArray<UInt8>) async throws -> Void) async throws {
+        var array = try await self.body.collect(upTo: maxSize)
+        try await process(&array)
+        self.body = .init(.asyncReader(CollatedRequestAsyncReader(array)))
     }
 }
 
