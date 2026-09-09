@@ -24,12 +24,11 @@ public import AsyncStreaming
 public import BasicContainers
 import ContainersPreview
 public import HTTPTypes
-package import NIOCore
+public import NIOCore
 package import NIOHTTPTypes
 import Synchronization
 
-@usableFromInline
-package protocol RequestAsyncReader: AsyncReader, ~Copyable
+public protocol RequestAsyncReader: AsyncReader, ~Copyable
 where Buffer == UniqueArray<UInt8>, ReadFailure == any Error, FinalElement == HTTPFields? {
     consuming func drain() async throws(ReadFailure)
 }
@@ -133,8 +132,7 @@ package struct BaseRequestAsyncReader: RequestAsyncReader, ~Copyable {
         }
     }
 
-    @usableFromInline
-    package consuming func drain() async throws(ReadFailure) {
+    public consuming func drain() async throws(ReadFailure) {
         while let part = try await self.iterator?.next() {
             if case .end = part {
                 // Move the iterator back into ReaderState so the outer request
@@ -204,8 +202,7 @@ extension RequestAsyncReader where Self: ~Copyable {
         return array
     }
 
-    @usableFromInline
-    package consuming func drain() async throws(ReadFailure) {
+    public consuming func drain() async throws(ReadFailure) {
         var reader = self
 
         while true {
@@ -259,6 +256,7 @@ package enum RequestAsyncReaderError: Error, CustomStringConvertible {
 }
 
 extension ByteBuffer {
+    @usableFromInline
     package init(_ span: RawSpan) {
         self = .init()
         self.writeBytes(span)
