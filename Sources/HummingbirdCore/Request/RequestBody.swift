@@ -56,6 +56,13 @@ public final class RequestBody {
     package init(bytes: consuming UniqueArray<UInt8>) {
         self._backing = .asyncReader(CollatedRequestAsyncReader(bytes))
     }
+
+    /// Take request body AsyncReader from RequestBody. By doing this you are setting the
+    /// request body to be consumed and it is your responsibility to ensure the reader
+    /// reads the request body.
+    public var reader: any (RequestAsyncReader & ~Copyable) {
+        self._backing.take()
+    }
 }
 
 extension RequestBody {
