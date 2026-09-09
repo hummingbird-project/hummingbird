@@ -14,7 +14,7 @@ public import HTTPTypes
 
 /// Request Body
 ///
-/// Can be either a stream of ByteBuffers or a single ByteBuffer
+/// Wrapper for an AsyncReader that returns a stream of request body buffers
 public final class RequestBody {
     @usableFromInline
     package enum _Backing: ~Copyable {
@@ -117,6 +117,12 @@ extension RequestBody {
 }
 
 extension RequestBody {
+    /// Collapse body into a single UniqueArray<UInt8>.
+    ///
+    /// This function will consume the RequestBody and it will no longer be available.
+    ///
+    /// - Parameters
+    ///     - maxSize: Maxiumum size of body to collect
     @inlinable
     public func collect(upTo maxSize: Int) async throws -> UniqueArray<UInt8> {
         let reader = self._backing.take()
@@ -130,6 +136,9 @@ extension RequestBody {
         }
     }
 
+    /// Drain request body parts.
+    ///
+    /// This function will consume the RequestBody and it will no longer be available.
     @inlinable
     public func drain() async throws {
         guard let reader = self._backing.optionalTake() else { return }
