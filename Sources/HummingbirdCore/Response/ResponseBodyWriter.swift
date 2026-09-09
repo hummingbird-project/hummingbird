@@ -43,7 +43,7 @@ extension ResponseBodyWriter {
     }
 
     ///  Write buffers read from AsyncReader
-    /// - Parameter buffers: ByteBuffer AsyncSequence
+    /// - Parameter reader: AsyncReader to read from
     @inlinable
     public mutating func write<Reader: AsyncReader & ~Copyable>(_ reader: consuming Reader) async throws where Reader.Buffer == UniqueArray<UInt8> {
         _ = try await reader.forEachBuffer { buffer in

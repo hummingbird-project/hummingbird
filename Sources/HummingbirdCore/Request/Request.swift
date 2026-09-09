@@ -42,10 +42,10 @@ public struct Request {
         self.body = body
     }
 
-    /// Collapse body into one UniqueArray.
+    /// Collapse body into a single UniqueArray<UInt8>.
     ///
-    /// This will store the collated ByteBuffer back into the request so is a mutating method. If
-    /// you don't need to store the collated ByteBuffer on the request then use
+    /// This will store the collated buffer back into the request so is a mutating method. If
+    /// you don't need to store the collated buffer on the request then use
     /// `request.body.collect(maxSize:)`.
     ///
     /// - Parameters

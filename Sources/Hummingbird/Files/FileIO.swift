@@ -107,10 +107,10 @@ public struct FileIO: Sendable {
         }
     }
 
-    /// Write contents of AsyncSequence of buffers to file
+    /// Write output of AsyncReader to file
     ///
     /// - Parameters:
-    ///   - contents: AsyncSequence of buffers to write.
+    ///   - reader: AsyncReader to read buffers from
     ///   - path: Path to write to
     ///   - context: Request Context
     public func writeFile<Reader: AsyncReader & ~Copyable>(
