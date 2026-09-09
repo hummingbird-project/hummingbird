@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import AsyncStreaming
 import HTTPTypes
 public import Logging
 import NIOConcurrencyHelpers
@@ -51,7 +52,7 @@ extension HTTPChannelHandler {
                                 body: .init(.asyncReader(reader))
                             )
                             let responseWriter = ResponseWriter(outbound: outbound)
-                            try await self.responder(request, responseWriter, asyncChannel.channel)
+                            try await self.handleRequest(request, responseWriter: responseWriter, channel: asyncChannel.channel)
                             if request.headers[.connection] == "close" {
                                 break
                             }
@@ -85,6 +86,9 @@ extension HTTPChannelHandler {
                         logger.debug("HTTP parse error, closing connection")
                         try await outbound.write(.head(.init(status: .badRequest, headerFields: [.connection: "close", .contentLength: "0"])))
                         try await outbound.write(.end(nil))
+                    } catch {
+                        logger.error("\(error)")
+                        throw error
                     }
                     // close outbound and wait for channel to close
                     outbound.finish()
@@ -97,5 +101,14 @@ extension HTTPChannelHandler {
             // we got here because we failed to either read or write to the channel
             logger.trace("Failed to read/write to Channel. Error: \(error)")
         }
+    }
+
+    func handleRequest(
+        _ request: Request,
+        responseWriter: consuming ResponseWriter,
+        channel: any Channel
+    ) async throws {
+        try await self.responder(request, responseWriter, channel)
+        try await request.body.drain()
     }
 }
