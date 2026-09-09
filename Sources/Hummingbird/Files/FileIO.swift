@@ -6,6 +6,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+public import AsyncStreaming
+public import BasicContainers
 import CNIOLinux
 public import HummingbirdCore
 import Logging
@@ -101,6 +103,31 @@ public struct FileIO: Sendable {
         ) { fileHandle in
             try await fileHandle.withBufferedWriter { writer in
                 _ = try await writer.write(contentsOf: contents)
+            }
+        }
+    }
+
+    /// Write contents of AsyncSequence of buffers to file
+    ///
+    /// - Parameters:
+    ///   - contents: AsyncSequence of buffers to write.
+    ///   - path: Path to write to
+    ///   - context: Request Context
+    public func writeFile<Reader: AsyncReader & ~Copyable>(
+        reader: consuming Reader,
+        path: String,
+        context: some RequestContext
+    ) async throws where Reader.Buffer == UniqueArray<UInt8> {
+        context.logger.debug("[FileIO] PUT", metadata: ["hb.file.path": .string(path)])
+        var reader: Reader? = reader
+        _ = try await self.fileSystem.withFileHandle(
+            forWritingAt: .init(path),
+            options: .newFile(replaceExisting: true)
+        ) { fileHandle in
+            try await fileHandle.withBufferedWriter { writer in
+                try await reader.take()!.forEachBuffer { buffer in
+                    _ = try await writer.write(contentsOf: ByteBuffer(buffer.span.bytes))
+                }
             }
         }
     }
