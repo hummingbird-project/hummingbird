@@ -139,7 +139,7 @@ package struct BaseRequestAsyncReader: RequestAsyncReader, ~Copyable {
     }
 
     public consuming func drain() async throws(ReadFailure) {
-        while let part = try await self.iterator?.next() {
+        while let part = try await self.iterator?.next(isolation: #isolation) {
             if case .end = part {
                 // Move the iterator back into ReaderState so the outer request
                 // loop can recover it for the next request on the same connection
@@ -223,35 +223,6 @@ extension RequestAsyncReader where Self: ~Copyable {
                 break
             }
         }
-    }
-}
-
-/// This is a helper type to move a non-Sendable value across isolation regions.
-///
-/// This will be eventually replaced when a version of it is added to the standard
-/// library https://github.com/swiftlang/swift-evolution/blob/main/proposals/0538-disconnected.md
-@usableFromInline
-struct _Disconnected<Value: ~Copyable>: ~Copyable, Sendable {
-    // This is safe since we take the value as sending and take consumes it
-    // and returns it as sending.
-    private nonisolated(unsafe) var value: Value?
-
-    @usableFromInline
-    init(value: consuming sending Value) {
-        unsafe self.value = .some(value)
-    }
-
-    @usableFromInline
-    consuming func consume() -> sending Value {
-        nonisolated(unsafe) let value = unsafe self.value.take()!
-        return unsafe value
-    }
-
-    @usableFromInline
-    mutating func exchange(newValue: consuming sending Value) -> sending Value {
-        nonisolated(unsafe) let value = unsafe self.value.take()!
-        unsafe self.value = consume newValue
-        return unsafe value
     }
 }
 
