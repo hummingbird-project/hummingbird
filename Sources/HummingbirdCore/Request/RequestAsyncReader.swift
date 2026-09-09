@@ -28,10 +28,13 @@ package import NIOCore
 package import NIOHTTPTypes
 import Synchronization
 
-public protocol RequestAsyncReader: AsyncReader, ~Copyable where Buffer == UniqueArray<UInt8>, ReadFailure == any Error, FinalElement == HTTPFields? {
+@usableFromInline
+package protocol RequestAsyncReader: AsyncReader, ~Copyable
+where Buffer == UniqueArray<UInt8>, ReadFailure == any Error, FinalElement == HTTPFields? {
+    consuming func drain() async throws(ReadFailure)
 }
 
-public struct BaseRequestAsyncReader: RequestAsyncReader, ~Copyable {
+package struct BaseRequestAsyncReader: RequestAsyncReader, ~Copyable {
     package final class ReaderState: Sendable {
         struct Wrapped: ~Copyable {
             var finishedReading: Bool = false
@@ -122,7 +125,27 @@ public struct BaseRequestAsyncReader: RequestAsyncReader, ~Copyable {
         do {
             return try await body(&self.buffer, trailerFields)
         } catch {
+            nonisolated(unsafe) let iter = self.iterator.take()
+            self.state.wrapped.withLock { state in
+                _ = unsafe state.iterator.swap(newValue: iter)
+            }
             throw .second(error)
+        }
+    }
+
+    @usableFromInline
+    package consuming func drain() async throws(ReadFailure) {
+        while let part = try await self.iterator?.next() {
+            if case .end = part {
+                // Move the iterator back into ReaderState so the outer request
+                // loop can recover it for the next request on the same connection
+                // (HTTP/1.1 keep-alive).
+                nonisolated(unsafe) let iter = self.iterator.take()
+                self.state.wrapped.withLock { state in
+                    state.finishedReading = true
+                    _ = unsafe state.iterator.swap(newValue: iter)
+                }
+            }
         }
     }
 }
@@ -157,6 +180,44 @@ struct CollatedRequestAsyncReader: RequestAsyncReader, ~Copyable {
     }
 }
 
+extension RequestAsyncReader where Self: ~Copyable {
+    @usableFromInline
+    consuming func collect(upTo maxSize: Int) async throws(EitherError<ReadFailure, any Error>) -> UniqueArray<UInt8> {
+        var reader = self
+        var finished: Bool = false
+        var array = UniqueArray<UInt8>()
+        var size = 0
+
+        while finished == false {
+            try await reader.read { (buffer, final) -> Void in
+                size += buffer.count
+                if size > maxSize {
+                    throw RequestAsyncReaderError.tooLarge
+                }
+                array.append(from: buffer.consumeAll())
+                if final != nil {
+                    finished = true
+                }
+            }
+        }
+        // The force-unwrap is safe since final element must be set at this point
+        return array
+    }
+
+    @usableFromInline
+    package consuming func drain() async throws(ReadFailure) {
+        var reader = self
+
+        while true {
+            if try await reader.read(body: { _, final in
+                final != nil
+            }) {
+                break
+            }
+        }
+    }
+}
+
 // This is a helper type to move a non-Sendable value across isolation regions.
 @usableFromInline
 struct Disconnected<Value: ~Copyable>: ~Copyable, Sendable {
@@ -183,13 +244,16 @@ struct Disconnected<Value: ~Copyable>: ~Copyable, Sendable {
     }
 }
 
-enum RequestAsyncReaderError: Error, CustomStringConvertible {
+package enum RequestAsyncReaderError: Error, CustomStringConvertible {
     case streamEndedBeforeReceivingRequestEnd
+    case tooLarge
 
-    var description: String {
+    package var description: String {
         switch self {
         case .streamEndedBeforeReceivingRequestEnd:
             "The request stream unexpectedly ended before receiving a request end part."
+        case .tooLarge:
+            "The request stream is too large."
         }
     }
 }
