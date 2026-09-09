@@ -6,6 +6,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+public import AsyncStreaming
+public import BasicContainers
 public import HTTPTypes
 public import NIOCore
 
@@ -37,6 +39,15 @@ extension ResponseBodyWriter {
     public mutating func write<BufferSequence: AsyncSequence>(_ buffers: BufferSequence) async throws where BufferSequence.Element == ByteBuffer {
         for try await buffer in buffers {
             try await self.write(buffer)
+        }
+    }
+
+    ///  Write buffers read from AsyncReader
+    /// - Parameter buffers: ByteBuffer AsyncSequence
+    @inlinable
+    public mutating func write<Reader: AsyncReader & ~Copyable>(_ reader: consuming Reader) async throws where Reader.Buffer == UniqueArray<UInt8> {
+        _ = try await reader.forEachBuffer { buffer in
+            try await self.write(ByteBuffer(buffer.span.bytes))
         }
     }
 }
