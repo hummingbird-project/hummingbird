@@ -138,6 +138,11 @@ package struct BaseRequestAsyncReader: RequestAsyncReader, ~Copyable {
         }
     }
 
+    /// Drain request body of buffers so a subsequent request on the same connection can
+    /// be processed.
+    ///
+    /// This function returns the iterator to the RenderState so it can be used for
+    /// the next HTTP request on the connection.
     public consuming func drain() async throws(ReadFailure) {
         while let part = try await self.iterator?.next(isolation: #isolation) {
             if case .end = part {
