@@ -28,11 +28,17 @@ public import NIOCore
 package import NIOHTTPTypes
 import Synchronization
 
+/// AsyncReader used to process Request body buffers.
+///
+/// Return buffers as UniqueArray<UInt8> and trailer headers as the final element
 public protocol RequestAsyncReader: AsyncReader, ~Copyable
 where Buffer == UniqueArray<UInt8>, ReadFailure == any Error, FinalElement == HTTPFields? {
+    /// Drain request body of buffers so a subsequent request on the same connection can
+    /// be processed.
     consuming func drain() async throws(ReadFailure)
 }
 
+/// Base AsyncReader generated from AsyncSequence iterator of HTTP parts
 package struct BaseRequestAsyncReader: RequestAsyncReader, ~Copyable {
     package final class ReaderState: Sendable {
         struct Wrapped: ~Copyable {
@@ -42,7 +48,7 @@ package struct BaseRequestAsyncReader: RequestAsyncReader, ~Copyable {
             /// body reader at construction time and returned by it once request
             /// `.end` has been observed (for HTTP/1.1 keep-alive recovery).
             var iterator:
-                Disconnected<
+                _Disconnected<
                     NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator?
                 >
         }
@@ -50,14 +56,14 @@ package struct BaseRequestAsyncReader: RequestAsyncReader, ~Copyable {
         let wrapped: Mutex<Wrapped>
 
         package init(iterator: consuming sending NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator) {
-            self.wrapped = .init(.init(iterator: Disconnected(value: iterator)))
+            self.wrapped = .init(.init(iterator: _Disconnected(value: iterator)))
         }
 
         /// Takes the iterator out of the state. Returns the iterator if present,
         /// or `nil` if it's already been taken (e.g. by the body reader).
         package func takeIterator() -> sending NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator? {
             self.wrapped.withLock { state in
-                state.iterator.swap(newValue: nil)
+                state.iterator.exchange(newValue: nil)
             }
         }
     }
@@ -114,7 +120,7 @@ package struct BaseRequestAsyncReader: RequestAsyncReader, ~Copyable {
             nonisolated(unsafe) let iter = self.iterator.take()
             self.state.wrapped.withLock { state in
                 state.finishedReading = true
-                _ = unsafe state.iterator.swap(newValue: iter)
+                _ = unsafe state.iterator.exchange(newValue: iter)
             }
             trailerFields = trailer
         case .none:
@@ -126,7 +132,7 @@ package struct BaseRequestAsyncReader: RequestAsyncReader, ~Copyable {
         } catch {
             nonisolated(unsafe) let iter = self.iterator.take()
             self.state.wrapped.withLock { state in
-                _ = unsafe state.iterator.swap(newValue: iter)
+                _ = unsafe state.iterator.exchange(newValue: iter)
             }
             throw .second(error)
         }
@@ -141,7 +147,7 @@ package struct BaseRequestAsyncReader: RequestAsyncReader, ~Copyable {
                 nonisolated(unsafe) let iter = self.iterator.take()
                 self.state.wrapped.withLock { state in
                     state.finishedReading = true
-                    _ = unsafe state.iterator.swap(newValue: iter)
+                    _ = unsafe state.iterator.exchange(newValue: iter)
                 }
             }
         }
@@ -151,6 +157,7 @@ package struct BaseRequestAsyncReader: RequestAsyncReader, ~Copyable {
 @available(*, unavailable)
 extension BaseRequestAsyncReader: Sendable {}
 
+/// AsyncReader that reads one buffer
 struct CollatedRequestAsyncReader: RequestAsyncReader, ~Copyable {
     public typealias ReadElement = UInt8
     public typealias Buffer = UniqueArray<UInt8>
@@ -179,6 +186,9 @@ struct CollatedRequestAsyncReader: RequestAsyncReader, ~Copyable {
 }
 
 extension RequestAsyncReader where Self: ~Copyable {
+    /// Collect all of a request body's buffers into one buffer
+    /// - Parameter maxSize:
+    /// - Returns: Buffer as a UniqueArray<UInt8>
     @usableFromInline
     consuming func collect(upTo maxSize: Int) async throws(EitherError<ReadFailure, any Error>) -> UniqueArray<UInt8> {
         var reader = self
@@ -202,6 +212,7 @@ extension RequestAsyncReader where Self: ~Copyable {
         return array
     }
 
+    /// Default implementation of drain
     public consuming func drain() async throws(ReadFailure) {
         var reader = self
 
@@ -215,9 +226,12 @@ extension RequestAsyncReader where Self: ~Copyable {
     }
 }
 
-// This is a helper type to move a non-Sendable value across isolation regions.
+/// This is a helper type to move a non-Sendable value across isolation regions.
+///
+/// This will be eventually replaced when a version of it is added to the standard
+/// library https://github.com/swiftlang/swift-evolution/blob/main/proposals/0538-disconnected.md
 @usableFromInline
-struct Disconnected<Value: ~Copyable>: ~Copyable, Sendable {
+struct _Disconnected<Value: ~Copyable>: ~Copyable, Sendable {
     // This is safe since we take the value as sending and take consumes it
     // and returns it as sending.
     private nonisolated(unsafe) var value: Value?
@@ -228,13 +242,13 @@ struct Disconnected<Value: ~Copyable>: ~Copyable, Sendable {
     }
 
     @usableFromInline
-    consuming func take() -> sending Value {
+    consuming func consume() -> sending Value {
         nonisolated(unsafe) let value = unsafe self.value.take()!
         return unsafe value
     }
 
     @usableFromInline
-    mutating func swap(newValue: consuming sending Value) -> sending Value {
+    mutating func exchange(newValue: consuming sending Value) -> sending Value {
         nonisolated(unsafe) let value = unsafe self.value.take()!
         unsafe self.value = consume newValue
         return unsafe value
@@ -256,6 +270,7 @@ package enum RequestAsyncReaderError: Error, CustomStringConvertible {
 }
 
 extension ByteBuffer {
+    /// Small helper function to create a ByteBuffer from a RawSpan
     @usableFromInline
     package init(_ span: RawSpan) {
         self = .init()
