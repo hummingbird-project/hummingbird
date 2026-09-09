@@ -72,21 +72,29 @@ extension RequestBody {
     public typealias ReadFailure = any Error
 
     @inlinable
-    nonisolated(nonsending) public func read<Return: ~Copyable, Failure: Error>(
-        body: nonisolated(nonsending) (inout Buffer, consuming FinalElement?) async throws(Failure) -> Return
-    ) async throws -> Return {
+    @discardableResult
+    public consuming func forEachBuffer<Failure: Error>(
+        body: (inout Buffer) async throws(Failure) -> Void
+    ) async throws(EitherError<ReadFailure, Failure>) -> FinalElement? {
         var reader = self._backing.take()
-        do {
-            return try await reader.read(body: body)
-        } catch {
-            switch error {
-            case .first(let error): throw error
-            case .second(let error): throw error
+        var final: FinalElement? = nil
+        var done = false
+        while !done {
+            try await reader.read { (next, finalElement) throws(Failure) -> Void in
+                if !next.isEmpty {
+                    try await body(&next)
+                }
+                if let finalElement {
+                    final = finalElement
+                    done = true
+                }
             }
         }
+        return final
     }
 
     @inlinable
+    @discardableResult
     public consuming func collect<Container: RangeReplaceableContainer<ReadElement> & ~Copyable & ~Escapable>(
         into target: inout Container
     ) async throws(EitherError<ReadFailure, AsyncReaderLeftOverElementsError>) -> FinalElement {
