@@ -8,8 +8,9 @@
 
 public import AsyncStreaming
 public import BasicContainers
-import ContainersPreview
+public import ContainersPreview
 internal import DequeModule
+public import HTTPTypes
 
 /// Request Body
 ///
@@ -20,13 +21,26 @@ public final class RequestBody {
         case asyncReader(any (RequestAsyncReader & ~Copyable))
         case consumed
 
-        mutating func consumeReader() -> any (RequestAsyncReader & ~Copyable) {
+        @usableFromInline
+        mutating func take() -> any (RequestAsyncReader & ~Copyable) {
             switch consume self {
             case .asyncReader(let reader):
                 self = .consumed
                 return reader
             case .consumed:
                 fatalError("Cannot consume reader twice")
+            }
+        }
+
+        @usableFromInline
+        mutating func optionalTake() -> (any (RequestAsyncReader & ~Copyable))? {
+            switch consume self {
+            case .asyncReader(let reader):
+                self = .consumed
+                return reader
+            case .consumed:
+                self = .consumed
+                return nil
             }
         }
     }
@@ -39,50 +53,71 @@ public final class RequestBody {
         self._backing = backing
     }
 
-    public func consumeBody() -> any (RequestAsyncReader & ~Copyable) {
-        self._backing.consumeReader()
-    }
-
     package init(bytes: consuming UniqueArray<UInt8>) {
         self._backing = .asyncReader(CollatedRequestAsyncReader(bytes))
     }
 }
 
 extension RequestBody {
-    public typealias ReadElement = BaseRequestAsyncReader.ReadElement
-    public typealias Buffer = BaseRequestAsyncReader.Buffer
-    public typealias FinalElement = BaseRequestAsyncReader.FinalElement
-    public typealias ReadFailure = BaseRequestAsyncReader.ReadFailure
+    public typealias ReadElement = UInt8
+    public typealias Buffer = UniqueArray<UInt8>
+    public typealias FinalElement = HTTPFields?
+    public typealias ReadFailure = any Error
 
+    @inlinable
     nonisolated(nonsending) public func read<Return: ~Copyable, Failure: Error>(
         body: nonisolated(nonsending) (inout Buffer, consuming FinalElement?) async throws(Failure) -> Return
-    ) async throws(EitherError<ReadFailure, Failure>) -> Return {
-        var reader = self._backing.consumeReader()
-        return try await reader.read(body: body)
+    ) async throws -> Return {
+        var reader = self._backing.take()
+        do {
+            return try await reader.read(body: body)
+        } catch {
+            switch error {
+            case .first(let error): throw error
+            case .second(let error): throw error
+            }
+        }
+    }
+
+    @inlinable
+    public consuming func collect<Container: RangeReplaceableContainer<ReadElement> & ~Copyable & ~Escapable>(
+        into target: inout Container
+    ) async throws(EitherError<ReadFailure, AsyncReaderLeftOverElementsError>) -> FinalElement {
+        let reader = self._backing.take()
+        return try await reader.collect(into: &target)
+    }
+
+    @inlinable
+    public consuming func pipe<Writer>(
+        into writer: consuming Writer
+    ) async throws(EitherError<ReadFailure, Writer.WriteFailure>)
+    where
+        Writer: CallerAsyncWriter & ~Copyable,
+        Writer.WriteElement == ReadElement,
+        Writer.FinalElement == FinalElement
+    {
+        let reader = self._backing.take()
+        return try await reader.pipe(into: writer)
     }
 }
 
 extension RequestBody {
+    @inlinable
     public func collect(upTo maxSize: Int) async throws -> UniqueArray<UInt8> {
-        let reader = self._backing.consumeReader()
-        return try await reader.collect(upTo: maxSize)
-    }
-}
-
-extension AsyncReader where Self: ~Copyable, Buffer == UniqueArray<UInt8> {
-    consuming func collect(upTo: Int) async throws -> UniqueArray<UInt8> {
-        var reader = self
-        var finalElement: FinalElement? = nil
-        var array = UniqueArray<UInt8>()
-        while finalElement == nil {
-            try await reader.read { (buffer, final) -> Void in
-                array.append(from: buffer.consumeAll())
-                if let final {
-                    finalElement = final
-                }
+        let reader = self._backing.take()
+        do {
+            return try await reader.collect(upTo: maxSize)
+        } catch {
+            switch error {
+            case .first(let error): throw error
+            case .second(let error): throw error
             }
         }
-        // The force-unwrap is safe since final element must be set at this point
-        return array
+    }
+
+    @inlinable
+    public func drain() async throws {
+        guard let reader = self._backing.optionalTake() else { return }
+        try await reader.drain()
     }
 }
