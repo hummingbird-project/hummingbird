@@ -255,15 +255,14 @@ struct ApplicationTests {
         }
     }
 
-    /* TODO: Fixup for RequestAsyncReader
     @Test func testResponseBodySequence() async throws {
         let router = Router()
         router
             .group("/echo-body")
             .post { request, _ -> Response in
                 var buffers: [ByteBuffer] = []
-                for try await buffer in request.body {
-                    buffers.append(buffer)
+                try await request.body.forEachBuffer {
+                    buffers.append(.init($0.span.bytes))
                 }
                 return .init(status: .ok, headers: [:], body: .init(contentsOf: buffers))
             }
@@ -278,6 +277,8 @@ struct ApplicationTests {
             }
         }
     }
+
+    /* TODO: Fixup for RequestAsyncReader
 
     /// Test streaming of requests and streaming of responses by streaming the request body into a response streamer
     @Test func testStreaming() async throws {
@@ -366,7 +367,7 @@ struct ApplicationTests {
             var request = request
             try await request.collectBody(upTo: context.maxUploadSize) { _ in }
             var size = 0
-            try await request.body.read { buffer, _ in
+            try await request.body.forEachBuffer { buffer in
                 size += buffer.count
             }
             return size.description
