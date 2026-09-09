@@ -82,14 +82,12 @@ struct FileIOTests {
         }
     }
 
-    /* TODO: Fixup for RequestAsyncReader
-
     @Test func testWrite() async throws {
         let filename = "testWrite.txt"
         let router = Router()
         router.put("store") { request, context -> HTTPResponse.Status in
             let fileIO = FileIO(threadPool: .singleton)
-            try await fileIO.writeFile(contents: request.body, path: filename, context: context)
+            try await fileIO.writeFile(reader: request.body.reader, path: filename, context: context)
             return .ok
         }
         let app = Application(responder: router.buildResponder())
@@ -113,7 +111,7 @@ struct FileIOTests {
         let router = Router()
         router.put("store") { request, context -> HTTPResponse.Status in
             let fileIO = FileIO(threadPool: .singleton)
-            try await fileIO.writeFile(contents: request.body, path: filename, context: context)
+            try await fileIO.writeFile(reader: request.body.reader, path: filename, context: context)
             return .ok
         }
         let app = Application(responder: router.buildResponder())
@@ -131,7 +129,7 @@ struct FileIOTests {
             #expect(contents == buffer)
         }
     }
-*/
+
     @Test func testReadEmptyFile() async throws {
         let router = Router()
         router.get("empty.txt") { _, context -> Response in
