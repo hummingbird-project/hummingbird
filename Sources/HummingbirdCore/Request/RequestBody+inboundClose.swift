@@ -6,6 +6,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+/* TODO: Fixup for RequestAsyncReader
+
 import HTTPTypes
 import NIOConcurrencyHelpers
 import NIOCore
@@ -160,3 +162,5 @@ extension RequestBody {
         return .inboundClosed
     }
 }
+
+*/

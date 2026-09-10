@@ -7,7 +7,9 @@
 //
 
 import AsyncAlgorithms
+import AsyncStreaming
 import Atomics
+import BasicContainers
 import HTTPTypes
 import HummingbirdCore
 import HummingbirdTesting
@@ -162,7 +164,7 @@ struct HummingbirdCoreTests {
     @Test func testConsumeBody() async throws {
         try await testServer(
             responder: { (request, responseWriter: consuming ResponseWriter, _) in
-                let buffer: ByteBuffer
+                let buffer: UniqueArray<UInt8>
                 do {
                     buffer = try await request.body.collect(upTo: .max)
                 } catch {
@@ -170,7 +172,7 @@ struct HummingbirdCoreTests {
                     return
                 }
                 var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
-                try await bodyWriter.write(buffer)
+                try await bodyWriter.write(.init(buffer.span.bytes))
                 try await bodyWriter.finish(nil)
             },
             configuration: .init(address: .hostname(port: 0)),
@@ -227,7 +229,7 @@ struct HummingbirdCoreTests {
         try await testServer(
             responder: { (request, responseWriter: consuming ResponseWriter, _) in
                 var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
-                try await bodyWriter.write(request.body)
+                try await bodyWriter.write(request.body.reader)
                 try await bodyWriter.finish(nil)
             },
             configuration: .init(address: .hostname(port: 0)),
@@ -260,7 +262,6 @@ struct HummingbirdCoreTests {
             }
         )
     }
-
     @Test func testStreamBodySlowStream() async throws {
         /// channel handler that delays the sending of data
         class SlowInputChannelHandler: ChannelOutboundHandler, RemovableChannelHandler {
@@ -567,6 +568,8 @@ struct HummingbirdCoreTests {
         }
     }
 
+    /* TODO: Fixup for RequestAsyncReader
+
     /// Test running withInboundCloseHandler with closing input
     @Test func testWithCloseInboundHandlerWithoutClose() async throws {
         try await testServer(
@@ -684,30 +687,28 @@ struct HummingbirdCoreTests {
             try await client.close()
         }
     }
+    */
 }
 
-struct DelayAsyncSequence<CoreSequence: AsyncSequence>: AsyncSequence {
-    typealias Element = CoreSequence.Element
-    struct AsyncIterator: AsyncIteratorProtocol {
-        var iterator: CoreSequence.AsyncIterator
+struct DelayedAsyncReader: RequestAsyncReader, ~Copyable {
+    var reader: any (RequestAsyncReader & ~Copyable)
 
-        mutating func next() async throws -> Element? {
-            try await Task.sleep(for: .milliseconds(Int.random(in: 10..<100)))
-            return try await self.iterator.next()
+    public mutating func read<Return: ~Copyable, Failure: Error>(
+        body: nonisolated(nonsending) (inout UniqueArray<UInt8>, consuming HTTPFields??) async throws(Failure) -> Return
+    ) async throws(EitherError<any Error, Failure>) -> Return {
+        do {
+            return try await reader.read { buffer, trailers in
+                try await Task.sleep(for: .milliseconds(Int.random(in: 10..<100)))
+                return try await body(&buffer, trailers)
+            }
+        } catch {
+            throw .first(error)
         }
     }
-
-    let seq: CoreSequence
-
-    func makeAsyncIterator() -> AsyncIterator {
-        .init(iterator: self.seq.makeAsyncIterator())
-    }
 }
 
-extension DelayAsyncSequence: Sendable where CoreSequence: Sendable {}
-
-extension AsyncSequence {
-    func delayed() -> DelayAsyncSequence<Self> {
-        .init(seq: self)
+extension RequestBody {
+    func delayed() -> some (RequestAsyncReader & ~Copyable) {
+        DelayedAsyncReader(reader: self.reader)
     }
 }

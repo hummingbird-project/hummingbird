@@ -1,0 +1,255 @@
+//
+// This source file is part of the Hummingbird server framework project
+// Copyright (c) the Hummingbird authors
+//
+// See LICENSE.txt for license information
+// SPDX-License-Identifier: Apache-2.0
+//
+
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Swift HTTP Server open source project
+//
+// Copyright (c) 2025 Apple Inc. and the Swift HTTP Server project authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE.txt for license information
+// See CONTRIBUTORS.txt for the list of Swift HTTP Server project authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
+
+public import AsyncStreaming
+public import BasicContainers
+import ContainersPreview
+public import HTTPTypes
+public import NIOCore
+package import NIOHTTPTypes
+import Synchronization
+
+/// AsyncReader used to process Request body buffers.
+///
+/// Return buffers as UniqueArray<UInt8> and trailer headers as the final element
+public protocol RequestAsyncReader: AsyncReader, ~Copyable
+where Buffer == UniqueArray<UInt8>, ReadFailure == any Error, FinalElement == HTTPFields? {
+    /// Drain request body of buffers so a subsequent request on the same connection can
+    /// be processed.
+    consuming func drain() async throws(ReadFailure)
+}
+
+/// Base AsyncReader generated from AsyncSequence iterator of HTTP parts
+package struct BaseRequestAsyncReader: RequestAsyncReader, ~Copyable {
+    package final class ReaderState: Sendable {
+        struct Wrapped: ~Copyable {
+            var finishedReading: Bool = false
+
+            /// The iterator. Initially populated from the channel; taken by the
+            /// body reader at construction time and returned by it once request
+            /// `.end` has been observed (for HTTP/1.1 keep-alive recovery).
+            var iterator:
+                _Disconnected<
+                    NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator?
+                >
+        }
+
+        let wrapped: Mutex<Wrapped>
+
+        package init(iterator: consuming sending NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator) {
+            self.wrapped = .init(.init(iterator: _Disconnected(value: iterator)))
+        }
+
+        /// Takes the iterator out of the state. Returns the iterator if present,
+        /// or `nil` if it's already been taken (e.g. by the body reader).
+        package func takeIterator() -> sending NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator? {
+            self.wrapped.withLock { state in
+                state.iterator.exchange(newValue: nil)
+            }
+        }
+    }
+
+    public typealias ReadElement = UInt8
+    public typealias Buffer = UniqueArray<UInt8>
+    public typealias FinalElement = HTTPFields?
+    public typealias ReadFailure = any Error
+
+    private var state: ReaderState
+
+    /// The iterator that provides HTTP request parts from the underlying channel.
+    /// Taken from `state` at construction; returned to `state` when this reader
+    /// observes request `.end` so the outer request loop can recover it for
+    /// HTTP/1.1 keep-alive.
+    private var iterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator?
+
+    /// A reusable buffer handed to the body closure on each call to ``read(body:)``.
+    /// Reusing it across calls preserves the allocation; the buffer is cleared
+    /// (while keeping its capacity) at the start of every read.
+    private var buffer: UniqueArray<UInt8>
+
+    /// Initializes a new request body reader, taking the iterator from the
+    /// shared `ReaderState`.
+    package init(readerState: ReaderState) {
+        self.state = readerState
+        self.iterator = readerState.takeIterator()
+        self.buffer = UniqueArray<UInt8>()
+    }
+
+    public mutating func read<Return: ~Copyable, Failure: Error>(
+        body: nonisolated(nonsending) (inout Buffer, consuming HTTPFields??) async throws(Failure) -> Return
+    ) async throws(EitherError<ReadFailure, Failure>) -> Return {
+        let requestPart: HTTPRequestPart?
+        do {
+            requestPart = try await self.iterator?.next(isolation: #isolation)
+        } catch {
+            throw .first(error)
+        }
+
+        let trailerFields: HTTPFields??
+        self.buffer.removeAll(keepingCapacity: true)
+        switch requestPart {
+        case .head:
+            fatalError()
+        case .body(let element):
+            self.buffer.reserveCapacity(element.readableBytes)
+            self.buffer.append(copying: element.readableBytesUInt8Span)
+            trailerFields = nil
+        case .end(let trailer):
+            // Move the iterator back into ReaderState so the outer request
+            // loop can recover it for the next request on the same connection
+            // (HTTP/1.1 keep-alive).
+            nonisolated(unsafe) let iter = self.iterator.take()
+            self.state.wrapped.withLock { state in
+                state.finishedReading = true
+                _ = unsafe state.iterator.exchange(newValue: iter)
+            }
+            trailerFields = trailer
+        case .none:
+            throw .first(RequestAsyncReaderError.streamEndedBeforeReceivingRequestEnd)
+        }
+
+        do {
+            return try await body(&self.buffer, trailerFields)
+        } catch {
+            nonisolated(unsafe) let iter = self.iterator.take()
+            self.state.wrapped.withLock { state in
+                _ = unsafe state.iterator.exchange(newValue: iter)
+            }
+            throw .second(error)
+        }
+    }
+
+    /// Drain request body of buffers so a subsequent request on the same connection can
+    /// be processed.
+    ///
+    /// This function returns the iterator to the RenderState so it can be used for
+    /// the next HTTP request on the connection.
+    public consuming func drain() async throws(ReadFailure) {
+        while let part = try await self.iterator?.next(isolation: #isolation) {
+            if case .end = part {
+                // Move the iterator back into ReaderState so the outer request
+                // loop can recover it for the next request on the same connection
+                // (HTTP/1.1 keep-alive).
+                nonisolated(unsafe) let iter = self.iterator.take()
+                self.state.wrapped.withLock { state in
+                    state.finishedReading = true
+                    _ = unsafe state.iterator.exchange(newValue: iter)
+                }
+            }
+        }
+    }
+}
+
+@available(*, unavailable)
+extension BaseRequestAsyncReader: Sendable {}
+
+/// AsyncReader that reads one buffer
+struct CollatedRequestAsyncReader: RequestAsyncReader, ~Copyable {
+    public typealias ReadElement = UInt8
+    public typealias Buffer = UniqueArray<UInt8>
+    public typealias FinalElement = HTTPFields?
+    public typealias ReadFailure = any Error
+
+    let buffer: Mutex<Buffer?>
+    let finalElement: FinalElement?
+
+    init(_ array: consuming UniqueArray<UInt8>, finalElement: FinalElement = nil) {
+        // The force-unwrap is safe since final element must be set at this point
+        self.buffer = .init(array)
+        self.finalElement = finalElement
+    }
+
+    public mutating func read<Return: ~Copyable, Failure: Error>(
+        body: nonisolated(nonsending) (inout Buffer, consuming HTTPFields??) async throws(Failure) -> Return
+    ) async throws(EitherError<ReadFailure, Failure>) -> Return {
+        guard var buffer = self.buffer.withLock({ $0.take() }) else { throw .first(RequestAsyncReaderError.streamEndedBeforeReceivingRequestEnd) }
+        do {
+            return try await body(&buffer, finalElement)
+        } catch {
+            throw .second(error)
+        }
+    }
+}
+
+extension RequestAsyncReader where Self: ~Copyable {
+    /// Collect all of a request body's buffers into one buffer
+    /// - Parameter maxSize:
+    /// - Returns: Buffer as a UniqueArray<UInt8>
+    @usableFromInline
+    consuming func collect(upTo maxSize: Int) async throws(EitherError<ReadFailure, any Error>) -> UniqueArray<UInt8> {
+        var reader = self
+        var finished: Bool = false
+        var array = UniqueArray<UInt8>()
+        var size = 0
+
+        while finished == false {
+            try await reader.read { (buffer, final) -> Void in
+                size += buffer.count
+                if size > maxSize {
+                    throw RequestAsyncReaderError.tooLarge
+                }
+                array.append(from: buffer.consumeAll())
+                if final != nil {
+                    finished = true
+                }
+            }
+        }
+        // The force-unwrap is safe since final element must be set at this point
+        return array
+    }
+
+    /// Default implementation of drain
+    public consuming func drain() async throws(ReadFailure) {
+        var reader = self
+
+        while true {
+            if try await reader.read(body: { _, final in
+                final != nil
+            }) {
+                break
+            }
+        }
+    }
+}
+
+package enum RequestAsyncReaderError: Error, CustomStringConvertible {
+    case streamEndedBeforeReceivingRequestEnd
+    case tooLarge
+
+    package var description: String {
+        switch self {
+        case .streamEndedBeforeReceivingRequestEnd:
+            "The request stream unexpectedly ended before receiving a request end part."
+        case .tooLarge:
+            "The request stream is too large."
+        }
+    }
+}
+
+extension ByteBuffer {
+    /// Small helper function to create a ByteBuffer from a RawSpan
+    @usableFromInline
+    package init(_ span: RawSpan) {
+        self = .init()
+        self.writeBytes(span)
+    }
+}
