@@ -10,10 +10,10 @@ import Foundation
 import HTTPTypes
 import Hummingbird
 import HummingbirdTesting
-import NIOFileSystem
 import NIOFoundationEssentialsCompat
 import NIOPosix
 import Testing
+import _NIOFileSystem
 
 struct FileMiddlewareTests {
     static func randomBuffer(size: Int) -> ByteBuffer {
@@ -134,6 +134,10 @@ struct FileMiddlewareTests {
                     #expect(response.body == slice)
                     #expect(response.headers[.contentLength] == "320000")
                     #expect(response.headers[.contentRange] == "bytes 6000-325999/326000")
+                }
+
+                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=500-100"]) { response in
+                    #expect(response.status == .rangeNotSatisfiable)
                 }
             }
         }

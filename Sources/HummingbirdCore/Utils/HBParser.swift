@@ -500,10 +500,12 @@ extension Parser {
     }
 
     func skipUTF8Character(at index: Int) -> Int {
-        if self.buffer[index] & 0x80 != 0x80 { return index + 1 }
-        if self.buffer[index + 1] & 0xC0 == 0x80 { return index + 2 }
-        if self.buffer[index + 2] & 0xC0 == 0x80 { return index + 3 }
-        return index + 4
+        // the scalar's encoded length is determined by the leading byte, matching `decodeUTF8Character`
+        let byte = self.buffer[index]
+        if byte & 0x80 == 0 { return index + 1 }  // 0xxxxxxx: 1 byte
+        if byte & 0xE0 == 0xC0 { return index + 2 }  // 110xxxxx: 2 bytes
+        if byte & 0xF0 == 0xE0 { return index + 3 }  // 1110xxxx: 3 bytes
+        return index + 4  // 11110xxx: 4 bytes
     }
 
     func backOneUTF8Character(at index: Int) -> Int {

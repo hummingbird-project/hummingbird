@@ -129,44 +129,42 @@ enum URLEncodedFormNode: CustomStringConvertible, Equatable {
                 return .map(.init())
             }
         }
-
-        // get key and remove from list
-        let keyType = keys.first
-        let keys = keys.dropFirst()
-
-        switch (self, keyType) {
-        case (.map(let map), .map(let key)):
-            let key = String(key)
-            if keys.count == 0 {
-                guard map.values[key] == nil else { throw URLEncodedFormError(code: .duplicateKeys, value: key) }
-                map.values[key] = .leaf(value)
-            } else {
-                if let node = map.values[key] {
-                    try node.addValue(keys: keys, value: value, key: key)
+        var currentNode = self
+        var currentKey = key
+        for keyIndex in keys.indices {
+            let keyType = keys[keyIndex]
+            switch (currentNode, keyType) {
+            case (.map(let map), .map(let key)):
+                currentKey = String(key)
+                if keyIndex == keys.count - 1 {
+                    guard map.values[currentKey] == nil else { throw URLEncodedFormError(code: .duplicateKeys, value: currentKey) }
+                    map.values[currentKey] = .leaf(value)
                 } else {
-                    let node = createNode(from: keys.first!)
-                    map.values[key] = node
-                    try node.addValue(keys: keys, value: value, key: key)
+                    if let node = map.values[currentKey] {
+                        currentNode = node
+                    } else {
+                        let node = createNode(from: keys[keyIndex + 1])
+                        map.values[currentKey] = node
+                        currentNode = node
+                    }
                 }
-            }
-        case (.array(let array), .array):
-            if keys.count == 0 {
+            case (.array(let array), .array):
+                if keyIndex == keys.count - 1 {
+                    array.values.append(.leaf(value))
+                } else {
+                    // currently don't support arrays and maps inside arrays
+                    throw URLEncodedFormError(code: .notSupported, value: currentKey)
+                }
+            case (.array(let array), .arrayWithIndices(let index)):
+                guard keyIndex == keys.count - 1, array.values.count == index else {
+                    throw URLEncodedFormError(code: .invalidArrayIndex, value: "\(currentKey)[\(index)]")
+                }
                 array.values.append(.leaf(value))
-            } else {
-                // currently don't support arrays and maps inside arrays
-                throw URLEncodedFormError(code: .notSupported, value: key)
+            case (_, .arrayWithIndices), (_, .array):
+                throw URLEncodedFormError(code: .addingToInvalidType, value: currentKey)
+            case (_, .map):
+                throw URLEncodedFormError(code: .addingToInvalidType, value: currentKey)
             }
-        case (.array(let array), .arrayWithIndices(let index)):
-            guard keys.count == 0, array.values.count == index else {
-                throw URLEncodedFormError(code: .invalidArrayIndex, value: "\(key)[\(index)]")
-            }
-            array.values.append(.leaf(value))
-        case (_, .arrayWithIndices), (_, .array):
-            throw URLEncodedFormError(code: .addingToInvalidType, value: key)
-        case (_, .map):
-            throw URLEncodedFormError(code: .addingToInvalidType, value: key)
-        default:
-            throw URLEncodedFormError(code: .unexpectedError, value: key)
         }
     }
 
@@ -257,6 +255,12 @@ enum KeyParser {
         case arrayWithIndices(Int)
     }
 
+    /// Maximum number of nested key components allowed in a single form key.
+    /// A maliciously deep key (e.g. `x[a][a]...[a]`) builds a node tree so deep
+    /// that constructing *or* deallocating it overflows the stack. Bounding the
+    /// depth here caps the tree depth and closes that denial-of-service.
+    static let maxKeyDepth = 64
+
     static func parse(_ key: String) -> [KeyType]? {
         var index = key.startIndex
         var values: [KeyType] = []
@@ -269,6 +273,7 @@ enum KeyParser {
         index = bracketIndex
 
         while index != key.endIndex {
+            guard values.count < Self.maxKeyDepth else { return nil }
             guard key[index] == "[" else { return nil }
             index = key.index(after: index)
             // an open bracket is unexpected

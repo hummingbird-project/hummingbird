@@ -11,7 +11,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "4603a8036d921ea999fadb742931546c341f4bd7",
+            "uid" : "9544287b9416c0bc71e58b9f3aead8dd14b16103",
             "url" : "https://github.com/swift-server/async-http-client.git"
           }
         ]
@@ -22,10 +22,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/swift-server/async-http-client@1.35.0",
+      "purl" : "pkg:swift/github.com/swift-server/async-http-client@1.36.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.35.0"
+      "version" : "1.36.0"
     },
     {
       "bom-ref" : "async-http-client:AsyncHTTPClient",
@@ -36,7 +36,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "4603a8036d921ea999fadb742931546c341f4bd7",
+            "uid" : "9544287b9416c0bc71e58b9f3aead8dd14b16103",
             "url" : "https://github.com/swift-server/async-http-client.git"
           }
         ]
@@ -47,10 +47,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/swift-server/async-http-client:AsyncHTTPClient@1.35.0",
+      "purl" : "pkg:swift/github.com/swift-server/async-http-client:AsyncHTTPClient@1.36.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.35.0"
+      "version" : "1.36.0"
     },
     {
       "bom-ref" : "hummingbird",
@@ -976,7 +976,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "61d1b44f6e4e118792be1cff88ee2bc0267c6f9a",
+            "uid" : "45bdf670248be5f16ec0340e125dca285536f0fb",
             "url" : "https://github.com/apple/swift-nio-http2.git"
           }
         ]
@@ -987,10 +987,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio-http2@1.44.0",
+      "purl" : "pkg:swift/github.com/apple/swift-nio-http2@1.45.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.44.0"
+      "version" : "1.45.0"
     },
     {
       "bom-ref" : "swift-nio-http2:NIOHTTP2",
@@ -1001,7 +1001,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "61d1b44f6e4e118792be1cff88ee2bc0267c6f9a",
+            "uid" : "45bdf670248be5f16ec0340e125dca285536f0fb",
             "url" : "https://github.com/apple/swift-nio-http2.git"
           }
         ]
@@ -1012,10 +1012,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio-http2:NIOHTTP2@1.44.0",
+      "purl" : "pkg:swift/github.com/apple/swift-nio-http2:NIOHTTP2@1.45.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.44.0"
+      "version" : "1.45.0"
     },
     {
       "bom-ref" : "swift-nio-ssl",
@@ -1451,7 +1451,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "b5544ba79a70a0cb3563e75bf26dc198d6b40ed3",
+            "uid" : "50688cacbd41d547e9eb9f7a213542340b7c442b",
             "url" : "https://github.com/apple/swift-system"
           }
         ]
@@ -1462,10 +1462,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-system@1.7.4",
+      "purl" : "pkg:swift/github.com/apple/swift-system@1.7.5",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.7.4"
+      "version" : "1.7.5"
     },
     {
       "bom-ref" : "swift-system:SystemPackage",
@@ -1476,7 +1476,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "b5544ba79a70a0cb3563e75bf26dc198d6b40ed3",
+            "uid" : "50688cacbd41d547e9eb9f7a213542340b7c442b",
             "url" : "https://github.com/apple/swift-system"
           }
         ]
@@ -1487,10 +1487,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-system:SystemPackage@1.7.4",
+      "purl" : "pkg:swift/github.com/apple/swift-system:SystemPackage@1.7.5",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.7.4"
+      "version" : "1.7.5"
     }
   ],
   "dependencies" : [
@@ -2018,11 +2018,11 @@
       "type" : "application",
       "version" : "unknown"
     },
-    "timestamp" : "2026-07-17T09:33:36Z",
+    "timestamp" : "2026-07-29T08:00:15Z",
     "tools" : {
       "components" : [
         {
-          "bom-ref" : "urn:uuid:f314741a-7358-4520-bba4-3991be190bbb",
+          "bom-ref" : "urn:uuid:3b833585-c536-4eb3-b1b4-8727ff4453be",
           "licenses" : [
             {
               "license" : {
@@ -2040,7 +2040,7 @@
       ]
     }
   },
-  "serialNumber" : "urn:uuid:ff72f24e-cd11-4932-bfab-54107fea8d40",
+  "serialNumber" : "urn:uuid:7909de67-2577-402e-877c-39e6304ceeaf",
   "specVersion" : "1.7",
   "version" : 1
 }

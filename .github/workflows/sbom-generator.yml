@@ -34,10 +34,10 @@ jobs:
 
     - name: Generate SBOM
       run: |
-        rm -f docs/cyclonedx*
-        rm -f docs/spdx*
-        swift build --sbom-spec cyclonedx --sbom-output-dir docs
-        swift build --sbom-spec spdx --sbom-output-dir docs
+        mkdir -p docs/sbom
+        rm -f docs/sbom/*
+        swift build --sbom-spec cyclonedx --sbom-output-dir docs/sbom
+        swift build --sbom-spec spdx --sbom-output-dir docs/sbom
 
     - name: Commit and create PR
       uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8.1.1

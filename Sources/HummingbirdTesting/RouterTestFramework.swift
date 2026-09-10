@@ -60,9 +60,10 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
         }
         // if we have services then setup task group with service group running in separate task from test
         return try await withThrowingTaskGroup(of: Void.self) { group in
+            let (stream, cont) = AsyncStream.makeStream(of: Void.self)
             let serviceGroup = ServiceGroup(
                 configuration: .init(
-                    services: self.services,
+                    services: self.services + [FinishContinuationService(cont: cont)],
                     gracefulShutdownSignals: [.sigterm, .sigint],
                     logger: self.logger
                 )
@@ -71,12 +72,18 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
                 try await serviceGroup.run()
             }
             do {
-                // run the runBeforeServer processes before we run test closure. Need to do this
-                // after we have run the serviceGroup though
+                // Before we run the test closure we need to run the runBeforeServer processes and also
+                // wait for the ServiceGroup to actually start. If we don't wait for the service group to
+                // start and the test closure returns immediately there is a possibility we call triggerGracefulShutdown
+                // before we actually run the service group and it will never run the services in the
+                // group. See https://github.com/hummingbird-project/hummingbird/issues/871 for details
                 for process in self.processesRunBeforeServerStart {
                     try await process()
                 }
+                await stream.first { _ in true }
+
                 let value = try await test(client)
+
                 await serviceGroup.triggerGracefulShutdown()
                 return value
             } catch {
@@ -161,6 +168,14 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
                 values.trailingHeaders = headers
             }
         }
+    }
+}
+
+private struct FinishContinuationService: Service {
+    let cont: AsyncStream<Void>.Continuation
+    func run() async throws {
+        cont.finish()
+        try? await gracefulShutdown()
     }
 }
 
