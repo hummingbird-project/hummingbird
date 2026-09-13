@@ -47,7 +47,7 @@ extension ResponseBodyWriter {
     @inlinable
     public mutating func write<Reader: AsyncReader & ~Copyable>(_ reader: consuming Reader) async throws where Reader.Buffer == UniqueArray<UInt8> {
         _ = try await reader.forEachBuffer { buffer in
-            try await self.write(ByteBuffer(buffer.span.bytes))
+            try await self.write(ByteBuffer(draining: &buffer))
         }
     }
 }

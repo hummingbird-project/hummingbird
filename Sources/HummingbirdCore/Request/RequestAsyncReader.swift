@@ -244,12 +244,3 @@ package enum RequestAsyncReaderError: Error, CustomStringConvertible {
         }
     }
 }
-
-extension ByteBuffer {
-    /// Small helper function to create a ByteBuffer from a RawSpan
-    @usableFromInline
-    package init(_ span: RawSpan) {
-        self = .init()
-        self.writeBytes(span)
-    }
-}
