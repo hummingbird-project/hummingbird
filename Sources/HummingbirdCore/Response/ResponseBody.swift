@@ -15,7 +15,7 @@ public struct ResponseBody: Sendable {
     enum _Backing: Sendable {
         case byteBuffer(ByteBuffer)
         case empty
-        case closure(Int?, @Sendable (inout any ResponseBodyWriter) async throws -> Void)
+        case closure(Int?, @Sendable (consuming any ResponseBodyWriter & ~Copyable) async throws -> Void)
     }
 
     @usableFromInline
@@ -44,7 +44,7 @@ public struct ResponseBody: Sendable {
     /// - Parameters:
     ///   - contentLength: Optional length of body
     ///   - write: closure provided with `writer` type that can be used to write to response body
-    public init(contentLength: Int? = nil, _ write: @Sendable @escaping (inout any ResponseBodyWriter) async throws -> Void) {
+    public init(contentLength: Int? = nil, _ write: @Sendable @escaping (consuming any (ResponseBodyWriter & ~Copyable)) async throws -> Void) {
         self._backing = .closure(contentLength, write)
     }
 
@@ -64,6 +64,7 @@ public struct ResponseBody: Sendable {
     public init<BufferSequence: Sequence & Sendable>(contentsOf byteBuffers: BufferSequence) where BufferSequence.Element == ByteBuffer {
         let contentLength = byteBuffers.map(\.readableBytes).reduce(0, +)
         self._backing = .closure(contentLength) { writer in
+            var writer = writer
             try await writer.write(contentsOf: byteBuffers)
             try await writer.finish(nil)
         }
@@ -73,13 +74,17 @@ public struct ResponseBody: Sendable {
     /// - Parameter asyncSequence: ByteBuffer AsyncSequence
     public init<BufferSequence: AsyncSequence & Sendable>(asyncSequence: BufferSequence) where BufferSequence.Element == ByteBuffer {
         self._backing = .closure(nil) { writer in
-            try await writer.write(asyncSequence)
+            var writer = writer
+            for try await buffer in asyncSequence {
+                try await writer.write(buffer)
+            }
             try await writer.finish(nil)
         }
     }
 
     @inlinable
-    public consuming func write(_ writer: consuming any ResponseBodyWriter) async throws {
+    public consuming func write(_ writer: consuming any (ResponseBodyWriter & ~Copyable)) async throws {
+        var writer = writer
         switch self._backing {
         case .byteBuffer(let buf):
             try await writer.write(buf)
@@ -87,7 +92,7 @@ public struct ResponseBody: Sendable {
         case .empty:
             try await writer.finish(nil)
         case .closure(_, let fn):
-            try await fn(&writer)
+            try await fn(writer)
         }
     }
 
@@ -95,12 +100,12 @@ public struct ResponseBody: Sendable {
     /// ByteBuffers written.
     /// - Parameter transform: A mapping closure applied to every ByteBuffer in ResponseBody
     /// - Returns: The transformed ResponseBody
-    public consuming func map(_ transform: @escaping @Sendable (ByteBuffer) async throws -> ByteBuffer) -> ResponseBody {
+    /*public consuming func map(_ transform: @escaping @Sendable (ByteBuffer) async throws -> ByteBuffer) -> ResponseBody {
         let body = self
-        return Self.init { writer in
+        return Self.init { (writer: consuming any (ResponseBodyWriter & ~Copyable)) in
             try await body.write(writer.map(transform))
         }
-    }
+    }*/
 
     /// Create new response body that calls a closure once original response body has been written
     /// to the channel
