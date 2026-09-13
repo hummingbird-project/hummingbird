@@ -10,7 +10,7 @@ public import HTTPTypes
 public import NIOCore
 
 /// HTTP Response Body part writer
-public protocol ResponseBodyWriter {
+public protocol ResponseBodyWriter: ~Copyable {
     /// Write a single ByteBuffer
     /// - Parameter buffer: single buffer to write
     mutating func write(_ buffer: ByteBuffer) async throws
@@ -22,7 +22,7 @@ public protocol ResponseBodyWriter {
     consuming func finish(_ trailingHeaders: HTTPFields?) async throws
 }
 
-extension ResponseBodyWriter {
+extension ResponseBodyWriter where Self: ~Copyable {
     /// Default implementation of writing a sequence of ByteBuffers
     @inlinable
     public mutating func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws {
@@ -41,7 +41,7 @@ extension ResponseBodyWriter {
     }
 }
 
-struct MappedResponseBodyWriter<ParentWriter: ResponseBodyWriter>: ResponseBodyWriter {
+struct MappedResponseBodyWriter<ParentWriter: ResponseBodyWriter>: ResponseBodyWriter & ~Copyable where ParentWriter: ~Copyable {
     fileprivate var parentWriter: ParentWriter
     fileprivate let transform: @Sendable (ByteBuffer) async throws -> ByteBuffer
 
@@ -66,10 +66,10 @@ struct MappedResponseBodyWriter<ParentWriter: ResponseBodyWriter>: ResponseBodyW
     }
 }
 
-extension ResponseBodyWriter {
+extension ResponseBodyWriter where Self: ~Copyable {
     /// Return ResponseBodyWriter that applies transform to all ByteBuffers written to it
     /// ResponseBodyWriter.
-    public consuming func map(_ transform: @escaping @Sendable (ByteBuffer) async throws -> ByteBuffer) -> some ResponseBodyWriter {
+    public consuming func map(_ transform: @escaping @Sendable (ByteBuffer) async throws -> ByteBuffer) -> some (ResponseBodyWriter & ~Copyable) {
         MappedResponseBodyWriter(parentWriter: self, transform: transform)
     }
 }
