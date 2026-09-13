@@ -126,7 +126,7 @@ public struct FileIO: Sendable {
         ) { fileHandle in
             try await fileHandle.withBufferedWriter { writer in
                 try await reader.take()!.forEachBuffer { buffer in
-                    _ = try await writer.write(contentsOf: ByteBuffer(buffer.span.bytes))
+                    _ = try await writer.write(contentsOf: ByteBuffer(draining: &buffer))
                 }
             }
         }

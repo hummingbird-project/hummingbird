@@ -241,8 +241,8 @@ struct ApplicationTests {
         router
             .group("/echo-body")
             .post { request, _ -> Response in
-                let buffer = try await request.body.collect(upTo: .max)
-                return .init(status: .ok, headers: [:], body: .init(byteBuffer: .init(buffer.span.bytes)))
+                var buffer = try await request.body.collect(upTo: .max)
+                return .init(status: .ok, headers: [:], body: .init(byteBuffer: .init(draining: &buffer)))
             }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -262,7 +262,7 @@ struct ApplicationTests {
             .post { request, _ -> Response in
                 var buffers: [ByteBuffer] = []
                 try await request.body.forEachBuffer {
-                    buffers.append(.init($0.span.bytes))
+                    buffers.append(.init(draining: &$0))
                 }
                 return .init(status: .ok, headers: [:], body: .init(contentsOf: buffers))
             }
@@ -387,8 +387,8 @@ struct ApplicationTests {
         router
             .group("/echo-body")
             .post { request, _ -> ByteBuffer? in
-                let buffer = try await request.body.collect(upTo: .max)
-                return buffer.count > 0 ? ByteBuffer(buffer.span.bytes) : nil
+                var buffer = try await request.body.collect(upTo: .max)
+                return buffer.count > 0 ? ByteBuffer(draining: &buffer) : nil
             }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
@@ -1246,11 +1246,12 @@ struct ApplicationTests {
 
         let router = Router()
         router.post("/") { request, context in
-            let b = try await request.body.collect(upTo: .max)
+            var b = try await request.body.collect(upTo: .max)
+            let byteBuffer = ByteBuffer(draining: &b)
             return Response(
                 status: .ok,
                 body: .init { writer in
-                    try await writer.write(ByteBuffer(b.span.bytes))
+                    try await writer.write(byteBuffer)
                     try await writer.finish(nil)
                 }
             )
