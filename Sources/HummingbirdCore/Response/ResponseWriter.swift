@@ -6,17 +6,19 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+public import HTTPAPIs
 public import HTTPTypes
 public import NIOCore
 public import NIOHTTPTypes
 
 /// ResponseWriter that writes directly to AsyncChannel
+@available(hummingbird 3.0, *)
 public struct ResponseWriter: ~Copyable {
     @usableFromInline
-    let outbound: NIOAsyncChannelOutboundWriter<HTTPResponsePart>
+    var sender: ResponseSender
 
-    public init(outbound: NIOAsyncChannelOutboundWriter<HTTPResponsePart>) {
-        self.outbound = outbound
+    init(_ sender: consuming ResponseSender) {
+        self.sender = sender
     }
 
     /// Write HTTP head part and return ``ResponseBodyWriter`` to write response body
@@ -24,9 +26,9 @@ public struct ResponseWriter: ~Copyable {
     /// - Parameter head: Response head
     /// - Returns: Response body writer used to write HTTP response body
     @inlinable
-    public consuming func writeHead(_ head: HTTPResponse) async throws -> some ResponseBodyWriter {
-        try await self.outbound.write(.head(head))
-        return RootResponseBodyWriter(outbound: self.outbound)
+    public consuming func writeHead(_ head: HTTPResponse) async throws -> some (ResponseBodyWriter & ~Copyable) {
+        let writer = try await self.sender.send(head)
+        return RootResponseBodyWriter(writer: writer)
     }
 
     /// Write Informational HTTP head part
@@ -35,16 +37,14 @@ public struct ResponseWriter: ~Copyable {
     /// - Parameter head: Informational response head
     @inlinable
     public func writeInformationalHead(_ head: HTTPResponse) async throws {
-        precondition((100..<200).contains(head.status.code), "Informational HTTP responses require a status code in the range of 100 through 199")
-        try await self.outbound.write(.head(head))
+        try await self.sender.sendInformational(head)
     }
 
     /// Write full HTTP response that doesn't include a body
     ///
     /// - Parameter head: Response head
-    @inlinable
     public consuming func writeResponse(_ head: HTTPResponse) async throws {
-        try await self.outbound.write(contentsOf: [.head(head), .end(nil)])
+        try await self.sender.sendAndFinish(head)
     }
 
     /// Write a complete HTTP response, using a fast path for ByteBuffer and empty bodies.
@@ -60,50 +60,47 @@ public struct ResponseWriter: ~Copyable {
     public consuming func write(response head: HTTPResponse, body: consuming ResponseBody) async throws {
         switch body._backing {
         case .byteBuffer(let buf):
-            try await self.outbound.write(contentsOf: [.head(head), .body(buf), .end(nil)])
+            try await self.sender.sendAndFinish(head, buffer: buf, trailer: nil)
         case .empty:
-            try await self.outbound.write(contentsOf: [.head(head), .end(nil)])
+            try await self.sender.sendAndFinish(head)
         case .closure(_, let fn):
             let bodyWriter = try await self.writeHead(head)
-            var w: any ResponseBodyWriter = bodyWriter
-            try await fn(&w)
+            let w: any (ResponseBodyWriter & ~Copyable) = bodyWriter
+            try await fn(w)
         }
     }
 }
 
 /// ResponseBodyWriter that writes ByteBuffers to AsyncChannel outbound writer
 @usableFromInline
-struct RootResponseBodyWriter: Sendable, ResponseBodyWriter {
-    typealias Out = HTTPResponsePart
-    /// The components of a HTTP response from the view of a HTTP server.
-    public typealias OutboundWriter = NIOAsyncChannelOutboundWriter<Out>
+struct RootResponseBodyWriter: ResponseBodyWriter, ~Copyable {
 
     @usableFromInline
-    let outbound: OutboundWriter
+    var writer: ResponseSender.Writer
 
     @usableFromInline
-    init(outbound: OutboundWriter) {
-        self.outbound = outbound
+    init(writer: consuming ResponseSender.Writer) {
+        self.writer = writer
     }
 
     /// Write a single ByteBuffer
     /// - Parameter buffer: single buffer to write
     @inlinable
-    func write(_ buffer: ByteBuffer) async throws {
-        try await self.outbound.write(.body(buffer))
+    mutating func write(_ buffer: ByteBuffer) async throws {
+        try await self.writer.write(buffer: buffer)
     }
 
     /// Write a sequence of ByteBuffers
     /// - Parameter buffers: Sequence of buffers
     @inlinable
-    func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws {
-        try await self.outbound.write(contentsOf: buffers.map { .body($0) })
+    mutating func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws {
+        try await self.writer.write(contentsOf: buffers.map { .body($0) })
     }
 
     /// Finish writing body
     /// - Parameter trailingHeaders: Any trailing headers you want to include at end
     @inlinable
     consuming func finish(_ trailingHeaders: HTTPFields?) async throws {
-        try await self.outbound.write(.end(trailingHeaders))
+        try await self.writer.finish(finalElement: trailingHeaders)
     }
 }

@@ -103,7 +103,7 @@ extension ApplicationProtocol {
             configuration: self.configuration.httpServer,
             eventLoopGroup: self.eventLoopGroup,
             logger: self.logger
-        ) { (request, responseWriter: consuming ResponseWriter, channel) in
+        ) { (request, responseWriter: consuming ResponseSender, channel) in
             let logger = self.logger.with(metadataKey: "hb.request.id", value: .stringConvertible(RequestID()))
             let response = try await withLogger(logger) { logger in
                 let context = Self.Responder.Context(

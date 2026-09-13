@@ -17,7 +17,7 @@ import ServiceLifecycle
 
 /// Protocol for HTTP channels
 public protocol HTTPChannelHandler: ServerChildChannel {
-    typealias Responder = @Sendable (Request, consuming ResponseWriter, any Channel) async throws -> Void
+    typealias Responder = @Sendable (Request, consuming ResponseSender, any Channel) async throws -> Void
     /// HTTP Request responder
     var responder: Responder { get }
 }
@@ -51,8 +51,9 @@ extension HTTPChannelHandler {
                                 head: head,
                                 body: .init(.asyncReader(reader))
                             )
-                            let responseWriter = ResponseWriter(outbound: outbound)
-                            try await self.handleRequest(request, responseWriter: responseWriter, channel: asyncChannel.channel)
+                            let writerState = ResponseSender.WriterState()
+                            let responseSender = ResponseSender(writer: outbound, writerState: writerState)
+                            try await self.handleRequest(request, responseSender: responseSender, channel: asyncChannel.channel)
                             if request.headers[.connection] == "close" {
                                 break
                             }
@@ -105,10 +106,10 @@ extension HTTPChannelHandler {
 
     func handleRequest(
         _ request: Request,
-        responseWriter: consuming ResponseWriter,
+        responseSender: consuming ResponseSender,
         channel: any Channel
     ) async throws {
-        try await self.responder(request, responseWriter, channel)
+        try await self.responder(request, responseSender, channel)
         try await request.body.drain()
     }
 }
