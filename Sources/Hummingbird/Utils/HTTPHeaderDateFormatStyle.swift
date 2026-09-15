@@ -64,7 +64,7 @@ extension HTTPHeaderDateFormatStyle: ParseStrategy {
 
         let asciiDigits = UInt8(ascii: "0")...UInt8(ascii: "9")
 
-        return s.withUTF8 { buffer -> DateComponents? in
+        return unsafe s.withUTF8 { buffer -> DateComponents? in
             func parseDay(_ it: inout UnsafeBufferPointer<UInt8>.Iterator) -> Int? {
                 let first = it.next()
                 let second = it.next()
