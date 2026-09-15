@@ -92,12 +92,6 @@ public struct ResponseSender: HTTPResponseSender, ~Copyable {
         }
 
         public mutating func write(
-            buffer: ByteBuffer
-        ) async throws(WriteFailure) {
-            try await self.writer.write(.body(buffer))
-        }
-
-        public mutating func write(
             contentsOf parts: some Sequence<HTTPResponsePart>
         ) async throws(WriteFailure) {
             try await self.writer.write(contentsOf: parts)
