@@ -136,7 +136,7 @@ public struct FileIO: Sendable {
         chunkLength: Int
     ) -> ResponseBody {
         ResponseBody(contentLength: range.count) { writer in
-            var writer: (any (ResponseBodyAsyncWriter & ~Copyable))? = writer
+            var writer: AnyResponseBodyAsyncWriter? = writer
             try await self.fileSystem.withFileHandle(forReadingAt: .init(path)) { fileHandle in
                 let startOffset: Int64 = numericCast(range.lowerBound)
                 let endOffset: Int64 = numericCast(range.upperBound)
