@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+public import BasicContainers
 public import HTTPAPIs
 public import HTTPTypes
 import NIOCore
@@ -59,8 +60,8 @@ public struct ResponseWriter: ~Copyable {
     @inlinable
     public consuming func write(response head: HTTPResponse, body: consuming ResponseBody) async throws {
         switch body._backing {
-        case .byteBuffer(let buf):
-            try await self.sender.sendAndFinish(head, buffer: buf, trailer: nil)
+        case .bytes(var buf):
+            try await self.sender.sendAndFinish(head, buffer: &buf, trailer: nil)
         case .empty:
             try await self.sender.sendAndFinish(head)
         case .closure(_, let fn):

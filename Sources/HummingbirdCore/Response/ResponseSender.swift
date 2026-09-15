@@ -122,7 +122,12 @@ public struct ResponseSender: HTTPResponseSender, ~Copyable {
         buffer: inout Buffer,
         trailer: HTTPFields?
     ) async throws where Buffer.Element: ~Copyable {
-        try await sendAndFinish(response, buffer: ByteBuffer(draining: &buffer), trailer: trailer)
+        if buffer.count == 0 {
+            try await self.writer.write(contentsOf: [.head(response), .end(trailer)])
+        } else {
+            try await self.writer.write(contentsOf: [.head(response), .body(ByteBuffer(draining: &buffer)), .end(trailer)])
+        }
+        self.writerState.wrapped.withLock { $0.finishedWriting = true }
     }
 
     @inlinable
