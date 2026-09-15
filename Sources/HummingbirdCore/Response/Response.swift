@@ -9,8 +9,7 @@
 public import HTTPTypes
 
 /// Holds all the required to generate a HTTP Response
-@available(hummingbird 3.0, *)
-public struct Response: ~Copyable {
+public struct Response {
     /// Response status
     public var status: HTTPResponse.Status
     /// Response headers
@@ -24,31 +23,27 @@ public struct Response: ~Copyable {
             self.headers = newValue.headerFields
         }
     }
-    @usableFromInline
-    /*private*/ var _body: ResponseBody
+    public internal(set) var body: ResponseBody
     /// Response body
-    @inlinable
-    public var body: ResponseBody {
-        yielding borrow { yield _body }
-        set {
-            if self.body.contentLength != newValue.contentLength {
-                if let contentLength = newValue.contentLength {
-                    self.headers[.contentLength] = String(describing: contentLength)
-                } else {
-                    self.headers[.contentLength] = nil
-                }
+    //@inlinable
+    public mutating func setBody(_ body: consuming ResponseBody) {
+        if self.body.contentLength != body.contentLength {
+            if let contentLength = body.contentLength {
+                self.headers[.contentLength] = String(describing: contentLength)
+            } else {
+                self.headers[.contentLength] = nil
             }
-            self._body = newValue
         }
+        self.body = body
     }
 
     /// Initialize Response
-    @inlinable
+    //@inlinable
     public init(status: HTTPResponse.Status, headers: HTTPFields = .init(), body: consuming ResponseBody = .init()) {
         self.status = status
         self.headers = headers
-        self._body = body
-        if let contentLength = self._body.contentLength, !self.headers.contains(.contentLength) {
+        self.body = body
+        if let contentLength = self.body.contentLength, !self.headers.contains(.contentLength) {
             self.headers[.contentLength] = String(describing: contentLength)
         }
     }

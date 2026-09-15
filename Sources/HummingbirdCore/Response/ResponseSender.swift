@@ -7,6 +7,7 @@
 //
 
 import BasicContainers
+import ContainersPreview
 public import HTTPAPIs
 public import HTTPTypes
 public import NIOCore
@@ -15,6 +16,25 @@ public import Synchronization
 
 public protocol ResponseBodyAsyncWriter: CallerAsyncWriter, ~Copyable
 where WriteElement == UInt8, WriteFailure == any Error, FinalElement == HTTPFields? {
+}
+
+public struct AnyResponseBodyAsyncWriter: ResponseBodyAsyncWriter & ~Copyable {
+    @usableFromInline
+    init(_ writer: consuming (any ResponseBodyAsyncWriter & ~Copyable)) {
+        self.writer = consume writer
+    }
+    public mutating func write<Buffer>(buffer: inout Buffer) async throws(any Error)
+    where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
+        try await self.writer!.write(buffer: &buffer)
+    }
+
+    public consuming func finish<Buffer>(buffer: inout Buffer, finalElement: consuming HTTPTypes.HTTPFields?) async throws(any Error)
+    where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
+        let writer = self.writer.take()!
+        try await writer.finish(buffer: &buffer, finalElement: finalElement)
+    }
+
+    private var writer: (any ResponseBodyAsyncWriter & ~Copyable)?
 }
 
 public struct ResponseSender: HTTPResponseSender, ~Copyable {

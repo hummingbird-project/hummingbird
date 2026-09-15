@@ -18,6 +18,7 @@ public import Foundation
 #endif
 
 /// Local file system file provider used by FileMiddleware. All file accesses are relative to a root folder
+@available(hummingbird 3.0, *)
 public struct LocalFileSystem: FileProvider {
     /// File attributes required by ``FileMiddleware``
     public struct FileAttributes: Sendable, FileMiddlewareFileAttributes {
