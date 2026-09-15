@@ -34,6 +34,7 @@ struct URLEncodedFormTests {
 
     struct Error: Swift.Error {}
 
+    @available(hummingbird 3.0, *)
     @Test func testDecode() async throws {
         let router = Router(context: URLEncodedCodingRequestContext.self)
         router.put("/user") { request, context -> HTTPResponse.Status in
@@ -52,6 +53,7 @@ struct URLEncodedFormTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testEncode() async throws {
         let router = Router(context: URLEncodedCodingRequestContext.self)
         router.get("/user") { _, _ -> User in
@@ -68,6 +70,7 @@ struct URLEncodedFormTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testDecodeQuery() async throws {
         let router = Router()
         router.post("/user") { request, context -> User in
@@ -85,6 +88,7 @@ struct URLEncodedFormTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testError() async throws {
         let router = Router(context: URLEncodedCodingRequestContext.self)
         router.get("/error") { _, _ -> User in

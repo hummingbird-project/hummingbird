@@ -18,7 +18,7 @@ public struct ResponseWriter: ~Copyable {
     @usableFromInline
     var sender: ResponseSender
 
-    init(_ sender: consuming ResponseSender) {
+    package init(_ sender: consuming ResponseSender) {
         self.sender = sender
     }
 

@@ -22,6 +22,7 @@ struct JSONCodingTests {
 
     struct Error: Swift.Error {}
 
+    @available(hummingbird 3.0, *)
     @Test func testDecode() async throws {
         let router = Router()
         router.put("/user") { request, context -> HTTPResponse.Status in
@@ -40,6 +41,7 @@ struct JSONCodingTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testEncode() async throws {
         let router = Router()
         router.get("/user") { _, _ -> User in
@@ -56,6 +58,7 @@ struct JSONCodingTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testEncode2() async throws {
         let router = Router()
         router.get("/json") { _, _ in

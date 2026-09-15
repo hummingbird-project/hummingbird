@@ -14,6 +14,7 @@ public import NIOCore
 import NIOHTTP1
 public import NIOHTTPTypes
 import ServiceLifecycle
+import Synchronization
 
 /// Protocol for HTTP channels
 public protocol HTTPChannelHandler: ServerChildChannel {
@@ -54,6 +55,9 @@ extension HTTPChannelHandler {
                             let writerState = ResponseSender.WriterState()
                             let responseSender = ResponseSender(writer: outbound, writerState: writerState)
                             try await self.handleRequest(request, responseSender: responseSender, channel: asyncChannel.channel)
+                            if writerState.wrapped.withLock({ $0.finishedWriting }) {
+                                break
+                            }
                             if request.headers[.connection] == "close" {
                                 break
                             }

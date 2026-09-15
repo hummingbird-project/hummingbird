@@ -6,6 +6,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import BasicContainers
+import HTTPAPIs
 import HTTPTypes
 import HummingbirdCore
 import HummingbirdTesting
@@ -20,11 +22,12 @@ public enum TestErrors: Error {
 }
 
 /// Basic responder that just returns "Hello" in body
-@Sendable func helloResponder(to request: Request, responseWriter: consuming ResponseWriter, channel: any Channel) async throws {
-    let responseBody = channel.allocator.buffer(string: "Hello")
-    var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
-    try await bodyWriter.write(responseBody)
-    try await bodyWriter.finish(nil)
+@available(hummingbird 3.0, *)
+@Sendable func helloResponder(to request: Request, responseWriter: consuming ResponseSender, channel: any Channel) async throws {
+    var responseBody = UniqueArray(copying: "Hello".utf8)
+    var bodyWriter = try await responseWriter.send(.init(status: .ok))
+    try await bodyWriter.write(buffer: &responseBody)
+    try await bodyWriter.finish()
 }
 
 /// Helper function for testing a server
