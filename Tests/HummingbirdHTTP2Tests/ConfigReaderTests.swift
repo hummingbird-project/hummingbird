@@ -15,6 +15,7 @@ import NIOCore
 import Testing
 
 struct ConfigReaderTests {
+    #if TLSSupport
     @Test
     @available(macOS 15, iOS 18, macCatalyst 18, tvOS 18, visionOS 2, *)
     func testTLSChannelConfigReader() throws {
@@ -34,7 +35,7 @@ struct ConfigReaderTests {
         #expect(tlsConfig.tlsConfiguration.privateKey == serverTLSConfiguration.privateKey)
         #expect(tlsConfig.tlsConfiguration.trustRoots == serverTLSConfiguration.trustRoots)
     }
-
+    #endif
     @Test
     @available(macOS 15, iOS 18, macCatalyst 18, tvOS 18, visionOS 2, *)
     func testHTTP2ChannelConfigReader() throws {

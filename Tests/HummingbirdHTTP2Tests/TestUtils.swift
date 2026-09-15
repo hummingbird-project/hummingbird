@@ -6,16 +6,18 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-import AsyncHTTPClient
 import HTTPTypes
 import HummingbirdCore
 import HummingbirdTesting
 import Logging
 import NIOCore
 import NIOPosix
-import NIOSSL
 import ServiceLifecycle
 import UnixSignals
+
+#if AsyncHTTPClientSupport
+import AsyncHTTPClient
+#endif
 
 public enum TestErrors: Error {
     case timeout
@@ -64,6 +66,7 @@ func testServer<Value: Sendable>(
     }
 }
 
+#if AsyncHTTPClientSupport
 func withHTTPClient<Value>(
     _ configuration: HTTPClient.Configuration,
     eventLoopGroup: any EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
@@ -83,6 +86,7 @@ func withHTTPClient<Value>(
     try await httpClient.shutdown()
     return value
 }
+#endif
 
 /// Run process with a timeout
 /// - Parameters:
