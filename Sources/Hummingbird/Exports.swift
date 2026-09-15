@@ -15,7 +15,6 @@
 @_exported @_documentation(visibility: internal) import class HummingbirdCore.RequestBody
 @_exported @_documentation(visibility: internal) import struct HummingbirdCore.Response
 @_exported @_documentation(visibility: internal) import struct HummingbirdCore.ResponseBody
-@_exported @_documentation(visibility: internal) import protocol HummingbirdCore.ResponseBodyWriter
 @_exported @_documentation(visibility: internal) import struct NIOCore.ByteBuffer
 @_exported @_documentation(visibility: internal) import struct NIOCore.ByteBufferAllocator
 

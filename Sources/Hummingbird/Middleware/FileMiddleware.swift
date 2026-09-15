@@ -58,6 +58,7 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
     ///   - searchForIndexHtml: Should we look for index.html in folders
     ///   - threadPool: ThreadPool used by file loading
     ///   - logger: Logger used to output file information
+    @available(hummingbird 3.0, *)
     public init(
         _ rootFolder: String = "public",
         urlBasePath: String? = nil,

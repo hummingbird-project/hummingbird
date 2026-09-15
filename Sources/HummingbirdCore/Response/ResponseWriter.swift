@@ -27,9 +27,9 @@ public struct ResponseWriter: ~Copyable {
     /// - Parameter head: Response head
     /// - Returns: Response body writer used to write HTTP response body
     @inlinable
-    public consuming func writeHead(_ head: HTTPResponse) async throws -> some (ResponseBodyAsyncWriter & ~Copyable) {
+    public consuming func writeHead(_ head: HTTPResponse) async throws -> AnyResponseBodyAsyncWriter {
         let writer = try await self.sender.send(head)
-        return writer
+        return AnyResponseBodyAsyncWriter(writer)
     }
 
     /// Write Informational HTTP head part
@@ -60,8 +60,8 @@ public struct ResponseWriter: ~Copyable {
     @inlinable
     public consuming func write(response head: HTTPResponse, body: consuming ResponseBody) async throws {
         switch body._backing {
-        case .bytes(var buf):
-            try await self.sender.sendAndFinish(head, buffer: &buf, trailer: nil)
+        case .bytes(let buf):
+            try await self.sender.sendAndFinish(head, buffer: &buf.value, trailer: nil)
         case .empty:
             try await self.sender.sendAndFinish(head)
         case .closure(_, let fn):

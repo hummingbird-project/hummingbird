@@ -10,14 +10,24 @@ public import BasicContainers
 public import HTTPAPIs
 import HTTPTypes
 
-/// Response body
-@available(hummingbird 3.0, *)
-public struct ResponseBody: ~Copyable {
+@usableFromInline
+final class Box<Value: ~Copyable> {
     @usableFromInline
-    enum _Backing: ~Copyable {
-        case bytes(UniqueArray<UInt8>)
+    var value: Value
+
+    @usableFromInline
+    init(value: consuming Value) {
+        self.value = value
+    }
+}
+
+/// Response body
+public struct ResponseBody {
+    @usableFromInline
+    enum _Backing {
+        case bytes(Box<UniqueArray<UInt8>>)
         case empty
-        case closure(Int?, (consuming any ResponseBodyAsyncWriter & ~Copyable) async throws -> Void)
+        case closure(Int?, (consuming AnyResponseBodyAsyncWriter) async throws -> Void)
     }
 
     @usableFromInline
@@ -25,7 +35,7 @@ public struct ResponseBody: ~Copyable {
 
     public var contentLength: Int? {
         switch _backing {
-        case .bytes(let buf): return buf.count
+        case .bytes(let buf): return buf.value.count
         case .empty: return 0
         case .closure(let len, _): return len
         }
@@ -46,7 +56,7 @@ public struct ResponseBody: ~Copyable {
     /// - Parameters:
     ///   - contentLength: Optional length of body
     ///   - write: closure provided with `writer` type that can be used to write to response body
-    public init(contentLength: Int? = nil, _ write: @escaping (consuming any (ResponseBodyAsyncWriter & ~Copyable)) async throws -> Void) {
+    public init(contentLength: Int? = nil, _ write: @escaping (consuming AnyResponseBodyAsyncWriter) async throws -> Void) {
         self._backing = .closure(contentLength, write)
     }
 
@@ -58,14 +68,15 @@ public struct ResponseBody: ~Copyable {
     /// Initialise ResponseBody that contains a single ByteBuffer
     /// - Parameter byteBuffer: ByteBuffer to write
     public init(_ bytes: consuming UniqueArray<UInt8>) {
-        self._backing = .bytes(bytes)
+        self._backing = .bytes(.init(value: bytes))
     }
 
     @inlinable
-    public consuming func write(_ writer: consuming any (ResponseBodyAsyncWriter & ~Copyable)) async throws {
+    @available(hummingbird 3.0, *)
+    public consuming func write(_ writer: consuming AnyResponseBodyAsyncWriter) async throws {
         switch self._backing {
-        case .bytes(var buf):
-            try await writer.finish(buffer: &buf)
+        case .bytes(let buf):
+            try await writer.finish(buffer: &buf.value)
         case .empty:
             try await writer.finish(trailer: nil)
         case .closure(_, let fn):
@@ -83,6 +94,7 @@ public struct ResponseBody: ~Copyable {
     /// response was written. This functions provides you a method for catching the point when the
     /// response has been fully written. If you drop the response in a middleware run after this
     /// point the post write closure will not get run.
+    @available(hummingbird 3.0, *)
     consuming package func withPostWriteClosure(_ postWrite: @escaping () async -> Void) -> Self {
         let contentLength = self.contentLength
         var backing: _Backing? = self._backing
