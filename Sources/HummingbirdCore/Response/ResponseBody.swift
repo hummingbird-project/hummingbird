@@ -9,14 +9,13 @@
 public import BasicContainers
 public import HTTPAPIs
 import HTTPTypes
-public import NIOCore
 
 /// Response body
 @available(hummingbird 3.0, *)
-public struct ResponseBody {
+public struct ResponseBody: ~Copyable {
     @usableFromInline
-    enum _Backing {
-        case byteBuffer(ByteBuffer)
+    enum _Backing: ~Copyable {
+        case bytes(UniqueArray<UInt8>)
         case empty
         case closure(Int?, (consuming any ResponseBodyAsyncWriter & ~Copyable) async throws -> Void)
     }
@@ -26,7 +25,7 @@ public struct ResponseBody {
 
     public var contentLength: Int? {
         switch _backing {
-        case .byteBuffer(let buf): return buf.readableBytes
+        case .bytes(let buf): return buf.count
         case .empty: return 0
         case .closure(let len, _): return len
         }
@@ -58,16 +57,15 @@ public struct ResponseBody {
 
     /// Initialise ResponseBody that contains a single ByteBuffer
     /// - Parameter byteBuffer: ByteBuffer to write
-    public init(byteBuffer: ByteBuffer) {
-        self._backing = .byteBuffer(byteBuffer)
+    public init(_ bytes: consuming UniqueArray<UInt8>) {
+        self._backing = .bytes(bytes)
     }
 
     @inlinable
     public consuming func write(_ writer: consuming any (ResponseBodyAsyncWriter & ~Copyable)) async throws {
         switch self._backing {
-        case .byteBuffer(let buf):
-            var uniqueArray = UniqueArray<UInt8>(copying: buf.readableBytesUInt8Span)
-            try await writer.finish(buffer: &uniqueArray)
+        case .bytes(var buf):
+            try await writer.finish(buffer: &buf)
         case .empty:
             try await writer.finish(trailer: nil)
         case .closure(_, let fn):
@@ -75,17 +73,9 @@ public struct ResponseBody {
         }
     }
 
-    /// Returns a ResponseBody containing the results of mapping the given closure over the sequence of
-    /// ByteBuffers written.
-    /// - Parameter transform: A mapping closure applied to every ByteBuffer in ResponseBody
-    /// - Returns: The transformed ResponseBody
-    /*public consuming func map(_ transform: @escaping @Sendable (ByteBuffer) async throws -> ByteBuffer) -> ResponseBody {
-        let body = self
-        return Self.init { writer in
-            try await body.write(writer.map(transform))
-        }
-    }*/
-
+    private init(_backing: consuming _Backing) {
+        self._backing = _backing
+    }
     /// Create new response body that calls a closure once original response body has been written
     /// to the channel
     ///
@@ -93,10 +83,12 @@ public struct ResponseBody {
     /// response was written. This functions provides you a method for catching the point when the
     /// response has been fully written. If you drop the response in a middleware run after this
     /// point the post write closure will not get run.
-    package func withPostWriteClosure(_ postWrite: @escaping @Sendable () async -> Void) -> Self {
-        .init(contentLength: self.contentLength) { writer in
+    consuming package func withPostWriteClosure(_ postWrite: @escaping () async -> Void) -> Self {
+        let contentLength = self.contentLength
+        var backing: _Backing? = self._backing
+        return .init(contentLength: contentLength) { writer in
             do {
-                try await self.write(writer)
+                try await ResponseBody(_backing: backing.take()!).write(writer)
                 await postWrite()
             } catch {
                 await postWrite()
