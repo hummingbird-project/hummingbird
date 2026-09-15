@@ -10,7 +10,7 @@ public import HTTPTypes
 
 /// Holds all the required to generate a HTTP Response
 @available(hummingbird 3.0, *)
-public struct Response {
+public struct Response: ~Copyable {
     /// Response status
     public var status: HTTPResponse.Status
     /// Response headers
@@ -29,7 +29,7 @@ public struct Response {
     /// Response body
     @inlinable
     public var body: ResponseBody {
-        get { _body }
+        yielding borrow { yield _body }
         set {
             if self.body.contentLength != newValue.contentLength {
                 if let contentLength = newValue.contentLength {
@@ -44,11 +44,11 @@ public struct Response {
 
     /// Initialize Response
     @inlinable
-    public init(status: HTTPResponse.Status, headers: HTTPFields = .init(), body: ResponseBody = .init()) {
+    public init(status: HTTPResponse.Status, headers: HTTPFields = .init(), body: consuming ResponseBody = .init()) {
         self.status = status
         self.headers = headers
         self._body = body
-        if let contentLength = body.contentLength, !self.headers.contains(.contentLength) {
+        if let contentLength = self._body.contentLength, !self.headers.contains(.contentLength) {
             self.headers[.contentLength] = String(describing: contentLength)
         }
     }
@@ -60,8 +60,8 @@ public struct Response {
 }
 
 @available(hummingbird 3.0, *)
-extension Response: CustomStringConvertible {
+extension Response {
     public var description: String {
-        "status: \(self.status), headers: \(self.headers), body: \(self.body)"
+        "status: \(self.status), headers: \(self.headers), body: \(self.body.contentLength?.description ?? "length unknown")"
     }
 }
