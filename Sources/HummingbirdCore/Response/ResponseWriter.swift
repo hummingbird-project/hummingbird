@@ -8,8 +8,8 @@
 
 public import HTTPAPIs
 public import HTTPTypes
-public import NIOCore
-public import NIOHTTPTypes
+import NIOCore
+import NIOHTTPTypes
 
 /// ResponseWriter that writes directly to AsyncChannel
 @available(hummingbird 3.0, *)
@@ -26,9 +26,9 @@ public struct ResponseWriter: ~Copyable {
     /// - Parameter head: Response head
     /// - Returns: Response body writer used to write HTTP response body
     @inlinable
-    public consuming func writeHead(_ head: HTTPResponse) async throws -> some (ResponseBodyWriter & ~Copyable) {
+    public consuming func writeHead(_ head: HTTPResponse) async throws -> some (ResponseBodyAsyncWriter & ~Copyable) {
         let writer = try await self.sender.send(head)
-        return RootResponseBodyWriter(writer: writer)
+        return writer
     }
 
     /// Write Informational HTTP head part
@@ -65,42 +65,7 @@ public struct ResponseWriter: ~Copyable {
             try await self.sender.sendAndFinish(head)
         case .closure(_, let fn):
             let bodyWriter = try await self.writeHead(head)
-            let w: any (ResponseBodyWriter & ~Copyable) = bodyWriter
-            try await fn(w)
+            try await fn(bodyWriter)
         }
-    }
-}
-
-/// ResponseBodyWriter that writes ByteBuffers to AsyncChannel outbound writer
-@usableFromInline
-struct RootResponseBodyWriter: ResponseBodyWriter, ~Copyable {
-
-    @usableFromInline
-    var writer: ResponseSender.Writer
-
-    @usableFromInline
-    init(writer: consuming ResponseSender.Writer) {
-        self.writer = writer
-    }
-
-    /// Write a single ByteBuffer
-    /// - Parameter buffer: single buffer to write
-    @inlinable
-    mutating func write(_ buffer: ByteBuffer) async throws {
-        try await self.writer.write(buffer: buffer)
-    }
-
-    /// Write a sequence of ByteBuffers
-    /// - Parameter buffers: Sequence of buffers
-    @inlinable
-    mutating func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws {
-        try await self.writer.write(contentsOf: buffers.map { .body($0) })
-    }
-
-    /// Finish writing body
-    /// - Parameter trailingHeaders: Any trailing headers you want to include at end
-    @inlinable
-    consuming func finish(_ trailingHeaders: HTTPFields?) async throws {
-        try await self.writer.finish(finalElement: trailingHeaders)
     }
 }

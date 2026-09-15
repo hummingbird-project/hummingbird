@@ -13,6 +13,10 @@ public import NIOCore
 public import NIOHTTPTypes
 public import Synchronization
 
+public protocol ResponseBodyAsyncWriter: CallerAsyncWriter, ~Copyable
+where WriteElement == UInt8, WriteFailure == any Error, FinalElement == HTTPFields? {
+}
+
 public struct ResponseSender: HTTPResponseSender, ~Copyable {
     @usableFromInline
     final class WriterState: Sendable {
@@ -26,7 +30,7 @@ public struct ResponseSender: HTTPResponseSender, ~Copyable {
         let wrapped: Mutex<Wrapped> = .init(.init())
     }
 
-    public struct Writer: CallerAsyncWriter, ~Copyable {
+    public struct Writer: ResponseBodyAsyncWriter, ~Copyable {
         public typealias WriteElement = UInt8
         public typealias WriteFailure = any Error
         public typealias FinalElement = HTTPFields?

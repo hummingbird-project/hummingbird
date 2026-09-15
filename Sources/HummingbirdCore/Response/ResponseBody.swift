@@ -6,16 +6,19 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+public import BasicContainers
+public import HTTPAPIs
 import HTTPTypes
 public import NIOCore
 
 /// Response body
-public struct ResponseBody: Sendable {
+@available(hummingbird 3.0, *)
+public struct ResponseBody {
     @usableFromInline
-    enum _Backing: Sendable {
+    enum _Backing {
         case byteBuffer(ByteBuffer)
         case empty
-        case closure(Int?, @Sendable (consuming any ResponseBodyWriter & ~Copyable) async throws -> Void)
+        case closure(Int?, (consuming any ResponseBodyAsyncWriter & ~Copyable) async throws -> Void)
     }
 
     @usableFromInline
@@ -44,7 +47,7 @@ public struct ResponseBody: Sendable {
     /// - Parameters:
     ///   - contentLength: Optional length of body
     ///   - write: closure provided with `writer` type that can be used to write to response body
-    public init(contentLength: Int? = nil, _ write: @Sendable @escaping (consuming any (ResponseBodyWriter & ~Copyable)) async throws -> Void) {
+    public init(contentLength: Int? = nil, _ write: @escaping (consuming any (ResponseBodyAsyncWriter & ~Copyable)) async throws -> Void) {
         self._backing = .closure(contentLength, write)
     }
 
@@ -59,38 +62,14 @@ public struct ResponseBody: Sendable {
         self._backing = .byteBuffer(byteBuffer)
     }
 
-    /// Initialise ResponseBody that contains a sequence of ByteBuffers
-    /// - Parameter byteBuffers: Sequence of ByteBuffers to write
-    public init<BufferSequence: Sequence & Sendable>(contentsOf byteBuffers: BufferSequence) where BufferSequence.Element == ByteBuffer {
-        let contentLength = byteBuffers.map(\.readableBytes).reduce(0, +)
-        self._backing = .closure(contentLength) { writer in
-            var writer = writer
-            try await writer.write(contentsOf: byteBuffers)
-            try await writer.finish(nil)
-        }
-    }
-
-    /// Initialise ResponseBody with an AsyncSequence of ByteBuffers
-    /// - Parameter asyncSequence: ByteBuffer AsyncSequence
-    public init<BufferSequence: AsyncSequence & Sendable>(asyncSequence: BufferSequence) where BufferSequence.Element == ByteBuffer {
-        self._backing = .closure(nil) { writer in
-            var writer = writer
-            for try await buffer in asyncSequence {
-                try await writer.write(buffer)
-            }
-            try await writer.finish(nil)
-        }
-    }
-
     @inlinable
-    public consuming func write(_ writer: consuming any (ResponseBodyWriter & ~Copyable)) async throws {
-        var writer = writer
+    public consuming func write(_ writer: consuming any (ResponseBodyAsyncWriter & ~Copyable)) async throws {
         switch self._backing {
         case .byteBuffer(let buf):
-            try await writer.write(buf)
-            try await writer.finish(nil)
+            var uniqueArray = UniqueArray<UInt8>(copying: buf.readableBytesUInt8Span)
+            try await writer.finish(buffer: &uniqueArray)
         case .empty:
-            try await writer.finish(nil)
+            try await writer.finish(trailer: nil)
         case .closure(_, let fn):
             try await fn(writer)
         }
@@ -102,7 +81,7 @@ public struct ResponseBody: Sendable {
     /// - Returns: The transformed ResponseBody
     /*public consuming func map(_ transform: @escaping @Sendable (ByteBuffer) async throws -> ByteBuffer) -> ResponseBody {
         let body = self
-        return Self.init { (writer: consuming any (ResponseBodyWriter & ~Copyable)) in
+        return Self.init { writer in
             try await body.write(writer.map(transform))
         }
     }*/
