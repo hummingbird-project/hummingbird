@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import BasicContainers
 import Foundation
 import HTTPTypes
 import Hummingbird
@@ -23,6 +24,7 @@ struct TracingTests {
         return tracer
     }()
 
+    @available(hummingbird 3.0, *)
     @Test func testTracingMiddleware() async throws {
         try await Self.testTracer.withUnique {
             try await confirmation { endSpan in
@@ -65,6 +67,7 @@ struct TracingTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testTracingMiddlewareWithRouterBuilder() async throws {
         try await Self.testTracer.withUnique {
             try await confirmation { endSpan in
@@ -105,6 +108,7 @@ struct TracingTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testTracingMiddlewareWithQueryParameters() async throws {
         try await Self.testTracer.withUnique {
             try await confirmation { endSpan in
@@ -146,6 +150,7 @@ struct TracingTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testTracingMiddlewareWithRedactedQueryParameters() async throws {
         try await Self.testTracer.withUnique {
             try await confirmation { endSpan in
@@ -186,6 +191,7 @@ struct TracingTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testTracingMiddlewareWithFile() async throws {
         let filename = "\(#function).jpg"
         let text = "Test file contents"
@@ -231,6 +237,7 @@ struct TracingTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testMiddlewareSkippingEndpoint() async throws {
         struct DeadendMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(_ input: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
@@ -276,6 +283,7 @@ struct TracingTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testTracingMiddlewareServerError() async throws {
         try await Self.testTracer.withUnique {
             try await confirmation { endSpan in
@@ -317,6 +325,7 @@ struct TracingTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testTracingMiddlewareIncludingHeaders() async throws {
         try await Self.testTracer.withUnique {
             try await confirmation { endSpan in
@@ -335,7 +344,7 @@ struct TracingTests {
                     return Response(
                         status: .ok,
                         headers: headers,
-                        body: .init(byteBuffer: ByteBuffer(string: "42"))
+                        body: .init(UniqueArray(copying: "42".utf8))
                     )
                 }
                 let app = Application(responder: router.buildResponder())
@@ -373,6 +382,7 @@ struct TracingTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testTracingMiddlewareEmptyResponse() async throws {
 
         try await Self.testTracer.withUnique {
@@ -411,6 +421,7 @@ struct TracingTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testTracingMiddlewareIndexRoute() async throws {
         try await Self.testTracer.withUnique {
             try await confirmation { endSpan in
@@ -448,6 +459,7 @@ struct TracingTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testTracingMiddlewareRouteNotFound() async throws {
         try await Self.testTracer.withUnique {
             try await confirmation { endSpan in
@@ -485,6 +497,7 @@ struct TracingTests {
     }
 
     /// Test span is ended even if the response body with the span end is not run
+    @available(hummingbird 3.0, *)
     @Test func testTracingMiddlewareDropResponse() async throws {
         struct ErrorMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
@@ -520,6 +533,7 @@ struct TracingTests {
     }
 
     // Test span length is the time it takes to write the response
+    @available(hummingbird 3.0, *)
     @Test func testTracingSpanLength() async throws {
         try await Self.testTracer.withUnique {
             try await confirmation { endSpan in
@@ -547,6 +561,7 @@ struct TracingTests {
     }
 
     /// Test tracing serviceContext is attached to request when route handler is called
+    @available(hummingbird 3.0, *)
     @Test func testServiceContextPropagation() async throws {
         try await Self.testTracer.withUnique {
             try await confirmation(expectedCount: 2) { endSpan in
@@ -578,6 +593,7 @@ struct TracingTests {
     }
 
     /// Verify serviceContext set in trace middleware propagates to routes
+    @available(hummingbird 3.0, *)
     @Test func testServiceContextPropagationWithSpan() async throws {
         try await Self.testTracer.withUnique {
             try await confirmation(expectedCount: 2) { endSpan in
@@ -612,6 +628,7 @@ struct TracingTests {
 
     /// And SpanMiddleware in front of tracing middleware and set serviceContext value and use
     /// EventLoopFuture version of `request.withSpan` to call next.respond
+    @available(hummingbird 3.0, *)
     @Test func testServiceContextPropagationInMiddleware() async throws {
         struct SpanMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(
@@ -654,6 +671,7 @@ struct TracingTests {
     }
 
     /// Test tracing middleware serviceContext is propagated to async route handlers
+    @available(hummingbird 3.0, *)
     @Test func testServiceContextPropagationAsync() async throws {
         try await Self.testTracer.withUnique {
             try await confirmation(expectedCount: 2) { endSpan in

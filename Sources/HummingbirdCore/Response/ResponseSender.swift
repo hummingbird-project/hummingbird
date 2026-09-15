@@ -20,7 +20,7 @@ where WriteElement == UInt8, WriteFailure == any Error, FinalElement == HTTPFiel
 
 public struct AnyResponseBodyAsyncWriter: ResponseBodyAsyncWriter & ~Copyable {
     @usableFromInline
-    init(_ writer: consuming (any ResponseBodyAsyncWriter & ~Copyable)) {
+    package init(_ writer: consuming (any ResponseBodyAsyncWriter & ~Copyable)) {
         self.writer = consume writer
     }
     public mutating func write<Buffer>(buffer: inout Buffer) async throws(any Error)
@@ -39,15 +39,19 @@ public struct AnyResponseBodyAsyncWriter: ResponseBodyAsyncWriter & ~Copyable {
 
 public struct ResponseSender: HTTPResponseSender, ~Copyable {
     @usableFromInline
-    final class WriterState: Sendable {
+    package final class WriterState: Sendable {
         @usableFromInline
-        struct Wrapped: ~Copyable {
+        package struct Wrapped: ~Copyable {
             @usableFromInline
-            var finishedWriting: Bool = false
+            package var finishedWriting: Bool = false
         }
 
         @usableFromInline
-        let wrapped: Mutex<Wrapped> = .init(.init())
+        package let wrapped: Mutex<Wrapped>
+
+        package init() {
+            self.wrapped = .init(.init())
+        }
     }
 
     public struct Writer: ResponseBodyAsyncWriter, ~Copyable {
@@ -114,7 +118,7 @@ public struct ResponseSender: HTTPResponseSender, ~Copyable {
 
     // Initializes a new response sender.
     @inlinable
-    init(
+    package init(
         writer: NIOAsyncChannelOutboundWriter<HTTPResponsePart>,
         writerState: WriterState
     ) {

@@ -12,6 +12,7 @@ import Logging
 import NIOCore
 import NIOHTTPTypes
 import NIOHTTPTypesHTTP2
+import Synchronization
 
 /// HTTP2 Child channel for processing an HTTP2 stream
 @available(hummingbird 2.0, *)
@@ -69,8 +70,11 @@ struct HTTP2StreamChannel: ServerChildChannel {
                         head: head,
                         bodyIterator: iterator
                     )
-                    let responseWriter = ResponseWriter(outbound: outbound)
-                    try await self.responder(request, responseWriter, asyncChannel.channel)
+                    let writerState = ResponseSender.WriterState()
+                    try await self.responder(request, ResponseSender(writer: outbound, writerState: writerState), asyncChannel.channel)
+                    if writerState.wrapped.withLock({ $0.finishedWriting }) {
+                        return
+                    }
                     // Wait until inbound stream is finished. NIO will end the stream once
                     // it receives the HTTP part `.end`. This shouldnt be necessary as calling
                     // write should guarantee data is written

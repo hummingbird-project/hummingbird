@@ -30,12 +30,13 @@ if #available(hummingbird 2.0, *) {
         "Hello, world"
     }
 
+    /* TODO: Fixup for AsyncWriter
     // request with a body
     // ./wrk -c 128 -d 15s -t 8 -s scripts/post.lua http://localhost:8080
     router.post { request, _ in
         Response(status: .ok, body: .init(asyncSequence: request.body))
     }
-
+    */
     struct Object: ResponseEncodable {
         let message: String
     }

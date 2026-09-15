@@ -5,6 +5,7 @@
 // See LICENSE.txt for license information
 // SPDX-License-Identifier: Apache-2.0
 //
+import BasicContainers
 
 @available(hummingbird 2.0, *)
 extension URLEncodedFormEncoder: ResponseEncoder {
@@ -15,14 +16,14 @@ extension URLEncodedFormEncoder: ResponseEncoder {
     ///   - context: Request context
     public func encode(_ value: some Encodable, from request: Request, context: some RequestContext) throws -> Response {
         let string = try self.encode(value)
-        let buffer = ByteBuffer(string: string)
+        let buffer = UniqueArray(copying: string.utf8)
         return Response(
             status: .ok,
             headers: .defaultHummingbirdHeaders(
                 contentType: "application/x-www-form-urlencoded",
-                contentLength: buffer.readableBytes
+                contentLength: buffer.count
             ),
-            body: .init(byteBuffer: buffer)
+            body: .init(buffer)
         )
     }
 }

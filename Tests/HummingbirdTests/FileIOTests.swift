@@ -39,6 +39,7 @@ struct FileIOTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testReadFileIO() async throws {
         let router = Router()
         router.get("test.jpg") { _, context -> Response in
@@ -59,6 +60,7 @@ struct FileIOTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testReadMultipleFilesOnSameConnection() async throws {
         let router = Router()
         router.get("test.jpg") { _, context -> Response in
@@ -82,6 +84,7 @@ struct FileIOTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testWrite() async throws {
         let filename = "testWrite.txt"
         let router = Router()
@@ -106,6 +109,7 @@ struct FileIOTests {
         #expect(String(buffer: contents) == "This is a test")
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testWriteLargeFile() async throws {
         let filename = "testWriteLargeFile.txt"
         let router = Router()
@@ -130,6 +134,7 @@ struct FileIOTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testReadEmptyFile() async throws {
         let router = Router()
         router.get("empty.txt") { _, context -> Response in
@@ -150,6 +155,7 @@ struct FileIOTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testReadEmptyFilePart() async throws {
         let router = Router()
         router.get("empty.txt") { _, context -> Response in

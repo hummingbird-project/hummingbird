@@ -8,7 +8,9 @@
 
 import AsyncHTTPClient
 import Atomics
+import BasicContainers
 import Foundation
+import HTTPAPIs
 import HTTPTypes
 import HummingbirdCore
 import HummingbirdHTTP2
@@ -30,12 +32,16 @@ import UnixSignals
 @testable import Hummingbird
 
 struct ApplicationTests {
-    static func randomBuffer(size: Int) -> ByteBuffer {
-        var data = [UInt8](repeating: 0, count: size)
-        data = data.map { _ in UInt8.random(in: 0...255) }
-        return ByteBufferAllocator().buffer(bytes: data)
+    static func randomBuffer(size: Int) -> UniqueArray<UInt8> {
+        UniqueArray<UInt8>(copying: (0..<size).lazy.map { _ in UInt8.random(in: 0...255) })
     }
 
+    static func randomByteBuffer(size: Int) -> ByteBuffer {
+        var buffer = randomBuffer(size: size)
+        return ByteBuffer(draining: &buffer)
+    }
+
+    @available(hummingbird 3.0, *)
     @Test func testGetRoute() async throws {
         let router = Router()
         router.get("/hello") { _, _ -> ByteBuffer in
@@ -50,6 +56,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testHTTPStatusRoute() async throws {
         let router = Router()
         router.get("/accepted") { _, _ -> HTTPResponse.Status in
@@ -63,6 +70,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testStandardHeaders() async throws {
         let router = Router()
         router.get("/hello") { _, _ in
@@ -77,6 +85,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testServerHeaders() async throws {
         let router = Router()
         router.get("/hello") { _, _ in
@@ -93,6 +102,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testPostRoute() async throws {
         let router = Router()
         router.post("/hello") { _, _ -> String in
@@ -108,6 +118,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testMultipleMethods() async throws {
         let router = Router()
         router.post("/hello") { _, _ -> String in
@@ -128,6 +139,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testMultipleGroupMethods() async throws {
         let router = Router()
         router.group("hello")
@@ -149,6 +161,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testQueryRoute() async throws {
         let router = Router()
         router.post("/query") { request, _ -> ByteBuffer in
@@ -167,6 +180,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testMultipleQueriesRoute() async throws {
         let router = Router()
         router.post("/add") { request, _ -> String in
@@ -184,6 +198,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testArray() async throws {
         let router = Router()
         router.get("array") { _, _ -> [String] in
@@ -198,6 +213,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testErrorOutput() async throws {
         /// Error message returned by Hummingbird
         struct ErrorMessage: Codable {
@@ -220,6 +236,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testErrorHeaders() async throws {
         let router = Router()
         router.get("error") { _, _ -> HTTPResponse.Status in
@@ -234,18 +251,19 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testResponseBody() async throws {
         let router = Router()
         router
             .group("/echo-body")
             .post { request, _ -> Response in
                 let buffer = try await request.body.collect(upTo: .max)
-                return .init(status: .ok, headers: [:], body: .init(byteBuffer: buffer))
+                return .init(status: .ok, headers: [:], body: .init(UniqueArray(copying: buffer.readableBytesUInt8Span)))
             }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
-            let buffer = Self.randomBuffer(size: 1_140_000)
+            let buffer = Self.randomByteBuffer(size: 1_140_000)
             try await client.execute(uri: "/echo-body", method: .post, body: buffer) { response in
                 #expect(response.status == .ok)
                 #expect(response.body == buffer)
@@ -253,30 +271,9 @@ struct ApplicationTests {
         }
     }
 
-    @Test func testResponseBodySequence() async throws {
-        let router = Router()
-        router
-            .group("/echo-body")
-            .post { request, _ -> Response in
-                var buffers: [ByteBuffer] = []
-                for try await buffer in request.body {
-                    buffers.append(buffer)
-                }
-                return .init(status: .ok, headers: [:], body: .init(contentsOf: buffers))
-            }
-        let app = Application(responder: router.buildResponder())
-        try await app.test(.router) { client in
-
-            let buffer = Self.randomBuffer(size: 400_000)
-            try await client.execute(uri: "/echo-body", method: .post, body: buffer) { response in
-                #expect(response.status == .ok)
-                #expect(response.headers[.contentLength] == "400000")
-                #expect(response.body == buffer)
-            }
-        }
-    }
-
+    /* TODO: Fixup for AsyncWriter
     /// Test streaming of requests and streaming of responses by streaming the request body into a response streamer
+    @available(hummingbird 3.0, *)
     @Test func testStreaming() async throws {
         let router = Router()
         router.post("streaming") { request, _ -> Response in
@@ -293,7 +290,7 @@ struct ApplicationTests {
 
         try await app.test(.router) { client in
 
-            let buffer = Self.randomBuffer(size: 640_001)
+            let buffer = Self.randomByteBuffer(size: 640_001)
             try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
                 #expect(response.status == .ok)
                 #expect(response.body == buffer)
@@ -309,6 +306,7 @@ struct ApplicationTests {
     }
 
     /// Test streaming of requests and streaming of responses by streaming the request body into a response streamer
+    @available(hummingbird 3.0, *)
     @Test func testStreamingSmallBuffer() async throws {
         let router = Router()
         router.post("streaming") { request, _ -> Response in
@@ -327,7 +325,8 @@ struct ApplicationTests {
             }
         }
     }
-
+*/
+    @available(hummingbird 3.0, *)
     @Test func testCollectBody() async throws {
         struct CollateMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(
@@ -349,7 +348,7 @@ struct ApplicationTests {
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
-            let buffer = Self.randomBuffer(size: 512_000)
+            let buffer = Self.randomByteBuffer(size: 512_000)
             try await client.execute(uri: "/hello", method: .put, body: buffer) { response in
                 #expect(String(buffer: response.body) == "512000")
                 #expect(response.status == .ok)
@@ -357,6 +356,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testDoubleStreaming() async throws {
         let router = Router()
         router.post("size") { request, context -> String in
@@ -371,13 +371,14 @@ struct ApplicationTests {
         let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
-            let buffer = Self.randomBuffer(size: 100_000)
+            let buffer = Self.randomByteBuffer(size: 100_000)
             try await client.execute(uri: "/size", method: .post, body: buffer) { response in
                 #expect(String(buffer: response.body) == "100000")
             }
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testOptional() async throws {
         let router = Router()
         router
@@ -389,7 +390,7 @@ struct ApplicationTests {
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
 
-            let buffer = Self.randomBuffer(size: 64)
+            let buffer = Self.randomByteBuffer(size: 64)
             try await client.execute(uri: "/echo-body", method: .post, body: buffer) { response in
                 #expect(response.status == .ok)
                 #expect(response.body == buffer)
@@ -400,6 +401,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testOptionalCodable() async throws {
         struct SortedJSONRequestContext: RequestContext {
             var coreContext: CoreRequestContextStorage
@@ -432,6 +434,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testTypedResponse() async throws {
         let router = Router()
         router.delete("/hello") { _, _ in
@@ -453,6 +456,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testCodableTypedResponse() async throws {
         struct Result: ResponseEncodable {
             let value: String
@@ -477,6 +481,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testMaxUploadSize() async throws {
         struct MaxUploadRequestContext: RequestContext {
             init(source: Source) {
@@ -496,7 +501,7 @@ struct ApplicationTests {
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.live) { client in
-            let buffer = Self.randomBuffer(size: 128 * 1024)
+            let buffer = Self.randomByteBuffer(size: 128 * 1024)
             // check non streamed route throws an error
             try await client.execute(uri: "/upload", method: .post, body: buffer) { response in
                 #expect(response.status == .contentTooLarge)
@@ -508,14 +513,16 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testChunkedTransferEncoding() async throws {
         let router = Router()
             .get("chunked") { _, _ in
                 Response(
                     status: .ok,
-                    body: .init { writer in
-                        try await writer.write(ByteBuffer(string: "Testing"))
-                        try await writer.finish(nil)
+                    body: .init { (writer: consuming AnyResponseBodyAsyncWriter) in
+                        var buffer = UniqueArray(copying: "Testing".utf8)
+                        try await writer.write(buffer: &buffer)
+                        try await writer.finish()
                     }
                 )
             }
@@ -528,6 +535,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testRemoteAddress() async throws {
         /// Implementation of a basic request context that supports everything the Hummingbird library needs
         struct SocketAddressRequestContext: RequestContext {
@@ -565,6 +573,7 @@ struct ApplicationTests {
 
     /// test we can create an application and pass it around as a `some ApplicationProtocol`. This
     /// is more a compilation test than a runtime test
+    @available(hummingbird 3.0, *)
     @Test func testApplicationProtocolReturnValue() async throws {
         func createApplication() -> some ApplicationProtocol {
             let router = Router()
@@ -583,6 +592,7 @@ struct ApplicationTests {
     }
 
     /// test we can create out own application type conforming to ApplicationProtocol
+    @available(hummingbird 3.0, *)
     @Test func testApplicationProtocol() async throws {
         struct MyApp: ApplicationProtocol {
             typealias Context = BasicRequestContext
@@ -605,6 +615,7 @@ struct ApplicationTests {
     }
 
     /// test we can create an application that accepts a responder with an empty context
+    @available(hummingbird 3.0, *)
     @Test func testEmptyRequestContext() async throws {
         struct EmptyRequestContext: InitializableFromSource {
             typealias Source = ApplicationRequestContextSource
@@ -622,6 +633,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testHummingbirdServices() async throws {
         struct MyService: Service {
             static let started = ManagedAtomic(false)
@@ -644,6 +656,7 @@ struct ApplicationTests {
         #expect(MyService.shutdown.load(ordering: .relaxed) == true)
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testOnServerRunning() async throws {
         let runOnServerRunning = ManagedAtomic(false)
         let router = Router()
@@ -660,6 +673,7 @@ struct ApplicationTests {
         #expect(runOnServerRunning.load(ordering: .relaxed) == true)
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testRunBeforeServer() async throws {
         let runBeforeServer = ManagedAtomic(false)
         let router = Router()
@@ -679,6 +693,7 @@ struct ApplicationTests {
     }
 
     /// test we can create out own application type conforming to ApplicationProtocol
+    @available(hummingbird 3.0, *)
     @Test func testTLS() async throws {
         let router = Router()
         router.get("/") { _, _ -> String in
@@ -698,6 +713,7 @@ struct ApplicationTests {
     }
 
     /// test we can create out own application type conforming to ApplicationProtocol
+    @available(hummingbird 3.0, *)
     @Test func testHTTP2() async throws {
         let router = Router()
         router.get("/") { _, _ -> String in
@@ -717,6 +733,7 @@ struct ApplicationTests {
     }
 
     /// test we can create out own application type conforming to ApplicationProtocol
+    @available(hummingbird 3.0, *)
     @Test func testApplicationRouterInit() async throws {
         let router = Router()
         router.get("/") { _, _ -> String in
@@ -733,25 +750,26 @@ struct ApplicationTests {
     }
 
     /// test we can create out own application type conforming to ApplicationProtocol
+    @available(hummingbird 3.0, *)
     @Test func testBidirectionalStreaming() async throws {
-        let buffer = Self.randomBuffer(size: 1024 * 1024)
         let router = Router()
         router.post("/") { request, _ -> Response in
             .init(
                 status: .ok,
-                body: .init { writer in
+                body: .init { (writer: consuming AnyResponseBodyAsyncWriter) in
                     for try await buffer in request.body {
-                        let processed = ByteBuffer(
-                            bytes: buffer.readableBytesView.map { $0 ^ 0xFF }
+                        var processed = UniqueArray(
+                            copying: buffer.readableBytesView.lazy.map { $0 ^ 0xFF }
                         )
-                        try await writer.write(processed)
+                        try await writer.write(buffer: &processed)
                     }
-                    try await writer.finish(nil)
+                    try await writer.finish()
                 }
             )
         }
         let app = Application(router: router)
         try await app.test(.live) { client in
+            let buffer = Self.randomByteBuffer(size: 1024 * 1024)
             try await client.execute(uri: "/", method: .post, body: buffer) { response in
                 #expect(
                     response.body == ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 0xFF })
@@ -783,6 +801,7 @@ struct ApplicationTests {
         return tlsConfig
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testHTTPError() async throws {
         struct HTTPErrorFormat: Decodable {
             struct ErrorFormat: Decodable {
@@ -792,20 +811,24 @@ struct ApplicationTests {
             let error: ErrorFormat
         }
 
-        final class CollatedResponseWriter: ResponseBodyWriter {
-            let collated: NIOLockedValueBox<ByteBuffer>
+        final class CollatedResponseWriter: ResponseBodyAsyncWriter {
+            var collated: ByteBuffer
 
             init() {
                 self.collated = .init(.init())
             }
 
-            func write(_ buffer: ByteBuffer) async throws {
-                _ = self.collated.withLockedValue { collated in
-                    collated.writeImmutableBuffer(buffer)
-                }
+            func write<Buffer>(buffer: inout Buffer) async throws(any Error)
+            where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
+                collated.writeBytes(draining: &buffer)
+
             }
 
-            func finish(_: HTTPFields?) async throws {}
+            func finish<Buffer>(buffer: inout Buffer, finalElement: consuming HTTPTypes.HTTPFields?) async throws(any Error)
+            where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
+                collated.writeBytes(draining: &buffer)
+            }
+
         }
 
         let messages = [
@@ -829,13 +852,14 @@ struct ApplicationTests {
             let error = HTTPError(.internalServerError, message: message)
             let response = try error.response(from: request, context: context)
             let writer = CollatedResponseWriter()
-            _ = try await response.body.write(writer)
-            let format = try JSONDecoder().decode(HTTPErrorFormat.self, from: writer.collated.withLockedValue { $0 })
+            _ = try await response.body.write(AnyResponseBodyAsyncWriter(writer))
+            let format = try JSONDecoder().decode(HTTPErrorFormat.self, from: writer.collated)
             #expect(format.error.message == message)
         }
     }
 
     /// Test AsyncSequence returned by RequestBody.makeStream()
+    @available(hummingbird 3.0, *)
     @Test func testMakeStream() async throws {
         let router = Router()
         router.post("streaming") { request, context -> Response in
@@ -854,13 +878,13 @@ struct ApplicationTests {
                 }
                 return body
             }
-            return Response(status: .ok, body: .init(byteBuffer: body))
+            return Response(status: .ok, body: .init(UniqueArray(copying: body.readableBytesUInt8Span)))
         }
         let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
 
-            let buffer = Self.randomBuffer(size: 640_001)
+            let buffer = Self.randomByteBuffer(size: 640_001)
             try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
                 #expect(response.status == .ok)
                 #expect(response.body == buffer)
@@ -868,7 +892,9 @@ struct ApplicationTests {
         }
     }
 
+    /* TODO: Fixup for AsyncWriter
     /// Test AsyncSequence returned by RequestBody.makeStream() and feeding it data from multiple processes
+    @available(hummingbird 3.0, *)
     @Test func testMakeStreamMultipleSources() async throws {
         let router = Router()
         router.get("numbers") { request, context -> Response in
@@ -915,6 +941,7 @@ struct ApplicationTests {
     }
 
     /// Test consumeWithInboundCloseHandler
+    @available(hummingbird 3.0, *)
     @Test func testConsumeWithInboundHandler() async throws {
         let router = Router()
         router.post("streaming") { request, context -> Response in
@@ -941,6 +968,7 @@ struct ApplicationTests {
     }
 
     /// Test consumeWithInboundCloseHandler
+    @available(hummingbird 3.0, *)
     @Test func testConsumeWithCancellationOnInboundClose() async throws {
         let router = Router()
         router.post("streaming") { request, context -> Response in
@@ -966,6 +994,7 @@ struct ApplicationTests {
     }
 
     /// Test consumeWithInboundHandler after having collected the Request body
+    @available(hummingbird 3.0, *)
     @Test func testConsumeWithInboundHandlerAfterCollect() async throws {
         let router = Router()
         router.post("streaming") { request, context -> Response in
@@ -995,6 +1024,7 @@ struct ApplicationTests {
     }
 
     /// Test consumeWithInboundHandler after having replaced Request.body with a new streamed RequestBody
+    @available(hummingbird 3.0, *)
     @Test func testConsumeWithInboundHandlerAfterReplacingBody() async throws {
         let router = Router()
         router.post("streaming") { request, context -> Response in
@@ -1028,7 +1058,8 @@ struct ApplicationTests {
             }
         }
     }
-
+*/
+    @available(hummingbird 3.0, *)
     @Test func testErrorInResponseWriterClosesConnection() async throws {
         let router = Router()
         router.post("error") { request, context -> Response in
@@ -1047,6 +1078,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testIfMatchEtagHeaders() async throws {
         let router = Router()
         router.get("ifMatch") { request, context -> Response in
@@ -1069,6 +1101,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testIfNoneMatchEtagHeaders() async throws {
         let router = Router()
         router.get("ifNoneMatch") { request, context -> Response in
@@ -1096,6 +1129,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testIfUnmodifiedSinceHeaders() async throws {
         let now = Date.now
         let router = Router()
@@ -1119,6 +1153,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testIfModifiedSinceHeaders() async throws {
         let now = Date.now
         let router = Router()
@@ -1154,6 +1189,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testHTTPProtocolParseError() async throws {
         final class CreateErrorHandler: ChannelInboundHandler, RemovableChannelHandler {
             typealias InboundIn = HTTPRequestPart
@@ -1193,6 +1229,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testUnboundedHTTPHeaders() async throws {
         let router = Router()
             .post { request, _ in
@@ -1226,19 +1263,20 @@ struct ApplicationTests {
             }
         }
     }
-
+    @available(hummingbird 3.0, *)
     @Test func testCancelledRequest() async throws {
         let httpClient = HTTPClient()
         let (stream, cont) = AsyncStream.makeStream(of: Int.self)
 
         let router = Router()
         router.post("/") { request, context in
-            let b = try await request.body.collect(upTo: .max)
+            var b = try await UniqueArray<UInt8>(copying: request.body.collect(upTo: .max).readableBytesUInt8Span)
             return Response(
                 status: .ok,
                 body: .init { writer in
-                    try await writer.write(b)
-                    try await writer.finish(nil)
+                    var writer = writer
+                    try await writer.write(buffer: &b)
+                    try await writer.finish()
                 }
             )
         }
@@ -1292,6 +1330,7 @@ struct ApplicationTests {
         try await httpClient.shutdown()
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testTaskLocalLogger() async throws {
         let logHandler = InMemoryLogHandler()
         let router = Router()

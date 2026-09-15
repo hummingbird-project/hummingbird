@@ -103,7 +103,7 @@ extension ApplicationProtocol {
             configuration: self.configuration.httpServer,
             eventLoopGroup: self.eventLoopGroup,
             logger: self.logger
-        ) { (request, responseWriter: consuming ResponseSender, channel) in
+        ) { (request, responseSender: consuming ResponseSender, channel) in
             let logger = self.logger.with(metadataKey: "hb.request.id", value: .stringConvertible(RequestID()))
             let response = try await withLogger(logger) { logger in
                 let context = Self.Responder.Context(
@@ -134,7 +134,9 @@ extension ApplicationProtocol {
             }
             do {
                 // Write response — fast path for ByteBuffer/empty bodies (1 write instead of 3)
-                try await responseWriter.write(response: response.head, body: response.body)
+                if #available(hummingbird 3.0, *) {
+                    try await ResponseWriter(responseSender).write(response: response.head, body: response.body)
+                }
             } catch is HTTPParserError {
                 // cannot throw the parser error, as that will cause another response
                 // to be written
