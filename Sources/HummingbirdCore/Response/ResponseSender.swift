@@ -141,18 +141,4 @@ public struct ResponseSender: HTTPResponseSender, ~Copyable {
         }
         self.writerState.wrapped.withLock { $0.finishedWriting = true }
     }
-
-    @inlinable
-    nonisolated(nonsending) public consuming func sendAndFinish(
-        _ response: HTTPResponse,
-        buffer: ByteBuffer,
-        trailer: HTTPFields?
-    ) async throws {
-        if buffer.readableBytes == 0 {
-            try await self.writer.write(contentsOf: [.head(response), .end(trailer)])
-        } else {
-            try await self.writer.write(contentsOf: [.head(response), .body(buffer), .end(trailer)])
-        }
-        self.writerState.wrapped.withLock { $0.finishedWriting = true }
-    }
 }

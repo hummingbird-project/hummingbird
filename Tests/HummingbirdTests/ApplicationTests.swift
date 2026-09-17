@@ -271,13 +271,21 @@ struct ApplicationTests {
         }
     }
 
-    /* TODO: Fixup for AsyncWriter
     /// Test streaming of requests and streaming of responses by streaming the request body into a response streamer
     @available(hummingbird 3.0, *)
     @Test func testStreaming() async throws {
         let router = Router()
         router.post("streaming") { request, _ -> Response in
-            Response(status: .ok, body: .init(asyncSequence: request.body))
+            Response(
+                status: .ok,
+                body: .init { (writer: consuming AnyResponseBodyAsyncWriter) in
+                    for try await buffer in request.body {
+                        var bytes = UniqueArray(copying: buffer.readableBytesUInt8Span)
+                        try await writer.write(buffer: &bytes)
+                    }
+                    try await writer.finish()
+                }
+            )
         }
         router.post("size") { request, _ -> String in
             var size = 0
@@ -310,11 +318,20 @@ struct ApplicationTests {
     @Test func testStreamingSmallBuffer() async throws {
         let router = Router()
         router.post("streaming") { request, _ -> Response in
-            Response(status: .ok, body: .init(asyncSequence: request.body))
+            Response(
+                status: .ok,
+                body: .init { (writer: consuming AnyResponseBodyAsyncWriter) in
+                    for try await buffer in request.body {
+                        var bytes = UniqueArray(copying: buffer.readableBytesUInt8Span)
+                        try await writer.write(buffer: &bytes)
+                    }
+                    try await writer.finish()
+                }
+            )
         }
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
-            let buffer = Self.randomBuffer(size: 64)
+            let buffer = Self.randomByteBuffer(size: 64)
             try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
                 #expect(response.status == .ok)
                 #expect(response.body == buffer)
@@ -325,7 +342,7 @@ struct ApplicationTests {
             }
         }
     }
-*/
+
     @available(hummingbird 3.0, *)
     @Test func testCollectBody() async throws {
         struct CollateMiddleware<Context: RequestContext>: RouterMiddleware {

@@ -238,20 +238,22 @@ struct HummingbirdCoreTests {
         )
     }
 
-    /* TODO: Fixup for AsyncWriter
     @available(hummingbird 3.0, *)
     @Test func testStreamBody() async throws {
         try await testServer(
-            responder: { (request, responseWriter: consuming ResponseWriter, _) in
-                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
-                try await bodyWriter.write(request.body)
-                try await bodyWriter.finish(nil)
+            responder: { (request, responseWriter: consuming ResponseSender, _) in
+                var bodyWriter = try await responseWriter.send(.init(status: .ok))
+                for try await buffer in request.body {
+                    var bytes = UniqueArray(copying: buffer.readableBytesUInt8Span)
+                    try await bodyWriter.write(buffer: &bytes)
+                }
+                try await bodyWriter.finish()
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: #function),
             test: { client in
-                let buffer = Self.randomBuffer(size: 1_140_000)
+                let buffer = Self.randomByteBuffer(size: 1_140_000)
                 let response = try await client.post("/", body: buffer)
                 let body = try #require(response.body)
                 #expect(body == buffer)
@@ -262,16 +264,20 @@ struct HummingbirdCoreTests {
     @available(hummingbird 3.0, *)
     @Test func testStreamBodyWriteSlow() async throws {
         try await testServer(
-            responder: { (request, responseWriter: consuming ResponseWriter, _) in
-                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
-                try await bodyWriter.write(request.body.delayed())
-                try await bodyWriter.finish(nil)
+            responder: { (request, responseWriter: consuming ResponseSender, _) in
+                var bodyWriter = try await responseWriter.send(.init(status: .ok))
+                for try await buffer in request.body {
+                    var bytes = UniqueArray(copying: buffer.readableBytesUInt8Span)
+                    try await Task.sleep(for: .milliseconds(Int.random(in: 10..<100)))
+                    try await bodyWriter.write(buffer: &bytes)
+                }
+                try await bodyWriter.finish()
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: #function),
             test: { client in
-                let buffer = Self.randomBuffer(size: 1_140_000)
+                let buffer = Self.randomByteBuffer(size: 1_140_000)
                 let response = try await client.post("/", body: buffer)
                 let body = try #require(response.body)
                 #expect(body == buffer)
@@ -279,6 +285,7 @@ struct HummingbirdCoreTests {
         )
     }
 
+    /* TODO: Fixup for AsyncWriter
     @available(hummingbird 3.0, *)
     @Test func testStreamBodySlowStream() async throws {
         /// channel handler that delays the sending of data
