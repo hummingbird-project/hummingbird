@@ -62,6 +62,7 @@ struct EnvironmentTests {
         #expect(env2.get("TEST_VAR_E1") == "testSet")
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testLogLevel() {
         var env = Environment()
         env.set("LOG_LEVEL", value: "trace")

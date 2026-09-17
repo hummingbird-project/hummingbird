@@ -20,7 +20,7 @@ import ServiceLifecycle
 import UnixSignals
 
 /// Test using a live server and AsyncHTTPClient as a client
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 final class AsyncHTTPClientTestFramework<App: ApplicationProtocol>: ApplicationTestFramework {
     struct Client: TestClientProtocol {
         let client: HTTPClient

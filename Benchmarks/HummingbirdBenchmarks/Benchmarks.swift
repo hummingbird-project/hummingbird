@@ -24,7 +24,7 @@ let benchmarks: @Sendable () -> Void = {
             ],
         warmupIterations: 10
     )
-    if #available(macOS 14, *) {
+    if #available(hummingbird 3.0, *) {
         trieRouterBenchmarks()
         routerBenchmarks()
         httpBenchmarks()

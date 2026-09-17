@@ -8,6 +8,7 @@
 
 import BasicContainers
 import Benchmark
+import ContainersPreview
 import HTTPTypes
 import Hummingbird
 import HummingbirdCore
@@ -36,9 +37,16 @@ struct BenchmarkRequestContextSource: RequestContextSource {
 }
 
 /// Writes ByteBuffers to AsyncChannel outbound writer
-struct BenchmarkBodyWriter: Sendable, ResponseBodyWriter {
-    func finish(_: HTTPFields?) async throws {}
-    func write(_: ByteBuffer) async throws {}
+struct BenchmarkBodyWriter: ResponseBodyAsyncWriter {
+    mutating func write<Buffer>(buffer: inout Buffer) async throws(any Error)
+    where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
+
+    }
+
+    func finish<Buffer>(buffer: inout Buffer, finalElement: consuming HTTPTypes.HTTPFields?) async throws(any Error)
+    where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
+
+    }
 }
 
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
@@ -55,6 +63,8 @@ struct BasicRouterBenchmarkContext: RouterRequestContext {
 }
 
 typealias ByteBufferWriter = (ByteBuffer) async throws -> Void
+
+@available(hummingbird 3.0, *)
 extension Benchmark {
     @discardableResult
     convenience init?<ResponderBuilder: HTTPResponderBuilder>(
@@ -90,7 +100,7 @@ extension Benchmark {
                         try await writeBody { source.yield(.body($0)) }
                         source.finish()
                         let response = try await responder.respond(to: request, context: context)
-                        _ = try await response.body.write(BenchmarkBodyWriter())
+                        _ = try await response.body.write(.init(BenchmarkBodyWriter()))
                     }
                 }
             } else {
@@ -101,7 +111,7 @@ extension Benchmark {
                 for _ in benchmark.scaledIterations {
                     for _ in 0..<50 {
                         let response = try await responder.respond(to: hbRequest, context: context)
-                        _ = try await response.body.write(BenchmarkBodyWriter())
+                        _ = try await response.body.write(.init(BenchmarkBodyWriter()))
                     }
                 }
             }
@@ -119,7 +129,7 @@ extension HTTPField.Name {
     static let test = Self("Test")!
 }
 
-@available(macOS 14, *)
+@available(hummingbird 3.0, *)
 func routerBenchmarks() {
     MetricsSystem.bootstrap(TestMetrics())
     let buffer = ByteBufferAllocator().buffer(repeating: 0xFF, count: 10000)
@@ -165,7 +175,7 @@ func routerBenchmarks() {
         return router
     }
 
-    /* TODO: Fixup for RequestAsyncReader
+    /* TODO: Fixup for RequestAsyncReader/AsyncWriter
     Benchmark(
         "Router:Echo",
         configuration: .init(warmupIterations: 10),
