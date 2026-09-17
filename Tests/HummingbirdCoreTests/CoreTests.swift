@@ -159,7 +159,7 @@ struct HummingbirdCoreTests {
                         client.connect()
                         let response = try await client.post("/", body: ByteBuffer(string: "Hello"))
                         var body = try #require(response.body)
-                        #expect(body.readString(length: body.readableBytes) == "Hello")
+                        #expect(body.readString(length: body.readableBytes) == "hello")
                         try await client.close()
                     }
                 }

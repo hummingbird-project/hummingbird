@@ -52,7 +52,7 @@ extension HTTPChannelHandler {
                             let writerState = ResponseSender.WriterState()
                             let responseSender = ResponseSender(writer: outbound, writerState: writerState)
                             try await self.responder(request, responseSender, asyncChannel.channel)
-                            if writerState.wrapped.withLock({ $0.finishedWriting }) {
+                            if !writerState.wrapped.withLock({ $0.finishedWriting }) {
                                 break
                             }
                             if request.headers[.connection] == "close" {
