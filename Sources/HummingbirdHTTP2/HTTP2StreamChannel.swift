@@ -78,7 +78,7 @@ struct HTTP2StreamChannel: ServerChildChannel {
                         responseSender: ResponseSender(writer: outbound, writerState: writerState),
                         channel: asyncChannel.channel
                     )
-                    if writerState.wrapped.withLock({ $0.finishedWriting }) {
+                    if !writerState.wrapped.withLock({ $0.finishedWriting }) {
                         return
                     }
                     // Wait until inbound stream is finished. NIO will end the stream once
