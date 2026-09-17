@@ -91,12 +91,6 @@ public struct ResponseSender: HTTPResponseSender, ~Copyable {
             self.writerState.wrapped.withLock { $0.finishedWriting = true }
         }
 
-        public mutating func write(
-            contentsOf parts: some Sequence<HTTPResponsePart>
-        ) async throws(WriteFailure) {
-            try await self.writer.write(contentsOf: parts)
-        }
-
         public consuming func finish(
             finalElement: consuming HTTPFields?
         ) async throws(WriteFailure) {
