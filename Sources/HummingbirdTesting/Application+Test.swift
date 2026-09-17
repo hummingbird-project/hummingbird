@@ -36,6 +36,7 @@ public struct TestingSetup: Sendable {
 }
 
 /// Extends `ApplicationProtocol` to support testing of applications
+@available(hummingbird 3.0, *)
 extension ApplicationProtocol {
     // MARK: Initialization
 
