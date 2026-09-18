@@ -100,7 +100,7 @@ extension Benchmark {
                         try await writeBody { source.yield(.body($0)) }
                         source.finish()
                         let response = try await responder.respond(to: request, context: context)
-                        _ = try await response.body.write(.init(BenchmarkBodyWriter()))
+                        _ = try await response.body.write(BenchmarkBodyWriter())
                     }
                 }
             } else {
@@ -111,7 +111,7 @@ extension Benchmark {
                 for _ in benchmark.scaledIterations {
                     for _ in 0..<50 {
                         let response = try await responder.respond(to: hbRequest, context: context)
-                        _ = try await response.body.write(.init(BenchmarkBodyWriter()))
+                        _ = try await response.body.write(BenchmarkBodyWriter())
                     }
                 }
             }

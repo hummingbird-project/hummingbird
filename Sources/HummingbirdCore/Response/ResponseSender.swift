@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-import BasicContainers
+public import BasicContainers
 import ContainersPreview
 public import HTTPAPIs
 public import HTTPTypes
@@ -14,11 +14,13 @@ public import NIOCore
 public import NIOHTTPTypes
 public import Synchronization
 
+/// A `CallerAsyncWriter` for writing HTTP responses
 public protocol ResponseBodyAsyncWriter: CallerAsyncWriter, ~Copyable
 where WriteElement == UInt8, WriteFailure == any Error, FinalElement == HTTPFields? {
 }
 
-public struct AnyResponseBodyAsyncWriter: ResponseBodyAsyncWriter & ~Copyable {
+/// Wrapper for existential ResponseBodyAsyncWriter
+public struct AnyResponseBodyAsyncWriter: ~Copyable {
     @usableFromInline
     package init(_ writer: consuming (any ResponseBodyAsyncWriter & ~Copyable)) {
         self.writer = consume writer
@@ -31,16 +33,24 @@ public struct AnyResponseBodyAsyncWriter: ResponseBodyAsyncWriter & ~Copyable {
     }
 
     @inlinable
-    public consuming func finish<Buffer>(buffer: inout Buffer, finalElement: consuming HTTPTypes.HTTPFields?) async throws(any Error)
+    public consuming func finish<Buffer>(buffer: inout Buffer, finalElement: consuming HTTPTypes.HTTPFields? = nil) async throws(any Error)
     where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
         let writer = self.writer.take()!
         try await writer.finish(buffer: &buffer, finalElement: finalElement)
+    }
+
+    @inlinable
+    public consuming func finish(finalElement: consuming HTTPTypes.HTTPFields? = nil) async throws(any Error) {
+        let writer = self.writer.take()!
+        var empty = UniqueArray<UInt8>()
+        try await writer.finish(buffer: &empty, finalElement: finalElement)
     }
 
     @usableFromInline
     internal var writer: (any ResponseBodyAsyncWriter & ~Copyable)?
 }
 
+/// HTTPResponseSender that sends an HTTP response using a NIOAsyncChannelOutboundWriter
 public struct ResponseSender: HTTPResponseSender, ~Copyable {
     @usableFromInline
     package final class WriterState: Sendable {
@@ -58,6 +68,7 @@ public struct ResponseSender: HTTPResponseSender, ~Copyable {
         }
     }
 
+    /// ResponseBody AsyncWriter that writes the response body using a NIOAsyncChannelOutboundWriter
     public struct Writer: ResponseBodyAsyncWriter, ~Copyable {
         public typealias WriteElement = UInt8
         public typealias WriteFailure = any Error

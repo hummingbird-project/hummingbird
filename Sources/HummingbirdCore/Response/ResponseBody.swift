@@ -7,9 +7,10 @@
 //
 
 public import BasicContainers
-public import HTTPAPIs
+import HTTPAPIs
 import HTTPTypes
 
+/// Used to Box a non-copyable so it can be used in copyable struct
 @usableFromInline
 final class Box<Value: ~Copyable> {
     @usableFromInline
@@ -73,12 +74,19 @@ public struct ResponseBody {
 
     @inlinable
     @available(hummingbird 3.0, *)
+    public consuming func write(_ writer: consuming any (ResponseBodyAsyncWriter & ~Copyable)) async throws {
+        let writer = AnyResponseBodyAsyncWriter(writer)
+        try await write(writer)
+    }
+
+    @inlinable
+    @available(hummingbird 3.0, *)
     public consuming func write(_ writer: consuming AnyResponseBodyAsyncWriter) async throws {
         switch self._backing {
         case .bytes(let buf):
             try await writer.finish(buffer: &buf.value)
         case .empty:
-            try await writer.finish(trailer: nil)
+            try await writer.finish()
         case .closure(_, let fn):
             try await fn(writer)
         }
