@@ -108,12 +108,13 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
                 }
                 let (stream, source) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()
                 let iterator = stream.makeAsyncIterator()
-                let requestBody = NIOAsyncChannelRequestBody(iterator: iterator)
+                let reader = BaseRequestAsyncReader(readerState: .init(iterator: iterator))
+                let requestBody = RequestBody(.asyncReader(reader))
 
                 //let (stream, source) = RequestBody.makeStream()
                 let request = Request(
                     head: .init(method: method, scheme: "http", authority: "localhost", path: uri, headerFields: headers),
-                    body: RequestBody(nioAsyncChannelInbound: requestBody)
+                    body: requestBody
                 )
                 let logger = self.logger.with(metadataKey: "hb.request.id", value: .stringConvertible(RequestID()))
                 let context = self.makeContext(logger)
