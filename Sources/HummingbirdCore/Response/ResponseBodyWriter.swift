@@ -13,19 +13,19 @@ public import NIOCore
 public protocol ResponseBodyWriter {
     /// Write a single ByteBuffer
     /// - Parameter buffer: single buffer to write
-    mutating func write(_ buffer: ByteBuffer) async throws
+    mutating nonisolated(nonsending) func write(_ buffer: ByteBuffer) async throws
     /// Write a sequence of ByteBuffers
     /// - Parameter buffers: Sequence of buffers
-    mutating func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws
+    mutating nonisolated(nonsending) func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws
     /// Finish writing body
     /// - Parameter trailingHeaders: Any trailing headers you want to include at end
-    consuming func finish(_ trailingHeaders: HTTPFields?) async throws
+    consuming nonisolated(nonsending) func finish(_ trailingHeaders: HTTPFields?) async throws
 }
 
 extension ResponseBodyWriter {
     /// Default implementation of writing a sequence of ByteBuffers
     @inlinable
-    public mutating func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws {
+    public mutating nonisolated(nonsending) func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws {
         for part in buffers {
             try await self.write(part)
         }
@@ -34,7 +34,8 @@ extension ResponseBodyWriter {
     ///  Write AsyncSequence of ByteBuffers
     /// - Parameter buffers: ByteBuffer AsyncSequence
     @inlinable
-    public mutating func write<BufferSequence: AsyncSequence>(_ buffers: BufferSequence) async throws where BufferSequence.Element == ByteBuffer {
+    public mutating nonisolated(nonsending) func write<BufferSequence: AsyncSequence>(_ buffers: BufferSequence) async throws
+    where BufferSequence.Element == ByteBuffer {
         for try await buffer in buffers {
             try await self.write(buffer)
         }
