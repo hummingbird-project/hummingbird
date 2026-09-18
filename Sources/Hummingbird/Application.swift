@@ -134,7 +134,7 @@ extension ApplicationProtocol {
             }
             do {
                 // Write response — fast path for ByteBuffer/empty bodies (1 write instead of 3)
-                try await ResponseWriter(responseSender).write(response: response.head, body: response.body)
+                try await responseSender.write(response: response.head, body: response.body)
             } catch is HTTPParserError {
                 // cannot throw the parser error, as that will cause another response
                 // to be written
