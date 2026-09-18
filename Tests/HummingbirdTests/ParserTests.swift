@@ -12,32 +12,52 @@ import Testing
 
 struct ParserTests {
     @Test func testCharacter() throws {
-        var parser = Parser("TestString")
+        var parser = Parser("Tést🤣String")
         #expect(try parser.character() == "T")
-        #expect(try parser.character() == "e")
+        #expect(try parser.character() == "é")
+        #expect(try parser.character() == "s")
+        #expect(try parser.character() == "t")
+        #expect(try parser.character() == "🤣")
     }
 
     @Test func testSubstring() throws {
-        var parser = Parser("TestString")
+        var parser = Parser("Tést🤣String")
         #expect(throws: (any Error).self) { try parser.read(count: 23) }
-        #expect(try parser.read(count: 3).string == "Tes")
-        #expect(try parser.read(count: 5).string == "tStri")
+        #expect(try parser.read(count: 3).string == "Tés")
+        #expect(try parser.read(count: 6).string == "t🤣Stri")
         #expect(throws: (any Error).self) { try parser.read(count: 3) }
         #expect(throws: Never.self) { try parser.read(count: 2) }
     }
 
+    @Test func testWalkUnicode() throws {
+        let string = "é🤣ブ"
+        var parser = Parser(string)
+        // Walk forward
+        var count = 0
+        while parser.reachedEnd() == false {
+            try parser.advance()
+            count += 1
+        }
+        #expect(count == string.count)
+        while (try? parser.retreat()) != nil {
+            count -= 1
+        }
+        #expect(count == 0)
+    }
+
     @Test func testReadCharacter() throws {
-        var parser = Parser("TestString")
+        var parser = Parser("Te🤣stString")
         #expect(throws: Never.self) { try parser.read("T") }
         #expect(throws: Never.self) { try parser.read("e") }
+        #expect(throws: Never.self) { try parser.read("🤣") }
         #expect(try parser.read("e") == false)
         #expect(try parser.read(Set("hgs")) == true)
     }
 
     @Test func testReadUntilCharacter() throws {
-        var parser = Parser("TestString")
-        #expect(try parser.read(until: "S").string == "Test")
-        #expect(try parser.read(until: "n").string == "Stri")
+        var parser = Parser("Test🤣String")
+        #expect(try parser.read(until: "🤣").string == "Test")
+        #expect(try parser.read(until: "n").string == "🤣Stri")
         #expect(throws: (any Error).self) { try parser.read(until: "!") }
     }
 
@@ -48,8 +68,8 @@ struct ParserTests {
     }
 
     @Test func testReadUntilString() throws {
-        var parser = Parser("<!-- check for -comment end -->")
-        #expect(try parser.read(untilString: "-->").string == "<!-- check for -comment end ")
+        var parser = Parser("<!-- check for -comment end 🤣 -->")
+        #expect(try parser.read(untilString: "-->").string == "<!-- check for -comment end 🤣 ")
         #expect(try parser.read("-->") == true)
     }
 
@@ -68,11 +88,11 @@ struct ParserTests {
     }
 
     @Test func testRetreat() throws {
-        var parser = Parser("abcdef")
+        var parser = Parser("abc🤣def")
         #expect(throws: (any Error).self) { try parser.retreat() }
         _ = try parser.read(count: 4)
         try parser.retreat(by: 3)
-        #expect(try parser.read(count: 4).string == "bcde")
+        #expect(try parser.read(count: 4).string == "bc🤣d")
     }
 
     @Test func testCopy() throws {
