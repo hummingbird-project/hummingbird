@@ -130,11 +130,10 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
                     attributes["http.response.body.size"] = response.body.contentLength
                 }
                 let spanWrapper = UnsafeTransfer(SpanWrapper(span))
-                response.setBody(
-                    response.body.withPostWriteClosure {
-                        spanWrapper.wrappedValue.end()
-                    }
-                )
+                response.body = response.body.withPostWriteClosure {
+                    spanWrapper.wrappedValue.end()
+                }
+
                 return response
             }
         } catch {

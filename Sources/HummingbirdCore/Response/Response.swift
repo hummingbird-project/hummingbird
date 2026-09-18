@@ -23,27 +23,31 @@ public struct Response {
             self.headers = newValue.headerFields
         }
     }
-    public internal(set) var body: ResponseBody
+    @usableFromInline
+    /*private*/ var _body: ResponseBody
     /// Response body
-    //@inlinable
-    public mutating func setBody(_ body: consuming ResponseBody) {
-        if self.body.contentLength != body.contentLength {
-            if let contentLength = body.contentLength {
-                self.headers[.contentLength] = String(describing: contentLength)
-            } else {
-                self.headers[.contentLength] = nil
+    @inlinable
+    public var body: ResponseBody {
+        get { _body }
+        set {
+            if self.body.contentLength != newValue.contentLength {
+                if let contentLength = newValue.contentLength {
+                    self.headers[.contentLength] = String(describing: contentLength)
+                } else {
+                    self.headers[.contentLength] = nil
+                }
             }
+            self._body = newValue
         }
-        self.body = body
     }
 
     /// Initialize Response
-    //@inlinable
-    public init(status: HTTPResponse.Status, headers: HTTPFields = .init(), body: consuming ResponseBody = .init()) {
+    @inlinable
+    public init(status: HTTPResponse.Status, headers: HTTPFields = .init(), body: ResponseBody = .init()) {
         self.status = status
         self.headers = headers
-        self.body = body
-        if let contentLength = self.body.contentLength, !self.headers.contains(.contentLength) {
+        self._body = body
+        if let contentLength = body.contentLength, !self.headers.contains(.contentLength) {
             self.headers[.contentLength] = String(describing: contentLength)
         }
     }
