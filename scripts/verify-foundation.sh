@@ -28,7 +28,7 @@ for LIB in ${LIBS_TO_CHECK}; do
   # check if the binary has a dependency on Foundation or ICU
   echo "${OBJDUMP}" | grep "${LIB}"  # return 1 if not found
 
-  # 1 is success (grep failed to find the lib), 0 is failure (grep successly found the lib)
+  # 1 is success (grep failed to find the lib), 0 is failure (grep successfully found the lib)
   SUCCESS=$?
   if [ "$SUCCESS" -eq 0 ]; then
     log "❌ ${LIB} found." && break
