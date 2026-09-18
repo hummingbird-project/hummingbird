@@ -1,4 +1,4 @@
-name: Verify not using Foundation
+- name: Verify that Foundation is not used
 
 on:
   pull_request:
