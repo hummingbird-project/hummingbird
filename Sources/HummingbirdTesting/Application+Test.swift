@@ -19,7 +19,9 @@ public struct TestingSetup: Sendable {
     enum Internal: Sendable {
         case router
         case live
+        #if AsyncHTTPClientSupport
         case ahc(TestHTTPScheme)
+        #endif
     }
 
     let value: Internal
@@ -32,7 +34,9 @@ public struct TestingSetup: Sendable {
     public static var live: TestingSetup { .init(value: .live) }
     /// Sets up a live server and execute tests using the HTTP client from
     /// https://github.com/swift-server/async-http-client. Does not support trailer headers
+    #if AsyncHTTPClientSupport
     public static func ahc(_ scheme: TestHTTPScheme = .http) -> TestingSetup { .init(value: .ahc(scheme)) }
+    #endif
 }
 
 /// Extends `ApplicationProtocol` to support testing of applications
@@ -75,7 +79,9 @@ extension ApplicationProtocol {
             switch testingSetup.value {
             case .router: try await RouterTestFramework(app: self)
             case .live: LiveTestFramework(app: self)
+            #if AsyncHTTPClientSupport
             case .ahc(let scheme): AsyncHTTPClientTestFramework(app: self, scheme: scheme)
+            #endif
             }
         return try await app.run(test)
     }

@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+#if TLSSupport
 public import NIOCore
 public import NIOSSL
 
@@ -70,3 +71,4 @@ package struct TLSChannelInternalConfiguration: Sendable {
         self.customVerificationCallback = configuration.customVerificationCallback
     }
 }
+#endif
