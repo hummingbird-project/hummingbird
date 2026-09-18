@@ -156,4 +156,27 @@ public struct ResponseSender: HTTPResponseSender, ~Copyable {
         }
         self.writerState.wrapped.withLock { $0.finishedWriting = true }
     }
+
+    /// Write a complete HTTP response, using a fast path for ByteBuffer and empty bodies.
+    ///
+    /// For single-ByteBuffer and empty bodies, head + body + end are sent as a single
+    /// batched write (1 encoder pass instead of 3). Streaming and closure-backed bodies
+    /// fall through to the standard path.
+    ///
+    /// - Parameters:
+    ///   - head: Response head
+    ///   - body: Response body
+    @available(hummingbird 3.0, *)
+    @inlinable
+    public consuming func write(response head: HTTPResponse, body: consuming ResponseBody) async throws {
+        switch body._backing {
+        case .bytes(let buf):
+            try await self.sendAndFinish(head, buffer: &buf.value, trailer: nil)
+        case .empty:
+            try await self.sendAndFinish(head)
+        case .closure(_, let fn):
+            let bodyWriter = try await self.send(head)
+            try await fn(AnyResponseBodyAsyncWriter(bodyWriter))
+        }
+    }
 }
