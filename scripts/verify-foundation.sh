@@ -1,5 +1,5 @@
 #!/bin/bash
-# Verify package with no trait does not require libFoundation.so or libFoundationInternationalization.so
+# Verify that the package without traits does not require libFoundation.so or libFoundationInternationalization.so
 # This script only checks the dynamic libs referenced by the PerformanceTest executable.
 
 log() { printf -- "** %s\n" "$*" >&2; }
