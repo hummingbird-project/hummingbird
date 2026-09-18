@@ -7,6 +7,7 @@
 //
 
 import BasicContainers
+import ContainersPreview
 import Foundation
 import HTTPTypes
 import Hummingbird
@@ -129,26 +130,25 @@ struct MiddlewareTests {
             }
         }
     }
-    /*
+
     @available(hummingbird 3.0, *)
     @Test func testMiddlewareResponseBodyWriter() async throws {
         struct TransformWriter: ResponseBodyAsyncWriter, ~Copyable {
-            var parentWriter: any (ResponseBodyAsyncWriter & ~Copyable)
+            var parentWriter: AnyResponseBodyAsyncWriter
 
             mutating func write<Buffer>(buffer: inout Buffer) async throws(any Error)
             where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
                 var output = UniqueArray(from: buffer.consumeAll().map { $0 ^ 255 })
                 try await self.parentWriter.write(buffer: &output)
-
             }
 
-            func finish<Buffer>(buffer: inout Buffer, finalElement: consuming HTTPTypes.HTTPFields?) async throws(any Error)
+            consuming func finish<Buffer>(buffer: inout Buffer, finalElement: consuming HTTPTypes.HTTPFields?) async throws(any Error)
             where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
                 var output = UniqueArray(from: buffer.consumeAll().map { $0 ^ 255 })
+                var finalElement = finalElement ?? [:]
+                finalElement[.middleware2] = "test2"
                 try await self.parentWriter.finish(buffer: &output, finalElement: finalElement)
-
             }
-
         }
         struct TransformMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
@@ -167,9 +167,12 @@ struct MiddlewareTests {
                 Get("test") { request, _ in
                     Response(
                         status: .ok,
-                        body: .init { writer in
-                            try await writer.write(request.body)
-                            try await writer.finish([.middleware: "test"])
+                        body: .init { (writer: consuming AnyResponseBodyAsyncWriter) in
+                            for try await buffer in request.body {
+                                var bytes = UniqueArray(copying: buffer.readableBytesUInt8Span)
+                                try await writer.write(buffer: &bytes)
+                            }
+                            try await writer.finish(finalElement: [.middleware: "test"])
                         }
                     )
                 }
@@ -186,7 +189,7 @@ struct MiddlewareTests {
                 #expect(expectedOutput == response.body)
             }
         }
-    }*/
+    }
 }
 
 /// HTTPField used during tests

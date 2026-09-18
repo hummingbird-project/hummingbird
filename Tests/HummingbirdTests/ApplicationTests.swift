@@ -909,173 +909,189 @@ struct ApplicationTests {
         }
     }
 
-    /* TODO: Fixup for AsyncWriter
-            /// Test AsyncSequence returned by RequestBody.makeStream() and feeding it data from multiple processes
-            @available(hummingbird 3.0, *)
-            @Test func testMakeStreamMultipleSources() async throws {
-                let router = Router()
-                router.get("numbers") { request, context -> Response in
-                    let body = try await withThrowingTaskGroup(of: Void.self) { group in
-                        let (requestBody, source) = RequestBody.makeStream()
+    /// Test AsyncSequence returned by RequestBody.makeStream() and feeding it data from multiple processes
+    @available(hummingbird 3.0, *)
+    @Test func testMakeStreamMultipleSources() async throws {
+        let router = Router()
+        router.get("numbers") { request, context -> Response in
+            let body = try await withThrowingTaskGroup(of: Void.self) { group in
+                let (requestBody, source) = RequestBody.makeStream()
+                group.addTask {
+                    // Add three tasks feeding the source
+                    await withThrowingTaskGroup(of: Void.self) { group in
                         group.addTask {
-                            // Add three tasks feeding the source
-                            await withThrowingTaskGroup(of: Void.self) { group in
-                                group.addTask {
-                                    for value in 0..<100 {
-                                        await source.yield(ByteBuffer(string: String(describing: value)))
-                                    }
-                                }
-                                group.addTask {
-                                    for value in 0..<100 {
-                                        await source.yield(ByteBuffer(string: String(describing: value)))
-                                    }
-                                }
-                                group.addTask {
-                                    for value in 0..<100 {
-                                        await source.yield(ByteBuffer(string: String(describing: value)))
-                                    }
-                                }
+                            for value in 0..<100 {
+                                await source.yield(ByteBuffer(string: String(describing: value)))
                             }
-                            source.finish()
                         }
-                        var body = ByteBuffer()
-                        for try await buffer in requestBody {
-                            var buffer = buffer
-                            body.writeBuffer(&buffer)
-                            try await Task.sleep(for: .milliseconds(1))
-                        }
-                        return body
-                    }
-                    return Response(status: .ok, body: .init(byteBuffer: body))
-                }
-                let app = Application(responder: router.buildResponder())
-
-                try await app.test(.router) { client in
-                    try await client.execute(uri: "/numbers", method: .get) { response in
-                        #expect(response.status == .ok)
-                    }
-                }
-            }
-
-            /// Test consumeWithInboundCloseHandler
-            @available(hummingbird 3.0, *)
-            @Test func testConsumeWithInboundHandler() async throws {
-                let router = Router()
-                router.post("streaming") { request, context -> Response in
-                    Response(
-                        status: .ok,
-                        body: .init { writer in
-                            try await request.body.consumeWithInboundCloseHandler { body in
-                                try await writer.write(body)
-                            } onInboundClosed: {
+                        group.addTask {
+                            for value in 0..<100 {
+                                await source.yield(ByteBuffer(string: String(describing: value)))
                             }
-                            try await writer.finish(nil)
                         }
-                    )
-                }
-                let app = Application(responder: router.buildResponder())
-
-                try await app.test(.live) { client in
-                    let buffer = Self.randomBuffer(size: 640_001)
-                    try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
-                        #expect(response.status == .ok)
-                        #expect(response.body == buffer)
-                    }
-                }
-            }
-
-            /// Test consumeWithInboundCloseHandler
-            @available(hummingbird 3.0, *)
-            @Test func testConsumeWithCancellationOnInboundClose() async throws {
-                let router = Router()
-                router.post("streaming") { request, context -> Response in
-                    Response(
-                        status: .ok,
-                        body: .init { writer in
-                            try await request.body.consumeWithCancellationOnInboundClose { body in
-                                try await writer.write(body)
+                        group.addTask {
+                            for value in 0..<100 {
+                                await source.yield(ByteBuffer(string: String(describing: value)))
                             }
-                            try await writer.finish(nil)
                         }
-                    )
-                }
-                let app = Application(responder: router.buildResponder())
-
-                try await app.test(.live) { client in
-                    let buffer = Self.randomBuffer(size: 640_001)
-                    try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
-                        #expect(response.status == .ok)
-                        #expect(response.body == buffer)
                     }
+                    source.finish()
                 }
+                var body = ByteBuffer()
+                for try await buffer in requestBody {
+                    var buffer = buffer
+                    body.writeBuffer(&buffer)
+                    try await Task.sleep(for: .milliseconds(1))
+                }
+                return body
             }
+            let bytes = UniqueArray(copying: body.readableBytesUInt8Span)
+            return Response(
+                status: .ok,
+                body: .init(bytes)
+            )
+        }
+        let app = Application(responder: router.buildResponder())
 
-            /// Test consumeWithInboundHandler after having collected the Request body
-            @available(hummingbird 3.0, *)
-            @Test func testConsumeWithInboundHandlerAfterCollect() async throws {
-                let router = Router()
-                router.post("streaming") { request, context -> Response in
-                    var request = request
-                    _ = try await request.collectBody(upTo: .max)
-                    let request2 = request
-                    return Response(
-                        status: .ok,
-                        body: .init { writer in
-                            try await request2.body.consumeWithInboundCloseHandler { body in
-                                try await writer.write(body)
-                            } onInboundClosed: {
-                            }
-                            try await writer.finish(nil)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/numbers", method: .get) { response in
+                #expect(response.status == .ok)
+                #expect(response.headers[.contentLength] == "570")
+            }
+        }
+    }
+
+    /// Test consumeWithInboundCloseHandler
+    @available(hummingbird 3.0, *)
+    @Test func testConsumeWithInboundHandler() async throws {
+        let router = Router()
+        router.post("streaming") { request, context -> Response in
+            Response(
+                status: .ok,
+                body: .init { (writer: consuming AnyResponseBodyAsyncWriter) in
+                    try await request.body.consumeWithInboundCloseHandler { body in
+                        for try await buffer in body {
+                            var bytes = UniqueArray(copying: buffer.readableBytesUInt8Span)
+                            try await writer.write(buffer: &bytes)
                         }
-                    )
-                }
-                let app = Application(responder: router.buildResponder())
-
-                try await app.test(.live) { client in
-                    let buffer = Self.randomBuffer(size: 640_001)
-                    try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
-                        #expect(response.status == .ok)
-                        #expect(response.body == buffer)
+                    } onInboundClosed: {
                     }
+                    try await writer.finish()
                 }
+            )
+        }
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.live) { client in
+            let buffer = Self.randomByteBuffer(size: 640_001)
+            try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
+                #expect(response.status == .ok)
+                #expect(response.body == buffer)
             }
+        }
+    }
 
-            /// Test consumeWithInboundHandler after having replaced Request.body with a new streamed RequestBody
-            @available(hummingbird 3.0, *)
-            @Test func testConsumeWithInboundHandlerAfterReplacingBody() async throws {
-                let router = Router()
-                router.post("streaming") { request, context -> Response in
-                    var request = request
-                    request.body = .init(
-                        asyncSequence: request.body.map {
-                            let view = $0.readableBytesView.map { $0 ^ 255 }
-                            return ByteBuffer(bytes: view)
+    /// Test consumeWithInboundCloseHandler
+    @available(hummingbird 3.0, *)
+    @Test func testConsumeWithCancellationOnInboundClose() async throws {
+        let router = Router()
+        router.post("streaming") { request, context -> Response in
+            Response(
+                status: .ok,
+                body: .init { (writer: consuming AnyResponseBodyAsyncWriter) in
+                    try await request.body.consumeWithCancellationOnInboundClose { body in
+                        for try await buffer in body {
+                            var bytes = UniqueArray(copying: buffer.readableBytesUInt8Span)
+                            try await writer.write(buffer: &bytes)
                         }
-                    )
-                    let request2 = request
-                    return Response(
-                        status: .ok,
-                        body: .init { writer in
-                            try await request2.body.consumeWithInboundCloseHandler { body in
-                                try await writer.write(body)
-                            } onInboundClosed: {
-                            }
-                            try await writer.finish(nil)
-                        }
-                    )
-                }
-                let app = Application(responder: router.buildResponder())
-
-                try await app.test(.live) { client in
-                    let buffer = Self.randomBuffer(size: 640_001)
-                    let xorBuffer = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
-                    try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
-                        #expect(response.status == .ok)
-                        #expect(response.body == xorBuffer)
                     }
+                    try await writer.finish()
                 }
+            )
+        }
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.live) { client in
+            let buffer = Self.randomByteBuffer(size: 640_001)
+            try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
+                #expect(response.status == .ok)
+                #expect(response.body == buffer)
             }
-        */
+        }
+    }
+
+    /// Test consumeWithInboundHandler after having collected the Request body
+    @available(hummingbird 3.0, *)
+    @Test func testConsumeWithInboundHandlerAfterCollect() async throws {
+        let router = Router()
+        router.post("streaming") { request, context -> Response in
+            var request = request
+            _ = try await request.collectBody(upTo: .max)
+            let request2 = request
+            return Response(
+                status: .ok,
+                body: .init { (writer: consuming AnyResponseBodyAsyncWriter) in
+                    try await request2.body.consumeWithInboundCloseHandler { body in
+                        for try await buffer in body {
+                            var bytes = UniqueArray(copying: buffer.readableBytesUInt8Span)
+                            try await writer.write(buffer: &bytes)
+                        }
+                    } onInboundClosed: {
+                    }
+                    try await writer.finish()
+                }
+            )
+        }
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.live) { client in
+            let buffer = Self.randomByteBuffer(size: 640_001)
+            try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
+                #expect(response.status == .ok)
+                #expect(response.body == buffer)
+            }
+        }
+    }
+
+    /// Test consumeWithInboundHandler after having replaced Request.body with a new streamed RequestBody
+    @available(hummingbird 3.0, *)
+    @Test func testConsumeWithInboundHandlerAfterReplacingBody() async throws {
+        let router = Router()
+        router.post("streaming") { request, context -> Response in
+            var request = request
+            request.body = .init(
+                asyncSequence: request.body.map {
+                    let view = $0.readableBytesView.map { $0 ^ 255 }
+                    return ByteBuffer(bytes: view)
+                }
+            )
+            let request2 = request
+            return Response(
+                status: .ok,
+                body: .init { (writer: consuming AnyResponseBodyAsyncWriter) in
+                    try await request2.body.consumeWithInboundCloseHandler { body in
+                        for try await buffer in body {
+                            var bytes = UniqueArray(copying: buffer.readableBytesUInt8Span)
+                            try await writer.write(buffer: &bytes)
+                        }
+                    } onInboundClosed: {
+                    }
+                    try await writer.finish()
+                }
+            )
+        }
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.live) { client in
+            let buffer = Self.randomByteBuffer(size: 640_001)
+            let xorBuffer = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
+            try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
+                #expect(response.status == .ok)
+                #expect(response.body == xorBuffer)
+            }
+        }
+    }
+
     @available(hummingbird 3.0, *)
     @Test func testErrorInResponseWriterClosesConnection() async throws {
         let router = Router()

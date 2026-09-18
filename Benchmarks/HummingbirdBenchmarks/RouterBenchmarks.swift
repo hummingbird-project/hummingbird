@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import BasicContainers
 import Benchmark
 import ContainersPreview
 import HTTPTypes
@@ -168,7 +169,6 @@ func routerBenchmarks() {
         return router
     }
 
-    /* TODO: Fixup for AsyncWriter
     Benchmark(
         "Router:Echo",
         configuration: .init(warmupIterations: 10),
@@ -184,17 +184,18 @@ func routerBenchmarks() {
             Response(
                 status: .ok,
                 headers: [:],
-                body: .init { writer in
+                body: .init { (writer: consuming AnyResponseBodyAsyncWriter) in
                     for try await buffer in request.body {
-                        try await writer.write(buffer)
+                        var bytes = UniqueArray(copying: buffer.readableBytesUInt8Span)
+                        try await writer.write(buffer: &bytes)
                     }
-                    try await writer.finish(nil)
+                    try await writer.finish()
                 }
             )
         }
         return router
     }
-    */
+
     Benchmark(
         "Router:CaseInsensitive",
         configuration: .init(warmupIterations: 10),
