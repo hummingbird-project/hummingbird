@@ -324,7 +324,7 @@ struct HummingbirdCoreTests {
         try await testServer(
             responder: { _, responseWriter, _ in
                 let bodyWriter = try await responseWriter.send(.init(status: .ok))
-                try await bodyWriter.finish(trailer: [.contentType: "text"])
+                try await bodyWriter.finish(finalElement: [.contentType: "text"])
             },
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),

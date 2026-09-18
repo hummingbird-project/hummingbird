@@ -128,7 +128,7 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
                     }
                     let storage = RouterResponseWriter.Storage()
                     let responseWriter = RouterResponseWriter(storage: storage)
-                    try await response.body.write(AnyResponseBodyAsyncWriter(responseWriter))
+                    try await response.body.write(responseWriter)
                     return TestResponse(head: response.head, body: storage.body, trailerHeaders: storage.trailers)
                 }
 

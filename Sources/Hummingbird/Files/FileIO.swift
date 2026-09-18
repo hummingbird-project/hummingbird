@@ -146,7 +146,7 @@ public struct FileIO: Sendable {
                     var byteArray = UniqueArray(copying: chunk.readableBytesUInt8Span)
                     try await writer.write(buffer: &byteArray)
                 }
-                try await writer.finish(trailer: nil)
+                try await writer.finish()
             }
         }
     }

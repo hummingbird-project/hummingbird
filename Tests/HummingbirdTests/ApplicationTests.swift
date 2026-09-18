@@ -869,7 +869,7 @@ struct ApplicationTests {
             let error = HTTPError(.internalServerError, message: message)
             let response = try error.response(from: request, context: context)
             let writer = CollatedResponseWriter()
-            _ = try await response.body.write(AnyResponseBodyAsyncWriter(writer))
+            _ = try await response.body.write(writer)
             let format = try JSONDecoder().decode(HTTPErrorFormat.self, from: writer.collated)
             #expect(format.error.message == message)
         }
