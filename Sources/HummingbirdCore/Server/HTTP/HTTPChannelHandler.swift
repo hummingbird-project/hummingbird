@@ -13,10 +13,11 @@ public import NIOCore
 import NIOHTTP1
 public import NIOHTTPTypes
 import ServiceLifecycle
+import Synchronization
 
 /// Protocol for HTTP channels
 public protocol HTTPChannelHandler: ServerChildChannel {
-    typealias Responder = @Sendable (Request, consuming ResponseWriter, any Channel) async throws -> Void
+    typealias Responder = @Sendable (Request, consuming ResponseSender, any Channel) async throws -> Void
     /// HTTP Request responder
     var responder: Responder { get }
 }
@@ -48,8 +49,12 @@ extension HTTPChannelHandler {
                                 head: head,
                                 bodyIterator: iterator
                             )
-                            let responseWriter = ResponseWriter(outbound: outbound)
-                            try await self.responder(request, responseWriter, asyncChannel.channel)
+                            let writerState = ResponseSender.WriterState()
+                            let responseSender = ResponseSender(writer: outbound, writerState: writerState)
+                            try await self.responder(request, responseSender, asyncChannel.channel)
+                            if !writerState.wrapped.withLock({ $0.finishedWriting }) {
+                                break
+                            }
                             if request.headers[.connection] == "close" {
                                 break
                             }

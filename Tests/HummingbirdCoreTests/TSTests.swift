@@ -28,6 +28,7 @@ struct TransportServicesTests {
         return ByteBufferAllocator().buffer(bytes: data)
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testConnect() async throws {
         try await testServer(
             responder: helloResponder,
@@ -41,6 +42,7 @@ struct TransportServicesTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testTLS() async throws {
         let p12Path = Bundle.module.path(forResource: "server", ofType: "p12")!
         await withKnownIssue("Loading p12 files in CI can fail with `interactionNotAllowed` error", isIntermittent: true) {

@@ -9,7 +9,7 @@
 public import HTTPTypes
 
 /// Holds all the required to generate a HTTP Response
-public struct Response: Sendable {
+public struct Response {
     /// Response status
     public var status: HTTPResponse.Status
     /// Response headers
@@ -58,8 +58,9 @@ public struct Response: Sendable {
     }
 }
 
-extension Response: CustomStringConvertible {
+@available(hummingbird 3.0, *)
+extension Response {
     public var description: String {
-        "status: \(self.status), headers: \(self.headers), body: \(self.body)"
+        "status: \(self.status), headers: \(self.headers), body: \(self.body.contentLength?.description ?? "length unknown")"
     }
 }

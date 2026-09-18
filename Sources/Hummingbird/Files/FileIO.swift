@@ -6,7 +6,9 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import BasicContainers
 import CNIOLinux
+import HTTPAPIs
 public import HummingbirdCore
 import Logging
 import NIOCore
@@ -14,6 +16,7 @@ public import NIOPosix
 import _NIOFileSystem
 
 /// Manages File reading and writing.
+@available(hummingbird 3.0, *)
 public struct FileIO: Sendable {
     struct FileError: Error {
         internal enum Value {
@@ -133,14 +136,17 @@ public struct FileIO: Sendable {
         chunkLength: Int
     ) -> ResponseBody {
         ResponseBody(contentLength: range.count) { writer in
+            var writer: AnyResponseBodyAsyncWriter? = writer
             try await self.fileSystem.withFileHandle(forReadingAt: .init(path)) { fileHandle in
                 let startOffset: Int64 = numericCast(range.lowerBound)
                 let endOffset: Int64 = numericCast(range.upperBound)
 
+                var writer = writer.take()!
                 for try await chunk in fileHandle.readChunks(in: startOffset...endOffset, chunkLength: .bytes(numericCast(chunkLength))) {
-                    try await writer.write(chunk)
+                    var byteArray = UniqueArray(copying: chunk.readableBytesUInt8Span)
+                    try await writer.write(buffer: &byteArray)
                 }
-                try await writer.finish(nil)
+                try await writer.finish()
             }
         }
     }

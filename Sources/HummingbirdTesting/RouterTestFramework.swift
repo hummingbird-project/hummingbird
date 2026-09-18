@@ -7,6 +7,7 @@
 //
 
 import Atomics
+import ContainersPreview
 import HTTPTypes
 @_spi(Internal) import Hummingbird
 @_spi(Internal) import HummingbirdCore
@@ -20,7 +21,7 @@ import ServiceLifecycle
 import UnixSignals
 
 /// Test sending requests directly to router. This does not setup a live server
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework where Responder.Context: InitializableFromSource {
     let responder: Responder
     let makeContext: @Sendable (Logger) -> Responder.Context
@@ -125,11 +126,10 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
                     } catch {
                         response = Response(status: .internalServerError)
                     }
-                    let responseWriter = RouterResponseWriter()
+                    let storage = RouterResponseWriter.Storage()
+                    let responseWriter = RouterResponseWriter(storage: storage)
                     try await response.body.write(responseWriter)
-                    return responseWriter.values.withLockedValue { values in
-                        TestResponse(head: response.head, body: values.body, trailerHeaders: values.trailingHeaders)
-                    }
+                    return TestResponse(head: response.head, body: storage.body, trailerHeaders: storage.trailers)
                 }
 
                 if var body {
@@ -150,23 +150,31 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
         var port: Int? { nil }
     }
 
-    struct RouterResponseWriter: ResponseBodyWriter {
-        let values: NIOLockedValueBox<(body: ByteBuffer, trailingHeaders: HTTPFields?)>
-
-        init() {
-            self.values = .init((body: .init(), trailingHeaders: nil))
+    @available(hummingbird 3.0, *)
+    struct RouterResponseWriter: ResponseBodyAsyncWriter, ~Copyable {
+        final class Storage {
+            init() {
+                self.body = .init()
+                self.trailers = nil
+            }
+            var body: ByteBuffer
+            var trailers: HTTPFields?
+        }
+        mutating func write<Buffer>(buffer: inout Buffer) async throws(any Error)
+        where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
+            self.storage.body.writeBytes(draining: &buffer)
         }
 
-        func write(_ buffer: ByteBuffer) async throws {
-            _ = self.values.withLockedValue { values in
-                values.body.writeImmutableBuffer(buffer)
-            }
+        consuming func finish<Buffer>(buffer: inout Buffer, finalElement: consuming HTTPFields?) async throws(any Error)
+        where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
+            self.storage.body.writeBytes(draining: &buffer)
+            self.storage.trailers = finalElement
         }
 
-        func finish(_ headers: HTTPTypes.HTTPFields?) async throws {
-            self.values.withLockedValue { values in
-                values.trailingHeaders = headers
-            }
+        let storage: Storage
+
+        init(storage: Storage) {
+            self.storage = storage
         }
     }
 }

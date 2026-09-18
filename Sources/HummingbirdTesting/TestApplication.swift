@@ -16,7 +16,7 @@ import ServiceLifecycle
 /// TestApplication used to wrap Application being tested.
 ///
 /// This is needed to override the `onServerRunning` function
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 internal struct TestApplication<BaseApp: ApplicationProtocol>: ApplicationProtocol, Service {
     typealias Responder = BaseApp.Responder
 
