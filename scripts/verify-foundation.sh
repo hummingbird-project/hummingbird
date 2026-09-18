@@ -41,5 +41,5 @@ done
 if [ "$SUCCESS" -eq 0 ]; then
   fatal "❌ At least one foundation lib was found, reporting the error."
 else
-  log "✅ No foundation lib found, congrats!" && exit 0
+  log "✅ No Foundation libraries found." && exit 0
 fi
