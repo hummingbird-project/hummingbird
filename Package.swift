@@ -52,7 +52,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.20.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.0.0"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.30.0"),
-        .package(url: "https://github.com/swift-server/swift-http-server.git", from: "0.1.0"),
+        .package(url: "https://github.com/apple/swift-http-api-proposal.git", from: "0.1.0"),
     ],
     targets: [
         .target(
@@ -71,7 +71,7 @@ let package = Package(
                 .product(name: "_NIOFileSystem", package: "swift-nio"),
                 .product(name: "NIOPosix", package: "swift-nio"),
                 .product(name: "NIOFoundationEssentialsCompat", package: "swift-nio"),
-                .product(name: "NIOHTTPServer", package: "swift-http-server"),
+                .product(name: "HTTPAPIs", package: "swift-http-api-proposal"),
             ],
             swiftSettings: swiftSettings
         ),
@@ -95,7 +95,7 @@ let package = Package(
                     condition: .when(platforms: [.macOS, .iOS, .macCatalyst, .tvOS, .visionOS])
                 ),
                 .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
-                .product(name: "NIOHTTPServer", package: "swift-http-server"),
+                .product(name: "HTTPAPIs", package: "swift-http-api-proposal"),
             ],
             swiftSettings: swiftSettings
         ),
