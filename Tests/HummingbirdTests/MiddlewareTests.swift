@@ -151,11 +151,10 @@ struct MiddlewareTests {
         }
     }
 
-    /* TODO: Fixup for AsyncWriter
     @available(hummingbird 3.0, *)
     @Test func testMiddlewareResponseBodyWriter() async throws {
         struct TransformWriter: ResponseBodyAsyncWriter, ~Copyable {
-            var parentWriter: any (ResponseBodyAsyncWriter & ~Copyable)
+            var parentWriter: AnyResponseBodyAsyncWriter
 
             mutating func write<Buffer>(buffer: inout Buffer) async throws(any Error)
             where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
@@ -164,7 +163,7 @@ struct MiddlewareTests {
 
             }
 
-            func finish<Buffer>(buffer: inout Buffer, finalElement: consuming HTTPTypes.HTTPFields?) async throws(any Error)
+            consuming func finish<Buffer>(buffer: inout Buffer, finalElement: consuming HTTPTypes.HTTPFields?) async throws(any Error)
             where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
                 var output = UniqueArray(from: buffer.consumeAll().map { $0 ^ 255 })
                 try await self.parentWriter.finish(buffer: &output, finalElement: finalElement)
@@ -176,20 +175,28 @@ struct MiddlewareTests {
             public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 let response = try await next(request, context)
                 var editedResponse = response
-                editedResponse.setBody(
-                    .init { writer in
-                        let transformWriter = TransformWriter(parentWriter: writer)
-                        try await response.body.write(.init(transformWriter))
+                editedResponse.body = .init { writer in
+                    let transformWriter = TransformWriter(parentWriter: writer)
+                    try await response.body.write(.init(transformWriter))
+                }
+
+                return editedResponse
+            }
+        }
+        let router = Router()
+        router.group()
+            .add(middleware: TransformMiddleware())
+            .get("test") { request, _ in
+                Response(
+                    status: .ok,
+                    body: .init { (writer: consuming AnyResponseBodyAsyncWriter) in
+                        for try await buffer in request.body {
+                            var bytes = UniqueArray(copying: buffer.readableBytesUInt8Span)
+                            try await writer.write(buffer: &bytes)
+                        }
+                        try await writer.finish()
                     }
                 )
-                return editedResponse
-            }
-        }
-        let router = Router()
-        router.group()
-            .add(middleware: TransformMiddleware())
-            .get("test") { request, _ in
-                Response(status: .ok, body: .init(asyncSequence: request.body))
             }
         let app = Application(responder: router.buildResponder())
 
@@ -202,47 +209,6 @@ struct MiddlewareTests {
         }
     }
 
-    @available(hummingbird 3.0, *)
-    @Test func testMappedResponseBodyWriter() async throws {
-        struct TransformWriter: ResponseBodyWriter {
-            var parentWriter: any ResponseBodyWriter
-
-            mutating func write(_ buffer: ByteBuffer) async throws {
-                let output = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
-                try await self.parentWriter.write(output)
-            }
-
-            func finish(_ trailingHeaders: HTTPFields?) async throws {
-                try await self.parentWriter.finish(trailingHeaders)
-            }
-        }
-        struct TransformMiddleware<Context: RequestContext>: RouterMiddleware {
-            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-                let response = try await next(request, context)
-                var editedResponse = response
-                editedResponse.body = editedResponse.body.map {
-                    ByteBuffer(bytes: $0.readableBytesView.map { $0 ^ 255 })
-                }
-                return editedResponse
-            }
-        }
-        let router = Router()
-        router.group()
-            .add(middleware: TransformMiddleware())
-            .get("test") { request, _ in
-                Response(status: .ok, body: .init(asyncSequence: request.body))
-            }
-        let app = Application(responder: router.buildResponder())
-
-        try await app.test(.router) { client in
-            let buffer = Self.randomBuffer(size: 64000)
-            try await client.execute(uri: "/test", method: .get, body: buffer) { response in
-                let expectedOutput = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
-                #expect(expectedOutput == response.body)
-            }
-        }
-    }
-*/
     @available(hummingbird 3.0, *)
     @Test func testCORSUseOrigin() async throws {
         let router = Router()

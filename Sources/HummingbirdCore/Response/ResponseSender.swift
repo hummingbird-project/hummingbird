@@ -27,27 +27,29 @@ public struct AnyResponseBodyAsyncWriter: ~Copyable {
     }
 
     @inlinable
-    public mutating func write<Buffer>(buffer: inout Buffer) async throws(any Error)
+    public mutating nonisolated(nonsending) func write<Buffer>(buffer: inout Buffer) async throws(any Error)
     where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
         try await self.writer!.write(buffer: &buffer)
     }
 
     @inlinable
-    public consuming func finish<Buffer>(buffer: inout Buffer, finalElement: consuming HTTPTypes.HTTPFields? = nil) async throws(any Error)
+    public consuming nonisolated(nonsending) func finish<Buffer>(
+        buffer: inout Buffer,
+        finalElement: consuming HTTPTypes.HTTPFields? = nil
+    ) async throws(any Error)
     where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
         let writer = self.writer.take()!
         try await writer.finish(buffer: &buffer, finalElement: finalElement)
     }
 
     @inlinable
-    public consuming func finish(finalElement: consuming HTTPTypes.HTTPFields? = nil) async throws(any Error) {
+    public consuming nonisolated(nonsending) func finish(finalElement: consuming HTTPTypes.HTTPFields? = nil) async throws(any Error) {
         let writer = self.writer.take()!
         var empty = UniqueArray<UInt8>()
         try await writer.finish(buffer: &empty, finalElement: finalElement)
     }
 
-    @usableFromInline
-    internal var writer: (any ResponseBodyAsyncWriter & ~Copyable)?
+    public var writer: (any ResponseBodyAsyncWriter & ~Copyable)?
 }
 
 /// HTTPResponseSender that sends an HTTP response using a NIOAsyncChannelOutboundWriter
