@@ -6,12 +6,12 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+public import BasicContainers
 public import HTTPTypes
-public import NIOCore
-package import NIOHTTPTypes
+import NIOCore
 
 /// Holds all the values required to process a request
-public struct Request: Sendable {
+public struct Request {
     // MARK: Member variables
 
     /// URI path
@@ -19,7 +19,7 @@ public struct Request: Sendable {
     /// HTTP head
     public let head: HTTPRequest
     /// Body of HTTP request
-    private var _body: RequestBody
+    public var body: RequestBody
     /// Request HTTP method
     @inlinable
     public var method: HTTPRequest.Method { self.head.method }
@@ -27,20 +27,6 @@ public struct Request: Sendable {
     @inlinable
     public var headers: HTTPFields { self.head.headerFields }
 
-    public var body: RequestBody {
-        get { _body }
-        set {
-            let original = _body.originalRequestBody
-            switch newValue._backing {
-            case .nioAsyncChannelRequestBody:
-                self._body = body
-            case .byteBuffer(let buffer, _):
-                self._body = .init(.byteBuffer(buffer, original))
-            case .anyAsyncSequence(let seq, _):
-                self._body = .init(.anyAsyncSequence(seq, original))
-            }
-        }
-    }
     // MARK: Initialization
 
     /// Create new Request
@@ -53,37 +39,25 @@ public struct Request: Sendable {
     ) {
         self.uri = .init(head.path ?? "")
         self.head = head
-        self._body = body
+        self.body = body
     }
 
-    /// Create new Request
-    /// - Parameters:
-    ///   - head: HTTP head
-    ///   - bodyIterator: HTTP request part stream
-    package init(
-        head: HTTPRequest,
-        bodyIterator: NIOAsyncChannelInboundStream<HTTPRequestPart>.AsyncIterator
-    ) {
-        self.uri = .init(head.path ?? "")
-        self.head = head
-        self._body = .init(nioAsyncChannelInbound: .init(iterator: bodyIterator))
-    }
-
-    /// Collapse body into one ByteBuffer.
+    /// Collapse body into a single UniqueArray<UInt8>.
     ///
-    /// This will store the collated ByteBuffer back into the request so is a mutating method. If
-    /// you don't need to store the collated ByteBuffer on the request then use
+    /// This will store the collated buffer back into the request so is a mutating method. If
+    /// you don't need to store the collated buffer on the request then use
     /// `request.body.collect(maxSize:)`.
     ///
-    /// - Parameter maxSize: Maxiumum size of body to collect
-    /// - Returns: Collated body
-    public mutating func collectBody(upTo maxSize: Int) async throws -> ByteBuffer {
-        let byteBuffer = try await self.body.collect(upTo: maxSize)
-        self.body = .init(buffer: byteBuffer)
-        return byteBuffer
+    /// - Parameters
+    ///     - maxSize: Maxiumum size of body to collect
+    public mutating func collectBody(upTo maxSize: Int, process: (inout UniqueArray<UInt8>) async throws -> Void) async throws {
+        var array = try await self.body.collect(upTo: maxSize)
+        try await process(&array)
+        self.body = .init(.asyncReader(CollatedRequestAsyncReader(array)))
     }
 }
 
+@available(hummingbird 3.0, *)
 extension Request: CustomStringConvertible {
     public var description: String {
         "uri: \(self.uri), method: \(self.method), headers: \(self.headers), body: \(self.body)"
