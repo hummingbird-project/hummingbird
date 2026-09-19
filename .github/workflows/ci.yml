@@ -26,7 +26,7 @@ jobs:
       with:
         xcode-version: latest-stable
     - name: Checkout
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
     - name: Build
       run: |
         swift build
@@ -36,16 +36,16 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        image: ["swift:6.1", "swift:6.2", "swift:6.3", "swiftlang/swift:nightly-6.4.x-noble"]
+        image: ["swift:6.2", "swift:6.3", "swift:6.4"]
     container:
       image: ${{ matrix.image }}
-    #env:
-    #  ENABLE_HB_BENCHMARKS: true
+    env:
+      ENABLE_HB_BENCHMARKS: true
     steps:
     - name: Install curl
       run: apt-get update -yq && apt-get install -y curl
     - name: Checkout
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
     - name: Install libjemalloc-dev
       run: |
         apt-get -q update
@@ -55,6 +55,6 @@ jobs:
       run: |
         swift test --enable-code-coverage
     - name: Upload coverage data
-      uses: vapor/swift-codecov-action@2f478f2fd22e06ca363967d0fb6c6593a8548cee  # v0.3.5
+      uses: vapor/swift-codecov-action@855faf6b50974544c7ab3da724f49e602e43edc6  # v0.3.6
       with:
         codecov_token: ${{ secrets.CODECOV_TOKEN }}

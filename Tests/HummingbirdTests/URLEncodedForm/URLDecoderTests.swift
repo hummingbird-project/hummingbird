@@ -336,5 +336,19 @@ extension URLEncodedFormTests {
                 try URLEncodedFormDecoder().decode(Input1.self, from: "someField[=2")
             }
         }
+
+        #if compiler(>=6.2)
+        @Test func testOverflow() async throws {
+            await #expect(processExitsWith: .success) {
+                struct Input1: Decodable {}
+                var form = "x"
+                for _ in 0..<800 {
+                    form += "[a]"
+                }
+                form += "=1"
+                _ = try? URLEncodedFormDecoder().decode(Input1.self, from: form)
+            }
+        }
+        #endif
     }
 }
