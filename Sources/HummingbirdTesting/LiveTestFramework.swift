@@ -16,7 +16,7 @@ import ServiceLifecycle
 import UnixSignals
 
 /// Test using a live server
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 final class LiveTestFramework<App: ApplicationProtocol>: ApplicationTestFramework {
     struct Client: TestClientProtocol {
         let client: TestClient

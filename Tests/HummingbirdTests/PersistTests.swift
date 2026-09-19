@@ -49,6 +49,7 @@ struct PersistTests {
         return (router, persist)
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testSetGet() async throws {
         let (router, _) = try createRouter()
         let app = Application(responder: router.buildResponder())
@@ -61,6 +62,7 @@ struct PersistTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testCreateGet() async throws {
         let (router, persist) = try createRouter()
 
@@ -80,6 +82,7 @@ struct PersistTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testDoubleCreateFail() async throws {
         let (router, persist) = try createRouter()
         router.put("/create/:tag") { request, context -> HTTPResponse.Status in
@@ -104,6 +107,7 @@ struct PersistTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testSetTwice() async throws {
         let (router, _) = try createRouter()
         let app = Application(responder: router.buildResponder())
@@ -120,6 +124,7 @@ struct PersistTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testExpires() async throws {
         let (router, _) = try createRouter()
         let app = Application(responder: router.buildResponder())
@@ -140,6 +145,7 @@ struct PersistTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testTTL() async throws {
         let (router, _) = try createRouter()
         let app = Application(responder: router.buildResponder())
@@ -155,6 +161,7 @@ struct PersistTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testCodable() async throws {
         struct TestCodable: Codable {
             let buffer: String
@@ -183,6 +190,7 @@ struct PersistTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testInvalidGetAs() async throws {
         struct TestCodable: Codable {
             let buffer: String
@@ -208,6 +216,7 @@ struct PersistTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testRemove() async throws {
         let (router, _) = try createRouter()
         let app = Application(responder: router.buildResponder())
@@ -221,6 +230,7 @@ struct PersistTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testExpireAndAdd() async throws {
         let (router, _) = try createRouter()
         let app = Application(responder: router.buildResponder())
@@ -242,6 +252,7 @@ struct PersistTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testTidy() async throws {
         let (router, persist) = try createRouter(configuration: .init(tidyFrequency: .milliseconds(1)))
         let app = Application(responder: router.buildResponder(), services: [persist])

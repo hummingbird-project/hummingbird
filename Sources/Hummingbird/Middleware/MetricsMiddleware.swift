@@ -19,6 +19,7 @@ import NIOConcurrencyHelpers
 /// Swift-Metrics has a flexible backend, which will need to be initialized before any metrics are recorded.
 ///
 /// A list of implementations is available in the swift-log repository's README.
+@available(hummingbird 3.0, *)
 public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
     let metricsCache: MetricsCache
 
@@ -41,6 +42,7 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
                 metrics.timer.recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
                 activeRequestMeter.decrement()
             }
+
             return response
         } catch {
             let errorType: HTTPResponse.Status

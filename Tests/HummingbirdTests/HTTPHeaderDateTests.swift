@@ -14,6 +14,7 @@ import Testing
 
 extension HTTPTests {
     struct HeaderDateTests {
+        @available(hummingbird 3.0, *)
         @Test func testHTTPHeaderDateRenderer() {
             let formatter = DateFormatter()
             formatter.locale = Locale(identifier: "en_US_POSIX")
@@ -29,6 +30,7 @@ extension HTTPTests {
             }
         }
 
+        @available(hummingbird 3.0, *)
         @Test func testDateHeader() async throws {
             let router = Router()
             router.get("date") { _, _ in
@@ -49,6 +51,7 @@ extension HTTPTests {
         }
 
         /// convert from date to string and back
+        @available(hummingbird 3.0, *)
         @Test func testFormatStyleAndParser() throws {
             for _ in 0..<1000 {
                 let time = Int.random(in: 1...4 * Int(Int32.max))
@@ -60,6 +63,7 @@ extension HTTPTests {
         }
 
         /// convert from string to date and back
+        @available(hummingbird 3.0, *)
         @Test func testParserAndFormatStyle() throws {
             func checkDates(_ dates: [(String, String)]) throws {
                 for entry in dates {
