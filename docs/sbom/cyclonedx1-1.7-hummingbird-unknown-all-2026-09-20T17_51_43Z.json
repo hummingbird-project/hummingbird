@@ -2018,11 +2018,11 @@
       "type" : "application",
       "version" : "unknown"
     },
-    "timestamp" : "2026-09-20T15:38:10Z",
+    "timestamp" : "2026-09-20T17:51:43Z",
     "tools" : {
       "components" : [
         {
-          "bom-ref" : "urn:uuid:c23bfa32-1943-4d67-80cb-f345c4f792a9",
+          "bom-ref" : "urn:uuid:f4d06732-d6a1-4671-8ce5-26bf0fede6a3",
           "licenses" : [
             {
               "license" : {
@@ -2040,7 +2040,7 @@
       ]
     }
   },
-  "serialNumber" : "urn:uuid:4a770fcc-4c50-4d2f-b18d-0f422a0cf9a7",
+  "serialNumber" : "urn:uuid:e39ca789-fe98-4b86-a981-c69df7be2a68",
   "specVersion" : "1.7",
   "version" : 1
 }
