@@ -23,7 +23,7 @@ import Foundation
 /// Getting the current date formatted is an expensive operation. This creates a task that will
 /// update a cached version of the date in the format as detailed in RFC9110 once every second.
 @available(hummingbird 2.0, *)
-final class DateCache: Service {
+package final class DateCache: Service {
     final class DateContainer: AtomicReference, Sendable {
         let date: String
 
@@ -34,11 +34,11 @@ final class DateCache: Service {
 
     let dateContainer: ManagedAtomic<DateContainer>
 
-    init() {
+    package init() {
         self.dateContainer = .init(.init(date: Date.now.httpHeader))
     }
 
-    public func run() async throws {
+    package func run() async throws {
         let timerSequence = AsyncTimerSequence(interval: .seconds(1), clock: .suspending)
             .cancelOnGracefulShutdown()
         for try await _ in timerSequence {
@@ -46,7 +46,7 @@ final class DateCache: Service {
         }
     }
 
-    public var date: String {
+    package var date: String {
         self.dateContainer.load(ordering: .acquiring).date
     }
 }
