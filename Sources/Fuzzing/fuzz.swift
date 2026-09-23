@@ -38,7 +38,7 @@ public func mutate(data: UnsafeMutablePointer<UInt8>, size: Int, maxSize: Int, s
     #elseif FUZZ_PERCENTDECODE
     mutatePercentDecode(data: data, size: size, maxSize: maxSize, seed: seed)
     #else
-    fatalError("Fuzz method not chosen. Use precompiler define.")
+    return size
     #endif
 }
 
@@ -50,6 +50,8 @@ public func test(_ start: UnsafeRawPointer, _ count: Int) -> CInt {
     return testRouterPath(bytes)
     #elseif FUZZ_PERCENTDECODE
     return testPercentDecode(bytes)
+    #elseif FUZZ_URLENCODEDFORM
+    return testURLEncodedFormDecode(bytes)
     #else
     fatalError("Fuzz method not chosen. Use precompiler define.")
     #endif
@@ -104,6 +106,16 @@ func mutatePercentDecode(data: UnsafeMutablePointer<UInt8>, size: Int, maxSize: 
 func testPercentDecode(_ bytes: UnsafeRawBufferPointer) -> CInt {
     let string = String(decoding: bytes, as: UTF8.self)
     blackHole(string.removingURLPercentEncoding())
+    return 0
+}
+
+// MARK: URLEncodedForm
+
+func testURLEncodedFormDecode(_ bytes: UnsafeRawBufferPointer) -> CInt {
+    struct TestType: Decodable {}
+    let string = String(decoding: bytes, as: UTF8.self)
+    let result = try? URLEncodedFormDecoder().decode(TestType.self, from: string)
+    blackHole(result)
     return 0
 }
 
