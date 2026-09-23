@@ -1247,6 +1247,7 @@ struct ApplicationTests {
         let app = Application(
             router: router,
             server: .http1(configuration: httpConfiguration),
+            configuration: .init(address: .hostname(port: 0)),
             onServerRunning: { cont.yield($0.localAddress!.port!) }
         )
         await withThrowingTaskGroup(of: Void.self) { group in
@@ -1263,13 +1264,13 @@ struct ApplicationTests {
             }
 
             let port = await stream.first { _ in true }!
-            let (stream, cont) = AsyncStream<Void>.makeStream(of: Void.self)
+            let (stream2, cont2) = AsyncStream<Void>.makeStream(of: Void.self)
             let task = Task {
                 let count = ManagedAtomic(0)
                 let bodyStream = AsyncStream {
                     let value = count.loadThenWrappingIncrement(by: 1, ordering: .relaxed)
                     if value == 2 {
-                        cont.yield()
+                        cont2.yield()
                     }
                     if value < 16 {
                         try? await Task.sleep(for: .milliseconds(100))
@@ -1285,7 +1286,7 @@ struct ApplicationTests {
                 let result = try await response.body.collect(upTo: .max)
                 print("Result size: \(result.readableBytes)")
             }
-            await stream.first { _ in true }
+            await stream2.first { _ in true }
             task.cancel()
             await serviceGroup.triggerGracefulShutdown()
         }
