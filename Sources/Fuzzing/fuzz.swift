@@ -3,6 +3,10 @@ import Hummingbird
 import HummingbirdCore
 import LLVMFuzzer
 
+// To run fuzzer use
+// swift run --sanitize=fuzzer Fuzzing <CORPUS DIR>
+// See https://llvm.org/docs/LibFuzzer.html for more details
+
 @_optimize(none)  // Taken from package-benchmark
 public func blackHole(_: some Any) {}
 
@@ -20,7 +24,7 @@ struct RandomNumberGeneratorWithSeed: RandomNumberGenerator {
     }
 }
 
-#if !(FUZZ_URL || FUZZ_PERCENTDECODE)
+#if !(FUZZ_URL || FUZZ_PERCENTDECODE || FUZZ_URLENCODEDFORM)
 @main
 enum LLVMFuzzer {
     static func main() {
@@ -33,13 +37,7 @@ enum LLVMFuzzer {
 @available(macOS 13, *)
 @_cdecl("LLVMFuzzerCustomMutator")
 public func mutate(data: UnsafeMutablePointer<UInt8>, size: Int, maxSize: Int, seed: UInt32) -> Int {
-    #if FUZZ_URL
-    mutateRouterPath(data: data, size: size, maxSize: maxSize, seed: seed)
-    #elseif FUZZ_PERCENTDECODE
-    mutatePercentDecode(data: data, size: size, maxSize: maxSize, seed: seed)
-    #else
-    return size
-    #endif
+    LLVMFuzzerMutate(data, size, maxSize)
 }
 
 @available(macOS 13, *)
@@ -59,31 +57,6 @@ public func test(_ start: UnsafeRawPointer, _ count: Int) -> CInt {
 
 // MARK: URI/RouterPath
 
-/// Mutate random data so always starts with a "/" and everything is ascii 7 bit
-func mutateRouterPath(data: UnsafeMutablePointer<UInt8>, size: Int, maxSize: Int, seed: UInt32) -> Int {
-    let newSize = LLVMFuzzerMutate(data, size, maxSize)
-    guard newSize > 1 else {
-        data[0] = data[0] & 0x7f
-        return newSize
-    }
-    data[0] = UInt8(ascii: "/")
-    var rng = RandomNumberGeneratorWithSeed(seed: Int(bitPattern: UInt(seed)))
-
-    let controlCharacters: [UInt8] = [
-        .init(ascii: "/"), .init(ascii: ":"), .init(ascii: "{"), .init(ascii: "}"), .init(ascii: "%"), .init(ascii: "?"), .init(ascii: "="),
-        .init(ascii: "&"),
-    ]
-    for index in 1..<newSize {
-        let r = Int.random(in: 0..<128, using: &rng)
-        if r < controlCharacters.count {
-            data[index] = controlCharacters[r]
-        } else {
-            data[index] = data[index] & 0x7f
-        }
-    }
-    return newSize
-}
-
 /// test string converts to URI and then converts to RouterPath
 func testRouterPath(_ bytes: UnsafeRawBufferPointer) -> CInt {
     let uriString = String(decoding: bytes, as: UTF8.self)
@@ -94,15 +67,6 @@ func testRouterPath(_ bytes: UnsafeRawBufferPointer) -> CInt {
 
 // MARK: Percent decode
 
-/// Mutate so it is ascii 7 bit
-func mutatePercentDecode(data: UnsafeMutablePointer<UInt8>, size: Int, maxSize: Int, seed: UInt32) -> Int {
-    let newSize = LLVMFuzzerMutate(data, size, maxSize)
-    for index in 0..<newSize {
-        data[index] = data[index] & 0x7f
-    }
-    return newSize
-}
-
 func testPercentDecode(_ bytes: UnsafeRawBufferPointer) -> CInt {
     let string = String(decoding: bytes, as: UTF8.self)
     blackHole(string.removingURLPercentEncoding())
@@ -112,7 +76,8 @@ func testPercentDecode(_ bytes: UnsafeRawBufferPointer) -> CInt {
 // MARK: URLEncodedForm
 
 func testURLEncodedFormDecode(_ bytes: UnsafeRawBufferPointer) -> CInt {
-    struct TestType: Decodable {}
+    struct TestType: Decodable {
+    }
     let string = String(decoding: bytes, as: UTF8.self)
     let result = try? URLEncodedFormDecoder().decode(TestType.self, from: string)
     blackHole(result)

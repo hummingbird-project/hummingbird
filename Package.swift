@@ -164,7 +164,7 @@ let package = Package(
                 .byName(name: "LLVMFuzzer"),
                 .byName(name: "Hummingbird"),
             ],
-            swiftSettings: swiftSettings
+            swiftSettings: swiftSettings + [.define("FUZZ_PERCENTDECODE")]
         ),
         // test targets
         .testTarget(
