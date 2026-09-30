@@ -60,12 +60,8 @@ struct AsyncTestingFramework<Responder: HTTPResponder>: ApplicationTestFramework
                 request.writeBuffer(&body)
             }
 
-            try await asyncTestingChannel.writeInbound(request)
-            try await self.clientTestingChannel.writeOutbound(
-                HTTPClientRequestPart.head(.init(version: .http1_1, method: .init(method), uri: uri, headers: .init(headers)))
-            )
+            let responseBuffer = try await executeRequest(request)
 
-            let responseBuffer = try await self.asyncTestingChannel.waitForOutboundWrite(as: ByteBuffer.self)
             try await self.clientTestingChannel.writeInbound(responseBuffer)
             var body = ByteBuffer()
             var responseHead: HTTPResponseHead?
@@ -86,6 +82,14 @@ struct AsyncTestingFramework<Responder: HTTPResponder>: ApplicationTestFramework
                     fatalError()
                 }
             }
+        }
+
+        func executeRequest(_ request: ByteBuffer) async throws -> ByteBuffer {
+            try await asyncTestingChannel.writeInbound(request)
+            try await self.clientTestingChannel.writeOutbound(
+                HTTPClientRequestPart.head(.init(version: .http1_1, method: .GET, uri: "/", headers: .init()))
+            )
+            return try await self.asyncTestingChannel.waitForOutboundWrite(as: ByteBuffer.self)
         }
 
         var port: Int? { nil }
