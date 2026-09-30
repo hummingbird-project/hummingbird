@@ -22,12 +22,19 @@ import Synchronization
 struct AsyncTestingFramework<Responder: HTTPResponder>: ApplicationTestFramework where Responder.Context: InitializableFromSource {
     final class Client: TestClientProtocol {
         let asyncTestingChannel: NIOAsyncTestingChannel
+        let clientTestingChannel: NIOAsyncTestingChannel
 
-        init() throws {
-            self.asyncTestingChannel = .init()
-            try self.asyncTestingChannel.pipeline.syncOperations.addHandler(
-                ByteToMessageHandler(HTTPDecoder<HTTPClientResponsePart, ByteBuffer>())
-            )
+        init(_ asyncTestingChannel: NIOAsyncTestingChannel) async throws {
+            self.asyncTestingChannel = asyncTestingChannel
+            let clientTestingChannel = NIOAsyncTestingChannel()
+            self.clientTestingChannel = clientTestingChannel
+            try await clientTestingChannel.eventLoop.flatSubmit {
+                clientTestingChannel.eventLoop.assumeIsolated().makeCompletedFuture {
+                    try clientTestingChannel.pipeline.syncOperations.addHandler(
+                        ByteToMessageHandler(HTTPDecoder<HTTPClientResponsePart, HTTPClientRequestPart>())
+                    )
+                }
+            }.get()
         }
 
         func executeRequest(
@@ -36,29 +43,47 @@ struct AsyncTestingFramework<Responder: HTTPResponder>: ApplicationTestFramework
             headers: HTTPTypes.HTTPFields,
             body: NIOCore.ByteBuffer?
         ) async throws -> TestResponse {
+
+            var headers = headers
+            if let body {
+                headers[.contentLength] = String(describing: body.readableBytes)
+            }
             var request = ByteBuffer()
             // write head
-            request.writeString("\(method) \(uri) HTTP/1.1\r\n")
+            request.writeString("\(method) \(uri.first == "/" ? "" : "/")\(uri) HTTP/1.1\r\n")
             // write headers
             for header in headers {
                 request.writeString("\(header.name): \(header.value)\r\n")
             }
-            request.writeString("\r\n")
-            try await asyncTestingChannel.writeInbound(request)
+            request.writeStaticString("\r\n")
+            if var body {
+                request.writeBuffer(&body)
+            }
 
-            var responsePart = try await asyncTestingChannel.waitForOutboundWrite(as: HTTPClientResponsePart.self)
-            guard case .head(let headPart) = responsePart else { fatalError() }
+            try await asyncTestingChannel.writeInbound(request)
+            try await self.clientTestingChannel.writeOutbound(
+                HTTPClientRequestPart.head(.init(version: .http1_1, method: .init(method), uri: uri, headers: .init(headers)))
+            )
+
+            let responseBuffer = try await self.asyncTestingChannel.waitForOutboundWrite(as: ByteBuffer.self)
+            try await self.clientTestingChannel.writeInbound(responseBuffer)
             var body = ByteBuffer()
+            var responseHead: HTTPResponseHead?
             while true {
-                responsePart = try await asyncTestingChannel.waitForOutboundWrite(as: HTTPClientResponsePart.self)
-                switch responsePart {
-                case .head:
-                    fatalError()
-                case .body(var buffer):
+                let responsePart = try await self.clientTestingChannel.readInbound(as: HTTPClientResponsePart.self)
+                switch (responseHead, responsePart) {
+                case (nil, .head(let headPart)):
+                    responseHead = headPart
+                case (.some, .body(var buffer)):
                     body.writeBuffer(&buffer)
-                case .end(let trailers):
-                    let head = try HTTPResponse(headPart)
+                case (.some(let head), .end(let trailers)):
+                    let head = try HTTPResponse(head)
                     return TestResponse(head: head, body: body, trailerHeaders: trailers.map { HTTPFields($0, splitCookie: false) })
+                case (_, .none):
+                    let responseBuffer = try await self.asyncTestingChannel.waitForOutboundWrite(as: ByteBuffer.self)
+                    try await self.clientTestingChannel.writeInbound(responseBuffer)
+                default:
+                    fatalError()
                 }
             }
         }
@@ -80,6 +105,31 @@ struct AsyncTestingFramework<Responder: HTTPResponder>: ApplicationTestFramework
     }
 
     func run<Value>(_ test: @Sendable (Client) async throws -> Value) async throws -> Value {
+        let channel = NIOAsyncTestingChannel()
+        let value = try await self.childChannel._runTest(channel: channel, logger: self.logger, test: test)
+        return value
+    }
+}
 
+@available(hummingbird 2.0, *)
+extension ServerChildChannel {
+    fileprivate func _runTest<Responder: HTTPResponder, Return>(
+        channel: any Channel,
+        logger: Logger,
+        test: @Sendable (AsyncTestingFramework<Responder>.Client) async throws -> Return
+    ) async throws -> Return {
+        let asyncTestingChannel = NIOAsyncTestingChannel()
+        let client = try await AsyncTestingFramework<Responder>.Client(asyncTestingChannel)
+        let value = try await asyncTestingChannel.eventLoop.flatSubmit {
+            self.setup(channel: asyncTestingChannel, logger: logger)
+        }.get()
+        return try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                await self.handle(value: value, logger: logger)
+            }
+            let rt = try await test(client)
+            group.cancelAll()
+            return rt
+        }
     }
 }
