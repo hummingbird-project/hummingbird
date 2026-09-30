@@ -139,24 +139,32 @@ extension RequestBody {
             case multipleWaitingForProduceMore(Deque<CheckedContinuation<Void, Never>>)
             case terminated
         }
-        let state: NIOLockedValueBox<State>
+        struct LockedState {
+            var state: State
+            /// Number of times `produceMore` has been called. `Source.yield` samples this before
+            /// yielding and hands it to `stopProducing`, so a `produceMore` that arrives after the
+            /// sequence has answered `.stopProducing` but before `stopProducing` runs isn't lost.
+            var produceMoreCount: Int
+        }
+        let lockedState: NIOLockedValueBox<LockedState>
 
         @usableFromInline
         init() {
-            self.state = .init(.produceMore)
+            self.lockedState = .init(.init(state: .produceMore, produceMoreCount: 0))
         }
 
         @usableFromInline
         func produceMore() {
-            self.state.withLockedValue { state in
-                switch state {
+            self.lockedState.withLockedValue { lockedState in
+                lockedState.produceMoreCount += 1
+                switch lockedState.state {
                 case .produceMore:
                     break
                 case .waitingForProduceMore(let continuation):
                     if let continuation {
                         continuation.resume()
                     }
-                    state = .produceMore
+                    lockedState.state = .produceMore
 
                 case .multipleWaitingForProduceMore(var continuations):
                     // this isnt exactly correct as the number of continuations
@@ -164,7 +172,7 @@ extension RequestBody {
                     while let cont = continuations.popFirst() {
                         cont.resume()
                     }
-                    state = .produceMore
+                    lockedState.state = .produceMore
 
                 case .terminated:
                     preconditionFailure("Unexpected state")
@@ -174,20 +182,20 @@ extension RequestBody {
 
         @usableFromInline
         func didTerminate() {
-            self.state.withLockedValue { state in
-                switch state {
+            self.lockedState.withLockedValue { lockedState in
+                switch lockedState.state {
                 case .produceMore:
                     break
                 case .waitingForProduceMore(let continuation):
                     if let continuation {
                         continuation.resume()
                     }
-                    state = .terminated
+                    lockedState.state = .terminated
                 case .multipleWaitingForProduceMore(var continuations):
                     while let cont = continuations.popFirst() {
                         cont.resume()
                     }
-                    state = .terminated
+                    lockedState.state = .terminated
                 case .terminated:
                     preconditionFailure("Unexpected state")
                 }
@@ -196,13 +204,13 @@ extension RequestBody {
 
         @usableFromInline
         func waitForProduceMore() async {
-            switch self.state.withLockedValue({ $0 }) {
+            switch self.lockedState.withLockedValue({ $0.state }) {
             case .produceMore, .terminated:
                 break
             case .waitingForProduceMore, .multipleWaitingForProduceMore:
                 await withCheckedContinuation { (newContinuation: CheckedContinuation<Void, Never>) in
-                    self.state.withLockedValue { state in
-                        switch state {
+                    self.lockedState.withLockedValue { lockedState in
+                        switch lockedState.state {
                         case .produceMore:
                             newContinuation.resume()
                         case .waitingForProduceMore(let firstContinuation):
@@ -211,13 +219,13 @@ extension RequestBody {
                                 continuations.reserveCapacity(2)
                                 continuations.append(firstContinuation)
                                 continuations.append(newContinuation)
-                                state = .multipleWaitingForProduceMore(continuations)
+                                lockedState.state = .multipleWaitingForProduceMore(continuations)
                             } else {
-                                state = .waitingForProduceMore(newContinuation)
+                                lockedState.state = .waitingForProduceMore(newContinuation)
                             }
                         case .multipleWaitingForProduceMore(var continuations):
                             continuations.append(newContinuation)
-                            state = .multipleWaitingForProduceMore(continuations)
+                            lockedState.state = .multipleWaitingForProduceMore(continuations)
                         case .terminated:
                             newContinuation.resume()
                         }
@@ -226,12 +234,25 @@ extension RequestBody {
             }
         }
 
+        /// Number of `produceMore` calls so far, to pass to ``stopProducing(produceMoreCount:)``.
         @usableFromInline
-        func stopProducing() {
-            self.state.withLockedValue { state in
-                switch state {
+        func currentProduceMoreCount() -> Int {
+            self.lockedState.withLockedValue { $0.produceMoreCount }
+        }
+
+        /// Stop producing until the next `produceMore`.
+        ///
+        /// - Parameter produceMoreCount: ``currentProduceMoreCount()`` sampled before the yield that
+        ///     returned `.stopProducing`. If `produceMore` has been called since then, the consumer has
+        ///     already drained the buffer and will not ask again, so keep producing.
+        @usableFromInline
+        func stopProducing(produceMoreCount: Int) {
+            self.lockedState.withLockedValue { lockedState in
+                switch lockedState.state {
                 case .produceMore:
-                    state = .waitingForProduceMore(nil)
+                    if lockedState.produceMoreCount == produceMoreCount {
+                        lockedState.state = .waitingForProduceMore(nil)
+                    }
                 case .waitingForProduceMore:
                     break
                 case .multipleWaitingForProduceMore:
@@ -267,9 +288,10 @@ extension RequestBody {
             // if previous call indicated we should stop producing wait until the delegate
             // says we can start producing again
             await self.delegate.waitForProduceMore()
+            let produceMoreCount = self.delegate.currentProduceMoreCount()
             let result = self.source.yield(element)
             if result == .stopProducing {
-                self.delegate.stopProducing()
+                self.delegate.stopProducing(produceMoreCount: produceMoreCount)
             }
         }
 
