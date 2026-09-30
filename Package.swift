@@ -24,6 +24,9 @@ swiftSettings.append(contentsOf: [
 ])
 #endif
 
+swiftSettings.append(.unsafeFlags(["-strict-memory-safety"]))
+
+
 let package = Package(
     name: "hummingbird",
     platforms: [.macOS(.v11), .iOS(.v15), .macCatalyst(.v15), .tvOS(.v15), .visionOS(.v1)],
