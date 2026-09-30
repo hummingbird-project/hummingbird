@@ -76,15 +76,18 @@ public struct HTTP2Channel: ServerChildChannel {
     /// - Returns: Object to process input/output on child channel
     public func setup(channel: any Channel, logger: Logger) -> EventLoopFuture<Value> {
         channel.eventLoop.makeCompletedFuture {
-            let connectionManager = HTTP2ServerConnectionManager(
+            let connectionManager = NIOHTTP2ServerConnectionManagementHandler(
                 eventLoop: channel.eventLoop,
-                idleTimeout: self.configuration.idleTimeout,
-                maxAgeTimeout: self.configuration.maxAgeTimeout,
-                gracefulCloseTimeout: self.configuration.gracefulCloseTimeout
+                configuration: .init(
+                    maxIdleTime: self.configuration.idleTimeout.map { TimeAmount($0) },
+                    maxAge: self.configuration.maxAgeTimeout.map { TimeAmount($0) },
+                    maxGraceTime: self.configuration.gracefulCloseTimeout.map { TimeAmount($0) },
+                    keepalive: nil
+                )
             )
             let handler: HTTP2Connection = try channel.pipeline.syncOperations.configureAsyncHTTP2Pipeline(
                 mode: .server,
-                streamDelegate: connectionManager.streamDelegate,
+                streamDelegate: connectionManager.http2StreamDelegate,
                 configuration: .init()
             ) { http2ChildChannel in
                 self.http2Stream.setup(channel: http2ChildChannel, logger: logger)
