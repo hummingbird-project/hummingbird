@@ -16,6 +16,7 @@ import NIOHTTP1
 import NIOHTTPTypesHTTP1
 import ServiceLifecycle
 import Synchronization
+import UnixSignals
 
 /// Test sending requests directly to router. This does not setup a live server
 @available(hummingbird 2.0, *)
@@ -104,14 +105,38 @@ struct AsyncTestingFramework<Responder: HTTPResponder>: ApplicationTestFramework
         let dateCache = DateCache()
         self.childChannel = try await app.server.buildChildChannel(app.applicationResponder(app.responder, dateCache: dateCache))
         self.processesRunBeforeServerStart = app.processesRunBeforeServerStart
-        self.services = app.services
+        self.services = app.services + [dateCache]
         self.logger = app.logger
     }
 
     func run<Value>(_ test: @Sendable (Client) async throws -> Value) async throws -> Value {
         let channel = NIOAsyncTestingChannel()
-        let value = try await self.childChannel._runTest(channel: channel, logger: self.logger, test: test)
-        return value
+        return try await withThrowingTaskGroup(of: Void.self) { group in
+            let (stream, cont) = AsyncStream.makeStream(of: Void.self)
+            let serviceGroup = ServiceGroup(
+                configuration: .init(
+                    services: self.services + [FinishContinuationService(cont: cont)],
+                    gracefulShutdownSignals: [.sigterm, .sigint],
+                    logger: self.logger
+                )
+            )
+            group.addTask {
+                try await serviceGroup.run()
+            }
+
+            for process in self.processesRunBeforeServerStart {
+                try await process()
+            }
+            do {
+                await stream.first { _ in true }
+                let value = try await self.childChannel._runTest(channel: channel, logger: self.logger, test: test)
+                await serviceGroup.triggerGracefulShutdown()
+                return value
+            } catch {
+                await serviceGroup.triggerGracefulShutdown()
+                throw error
+            }
+        }
     }
 }
 
