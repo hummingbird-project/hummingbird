@@ -9,13 +9,14 @@
 @_exported @_documentation(visibility: internal) import struct HTTPTypes.HTTPFields
 @_exported @_documentation(visibility: internal) import struct HTTPTypes.HTTPRequest
 @_exported @_documentation(visibility: internal) import struct HTTPTypes.HTTPResponse
+@_exported @_documentation(visibility: internal) import struct HummingbirdCore.AnyResponseBodyAsyncWriter
 @_exported @_documentation(visibility: internal) import struct HummingbirdCore.BindAddress
 // Temporary exports of unavailable typealiases
 @_exported @_documentation(visibility: internal) import struct HummingbirdCore.Request
 @_exported @_documentation(visibility: internal) import class HummingbirdCore.RequestBody
 @_exported @_documentation(visibility: internal) import struct HummingbirdCore.Response
 @_exported @_documentation(visibility: internal) import struct HummingbirdCore.ResponseBody
-@_exported @_documentation(visibility: internal) import protocol HummingbirdCore.ResponseBodyWriter
+@_exported @_documentation(visibility: internal) import protocol HummingbirdCore.ResponseBodyAsyncWriter
 @_exported @_documentation(visibility: internal) import struct NIOCore.ByteBuffer
 @_exported @_documentation(visibility: internal) import struct NIOCore.ByteBufferAllocator
 

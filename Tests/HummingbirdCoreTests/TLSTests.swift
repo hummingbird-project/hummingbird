@@ -17,6 +17,7 @@ import NIOSSL
 import Testing
 
 struct HummingBirdTLSTests {
+    @available(hummingbird 3.0, *)
     @Test func testConnect() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
         defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
@@ -34,6 +35,7 @@ struct HummingBirdTLSTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testGracefulShutdownWithDanglingConnection() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
         defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
@@ -54,6 +56,7 @@ struct HummingBirdTLSTests {
         try await channel.closeFuture.get()
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testCustomVerify() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
         let verifiedResult = NIOLockedValueBox<NIOSSLVerificationResult>(.certificateVerified)

@@ -6,6 +6,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import BasicContainers
+import ContainersPreview
 import Foundation
 import HTTPTypes
 import Hummingbird
@@ -49,6 +51,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testRead() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware("."))
@@ -67,6 +70,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testNotAFile() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware("."))
@@ -79,6 +83,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testReadLargeFile() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware("."))
@@ -96,6 +101,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testReadRange() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware("."))
@@ -143,6 +149,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testIfRangeRead() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware("."))
@@ -178,6 +185,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testHead() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware("."))
@@ -202,6 +210,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testETag() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware("."))
@@ -222,6 +231,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testIfNoneMatch() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware("."))
@@ -250,6 +260,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testIfModifiedSince() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware("."))
@@ -275,6 +286,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testCacheControl() async throws {
         let router = Router()
         let cacheControl: CacheControl = .init([
@@ -302,6 +314,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testIndexHtml() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware(".", searchForIndexHtml: true))
@@ -317,6 +330,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testFolderRedirect() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware(".", searchForIndexHtml: true))
@@ -340,6 +354,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testSymlink() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware(".", searchForIndexHtml: true))
@@ -371,6 +386,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testOnThrowCustom404() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware(".", searchForIndexHtml: true))
@@ -396,6 +412,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testOnReturnNotFoundResponse() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware(".").withServeOnNotFoundResponse())
@@ -415,11 +432,12 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testOnReturnNotFoundResponseFallsBackWhenFileMissing() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware(".").withServeOnNotFoundResponse())
         router.get("testOnReturnNotFoundResponseFallsBack.html") { _, _ in
-            Response(status: .notFound, body: .init(byteBuffer: .init(string: "custom not found")))
+            Response(status: .notFound, body: .init(UniqueArray(copying: "custom not found".utf8)))
         }
         let app = Application(responder: router.buildResponder())
 
@@ -431,6 +449,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testOnReturnNotFoundResponseDisabledByDefault() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware("."))
@@ -450,6 +469,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testOnReturnNotFoundResponseHead() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware(".").withServeOnNotFoundResponse())
@@ -470,6 +490,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testFolder() async throws {
         let router = Router()
         router.middlewares.add(FileMiddleware(".", searchForIndexHtml: false))
@@ -482,6 +503,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testPathPrefix() async throws {
         // echo file provider. Returns file name as contents of file
         struct MemoryFileProvider: FileProvider {
@@ -504,14 +526,14 @@ struct FileMiddlewareTests {
             }
 
             func loadFile(id path: String, context: some RequestContext) async throws -> ResponseBody {
-                let buffer = ByteBuffer(string: self.prefix + path)
-                return .init(byteBuffer: buffer)
+                .init(UniqueArray(copying: (self.prefix + path).utf8))
             }
 
             func loadFile(id path: String, range: ClosedRange<Int>, context: some RequestContext) async throws -> ResponseBody {
-                let buffer = ByteBuffer(string: self.prefix + path)
-                guard let slice = buffer.getSlice(at: range.lowerBound, length: range.count) else { throw HTTPError(.rangeNotSatisfiable) }
-                return .init(byteBuffer: slice)
+                var buffer = UniqueArray(copying: (self.prefix + path).utf8)
+                guard range.lowerBound < buffer.count && range.upperBound >= 0 else { throw HTTPError(.rangeNotSatisfiable) }
+                let slice = buffer.consume(range)
+                return .init(UniqueArray(from: slice))
             }
         }
         let router = Router()
@@ -550,6 +572,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testCustomFileProvider() async throws {
         // basic file provider
         struct MemoryFileProvider: FileProvider {
@@ -574,13 +597,13 @@ struct FileMiddlewareTests {
 
             func loadFile(id path: String, context: some RequestContext) async throws -> ResponseBody {
                 guard let file = files[path] else { throw HTTPError(.notFound) }
-                return .init(byteBuffer: file)
+                return .init(UniqueArray(copying: file.readableBytesUInt8Span))
             }
 
             func loadFile(id path: String, range: ClosedRange<Int>, context: some RequestContext) async throws -> ResponseBody {
                 guard let file = files[path] else { throw HTTPError(.notFound) }
                 guard let slice = file.getSlice(at: range.lowerBound, length: range.count) else { throw HTTPError(.rangeNotSatisfiable) }
-                return .init(byteBuffer: slice)
+                return .init(UniqueArray(copying: slice.readableBytesUInt8Span))
             }
 
             var files: [String: ByteBuffer]
@@ -600,6 +623,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test(arguments: ["1.jpg", "2.JPG", "3.JpG", "4.JPeG", "5.JPEG"])
     func testFilesWithNonLowercaseFileExtensions(fileSuffix: String) async throws {
         let router = Router()
@@ -619,6 +643,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testCustomMIMEType() async throws {
         let hlsStream = try #require(MediaType(from: "application/x-mpegURL"))
         let router = Router()
@@ -653,6 +678,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testCustomMIMETypeCaseInsensitivity() async throws {
         let hlsStream = try #require(MediaType(from: "application/x-mpegURL"))
         let router = Router()
@@ -674,6 +700,7 @@ struct FileMiddlewareTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testCustomMIMETypes() async throws {
         let hlsStream = try #require(MediaType(from: "application/x-mpegURL"))
         let router = Router()

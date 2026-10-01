@@ -7,6 +7,7 @@
 //
 
 import BasicContainers
+import HTTPAPIs
 import HTTPTypes
 import HummingbirdCore
 import Logging
@@ -16,11 +17,12 @@ import NIOHTTP1
 import Testing
 
 struct HTTP1ChannelTests {
+    @available(hummingbird 3.0, *)
     func testHTTP1Channel(
         _ test: (NIOAsyncTestingChannel) async throws -> Void,
-        responder: @escaping HTTPChannelHandler.Responder = { (request: Request, writer: consuming ResponseWriter, channel: any Channel) in
+        responder: @escaping HTTPChannelHandler.Responder = { (request: Request, writer: consuming ResponseSender, channel: any Channel) in
             let body = try await request.body.collect(upTo: .max)
-            try await writer.writeResponse(
+            try await writer.sendAndFinish(
                 .init(
                     status: .ok,
                     headerFields: [.test: "\(body.count)", .contentLength: "0"]
@@ -45,6 +47,7 @@ struct HTTP1ChannelTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testHTTPParserError() async throws {
         try await testHTTP1Channel { channel in
             channel.pipeline.fireErrorCaught(HTTPParserError.unknown)
@@ -55,6 +58,7 @@ struct HTTP1ChannelTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testHTTPParserErrorAfterHeader() async throws {
         try await testHTTP1Channel { channel in
             try await channel.writeInbound(ByteBuffer(string: "GET / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 16\r\n\r\n"))
@@ -66,6 +70,7 @@ struct HTTP1ChannelTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testHTTPParserErrorAfterSuccessfulResponse() async throws {
         try await testHTTP1Channel { channel in
             try await channel.writeInbound(ByteBuffer(string: "GET / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 0\r\n\r\n"))
@@ -81,6 +86,7 @@ struct HTTP1ChannelTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testHTTPParserErrorInvalidMethod() async throws {
         try await testHTTP1Channel { channel in
             do {

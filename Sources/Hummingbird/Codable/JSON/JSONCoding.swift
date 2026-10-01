@@ -23,14 +23,14 @@ extension JSONEncoder: ResponseEncoder {
     ///   - context: Request context
     public func encode(_ value: some Encodable, from request: Request, context: some RequestContext) throws -> Response {
         let data = try self.encode(value)
-        let buffer = ByteBuffer(bytes: data)
+        let buffer = UniqueArray(copying: data)
         return Response(
             status: .ok,
             headers: .defaultHummingbirdHeaders(
                 contentType: "application/json; charset=utf-8",
                 contentLength: data.count
             ),
-            body: .init(byteBuffer: buffer)
+            body: .init(buffer)
         )
     }
 }

@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import BasicContainers
 public import HTTPTypes
 public import HummingbirdCore
 
@@ -28,14 +29,14 @@ extension Response: ResponseGenerator {
 extension String: ResponseGenerator {
     /// Generate response holding string
     public func response(from request: Request, context: some RequestContext) -> Response {
-        let buffer = ByteBuffer(string: self)
+        let buffer = UniqueArray(copying: self.utf8)
         return Response(
             status: .ok,
             headers: .defaultHummingbirdHeaders(
                 contentType: "text/plain; charset=utf-8",
-                contentLength: buffer.readableBytes
+                contentLength: buffer.count
             ),
-            body: .init(byteBuffer: buffer)
+            body: .init(buffer)
         )
     }
 }
@@ -44,14 +45,14 @@ extension String: ResponseGenerator {
 extension Substring: ResponseGenerator {
     /// Generate response holding string
     public func response(from request: Request, context: some RequestContext) -> Response {
-        let buffer = ByteBuffer(substring: self)
+        let buffer = UniqueArray(copying: self.utf8)
         return Response(
             status: .ok,
             headers: .defaultHummingbirdHeaders(
                 contentType: "text/plain; charset=utf-8",
-                contentLength: buffer.readableBytes
+                contentLength: buffer.count
             ),
-            body: .init(byteBuffer: buffer)
+            body: .init(buffer)
         )
     }
 }
@@ -66,7 +67,7 @@ extension ByteBuffer: ResponseGenerator {
                 contentType: "application/octet-stream",
                 contentLength: self.readableBytes
             ),
-            body: .init(byteBuffer: self)
+            body: .init(UniqueArray(copying: self.readableBytesUInt8Span))
         )
     }
 }

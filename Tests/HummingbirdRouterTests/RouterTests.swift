@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import BasicContainers
 import HTTPTypes
 import Hummingbird
 import HummingbirdRouter
@@ -30,12 +31,13 @@ struct RouterTests {
     }
 
     /// Test endpointPath is set
+    @available(hummingbird 3.0, *)
     @Test func testEndpointPath() async throws {
         struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 _ = try await next(request, context)
                 guard let endpointPath = context.endpointPath else { return try await next(request, context) }
-                return .init(status: .ok, body: .init(byteBuffer: ByteBuffer(string: endpointPath)))
+                return .init(status: .ok, body: .init(UniqueArray(copying: endpointPath.utf8)))
             }
         }
 
@@ -55,12 +57,13 @@ struct RouterTests {
     }
 
     /// Test endpointPath is prefixed with a "/"
+    @available(hummingbird 3.0, *)
     @Test func testEndpointPathPrefix() async throws {
         struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 _ = try await next(request, context)
                 guard let endpointPath = context.endpointPath else { return try await next(request, context) }
-                return .init(status: .ok, body: .init(byteBuffer: ByteBuffer(string: endpointPath)))
+                return .init(status: .ok, body: .init(UniqueArray(copying: endpointPath.utf8)))
             }
         }
 
@@ -92,11 +95,12 @@ struct RouterTests {
     }
 
     /// Test endpointPath doesn't have "/" at end
+    @available(hummingbird 3.0, *)
     @Test func testEndpointPathSuffix() async throws {
         struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 guard let endpointPath = context.endpointPath else { return try await next(request, context) }
-                return .init(status: .ok, body: .init(byteBuffer: ByteBuffer(string: endpointPath)))
+                return .init(status: .ok, body: .init(UniqueArray(copying: endpointPath.utf8)))
             }
         }
 
@@ -140,6 +144,7 @@ struct RouterTests {
     }
 
     /// Test correct endpoints are called from group
+    @available(hummingbird 3.0, *)
     @Test func testMethodEndpoint() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             RouteGroup("/endpoint") {
@@ -165,6 +170,7 @@ struct RouterTests {
 
     /// Test middle in group is applied to group but not to routes outside
     /// group
+    @available(hummingbird 3.0, *)
     @Test func testGroupMiddleware() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             RouteGroup("/group") {
@@ -189,6 +195,7 @@ struct RouterTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testEndpointMiddleware() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             RouteGroup("/group") {
@@ -207,6 +214,7 @@ struct RouterTests {
     }
 
     /// Test middleware in parent group is applied to routes in child group
+    @available(hummingbird 3.0, *)
     @Test func testGroupGroupMiddleware() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             RouteGroup("/test") {
@@ -227,6 +235,7 @@ struct RouterTests {
     }
 
     /// Test adding middleware to group doesn't affect middleware in parent groups
+    @available(hummingbird 3.0, *)
     @Test func testGroupGroupMiddleware2() async throws {
         struct TestGroupMiddleware: RouterMiddleware {
             typealias Context = TestRouterContext2
@@ -265,6 +274,7 @@ struct RouterTests {
     }
 
     /// Test context transform
+    @available(hummingbird 3.0, *)
     @Test func testGroupTransformingGroupMiddleware() async throws {
         struct TestRouterContext2: RequestContext, RouterRequestContext {
             /// router context
@@ -312,6 +322,7 @@ struct RouterTests {
     }
 
     /// Test throwing context transform
+    @available(hummingbird 3.0, *)
     @Test func testThrowingTransformingGroupMiddleware() async throws {
         struct TestRouterContext: RequestContext, RouterRequestContext {
             /// router context
@@ -370,6 +381,7 @@ struct RouterTests {
     }
 
     /// Test adding middleware to group doesn't affect middleware in parent groups
+    @available(hummingbird 3.0, *)
     @Test func testRouteBuilder() async throws {
         struct TestGroupMiddleware: RouterMiddleware {
             typealias Context = TestRouterContext2
@@ -411,6 +423,7 @@ struct RouterTests {
     }
 
     /// Test the hummingbird core parser against possible overflows of the percent encoder. this issue was introduced in pr #404 in the context of query parameters but I've thrown in some other random overflow scenarios in here too for good measure. if it doesn't crash, its a win.
+    @available(hummingbird 3.0, *)
     @Test func testQueryParameterOverflow() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Get("overflow") { req, _ in
@@ -432,6 +445,7 @@ struct RouterTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testParameters() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Delete("/user/:id") { _, context -> String? in
@@ -446,6 +460,7 @@ struct RouterTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testParametersAs() async throws {
         enum TestEnumString: String {  // for RawRepresentable
             case hummingbird
@@ -513,6 +528,7 @@ struct RouterTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testParameterCollection() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Delete("/user/:username/:id") { _, context -> String? in
@@ -528,6 +544,7 @@ struct RouterTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testPartialCapture() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Route(.get, "/files/file.{ext}/{name}.jpg") { _, context -> String in
@@ -545,6 +562,7 @@ struct RouterTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testPartialWildcard() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Get("/files/file.*/*.jpg") { _, _ -> HTTPResponse.Status in
@@ -563,6 +581,7 @@ struct RouterTests {
     }
 
     /// Test we have a request id and that it increments with each request
+    @available(hummingbird 3.0, *)
     @Test func testRequestId() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Get("id") { _, context in
@@ -582,6 +601,7 @@ struct RouterTests {
     }
 
     // Test redirect response
+    @available(hummingbird 3.0, *)
     @Test func testRedirect() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Get("redirect") { _, _ in
@@ -597,6 +617,7 @@ struct RouterTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testResponderBuilder() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self) {
             Get("hello") { _, _ in
@@ -612,6 +633,7 @@ struct RouterTests {
     }
 
     // Test case insensitive router works
+    @available(hummingbird 3.0, *)
     @Test func testCaseInsensitive() async throws {
         let router = RouterBuilder(context: BasicRouterRequestContext.self, options: .caseInsensitive) {
             Get("Uppercased") { _, _ in

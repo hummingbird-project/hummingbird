@@ -15,6 +15,7 @@ import NIOConcurrencyHelpers
 import Testing
 
 struct MetricsTests {
+    @available(hummingbird 3.0, *)
     @Test func testCounter() async throws {
         let metrics = TestMetrics()
         try await withMetricsFactory(metrics) {
@@ -35,6 +36,7 @@ struct MetricsTests {
         #expect(counter.values[0] == 1)
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testCounter2() async throws {
         let metrics = TestMetrics()
         try await withMetricsFactory(metrics) {
@@ -74,6 +76,7 @@ struct MetricsTests {
         #expect(counter1.values.count + counter2.values.count + counter3.values.count + counter4.values.count == 1000)
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testError() async throws {
         let metrics = TestMetrics()
         try await withMetricsFactory(metrics) {
@@ -100,6 +103,7 @@ struct MetricsTests {
         #expect(errorCounter.values.count == 1)
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testNotFoundError() async throws {
         let metrics = TestMetrics()
         try await withMetricsFactory(metrics) {
@@ -126,6 +130,7 @@ struct MetricsTests {
         #expect(errorCounter.values.count == 1)
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testParameterEndpoint() async throws {
         let metrics = TestMetrics()
         try await withMetricsFactory(metrics) {
@@ -147,6 +152,7 @@ struct MetricsTests {
         #expect(errorCounter.values.count == 1)
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testRecordingBodyWriteTime() async throws {
         let metrics = TestMetrics()
         try await withMetricsFactory(metrics) {
@@ -174,6 +180,7 @@ struct MetricsTests {
         #expect(timer.values[0] > 5_000_000)
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testActiveRequestsMetric() async throws {
         let metrics = TestMetrics()
         try await withMetricsFactory(metrics) {

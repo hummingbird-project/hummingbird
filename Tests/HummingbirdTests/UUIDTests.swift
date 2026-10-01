@@ -14,6 +14,7 @@ import Testing
 
 @Suite("Test UUID as URL/query parameters")
 struct UUIDTests {
+    @available(hummingbird 3.0, *)
     @Test func testGetUUID() async throws {
         let router = Router()
         router.get(":id") { _, context -> UUID? in
@@ -29,6 +30,7 @@ struct UUIDTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testRequireUUID() async throws {
         let router = Router()
         router.get(":id") { _, context -> UUID in
@@ -44,6 +46,7 @@ struct UUIDTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testGetUUIDs() async throws {
         let router = Router()
         router.get { request, _ -> [UUID] in
@@ -61,6 +64,7 @@ struct UUIDTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testRequireUUIDs() async throws {
         let router = Router()
         router.get { request, _ -> [UUID] in

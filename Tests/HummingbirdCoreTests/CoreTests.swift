@@ -10,6 +10,8 @@ import AsyncAlgorithms
 import AsyncStreaming
 import Atomics
 import BasicContainers
+import ContainersPreview
+import HTTPAPIs
 import HTTPTypes
 import HummingbirdCore
 import HummingbirdTesting
@@ -35,12 +37,16 @@ struct HummingbirdCoreTests {
         #endif
     }()
 
-    static func randomBuffer(size: Int) -> ByteBuffer {
-        var data = [UInt8](repeating: 0, count: size)
-        data = data.map { _ in UInt8.random(in: 0...255) }
-        return ByteBufferAllocator().buffer(bytes: data)
+    static func randomBuffer(size: Int) -> UniqueArray<UInt8> {
+        UniqueArray<UInt8>(copying: (0..<size).lazy.map { _ in UInt8.random(in: 0...255) })
     }
 
+    static func randomByteBuffer(size: Int) -> ByteBuffer {
+        var buffer = randomBuffer(size: size)
+        return ByteBuffer(draining: &buffer)
+    }
+
+    @available(hummingbird 3.0, *)
     @Test func testConnect() async throws {
         try await testServer(
             responder: helloResponder,
@@ -55,6 +61,7 @@ struct HummingbirdCoreTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testMultipleRequests() async throws {
         try await testServer(
             responder: helloResponder,
@@ -70,6 +77,7 @@ struct HummingbirdCoreTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testMultipleConnections() async throws {
         try await testServer(
             responder: helloResponder,
@@ -98,6 +106,7 @@ struct HummingbirdCoreTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testMaxConnections() async throws {
         final class TestMaximumAvailableConnections: AvailableConnectionsDelegate, @unchecked Sendable {
             let maxConnections: Int
@@ -124,12 +133,13 @@ struct HummingbirdCoreTests {
             }
         }
         /// Basic responder that waits 10 milliseconds and returns "Hello" in body
-        @Sendable func helloResponder(to request: Request, responseWriter: consuming ResponseWriter, channel: any Channel) async throws {
+        @available(hummingbird 3.0, *)
+        @Sendable func helloResponder(to request: Request, responseWriter: consuming ResponseSender, channel: any Channel) async throws {
             try? await Task.sleep(for: .milliseconds(10))
-            let responseBody = channel.allocator.buffer(string: "Hello")
-            var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
-            try await bodyWriter.write(responseBody)
-            try await bodyWriter.finish(nil)
+            var responseBody = UniqueArray(copying: "hello".utf8)
+            var bodyWriter = try await responseWriter.send(.init(status: .ok))
+            try await bodyWriter.write(buffer: &responseBody)
+            try await bodyWriter.finish()
         }
         let availableConnectionsDelegate = TestMaximumAvailableConnections(10)
         try await testServer(
@@ -150,7 +160,7 @@ struct HummingbirdCoreTests {
                         client.connect()
                         let response = try await client.post("/", body: ByteBuffer(string: "Hello"))
                         var body = try #require(response.body)
-                        #expect(body.readString(length: body.readableBytes) == "Hello")
+                        #expect(body.readString(length: body.readableBytes) == "hello")
                         try await client.close()
                     }
                 }
@@ -161,25 +171,26 @@ struct HummingbirdCoreTests {
         #expect(availableConnectionsDelegate.maxConnectionCountRecorded < 14)
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testConsumeBody() async throws {
         try await testServer(
-            responder: { (request, responseWriter: consuming ResponseWriter, _) in
+            responder: { request, responseWriter, _ in
                 var buffer: UniqueArray<UInt8>
                 do {
                     buffer = try await request.body.collect(upTo: .max)
                 } catch {
-                    try await responseWriter.writeResponse(.init(status: .contentTooLarge))
+                    try await responseWriter.sendAndFinish(.init(status: .contentTooLarge))
                     return
                 }
-                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
-                try await bodyWriter.write(.init(draining: &buffer))
-                try await bodyWriter.finish(nil)
+                var bodyWriter = try await responseWriter.send(.init(status: .ok))
+                try await bodyWriter.write(buffer: &buffer)
+                try await bodyWriter.finish()
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: #function),
             test: { client in
-                let buffer = Self.randomBuffer(size: 1_140_000)
+                let buffer = Self.randomByteBuffer(size: 1_140_000)
                 let response = try await client.post("/", body: buffer)
                 let body = try #require(response.body)
                 #expect(body == buffer)
@@ -187,13 +198,14 @@ struct HummingbirdCoreTests {
         )
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testWriteBody() async throws {
         try await testServer(
-            responder: { (_, responseWriter: consuming ResponseWriter, _) in
-                let buffer = Self.randomBuffer(size: 1_140_000)
-                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
-                try await bodyWriter.write(buffer)
-                try await bodyWriter.finish(nil)
+            responder: { _, responseWriter, _ in
+                var buffer = Self.randomBuffer(size: 1_140_000)
+                var bodyWriter = try await responseWriter.send(.init(status: .ok))
+                try await bodyWriter.write(buffer: &buffer)
+                try await bodyWriter.finish()
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
@@ -206,13 +218,14 @@ struct HummingbirdCoreTests {
         )
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testWriteLargeBodyAndClose() async throws {
         try await testServer(
-            responder: { (_, responseWriter: consuming ResponseWriter, _) in
-                let buffer = Self.randomBuffer(size: 1_140_000)
-                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
-                try await bodyWriter.write(buffer)
-                try await bodyWriter.finish(nil)
+            responder: { _, responseWriter, _ in
+                var buffer = Self.randomBuffer(size: 1_140_000)
+                var bodyWriter = try await responseWriter.send(.init(status: .ok))
+                try await bodyWriter.write(buffer: &buffer)
+                try await bodyWriter.finish()
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
@@ -225,18 +238,21 @@ struct HummingbirdCoreTests {
         )
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testStreamBody() async throws {
         try await testServer(
-            responder: { (request, responseWriter: consuming ResponseWriter, _) in
-                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
-                try await bodyWriter.write(request.body.reader)
-                try await bodyWriter.finish(nil)
+            responder: { (request, responseWriter: consuming ResponseSender, _) in
+                var bodyWriter = try await responseWriter.send(.init(status: .ok))
+                try await request.body.forEachBuffer { buffer in
+                    try await bodyWriter.write(buffer: &buffer)
+                }
+                try await bodyWriter.finish()
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: #function),
             test: { client in
-                let buffer = Self.randomBuffer(size: 1_140_000)
+                let buffer = Self.randomByteBuffer(size: 1_140_000)
                 let response = try await client.post("/", body: buffer)
                 let body = try #require(response.body)
                 #expect(body == buffer)
@@ -244,24 +260,30 @@ struct HummingbirdCoreTests {
         )
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testStreamBodyWriteSlow() async throws {
         try await testServer(
-            responder: { (request, responseWriter: consuming ResponseWriter, _) in
-                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
-                try await bodyWriter.write(request.body.delayed())
-                try await bodyWriter.finish(nil)
+            responder: { (request, responseWriter: consuming ResponseSender, _) in
+                var bodyWriter = try await responseWriter.send(.init(status: .ok))
+                try await request.body.forEachBuffer { buffer in
+                    try await Task.sleep(for: .milliseconds(Int.random(in: 10..<100)))
+                    try await bodyWriter.write(buffer: &buffer)
+                }
+                try await bodyWriter.finish()
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: #function),
             test: { client in
-                let buffer = Self.randomBuffer(size: 1_140_000)
+                let buffer = Self.randomByteBuffer(size: 1_140_000)
                 let response = try await client.post("/", body: buffer)
                 let body = try #require(response.body)
                 #expect(body == buffer)
             }
         )
     }
+
+    @available(hummingbird 3.0, *)
     @Test func testStreamBodySlowStream() async throws {
         /// channel handler that delays the sending of data
         class SlowInputChannelHandler: ChannelOutboundHandler, RemovableChannelHandler {
@@ -276,17 +298,19 @@ struct HummingbirdCoreTests {
             }
         }
         try await testServer(
-            responder: { (request, responseWriter: consuming ResponseWriter, _) in
-                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
-                try await bodyWriter.write(request.body.delayed())
-                try await bodyWriter.finish(nil)
+            responder: { (request, responseWriter: consuming ResponseSender, _) in
+                var bodyWriter = try await responseWriter.send(.init(status: .ok)).delayed()
+                try await request.body.forEachBuffer { buffer in
+                    try await bodyWriter.write(buffer: &buffer)
+                }
+                try await bodyWriter.finish()
             },
             httpChannelSetup: .http1(configuration: .init(additionalChannelHandlers: [SlowInputChannelHandler()])),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: #function),
             test: { client in
-                let buffer = Self.randomBuffer(size: 1_140_000)
+                let buffer = Self.randomByteBuffer(size: 1_140_000)
                 let response = try await client.post("/", body: buffer)
                 let body = try #require(response.body)
                 #expect(body == buffer)
@@ -294,11 +318,12 @@ struct HummingbirdCoreTests {
         )
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testTrailerHeaders() async throws {
         try await testServer(
-            responder: { (_, responseWriter: consuming ResponseWriter, _) in
-                let bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
-                try await bodyWriter.finish([.contentType: "text"])
+            responder: { _, responseWriter, _ in
+                let bodyWriter = try await responseWriter.send(.init(status: .ok))
+                try await bodyWriter.finish(finalElement: [.contentType: "text"])
             },
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
@@ -311,6 +336,7 @@ struct HummingbirdCoreTests {
         )
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testChannelHandlerErrorPropagation() async throws {
         struct TestChannelHandlerError: Error {}
         class CreateErrorHandler: ChannelInboundHandler, RemovableChannelHandler {
@@ -325,41 +351,42 @@ struct HummingbirdCoreTests {
             }
         }
         try await testServer(
-            responder: { (request, responseWriter: consuming ResponseWriter, _) in
+            responder: { request, responseWriter, _ in
                 do {
                     _ = try await request.body.collect(upTo: .max)
                 } catch is TestChannelHandlerError {
-                    try await responseWriter.writeResponse(.init(status: .unavailableForLegalReasons))
+                    try await responseWriter.sendAndFinish(.init(status: .unavailableForLegalReasons))
                     return
                 } catch {
-                    try await responseWriter.writeResponse(.init(status: .contentTooLarge))
+                    try await responseWriter.sendAndFinish(.init(status: .contentTooLarge))
                     return
                 }
-                try await responseWriter.writeResponse(.init(status: .ok))
+                try await responseWriter.sendAndFinish(.init(status: .ok))
             },
             httpChannelSetup: .http1(configuration: .init(additionalChannelHandlers: [CreateErrorHandler()])),
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: #function),
             test: { client in
-                let buffer = Self.randomBuffer(size: 32)
+                let buffer = Self.randomByteBuffer(size: 32)
                 let response = try await client.post("/", body: buffer)
                 #expect(response.status == .unavailableForLegalReasons)
             }
         )
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testDropRequestBody() async throws {
         try await testServer(
-            responder: { (_, responseWriter: consuming ResponseWriter, _) in
+            responder: { _, responseWriter, _ in
                 // ignore request body
-                try await responseWriter.writeResponse(.init(status: .accepted))
+                try await responseWriter.sendAndFinish(.init(status: .accepted))
             },
             configuration: .init(address: .hostname(port: 0)),
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: #function),
             test: { client in
-                let buffer = Self.randomBuffer(size: 16384)
+                let buffer = Self.randomByteBuffer(size: 16384)
                 let response = try await client.post("/", body: buffer)
                 #expect(response.status == .accepted)
                 let response2 = try await client.post("/", body: buffer)
@@ -369,6 +396,7 @@ struct HummingbirdCoreTests {
     }
 
     /// test server closes connection if "connection" header is set to "close"
+    @available(hummingbird 3.0, *)
     @Test func testConnectionClose() async throws {
         try await testServer(
             responder: helloResponder,
@@ -386,6 +414,7 @@ struct HummingbirdCoreTests {
     }
 
     /// Test idle handler kicks in if request is never finished
+    @available(hummingbird 3.0, *)
     @Test func testUnfinishedReadIdleHandler() async throws {
         /// Channel Handler for serializing request header and data
         final class HTTPServerIncompleteRequest: ChannelInboundHandler, RemovableChannelHandler {
@@ -403,14 +432,14 @@ struct HummingbirdCoreTests {
             }
         }
         try await testServer(
-            responder: { (request, responseWriter: consuming ResponseWriter, _) in
+            responder: { request, responseWriter, _ in
                 do {
                     _ = try await request.body.collect(upTo: .max)
                 } catch {
-                    try await responseWriter.writeResponse(.init(status: .contentTooLarge))
+                    try await responseWriter.sendAndFinish(.init(status: .contentTooLarge))
                     return
                 }
-                try await responseWriter.writeResponse(.init(status: .ok))
+                try await responseWriter.sendAndFinish(.init(status: .ok))
             },
             httpChannelSetup: .http1(
                 configuration: .init(
@@ -434,6 +463,7 @@ struct HummingbirdCoreTests {
     }
 
     /// Test idle handler kicks in if head is never sent after opening connection
+    @available(hummingbird 3.0, *)
     @Test func testUninitiatedReadIdleHandler() async throws {
         /// Channel Handler for serializing request header and data
         final class HTTPServerIncompleteRequest: ChannelInboundHandler, RemovableChannelHandler {
@@ -443,14 +473,14 @@ struct HummingbirdCoreTests {
             func channelRead(context: ChannelHandlerContext, data: NIOAny) {}
         }
         try await testServer(
-            responder: { (request, responseWriter: consuming ResponseWriter, _) in
+            responder: { request, responseWriter, _ in
                 do {
                     _ = try await request.body.collect(upTo: .max)
                 } catch {
-                    try await responseWriter.writeResponse(.init(status: .contentTooLarge))
+                    try await responseWriter.sendAndFinish(.init(status: .contentTooLarge))
                     return
                 }
-                try await responseWriter.writeResponse(.init(status: .ok))
+                try await responseWriter.sendAndFinish(.init(status: .ok))
             },
             httpChannelSetup: .http1(
                 configuration: .init(
@@ -473,6 +503,7 @@ struct HummingbirdCoreTests {
         )
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testLeftOpenReadIdleHandler() async throws {
         /// Channel Handler for serializing request header and data
         final class HTTPServerIncompleteRequest: ChannelInboundHandler, RemovableChannelHandler {
@@ -490,14 +521,14 @@ struct HummingbirdCoreTests {
             }
         }
         try await testServer(
-            responder: { (request, responseWriter: consuming ResponseWriter, _) in
+            responder: { request, responseWriter, _ in
                 do {
                     _ = try await request.body.collect(upTo: .max)
                 } catch {
-                    try await responseWriter.writeResponse(.init(status: .contentTooLarge))
+                    try await responseWriter.sendAndFinish(.init(status: .contentTooLarge))
                     return
                 }
-                try await responseWriter.writeResponse(.init(status: .ok))
+                try await responseWriter.sendAndFinish(.init(status: .ok))
             },
             httpChannelSetup: .http1(
                 configuration: .init(
@@ -518,6 +549,7 @@ struct HummingbirdCoreTests {
         )
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testChildChannelGracefulShutdown() async throws {
         let handlerPromise = Promise<Void>()
 
@@ -528,12 +560,15 @@ struct HummingbirdCoreTests {
                 configuration: .init(address: .hostname(port: 0)),
                 eventLoopGroup: Self.eventLoopGroup,
                 logger: logger
-            ) { (request, responseWriter: consuming ResponseWriter, _) in
+            ) { (request, responseWriter: consuming ResponseSender, _) in
                 await handlerPromise.complete(())
                 try? await Task.sleep(for: .milliseconds(500))
-                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
-                try await bodyWriter.write(request.body.delayed())
-                try await bodyWriter.finish(nil)
+                var bodyWriter = try await responseWriter.send(.init(status: .ok)).delayed()
+                try await request.body.forEachBuffer { buffer in
+                    try await bodyWriter.write(buffer: &buffer)
+                }
+                try await bodyWriter.finish()
+
             } onServerRunning: {
                 await portPromise.complete($0.localAddress!.port!)
             }
@@ -571,16 +606,19 @@ struct HummingbirdCoreTests {
     /* TODO: Fixup for RequestAsyncReader
 
     /// Test running withInboundCloseHandler with closing input
+    @available(hummingbird 3.0, *)
     @Test func testWithCloseInboundHandlerWithoutClose() async throws {
         try await testServer(
-            responder: { (request, responseWriter: consuming ResponseWriter, _) in
-                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+            responder: { (request, responseWriter: consuming ResponseSender, _) in
+                var bodyWriter = try await responseWriter.send(.init(status: .ok))
                 do {
                     try await request.body.consumeWithInboundCloseHandler { body in
-                        try await bodyWriter.write(body)
+                        try await request.body.forEachBuffer { buffer in
+                            try await bodyWriter.write(buffer: &buffer)
+                        }
                     } onInboundClosed: {
                     }
-                    try await bodyWriter.finish(nil)
+                    try await bodyWriter.finish()
                 } catch {
                     throw error
                 }
@@ -597,12 +635,13 @@ struct HummingbirdCoreTests {
     }
 
     /// Test running withInboundCloseHandler
+    @available(hummingbird 3.0, *)
     @Test func testWithCloseInboundHandler() async throws {
         let handlerPromise = Promise<Void>()
         try await testServer(
-            responder: { (request, responseWriter: consuming ResponseWriter, _) in
+            responder: { (request, responseWriter: consuming ResponseSender, _) in
                 await handlerPromise.complete(())
-                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                var bodyWriter = try await responseWriter.send(.init(status: .ok))
                 let finished = ManagedAtomic(false)
                 try await request.body.consumeWithInboundCloseHandler { body in
                     let body = try await body.collect(upTo: .max)
@@ -612,7 +651,7 @@ struct HummingbirdCoreTests {
                                 break
                             }
                             try await Task.sleep(for: .milliseconds(300))
-                            try await bodyWriter.write(body)
+                            try await bodyWriter.write(buffer: &body)
                         } catch {
                             throw error
                         }
@@ -620,7 +659,7 @@ struct HummingbirdCoreTests {
                 } onInboundClosed: {
                     finished.store(true, ordering: .relaxed)
                 }
-                try await bodyWriter.finish(nil)
+                try await bodyWriter.finish()
             },
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
@@ -634,14 +673,17 @@ struct HummingbirdCoreTests {
     }
 
     /// Test running cancel on inbound close without an inbound close
+    @available(hummingbird 3.0, *)
     @Test func testCancelOnCloseInboundWithoutClose() async throws {
         try await testServer(
-            responder: { (request, responseWriter: consuming ResponseWriter, _) in
-                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+            responder: { (request, responseWriter: consuming ResponseSender, _) in
+                var bodyWriter = try await responseWriter.send(.init(status: .ok))
                 try await request.body.consumeWithCancellationOnInboundClose { body in
-                    try await bodyWriter.write(body)
+                    try await request.body.forEachBuffer { buffer in
+                        try await bodyWriter.write(buffer: &buffer)
+                    }
                 }
-                try await bodyWriter.finish(nil)
+                try await bodyWriter.finish()
             },
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
@@ -655,12 +697,13 @@ struct HummingbirdCoreTests {
     }
 
     /// Test running cancel on inbound close actually cancels on inbound closure
+    @available(hummingbird 3.0, *)
     @Test func testCancelOnCloseInbound() async throws {
         let handlerPromise = Promise<Void>()
         try await testServer(
-            responder: { (request, responseWriter: consuming ResponseWriter, _) in
+            responder: { (request, responseWriter: consuming ResponseSender, _) in
                 await handlerPromise.complete(())
-                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                var bodyWriter = try await responseWriter.send(.init(status: .ok))
                 try await request.body.consumeWithCancellationOnInboundClose { body in
                     let body = try await body.collect(upTo: .max)
                     await #expect(throws: CancellationError.self) {
@@ -668,14 +711,16 @@ struct HummingbirdCoreTests {
                             do {
                                 try Task.checkCancellation()
                                 try await Task.sleep(for: .seconds(1))
-                                try await bodyWriter.write(body)
+                                var bytes = UniqueArray(copying: body.readableBytesUInt8Span)
+
+                                try await bodyWriter.write(buffer: &bytes)
                             } catch {
                                 throw error
                             }
                         }
                     }
                 }
-                try await bodyWriter.finish(nil)
+                try await bodyWriter.finish()
             },
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
@@ -686,29 +731,34 @@ struct HummingbirdCoreTests {
             await handlerPromise.wait()
             try await client.close()
         }
-    }
-    */
+    }*/
 }
 
-struct DelayedAsyncReader: RequestAsyncReader, ~Copyable {
-    var reader: any (RequestAsyncReader & ~Copyable)
+struct DelayResponseAsyncWriter<ParentWriter: ResponseBodyAsyncWriter & ~Copyable>: ResponseBodyAsyncWriter, ~Copyable {
+    mutating nonisolated(nonsending) func write<Buffer>(buffer: inout Buffer) async throws(any Error)
+    where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
+        try await Task.sleep(for: .milliseconds(Int.random(in: 10..<100)))
+        try await self.parentWriter.write(buffer: &buffer)
+    }
 
-    public mutating func read<Return: ~Copyable, Failure: Error>(
-        body: nonisolated(nonsending) (inout UniqueArray<UInt8>, consuming HTTPFields??) async throws(Failure) -> Return
-    ) async throws(EitherError<any Error, Failure>) -> Return {
-        do {
-            return try await reader.read { buffer, trailers in
-                try await Task.sleep(for: .milliseconds(Int.random(in: 10..<100)))
-                return try await body(&buffer, trailers)
-            }
-        } catch {
-            throw .first(error)
-        }
+    nonisolated(nonsending) consuming func finish<Buffer>(buffer: inout Buffer, finalElement: consuming HTTPTypes.HTTPFields?) async throws(any Error)
+    where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
+        try await Task.sleep(for: .milliseconds(Int.random(in: 10..<100)))
+        try await Task.sleep(for: .milliseconds(Int.random(in: 10..<100)))
+        try await self.parentWriter.finish(buffer: &buffer, finalElement: finalElement)
+    }
+
+    var parentWriter: ParentWriter
+}
+
+extension ResponseBodyAsyncWriter where Self: ~Copyable {
+    consuming func delayed() -> AnyResponseBodyAsyncWriter {
+        .init(DelayResponseAsyncWriter(parentWriter: self))
     }
 }
 
-extension RequestBody {
-    func delayed() -> some (RequestAsyncReader & ~Copyable) {
-        DelayedAsyncReader(reader: self.reader)
+extension AnyResponseBodyAsyncWriter {
+    consuming func delayed() -> AnyResponseBodyAsyncWriter {
+        self.writer.take()!.delayed()
     }
 }
