@@ -8,6 +8,7 @@
 
 import BasicContainers
 import Benchmark
+import ContainersPreview
 import HTTPTypes
 import Hummingbird
 import HummingbirdCore
@@ -36,9 +37,16 @@ struct BenchmarkRequestContextSource: RequestContextSource {
 }
 
 /// Writes ByteBuffers to AsyncChannel outbound writer
-struct BenchmarkBodyWriter: Sendable, ResponseBodyWriter {
-    func finish(_: HTTPFields?) async throws {}
-    func write(_: ByteBuffer) async throws {}
+struct BenchmarkBodyWriter: ResponseBodyAsyncWriter {
+    mutating func write<Buffer>(buffer: inout Buffer) async throws(any Error)
+    where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
+
+    }
+
+    func finish<Buffer>(buffer: inout Buffer, finalElement: consuming HTTPTypes.HTTPFields?) async throws(any Error)
+    where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
+
+    }
 }
 
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
@@ -55,6 +63,8 @@ struct BasicRouterBenchmarkContext: RouterRequestContext {
 }
 
 typealias ByteBufferWriter = (ByteBuffer) async throws -> Void
+
+@available(hummingbird 3.0, *)
 extension Benchmark {
     @discardableResult
     convenience init?<ResponderBuilder: HTTPResponderBuilder>(
@@ -119,7 +129,7 @@ extension HTTPField.Name {
     static let test = Self("Test")!
 }
 
-@available(macOS 14, *)
+@available(hummingbird 3.0, *)
 func routerBenchmarks() {
     MetricsSystem.bootstrap(TestMetrics())
     let buffer = ByteBufferAllocator().buffer(repeating: 0xFF, count: 10000)
@@ -165,7 +175,6 @@ func routerBenchmarks() {
         return router
     }
 
-    /* TODO: Fixup for RequestAsyncReader
     Benchmark(
         "Router:Echo",
         configuration: .init(warmupIterations: 10),
@@ -181,17 +190,17 @@ func routerBenchmarks() {
             Response(
                 status: .ok,
                 headers: [:],
-                body: .init { writer in
-                    for try await buffer in request.body {
-                        try await writer.write(buffer)
+                body: .init { (writer: consuming AnyResponseBodyAsyncWriter) in
+                    try await request.body.forEachBuffer { buffer in
+                        try await writer.write(buffer: &buffer)
                     }
-                    try await writer.finish(nil)
+                    try await writer.finish()
                 }
             )
         }
         return router
     }
-    */
+
     Benchmark(
         "Router:CaseInsensitive",
         configuration: .init(warmupIterations: 10),

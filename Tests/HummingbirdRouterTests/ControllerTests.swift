@@ -12,6 +12,7 @@ import HummingbirdTesting
 import Testing
 
 struct ControllerTests {
+    @available(hummingbird 3.0, *)
     @Test func testRouterControllerWithSingleRoute() async throws {
         struct TestController: RouterController {
             typealias Context = BasicRouterRequestContext
@@ -32,6 +33,7 @@ struct ControllerTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testRouterControllerWithMultipleRoutes() async throws {
         struct TestController: RouterController {
             typealias Context = BasicRouterRequestContext
@@ -57,6 +59,7 @@ struct ControllerTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testRouterControllerWithGenericChildren() async throws {
         struct ChildController: RouterController {
             typealias Context = BasicRouterRequestContext
@@ -99,6 +102,7 @@ struct ControllerTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testRouterControllerWithMiddleware() async throws {
         struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
             func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {

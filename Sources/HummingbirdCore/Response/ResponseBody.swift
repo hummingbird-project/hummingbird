@@ -6,16 +6,29 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+public import BasicContainers
+import HTTPAPIs
 import HTTPTypes
-public import NIOCore
+
+/// Used to Box a non-copyable so it can be used in copyable struct
+@usableFromInline
+final class Box<Value: ~Copyable> {
+    @usableFromInline
+    var value: Value
+
+    @usableFromInline
+    init(value: consuming Value) {
+        self.value = value
+    }
+}
 
 /// Response body
-public struct ResponseBody: Sendable {
+public struct ResponseBody {
     @usableFromInline
-    enum _Backing: Sendable {
-        case byteBuffer(ByteBuffer)
+    enum _Backing {
+        case bytes(Box<UniqueArray<UInt8>>)
         case empty
-        case closure(Int?, @Sendable (inout any ResponseBodyWriter) async throws -> Void)
+        case closure(Int?, (consuming AnyResponseBodyAsyncWriter) async throws -> Void)
     }
 
     @usableFromInline
@@ -23,7 +36,7 @@ public struct ResponseBody: Sendable {
 
     public var contentLength: Int? {
         switch _backing {
-        case .byteBuffer(let buf): return buf.readableBytes
+        case .bytes(let buf): return buf.value.count
         case .empty: return 0
         case .closure(let len, _): return len
         }
@@ -44,7 +57,7 @@ public struct ResponseBody: Sendable {
     /// - Parameters:
     ///   - contentLength: Optional length of body
     ///   - write: closure provided with `writer` type that can be used to write to response body
-    public init(contentLength: Int? = nil, _ write: @Sendable @escaping (inout any ResponseBodyWriter) async throws -> Void) {
+    public init(contentLength: Int? = nil, _ write: @escaping (consuming AnyResponseBodyAsyncWriter) async throws -> Void) {
         self._backing = .closure(contentLength, write)
     }
 
@@ -55,53 +68,33 @@ public struct ResponseBody: Sendable {
 
     /// Initialise ResponseBody that contains a single ByteBuffer
     /// - Parameter byteBuffer: ByteBuffer to write
-    public init(byteBuffer: ByteBuffer) {
-        self._backing = .byteBuffer(byteBuffer)
-    }
-
-    /// Initialise ResponseBody that contains a sequence of ByteBuffers
-    /// - Parameter byteBuffers: Sequence of ByteBuffers to write
-    public init<BufferSequence: Sequence & Sendable>(contentsOf byteBuffers: BufferSequence) where BufferSequence.Element == ByteBuffer {
-        let contentLength = byteBuffers.map(\.readableBytes).reduce(0, +)
-        self._backing = .closure(contentLength) { writer in
-            try await writer.write(contentsOf: byteBuffers)
-            try await writer.finish(nil)
-        }
-    }
-
-    /// Initialise ResponseBody with an AsyncSequence of ByteBuffers
-    /// - Parameter asyncSequence: ByteBuffer AsyncSequence
-    public init<BufferSequence: AsyncSequence & Sendable>(asyncSequence: BufferSequence) where BufferSequence.Element == ByteBuffer {
-        self._backing = .closure(nil) { writer in
-            try await writer.write(asyncSequence)
-            try await writer.finish(nil)
-        }
+    public init(_ bytes: consuming UniqueArray<UInt8>) {
+        self._backing = .bytes(.init(value: bytes))
     }
 
     @inlinable
-    public consuming func write(_ writer: consuming any ResponseBodyWriter) async throws {
+    @available(hummingbird 3.0, *)
+    public consuming func write(_ writer: consuming any (ResponseBodyAsyncWriter & ~Copyable)) async throws {
+        let writer = AnyResponseBodyAsyncWriter(writer)
+        try await write(writer)
+    }
+
+    @inlinable
+    @available(hummingbird 3.0, *)
+    public consuming func write(_ writer: consuming AnyResponseBodyAsyncWriter) async throws {
         switch self._backing {
-        case .byteBuffer(let buf):
-            try await writer.write(buf)
-            try await writer.finish(nil)
+        case .bytes(let buf):
+            try await writer.finish(buffer: &buf.value)
         case .empty:
-            try await writer.finish(nil)
+            try await writer.finish()
         case .closure(_, let fn):
-            try await fn(&writer)
+            try await fn(writer)
         }
     }
 
-    /// Returns a ResponseBody containing the results of mapping the given closure over the sequence of
-    /// ByteBuffers written.
-    /// - Parameter transform: A mapping closure applied to every ByteBuffer in ResponseBody
-    /// - Returns: The transformed ResponseBody
-    public consuming func map(_ transform: @escaping @Sendable (ByteBuffer) async throws -> ByteBuffer) -> ResponseBody {
-        let body = self
-        return Self.init { writer in
-            try await body.write(writer.map(transform))
-        }
+    private init(_backing: consuming _Backing) {
+        self._backing = _backing
     }
-
     /// Create new response body that calls a closure once original response body has been written
     /// to the channel
     ///
@@ -109,10 +102,13 @@ public struct ResponseBody: Sendable {
     /// response was written. This functions provides you a method for catching the point when the
     /// response has been fully written. If you drop the response in a middleware run after this
     /// point the post write closure will not get run.
-    package func withPostWriteClosure(_ postWrite: @escaping @Sendable () async -> Void) -> Self {
-        .init(contentLength: self.contentLength) { writer in
+    @available(hummingbird 3.0, *)
+    consuming package func withPostWriteClosure(_ postWrite: @escaping () async -> Void) -> Self {
+        let contentLength = self.contentLength
+        var backing: _Backing? = self._backing
+        return .init(contentLength: contentLength) { writer in
             do {
-                try await self.write(writer)
+                try await ResponseBody(_backing: backing.take()!).write(writer)
                 await postWrite()
             } catch {
                 await postWrite()

@@ -7,6 +7,7 @@
 //
 
 import AsyncHTTPClient
+import HTTPAPIs
 import HTTPTypes
 import HummingbirdCore
 import HummingbirdHTTP2
@@ -23,6 +24,7 @@ import Testing
 import UnixSignals
 
 struct HummingBirdHTTP2Tests {
+    @available(hummingbird 3.0, *)
     @Test func testConnect() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
         defer {
@@ -37,8 +39,8 @@ struct HummingBirdHTTP2Tests {
         tlsConfiguration.certificateVerification = .noHostnameVerification
         try await withHTTPClient(.init(tlsConfiguration: tlsConfiguration)) { httpClient in
             try await testServer(
-                responder: { (_, responseWriter: consuming ResponseWriter, _) in
-                    try await responseWriter.writeResponse(.init(status: .ok))
+                responder: { (_, responseWriter: consuming ResponseSender, _) in
+                    try await responseWriter.sendAndFinish(.init(status: .ok))
                 },
                 httpChannelSetup: .http2Upgrade(tlsConfiguration: getServerTLSConfiguration()),
                 configuration: .init(address: .hostname(port: 0), serverName: testServerName),
@@ -53,6 +55,7 @@ struct HummingBirdHTTP2Tests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testCustomVerify() async throws {
         let verifiedResult = NIOLockedValueBox<NIOSSLVerificationResult>(.certificateVerified)
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
@@ -65,8 +68,8 @@ struct HummingBirdHTTP2Tests {
         var serverTLSConfig = try getServerTLSConfiguration()
         serverTLSConfig.certificateVerification = .noHostnameVerification
         try await testServer(
-            responder: { (_, responseWriter: consuming ResponseWriter, _) in
-                try await responseWriter.writeResponse(.init(status: .ok))
+            responder: { (_, responseWriter: consuming ResponseSender, _) in
+                try await responseWriter.sendAndFinish(.init(status: .ok))
             },
             httpChannelSetup: .http2Upgrade(
                 tlsChannelConfiguration: .init(
@@ -109,6 +112,7 @@ struct HummingBirdHTTP2Tests {
 
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testMultipleSerialRequests() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
         defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
@@ -121,8 +125,8 @@ struct HummingBirdHTTP2Tests {
         tlsConfiguration.certificateVerification = .noHostnameVerification
         try await withHTTPClient(.init(tlsConfiguration: tlsConfiguration)) { httpClient in
             try await testServer(
-                responder: { (_, responseWriter: consuming ResponseWriter, _) in
-                    try await responseWriter.writeResponse(.init(status: .ok))
+                responder: { (_, responseWriter: consuming ResponseSender, _) in
+                    try await responseWriter.sendAndFinish(.init(status: .ok))
                 },
                 httpChannelSetup: .http2Upgrade(tlsConfiguration: getServerTLSConfiguration()),
                 configuration: .init(address: .hostname(port: 0), serverName: testServerName),
@@ -140,6 +144,7 @@ struct HummingBirdHTTP2Tests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testMultipleConcurrentRequests() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
         defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
@@ -152,8 +157,8 @@ struct HummingBirdHTTP2Tests {
         tlsConfiguration.certificateVerification = .noHostnameVerification
         try await withHTTPClient(.init(tlsConfiguration: tlsConfiguration)) { httpClient in
             try await testServer(
-                responder: { (_, responseWriter: consuming ResponseWriter, _) in
-                    try await responseWriter.writeResponse(.init(status: .ok))
+                responder: { (_, responseWriter: consuming ResponseSender, _) in
+                    try await responseWriter.sendAndFinish(.init(status: .ok))
                 },
                 httpChannelSetup: .http2Upgrade(tlsConfiguration: getServerTLSConfiguration()),
                 configuration: .init(address: .hostname(port: 0), serverName: testServerName),
@@ -176,6 +181,7 @@ struct HummingBirdHTTP2Tests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testConnectionClosed() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
         defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
@@ -183,8 +189,8 @@ struct HummingBirdHTTP2Tests {
         logger.logLevel = .trace
 
         try await testServer(
-            responder: { (_, responseWriter: consuming ResponseWriter, _) in
-                try await responseWriter.writeResponse(.init(status: .ok))
+            responder: { (_, responseWriter: consuming ResponseSender, _) in
+                try await responseWriter.sendAndFinish(.init(status: .ok))
             },
             httpChannelSetup: .http2Upgrade(
                 tlsConfiguration: getServerTLSConfiguration()
@@ -207,14 +213,15 @@ struct HummingBirdHTTP2Tests {
         )
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testHTTP1Connect() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
         defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
         var logger = Logger(label: "Hummingbird")
         logger.logLevel = .trace
         try await testServer(
-            responder: { (_, responseWriter: consuming ResponseWriter, _) in
-                try await responseWriter.writeResponse(.init(status: .ok))
+            responder: { (_, responseWriter: consuming ResponseSender, _) in
+                try await responseWriter.sendAndFinish(.init(status: .ok))
             },
             httpChannelSetup: .http2Upgrade(tlsConfiguration: getServerTLSConfiguration()),
             configuration: .init(address: .hostname(port: 0), serverName: testServerName),
@@ -245,6 +252,7 @@ struct HummingBirdHTTP2Tests {
         )
     }
 
+    @available(hummingbird 3.0, *)
     func testChildChannelGracefulShutdown() async throws {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 2)
         defer {
@@ -264,9 +272,9 @@ struct HummingBirdHTTP2Tests {
                     configuration: .init(address: .hostname(port: 0), serverName: testServerName),
                     eventLoopGroup: eventLoopGroup,
                     logger: logger,
-                    responder: { (_, responseWriter: consuming ResponseWriter, _) in
+                    responder: { (_, responseWriter: consuming ResponseSender, _) in
                         try await Task.sleep(for: .seconds(2))
-                        try await responseWriter.writeResponse(.init(status: .ok))
+                        try await responseWriter.sendAndFinish(.init(status: .ok))
                     },
                     onServerRunning: { await promise.complete($0.localAddress!.port!) }
                 )

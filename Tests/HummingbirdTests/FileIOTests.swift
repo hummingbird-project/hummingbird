@@ -40,6 +40,7 @@ struct FileIOTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test(.tempFile(contentSize: 320_003))
     func testReadFileIO() async throws {
         let router = Router()
@@ -57,6 +58,7 @@ struct FileIOTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test(.tempFile(contentSize: 54003))
     func testReadMultipleFilesOnSameConnection() async throws {
         let router = Router()
@@ -127,6 +129,7 @@ struct FileIOTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test(.tempFile(contents: ByteBuffer()))
     func testReadEmptyFile() async throws {
         let router = Router()
@@ -144,6 +147,7 @@ struct FileIOTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test(.tempFile(contents: ByteBuffer()))
     func testReadEmptyFilePart() async throws {
         let router = Router()

@@ -14,6 +14,7 @@ import Testing
 
 extension HTTPTests {
     struct CookieTests {
+        @available(hummingbird 3.0, *)
         @Test func testNameValue() {
             let cookie = Cookie(from: "name=value")
             #expect(cookie?.name == "name")
@@ -21,52 +22,62 @@ extension HTTPTests {
             #expect(cookie?.description == "name=value")
         }
 
+        @available(hummingbird 3.0, *)
         @Test func testPropertyOutput() {
             let cookie = Cookie(from: "name=value; Expires=Wed, 21 Oct 2015 07:28:00 GMT")
             #expect(cookie?.description == "name=value; Expires=Wed, 21 Oct 2015 07:28:00 GMT")
         }
 
+        @available(hummingbird 3.0, *)
         @Test func testExpires() {
             let cookie = Cookie(from: "name=value; Expires=Wed, 21 Oct 2015 07:28:00 GMT")
             #expect(cookie?.expires == Date(httpHeader: "Wed, 21 Oct 2015 07:28:00 GMT"))
         }
 
+        @available(hummingbird 3.0, *)
         @Test func testDomain() {
             let cookie = Cookie(from: "name=value; Domain=test.com")
             #expect(cookie?.domain == "test.com")
         }
 
+        @available(hummingbird 3.0, *)
         @Test func testPath() {
             let cookie = Cookie(from: "name=value; Path=/test")
             #expect(cookie?.path == "/test")
         }
 
+        @available(hummingbird 3.0, *)
         @Test func testMaxAge() {
             let cookie = Cookie(from: "name=value; Max-Age=3600")
             #expect(cookie?.maxAge == 3600)
         }
 
+        @available(hummingbird 3.0, *)
         @Test func testSecure() {
             let cookie = Cookie(from: "name=value; Secure")
             #expect(cookie?.secure == true)
         }
 
+        @available(hummingbird 3.0, *)
         @Test func testHttpOnly() {
             let cookie = Cookie(from: "name=value; HttpOnly")
             #expect(cookie?.httpOnly == true)
         }
 
+        @available(hummingbird 3.0, *)
         @Test func testSameSite() {
             let cookie = Cookie(from: "name=value; SameSite=Strict")
             #expect(cookie?.sameSite == .strict)
         }
 
+        @available(hummingbird 3.0, *)
         @Test func testSingleRequestCookie() throws {
             let cookies = Cookies(from: ["name=value"])
             let cookie = try #require(cookies["name"])
             #expect(cookie.value == "value")
         }
 
+        @available(hummingbird 3.0, *)
         @Test func testMultipleRequestCookie() throws {
             let cookies = Cookies(from: ["name=value; name2=value2"])
             let cookie = try #require(cookies["name"])
@@ -75,6 +86,7 @@ extension HTTPTests {
             #expect(cookie2.value == "value2")
         }
 
+        @available(hummingbird 3.0, *)
         @Test func testMultipleHeadersRequestCookie() throws {
             let cookies = Cookies(from: ["name=value; name2=value2", "name3=value3"])
             let cookie = try #require(cookies["name"])
@@ -85,6 +97,7 @@ extension HTTPTests {
             #expect(cookie3.value == "value3")
         }
 
+        @available(hummingbird 3.0, *)
         @Test func testSetCookie() async throws {
             let router = Router()
             router.post("/") { _, _ -> Response in
@@ -100,6 +113,7 @@ extension HTTPTests {
             }
         }
 
+        @available(hummingbird 3.0, *)
         @Test func testSetCookieViaRequest() async throws {
             let router = Router()
             router.post("/") { _, _ in
@@ -113,6 +127,7 @@ extension HTTPTests {
             }
         }
 
+        @available(hummingbird 3.0, *)
         @Test func testReadCookieFromRequest() async throws {
             let router = Router()
             router.post("/") { request, _ -> String? in
@@ -127,6 +142,7 @@ extension HTTPTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testValidatedCookieSuccess() throws {
         let cookie = try Cookie.validated(name: "session", value: "abcdef1234")
         #expect(cookie.name == "session")
@@ -135,6 +151,7 @@ extension HTTPTests {
         #expect(cookie.secure == false)
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testValidatedCookieWithSameSite() throws {
         let cookie = try Cookie.validated(name: "foo", value: "bar", sameSite: .strict)
         #expect(cookie.name == "foo")
@@ -142,6 +159,7 @@ extension HTTPTests {
         #expect(cookie.sameSite == .strict)
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testValidatedCookieInvalidName() {
         #expect(throws: Cookie.ValidationError.self) {
             try Cookie.validated(name: "invalid;name", value: "value")
@@ -151,6 +169,7 @@ extension HTTPTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testValidatedCookieInvalidValue() {
         #expect(throws: Cookie.ValidationError.self) {
             try Cookie.validated(name: "name", value: "inv\u{7F}alid")

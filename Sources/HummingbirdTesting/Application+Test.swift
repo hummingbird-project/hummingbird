@@ -36,7 +36,7 @@ public struct TestingSetup: Sendable {
 }
 
 /// Extends `ApplicationProtocol` to support testing of applications
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 extension ApplicationProtocol {
     // MARK: Initialization
 
@@ -67,6 +67,7 @@ extension ApplicationProtocol {
     /// - Parameters:
     ///   - testingSetup: indicates which type of testing framework we want
     ///   - test: test function
+    @available(hummingbird 3.0, *)
     public func test<Value>(
         _ testingSetup: TestingSetup,
         _ test: @Sendable (any TestClientProtocol) async throws -> Value

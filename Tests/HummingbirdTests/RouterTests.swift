@@ -7,6 +7,7 @@
 //
 
 import Atomics
+import BasicContainers
 import Hummingbird
 import HummingbirdTesting
 import Logging
@@ -30,11 +31,12 @@ struct RouterTests {
     }
 
     /// Test endpointPath is set
+    @available(hummingbird 3.0, *)
     @Test func testEndpointPath() async throws {
         struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 guard let endpointPath = context.endpointPath else { return try await next(request, context) }
-                return .init(status: .ok, body: .init(byteBuffer: ByteBuffer(string: endpointPath)))
+                return .init(status: .ok, body: .init(UniqueArray(copying: endpointPath.utf8)))
             }
         }
 
@@ -51,11 +53,12 @@ struct RouterTests {
     }
 
     /// Test endpointPath is prefixed with a "/"
+    @available(hummingbird 3.0, *)
     @Test func testEndpointPathPrefix() async throws {
         struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 guard let endpointPath = context.endpointPath else { return try await next(request, context) }
-                return .init(status: .ok, body: .init(byteBuffer: ByteBuffer(string: endpointPath)))
+                return .init(status: .ok, body: .init(UniqueArray(copying: endpointPath.utf8)))
             }
         }
 
@@ -85,6 +88,7 @@ struct RouterTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testConstantCapturesParameterRoute() async throws {
         let router = Router()
 
@@ -104,11 +108,12 @@ struct RouterTests {
     }
 
     /// Test endpointPath doesn't have "/" at end
+    @available(hummingbird 3.0, *)
     @Test func testEndpointPathSuffix() async throws {
         struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
                 guard let endpointPath = context.endpointPath else { return try await next(request, context) }
-                return .init(status: .ok, body: .init(byteBuffer: ByteBuffer(string: endpointPath)))
+                return .init(status: .ok, body: .init(UniqueArray(copying: endpointPath.utf8)))
             }
         }
 
@@ -151,6 +156,7 @@ struct RouterTests {
     }
 
     /// Test correct endpoints are called from group
+    @available(hummingbird 3.0, *)
     @Test func testMethodEndpoint() async throws {
         let router = Router()
         router
@@ -175,6 +181,7 @@ struct RouterTests {
 
     /// Test middle in group is applied to group but not to routes outside
     /// group
+    @available(hummingbird 3.0, *)
     @Test func testGroupMiddleware() async throws {
         let router = Router()
         router
@@ -198,6 +205,7 @@ struct RouterTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testEndpointMiddleware() async throws {
         let router = Router()
         router
@@ -215,6 +223,7 @@ struct RouterTests {
     }
 
     /// Test middleware in parent group is applied to routes in child group
+    @available(hummingbird 3.0, *)
     @Test func testGroupGroupMiddleware() async throws {
         let router = Router()
         router
@@ -233,6 +242,7 @@ struct RouterTests {
     }
 
     /// Test adding middleware to group doesn't affect middleware in parent groups
+    @available(hummingbird 3.0, *)
     @Test func testGroupGroupMiddleware2() async throws {
         struct TestGroupMiddleware: RouterMiddleware {
             let output: String
@@ -272,6 +282,7 @@ struct RouterTests {
     }
 
     /// Test middleware in parent group is applied to routes in child group
+    @available(hummingbird 3.0, *)
     @Test func testTransformingGroupMiddleware() async throws {
         struct TestRouterContext2: RequestContext {
             typealias Source = BasicRequestContext
@@ -311,6 +322,7 @@ struct RouterTests {
     }
 
     /// Test middleware in parent group is applied to routes in child group
+    @available(hummingbird 3.0, *)
     @Test func testThrowingTransformingGroupMiddleware() async throws {
         struct TestRouterContext: RequestContext {
             init(source: Source) {
@@ -362,6 +374,7 @@ struct RouterTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testParameters() async throws {
         let router = Router()
         router
@@ -376,6 +389,7 @@ struct RouterTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testRequireLosslessStringParameter() async throws {
         let router = Router()
         router
@@ -394,6 +408,7 @@ struct RouterTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testRequireRawRepresentableParameter() async throws {
         enum TestEnum: String {
             case this
@@ -415,6 +430,7 @@ struct RouterTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testParameterCollection() async throws {
         let router = Router()
         router
@@ -430,6 +446,7 @@ struct RouterTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testPartialCapture() async throws {
         let router = Router()
         router
@@ -447,6 +464,7 @@ struct RouterTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testPartialWildcard() async throws {
         let router = Router()
         router
@@ -464,6 +482,7 @@ struct RouterTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testRequireLosslessStringQuery() async throws {
         let router = Router()
         router
@@ -482,6 +501,7 @@ struct RouterTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testRequireRawRepresentableQuery() async throws {
         enum TestEnum: String, Codable {
             case this
@@ -506,6 +526,7 @@ struct RouterTests {
     }
 
     /// Test we have a request id and that it increments with each request
+    @available(hummingbird 3.0, *)
     @Test func testRequestId() async throws {
         let router = Router()
         router.get("id") { _, context in
@@ -524,6 +545,7 @@ struct RouterTests {
     }
 
     // Test redirect response
+    @available(hummingbird 3.0, *)
     @Test func testRedirect() async throws {
         let router = Router()
         router.get("redirect") { _, _ in
@@ -539,6 +561,7 @@ struct RouterTests {
     }
 
     // Test route collection added to Router
+    @available(hummingbird 3.0, *)
     @Test func testRouteCollection() async throws {
         let router = Router()
         let routes = RouteCollection()
@@ -555,6 +578,7 @@ struct RouterTests {
     }
 
     // Test route collection added to Router
+    @available(hummingbird 3.0, *)
     @Test func testRouteCollectionInGroup() async throws {
         let router = Router()
         let routes = RouteCollection()
@@ -571,6 +595,7 @@ struct RouterTests {
     }
 
     // Test middleware in route collection
+    @available(hummingbird 3.0, *)
     @Test func testMiddlewareInRouteCollection() async throws {
         let router = Router()
         let routes = RouteCollection()
@@ -589,6 +614,7 @@ struct RouterTests {
     }
 
     // Test middleware in route collection is only applied to routes after middleware
+    @available(hummingbird 3.0, *)
     @Test func testMiddlewareOrderingInRouteCollection() async throws {
         let router = Router()
         let routes = RouteCollection()
@@ -614,6 +640,7 @@ struct RouterTests {
     }
 
     // Test group in route collection
+    @available(hummingbird 3.0, *)
     @Test func testGroupInRouteCollection() async throws {
         let router = Router()
         let routes = RouteCollection()
@@ -633,6 +660,7 @@ struct RouterTests {
     }
 
     // Test case insensitive router works
+    @available(hummingbird 3.0, *)
     @Test func testCaseInsensitive() async throws {
         let router = Router(options: .caseInsensitive)
         router.get("Uppercased") { _, _ in
@@ -672,6 +700,7 @@ struct RouterTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testRecursiveWildcard() async throws {
         let router = Router()
         router.get("/api/v1/**/john") { _, context in
@@ -692,6 +721,7 @@ struct RouterTests {
     }
 
     // Test HEAD endpoints don't have their content-length set to zero
+    @available(hummingbird 3.0, *)
     @Test func testReturningHead() async throws {
         let router = Router(options: .autoGenerateHeadEndpoints)
         router.addMiddleware {
@@ -713,6 +743,7 @@ struct RouterTests {
     }
 
     // Test auto generation of HEAD endpoints works
+    @available(hummingbird 3.0, *)
     @Test func testAutoGenerateHeadEndpoints() async throws {
         let router = Router(options: .autoGenerateHeadEndpoints)
         router.get("nohead") { _, _ in
@@ -743,6 +774,7 @@ struct RouterTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testRouterPathStringInterpolation() async throws {
         let route = "/test"
         let router = Router()
@@ -758,6 +790,7 @@ struct RouterTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testEndpointDescriptions() {
         let router = Router()
         router.get("test") { _, _ in "" }
@@ -785,6 +818,7 @@ struct RouterTests {
         #expect(routes[6].method == .get)
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testValidateOrdering() throws {
         let router = Router()
         router.post("{test}/{what}") { _, _ in "" }
@@ -792,6 +826,7 @@ struct RouterTests {
         try router.validate()
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testValidateParametersVsWildcards() throws {
         let router = Router()
         router.get("test/*") { _, _ in "" }
@@ -799,6 +834,7 @@ struct RouterTests {
         #expect(throws: RouterValidationError(path: "/test/*", override: "/test/{what}")) { try router.validate() }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testValidateParametersVsRecursiveWildcard() throws {
         let router = Router()
         router.get("test/**") { _, _ in "" }
@@ -806,6 +842,7 @@ struct RouterTests {
         #expect(throws: RouterValidationError(path: "/test/**", override: "/test/{what}")) { try router.validate() }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testValidateDifferentParameterNames() throws {
         let router = Router()
         router.get("test/{this}") { _, _ in "" }

@@ -7,6 +7,9 @@
 //
 
 import AsyncHTTPClient
+import BasicContainers
+import ContainersPreview
+import HTTPAPIs
 import HTTPTypes
 import HummingbirdCore
 import HummingbirdTesting
@@ -22,11 +25,12 @@ public enum TestErrors: Error {
 }
 
 /// Basic responder that just returns "Hello" in body
-@Sendable func helloResponder(to request: Request, responseWriter: consuming ResponseWriter, channel: any Channel) async throws {
-    let responseBody = channel.allocator.buffer(string: "Hello")
-    var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
-    try await bodyWriter.write(responseBody)
-    try await bodyWriter.finish(nil)
+@available(hummingbird 3.0, *)
+@Sendable func helloResponder(to request: Request, responseWriter: consuming ResponseSender, channel: any Channel) async throws {
+    var bodyWriter = try await responseWriter.send(.init(status: .ok))
+    var buffer = UniqueArray(copying: "Hello".utf8)
+    try await bodyWriter.write(buffer: &buffer)
+    try await bodyWriter.finish()
 }
 
 /// Helper function for testing a server
@@ -65,9 +69,9 @@ func testServer<Value: Sendable>(
 }
 
 func withHTTPClient<Value>(
-    _ configuration: HTTPClient.Configuration,
+    _ configuration: AsyncHTTPClient.HTTPClient.Configuration,
     eventLoopGroup: any EventLoopGroup = MultiThreadedEventLoopGroup.singleton,
-    _ process: (HTTPClient) async throws -> Value
+    _ process: (AsyncHTTPClient.HTTPClient) async throws -> Value
 ) async throws -> Value {
     let httpClient = HTTPClient(
         eventLoopGroupProvider: .shared(eventLoopGroup),
