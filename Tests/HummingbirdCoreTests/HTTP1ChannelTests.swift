@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import BasicContainers
 import HTTPTypes
 import HummingbirdCore
 import Logging
@@ -22,7 +23,7 @@ struct HTTP1ChannelTests {
             try await writer.writeResponse(
                 .init(
                     status: .ok,
-                    headerFields: [.test: "\(body.readableBytes)", .contentLength: "0"]
+                    headerFields: [.test: "\(body.count)", .contentLength: "0"]
                 )
             )
         }
