@@ -12,7 +12,7 @@ import ContainersPreview
 import HTTPTypes
 import Hummingbird
 import HummingbirdCore
-import HummingbirdRouter
+//import HummingbirdRouter
 import Logging
 import Metrics
 import MetricsTestKit
@@ -246,7 +246,7 @@ func routerBenchmarks() {
         }
         return router
     }
-
+    /* TODO: Re-enable HummingbirdRouter
     Benchmark(
         "RouterBuilder:Middleware",
         configuration: .init(warmupIterations: 10),
@@ -263,4 +263,5 @@ func routerBenchmarks() {
         }
         return router
     }
+    */
 }
