@@ -28,7 +28,7 @@ public struct ApplicationConfiguration: Sendable {
     public var backlog: Int
     /// Allows socket to be bound to an address that is already in use.
     public var reuseAddress: Bool
-    /// Object deciding on when we should accept new connection. Use ``HummingbirdCore/MaximumAvailableConnections``
+    /// Object deciding on when we should accept new connection. Use ``/HummingbirdCore/MaximumAvailableConnections``
     /// to set the maximum allowed connections.
     public var availableConnectionsDelegate: (any AvailableConnectionsDelegate)?
     #if canImport(Network)
@@ -47,7 +47,7 @@ public struct ApplicationConfiguration: Sendable {
     ///         arrives with the queue full, the client may receive an error with an indication of ECONNREFUSE
     ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
     ///   - availableConnectionsDelegate: Object deciding on when we should accept new connection. Use
-    ///         ``HummingbirdCore/MaximumAvailableConnections`` to set the maximum allowed connections.
+    ///         ``/HummingbirdCore/MaximumAvailableConnections`` to set the maximum allowed connections.
     public init(
         address: BindAddress = .hostname(),
         serverName: String? = nil,
@@ -73,7 +73,7 @@ public struct ApplicationConfiguration: Sendable {
     ///   - serverName: Server name to return in "server" header
     ///   - reuseAddress: Allows socket to be bound to an address that is already in use.
     ///   - availableConnectionsDelegate: Object deciding on when we should accept new connection. Use
-    ///         ``HummingbirdCore/MaximumAvailableConnections`` to set the maximum allowed connections.
+    ///         ``/HummingbirdCore/MaximumAvailableConnections`` to set the maximum allowed connections.
     ///   - tlsOptions: TLS options for when you are using NIOTransportServices
     public init(
         address: BindAddress = .hostname(),

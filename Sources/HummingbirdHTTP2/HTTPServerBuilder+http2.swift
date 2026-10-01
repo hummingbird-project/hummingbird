@@ -14,7 +14,7 @@ public import NIOSSL
 extension HTTPServerBuilder {
     /// Build HTTP channel with HTTP2 upgrade
     ///
-    /// Use in ``Hummingbird/Application`` initialization.
+    /// Use in ``/Hummingbird/Application`` initialization.
     /// ```
     /// let app = Application(
     ///     router: router,
@@ -42,7 +42,7 @@ extension HTTPServerBuilder {
 
     /// Build HTTP channel with HTTP2 upgrade
     ///
-    /// Use in ``Hummingbird/Application`` initialization.
+    /// Use in ``/Hummingbird/Application`` initialization.
     /// ```
     /// let app = Application(
     ///     router: router,
@@ -68,7 +68,7 @@ extension HTTPServerBuilder {
 
     /// Build HTTP channel with HTTP2 upgrade
     ///
-    /// Use in ``Hummingbird/Application`` initialization.
+    /// Use in ``/Hummingbird/Application`` initialization.
     /// ```
     /// let app = Application(
     ///     router: router,
@@ -98,7 +98,7 @@ extension HTTPServerBuilder {
     /// Therefore a client will need to know in advance it is connecting to an HTTP2 server. You can
     /// test this with curl as follows: `curl --http2-prior-knowledge http://localhost:8080/`
     ///
-    /// Use in ``Hummingbird/Application`` initialization.
+    /// Use in ``/Hummingbird/Application`` initialization.
     /// ```
     /// let app = Application(
     ///     router: router,

@@ -52,7 +52,7 @@ where Handler.Input == Request, Handler.Output == Response, Handler.Context == C
     ///   - context: RequestContext to convert to
     ///   - builder: RouteGroup builder
     ///
-    /// The ``Hummingbird/RequestContext`` that the group uses must conform to ``Hummingbird/ChildRequestContext``
+    /// The ``/Hummingbird/RequestContext`` that the group uses must conform to ``/Hummingbird/ChildRequestContext``
     /// and the `ParentContext` of that `RequestContext` be the `RequestContext` we are transforming
     /// from eg
     /// ```

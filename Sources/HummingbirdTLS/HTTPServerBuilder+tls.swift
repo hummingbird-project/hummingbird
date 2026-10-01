@@ -13,7 +13,7 @@ public import NIOSSL
 extension HTTPServerBuilder {
     /// Build server supporting HTTP with TLS
     ///
-    /// Use in ``Hummingbird/Application`` initialization.
+    /// Use in ``/Hummingbird/Application`` initialization.
     /// ```
     /// let app = Application(
     ///     router: router,
@@ -36,7 +36,7 @@ extension HTTPServerBuilder {
 
     /// Build server supporting HTTP with TLS
     ///
-    ///  Use in ``Hummingbird/Application`` initialization.
+    ///  Use in ``/Hummingbird/Application`` initialization.
     ///
     ///  This version of the function adds extra configuration including a custom verification callback
     ///  which can be used to override the standard certificate verification.

@@ -8,7 +8,7 @@
 
 public import Hummingbird
 
-/// Router middleware that transforms the ``Hummingbird/RequestContext`` and uses it with the contained
+/// Router middleware that transforms the ``/Hummingbird/RequestContext`` and uses it with the contained
 /// Middleware chain
 ///
 /// For the transform to work the `Source` of the transformed `RequestContext`` needs to be
@@ -57,7 +57,7 @@ where Handler.Input == Request, Handler.Output == Response, Handler.Context == H
     }
 }
 
-/// Router middleware that transforms the ``Hummingbird/RequestContext`` and uses it with the contained
+/// Router middleware that transforms the ``/Hummingbird/RequestContext`` and uses it with the contained
 /// Middleware chain. Used by ``HummingbirdRouter/RouteGroup/init(_:context:builder:)``
 public struct ThrowingContextTransform<
     Context: RouterRequestContext,

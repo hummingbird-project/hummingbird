@@ -29,7 +29,7 @@ extension Request {
         try await self.collectBody(upTo: context.maxUploadSize)
     }
 
-    /// Decode request using decoder stored at ``Hummingbird/RequestContext/requestDecoder``.
+    /// Decode request using decoder stored at ``/Hummingbird/RequestContext/requestDecoder``.
     /// - Parameters
     ///   - type: Type you want to decode to
     ///   - context: Request context

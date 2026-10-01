@@ -10,8 +10,8 @@ public import Hummingbird
 
 /// Route Handler Middleware.
 ///
-/// Requires that the return value of handler conforms to ``Hummingbird/ResponseGenerator`` so
-/// that the `handle` function can return an ``HummingbirdCore/Response``
+/// Requires that the return value of handler conforms to ``/Hummingbird/ResponseGenerator`` so
+/// that the `handle` function can return an ``/HummingbirdCore/Response``
 public struct Handle<HandlerOutput: ResponseGenerator, Context: RouterRequestContext>: Sendable, MiddlewareProtocol {
     public typealias Input = Request
     public typealias Output = Response
@@ -38,7 +38,7 @@ public struct Handle<HandlerOutput: ResponseGenerator, Context: RouterRequestCon
 
 /// Result builder for a Route.
 ///
-/// This is very similar to the ``Hummingbird/MiddlewareFixedTypeBuilder`` result builder except it requires
+/// This is very similar to the ``/Hummingbird/MiddlewareFixedTypeBuilder`` result builder except it requires
 /// the last entry of the builder to be a ``Handle`` so we are guaranteed a Response. It also
 /// adds the ability to pass in a closure instead of ``Handle`` type.
 @resultBuilder

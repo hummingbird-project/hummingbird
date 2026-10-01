@@ -12,7 +12,7 @@ public import ServiceLifecycle
 
 /// Build server that takes an HTTP responder
 ///
-/// Used when building an ``Hummingbird/Application``. It delays the building
+/// Used when building an ``/Hummingbird/Application``. It delays the building
 /// of the ``ServerChildChannel`` and ``Server`` until the HTTP responder has been built.
 public struct HTTPServerBuilder: Sendable {
     /// build child channel from HTTP responder
@@ -49,7 +49,7 @@ public struct HTTPServerBuilder: Sendable {
 extension HTTPServerBuilder {
     ///  Return a `HTTPServerBuilder` that will build a HTTP1 server
     ///
-    /// Use in ``Hummingbird/Application`` initialization.
+    /// Use in ``/Hummingbird/Application`` initialization.
     /// ```
     /// let app = Application(
     ///     router: router,
@@ -70,7 +70,7 @@ extension HTTPServerBuilder {
 
     ///  Return a `HTTPServerBuilder` that will build a HTTP1 server
     ///
-    /// Use in ``Hummingbird/Application`` initialization.
+    /// Use in ``/Hummingbird/Application`` initialization.
     /// ```
     /// let app = Application(
     ///     router: router,

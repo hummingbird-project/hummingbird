@@ -8,7 +8,7 @@
 
 @available(hummingbird 2.0, *)
 extension URLEncodedFormEncoder: ResponseEncoder {
-    /// Extend URLEncodedFormEncoder to support generating a ``HummingbirdCore/Response``. Sets body and header values
+    /// Extend URLEncodedFormEncoder to support generating a ``/HummingbirdCore/Response``. Sets body and header values
     /// - Parameters:
     ///   - value: Value to encode
     ///   - request: Request used to generate response
@@ -29,7 +29,7 @@ extension URLEncodedFormEncoder: ResponseEncoder {
 
 @available(hummingbird 2.0, *)
 extension URLEncodedFormDecoder: RequestDecoder {
-    /// Extend URLEncodedFormDecoder to decode from ``HummingbirdCore/Request``.
+    /// Extend URLEncodedFormDecoder to decode from ``/HummingbirdCore/Request``.
     /// - Parameters:
     ///   - type: Type to decode
     ///   - request: Request to decode from
