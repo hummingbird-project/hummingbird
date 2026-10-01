@@ -82,12 +82,13 @@ struct FileIOTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testWrite() async throws {
         let filename = "testWrite.txt"
         let router = Router()
         router.put("store") { request, context -> HTTPResponse.Status in
             let fileIO = FileIO(threadPool: .singleton)
-            try await fileIO.writeFile(contents: request.body, path: filename, context: context)
+            try await fileIO.writeFile(reader: request.body.reader, path: filename, context: context)
             return .ok
         }
         let app = Application(responder: router.buildResponder())
@@ -106,12 +107,13 @@ struct FileIOTests {
         #expect(String(buffer: contents) == "This is a test")
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testWriteLargeFile() async throws {
         let filename = "testWriteLargeFile.txt"
         let router = Router()
         router.put("store") { request, context -> HTTPResponse.Status in
             let fileIO = FileIO(threadPool: .singleton)
-            try await fileIO.writeFile(contents: request.body, path: filename, context: context)
+            try await fileIO.writeFile(reader: request.body.reader, path: filename, context: context)
             return .ok
         }
         let app = Application(responder: router.buildResponder())

@@ -33,9 +33,10 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
         do {
             var response = try await next(request, context)
             let responseStatus = response.status
+            let method = request.method
             response.body = response.body.withPostWriteClosure {
                 let metrics = self.metricsCache.getEndpointMetrics(
-                    id: .init(endpoint: context.endpointPath ?? "Unknown", method: request.method, status: responseStatus)
+                    id: .init(endpoint: context.endpointPath ?? "Unknown", method: method, status: responseStatus)
                 )
                 metrics.counter.increment()
                 metrics.timer.recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)

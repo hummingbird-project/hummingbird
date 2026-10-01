@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import AsyncStreaming
 import HTTPTypes
 public import Logging
 import NIOConcurrencyHelpers
@@ -44,26 +45,28 @@ extension HTTPChannelHandler {
                         }
 
                         while true {
+                            let readerState = BaseRequestAsyncReader.ReaderState(iterator: iterator)
+                            let reader = BaseRequestAsyncReader(readerState: readerState)
                             let request = Request(
                                 head: head,
-                                bodyIterator: iterator
+                                body: .init(.asyncReader(reader))
                             )
                             let responseWriter = ResponseWriter(outbound: outbound)
-                            try await self.responder(request, responseWriter, asyncChannel.channel)
+                            try await self.handleRequest(request, responseWriter: responseWriter, channel: asyncChannel.channel)
                             if request.headers[.connection] == "close" {
                                 break
                             }
-
+                            guard var recoveredIterator = readerState.takeIterator() else { break }
                             // Flush current request
                             // read until we don't have a body part
                             var part: HTTPRequestPart?
                             while true {
-                                part = try await iterator.next()
+                                part = try await recoveredIterator.next()
                                 guard case .body = part else { break }
                             }
                             // if we have an end then read the next part
                             if case .end = part {
-                                part = try await iterator.next()
+                                part = try await recoveredIterator.next()
                             }
 
                             // if part is nil break out of loop
@@ -74,6 +77,8 @@ extension HTTPChannelHandler {
                             // part should be a head, if not throw error
                             guard case .head(let newHead) = part else { throw HTTPChannelError.unexpectedHTTPPart(part) }
                             head = newHead
+
+                            iterator = recoveredIterator
                         }
                     } catch is HTTPParserError {
                         // if we receive an HTTPParserError write badRequest and close connection
@@ -81,6 +86,9 @@ extension HTTPChannelHandler {
                         logger.debug("HTTP parse error, closing connection")
                         try await outbound.write(.head(.init(status: .badRequest, headerFields: [.connection: "close", .contentLength: "0"])))
                         try await outbound.write(.end(nil))
+                    } catch {
+                        logger.error("\(error)")
+                        throw error
                     }
                     // close outbound and wait for channel to close
                     outbound.finish()
@@ -93,5 +101,14 @@ extension HTTPChannelHandler {
             // we got here because we failed to either read or write to the channel
             logger.trace("Failed to read/write to Channel. Error: \(error)")
         }
+    }
+
+    func handleRequest(
+        _ request: Request,
+        responseWriter: consuming ResponseWriter,
+        channel: any Channel
+    ) async throws {
+        try await self.responder(request, responseWriter, channel)
+        try await request.body.drain()
     }
 }

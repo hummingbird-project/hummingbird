@@ -6,6 +6,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+/* TODO: Fixup for RequestAsyncReader
+
 import NIOCore
 import NIOHTTPTypes
 
@@ -71,3 +73,5 @@ extension RequestBody {
         .init(base: self, underlyingIterator: iterator)
     }
 }
+
+*/
