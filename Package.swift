@@ -17,7 +17,7 @@ var swiftSettings: [SwiftSetting] = [
     .enableUpcomingFeature("InferIsolatedConformances"),
 
     .enableExperimentalFeature("AvailabilityMacro=hummingbird 2.0:macOS 14.0, iOS 17.0, tvOS 17.0, visionOS 1.0, Android 28"),
-    .enableExperimentalFeature("AvailabilityMacro=hummingbird 3.0:anyAppleOS 26.0, Android 28"),
+    .enableExperimentalFeature("AvailabilityMacro=hummingbird 3.0:anyAppleOS 27.0, Android 28"),
 ]
 
 let package = Package(
@@ -34,13 +34,12 @@ let package = Package(
     ],
     traits: [
         .trait(name: "ConfigurationSupport", description: "Enable support for swift-configuration package."),
-        .trait(name: "FullFoundation", description: "Enable functionality that requires full Foundation."),
-        .default(enabledTraits: ["ConfigurationSupport", "FullFoundation"]),
+        .default(enabledTraits: ["ConfigurationSupport"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "1.1.5"),
+        .package(url: "https://github.com/apple/swift-async-algorithms.git", exact: "1.1.5", traits: [.defaults, "UnstableAsyncStreaming"]),
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.0.0"),
-        .package(url: "https://github.com/apple/swift-collections.git", from: "1.0.0", traits: [.defaults, "UnstableContainersPreview"]),
+        .package(url: "https://github.com/apple/swift-collections.git", exact: "1.6.0", traits: [.defaults, "UnstableContainersPreview"]),
         .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.2", traits: []),
         .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.3.0"),
         .package(url: "https://github.com/apple/swift-http-types.git", from: "1.0.0"),
@@ -53,7 +52,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.20.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.0.0"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.30.0"),
-        .package(url: "https://github.com/apple/swift-http-api-proposal.git", from: "0.1.0"),
+        .package(url: "https://github.com/apple/swift-http-api-proposal.git", from: "0.2.1"),
     ],
     targets: [
         .target(

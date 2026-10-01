@@ -255,6 +255,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testResponseBodySequence() async throws {
         let router = Router()
         router
@@ -361,6 +362,7 @@ struct ApplicationTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testDoubleStreaming() async throws {
         let router = Router()
         router.post("size") { request, context -> String in

@@ -113,6 +113,7 @@ public struct FileIO: Sendable {
     ///   - reader: AsyncReader to read buffers from
     ///   - path: Path to write to
     ///   - context: Request Context
+    @available(hummingbird 3.0, *)
     public func writeFile<Reader: AsyncReader & ~Copyable>(
         reader: consuming Reader,
         path: String,

@@ -65,6 +65,7 @@ public final class RequestBody {
     }
 }
 
+@available(hummingbird 3.0, *)
 extension RequestBody {
     public typealias ReadElement = UInt8
     public typealias Buffer = UniqueArray<UInt8>

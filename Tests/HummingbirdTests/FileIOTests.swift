@@ -82,6 +82,7 @@ struct FileIOTests {
         }
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testWrite() async throws {
         let filename = "testWrite.txt"
         let router = Router()
@@ -106,6 +107,7 @@ struct FileIOTests {
         #expect(String(buffer: contents) == "This is a test")
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testWriteLargeFile() async throws {
         let filename = "testWriteLargeFile.txt"
         let router = Router()
