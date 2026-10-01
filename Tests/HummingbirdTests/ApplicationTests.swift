@@ -908,8 +908,7 @@ struct ApplicationTests {
             }
         }
     }
-    */
-    /* TODO: Fixup for AsyncWriter
+
     /// Test AsyncSequence returned by RequestBody.makeStream() and feeding it data from multiple processes
     @available(hummingbird 3.0, *)
     @Test func testMakeStreamMultipleSources() async throws {
@@ -961,7 +960,9 @@ struct ApplicationTests {
             }
         }
     }
+    */
 
+    /* TODO: Fixup for RequestAsyncReader
     /// Test consumeWithInboundCloseHandler
     @available(hummingbird 3.0, *)
     @Test func testConsumeWithInboundHandler() async throws {

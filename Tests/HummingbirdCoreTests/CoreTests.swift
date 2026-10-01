@@ -548,7 +548,6 @@ struct HummingbirdCoreTests {
             }
         )
     }
-    /* TODO: Fixup for RequestAsyncReader
 
     @available(hummingbird 3.0, *)
     @Test func testChildChannelGracefulShutdown() async throws {
@@ -565,9 +564,8 @@ struct HummingbirdCoreTests {
                 await handlerPromise.complete(())
                 try? await Task.sleep(for: .milliseconds(500))
                 var bodyWriter = try await responseWriter.send(.init(status: .ok)).delayed()
-                for try await buffer in request.body {
-                    var bytes = UniqueArray(copying: buffer.readableBytesUInt8Span)
-                    try await bodyWriter.write(buffer: &bytes)
+                try await request.body.forEachBuffer { buffer in
+                    try await bodyWriter.write(buffer: &buffer)
                 }
                 try await bodyWriter.finish()
 
@@ -604,7 +602,7 @@ struct HummingbirdCoreTests {
             try await group.waitForAll()
         }
     }
-    */
+
     /* TODO: Fixup for RequestAsyncReader
 
     /// Test running withInboundCloseHandler with closing input
@@ -615,9 +613,8 @@ struct HummingbirdCoreTests {
                 var bodyWriter = try await responseWriter.send(.init(status: .ok))
                 do {
                     try await request.body.consumeWithInboundCloseHandler { body in
-                        for try await buffer in body {
-                            var bytes = UniqueArray(copying: buffer.readableBytesUInt8Span)
-                            try await bodyWriter.write(buffer: &bytes)
+                        try await request.body.forEachBuffer { buffer in
+                            try await bodyWriter.write(buffer: &buffer)
                         }
                     } onInboundClosed: {
                     }
@@ -654,8 +651,7 @@ struct HummingbirdCoreTests {
                                 break
                             }
                             try await Task.sleep(for: .milliseconds(300))
-                            var bytes = UniqueArray(copying: body.readableBytesUInt8Span)
-                            try await bodyWriter.write(buffer: &bytes)
+                            try await bodyWriter.write(buffer: &body)
                         } catch {
                             throw error
                         }
@@ -683,9 +679,8 @@ struct HummingbirdCoreTests {
             responder: { (request, responseWriter: consuming ResponseSender, _) in
                 var bodyWriter = try await responseWriter.send(.init(status: .ok))
                 try await request.body.consumeWithCancellationOnInboundClose { body in
-                    for try await buffer in body {
-                        var bytes = UniqueArray(copying: buffer.readableBytesUInt8Span)
-                        try await bodyWriter.write(buffer: &bytes)
+                    try await request.body.forEachBuffer { buffer in
+                        try await bodyWriter.write(buffer: &buffer)
                     }
                 }
                 try await bodyWriter.finish()

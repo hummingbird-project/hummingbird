@@ -31,22 +31,20 @@ if #available(hummingbird 3.0, *) {
         "Hello, world"
     }
 
-    /* TODO: Fixup for AsyncWriter/RequestAsyncReader
     // request with a body
     // ./wrk -c 128 -d 15s -t 8 -s scripts/post.lua http://localhost:8080
     router.post { request, _ in
         Response(
             status: .ok,
             body: .init { (writer: consuming AnyResponseBodyAsyncWriter) in
-                for try await buffer in request.body {
-                    var bytes = UniqueArray(copying: buffer.readableBytesUInt8Span)
-                    try await writer.write(buffer: &bytes)
+                try await request.body.forEachBuffer { buffer in
+                    try await writer.write(buffer: &buffer)
                 }
                 try await writer.finish()
             }
         )
     }
-    */
+
     struct Object: ResponseEncodable {
         let message: String
     }
