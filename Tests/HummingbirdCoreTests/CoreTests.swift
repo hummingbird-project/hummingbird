@@ -300,9 +300,8 @@ struct HummingbirdCoreTests {
         try await testServer(
             responder: { (request, responseWriter: consuming ResponseSender, _) in
                 var bodyWriter = try await responseWriter.send(.init(status: .ok)).delayed()
-                for try await buffer in request.body {
-                    var bytes = UniqueArray(copying: buffer.readableBytesUInt8Span)
-                    try await bodyWriter.write(buffer: &bytes)
+                try await request.body.forEachBuffer { buffer in
+                    try await bodyWriter.write(buffer: &buffer)
                 }
                 try await bodyWriter.finish()
             },
