@@ -19,14 +19,6 @@ public protocol HTTPResponder<Context>: Sendable {
     func respond(to request: Request, writer: consuming some (ResponseWriter & ~Copyable), context: Context) async throws
 }
 
-/*@available(hummingbird 3.0, *)
-extension HTTPResponder {
-    @inlinable
-    public func respond(to request: Request, writer: consuming some (ResponseWriter & ~Copyable), context: Context) async throws {
-        try await self.respond(to: request, writer: AnyResponseWriter(writer), context: context)
-    }
-}*/
-
 /// Responder that calls supplied closure
 @available(hummingbird 3.0, *)
 public struct CallbackResponder<Context>: HTTPResponder<Context> {
