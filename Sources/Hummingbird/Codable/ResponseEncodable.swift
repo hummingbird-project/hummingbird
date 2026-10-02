@@ -21,7 +21,7 @@ public protocol ResponseCodable: ResponseEncodable, Decodable {}
 @available(hummingbird 3.0, *)
 extension ResponseEncodable {
     public func writeResponse(from request: Request, writer: consuming some ResponseWriter & ~Copyable, context: some RequestContext) async throws {
-        try await context.responseEncoder.sendValue(self, from: request, writer: writer, context: context)
+        try await context.responseEncoder.sendEncoded(self, from: request, writer: writer, context: context)
     }
 }
 
@@ -33,7 +33,7 @@ extension Array: ResponseGenerator where Element: Encodable {}
 @available(hummingbird 3.0, *)
 extension Array: ResponseEncodable where Element: Encodable {
     public func writeResponse(from request: Request, writer: consuming some ResponseWriter & ~Copyable, context: some RequestContext) async throws {
-        try await context.responseEncoder.sendValue(self, from: request, writer: writer, context: context)
+        try await context.responseEncoder.sendEncoded(self, from: request, writer: writer, context: context)
     }
 }
 
@@ -45,6 +45,6 @@ extension Dictionary: ResponseGenerator where Key: Encodable, Value: Encodable {
 @available(hummingbird 3.0, *)
 extension Dictionary: ResponseEncodable where Key: Encodable, Value: Encodable {
     public func writeResponse(from request: Request, writer: consuming some ResponseWriter & ~Copyable, context: some RequestContext) async throws {
-        try await context.responseEncoder.sendValue(self, from: request, writer: writer, context: context)
+        try await context.responseEncoder.sendEncoded(self, from: request, writer: writer, context: context)
     }
 }

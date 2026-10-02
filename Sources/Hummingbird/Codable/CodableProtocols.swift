@@ -18,7 +18,7 @@ public protocol ResponseEncoder {
     ///   - value: value to encode
     ///   - request: request that generated this value
     ///   - context: Request context
-    func sendValue(
+    func sendEncoded(
         _ value: some Encodable,
         from request: Request,
         writer: consuming some (ResponseWriter & ~Copyable),

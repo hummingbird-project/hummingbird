@@ -19,12 +19,13 @@ public import Foundation
 
 @available(hummingbird 3.0, *)
 extension JSONEncoder: ResponseEncoder {
-    /// Extend JSONEncoder to support generating a ``HummingbirdCore/Response``. Sets body and header values
+    /// Extend JSONEncoder to support writing a HTTP response using a ResponseWriter
     /// - Parameters:
     ///   - value: Value to encode
     ///   - request: Request used to generate response
+    ///   - writer: Response writer to write responses to underlying transport
     ///   - context: Request context
-    public func sendValue(
+    public func sendEncoded(
         _ value: some Encodable,
         from request: Request,
         writer: consuming some (ResponseWriter & ~Copyable),

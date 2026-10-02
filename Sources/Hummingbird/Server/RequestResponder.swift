@@ -15,7 +15,12 @@ import ServiceContextModule
 @available(hummingbird 3.0, *)
 public protocol HTTPResponder<Context>: Sendable {
     associatedtype Context
-    /// Return response to the request supplied
+    /// Respond to request supplied
+    ///
+    /// - Parameters:
+    ///   - request: HTTP request
+    ///   - writer: Response writer to write responses to underlying transport
+    ///   - context: Request context
     func respond(to request: Request, writer: consuming some (ResponseWriter & ~Copyable), context: Context) async throws
 }
 
@@ -28,6 +33,12 @@ public struct CallbackResponder<Context>: HTTPResponder<Context> {
         self.callback = callback
     }
 
+    /// Respond to request supplied
+    ///
+    /// - Parameters:
+    ///   - request: HTTP request
+    ///   - writer: Response writer to write responses to underlying transport
+    ///   - context: Request context
     public func respond(to request: Request, writer: consuming some (ResponseWriter & ~Copyable), context: Context) async throws {
         try await self.callback(request, writer.consumeAsAny(), context)
     }

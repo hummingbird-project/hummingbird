@@ -63,7 +63,7 @@ public struct HTTPError: Error, HTTPResponseError, Sendable {
     public func writeResponse(from request: Request, writer: consuming some ResponseWriter & ~Copyable, context: some RequestContext) async throws {
         if let body {
             let codable = CodableFormat(error: CodableFormat.ErrorFormat(message: body))
-            return try await context.responseEncoder.sendValue(
+            return try await context.responseEncoder.sendEncoded(
                 codable,
                 from: request,
                 writer: EditHeadResponseWriter(writer) { response in
