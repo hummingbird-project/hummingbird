@@ -774,6 +774,28 @@ struct RouterTests {
     }
 
     @available(hummingbird 3.0, *)
+    @Test func testResponseWriter() async throws {
+        let router = Router()
+        router.on("/responseWriter", method: .get) { _, writer, _ in
+            var bodyWriter = try await writer.send(.init(status: .ok))
+            let output = "Hello World!"
+            let index = output.firstIndex(of: "W")!
+            var buffer1 = UniqueArray(copying: output[..<index].utf8)
+            var buffer2 = UniqueArray(copying: output[index...].utf8)
+            try await bodyWriter.write(buffer: &buffer1)
+            try await bodyWriter.write(buffer: &buffer2)
+            try await bodyWriter.finish()
+        }
+        let app = Application(responder: router.buildResponder())
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/responseWriter", method: .get) { response in
+                #expect(response.status == .ok)
+                #expect(String(buffer: response.body) == "Hello World!")
+            }
+        }
+    }
+
+    @available(hummingbird 3.0, *)
     @Test func testRouterPathStringInterpolation() async throws {
         let route = "/test"
         let router = Router()

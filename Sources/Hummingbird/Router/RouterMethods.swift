@@ -47,6 +47,17 @@ extension RouterMethods {
         return self
     }
 
+    /// Add path for async closure
+    @discardableResult public func on(
+        _ path: RouterPath,
+        method: HTTPRequest.Method,
+        use closure: @Sendable @escaping (Request, consuming AnyResponseWriter, Context) async throws -> Void
+    ) -> Self {
+        let responder = CallbackResponder<Context>(callback: closure)
+        self.on(path, method: method, responder: responder)
+        return self
+    }
+
     /// Return a group inside the current group
     /// - Parameter path: path prefix to add to routes inside this group
     public func group(_ path: RouterPath = "") -> RouterGroup<Context> {
