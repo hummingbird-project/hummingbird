@@ -34,7 +34,7 @@ struct RouterTests {
             context: Context,
             next: (Input, consuming Writer, Context) async throws -> Void
         ) async throws {
-            try await next(request, .init(EditHeaderResponseWriter(writer, { response in editResponse(&response, context) })), context)
+            try await next(request, .init(EditHeadResponseWriter(writer, { response in editResponse(&response, context) })), context)
         }
     }
 

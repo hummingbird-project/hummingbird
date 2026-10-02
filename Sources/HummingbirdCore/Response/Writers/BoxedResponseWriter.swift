@@ -10,9 +10,23 @@ import ContainersPreview
 public import HTTPAPIs
 public import HTTPTypes
 
-/// Wrapper for existential ResponseWriter
+/// Box ResponseWriter in a class, to avoid losing it when it is consumed.
+///
+/// This is useful for situations where responding to the errors a handler throws requires writing
+/// a response. If the handler had already starting writing a response then the boxed ResponseWriter
+/// will not be available.
+/// ```
+/// let boxedWriter = BoxedResponseWriter(writer: writer)
+/// do {
+///     try await next(request, boxedWriter, context)
+/// } catch {
+///     if let writer = boxedWriter.take() {
+///         try await writer.sendAndFinish(.init(status: .badRequest))
+///     }
+/// }
+/// ```
 @available(hummingbird 3.0, *)
-public final class ReusableResponseWriter<Writer: ResponseWriter & ~Copyable>: ResponseWriter {
+public final class BoxedResponseWriter<Writer: ResponseWriter & ~Copyable>: ResponseWriter {
     public init(writer: consuming Writer) {
         self.writer = consume writer
     }

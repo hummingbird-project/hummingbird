@@ -10,8 +10,11 @@ import ContainersPreview
 public import HTTPAPIs
 public import HTTPTypes
 
+/// ResponseWriter that edits the response head written to it
+///
+/// Before the response head is written it calls the `edit` closure with an `inout HTTPResponse`
 @available(hummingbird 3.0, *)
-public struct EditHeaderResponseWriter<Sender: ResponseWriter & ~Copyable>: ResponseWriter, ~Copyable {
+public struct EditHeadResponseWriter<Sender: ResponseWriter & ~Copyable>: ResponseWriter, ~Copyable {
     @inlinable
     package init(_ sender: consuming Sender, _ edit: @escaping (inout HTTPResponse) async throws -> Void) {
         self.sender = consume sender
