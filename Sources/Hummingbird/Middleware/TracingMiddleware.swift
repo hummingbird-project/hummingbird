@@ -67,91 +67,105 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
         self.attributes = attributes
     }
 
-    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+    public func handle(
+        _ request: Request,
+        writer: consuming AnyResponseWriter,
+        context: Context,
+        next: (Request, consuming AnyResponseWriter, Context) async throws -> Void
+    ) async throws {
         var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
         InstrumentationSystem.instrument.extract(request.headers, into: &serviceContext, using: HTTPHeadersExtractor())
 
         // span name is updated after route has run
         let operationName = "HTTP \(request.method.rawValue) route not found"
 
-        let span = startSpan(operationName, context: serviceContext, ofKind: .server)
-        span.updateAttributes { attributes in
-            if let staticAttributes = self.attributes {
-                attributes.merge(staticAttributes)
+        var writer: AnyResponseWriter? = writer
+        return try await withSpan(operationName, context: serviceContext, ofKind: .server) { span in
+            span.updateAttributes { attributes in
+                updateSpanAttributes(&attributes, request: request, context: context)
             }
-            attributes["http.request.method"] = request.method.rawValue
-            attributes["url.path"] = request.uri.path
-            if self.queryParametersToRedact.isEmpty {
-                attributes["url.query"] = request.uri.query
-            } else {
-                attributes["url.query"] = request.uri.queryParameters
-                    .lazy
-                    .map { (key, value) in
-                        self.queryParametersToRedact.contains(key) ? "\(key)=REDACTED" : "\(key)=\(value)"
-                    }
-                    .joined(separator: "&")
-            }
-            // TODO: Get HTTP version and scheme
-            // attributes["http.flavor"] = "\(request.version.major).\(request.version.minor)"
-            // attributes["url.scheme"] = request.uri.scheme?.rawValue
-            attributes["user_agent.original"] = request.headers[.userAgent]
-            attributes["http.request.body.size"] = request.headers[.contentLength].map { Int($0) } ?? nil
 
-            if let remoteAddress = (context as? any RemoteAddressRequestContext)?.remoteAddress {
-                attributes["net.sock.peer.port"] = remoteAddress.port
+            do {
+                return try await ServiceContext.$current.withValue(span.context) {
+                    try await next(
+                        request,
+                        .init(
+                            EditHeaderResponseWriter(writer.take()!) { response in
+                                if let endpointPath = context.endpointPath {
+                                    span.operationName = endpointPath
+                                }
+                                span.updateAttributes { attributes in
+                                    attributes["http.route"] = context.endpointPath
+                                    attributes = self.recordHeaders(
+                                        response.headerFields,
+                                        toSpanAttributes: attributes,
+                                        withPrefix: "http.response.header."
+                                    )
 
-                switch remoteAddress.protocol {
-                case .inet:
-                    attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
-                case .inet6:
-                    attributes["net.sock.family"] = "inet6"
-                    attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
-                case .unix:
-                    attributes["net.sock.family"] = "unix"
-                    attributes["net.sock.peer.addr"] = remoteAddress.pathname
-                default:
-                    break
+                                    attributes["http.response.status_code"] = Int(response.status.code)
+                                    attributes["http.response.body.size"] = response.headerFields[.contentLength].flatMap { Int($0) }
+                                }
+                            }
+                        ),
+                        context
+                    )
                 }
-            }
-            attributes = self.recordHeaders(request.headers, toSpanAttributes: attributes, withPrefix: "http.request.header.")
-        }
-
-        do {
-            return try await ServiceContext.$current.withValue(span.context) {
-                var response = try await next(request, context)
+            } catch {
                 if let endpointPath = context.endpointPath {
                     span.operationName = endpointPath
                 }
+                let statusCode = (error as? any HTTPResponseError)?.status.code ?? 500
                 span.updateAttributes { attributes in
                     attributes["http.route"] = context.endpointPath
-                    attributes = self.recordHeaders(response.headers, toSpanAttributes: attributes, withPrefix: "http.response.header.")
-
-                    attributes["http.response.status_code"] = Int(response.status.code)
-                    attributes["http.response.body.size"] = response.body.contentLength
+                    attributes["http.response.status_code"] = statusCode
                 }
-                let spanWrapper = UnsafeTransfer(SpanWrapper(span))
-                response.body = response.body.withPostWriteClosure {
-                    spanWrapper.wrappedValue.end()
+                if 500..<600 ~= statusCode {
+                    span.setStatus(.init(code: .error))
                 }
-
-                return response
+                throw error
             }
-        } catch {
-            if let endpointPath = context.endpointPath {
-                span.operationName = endpointPath
-            }
-            let statusCode = (error as? any HTTPResponseError)?.status.code ?? 500
-            span.updateAttributes { attributes in
-                attributes["http.route"] = context.endpointPath
-                attributes["http.response.status_code"] = statusCode
-            }
-            if 500..<600 ~= statusCode {
-                span.setStatus(.init(code: .error))
-            }
-            span.recordError(error)
-            span.end()
-            throw error
         }
+    }
+
+    func updateSpanAttributes(_ attributes: inout SpanAttributes, request: Request, context: Context) {
+        if let staticAttributes = self.attributes {
+            attributes.merge(staticAttributes)
+        }
+        attributes["http.request.method"] = request.method.rawValue
+        attributes["url.path"] = request.uri.path
+        if self.queryParametersToRedact.isEmpty {
+            attributes["url.query"] = request.uri.query
+        } else {
+            attributes["url.query"] = request.uri.queryParameters
+                .lazy
+                .map { (key, value) in
+                    self.queryParametersToRedact.contains(key) ? "\(key)=REDACTED" : "\(key)=\(value)"
+                }
+                .joined(separator: "&")
+        }
+        // TODO: Get HTTP version and scheme
+        // attributes["http.flavor"] = "\(request.version.major).\(request.version.minor)"
+        // attributes["url.scheme"] = request.uri.scheme?.rawValue
+        attributes["user_agent.original"] = request.headers[.userAgent]
+        attributes["http.request.body.size"] = request.headers[.contentLength].map { Int($0) } ?? nil
+
+        if let remoteAddress = (context as? any RemoteAddressRequestContext)?.remoteAddress {
+            attributes["net.sock.peer.port"] = remoteAddress.port
+
+            switch remoteAddress.protocol {
+            case .inet:
+                attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
+            case .inet6:
+                attributes["net.sock.family"] = "inet6"
+                attributes["net.sock.peer.addr"] = remoteAddress.ipAddress
+            case .unix:
+                attributes["net.sock.family"] = "unix"
+                attributes["net.sock.peer.addr"] = remoteAddress.pathname
+            default:
+                break
+            }
+        }
+        attributes = self.recordHeaders(request.headers, toSpanAttributes: attributes, withPrefix: "http.request.header.")
     }
 
     func recordHeaders(_ headers: HTTPFields, toSpanAttributes attributes: SpanAttributes, withPrefix prefix: String) -> SpanAttributes {
@@ -193,6 +207,7 @@ private class SpanWrapper {
 ///
 /// If you want the TracingMiddleware to record the remote address of requests
 /// then your request context will need to conform to this protocol
+@available(hummingbird 3.0, *)
 public protocol RemoteAddressRequestContext: RequestContext {
     /// Connected host address
     var remoteAddress: SocketAddress? { get }

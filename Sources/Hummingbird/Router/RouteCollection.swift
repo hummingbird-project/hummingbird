@@ -7,6 +7,7 @@
 //
 
 public import HTTPTypes
+public import HummingbirdCore
 
 /// Collection of routes
 @available(hummingbird 3.0, *)
@@ -38,7 +39,7 @@ public final class RouteCollection<Context: RequestContext>: RouterMethods {
     ///
     /// This middleware will only be applied to endpoints added after this call.
     /// - Parameter middleware: Middleware we are adding
-    @discardableResult public func add(middleware: any MiddlewareProtocol<Request, Response, Context>) -> Self {
+    @discardableResult public func add(middleware: any MiddlewareProtocol<Request, AnyResponseWriter, Context>) -> Self {
         self.middlewares.add(middleware)
         return self
     }

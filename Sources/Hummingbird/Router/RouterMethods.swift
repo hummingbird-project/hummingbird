@@ -31,7 +31,7 @@ public protocol RouterMethods<Context>: _HB_SendableMetatype {
     ///
     /// This middleware will only be applied to endpoints added after this call.
     /// - Parameter middleware: Middleware we are adding
-    func add(middleware: any MiddlewareProtocol<Request, Response, Context>) -> Self
+    func add(middleware: any MiddlewareProtocol<Request, AnyResponseWriter, Context>) -> Self
 }
 
 @available(hummingbird 3.0, *)
@@ -126,7 +126,9 @@ extension RouterMethods {
     /// - Parameter buildMiddlewareStack: Middleware stack result builder
     /// - Returns: router
     @discardableResult public func addMiddleware(
-        @MiddlewareFixedTypeBuilder<Request, Response, Context> buildMiddlewareStack: () -> some MiddlewareProtocol<Request, Response, Context>
+        @MiddlewareFixedTypeBuilder<Request, AnyResponseWriter, Context> buildMiddlewareStack: () -> some MiddlewareProtocol<
+            Request, AnyResponseWriter, Context
+        >
     ) -> Self {
         self.add(middleware: buildMiddlewareStack())
     }
@@ -182,9 +184,9 @@ extension RouterMethods {
     internal func constructResponder(
         use closure: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
     ) -> CallbackResponder<Context> {
-        CallbackResponder { request, context in
+        CallbackResponder { request, writer, context in
             let output = try await closure(request, context)
-            return try output.response(from: request, context: context)
+            try await output.writeResponse(from: request, writer: writer, context: context)
         }
     }
 }

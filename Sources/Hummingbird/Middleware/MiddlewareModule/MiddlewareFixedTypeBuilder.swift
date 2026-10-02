@@ -18,42 +18,43 @@
 /// context and output types passed through the middleware stack are fixed and cannot be changed.
 @resultBuilder
 public enum MiddlewareFixedTypeBuilder<Input, Writer: ~Copyable, Context> {
-    public static func buildExpression<M0: MiddlewareProtocol>(_ m0: M0) -> M0 where M0.Input == Input, M0.Writer == Writer, M0.Context == Context {
+    public static func buildExpression<M0: MiddlewareProtocol>(_ m0: M0) -> M0
+    where M0.Input == Input, M0.Writer == Writer, M0.Context == Context, M0.Writer: ~Copyable {
         m0
     }
 
-    public static func buildBlock<M0: MiddlewareProtocol>(_ m0: M0) -> M0 {
+    public static func buildBlock<M0: MiddlewareProtocol>(_ m0: M0) -> M0 where M0.Writer: ~Copyable {
         m0
     }
 
-    public static func buildPartialBlock<M0: MiddlewareProtocol>(first: M0) -> M0 {
+    public static func buildPartialBlock<M0: MiddlewareProtocol>(first: M0) -> M0 where M0.Writer: ~Copyable {
         first
     }
 
     public static func buildPartialBlock<M0: MiddlewareProtocol, M1: MiddlewareProtocol>(
         accumulated m0: M0,
         next m1: M1
-    ) -> _Middleware2<M0, M1> where M0.Input == M1.Input, M0.Writer == M1.Writer, M0.Context == M1.Context {
+    ) -> _Middleware2<M0, M1> where M0.Input == M1.Input, M0.Writer == M1.Writer, M0.Context == M1.Context, M0.Writer: ~Copyable {
         _Middleware2(m0, m1)
     }
 
-    public static func buildOptional<M0: MiddlewareProtocol>(_ component: M0?) -> _OptionalMiddleware<M0> {
+    public static func buildOptional<M0: MiddlewareProtocol>(_ component: M0?) -> _OptionalMiddleware<M0> where M0.Writer: ~Copyable {
         _OptionalMiddleware(middleware: component)
     }
 
     public static func buildEither<M0: MiddlewareProtocol>(
         first content: M0
-    ) -> M0 {
+    ) -> M0 where M0.Writer: ~Copyable {
         content
     }
 
     public static func buildEither<M0: MiddlewareProtocol>(
         second content: M0
-    ) -> M0 {
+    ) -> M0 where M0.Writer: ~Copyable {
         content
     }
 
-    public static func buildArray<M0: MiddlewareProtocol>(_ components: [M0]) -> _SpreadMiddleware<M0> {
+    public static func buildArray<M0: MiddlewareProtocol>(_ components: [M0]) -> _SpreadMiddleware<M0> where M0.Writer: ~Copyable {
         _SpreadMiddleware(middlewares: components)
     }
 }

@@ -96,7 +96,7 @@ public final class Router<Context: RequestContext>: RouterMethods, HTTPResponder
     ///
     /// This middleware will only be applied to endpoints added after this call.
     /// - Parameter middleware: Middleware we are adding
-    @discardableResult public func add(middleware: any MiddlewareProtocol<Request, Response, Context>) -> Self {
+    @discardableResult public func add(middleware: any MiddlewareProtocol<Request, AnyResponseWriter, Context>) -> Self {
         self.middlewares.add(middleware)
         return self
     }
@@ -105,7 +105,7 @@ public final class Router<Context: RequestContext>: RouterMethods, HTTPResponder
 /// Responder that return a not found error
 @available(hummingbird 3.0, *)
 struct NotFoundResponder<Context: RequestContext>: HTTPResponder {
-    func respond(to request: Request, context: Context) throws -> Response {
+    func respond(to request: Request, writer: consuming some (ResponseWriter & ~Copyable), context: Context) async throws {
         context.coreContext.endpointPath.value = "NotFound"
         throw HTTPError(.notFound)
     }

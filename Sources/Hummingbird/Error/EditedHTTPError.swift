@@ -6,10 +6,12 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import HTTPAPIs
 import HTTPTypes
 import HummingbirdCore
 
 /// Error generated from another error that adds additional headers to the response
+@available(hummingbird 3.0, *)
 struct EditedHTTPError: HTTPResponseError {
     let originalError: any Error
     var status: HTTPResponse.Status {
@@ -23,13 +25,14 @@ struct EditedHTTPError: HTTPResponseError {
         self.additionalHeaders = additionalHeaders
     }
 
-    func response(from request: Request, context: some RequestContext) throws -> Response {
+    func writeResponse(from request: Request, writer: consuming some ResponseWriter & ~Copyable, context: some RequestContext) async throws {
         if let originalError = originalError as? (any HTTPResponseError) {
-            var response = try originalError.response(from: request, context: context)
-            response.headers.append(contentsOf: self.additionalHeaders)
-            return response
+            return try await originalError.writeResponse(
+                from: request,
+                writer: EditHeaderResponseWriter(writer) { $0.headerFields.append(contentsOf: self.additionalHeaders) },
+                context: context
+            )
         }
-
-        return Response(status: .internalServerError, headers: self.additionalHeaders)
+        try await writer.sendAndFinish(.init(status: .internalServerError, headerFields: self.additionalHeaders))
     }
 }

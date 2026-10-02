@@ -12,6 +12,7 @@ public import HTTPTypes
 ///
 /// By conforming to `HTTPResponseError` you can control how your error will be presented to
 /// the client. Errors not conforming to this will be returned with status internalServerError.
+@available(hummingbird 3.0, *)
 public protocol HTTPResponseError: Error, ResponseGenerator {
     /// status code for the error
     var status: HTTPResponse.Status { get }

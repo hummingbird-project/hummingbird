@@ -7,6 +7,8 @@
 //
 
 import BasicContainers
+import HTTPAPIs
+import HummingbirdCore
 private import NIOFoundationEssentialsCompat
 
 #if canImport(FoundationEssentials)
@@ -15,26 +17,35 @@ public import FoundationEssentials
 public import Foundation
 #endif
 
+@available(hummingbird 3.0, *)
 extension JSONEncoder: ResponseEncoder {
     /// Extend JSONEncoder to support generating a ``HummingbirdCore/Response``. Sets body and header values
     /// - Parameters:
     ///   - value: Value to encode
     ///   - request: Request used to generate response
     ///   - context: Request context
-    public func encode(_ value: some Encodable, from request: Request, context: some RequestContext) throws -> Response {
+    public func sendValue(
+        _ value: some Encodable,
+        from request: Request,
+        writer: consuming some (ResponseWriter & ~Copyable),
+        context: some RequestContext
+    ) async throws {
         let data = try self.encode(value)
-        let buffer = UniqueArray(copying: data)
-        return Response(
-            status: .ok,
-            headers: .defaultHummingbirdHeaders(
-                contentType: "application/json; charset=utf-8",
-                contentLength: data.count
+        var buffer = UniqueArray(copying: data)
+        try await writer.sendAndFinish(
+            .init(
+                status: .ok,
+                headerFields: .defaultHummingbirdHeaders(
+                    contentType: "application/json; charset=utf-8",
+                    contentLength: data.count
+                )
             ),
-            body: .init(buffer)
+            buffer: &buffer
         )
     }
 }
 
+@available(hummingbird 3.0, *)
 extension JSONDecoder: RequestDecoder {
     /// Extend JSONDecoder to decode from ``HummingbirdCore/Request``.
     /// - Parameters:

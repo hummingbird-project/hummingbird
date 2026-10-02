@@ -121,16 +121,18 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
                 let context = self.makeContext(logger)
 
                 group.addTask {
-                    let response: Response
-                    do {
-                        response = try await self.responder.respond(to: request, context: context)
-                    } catch {
-                        response = Response(status: .internalServerError)
-                    }
                     let storage = RouterResponseWriter.Storage()
                     let responseWriter = RouterResponseWriter(storage: storage)
-                    try await response.body.write(responseWriter)
-                    return TestResponse(head: response.head, body: storage.body, trailerHeaders: storage.trailers)
+                    do {
+                        try await self.responder.respond(to: request, writer: responseWriter, context: context)
+                        if let response = storage.response {
+                            return TestResponse(head: response, body: storage.body, trailerHeaders: storage.trailer)
+                        } else {
+                            return TestResponse(head: .init(status: .internalServerError), body: .init(), trailerHeaders: nil)
+                        }
+                    } catch {
+                        return TestResponse(head: .init(status: .internalServerError), body: .init(), trailerHeaders: nil)
+                    }
                 }
 
                 if var body {
@@ -152,31 +154,53 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
     }
 
     @available(hummingbird 3.0, *)
-    struct RouterResponseWriter: ResponseBodyAsyncWriter, ~Copyable {
+    struct RouterResponseWriter: ResponseWriter, ~Copyable {
         final class Storage {
             init() {
+                self.response = nil
                 self.body = .init()
-                self.trailers = nil
+                self.trailer = nil
             }
+            var response: HTTPResponse?
             var body: ByteBuffer
-            var trailers: HTTPFields?
+            var trailer: HTTPFields?
         }
-        mutating func write<Buffer>(buffer: inout Buffer) async throws(any Error)
-        where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
-            self.storage.body.writeBytes(draining: &buffer)
+        struct Writer: ResponseBodyAsyncWriter, ~Copyable {
+            mutating func write<Buffer>(buffer: inout Buffer) async throws(any Error)
+            where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
+                self.storage.body.writeBytes(draining: &buffer)
+            }
+
+            consuming func finish<Buffer>(buffer: inout Buffer, finalElement: consuming HTTPFields?) async throws(any Error)
+            where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
+                self.storage.body.writeBytes(draining: &buffer)
+                self.storage.trailer = finalElement
+            }
+
+            let storage: Storage
+
+            init(storage: Storage) {
+                self.storage = storage
+            }
         }
 
-        consuming func finish<Buffer>(buffer: inout Buffer, finalElement: consuming HTTPFields?) async throws(any Error)
-        where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
-            self.storage.body.writeBytes(draining: &buffer)
-            self.storage.trailers = finalElement
+        mutating func sendInformational(_ response: HTTPTypes.HTTPResponse) async throws {
+            // do nothing
         }
 
-        let storage: Storage
-
-        init(storage: Storage) {
-            self.storage = storage
+        func send(_ response: HTTPTypes.HTTPResponse) async throws -> Writer {
+            self.storage.response = response
+            return Writer(storage: self.storage)
         }
+
+        func sendAndFinish<Buffer>(_ response: HTTPTypes.HTTPResponse, buffer: inout Buffer, trailer: HTTPTypes.HTTPFields?) async throws
+        where Buffer: ContainersPreview.RangeReplaceableContainer, Buffer.Element == UInt8, Buffer: ~Copyable {
+            self.storage.response = response
+            self.storage.body = ByteBuffer(draining: &buffer)
+            self.storage.trailer = trailer
+        }
+
+        var storage: Storage
     }
 }
 

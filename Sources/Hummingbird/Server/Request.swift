@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import HTTPAPIs
 public import HummingbirdCore
 import Logging
 
@@ -15,6 +16,7 @@ public import FoundationEssentials
 public import Foundation
 #endif
 
+@available(hummingbird 3.0, *)
 extension Request {
     /// Decode request using decoder stored at ``Hummingbird/RequestContext/requestDecoder``.
     /// - Parameters
@@ -45,8 +47,29 @@ extension Request {
     }
 }
 
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 extension Request {
+    enum MatchResponse<Generator: ResponseGenerator>: ResponseGenerator {
+        case match(HTTPResponse)
+        case result(HTTPFields, Generator)
+
+        func writeResponse(
+            from request: Request,
+            writer: consuming some ResponseWriter & ~Copyable,
+            context: some RequestContext
+        ) async throws {
+            switch self {
+            case .match(let response):
+                try await writer.sendAndFinish(response)
+            case .result(let headers, let result):
+                try await result.writeResponse(
+                    from: request,
+                    writer: EditHeaderResponseWriter(writer) { $0.headerFields.append(contentsOf: headers) },
+                    context: context
+                )
+            }
+        }
+    }
     /// Conditional request which will only be processed if the eTag supplied is not in the
     /// `If-None-Match` request header.
     ///
@@ -58,12 +81,12 @@ extension Request {
     ///   - context: Request context
     ///   - process: Closure to run if eTag is not in the `If-None-Match` header
     /// - Returns: Response
-    public func ifNoneMatch(
+    public func ifNoneMatch<Generator: ResponseGenerator>(
         headers: HTTPFields = [:],
         eTag: String,
         context: some RequestContext,
-        process: () async throws -> some ResponseGenerator
-    ) async throws -> Response {
+        process: () async throws -> Generator
+    ) async throws -> some ResponseGenerator {
         var headers = headers
         headers[.eTag] = eTag
         let ifNoneMatch = self.headers[values: .ifNoneMatch]
@@ -76,12 +99,11 @@ extension Request {
                     } else {
                         .preconditionFailed
                     }
-                return Response(status: status, headers: headers)
+                return MatchResponse<Generator>.match(.init(status: status, headerFields: headers))
             }
         }
-        var response = try await process().response(from: self, context: context)
-        response.headers.append(contentsOf: headers)
-        return response
+        let response = try await process()
+        return MatchResponse<Generator>.result(headers, response)
     }
 
     /// Conditional request which will only be processed if the eTag supplied is in the
@@ -100,20 +122,19 @@ extension Request {
     ///   - context: Request context
     ///   - process: Closure to run if eTag is not in the `If-None-Match` header
     /// - Returns: Response
-    public func ifMatch(
+    public func ifMatch<Generator: ResponseGenerator>(
         headers: HTTPFields = [:],
         eTag: String,
         context: some RequestContext,
-        process: () async throws -> some ResponseGenerator
-    ) async throws -> Response {
+        process: () async throws -> Generator
+    ) async throws -> some ResponseGenerator {
         var headers = headers
         headers[.eTag] = eTag
         if !self.headers[values: .ifMatch].contains(eTag) {
-            return Response(status: .preconditionFailed, headers: headers)
+            return MatchResponse<Generator>.match(.init(status: .preconditionFailed, headerFields: headers))
         }
-        var response = try await process().response(from: self, context: context)
-        response.headers.append(contentsOf: headers)
-        return response
+        let response = try await process()
+        return MatchResponse<Generator>.result(headers, response)
     }
 
     /// Conditional request which will only be processed if the modification date supplied is after
@@ -127,12 +148,12 @@ extension Request {
     ///   - context: Request context
     ///   - process: Closure to run if eTag is not in the `If-None-Match` header
     /// - Returns: Response
-    public func ifModifiedSince(
+    public func ifModifiedSince<Generator: ResponseGenerator>(
         headers: HTTPFields = [:],
         modificationDate: Date,
         context: some RequestContext,
-        process: () async throws -> some ResponseGenerator
-    ) async throws -> Response {
+        process: () async throws -> Generator
+    ) async throws -> some ResponseGenerator {
         var headers = headers
         headers[.lastModified] = modificationDate.httpHeader
         // `If-Modified-Since` headers are only applied to GET or HEAD requests
@@ -143,14 +164,13 @@ extension Request {
                     let modificationDateTimeInterval = modificationDate.timeIntervalSince1970.rounded(.down)
                     let ifModifiedSinceDateTimeInterval = ifModifiedSinceDate.timeIntervalSince1970
                     if modificationDateTimeInterval <= ifModifiedSinceDateTimeInterval {
-                        return Response(status: .notModified, headers: headers)
+                        return MatchResponse<Generator>.match(.init(status: .notModified, headerFields: headers))
                     }
                 }
             }
         }
-        var response = try await process().response(from: self, context: context)
-        response.headers.append(contentsOf: headers)
-        return response
+        let response = try await process()
+        return MatchResponse<Generator>.result(headers, response)
     }
 
     /// Conditional request which will only be processed if the modification date supplied is before
@@ -166,12 +186,12 @@ extension Request {
     ///   - context: Request context
     ///   - process: Closure to run if eTag is not in the `If-None-Match` header
     /// - Returns: Response
-    public func ifUnmodifiedSince(
+    public func ifUnmodifiedSince<Generator: ResponseGenerator>(
         headers: HTTPFields = [:],
         modificationDate: Date,
         context: some RequestContext,
-        process: () async throws -> some ResponseGenerator
-    ) async throws -> Response {
+        process: () async throws -> Generator
+    ) async throws -> some ResponseGenerator {
         var headers = headers
         headers[.lastModified] = modificationDate.httpHeader
         if let ifUnmodifiedSinceHeader = self.headers[.ifUnmodifiedSince] {
@@ -180,13 +200,12 @@ extension Request {
                 let modificationDateTimeInterval = modificationDate.timeIntervalSince1970.rounded(.down)
                 let ifUnmodifiedSinceDateTimeInterval = ifUnmodifiedSinceDate.timeIntervalSince1970
                 if modificationDateTimeInterval > ifUnmodifiedSinceDateTimeInterval {
-                    return Response(status: .preconditionFailed, headers: headers)
+                    return MatchResponse<Generator>.match(.init(status: .preconditionFailed, headerFields: headers))
                 }
             }
         }
-        var response = try await process().response(from: self, context: context)
-        response.headers.append(contentsOf: headers)
-        return response
+        let response = try await process()
+        return MatchResponse<Generator>.result(headers, response)
     }
 }
 

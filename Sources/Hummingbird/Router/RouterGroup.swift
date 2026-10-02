@@ -39,7 +39,7 @@ public struct RouterGroup<Context: RequestContext>: RouterMethods {
     ///
     /// This middleware will only be applied to endpoints added after this call.
     /// - Parameter middleware: Middleware we are adding
-    @discardableResult public func add(middleware: any MiddlewareProtocol<Request, Response, Context>) -> RouterGroup<Context> {
+    @discardableResult public func add(middleware: any MiddlewareProtocol<Request, AnyResponseWriter, Context>) -> RouterGroup<Context> {
         self.middlewares.add(middleware)
         return self
     }

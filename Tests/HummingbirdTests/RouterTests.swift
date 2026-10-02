@@ -9,6 +9,7 @@
 import Atomics
 import BasicContainers
 import Hummingbird
+import HummingbirdCore
 import HummingbirdTesting
 import Logging
 import NIOCore
@@ -16,38 +17,38 @@ import Testing
 import Tracing
 
 struct RouterTests {
+    @available(hummingbird 3.0, *)
     struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
-        let output: String
+        let editResponse: @Sendable (inout HTTPResponse, Context) -> Void
 
-        init(_ output: String = "TestMiddleware") {
-            self.output = output
+        init(
+            _ editResponse: @escaping @Sendable (inout HTTPResponse, Context) -> Void = { response, _ in
+                response.headerFields[.test] = "TestMiddleware"
+            }
+        ) {
+            self.editResponse = editResponse
         }
-
-        public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-            var response = try await next(request, context)
-            response.headers[.test] = self.output
-            return response
+        public func handle(
+            _ request: Request,
+            writer: consuming AnyResponseWriter,
+            context: Context,
+            next: (Input, consuming Writer, Context) async throws -> Void
+        ) async throws {
+            try await next(request, .init(EditHeaderResponseWriter(writer, { response in editResponse(&response, context) })), context)
         }
     }
 
     /// Test endpointPath is set
     @available(hummingbird 3.0, *)
     @Test func testEndpointPath() async throws {
-        struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
-            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-                guard let endpointPath = context.endpointPath else { return try await next(request, context) }
-                return .init(status: .ok, body: .init(UniqueArray(copying: endpointPath.utf8)))
-            }
-        }
-
         let router = Router()
-        router.middlewares.add(TestEndpointMiddleware())
+        router.middlewares.add(TestMiddleware { response, context in response.headerFields[.test] = context.endpointPath })
         router.get("/test/{number}") { _, _ in "xxx" }
         let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
             try await client.execute(uri: "/test/1", method: .get) { response in
-                #expect(String(buffer: response.body) == "/test/{number}")
+                #expect(response.headers[.test] == "/test/{number}")
             }
         }
     }
@@ -55,15 +56,8 @@ struct RouterTests {
     /// Test endpointPath is prefixed with a "/"
     @available(hummingbird 3.0, *)
     @Test func testEndpointPathPrefix() async throws {
-        struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
-            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-                guard let endpointPath = context.endpointPath else { return try await next(request, context) }
-                return .init(status: .ok, body: .init(UniqueArray(copying: endpointPath.utf8)))
-            }
-        }
-
         let router = Router()
-        router.middlewares.add(TestEndpointMiddleware())
+        router.middlewares.add(TestMiddleware { response, context in response.headerFields[.test] = context.endpointPath })
         router.get("test") { _, context in
             context.endpointPath
         }
@@ -77,13 +71,13 @@ struct RouterTests {
 
         try await app.test(.router) { client in
             try await client.execute(uri: "/", method: .get) { response in
-                #expect(String(buffer: response.body) == "/")
+                #expect(response.headers[.test] == "/test/{number}")
             }
             try await client.execute(uri: "/test/", method: .get) { response in
-                #expect(String(buffer: response.body) == "/test")
+                #expect(response.headers[.test] == "/test/{number}")
             }
             try await client.execute(uri: "/test2/", method: .post) { response in
-                #expect(String(buffer: response.body) == "/test2")
+                #expect(response.headers[.test] == "/test/{number}")
             }
         }
     }
@@ -110,15 +104,8 @@ struct RouterTests {
     /// Test endpointPath doesn't have "/" at end
     @available(hummingbird 3.0, *)
     @Test func testEndpointPathSuffix() async throws {
-        struct TestEndpointMiddleware<Context: RequestContext>: RouterMiddleware {
-            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-                guard let endpointPath = context.endpointPath else { return try await next(request, context) }
-                return .init(status: .ok, body: .init(UniqueArray(copying: endpointPath.utf8)))
-            }
-        }
-
         let router = Router()
-        router.middlewares.add(TestEndpointMiddleware())
+        router.middlewares.add(TestMiddleware { response, context in response.headerFields[.test] = context.endpointPath })
         router.get("test/") { _, context in
             context.endpointPath
         }
@@ -138,19 +125,19 @@ struct RouterTests {
         let app = Application(responder: router.buildResponder())
         try await app.test(.router) { client in
             try await client.execute(uri: "/test/", method: .get) { response in
-                #expect(String(buffer: response.body) == "/test")
+                #expect(response.headers[.test] == "/test")
             }
 
             try await client.execute(uri: "/test2/", method: .post) { response in
-                #expect(String(buffer: response.body) == "/test2")
+                #expect(response.headers[.test] == "/test2")
             }
 
             try await client.execute(uri: "/testGroup/", method: .get) { response in
-                #expect(String(buffer: response.body) == "/testGroup")
+                #expect(response.headers[.test] == "/testGroup")
             }
 
             try await client.execute(uri: "/testGroup2", method: .get) { response in
-                #expect(String(buffer: response.body) == "/testGroup2")
+                #expect(response.headers[.test] == "/testGroup2")
             }
         }
     }
@@ -245,16 +232,18 @@ struct RouterTests {
     @available(hummingbird 3.0, *)
     @Test func testGroupGroupMiddleware2() async throws {
         struct TestGroupMiddleware: RouterMiddleware {
+            typealias Context = TestRouterContext2
             let output: String
 
             public func handle(
                 _ request: Request,
-                context: TestRouterContext2,
-                next: (Request, TestRouterContext2) async throws -> Response
-            ) async throws -> Response {
+                writer: consuming AnyResponseWriter,
+                context: Context,
+                next: (Request, consuming AnyResponseWriter, TestRouterContext2) async throws -> Void
+            ) async throws {
                 var context = context
                 context.string = self.output
-                return try await next(request, context)
+                try await next(request, writer, context)
             }
         }
 
@@ -299,10 +288,15 @@ struct RouterTests {
         }
         struct TestTransformMiddleware: RouterMiddleware {
             typealias Context = TestRouterContext2
-            func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+            public func handle(
+                _ request: Request,
+                writer: consuming AnyResponseWriter,
+                context: Context,
+                next: (Input, consuming Writer, Context) async throws -> Void
+            ) async throws {
                 var context = context
                 context.string = request.headers[.test] ?? ""
-                return try await next(request, context)
+                try await next(request, writer, context)
             }
         }
         let router = Router()
@@ -350,10 +344,15 @@ struct RouterTests {
         }
         struct TestTransformMiddleware: RouterMiddleware {
             typealias Context = TestRouterContext
-            func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+            public func handle(
+                _ request: Request,
+                writer: consuming AnyResponseWriter,
+                context: Context,
+                next: (Input, consuming Writer, Context) async throws -> Void
+            ) async throws {
                 var context = context
                 context.string = request.headers[.test]
-                return try await next(request, context)
+                return try await next(request, writer, context)
             }
         }
         let router = Router(context: TestRouterContext.self)
@@ -599,7 +598,7 @@ struct RouterTests {
     @Test func testMiddlewareInRouteCollection() async throws {
         let router = Router()
         let routes = RouteCollection()
-            .add(middleware: TestMiddleware("Hello"))
+            .add(middleware: TestMiddleware { response, _ in response.headerFields[.test] = "Hello" })
             .get("that") { _, _ in
                 HTTPResponse.Status.ok
             }
@@ -621,7 +620,7 @@ struct RouterTests {
             .get("this") { _, _ in
                 HTTPResponse.Status.ok
             }
-            .add(middleware: TestMiddleware("Hello"))
+            .add(middleware: TestMiddleware { response, _ in response.headerFields[.test] = "Hello" })
             .get("that") { _, _ in
                 HTTPResponse.Status.ok
             }
@@ -645,7 +644,7 @@ struct RouterTests {
         let router = Router()
         let routes = RouteCollection()
         routes.group("2")
-            .add(middleware: TestMiddleware("Hello"))
+            .add(middleware: TestMiddleware { response, _ in response.headerFields[.test] = "Hello" })
             .get("3") { _, _ in
                 HTTPResponse.Status.ok
             }
@@ -851,6 +850,7 @@ struct RouterTests {
     }
 }
 
+@available(hummingbird 3.0, *)
 struct TestRouterContext2: RequestContext {
     init(source: Source) {
         self.coreContext = .init(source: source)

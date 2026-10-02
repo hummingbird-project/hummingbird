@@ -6,10 +6,13 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import HTTPAPIs
 public import HTTPTypes
+import HummingbirdCore
 import NIOCore
 
 /// Default HTTP error. Provides an HTTP status and a message
+@available(hummingbird 3.0, *)
 public struct HTTPError: Error, HTTPResponseError, Sendable {
     /// status code for the error
     public var status: HTTPResponse.Status
@@ -57,21 +60,24 @@ public struct HTTPError: Error, HTTPResponseError, Sendable {
         let error: ErrorFormat
     }
 
-    public func response(from request: Request, context: some RequestContext) throws -> Response {
+    public func writeResponse(from request: Request, writer: consuming some ResponseWriter & ~Copyable, context: some RequestContext) async throws {
         if let body {
             let codable = CodableFormat(error: CodableFormat.ErrorFormat(message: body))
-            var response = try context.responseEncoder.encode(codable, from: request, context: context)
-
-            response.status = self.status
-            response.headers.append(contentsOf: self.headers)
-
-            return response
-        } else {
-            return Response(status: self.status, headers: self.headers)
+            return try await context.responseEncoder.sendValue(
+                codable,
+                from: request,
+                writer: EditHeaderResponseWriter(writer) { response in
+                    response.status = self.status
+                    response.headerFields.append(contentsOf: self.headers)
+                },
+                context: context
+            )
         }
+        try await writer.sendAndFinish(.init(status: self.status, headerFields: self.headers))
     }
 }
 
+@available(hummingbird 3.0, *)
 extension HTTPError: CustomStringConvertible {
     /// Description of error for logging
     public var description: String {

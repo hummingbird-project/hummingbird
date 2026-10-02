@@ -57,8 +57,8 @@ struct MiddlewareResponder<Context>: HTTPResponder {
     let middleware: any MiddlewareProtocol<Request, AnyResponseWriter, Context>
     let next: @Sendable (Request, consuming AnyResponseWriter, Context) async throws -> Void
 
-    func respond(to request: Request, writer: consuming AnyResponseWriter, context: Context) async throws {
-        try await self.middleware.handle(request, writer: writer, context: context) { request, writer, context in
+    func respond(to request: Request, writer: consuming some (ResponseWriter & ~Copyable), context: Context) async throws {
+        try await self.middleware.handle(request, writer: writer.consumeAsAny(), context: context) { request, writer, context in
             try await self.next(request, writer, context)
         }
     }

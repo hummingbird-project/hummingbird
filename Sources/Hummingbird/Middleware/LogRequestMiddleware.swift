@@ -7,6 +7,7 @@
 //
 
 public import HTTPTypes
+public import HummingbirdCore
 public import Logging
 
 /// Middleware outputting to log for every call to server.
@@ -15,6 +16,7 @@ public import Logging
 /// Swift-Log has a flexible backend, and will output to console by default.
 /// You can replace the Logging backend with other implementations.
 /// A list of implementations is available in the swift-log repository's README.
+@available(hummingbird 3.0, *)
 public struct LogRequestsMiddleware<Context: RequestContext>: RouterMiddleware {
     /// Header filter
     public struct HeaderFilter: Sendable, ExpressibleByArrayLiteral {
@@ -65,7 +67,12 @@ public struct LogRequestsMiddleware<Context: RequestContext>: RouterMiddleware {
             }
     }
 
-    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+    public func handle(
+        _ request: Request,
+        writer: consuming AnyResponseWriter,
+        context: Context,
+        next: (Request, consuming AnyResponseWriter, Context) async throws -> Void
+    ) async throws {
         switch self.includeHeaders.value {
         case .none:
             context.logger.log(
@@ -97,7 +104,7 @@ public struct LogRequestsMiddleware<Context: RequestContext>: RouterMiddleware {
                 ]
             )
         }
-        return try await next(request, context)
+        return try await next(request, writer, context)
     }
 
     func filterHeaders(headers: HTTPFields, filter: [HTTPField.Name]) -> [String: String] {

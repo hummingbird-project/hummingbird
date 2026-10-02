@@ -17,11 +17,12 @@ public import Synchronization
 /// A `HTTPResponseSender` for writing HTTP responses
 @available(hummingbird 3.0, *)
 public protocol ResponseWriter: HTTPResponseSender, ~Copyable where Writer: ResponseBodyAsyncWriter & ~Copyable {
+    consuming func consumeAsAny() -> AnyResponseWriter
 }
 
-/// A `CallerAsyncWriter` for writing HTTP responses
-public protocol ResponseBodyAsyncWriter: CallerAsyncWriter, ~Copyable
-where WriteElement == UInt8, WriteFailure == any Error, FinalElement == HTTPFields? {
+@available(hummingbird 3.0, *)
+extension ResponseWriter where Self: ~Copyable {
+    public consuming func consumeAsAny() -> AnyResponseWriter { .init(self) }
 }
 
 /// Wrapper for existential ResponseSender
@@ -50,40 +51,9 @@ public struct AnyResponseWriter: ~Copyable, ResponseWriter {
         try await writer.sendAndFinish(response, buffer: &buffer, trailer: trailer)
     }
 
+    public consuming func consumeAsAny() -> AnyResponseWriter { self }
+
     public var writer: (any ResponseWriter & ~Copyable)?
-}
-
-/// Wrapper for existential ResponseBodyAsyncWriter
-public struct AnyResponseBodyAsyncWriter: ~Copyable, ResponseBodyAsyncWriter {
-    @usableFromInline
-    package init(_ writer: consuming (any ResponseBodyAsyncWriter & ~Copyable)) {
-        self.writer = consume writer
-    }
-
-    @inlinable
-    public mutating nonisolated(nonsending) func write<Buffer>(buffer: inout Buffer) async throws(any Error)
-    where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
-        try await self.writer!.write(buffer: &buffer)
-    }
-
-    @inlinable
-    public consuming nonisolated(nonsending) func finish<Buffer>(
-        buffer: inout Buffer,
-        finalElement: consuming HTTPTypes.HTTPFields? = nil
-    ) async throws(any Error)
-    where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
-        let writer = self.writer.take()!
-        try await writer.finish(buffer: &buffer, finalElement: finalElement)
-    }
-
-    @inlinable
-    public consuming nonisolated(nonsending) func finish(finalElement: consuming HTTPTypes.HTTPFields? = nil) async throws(any Error) {
-        let writer = self.writer.take()!
-        var empty = UniqueArray<UInt8>()
-        try await writer.finish(buffer: &empty, finalElement: finalElement)
-    }
-
-    public var writer: (any ResponseBodyAsyncWriter & ~Copyable)?
 }
 
 /// HTTPResponseSender that sends an HTTP response using a NIOAsyncChannelOutboundWriter
@@ -192,7 +162,10 @@ public struct NIOResponseWriter: ResponseWriter, ~Copyable {
         }
         self.writerState.wrapped.withLock { $0.finishedWriting = true }
     }
+}
 
+@available(hummingbird 3.0, *)
+extension ResponseWriter where Self: ~Copyable {
     /// Write a complete HTTP response, using a fast path for ByteBuffer and empty bodies.
     ///
     /// For single-ByteBuffer and empty bodies, head + body + end are sent as a single
@@ -202,9 +175,8 @@ public struct NIOResponseWriter: ResponseWriter, ~Copyable {
     /// - Parameters:
     ///   - head: Response head
     ///   - body: Response body
-    @available(hummingbird 3.0, *)
     @inlinable
-    public consuming func write(response head: HTTPResponse, body: consuming ResponseBody) async throws {
+    public consuming func sendAndFinish(response head: HTTPResponse, body: consuming ResponseBody) async throws {
         switch body._backing {
         case .bytes(let buf):
             try await self.sendAndFinish(head, buffer: &buf.value, trailer: nil)
@@ -215,38 +187,4 @@ public struct NIOResponseWriter: ResponseWriter, ~Copyable {
             try await fn(AnyResponseBodyAsyncWriter(bodyWriter))
         }
     }
-}
-
-@available(hummingbird 3.0, *)
-public struct EditHeaderResponseWriter<Sender: ResponseWriter & ~Copyable>: ResponseWriter, ~Copyable {
-    @inlinable
-    package init(_ sender: consuming Sender, _ edit: @escaping (inout HTTPResponse) async throws -> Void) {
-        self.sender = consume sender
-        self.edit = edit
-    }
-
-    @inlinable
-    public mutating func sendInformational(_ response: HTTPResponse) async throws {
-        try await self.sender.sendInformational(response)
-    }
-
-    @inlinable
-    public consuming func send(_ response: HTTPResponse) async throws -> Sender.Writer {
-        var response = response
-        try await edit(&response)
-        return try await self.sender.send(response)
-    }
-
-    @inlinable
-    public consuming func sendAndFinish<Buffer>(_ response: HTTPResponse, buffer: inout Buffer, trailer: HTTPFields?) async throws
-    where Buffer: RangeReplaceableContainer, Buffer.Element == UInt8, Buffer: ~Copyable {
-        var response = response
-        try await edit(&response)
-        return try await self.sender.sendAndFinish(response, buffer: &buffer, trailer: trailer)
-    }
-
-    @usableFromInline
-    var sender: Sender
-    @usableFromInline
-    let edit: (inout HTTPResponse) async throws -> Void
 }

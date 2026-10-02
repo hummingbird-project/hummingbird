@@ -93,50 +93,6 @@ extension ApplicationProtocol {
     public var processesRunBeforeServerStart: [@Sendable () async throws -> Void] { [] }
 }
 
-/// Wrapper for existential ResponseWriter
-final class RootResponseWriter: ResponseWriter {
-    internal init(serverName: String? = nil, dateCache: DateCache, writer: consuming NIOResponseWriter) {
-        self.serverName = serverName
-        self.dateCache = dateCache
-        self.writer = consume writer
-    }
-
-    @inlinable
-    public func sendInformational(_ response: HTTPResponse) async throws {
-        var response = response
-        self.addHeaders(to: &response)
-        try await self.writer!.sendInformational(response)
-    }
-
-    @inlinable
-    public consuming func send(_ response: HTTPResponse) async throws -> AnyResponseBodyAsyncWriter {
-        let writer = writer.take()!
-        var response = response
-        self.addHeaders(to: &response)
-        return try await .init(writer.send(response))
-    }
-
-    @inlinable
-    public consuming func sendAndFinish<Buffer>(_ response: HTTPResponse, buffer: inout Buffer, trailer: HTTPFields?) async throws
-    where Buffer: RangeReplaceableContainer, Buffer.Element == UInt8, Buffer: ~Copyable {
-        let writer = writer.take()!
-        var response = response
-        self.addHeaders(to: &response)
-        try await writer.sendAndFinish(response, buffer: &buffer, trailer: trailer)
-    }
-
-    func addHeaders(to response: inout HTTPResponse) {
-        response.headerFields[.date] = dateCache.date
-        // server name header
-        if let serverName {
-            response.headerFields[.server] = serverName
-        }
-    }
-    let serverName: String?
-    let dateCache: DateCache
-    public var writer: NIOResponseWriter?
-}
-
 /// Conform to `Service` from `ServiceLifecycle`.
 @available(hummingbird 3.0, *)
 extension ApplicationProtocol {
@@ -153,11 +109,7 @@ extension ApplicationProtocol {
             logger: self.logger
         ) { (request, responseWriter: consuming NIOResponseWriter, channel) in
             let logger = self.logger.with(metadataKey: "hb.request.id", value: .stringConvertible(RequestID()))
-            let rootResponseWriter = RootResponseWriter(
-                serverName: configuration.serverName,
-                dateCache: dateCache,
-                writer: responseWriter
-            )
+            var responseWriter: NIOResponseWriter? = responseWriter
             try await withLogger(logger) { logger in
                 let context = Self.Responder.Context(
                     source: .init(
@@ -166,16 +118,18 @@ extension ApplicationProtocol {
                     )
                 )
                 // respond to request
-                do {
-                    try await responder.respond(to: request, writer: .init(rootResponseWriter), context: context)
-                } catch let error as HTTPParserError {
-                    throw error
-                } catch {
-                    logger.debug("Unrecognised Error", metadata: ["error.type": "\(error)"])
-                    if let writer = rootResponseWriter.writer.take() {
-                        try await writer.sendAndFinish(.init(status: .internalServerError))
-                    }
-                }
+                try await responder.respond(
+                    to: request,
+                    writer:
+                        EditHeaderResponseWriter(responseWriter.take()!) { response in
+                            response.headerFields[.date] = dateCache.date
+                            // server name header
+                            if let serverName = self.configuration.serverName {
+                                response.headerFields[.server] = serverName
+                            }
+                        },
+                    context: context
+                )
             }
         } onServerRunning: {
             await self.onServerRunning($0)
