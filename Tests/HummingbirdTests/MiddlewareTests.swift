@@ -67,8 +67,8 @@ struct MiddlewareTests {
     @available(hummingbird 3.0, *)
     @Test func testMiddlewareOrder() async throws {
         let router = Router()
-        router.add(middleware: TestMiddleware { response, _ in response.headerFields[.test] = "first" })
-        router.add(middleware: TestMiddleware { response, _ in response.headerFields[.test] = "second" })
+        router.add(middleware: TestMiddleware { response, _ in response.headerFields[values: .test].append("first") })
+        router.add(middleware: TestMiddleware { response, _ in response.headerFields[values: .test].append("second") })
         router.get("/hello") { _, _ -> String in
             "Hello"
         }
@@ -530,8 +530,8 @@ struct MiddlewareTests {
     @Test func testMiddlewareResultBuilder() async throws {
         let router = Router()
         router.addMiddleware {
-            TestMiddleware { response, _ in response.headerFields[.test] = "first" }
-            TestMiddleware { response, _ in response.headerFields[.test] = "second" }
+            TestMiddleware { response, _ in response.headerFields[values: .test].append("first") }
+            TestMiddleware { response, _ in response.headerFields[values: .test].append("second") }
         }
         router.get("/hello") { _, _ -> String in
             "Hello"
@@ -579,9 +579,9 @@ struct MiddlewareTests {
             let router = Router()
             router.addMiddleware {
                 if shouldUseFirst {
-                    TestMiddleware { response, _ in response.headerFields[.test] = "first" }
+                    TestMiddleware { response, _ in response.headerFields[values: .test].append("first") }
                 }
-                TestMiddleware { response, _ in response.headerFields[.test] = "second" }
+                TestMiddleware { response, _ in response.headerFields[values: .test].append("second") }
             }
             router.get("/hello") { _, _ in "Hello" }
             let app = Application(responder: router.buildResponder())
@@ -615,7 +615,7 @@ struct MiddlewareTests {
                 if let middleware {
                     middleware
                 }
-                TestMiddleware { response, _ in response.headerFields[.test] = "second" }
+                TestMiddleware { response, _ in response.headerFields[values: .test].append("second") }
             }
             router.get("/hello") { _, _ in "Hello" }
             let app = Application(responder: router.buildResponder())
@@ -636,7 +636,7 @@ struct MiddlewareTests {
 
         /// The first middleware should be included along with the second middleware.
         try await test(
-            middleware: TestMiddleware { response, _ in response.headerFields[.test] = "first" }
+            middleware: TestMiddleware { response, _ in response.headerFields[values: .test].append("first") }
         )
 
         /// The first middleware should be excluded, leaving only the second middleware.
@@ -649,7 +649,7 @@ struct MiddlewareTests {
         let router = Router()
         router.addMiddleware {
             for i in 0..<limit {
-                TestMiddleware { response, _ in response.headerFields[.test] = String(i) }
+                TestMiddleware { response, _ in response.headerFields[values: .test].append(String(i)) }
             }
         }
         router.get("/hello") { _, _ in "Hello" }

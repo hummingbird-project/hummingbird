@@ -41,20 +41,17 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
             activeRequestMeter.decrement()
         }
         do {
+            var status: HTTPResponse.Status = .ok
             try await next(
                 request,
-                .init(
-                    EditHeaderResponseWriter(writer) {
-                        let metrics = self.metricsCache.getEndpointMetrics(
-                            id: .init(endpoint: context.endpointPath ?? "Unknown", method: request.method, status: $0.status)
-                        )
-                        metrics.counter.increment()
-                        metrics.timer.recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
-
-                    }
-                ),
+                .init(EditHeaderResponseWriter(writer) { status = $0.status }),
                 context
             )
+            let metrics = self.metricsCache.getEndpointMetrics(
+                id: .init(endpoint: context.endpointPath ?? "Unknown", method: request.method, status: status)
+            )
+            metrics.counter.increment()
+            metrics.timer.recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
         } catch {
             let errorType: HTTPResponse.Status
             if let httpError = error as? any HTTPResponseError {

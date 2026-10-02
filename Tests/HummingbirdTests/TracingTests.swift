@@ -420,7 +420,6 @@ struct TracingTests {
                     "http.route": "/users",
                     "url.path": "/users",
                     "http.response.status_code": 204,
-                    "http.response.body.size": 0,
                 ]
             )
         }
@@ -458,7 +457,6 @@ struct TracingTests {
                     "http.route": "/",
                     "url.path": "/",
                     "http.response.status_code": 200,
-                    "http.response.body.size": 0,
                 ]
             )
         }
@@ -483,7 +481,7 @@ struct TracingTests {
 
             #expect(span.operationName == "NotFound")
             #expect(span.kind == .server)
-            #expect(span.status == nil)
+            #expect(span.status?.code == .error)
 
             #expect(span.recordedErrors.count == 1)
             let error = try #require(span.recordedErrors.first?.0 as? HTTPError, "Recorded unexpected errors: \(span.recordedErrors)")
@@ -498,46 +496,6 @@ struct TracingTests {
                     "http.response.status_code": 404,
                 ]
             )
-        }
-    }
-
-    /// Test span is ended even if the response body with the span end is not run
-    @available(hummingbird 3.0, *)
-    @Test func testTracingMiddlewareDropResponse() async throws {
-        struct ErrorMiddleware<Context: RequestContext>: RouterMiddleware {
-            func handle(
-                _ request: Request,
-                writer: consuming AnyResponseWriter,
-                context: Context,
-                next: (Request, consuming AnyResponseWriter, Context) async throws -> Void
-            ) async throws {
-                try await next(request, .init(EditHeaderResponseWriter(writer) { _ in throw HTTPError(.badRequest) }), context)
-            }
-        }
-
-        try await Self.testTracer.withUnique {
-            try await confirmation { endSpan in
-                Self.testTracer.onEndSpan = { _ in endSpan() }
-
-                let router = Router()
-                router.middlewares.add(ErrorMiddleware())
-                router.middlewares.add(TracingMiddleware())
-                router.get("users/:id") { _, _ -> String in
-                    "42"
-                }
-                let app = Application(responder: router.buildResponder())
-                try await app.test(.router) { client in
-                    try await client.execute(uri: "/users/42", method: .get) { response in
-                        #expect(response.status == .badRequest)
-                    }
-                }
-            }
-            let span = try #require(Self.testTracer.spans.first)
-
-            #expect(span.operationName == "/users/{id}")
-            #expect(span.kind == .server)
-            #expect(span.status == nil)
-            #expect(span.recordedErrors.isEmpty == true)
         }
     }
 

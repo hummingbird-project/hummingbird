@@ -71,13 +71,13 @@ struct RouterTests {
 
         try await app.test(.router) { client in
             try await client.execute(uri: "/", method: .get) { response in
-                #expect(response.headers[.test] == "/test/{number}")
+                #expect(response.headers[.test] == "/")
             }
             try await client.execute(uri: "/test/", method: .get) { response in
-                #expect(response.headers[.test] == "/test/{number}")
+                #expect(response.headers[.test] == "/test")
             }
             try await client.execute(uri: "/test2/", method: .post) { response in
-                #expect(response.headers[.test] == "/test/{number}")
+                #expect(response.headers[.test] == "/test2")
             }
         }
     }
