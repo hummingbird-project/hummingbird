@@ -121,7 +121,7 @@ extension ApplicationProtocol {
                 try await responder.respond(
                     to: request,
                     writer:
-                        EditHeaderResponseWriter(responseWriter.take()!) { response in
+                        EditHeadResponseWriter(responseWriter.take()!) { response in
                             response.headerFields[.date] = dateCache.date
                             // server name header
                             if let serverName = self.configuration.serverName {

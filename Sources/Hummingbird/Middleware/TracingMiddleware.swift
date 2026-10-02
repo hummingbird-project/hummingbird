@@ -90,7 +90,7 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
                     try await next(
                         request,
                         .init(
-                            EditHeaderResponseWriter(writer.take()!) { response in
+                            EditHeadResponseWriter(writer.take()!) { response in
                                 if let endpointPath = context.endpointPath {
                                     span.operationName = endpointPath
                                 }

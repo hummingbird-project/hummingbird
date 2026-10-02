@@ -54,7 +54,7 @@ public struct ContentSecurityMiddleware<Context: RequestContext>: RouterMiddlewa
     ) async throws {
         try await next(
             request,
-            .init(EditHeaderResponseWriter(writer) { $0.headerFields.append(contentsOf: headers) }),
+            .init(EditHeadResponseWriter(writer) { $0.headerFields.append(contentsOf: headers) }),
             context
         )
     }

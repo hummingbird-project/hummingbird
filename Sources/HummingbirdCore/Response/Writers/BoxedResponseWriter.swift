@@ -33,19 +33,20 @@ public final class BoxedResponseWriter<Writer: ResponseWriter & ~Copyable>: Resp
 
     @inlinable
     public func sendInformational(_ response: HTTPResponse) async throws {
+        guard self.writer != nil else { throw ResponseWriterError.alreadyUsed }
         try await self.writer!.sendInformational(response)
     }
 
     @inlinable
     public consuming func send(_ response: HTTPResponse) async throws -> AnyResponseBodyAsyncWriter {
-        let writer = self.writer.take()!
+        guard let writer = self.writer.take() else { throw ResponseWriterError.alreadyUsed }
         return try await .init(writer.send(response))
     }
 
     @inlinable
     public consuming func sendAndFinish<Buffer>(_ response: HTTPResponse, buffer: inout Buffer, trailer: HTTPFields?) async throws
     where Buffer: RangeReplaceableContainer, Buffer.Element == UInt8, Buffer: ~Copyable {
-        let writer = self.writer.take()!
+        guard let writer = self.writer.take() else { throw ResponseWriterError.alreadyUsed }
         try await writer.sendAndFinish(response, buffer: &buffer, trailer: trailer)
     }
 
@@ -54,4 +55,15 @@ public final class BoxedResponseWriter<Writer: ResponseWriter & ~Copyable>: Resp
     }
 
     public var writer: Writer?
+}
+
+public enum ResponseWriterError: Error, CustomStringConvertible {
+    case alreadyUsed
+
+    public var description: String {
+        switch self {
+        case .alreadyUsed:
+            "The response writer is no longer available as it has already been used"
+        }
+    }
 }

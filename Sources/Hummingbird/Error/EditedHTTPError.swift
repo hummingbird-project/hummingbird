@@ -29,7 +29,7 @@ struct EditedHTTPError: HTTPResponseError {
         if let originalError = originalError as? (any HTTPResponseError) {
             return try await originalError.writeResponse(
                 from: request,
-                writer: EditHeaderResponseWriter(writer) { $0.headerFields.append(contentsOf: self.additionalHeaders) },
+                writer: EditHeadResponseWriter(writer) { $0.headerFields.append(contentsOf: self.additionalHeaders) },
                 context: context
             )
         }

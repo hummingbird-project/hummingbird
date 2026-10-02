@@ -6,8 +6,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-public import HummingbirdCore
-
 extension Response {
     /// Specifies the type of redirect that the client should receive.
     public enum RedirectType: Sendable {

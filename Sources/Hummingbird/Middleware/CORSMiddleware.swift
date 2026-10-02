@@ -213,7 +213,7 @@ public struct CORSMiddleware<Context: RequestContext>: RouterMiddleware {
                 return try await next(
                     request,
                     .init(
-                        EditHeaderResponseWriter(writer) { response in
+                        EditHeadResponseWriter(writer) { response in
                             response.headerFields[.accessControlAllowOrigin] = self.allowOrigin.value(for: request)
                             if self.allowCredentials {
                                 response.headerFields[.accessControlAllowCredentials] = "true"

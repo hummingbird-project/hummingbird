@@ -66,7 +66,7 @@ public struct HTTPError: Error, HTTPResponseError, Sendable {
             return try await context.responseEncoder.sendValue(
                 codable,
                 from: request,
-                writer: EditHeaderResponseWriter(writer) { response in
+                writer: EditHeadResponseWriter(writer) { response in
                     response.status = self.status
                     response.headerFields.append(contentsOf: self.headers)
                 },

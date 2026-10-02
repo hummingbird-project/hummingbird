@@ -34,7 +34,7 @@ public struct RouterResponder<Context: RequestContext>: HTTPResponder {
 
     /// Respond to the request supplied
     public func respond(to request: Request, writer: consuming some (ResponseWriter & ~Copyable), context: Context) async throws {
-        let writer = ReusableResponseWriter(writer: writer)
+        let writer = BoxedResponseWriter(writer: writer)
         do {
             let path = request.uri.path
             guard
