@@ -10,7 +10,7 @@ public import HTTPTypes
 public import HummingbirdCore
 
 /// Conform to `RouterMethods` to add standard router verb (get, post ...) methods
-@preconcurrency
+@available(hummingbird 3.0, *)
 public protocol RouterMethods<Context>: _HB_SendableMetatype {
     associatedtype Context: RequestContext
 
@@ -34,7 +34,7 @@ public protocol RouterMethods<Context>: _HB_SendableMetatype {
     func add(middleware: any MiddlewareProtocol<Request, Response, Context>) -> Self
 }
 
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 extension RouterMethods {
     /// Add path for async closure
     @discardableResult public func on(

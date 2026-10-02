@@ -6,27 +6,29 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-import NIOCore
+public import HummingbirdCore
 import ServiceContextModule
 
 /// Protocol for object that produces a response given a request
 ///
 /// This is the core protocol for Hummingbird. It defines an object that can respond to a request.
+@available(hummingbird 3.0, *)
 public protocol HTTPResponder<Context>: Sendable {
     associatedtype Context
     /// Return response to the request supplied
-    @Sendable func respond(to request: Request, context: Context) async throws -> Response
+    func respond(to request: Request, writer: consuming AnyResponseWriter, context: Context) async throws
 }
 
 /// Responder that calls supplied closure
-public struct CallbackResponder<Context>: HTTPResponder {
-    let callback: @Sendable (Request, Context) async throws -> Response
+@available(hummingbird 3.0, *)
+public struct CallbackResponder<Context>: HTTPResponder<Context> {
+    let callback: @Sendable (Request, consuming AnyResponseWriter, Context) async throws -> Void
 
-    public init(callback: @escaping @Sendable (Request, Context) async throws -> Response) {
+    public init(callback: @escaping @Sendable (Request, consuming AnyResponseWriter, Context) async throws -> Void) {
         self.callback = callback
     }
 
-    public func respond(to request: Request, context: Context) async throws -> Response {
-        try await self.callback(request, context)
+    public func respond(to request: Request, writer: consuming AnyResponseWriter, context: Context) async throws {
+        try await self.callback(request, writer, context)
     }
 }

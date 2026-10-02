@@ -14,13 +14,47 @@ public import NIOCore
 public import NIOHTTPTypes
 public import Synchronization
 
+/// A `HTTPResponseSender` for writing HTTP responses
+@available(hummingbird 3.0, *)
+public protocol ResponseWriter: HTTPResponseSender, ~Copyable where Writer: ResponseBodyAsyncWriter & ~Copyable {
+}
+
 /// A `CallerAsyncWriter` for writing HTTP responses
 public protocol ResponseBodyAsyncWriter: CallerAsyncWriter, ~Copyable
 where WriteElement == UInt8, WriteFailure == any Error, FinalElement == HTTPFields? {
 }
 
+/// Wrapper for existential ResponseSender
+@available(hummingbird 3.0, *)
+public struct AnyResponseWriter: ~Copyable, ResponseWriter {
+    @usableFromInline
+    package init(_ writer: consuming (any ResponseWriter & ~Copyable)) {
+        self.writer = consume writer
+    }
+
+    @inlinable
+    public mutating func sendInformational(_ response: HTTPResponse) async throws {
+        try await self.writer!.sendInformational(response)
+    }
+
+    @inlinable
+    public consuming func send(_ response: HTTPResponse) async throws -> AnyResponseBodyAsyncWriter {
+        let writer = writer.take()!
+        return try await .init(writer.send(response))
+    }
+
+    @inlinable
+    public consuming func sendAndFinish<Buffer>(_ response: HTTPResponse, buffer: inout Buffer, trailer: HTTPFields?) async throws
+    where Buffer: RangeReplaceableContainer, Buffer.Element == UInt8, Buffer: ~Copyable {
+        let writer = writer.take()!
+        try await writer.sendAndFinish(response, buffer: &buffer, trailer: trailer)
+    }
+
+    public var writer: (any ResponseWriter & ~Copyable)?
+}
+
 /// Wrapper for existential ResponseBodyAsyncWriter
-public struct AnyResponseBodyAsyncWriter: ~Copyable {
+public struct AnyResponseBodyAsyncWriter: ~Copyable, ResponseBodyAsyncWriter {
     @usableFromInline
     package init(_ writer: consuming (any ResponseBodyAsyncWriter & ~Copyable)) {
         self.writer = consume writer
@@ -53,7 +87,7 @@ public struct AnyResponseBodyAsyncWriter: ~Copyable {
 }
 
 /// HTTPResponseSender that sends an HTTP response using a NIOAsyncChannelOutboundWriter
-public struct ResponseSender: HTTPResponseSender, ~Copyable {
+public struct NIOResponseWriter: ResponseWriter, ~Copyable {
     @usableFromInline
     package final class WriterState: Sendable {
         @usableFromInline
@@ -181,4 +215,38 @@ public struct ResponseSender: HTTPResponseSender, ~Copyable {
             try await fn(AnyResponseBodyAsyncWriter(bodyWriter))
         }
     }
+}
+
+@available(hummingbird 3.0, *)
+public struct EditHeaderResponseWriter<Sender: ResponseWriter & ~Copyable>: ResponseWriter, ~Copyable {
+    @inlinable
+    package init(_ sender: consuming Sender, _ edit: @escaping (inout HTTPResponse) async throws -> Void) {
+        self.sender = consume sender
+        self.edit = edit
+    }
+
+    @inlinable
+    public mutating func sendInformational(_ response: HTTPResponse) async throws {
+        try await self.sender.sendInformational(response)
+    }
+
+    @inlinable
+    public consuming func send(_ response: HTTPResponse) async throws -> Sender.Writer {
+        var response = response
+        try await edit(&response)
+        return try await self.sender.send(response)
+    }
+
+    @inlinable
+    public consuming func sendAndFinish<Buffer>(_ response: HTTPResponse, buffer: inout Buffer, trailer: HTTPFields?) async throws
+    where Buffer: RangeReplaceableContainer, Buffer.Element == UInt8, Buffer: ~Copyable {
+        var response = response
+        try await edit(&response)
+        return try await self.sender.sendAndFinish(response, buffer: &buffer, trailer: trailer)
+    }
+
+    @usableFromInline
+    var sender: Sender
+    @usableFromInline
+    let edit: (inout HTTPResponse) async throws -> Void
 }

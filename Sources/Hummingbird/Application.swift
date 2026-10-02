@@ -6,6 +6,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import ContainersPreview
+import HTTPAPIs
 public import HummingbirdCore
 public import Logging
 public import NIOCore
@@ -42,7 +44,8 @@ public enum EventLoopGroupProvider {
 
 /// Protocol for an Application. Brings all the components of Hummingbird together
 @available(hummingbird 3.0, *)
-public protocol ApplicationProtocol: Service where Context: InitializableFromSource<ApplicationRequestContextSource> {
+public protocol ApplicationProtocol: Service
+where Context: InitializableFromSource<ApplicationRequestContextSource> {
     /// Responder that generates a response from a requests and context
     associatedtype Responder: HTTPResponder
     /// Context passed with Request to responder
@@ -90,9 +93,54 @@ extension ApplicationProtocol {
     public var processesRunBeforeServerStart: [@Sendable () async throws -> Void] { [] }
 }
 
+/// Wrapper for existential ResponseWriter
+final class RootResponseWriter: ResponseWriter {
+    internal init(serverName: String? = nil, dateCache: DateCache, writer: consuming NIOResponseWriter) {
+        self.serverName = serverName
+        self.dateCache = dateCache
+        self.writer = consume writer
+    }
+
+    @inlinable
+    public func sendInformational(_ response: HTTPResponse) async throws {
+        var response = response
+        self.addHeaders(to: &response)
+        try await self.writer!.sendInformational(response)
+    }
+
+    @inlinable
+    public consuming func send(_ response: HTTPResponse) async throws -> AnyResponseBodyAsyncWriter {
+        let writer = writer.take()!
+        var response = response
+        self.addHeaders(to: &response)
+        return try await .init(writer.send(response))
+    }
+
+    @inlinable
+    public consuming func sendAndFinish<Buffer>(_ response: HTTPResponse, buffer: inout Buffer, trailer: HTTPFields?) async throws
+    where Buffer: RangeReplaceableContainer, Buffer.Element == UInt8, Buffer: ~Copyable {
+        let writer = writer.take()!
+        var response = response
+        self.addHeaders(to: &response)
+        try await writer.sendAndFinish(response, buffer: &buffer, trailer: trailer)
+    }
+
+    func addHeaders(to response: inout HTTPResponse) {
+        response.headerFields[.date] = dateCache.date
+        // server name header
+        if let serverName {
+            response.headerFields[.server] = serverName
+        }
+    }
+    let serverName: String?
+    let dateCache: DateCache
+    public var writer: NIOResponseWriter?
+}
+
 /// Conform to `Service` from `ServiceLifecycle`.
 @available(hummingbird 3.0, *)
 extension ApplicationProtocol {
+
     /// Construct application and run it
     public func run() async throws {
         let dateCache = DateCache()
@@ -103,9 +151,14 @@ extension ApplicationProtocol {
             configuration: self.configuration.httpServer,
             eventLoopGroup: self.eventLoopGroup,
             logger: self.logger
-        ) { (request, responseSender: consuming ResponseSender, channel) in
+        ) { (request, responseWriter: consuming NIOResponseWriter, channel) in
             let logger = self.logger.with(metadataKey: "hb.request.id", value: .stringConvertible(RequestID()))
-            let response = try await withLogger(logger) { logger in
+            let rootResponseWriter = RootResponseWriter(
+                serverName: configuration.serverName,
+                dateCache: dateCache,
+                writer: responseWriter
+            )
+            try await withLogger(logger) { logger in
                 let context = Self.Responder.Context(
                     source: .init(
                         channel: channel,
@@ -113,34 +166,17 @@ extension ApplicationProtocol {
                     )
                 )
                 // respond to request
-                var response: Response
                 do {
-                    response = try await responder.respond(to: request, context: context)
+                    try await responder.respond(to: request, writer: .init(rootResponseWriter), context: context)
                 } catch let error as HTTPParserError {
                     throw error
                 } catch {
                     logger.debug("Unrecognised Error", metadata: ["error.type": "\(error)"])
-                    response = Response(
-                        status: .internalServerError,
-                        body: .init()
-                    )
+                    if let writer = rootResponseWriter.writer.take() {
+                        try await writer.sendAndFinish(.init(status: .internalServerError))
+                    }
                 }
-                response.headers[.date] = dateCache.date
-                // server name header
-                if let serverName = self.configuration.serverName {
-                    response.headers[.server] = serverName
-                }
-                return response
             }
-            do {
-                // Write response — fast path for ByteBuffer/empty bodies (1 write instead of 3)
-                try await responseSender.write(response: response.head, body: response.body)
-            } catch is HTTPParserError {
-                // cannot throw the parser error, as that will cause another response
-                // to be written
-                throw HTTPChannelError.parseErrorWhileWritingResponse
-            }
-
         } onServerRunning: {
             await self.onServerRunning($0)
         }

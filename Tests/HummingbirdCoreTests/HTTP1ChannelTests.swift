@@ -20,7 +20,7 @@ struct HTTP1ChannelTests {
     @available(hummingbird 3.0, *)
     func testHTTP1Channel(
         _ test: (NIOAsyncTestingChannel) async throws -> Void,
-        responder: @escaping HTTPChannelHandler.Responder = { (request: Request, writer: consuming ResponseSender, channel: any Channel) in
+        responder: @escaping HTTPChannelHandler.Responder = { (request: Request, writer: consuming NIOResponseSender, channel: any Channel) in
             let body = try await request.body.collect(upTo: .max)
             try await writer.sendAndFinish(
                 .init(

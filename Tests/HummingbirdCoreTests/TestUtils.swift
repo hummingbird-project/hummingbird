@@ -23,7 +23,7 @@ public enum TestErrors: Error {
 
 /// Basic responder that just returns "Hello" in body
 @available(hummingbird 3.0, *)
-@Sendable func helloResponder(to request: Request, responseWriter: consuming ResponseSender, channel: any Channel) async throws {
+@Sendable func helloResponder(to request: Request, responseWriter: consuming NIOResponseSender, channel: any Channel) async throws {
     var responseBody = UniqueArray(copying: "Hello".utf8)
     var bodyWriter = try await responseWriter.send(.init(status: .ok))
     try await bodyWriter.write(buffer: &responseBody)

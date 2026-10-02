@@ -17,8 +17,9 @@ import ServiceLifecycle
 import Synchronization
 
 /// Protocol for HTTP channels
+@available(hummingbird 3.0, *)
 public protocol HTTPChannelHandler: ServerChildChannel {
-    typealias Responder = @Sendable (Request, consuming ResponseSender, any Channel) async throws -> Void
+    typealias Responder = @Sendable (Request, consuming NIOResponseWriter, any Channel) async throws -> Void
     /// HTTP Request responder
     var responder: Responder { get }
 }
@@ -31,6 +32,7 @@ package enum HTTPChannelError: Error {
     case parseErrorWhileWritingResponse
 }
 
+@available(hummingbird 3.0, *)
 extension HTTPChannelHandler {
     public func handleHTTP(asyncChannel: NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>, logger: Logger) async {
         do {
@@ -52,9 +54,9 @@ extension HTTPChannelHandler {
                                 head: head,
                                 body: .init(.asyncReader(reader))
                             )
-                            let writerState = ResponseSender.WriterState()
-                            let responseSender = ResponseSender(writer: outbound, writerState: writerState)
-                            try await self.handleRequest(request, responseSender: responseSender, channel: asyncChannel.channel)
+                            let writerState = NIOResponseWriter.WriterState()
+                            let responseWriter = NIOResponseWriter(writer: outbound, writerState: writerState)
+                            try await self.handleRequest(request, responseWriter: responseWriter, channel: asyncChannel.channel)
                             if !writerState.wrapped.withLock({ $0.finishedWriting }) {
                                 break
                             }
@@ -110,10 +112,10 @@ extension HTTPChannelHandler {
 
     func handleRequest(
         _ request: Request,
-        responseSender: consuming ResponseSender,
+        responseWriter: consuming NIOResponseWriter,
         channel: any Channel
     ) async throws {
-        try await self.responder(request, responseSender, channel)
+        try await self.responder(request, responseWriter, channel)
         try await request.body.drain()
     }
 }

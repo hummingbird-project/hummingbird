@@ -134,7 +134,7 @@ struct HummingbirdCoreTests {
         }
         /// Basic responder that waits 10 milliseconds and returns "Hello" in body
         @available(hummingbird 3.0, *)
-        @Sendable func helloResponder(to request: Request, responseWriter: consuming ResponseSender, channel: any Channel) async throws {
+        @Sendable func helloResponder(to request: Request, responseWriter: consuming NIOResponseSender, channel: any Channel) async throws {
             try? await Task.sleep(for: .milliseconds(10))
             var responseBody = UniqueArray(copying: "hello".utf8)
             var bodyWriter = try await responseWriter.send(.init(status: .ok))
@@ -241,7 +241,7 @@ struct HummingbirdCoreTests {
     @available(hummingbird 3.0, *)
     @Test func testStreamBody() async throws {
         try await testServer(
-            responder: { (request, responseWriter: consuming ResponseSender, _) in
+            responder: { (request, responseWriter: consuming NIOResponseSender, _) in
                 var bodyWriter = try await responseWriter.send(.init(status: .ok))
                 try await request.body.forEachBuffer { buffer in
                     try await bodyWriter.write(buffer: &buffer)
@@ -263,7 +263,7 @@ struct HummingbirdCoreTests {
     @available(hummingbird 3.0, *)
     @Test func testStreamBodyWriteSlow() async throws {
         try await testServer(
-            responder: { (request, responseWriter: consuming ResponseSender, _) in
+            responder: { (request, responseWriter: consuming NIOResponseSender, _) in
                 var bodyWriter = try await responseWriter.send(.init(status: .ok))
                 try await request.body.forEachBuffer { buffer in
                     try await Task.sleep(for: .milliseconds(Int.random(in: 10..<100)))
@@ -298,7 +298,7 @@ struct HummingbirdCoreTests {
             }
         }
         try await testServer(
-            responder: { (request, responseWriter: consuming ResponseSender, _) in
+            responder: { (request, responseWriter: consuming NIOResponseSender, _) in
                 var bodyWriter = try await responseWriter.send(.init(status: .ok)).delayed()
                 try await request.body.forEachBuffer { buffer in
                     try await bodyWriter.write(buffer: &buffer)
@@ -560,7 +560,7 @@ struct HummingbirdCoreTests {
                 configuration: .init(address: .hostname(port: 0)),
                 eventLoopGroup: Self.eventLoopGroup,
                 logger: logger
-            ) { (request, responseWriter: consuming ResponseSender, _) in
+            ) { (request, responseWriter: consuming NIOResponseSender, _) in
                 await handlerPromise.complete(())
                 try? await Task.sleep(for: .milliseconds(500))
                 var bodyWriter = try await responseWriter.send(.init(status: .ok)).delayed()

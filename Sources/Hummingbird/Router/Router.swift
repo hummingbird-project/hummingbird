@@ -36,7 +36,7 @@ public import HummingbirdCore
 /// Both of these match routes which start with "/user" and the next path segment being anything.
 /// The second version extracts the path segment out and adds it to `Request.parameters` with the
 /// key "id".
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 public final class Router<Context: RequestContext>: RouterMethods, HTTPResponderBuilder {
     var trie: RouterPathTrieBuilder<EndpointResponders<Context>>
     public let middlewares: MiddlewareGroup<Context>
@@ -103,6 +103,7 @@ public final class Router<Context: RequestContext>: RouterMethods, HTTPResponder
 }
 
 /// Responder that return a not found error
+@available(hummingbird 3.0, *)
 struct NotFoundResponder<Context: RequestContext>: HTTPResponder {
     func respond(to request: Request, context: Context) throws -> Response {
         context.coreContext.endpointPath.value = "NotFound"
@@ -111,6 +112,7 @@ struct NotFoundResponder<Context: RequestContext>: HTTPResponder {
 }
 
 /// A type that has a single method to build a HTTPResponder
+@available(hummingbird 3.0, *)
 public protocol HTTPResponderBuilder {
     associatedtype Responder: HTTPResponder
     /// build a responder
