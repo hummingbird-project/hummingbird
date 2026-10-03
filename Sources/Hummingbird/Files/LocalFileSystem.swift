@@ -71,11 +71,8 @@ public struct LocalFileSystem: FileProvider {
     /// - Parameter path: path from URI
     /// - Returns: Full path
     public func getFileIdentifier(_ path: String) -> FileIdentifier? {
-        if path.first == "/" {
-            return "\(self.rootFolder)/\(path.dropFirst())"
-        } else {
-            return "\(self.rootFolder)/\(path)"
-        }
+        let fullPath = self.rootFolder.appending(path).string
+        return fullPath
     }
 
     /// Get file attributes
