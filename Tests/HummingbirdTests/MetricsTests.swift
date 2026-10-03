@@ -161,8 +161,9 @@ struct MetricsTests {
             router.get("/hello") { _, _ -> Response in
                 Response(
                     status: .ok,
-                    body: .init { _ in
+                    body: .init { writer in
                         try await Task.sleep(for: .milliseconds(5))
+                        try await writer.finish()
                     }
                 )
             }

@@ -7,11 +7,13 @@
 //
 
 import HTTPTypes
+public import HummingbirdCore
 
 /// Middleware for setting up content-security-policy related response headers
 ///
 /// Currently sets headers `content-security-policy`, `x-content-type-options`
 /// and optionally sets `content-security-policy-report-only` and `reporting-endpoints`.
+@available(hummingbird 3.0, *)
 public struct ContentSecurityMiddleware<Context: RequestContext>: RouterMiddleware {
     let headers: HTTPFields
 
@@ -44,9 +46,17 @@ public struct ContentSecurityMiddleware<Context: RequestContext>: RouterMiddlewa
         self.headers = headers
     }
 
-    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-        var response = try await next(request, context)
-        response.headers.append(contentsOf: headers)
-        return response
+    public func handle(
+        _ request: Request,
+        writer: consuming AnyResponseWriter,
+        context: Context,
+        next: (Request, consuming AnyResponseWriter, Context) async throws -> Void
+    ) async throws {
+        try await next(
+            request,
+            .init(EditHeadResponseWriter(writer) { $0.headerFields.append(contentsOf: headers) }),
+            context
+        )
     }
+
 }

@@ -10,7 +10,7 @@ public import HTTPTypes
 public import HummingbirdCore
 
 /// Conform to `RouterMethods` to add standard router verb (get, post ...) methods
-@preconcurrency
+@available(hummingbird 3.0, *)
 public protocol RouterMethods<Context>: _HB_SendableMetatype {
     associatedtype Context: RequestContext
 
@@ -31,18 +31,42 @@ public protocol RouterMethods<Context>: _HB_SendableMetatype {
     ///
     /// This middleware will only be applied to endpoints added after this call.
     /// - Parameter middleware: Middleware we are adding
-    func add(middleware: any MiddlewareProtocol<Request, Response, Context>) -> Self
+    func add(middleware: any MiddlewareProtocol<Request, AnyResponseWriter, Context>) -> Self
 }
 
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 extension RouterMethods {
-    /// Add path for async closure
+    /// Associate route handler with router path and method
+    ///
+    /// - Parameters:
+    ///   - path: Router path
+    ///   - method: HTTP request method
+    ///   - closure: Closure returning a ResponseGenerator given a Request and context
     @discardableResult public func on(
         _ path: RouterPath,
         method: HTTPRequest.Method,
         use closure: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
-        let responder = self.constructResponder(use: closure)
+        let responder = CallbackResponder { request, writer, context in
+            let output = try await closure(request, context)
+            try await output.writeResponse(from: request, writer: writer, context: context)
+        }
+        self.on(path, method: method, responder: responder)
+        return self
+    }
+
+    /// Associate route handler with router path and method
+    ///
+    /// - Parameters:
+    ///   - path: Router path
+    ///   - method: HTTP request method
+    ///   - closure: Closure with Request, ResponseWriter and Context parameters
+    @discardableResult public func on(
+        _ path: RouterPath,
+        method: HTTPRequest.Method,
+        use closure: @Sendable @escaping (Request, consuming AnyResponseWriter, Context) async throws -> Void
+    ) -> Self {
+        let responder = CallbackResponder<Context>(callback: closure)
         self.on(path, method: method, responder: responder)
         return self
     }
@@ -126,7 +150,9 @@ extension RouterMethods {
     /// - Parameter buildMiddlewareStack: Middleware stack result builder
     /// - Returns: router
     @discardableResult public func addMiddleware(
-        @MiddlewareFixedTypeBuilder<Request, Response, Context> buildMiddlewareStack: () -> some MiddlewareProtocol<Request, Response, Context>
+        @MiddlewareFixedTypeBuilder<Request, AnyResponseWriter, Context> buildMiddlewareStack: () -> some MiddlewareProtocol<
+            Request, AnyResponseWriter, Context
+        >
     ) -> Self {
         self.add(middleware: buildMiddlewareStack())
     }
@@ -177,14 +203,5 @@ extension RouterMethods {
         use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
         self.on(path, method: .patch, use: handler)
-    }
-
-    internal func constructResponder(
-        use closure: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
-    ) -> CallbackResponder<Context> {
-        CallbackResponder { request, context in
-            let output = try await closure(request, context)
-            return try output.response(from: request, context: context)
-        }
     }
 }

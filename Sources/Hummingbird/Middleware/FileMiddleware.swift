@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import HTTPAPIs
 import HTTPTypes
 public import HummingbirdCore
 public import Logging
@@ -40,7 +41,7 @@ public protocol FileMiddlewareFileAttributes {
 /// "if-modified-since", "if-none-match", "if-range" and 'range" headers. It will output "content-length",
 /// "modified-date", "eTag", "content-type", "cache-control" and "content-range" headers where
 /// they are relevant.
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 public struct FileMiddleware<Context: RequestContext, Provider: FileProvider>: RouterMiddleware
 where Provider.FileAttributes: FileMiddlewareFileAttributes {
     let cacheControl: CacheControl
@@ -165,16 +166,23 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
         )
     }
 
-    /// Handle request
-    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-        let fallbackResult: Result<Response, any Error>
+    public func handle(
+        _ request: Request,
+        writer: consuming AnyResponseWriter,
+        context: Context,
+        next: (Request, consuming AnyResponseWriter, Context) async throws -> Void
+    ) async throws {
+        let fallbackResult: Result<Void, any Error>
+        let writer = BoxedResponseWriter(writer: writer)
         do {
-            let response = try await next(request, context)
+            return try await next(request, .init(writer), context)
+            /* TODO: serve file on 404 written response
+            let response = try await next(request, writer, context)
             if self.serveOnNotFoundResponse, response.status == .notFound {
                 fallbackResult = .success(response)
             } else {
                 return response
-            }
+            }*/
         } catch {
             // Guard that error is HTTP error notFound
             guard let httpError = error as? any HTTPResponseError, httpError.status == .notFound else {
@@ -182,11 +190,17 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
             }
             fallbackResult = .failure(error)
         }
-
-        return try await self.serveFile(for: request, context: context, fallbackResult: fallbackResult)
+        if let writer = writer.writer.take() {
+            return try await self.serveFile(for: request, writer: writer, context: context, fallbackResult: fallbackResult)
+        }
     }
 
-    private func serveFile(for request: Request, context: Context, fallbackResult: Result<Response, any Error>) async throws -> Response {
+    private func serveFile(
+        for request: Request,
+        writer: consuming AnyResponseWriter,
+        context: Context,
+        fallbackResult: Result<Void, any Error>
+    ) async throws {
         guard request.method == .get || request.method == .head else {
             return try fallbackResult.get()
         }
@@ -235,32 +249,32 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
 
             switch fileResult {
             case .notModified(let headers):
-                return Response(status: .notModified, headers: headers)
+                return try await writer.sendAndFinish(.init(status: .notModified, headerFields: headers))
             case .loadFile(let headers, let range):
                 switch request.method {
                 case .get:
                     if let range {
                         let body = try await self.fileProvider.loadFile(id: actualID, range: range, context: context)
-                        return Response(status: .partialContent, headers: headers, body: body)
+                        return try await writer.sendAndFinish(response: .init(status: .partialContent, headerFields: headers), body: body)
                     }
 
                     let body = try await self.fileProvider.loadFile(id: actualID, context: context)
-                    return Response(status: .ok, headers: headers, body: body)
+                    return try await writer.sendAndFinish(response: .init(status: .ok, headerFields: headers), body: body)
 
                 case .head:
-                    return Response(status: .ok, headers: headers, body: .init())
+                    return try await writer.sendAndFinish(.init(status: .ok, headerFields: headers))
 
                 default:
                     return try fallbackResult.get()
                 }
             }
         case .redirect(let path):
-            return .redirect(to: path, type: .permanent)
+            try await Response.redirect(to: path, type: .permanent).writeResponse(from: request, writer: writer, context: context)
         }
     }
 }
 
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 extension FileMiddleware {
     /// Whether to return data from the file or a not modified response
     private enum FileResult {

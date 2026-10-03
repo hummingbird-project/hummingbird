@@ -39,7 +39,7 @@ struct HummingBirdHTTP2Tests {
         tlsConfiguration.certificateVerification = .noHostnameVerification
         try await withHTTPClient(.init(tlsConfiguration: tlsConfiguration)) { httpClient in
             try await testServer(
-                responder: { (_, responseWriter: consuming ResponseSender, _) in
+                responder: { (_, responseWriter: consuming NIOResponseWriter, _) in
                     try await responseWriter.sendAndFinish(.init(status: .ok))
                 },
                 httpChannelSetup: .http2Upgrade(tlsConfiguration: getServerTLSConfiguration()),
@@ -68,7 +68,7 @@ struct HummingBirdHTTP2Tests {
         var serverTLSConfig = try getServerTLSConfiguration()
         serverTLSConfig.certificateVerification = .noHostnameVerification
         try await testServer(
-            responder: { (_, responseWriter: consuming ResponseSender, _) in
+            responder: { (_, responseWriter: consuming NIOResponseWriter, _) in
                 try await responseWriter.sendAndFinish(.init(status: .ok))
             },
             httpChannelSetup: .http2Upgrade(
@@ -125,7 +125,7 @@ struct HummingBirdHTTP2Tests {
         tlsConfiguration.certificateVerification = .noHostnameVerification
         try await withHTTPClient(.init(tlsConfiguration: tlsConfiguration)) { httpClient in
             try await testServer(
-                responder: { (_, responseWriter: consuming ResponseSender, _) in
+                responder: { (_, responseWriter: consuming NIOResponseWriter, _) in
                     try await responseWriter.sendAndFinish(.init(status: .ok))
                 },
                 httpChannelSetup: .http2Upgrade(tlsConfiguration: getServerTLSConfiguration()),
@@ -157,7 +157,7 @@ struct HummingBirdHTTP2Tests {
         tlsConfiguration.certificateVerification = .noHostnameVerification
         try await withHTTPClient(.init(tlsConfiguration: tlsConfiguration)) { httpClient in
             try await testServer(
-                responder: { (_, responseWriter: consuming ResponseSender, _) in
+                responder: { (_, responseWriter: consuming NIOResponseWriter, _) in
                     try await responseWriter.sendAndFinish(.init(status: .ok))
                 },
                 httpChannelSetup: .http2Upgrade(tlsConfiguration: getServerTLSConfiguration()),
@@ -189,7 +189,7 @@ struct HummingBirdHTTP2Tests {
         logger.logLevel = .trace
 
         try await testServer(
-            responder: { (_, responseWriter: consuming ResponseSender, _) in
+            responder: { (_, responseWriter: consuming NIOResponseWriter, _) in
                 try await responseWriter.sendAndFinish(.init(status: .ok))
             },
             httpChannelSetup: .http2Upgrade(
@@ -220,7 +220,7 @@ struct HummingBirdHTTP2Tests {
         var logger = Logger(label: "Hummingbird")
         logger.logLevel = .trace
         try await testServer(
-            responder: { (_, responseWriter: consuming ResponseSender, _) in
+            responder: { (_, responseWriter: consuming NIOResponseWriter, _) in
                 try await responseWriter.sendAndFinish(.init(status: .ok))
             },
             httpChannelSetup: .http2Upgrade(tlsConfiguration: getServerTLSConfiguration()),
@@ -272,7 +272,7 @@ struct HummingBirdHTTP2Tests {
                     configuration: .init(address: .hostname(port: 0), serverName: testServerName),
                     eventLoopGroup: eventLoopGroup,
                     logger: logger,
-                    responder: { (_, responseWriter: consuming ResponseSender, _) in
+                    responder: { (_, responseWriter: consuming NIOResponseWriter, _) in
                         try await Task.sleep(for: .seconds(2))
                         try await responseWriter.sendAndFinish(.init(status: .ok))
                     },

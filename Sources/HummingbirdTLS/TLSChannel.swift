@@ -12,6 +12,7 @@ public import NIOCore
 public import NIOSSL
 
 /// Sets up child channel to use TLS before accessing base channel setup
+@available(hummingbird 3.0, *)
 public struct TLSChannel<BaseChannel: ServerChildChannel>: ServerChildChannel {
     public typealias Value = BaseChannel.Value
 
@@ -68,12 +69,14 @@ public struct TLSChannel<BaseChannel: ServerChildChannel>: ServerChildChannel {
     var baseChannel: BaseChannel
 }
 
+@available(hummingbird 3.0, *)
 extension TLSChannel: HTTPChannelHandler where BaseChannel: HTTPChannelHandler {
     public var responder: HTTPChannelHandler.Responder {
         self.baseChannel.responder
     }
 }
 
+@available(hummingbird 3.0, *)
 extension ServerChildChannel {
     /// Construct existential ``TLSChannel`` from existential `ServerChildChannel`
     func withTLS(tlsConfiguration: TLSConfiguration) throws -> any ServerChildChannel {

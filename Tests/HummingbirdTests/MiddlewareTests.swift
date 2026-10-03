@@ -29,16 +29,30 @@ struct MiddlewareTests {
     }
 
     @available(hummingbird 3.0, *)
-    @Test func testMiddleware() async throws {
-        struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
-            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-                var response = try await next(request, context)
-                response.headers[.test] = "TestMiddleware"
-                return response
+    struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
+        let editResponse: @Sendable (inout HTTPResponse, Context) -> Void
+
+        init(
+            _ editResponse: @escaping @Sendable (inout HTTPResponse, Context) -> Void = { response, _ in
+                response.headerFields[.test] = "TestMiddleware"
             }
+        ) {
+            self.editResponse = editResponse
         }
+        public func handle(
+            _ request: Request,
+            writer: consuming AnyResponseWriter,
+            context: Context,
+            next: (Input, consuming Writer, Context) async throws -> Void
+        ) async throws {
+            try await next(request, .init(EditHeadResponseWriter(writer, { response in editResponse(&response, context) })), context)
+        }
+    }
+
+    @available(hummingbird 3.0, *)
+    @Test func testMiddleware() async throws {
         let router = Router()
-        router.add(middleware: TestMiddleware())
+        router.add(middleware: TestMiddleware { response, _ in response.headerFields[.test] = "TestMiddleware" })
         router.get("/hello") { _, _ -> String in
             "Hello"
         }
@@ -52,17 +66,9 @@ struct MiddlewareTests {
 
     @available(hummingbird 3.0, *)
     @Test func testMiddlewareOrder() async throws {
-        struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
-            let string: String
-            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-                var response = try await next(request, context)
-                response.headers[values: .test].append(self.string)
-                return response
-            }
-        }
         let router = Router()
-        router.add(middleware: TestMiddleware(string: "first"))
-        router.add(middleware: TestMiddleware(string: "second"))
+        router.add(middleware: TestMiddleware { response, _ in response.headerFields[values: .test].append("first") })
+        router.add(middleware: TestMiddleware { response, _ in response.headerFields[values: .test].append("second") })
         router.get("/hello") { _, _ -> String in
             "Hello"
         }
@@ -78,16 +84,13 @@ struct MiddlewareTests {
 
     @available(hummingbird 3.0, *)
     @Test func testMiddlewareRunOnce() async throws {
-        struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
-            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-                var response = try await next(request, context)
-                #expect(response.headers[.test] == nil)
-                response.headers[.test] = "alreadyRun"
-                return response
-            }
-        }
         let router = Router()
-        router.add(middleware: TestMiddleware())
+        router.add(
+            middleware: TestMiddleware { response, _ in
+                #expect(response.headerFields[.test] == nil)
+                response.headerFields[.test] = "TestMiddleware"
+            }
+        )
         router.get("/hello") { _, _ -> String in
             "Hello"
         }
@@ -108,10 +111,16 @@ struct MiddlewareTests {
 
             let error: Details
         }
+        @available(hummingbird 3.0, *)
         struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
-            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+            public func handle(
+                _ request: Request,
+                writer: consuming AnyResponseWriter,
+                context: Context,
+                next: (Input, consuming Writer, Context) async throws -> Void
+            ) async throws {
                 do {
-                    return try await next(request, context)
+                    try await next(request, writer, context)
                 } catch let error as HTTPError where error.status == .notFound {
                     throw HTTPError(.notFound, message: "Edited error")
                 }
@@ -133,9 +142,14 @@ struct MiddlewareTests {
     @available(hummingbird 3.0, *)
     @Test func testEndpointPathInGroup() async throws {
         struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
-            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+            public func handle(
+                _ request: Request,
+                writer: consuming AnyResponseWriter,
+                context: Context,
+                next: (Input, consuming Writer, Context) async throws -> Void
+            ) async throws {
                 #expect(context.endpointPath != nil)
-                return try await next(request, context)
+                return try await next(request, writer, context)
             }
         }
         let router = Router()
@@ -172,15 +186,17 @@ struct MiddlewareTests {
 
         }
         struct TransformMiddleware<Context: RequestContext>: RouterMiddleware {
-            public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-                let response = try await next(request, context)
-                var editedResponse = response
-                editedResponse.body = .init { writer in
-                    let transformWriter = TransformWriter(parentWriter: writer)
-                    try await response.body.write(.init(transformWriter))
-                }
-
-                return editedResponse
+            public func handle(
+                _ request: Request,
+                writer: consuming AnyResponseWriter,
+                context: Context,
+                next: (Input, consuming Writer, Context) async throws -> Void
+            ) async throws {
+                try await next(
+                    request,
+                    .init(TransformingBodyResponseWriter(writer) { TransformWriter(parentWriter: $0) }),
+                    context
+                )
             }
         }
         let router = Router()
@@ -514,8 +530,8 @@ struct MiddlewareTests {
     @Test func testMiddlewareResultBuilder() async throws {
         let router = Router()
         router.addMiddleware {
-            TestMiddleware(string: "first")
-            TestMiddleware(string: "second")
+            TestMiddleware { response, _ in response.headerFields[values: .test].append("first") }
+            TestMiddleware { response, _ in response.headerFields[values: .test].append("second") }
         }
         router.get("/hello") { _, _ -> String in
             "Hello"
@@ -536,9 +552,9 @@ struct MiddlewareTests {
             let router = Router()
             router.addMiddleware {
                 if shouldUseFirst {
-                    TestMiddleware(string: "first")
+                    TestMiddleware { response, _ in response.headerFields[.test] = "first" }
                 } else {
-                    TestMiddleware(string: "second")
+                    TestMiddleware { response, _ in response.headerFields[.test] = "second" }
                 }
             }
             router.get("/hello") { _, _ in "Hello" }
@@ -563,10 +579,9 @@ struct MiddlewareTests {
             let router = Router()
             router.addMiddleware {
                 if shouldUseFirst {
-                    TestMiddleware(string: "first")
+                    TestMiddleware { response, _ in response.headerFields[values: .test].append("first") }
                 }
-
-                TestMiddleware(string: "second")
+                TestMiddleware { response, _ in response.headerFields[values: .test].append("second") }
             }
             router.get("/hello") { _, _ in "Hello" }
             let app = Application(responder: router.buildResponder())
@@ -600,8 +615,7 @@ struct MiddlewareTests {
                 if let middleware {
                     middleware
                 }
-
-                TestMiddleware(string: "second")
+                TestMiddleware { response, _ in response.headerFields[values: .test].append("second") }
             }
             router.get("/hello") { _, _ in "Hello" }
             let app = Application(responder: router.buildResponder())
@@ -621,7 +635,9 @@ struct MiddlewareTests {
         }
 
         /// The first middleware should be included along with the second middleware.
-        try await test(middleware: TestMiddleware(string: "first"))
+        try await test(
+            middleware: TestMiddleware { response, _ in response.headerFields[values: .test].append("first") }
+        )
 
         /// The first middleware should be excluded, leaving only the second middleware.
         try await test(middleware: Optional<TestMiddleware>.none)
@@ -633,7 +649,7 @@ struct MiddlewareTests {
         let router = Router()
         router.addMiddleware {
             for i in 0..<limit {
-                TestMiddleware(string: String(i))
+                TestMiddleware { response, _ in response.headerFields[values: .test].append(String(i)) }
             }
         }
         router.get("/hello") { _, _ in "Hello" }
@@ -645,15 +661,5 @@ struct MiddlewareTests {
                 )
             }
         }
-    }
-}
-
-/// Middleware used in tests. Adds the provided `String` to the header's `.test` value.
-struct TestMiddleware<Context: RequestContext>: RouterMiddleware {
-    let string: String
-    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-        var response = try await next(request, context)
-        response.headers[values: .test].append(self.string)
-        return response
     }
 }

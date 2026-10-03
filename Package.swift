@@ -28,7 +28,9 @@ let package = Package(
         .library(name: "HummingbirdCore", targets: ["HummingbirdCore"]),
         .library(name: "HummingbirdHTTP2", targets: ["HummingbirdHTTP2"]),
         .library(name: "HummingbirdTLS", targets: ["HummingbirdTLS"]),
+        /* TODO: Re-enable HummingbirdRouter
         .library(name: "HummingbirdRouter", targets: ["HummingbirdRouter"]),
+        */
         .library(name: "HummingbirdTesting", targets: ["HummingbirdTesting"]),
         .executable(name: "PerformanceTest", targets: ["PerformanceTest"]),
     ],
@@ -99,6 +101,7 @@ let package = Package(
             ],
             swiftSettings: swiftSettings
         ),
+        /* TODO: Re-enable HummingbirdRouter
         .target(
             name: "HummingbirdRouter",
             dependencies: [
@@ -106,7 +109,7 @@ let package = Package(
                 .product(name: "Logging", package: "swift-log"),
             ],
             swiftSettings: swiftSettings
-        ),
+        ),*/
         .target(
             name: "HummingbirdTesting",
             dependencies: [
@@ -163,12 +166,12 @@ let package = Package(
                 .byName(name: "HummingbirdTLS"),
                 .byName(name: "HummingbirdHTTP2"),
                 .byName(name: "HummingbirdTesting"),
-                .byName(name: "HummingbirdRouter"),
                 .product(name: "InMemoryLogging", package: "swift-log"),
                 .product(name: "MetricsTestKit", package: "swift-metrics"),
             ],
             swiftSettings: swiftSettings
         ),
+        /* TODO: Re-enable HummingbirdRouter
         .testTarget(
             name: "HummingbirdRouterTests",
             dependencies: [
@@ -176,7 +179,7 @@ let package = Package(
                 .byName(name: "HummingbirdTesting"),
             ],
             swiftSettings: swiftSettings
-        ),
+        ),*/
         .testTarget(
             name: "HummingbirdCoreTests",
             dependencies: [
@@ -210,7 +213,7 @@ if Context.environment["ENABLE_HB_BENCHMARKS"] != nil {
             name: "HummingbirdBenchmarks",
             dependencies: [
                 "Hummingbird",
-                "HummingbirdRouter",
+                //"HummingbirdRouter",
                 .product(name: "Benchmark", package: "benchmark"),
                 .product(name: "MetricsTestKit", package: "swift-metrics"),
             ],

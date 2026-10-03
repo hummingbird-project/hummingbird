@@ -19,12 +19,14 @@ public import Logging
 ///     }
 /// }
 /// ```
+@available(hummingbird 3.0, *)
 public protocol ChildRequestContext<ParentContext>: RequestContext where Source == Never {
     associatedtype ParentContext: RequestContext
     /// Initialise RequestContext from source
     init(context: ParentContext) throws
 }
 
+@available(hummingbird 3.0, *)
 extension ChildRequestContext {
     public init(source: Source) {
         // ChildRequestContext can never be created from it's Source `Never` so add preconditionFailure

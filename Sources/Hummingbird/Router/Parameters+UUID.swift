@@ -14,6 +14,7 @@ public import Foundation
 
 /// It is common for UUID's to be passed in as parameters. So lets add helper
 /// functions to extract them from Parameters
+@available(hummingbird 3.0, *)
 extension Parameters {
     /// Return parameter with specified id as a certain type
     /// - Parameters:
