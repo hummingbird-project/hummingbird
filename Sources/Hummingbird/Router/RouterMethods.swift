@@ -36,18 +36,31 @@ public protocol RouterMethods<Context>: _HB_SendableMetatype {
 
 @available(hummingbird 3.0, *)
 extension RouterMethods {
-    /// Add path for async closure
+    /// Associate route handler with router path and method
+    ///
+    /// - Parameters:
+    ///   - path: Router path
+    ///   - method: HTTP request method
+    ///   - closure: Closure returning a ResponseGenerator given a Request and context
     @discardableResult public func on(
         _ path: RouterPath,
         method: HTTPRequest.Method,
         use closure: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
-        let responder = self.constructResponder(use: closure)
+        let responder = CallbackResponder { request, writer, context in
+            let output = try await closure(request, context)
+            try await output.writeResponse(from: request, writer: writer, context: context)
+        }
         self.on(path, method: method, responder: responder)
         return self
     }
 
-    /// Add path for async closure
+    /// Associate route handler with router path and method
+    ///
+    /// - Parameters:
+    ///   - path: Router path
+    ///   - method: HTTP request method
+    ///   - closure: Closure with Request, ResponseWriter and Context parameters
     @discardableResult public func on(
         _ path: RouterPath,
         method: HTTPRequest.Method,
@@ -190,14 +203,5 @@ extension RouterMethods {
         use handler: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
     ) -> Self {
         self.on(path, method: .patch, use: handler)
-    }
-
-    internal func constructResponder(
-        use closure: @Sendable @escaping (Request, Context) async throws -> some ResponseGenerator
-    ) -> CallbackResponder<Context> {
-        CallbackResponder { request, writer, context in
-            let output = try await closure(request, context)
-            try await output.writeResponse(from: request, writer: writer, context: context)
-        }
     }
 }
