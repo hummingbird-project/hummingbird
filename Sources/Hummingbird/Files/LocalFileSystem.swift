@@ -53,6 +53,7 @@ public struct LocalFileSystem: FileProvider {
         self.rootFolder = FilePath(rootFolder)
         self.fileIO = .init(threadPool: threadPool)
 
+        #if !os(Windows)
         let absolutePath: FilePath
         if self.rootFolder.isAbsolute {
             absolutePath = self.rootFolder
@@ -65,6 +66,7 @@ public struct LocalFileSystem: FileProvider {
             }
         }
         logger.info("Serving files from \(absolutePath)")
+        #endif
     }
 
     /// Get full path name with local file system root prefixed
