@@ -22,6 +22,7 @@ import NIOHTTPTypes
 import NIOPosix
 
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
+@available(hummingbird 3.0, *)
 struct BasicBenchmarkContext: RequestContext {
     typealias Source = BenchmarkRequestContextSource
 
@@ -32,24 +33,43 @@ struct BasicBenchmarkContext: RequestContext {
     }
 }
 
+@available(hummingbird 3.0, *)
 struct BenchmarkRequestContextSource: RequestContextSource {
     public let logger = Logger(label: "Benchmark")
 }
 
-/// Writes ByteBuffers to AsyncChannel outbound writer
-struct BenchmarkBodyWriter: ResponseBodyAsyncWriter {
-    mutating func write<Buffer>(buffer: inout Buffer) async throws(any Error)
-    where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
+@available(hummingbird 3.0, *)
+struct BenchmarkResponseWriter: ResponseWriter {
+    mutating func sendInformational(_ response: HTTPTypes.HTTPResponse) async throws {
 
     }
 
-    func finish<Buffer>(buffer: inout Buffer, finalElement: consuming HTTPTypes.HTTPFields?) async throws(any Error)
-    where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
+    func send(_ response: HTTPTypes.HTTPResponse) async throws -> Writer {
+        Writer()
+    }
 
+    func sendAndFinish<Buffer>(_ response: HTTPTypes.HTTPResponse, buffer: inout Buffer, trailer: HTTPTypes.HTTPFields?) async throws
+    where Buffer: RangeReplaceableContainer, Buffer.Element == UInt8, Buffer: ~Copyable {
+
+    }
+
+    @available(hummingbird 3.0, *)
+    struct Writer: ResponseBodyAsyncWriter {
+        mutating func write<Buffer>(buffer: inout Buffer) async throws(any Error)
+        where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
+
+        }
+
+        func finish<Buffer>(buffer: inout Buffer, finalElement: consuming HTTPTypes.HTTPFields?) async throws(any Error)
+        where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
+
+        }
     }
 }
 
+/* TODO: Re-enable HummingbirdRouter
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
+@available(hummingbird 3.0, *)
 struct BasicRouterBenchmarkContext: RouterRequestContext {
     typealias Source = BenchmarkRequestContextSource
 
@@ -61,7 +81,7 @@ struct BasicRouterBenchmarkContext: RouterRequestContext {
         self.routerContext = .init()
     }
 }
-
+*/
 typealias ByteBufferWriter = (ByteBuffer) async throws -> Void
 
 @available(hummingbird 3.0, *)
@@ -99,8 +119,7 @@ extension Benchmark {
                         let request = Request(head: request, body: requestBody)
                         try await writeBody { source.yield(.body($0)) }
                         source.finish()
-                        let response = try await responder.respond(to: request, context: context)
-                        _ = try await response.body.write(BenchmarkBodyWriter())
+                        _ = try await responder.respond(to: request, writer: BenchmarkResponseWriter(), context: context)
                     }
                 }
             } else {
@@ -110,8 +129,7 @@ extension Benchmark {
 
                 for _ in benchmark.scaledIterations {
                     for _ in 0..<50 {
-                        let response = try await responder.respond(to: hbRequest, context: context)
-                        _ = try await response.body.write(BenchmarkBodyWriter())
+                        _ = try await responder.respond(to: hbRequest, writer: BenchmarkResponseWriter(), context: context)
                     }
                 }
             }
@@ -119,9 +137,15 @@ extension Benchmark {
     }
 }
 
+@available(hummingbird 3.0, *)
 struct EmptyMiddleware<Context>: RouterMiddleware {
-    func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-        try await next(request, context)
+    func handle(
+        _ input: Request,
+        writer: consuming AnyResponseWriter,
+        context: Context,
+        next: (Request, consuming AnyResponseWriter, Context) async throws -> Void
+    ) async throws {
+        try await next(input, writer, context)
     }
 }
 
