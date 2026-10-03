@@ -56,11 +56,16 @@ struct FileMiddlewareTests {
         let app = Application(responder: router.buildResponder())
 
         let filename = "\(#function).jpg"
+        let filename2 = "/\(#function).jpg"
         let text = "Test file contents"
 
         try await FileIOTests.withFile(filename, contents: text.utf8) {
             try await app.test(.router) { client in
                 try await client.execute(uri: filename, method: .get) { response in
+                    #expect(String(buffer: response.body) == text)
+                    #expect(response.headers[.contentType] == "image/jpeg")
+                }
+                try await client.execute(uri: filename2, method: .get) { response in
                     #expect(String(buffer: response.body) == text)
                     #expect(response.headers[.contentType] == "image/jpeg")
                 }
