@@ -10,6 +10,7 @@
 public import Logging
 public import NIOPosix
 import _NIOFileSystem
+import SystemPackage
 
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
@@ -40,7 +41,7 @@ public struct LocalFileSystem: FileProvider {
     /// File Identifier (Fully qualified path)
     public typealias FileIdentifier = String
 
-    let rootFolder: String
+    let rootFolder: FilePath
     let fileIO: FileIO
 
     /// Initialize LocalFileSystem FileProvider
@@ -49,25 +50,21 @@ public struct LocalFileSystem: FileProvider {
     ///   - threadPool: Thread pool used when loading files
     ///   - logger: Logger to output root folder information
     public init(rootFolder: String, threadPool: NIOThreadPool, logger: Logger) {
-        if rootFolder.last != "/" {
-            self.rootFolder = "\(rootFolder)/"
-        } else {
-            self.rootFolder = rootFolder
-        }
+        self.rootFolder = FilePath(rootFolder)
         self.fileIO = .init(threadPool: threadPool)
 
-        let workingFolder: String
-        if rootFolder.first == "/" {
-            workingFolder = ""
+        let absolutePath: FilePath
+        if self.rootFolder.isAbsolute {
+            absolutePath = self.rootFolder
         } else {
-            if let cwd = getcwd(nil, Int(PATH_MAX)) {
-                workingFolder = String(cString: cwd) + "/"
+            if let cwd = getcwd(nil, 0) {
+                absolutePath = FilePath(platformString: cwd).pushing(self.rootFolder)
                 free(cwd)
             } else {
-                workingFolder = "./"
+                absolutePath = self.rootFolder
             }
         }
-        logger.info("Serving files from \(workingFolder)\(rootFolder)")
+        logger.info("Serving files from \(absolutePath)")
     }
 
     /// Get full path name with local file system root prefixed
@@ -75,9 +72,9 @@ public struct LocalFileSystem: FileProvider {
     /// - Returns: Full path
     public func getFileIdentifier(_ path: String) -> FileIdentifier? {
         if path.first == "/" {
-            return "\(self.rootFolder)\(path.dropFirst())"
+            return "\(self.rootFolder)/\(path.dropFirst())"
         } else {
-            return "\(self.rootFolder)\(path)"
+            return "\(self.rootFolder)/\(path)"
         }
     }
 
