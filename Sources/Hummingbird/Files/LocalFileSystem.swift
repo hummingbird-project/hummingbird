@@ -6,9 +6,11 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+#if FileSystemSupport
 public import Logging
 public import NIOPosix
 import _NIOFileSystem
+import SystemPackage
 
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
@@ -39,7 +41,7 @@ public struct LocalFileSystem: FileProvider {
     /// File Identifier (Fully qualified path)
     public typealias FileIdentifier = String
 
-    let rootFolder: String
+    let rootFolder: FilePath
     let fileIO: FileIO
 
     /// Initialize LocalFileSystem FileProvider
@@ -48,36 +50,31 @@ public struct LocalFileSystem: FileProvider {
     ///   - threadPool: Thread pool used when loading files
     ///   - logger: Logger to output root folder information
     public init(rootFolder: String, threadPool: NIOThreadPool, logger: Logger) {
-        if rootFolder.last != "/" {
-            self.rootFolder = "\(rootFolder)/"
-        } else {
-            self.rootFolder = rootFolder
-        }
+        self.rootFolder = FilePath(rootFolder)
         self.fileIO = .init(threadPool: threadPool)
 
-        let workingFolder: String
-        if rootFolder.first == "/" {
-            workingFolder = ""
+        #if !os(Windows)
+        let absolutePath: FilePath
+        if self.rootFolder.isAbsolute {
+            absolutePath = self.rootFolder
         } else {
-            if let cwd = getcwd(nil, Int(PATH_MAX)) {
-                workingFolder = String(cString: cwd) + "/"
+            if let cwd = getcwd(nil, 0) {
+                absolutePath = FilePath(platformString: cwd).pushing(self.rootFolder)
                 free(cwd)
             } else {
-                workingFolder = "./"
+                absolutePath = self.rootFolder
             }
         }
-        logger.info("Serving files from \(workingFolder)\(rootFolder)")
+        logger.info("Serving files from \(absolutePath)")
+        #endif
     }
 
     /// Get full path name with local file system root prefixed
     /// - Parameter path: path from URI
     /// - Returns: Full path
     public func getFileIdentifier(_ path: String) -> FileIdentifier? {
-        if path.first == "/" {
-            return "\(self.rootFolder)\(path.dropFirst())"
-        } else {
-            return "\(self.rootFolder)\(path)"
-        }
+        let fullPath = self.rootFolder.appending(path).string
+        return fullPath
     }
 
     /// Get file attributes
@@ -117,3 +114,4 @@ public struct LocalFileSystem: FileProvider {
         try await self.fileIO.loadFile(path: path, range: range, context: context)
     }
 }
+#endif
