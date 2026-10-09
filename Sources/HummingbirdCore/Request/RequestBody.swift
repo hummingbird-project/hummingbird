@@ -135,34 +135,34 @@ extension RequestBody {
     struct Delegate: NIOAsyncSequenceProducerDelegate, Sendable {
         enum State {
             case produceMore
-            case waitingForProduceMore(CheckedContinuation<Void, Never>?)
-            case multipleWaitingForProduceMore(Deque<CheckedContinuation<Void, Never>>)
+            case waitingForProduceMore(CheckedContinuation<Int, Never>?)
+            case multipleWaitingForProduceMore(Deque<CheckedContinuation<Int, Never>>)
             case terminated
         }
         struct LockedState {
             var state: State
-            /// Number of times `produceMore` has been called. `Source.yield` samples this before
-            /// yielding and hands it to `stopProducing`, so a `produceMore` that arrives after the
+            /// Identifier of last `produceMore` called. `waitForProduceMore` returns this value so
+            /// `Source.yield` can pass it onto `stopProducing`, so a `produceMore` that arrives after the
             /// sequence has answered `.stopProducing` but before `stopProducing` runs isn't lost.
-            var produceMoreCount: Int
+            var produceMoreID: Int
         }
         let lockedState: NIOLockedValueBox<LockedState>
 
         @usableFromInline
         init() {
-            self.lockedState = .init(.init(state: .produceMore, produceMoreCount: 0))
+            self.lockedState = .init(.init(state: .produceMore, produceMoreID: 0))
         }
 
         @usableFromInline
         func produceMore() {
             self.lockedState.withLockedValue { lockedState in
-                lockedState.produceMoreCount += 1
+                lockedState.produceMoreID += 1
                 switch lockedState.state {
                 case .produceMore:
                     break
                 case .waitingForProduceMore(let continuation):
                     if let continuation {
-                        continuation.resume()
+                        continuation.resume(returning: lockedState.produceMoreID)
                     }
                     lockedState.state = .produceMore
 
@@ -170,7 +170,7 @@ extension RequestBody {
                     // this isnt exactly correct as the number of continuations
                     // resumed can overflow the back pressure
                     while let cont = continuations.popFirst() {
-                        cont.resume()
+                        cont.resume(returning: lockedState.produceMoreID)
                     }
                     lockedState.state = .produceMore
 
@@ -188,12 +188,12 @@ extension RequestBody {
                     break
                 case .waitingForProduceMore(let continuation):
                     if let continuation {
-                        continuation.resume()
+                        continuation.resume(returning: lockedState.produceMoreID)
                     }
                     lockedState.state = .terminated
                 case .multipleWaitingForProduceMore(var continuations):
                     while let cont = continuations.popFirst() {
-                        cont.resume()
+                        cont.resume(returning: lockedState.produceMoreID)
                     }
                     lockedState.state = .terminated
                 case .terminated:
@@ -203,19 +203,20 @@ extension RequestBody {
         }
 
         @usableFromInline
-        func waitForProduceMore() async {
-            switch self.lockedState.withLockedValue({ $0.state }) {
+        func waitForProduceMore() async -> Int {
+            let state = self.lockedState.withLockedValue({ $0 })
+            switch state.state {
             case .produceMore, .terminated:
-                break
+                return state.produceMoreID
             case .waitingForProduceMore, .multipleWaitingForProduceMore:
-                await withCheckedContinuation { (newContinuation: CheckedContinuation<Void, Never>) in
+                return await withCheckedContinuation { (newContinuation: CheckedContinuation<Int, Never>) in
                     self.lockedState.withLockedValue { lockedState in
                         switch lockedState.state {
                         case .produceMore:
-                            newContinuation.resume()
+                            newContinuation.resume(returning: lockedState.produceMoreID)
                         case .waitingForProduceMore(let firstContinuation):
                             if let firstContinuation {
-                                var continuations = Deque<CheckedContinuation<Void, Never>>()
+                                var continuations = Deque<CheckedContinuation<Int, Never>>()
                                 continuations.reserveCapacity(2)
                                 continuations.append(firstContinuation)
                                 continuations.append(newContinuation)
@@ -227,30 +228,23 @@ extension RequestBody {
                             continuations.append(newContinuation)
                             lockedState.state = .multipleWaitingForProduceMore(continuations)
                         case .terminated:
-                            newContinuation.resume()
+                            newContinuation.resume(returning: state.produceMoreID)
                         }
                     }
                 }
             }
         }
 
-        /// Number of `produceMore` calls so far, to pass to ``stopProducing(produceMoreCount:)``.
-        @usableFromInline
-        func currentProduceMoreCount() -> Int {
-            self.lockedState.withLockedValue { $0.produceMoreCount }
-        }
-
         /// Stop producing until the next `produceMore`.
         ///
-        /// - Parameter produceMoreCount: ``currentProduceMoreCount()`` sampled before the yield that
-        ///     returned `.stopProducing`. If `produceMore` has been called since then, the consumer has
-        ///     already drained the buffer and will not ask again, so keep producing.
+        /// - Parameter produceMoreID: Identifer of last produceMore processed. If `produceMore` has been
+        ///     called since then, the consumer has already drained the buffer and will not ask again, so keep producing.
         @usableFromInline
-        func stopProducing(produceMoreCount: Int) {
+        func stopProducing(produceMoreID: Int) {
             self.lockedState.withLockedValue { lockedState in
                 switch lockedState.state {
                 case .produceMore:
-                    if lockedState.produceMoreCount == produceMoreCount {
+                    if lockedState.produceMoreID == produceMoreID {
                         lockedState.state = .waitingForProduceMore(nil)
                     }
                 case .waitingForProduceMore:
@@ -287,11 +281,10 @@ extension RequestBody {
         public func yield(_ element: ByteBuffer) async {
             // if previous call indicated we should stop producing wait until the delegate
             // says we can start producing again
-            await self.delegate.waitForProduceMore()
-            let produceMoreCount = self.delegate.currentProduceMoreCount()
+            let produceMoreID = await self.delegate.waitForProduceMore()
             let result = self.source.yield(element)
             if result == .stopProducing {
-                self.delegate.stopProducing(produceMoreCount: produceMoreCount)
+                self.delegate.stopProducing(produceMoreID: produceMoreID)
             }
         }
 
