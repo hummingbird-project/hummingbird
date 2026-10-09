@@ -24,7 +24,6 @@ jobs:
     - name: Checkout Project Template
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       with:
-        ref: local-override
         fetch-depth: 1
         path: project-template
         repository: hummingbird-project/hummingbird-project-template
