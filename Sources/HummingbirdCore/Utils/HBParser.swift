@@ -462,7 +462,7 @@ extension Parser {
     }
 
     fileprivate func makeString<Bytes: Collection>(_ bytes: Bytes) -> String where Bytes.Element == UInt8, Bytes.Index == Int {
-        if let string = bytes.withContiguousStorageIfAvailable({ String(decoding: $0, as: Unicode.UTF8.self) }) {
+        if let string = bytes.withContiguousStorageIfAvailable({ unsafe String(decoding: $0, as: Unicode.UTF8.self) }) {
             return string
         } else {
             return String(decoding: bytes, as: Unicode.UTF8.self)
