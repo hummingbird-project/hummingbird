@@ -74,20 +74,21 @@ extension StringProtocol {
 
     fileprivate static func addingPercentEncoding(utf8Buffer: some Collection<UInt8>, component: URLComponentSet) -> String {
         let maxLength = utf8Buffer.count * 3
-        let result = withUnsafeTemporaryAllocation(of: UInt8.self, capacity: maxLength + 1) { _buffer in
-            var buffer = OutputBuffer(initializing: _buffer.baseAddress!, capacity: _buffer.count)
-            for v in utf8Buffer {
-                if v.isAllowedIn(component) {
-                    buffer.appendElement(v)
+        let percent = UInt8(ascii: "%")
+        let result = withUnsafeTemporaryAllocation(of: UInt8.self, capacity: maxLength) { buffer in
+            var i = 0
+            for byte in utf8Buffer {
+                if byte.isAllowedIn(component) {
+                    buffer[i] = byte
+                    i += 1
                 } else {
-                    buffer.appendElement(UInt8(ascii: "%"))
-                    buffer.appendElement(hexToAscii(v >> 4))
-                    buffer.appendElement(hexToAscii(v & 0xF))
+                    buffer[i] = percent
+                    buffer[i + 1] = hexToAscii(byte >> 4)
+                    buffer[i + 2] = hexToAscii(byte & 0xF)
+                    i += 3
                 }
             }
-            buffer.appendElement(0)  // NULL-terminated
-            let initialized = buffer.relinquishBorrowedMemory()
-            return String(cString: initialized.baseAddress!)
+            return String(decoding: buffer[..<i], as: UTF8.self)
         }
         return result
     }
