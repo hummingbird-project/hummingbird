@@ -7,6 +7,7 @@
 //
 
 import Dispatch
+import HummingbirdCore
 import Metrics
 import NIOConcurrencyHelpers
 
@@ -27,23 +28,30 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
         self.metricsCache = .init()
     }
 
-    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+    public func handle(
+        _ request: Request,
+        writer: consuming AnyResponseWriter,
+        context: Context,
+        next: (Input, consuming Writer, Context) async throws -> Void
+    ) async throws {
         let startTime = DispatchTime.now().uptimeNanoseconds
         let activeRequestMeter = self.metricsCache.getMethodMetrics(id: .init(method: request.method)).activeRequestMeter
         activeRequestMeter.increment()
+        defer {
+            activeRequestMeter.decrement()
+        }
         do {
-            var response = try await next(request, context)
-            let responseStatus = response.status
-            response.body = response.body.withPostWriteClosure {
-                let metrics = self.metricsCache.getEndpointMetrics(
-                    id: .init(endpoint: context.endpointPath ?? "Unknown", method: request.method, status: responseStatus)
-                )
-                metrics.counter.increment()
-                metrics.timer.recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
-                activeRequestMeter.decrement()
-            }
-
-            return response
+            var status: HTTPResponse.Status = .ok
+            try await next(
+                request,
+                .init(writer.editHead { status = $0.status }),
+                context
+            )
+            let metrics = self.metricsCache.getEndpointMetrics(
+                id: .init(endpoint: context.endpointPath ?? "Unknown", method: request.method, status: status)
+            )
+            metrics.counter.increment()
+            metrics.timer.recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
         } catch {
             let errorType: HTTPResponse.Status
             if let httpError = error as? any HTTPResponseError {
@@ -56,7 +64,6 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
             )
             metrics.counter.increment()
             metrics.errorCounter.increment()
-            activeRequestMeter.decrement()
             throw error
         }
     }

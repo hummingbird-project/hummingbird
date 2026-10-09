@@ -21,22 +21,31 @@
 ///   ...
 /// }
 /// ```
+
+public import HummingbirdCore
+
 @_documentation(visibility: internal)
-public struct _OptionalMiddleware<M0: MiddlewareProtocol>: MiddlewareProtocol {
+public struct _OptionalMiddleware<M0: MiddlewareProtocol>: MiddlewareProtocol where M0.Writer: ~Copyable {
     public typealias Input = M0.Input
-    public typealias Output = M0.Output
+    public typealias Writer = M0.Writer
     public typealias Context = M0.Context
 
     public let middleware: M0?
 
     @inlinable
-    public func handle(_ input: M0.Input, context: M0.Context, next: (M0.Input, M0.Context) async throws -> M0.Output) async throws -> M0.Output {
+    public func handle(
+        _ input: M0.Input,
+        writer: consuming Writer,
+        context: M0.Context,
+        next: (M0.Input, consuming M0.Writer, M0.Context) async throws -> Void
+    ) async throws {
         guard let middleware else {
-            return try await next(input, context)
+            return try await next(input, writer, context)
         }
 
-        return try await middleware.handle(input, context: context, next: next)
+        return try await middleware.handle(input, writer: writer, context: context, next: next)
     }
 }
 
-extension _OptionalMiddleware: RouterMiddleware where M0.Input == Request, M0.Output == Response {}
+@available(hummingbird 3.0, *)
+extension _OptionalMiddleware: RouterMiddleware where M0.Input == Request, M0.Writer == AnyResponseWriter {}

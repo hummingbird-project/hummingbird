@@ -95,25 +95,4 @@ public struct ResponseBody {
     private init(_backing: consuming _Backing) {
         self._backing = _backing
     }
-    /// Create new response body that calls a closure once original response body has been written
-    /// to the channel
-    ///
-    /// When you return a response from a handler, this cannot be considered to be the point the
-    /// response was written. This functions provides you a method for catching the point when the
-    /// response has been fully written. If you drop the response in a middleware run after this
-    /// point the post write closure will not get run.
-    @available(hummingbird 3.0, *)
-    consuming package func withPostWriteClosure(_ postWrite: @escaping () async -> Void) -> Self {
-        let contentLength = self.contentLength
-        var backing: _Backing? = self._backing
-        return .init(contentLength: contentLength) { writer in
-            do {
-                try await ResponseBody(_backing: backing.take()!).write(writer)
-                await postWrite()
-            } catch {
-                await postWrite()
-                throw error
-            }
-        }
-    }
 }

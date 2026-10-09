@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-public import HummingbirdCore
+import HummingbirdCore
 
 @available(hummingbird 2.0, *)
 extension Response {
@@ -16,7 +16,7 @@ extension Response {
     }
 }
 
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 extension EditedResponse {
     /// Set cookie on reponse patch
     ///

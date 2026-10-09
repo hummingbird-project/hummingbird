@@ -6,7 +6,9 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import HTTPAPIs
 public import HTTPTypes
+import HummingbirdCore
 public import NIOCore
 
 /// Middleware implementing Cross-Origin Resource Sharing (CORS) headers.
@@ -15,6 +17,7 @@ public import NIOCore
 /// then return an empty body with all the standard CORS headers otherwise send
 /// request onto the next handler and when you receive the response add a
 /// "access-control-allow-origin" header
+@available(hummingbird 3.0, *)
 public struct CORSMiddleware<Context: RequestContext>: RouterMiddleware {
     /// Defines what origins are allowed
     @available(*, deprecated, renamed: "AllowOriginExtended")
@@ -170,11 +173,15 @@ public struct CORSMiddleware<Context: RequestContext>: RouterMiddleware {
         self.maxAge = maxAge.map { String(describing: $0.nanoseconds / 1_000_000_000) }
     }
 
-    /// apply CORS middleware
-    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+    public func handle(
+        _ request: Request,
+        writer: consuming AnyResponseWriter,
+        context: Context,
+        next: (Request, consuming AnyResponseWriter, Context) async throws -> Void
+    ) async throws {
         // if no origin header then don't apply CORS
         guard request.headers.contains(.origin) else {
-            return try await next(request, context)
+            return try await next(request, writer, context)
         }
 
         if request.method == .options {
@@ -199,19 +206,25 @@ public struct CORSMiddleware<Context: RequestContext>: RouterMiddleware {
                 headers[.vary] = "Origin"
             }
 
-            return Response(status: .noContent, headers: headers, body: .init())
+            return try await writer.sendAndFinish(.init(status: .noContent, headerFields: headers))
         } else {
             // if not OPTIONS then run rest of middleware chain and add origin value at the end
             do {
-                var response = try await next(request, context)
-                response.headers[.accessControlAllowOrigin] = self.allowOrigin.value(for: request)
-                if self.allowCredentials {
-                    response.headers[.accessControlAllowCredentials] = "true"
-                }
-                if self.allowOrigin.shouldAddToVaryHeader {
-                    response.headers[values: .vary].append("Origin")
-                }
-                return response
+                return try await next(
+                    request,
+                    .init(
+                        writer.editHead { response in
+                            response.headerFields[.accessControlAllowOrigin] = self.allowOrigin.value(for: request)
+                            if self.allowCredentials {
+                                response.headerFields[.accessControlAllowCredentials] = "true"
+                            }
+                            if self.allowOrigin.shouldAddToVaryHeader {
+                                response.headerFields[values: .vary].append("Origin")
+                            }
+                        }
+                    ),
+                    context
+                )
             } catch {
                 // If next throws an error add headers to error
                 var additionalHeaders = HTTPFields()

@@ -15,6 +15,7 @@ import Testing
 struct PersistTests {
     static let redisHostname = Environment().get("REDIS_HOSTNAME") ?? "localhost"
 
+    @available(hummingbird 3.0, *)
     func createRouter(
         configuration: MemoryPersistDriver<ContinuousClock>.Configuration = .init()
     ) throws -> (Router<BasicRequestContext>, any PersistDriver) {

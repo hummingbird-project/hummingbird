@@ -6,9 +6,12 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import HTTPAPIs
+import HummingbirdCore
 import NIOCore
+import NIOHTTP1
 
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 public struct RouterResponder<Context: RequestContext>: HTTPResponder {
     @usableFromInline
     let trie: RouterTrie<EndpointResponders<Context>>
@@ -30,28 +33,32 @@ public struct RouterResponder<Context: RequestContext>: HTTPResponder {
         self.notFoundResponder = notFoundResponder
     }
 
-    /// Respond to request by calling correct handler
-    /// - Parameters
-    ///   - request: HTTP request
-    ///   - context: Request context
-    /// - Returns: Response
-    @inlinable
-    public func respond(to request: Request, context: Context) async throws -> Response {
+    /// Respond to the request supplied
+    public func respond(to request: Request, writer: consuming some (ResponseWriter & ~Copyable), context: Context) async throws {
+        let writer = writer.box()
         do {
             let path = request.uri.path
             guard
                 let (responderChain, parameters) = trie.resolve(path),
                 let responder = responderChain.getResponder(for: request.method)
             else {
-                return try await self.notFoundResponder.respond(to: request, context: context)
+                return try await self.notFoundResponder.respond(to: request, writer: writer, context: context)
             }
             var context = context
             context.coreContext.parameters = parameters
             // store endpoint path in request (mainly for metrics)
             context.coreContext.endpointPath.value = responderChain.path.description
-            return try await responder.respond(to: request, context: context)
+            try await responder.respond(to: request, writer: writer, context: context)
         } catch let error as any HTTPResponseError {
-            return try error.response(from: request, context: context)
+            if let writer = writer.take() {
+                try await error.writeResponse(from: request, writer: writer, context: context)
+            }
+        } catch let error as HTTPParserError {
+            throw error
+        } catch {
+            if let writer = writer.take() {
+                try await writer.sendAndFinish(.init(status: .internalServerError))
+            }
         }
     }
 }
