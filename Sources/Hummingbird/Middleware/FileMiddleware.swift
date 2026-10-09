@@ -173,7 +173,7 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
         next: (Request, consuming AnyResponseWriter, Context) async throws -> Void
     ) async throws {
         let fallbackResult: Result<Void, any Error>
-        let writer = BoxedResponseWriter(writer: writer)
+        let writer = writer.box()
         do {
             return try await next(request, .init(writer), context)
             /* TODO: serve file on 404 written response

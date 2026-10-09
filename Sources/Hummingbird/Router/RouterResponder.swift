@@ -9,6 +9,7 @@
 import HTTPAPIs
 import HummingbirdCore
 import NIOCore
+import NIOHTTP1
 
 @available(hummingbird 3.0, *)
 public struct RouterResponder<Context: RequestContext>: HTTPResponder {
@@ -34,7 +35,7 @@ public struct RouterResponder<Context: RequestContext>: HTTPResponder {
 
     /// Respond to the request supplied
     public func respond(to request: Request, writer: consuming some (ResponseWriter & ~Copyable), context: Context) async throws {
-        let writer = BoxedResponseWriter(writer: writer)
+        let writer = writer.box()
         do {
             let path = request.uri.path
             guard
@@ -52,6 +53,8 @@ public struct RouterResponder<Context: RequestContext>: HTTPResponder {
             if let writer = writer.take() {
                 try await error.writeResponse(from: request, writer: writer, context: context)
             }
+        } catch let error as HTTPParserError {
+            throw error
         } catch {
             if let writer = writer.take() {
                 try await writer.sendAndFinish(.init(status: .internalServerError))

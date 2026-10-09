@@ -16,7 +16,7 @@ public struct TransformingBodyResponseWriter<Parent: ResponseWriter & ~Copyable,
 {
 
     @inlinable
-    package init(_ parentWriter: consuming Parent, _ transform: @escaping (consuming Parent.Writer) async throws -> Writer) {
+    init(_ parentWriter: consuming Parent, _ transform: @escaping (consuming Parent.Writer) async throws -> Writer) {
         self.parentWriter = consume parentWriter
         self.transformWriter = transform
     }
@@ -44,4 +44,14 @@ public struct TransformingBodyResponseWriter<Parent: ResponseWriter & ~Copyable,
     var parentWriter: Parent
     @usableFromInline
     let transformWriter: nonisolated(nonsending) (consuming Parent.Writer) async throws -> Writer
+}
+
+@available(hummingbird 3.0, *)
+extension ResponseWriter where Self: ~Copyable {
+    @inlinable
+    public consuming func transformBody<OutputWriter: ResponseBodyAsyncWriter & ~Copyable>(
+        _ transform: @escaping (consuming Writer) async throws -> OutputWriter
+    ) -> TransformingBodyResponseWriter<Self, OutputWriter> {
+        TransformingBodyResponseWriter(self, transform)
+    }
 }

@@ -126,7 +126,7 @@ public struct EditedResponse<Generator: ResponseGenerator>: ResponseGenerator {
     public func writeResponse(from request: Request, writer: consuming some ResponseWriter & ~Copyable, context: some RequestContext) async throws {
         try await responseGenerator.writeResponse(
             from: request,
-            writer: EditHeadResponseWriter(writer) { response in
+            writer: writer.editHead { response in
                 if let status = self.status {
                     response.status = status
                 }

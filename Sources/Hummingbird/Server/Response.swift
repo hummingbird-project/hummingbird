@@ -7,6 +7,7 @@
 //
 
 public import HTTPTypes
+public import HummingbirdCore
 
 /// Holds all the required to generate a HTTP Response
 public struct Response {

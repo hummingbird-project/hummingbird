@@ -45,7 +45,7 @@ struct MiddlewareTests {
             context: Context,
             next: (Input, consuming Writer, Context) async throws -> Void
         ) async throws {
-            try await next(request, .init(EditHeadResponseWriter(writer, { response in editResponse(&response, context) })), context)
+            try await next(request, .init(writer.editHead { response in editResponse(&response, context) }), context)
         }
     }
 
@@ -194,7 +194,7 @@ struct MiddlewareTests {
             ) async throws {
                 try await next(
                     request,
-                    .init(TransformingBodyResponseWriter(writer) { TransformWriter(parentWriter: $0) }),
+                    .init(writer.transformBody { TransformWriter(parentWriter: $0) }),
                     context
                 )
             }

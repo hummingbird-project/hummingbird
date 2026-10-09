@@ -16,7 +16,7 @@ public import HTTPTypes
 @available(hummingbird 3.0, *)
 public struct EditHeadResponseWriter<Sender: ResponseWriter & ~Copyable>: ResponseWriter, ~Copyable {
     @inlinable
-    package init(_ sender: consuming Sender, _ edit: @escaping (inout HTTPResponse) async throws -> Void) {
+    init(_ sender: consuming Sender, _ edit: @escaping (inout HTTPResponse) async throws -> Void) {
         self.sender = consume sender
         self.edit = edit
     }
@@ -45,4 +45,12 @@ public struct EditHeadResponseWriter<Sender: ResponseWriter & ~Copyable>: Respon
     var sender: Sender
     @usableFromInline
     let edit: (inout HTTPResponse) async throws -> Void
+}
+
+@available(hummingbird 3.0, *)
+extension ResponseWriter where Self: ~Copyable {
+    @inlinable
+    public consuming func editHead(_ edit: @escaping (inout HTTPResponse) async throws -> Void) -> EditHeadResponseWriter<Self> {
+        EditHeadResponseWriter(self, edit)
+    }
 }

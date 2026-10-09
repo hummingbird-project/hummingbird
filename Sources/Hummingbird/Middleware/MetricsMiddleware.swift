@@ -44,7 +44,7 @@ public struct MetricsMiddleware<Context: RequestContext>: RouterMiddleware {
             var status: HTTPResponse.Status = .ok
             try await next(
                 request,
-                .init(EditHeadResponseWriter(writer) { status = $0.status }),
+                .init(writer.editHead { status = $0.status }),
                 context
             )
             let metrics = self.metricsCache.getEndpointMetrics(

@@ -64,7 +64,7 @@ extension Request {
             case .result(let headers, let result):
                 try await result.writeResponse(
                     from: request,
-                    writer: EditHeadResponseWriter(writer) { $0.headerFields.append(contentsOf: headers) },
+                    writer: writer.editHead { $0.headerFields.append(contentsOf: headers) },
                     context: context
                 )
             }

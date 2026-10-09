@@ -27,7 +27,7 @@ public import HTTPTypes
 /// ```
 @available(hummingbird 3.0, *)
 public final class BoxedResponseWriter<Writer: ResponseWriter & ~Copyable>: ResponseWriter {
-    public init(writer: consuming Writer) {
+    init(writer: consuming Writer) {
         self.writer = consume writer
     }
 
@@ -65,5 +65,13 @@ public enum ResponseWriterError: Error, CustomStringConvertible {
         case .alreadyUsed:
             "The response writer is no longer available as it has already been used"
         }
+    }
+}
+
+@available(hummingbird 3.0, *)
+extension ResponseWriter where Self: ~Copyable {
+    @inlinable
+    public consuming func box() -> BoxedResponseWriter<Self> {
+        BoxedResponseWriter(writer: self)
     }
 }
