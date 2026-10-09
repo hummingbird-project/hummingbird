@@ -69,7 +69,7 @@ struct ApplicationTests {
             "Hello"
         }
         let app = Application(responder: router.buildResponder())
-        try await app.test(.live) { client in
+        try await app.test(.asyncTesting) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
                 #expect(response.headers[.contentLength] == "5")
                 #expect(response.headers[.date] != nil)
@@ -86,7 +86,7 @@ struct ApplicationTests {
             responder: router.buildResponder(),
             configuration: .init(serverName: "TestServer")
         )
-        try await app.test(.live) { client in
+        try await app.test(.asyncTesting) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
                 #expect(response.headers[.server] == "TestServer")
             }
@@ -520,7 +520,7 @@ struct ApplicationTests {
                 )
             }
         let app = Application(responder: router.buildResponder())
-        try await app.test(.live) { client in
+        try await app.test(.asyncTesting) { client in
             // check streamed route doesn't
             try await client.execute(uri: "/chunked", method: .get) { response in
                 #expect(response.headers[.transferEncoding] == "chunked")
@@ -615,7 +615,7 @@ struct ApplicationTests {
                 Response(status: .ok)
             }
         )
-        try await app.test(.live) { client in
+        try await app.test(.asyncTesting) { client in
             try await client.execute(uri: "/hello", method: .get) { response in
                 #expect(response.status == .ok)
             }
@@ -751,7 +751,7 @@ struct ApplicationTests {
             )
         }
         let app = Application(router: router)
-        try await app.test(.live) { client in
+        try await app.test(.asyncTesting) { client in
             try await client.execute(uri: "/", method: .post, body: buffer) { response in
                 #expect(
                     response.body == ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 0xFF })
@@ -931,7 +931,7 @@ struct ApplicationTests {
         }
         let app = Application(responder: router.buildResponder())
 
-        try await app.test(.live) { client in
+        try await app.test(.asyncTesting) { client in
             let buffer = Self.randomBuffer(size: 640_001)
             try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
                 #expect(response.status == .ok)
@@ -956,7 +956,7 @@ struct ApplicationTests {
         }
         let app = Application(responder: router.buildResponder())
 
-        try await app.test(.live) { client in
+        try await app.test(.asyncTesting) { client in
             let buffer = Self.randomBuffer(size: 640_001)
             try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
                 #expect(response.status == .ok)
@@ -985,7 +985,7 @@ struct ApplicationTests {
         }
         let app = Application(responder: router.buildResponder())
 
-        try await app.test(.live) { client in
+        try await app.test(.asyncTesting) { client in
             let buffer = Self.randomBuffer(size: 640_001)
             try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
                 #expect(response.status == .ok)
@@ -1019,7 +1019,7 @@ struct ApplicationTests {
         }
         let app = Application(responder: router.buildResponder())
 
-        try await app.test(.live) { client in
+        try await app.test(.asyncTesting) { client in
             let buffer = Self.randomBuffer(size: 640_001)
             let xorBuffer = ByteBuffer(bytes: buffer.readableBytesView.map { $0 ^ 255 })
             try await client.execute(uri: "/streaming", method: .post, body: buffer) { response in
