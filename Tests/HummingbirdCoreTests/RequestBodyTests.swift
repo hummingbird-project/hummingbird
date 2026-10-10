@@ -52,6 +52,29 @@ struct RequestBodyTests {
         }
     }
 
+    /// `Source.yield` used to lose a wakeup when the consumer drained the buffer between the
+    /// sequence answering `.stopProducing` and the delegate being told to stop: the producer then
+    /// waited for a `produceMore` that never came, and the consumer waited for data forever.
+    @Test(.timeLimit(.minutes(1)))
+    func testStreamedRequestBodyNeverStallsUnderBackPressure() async throws {
+        for _ in 0..<2000 {
+            let (requestBody, source) = RequestBody.makeStream()
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    for _ in 0..<64 {
+                        await source.yield(ByteBuffer(repeating: 0, count: 16))
+                    }
+                    source.finish()
+                }
+                group.addTask {
+                    let buffer = try await requestBody.collect(upTo: .max)
+                    #expect(buffer.readableBytes == 64 * 16)
+                }
+                try await group.waitForAll()
+            }
+        }
+    }
+
     @Test func testInboundClosureParsingStream() async throws {
         try await withThrowingTaskGroup(of: Void.self) { group in
             let (httpSource, httpStream) = NIOAsyncChannelInboundStream<HTTPRequestPart>.makeTestingStream()

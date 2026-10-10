@@ -1,0 +1,63 @@
+name: Update from project template
+
+on:
+  schedule:
+    - cron: "15 0 * * 0"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  build:
+    runs-on: macOS-latest
+    steps:
+    - name: App Token
+      uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1  # v3.2.0
+      id: generate-token
+      with:
+        client-id: ${{ secrets.HB_APP_ID }}
+        private-key: ${{ secrets.HB_APP_PRIVATE_KEY }}
+        owner: ${{ github.repository_owner }}
+    - name: Checkout Project Template
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      with:
+        fetch-depth: 1
+        path: project-template
+        repository: hummingbird-project/hummingbird-project-template
+    - name: Checkout Target Repository
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      with:
+        fetch-depth: 1
+        path: hummingbird
+    - name: Install Dependencies
+      run: |
+        brew install hummingbird-project/tap/swift-mustache-cli
+    - name: Update Target Repository
+      run: |
+        cd project-template
+        ./update.sh ../hummingbird
+    - name: Set Commit message
+      run: |
+        cd project-template
+        {
+          echo 'GIT_COMMIT_MESSAGE<<EOF'
+          git log -1 --pretty=medium
+          echo EOF
+        } >> "$GITHUB_ENV"
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8.1.1
+      with:
+        token: ${{ steps.generate-token.outputs.token }}
+        path: hummingbird
+        commit-message: 'Update from hummingbird-project-template ${{ github.sha }}'
+        committer: GitHub <noreply@github.com>
+        author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+        branch: project-template-update
+        title: 'Update from Hummingbird Project Template'
+        body: |
+          ${{ env.GIT_COMMIT_MESSAGE }}
+          Automated update of files from https://github.com/hummingbird-project/hummingbird-project-template
+        base: main
