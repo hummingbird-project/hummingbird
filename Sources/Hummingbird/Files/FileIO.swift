@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+#if FileSystemSupport
 import CNIOLinux
 public import HummingbirdCore
 import Logging
@@ -145,3 +146,4 @@ public struct FileIO: Sendable {
         }
     }
 }
+#endif

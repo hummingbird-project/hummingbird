@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#if canImport(Network)
+#if canImport(Network) && TLSSupport
 
 import Foundation
 import HummingbirdCore

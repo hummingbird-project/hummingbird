@@ -6,6 +6,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+#if TLSSupport
+
 import HTTPTypes
 public import HummingbirdCore
 public import Logging
@@ -13,6 +15,7 @@ public import NIOCore
 import NIOHTTP1
 public import NIOHTTP2
 import NIOHTTPTypesHTTP1
+
 import NIOSSL
 public import NIOTLS
 
@@ -201,3 +204,5 @@ extension Channel {
         }
     }
 }
+
+#endif

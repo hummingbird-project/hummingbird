@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if TLSSupport
+
 import NIOSSL
 
 let testServerName = "hummingbird.codes"
@@ -175,3 +177,5 @@ func getClientTLSConfiguration() throws -> TLSConfiguration {
     tlsConfig.privateKey = .privateKey(privateKey)
     return tlsConfig
 }
+
+#endif
