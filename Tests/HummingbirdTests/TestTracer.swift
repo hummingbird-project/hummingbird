@@ -22,7 +22,6 @@
 import Dispatch
 import Foundation
 import Instrumentation
-import ServiceContextModule
 import Tracing
 
 /// Only intended to be used in single-threaded testing.
@@ -32,7 +31,7 @@ final class TestTracer: Tracer {
 
     func startSpan(
         _ operationName: String,
-        context: @autoclosure () -> ServiceContext,
+        context: @autoclosure () -> InstrumentationContext,
         ofKind kind: SpanKind,
         at instant: @autoclosure () -> some TracerInstant,
         function: String,
@@ -52,7 +51,7 @@ final class TestTracer: Tracer {
 
     public func forceFlush() {}
 
-    func extract<Carrier, Extract>(_ carrier: Carrier, into context: inout ServiceContext, using extractor: Extract)
+    func extract<Carrier, Extract>(_ carrier: Carrier, into context: inout InstrumentationContext, using extractor: Extract)
     where
         Extract: Extractor,
         Carrier == Extract.Carrier
@@ -61,7 +60,7 @@ final class TestTracer: Tracer {
         context.traceID = traceID
     }
 
-    func inject<Carrier, Inject>(_ context: ServiceContext, into carrier: inout Carrier, using injector: Inject)
+    func inject<Carrier, Inject>(_ context: InstrumentationContext, into carrier: inout Carrier, using injector: Inject)
     where
         Inject: Injector,
         Carrier == Inject.Carrier
@@ -72,16 +71,16 @@ final class TestTracer: Tracer {
 }
 
 extension TestTracer {
-    enum TraceIDKey: ServiceContextKey {
+    enum TraceIDKey: InstrumentationContextKey {
         typealias Value = String
     }
 
-    enum SpanIDKey: ServiceContextKey {
+    enum SpanIDKey: InstrumentationContextKey {
         typealias Value = String
     }
 }
 
-extension ServiceContext {
+extension InstrumentationContext {
     var traceID: String? {
         get {
             self[TestTracer.TraceIDKey.self]
@@ -111,7 +110,7 @@ final class TestSpan: Span {
     private(set) var recordedErrors: [(any Error, SpanAttributes)] = []
 
     var operationName: String
-    let context: ServiceContext
+    let context: InstrumentationContext
 
     private(set) var events = [SpanEvent]() {
         didSet {
@@ -134,7 +133,7 @@ final class TestSpan: Span {
     init(
         operationName: String,
         at instant: some TracerInstant,
-        context: ServiceContext,
+        context: InstrumentationContext,
         kind: SpanKind,
         onEnd: @escaping (TestSpan) -> Void
     ) {
@@ -198,7 +197,7 @@ final class TaskUniqueTestTracer: Tracer {
 
     func startSpan<Instant>(
         _ operationName: String,
-        context: @autoclosure () -> ServiceContextModule.ServiceContext,
+        context: @autoclosure () -> InstrumentationContext,
         ofKind kind: Tracing.SpanKind,
         at instant: @autoclosure () -> Instant,
         function: String,
@@ -216,7 +215,7 @@ final class TaskUniqueTestTracer: Tracer {
         )
     }
 
-    func activeSpan(identifiedBy context: ServiceContextModule.ServiceContext) -> Span? {
+    func activeSpan(identifiedBy context: InstrumentationContext) -> Span? {
         TaskUniqueTestTracer.current.activeSpan(identifiedBy: context)
     }
 
@@ -224,12 +223,12 @@ final class TaskUniqueTestTracer: Tracer {
         TaskUniqueTestTracer.current.forceFlush()
     }
 
-    func extract<Carrier, Extract>(_ carrier: Carrier, into context: inout ServiceContextModule.ServiceContext, using extractor: Extract)
+    func extract<Carrier, Extract>(_ carrier: Carrier, into context: inout InstrumentationContext, using extractor: Extract)
     where Carrier == Extract.Carrier, Extract: Instrumentation.Extractor {
         TaskUniqueTestTracer.current.extract(carrier, into: &context, using: extractor)
     }
 
-    func inject<Carrier, Inject>(_ context: ServiceContextModule.ServiceContext, into carrier: inout Carrier, using injector: Inject)
+    func inject<Carrier, Inject>(_ context: InstrumentationContext, into carrier: inout Carrier, using injector: Inject)
     where Carrier == Inject.Carrier, Inject: Instrumentation.Injector {
         TaskUniqueTestTracer.current.inject(context, into: &carrier, using: injector)
     }
