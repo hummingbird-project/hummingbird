@@ -2,41 +2,41 @@
   "@context" : "https://spdx.org/rdf/3.0.1/spdx-context.jsonld",
   "@graph" : [
     {
-      "creationInfo" : "urn:uuid:3f03a49d-d841-4d32-abbf-149340360df7:creationInfo",
-      "from" : "urn:uuid:3f03a49d-d841-4d32-abbf-149340360df7",
+      "creationInfo" : "urn:uuid:48822fc9-91d0-4719-99b5-84708b5fd8a0:creationInfo",
+      "from" : "urn:uuid:48822fc9-91d0-4719-99b5-84708b5fd8a0",
       "relationshipType" : "hasDeclaredLicense",
-      "spdxId" : "urn:uuid:3f03a49d-d841-4d32-abbf-149340360df7-hasDeclaredLicense-urn:spdx:Apache-2.0",
+      "spdxId" : "urn:uuid:48822fc9-91d0-4719-99b5-84708b5fd8a0-hasDeclaredLicense-urn:spdx:Apache-2.0",
       "to" : [
         "urn:spdx:Apache-2.0"
       ],
       "type" : "Relationship"
     },
     {
-      "creationInfo" : "urn:uuid:3f03a49d-d841-4d32-abbf-149340360df7:creationInfo",
+      "creationInfo" : "urn:uuid:48822fc9-91d0-4719-99b5-84708b5fd8a0:creationInfo",
       "simplelicensing_licenseExpression" : "Apache-2.0",
       "spdxId" : "urn:spdx:Apache-2.0",
       "type" : "simplelicensing_LicenseExpression"
     },
     {
-      "@id" : "urn:uuid:3f03a49d-d841-4d32-abbf-149340360df7:creationInfo",
-      "created" : "2026-10-09T11:37:51Z",
+      "@id" : "urn:uuid:48822fc9-91d0-4719-99b5-84708b5fd8a0:creationInfo",
+      "created" : "2026-10-13T08:17:39Z",
       "createdBy" : [
-        "urn:uuid:3f03a49d-d841-4d32-abbf-149340360df7"
+        "urn:uuid:48822fc9-91d0-4719-99b5-84708b5fd8a0"
       ],
       "specVersion" : "6.4.0-dev",
       "type" : "CreationInfo"
     },
     {
-      "creationInfo" : "urn:uuid:3f03a49d-d841-4d32-abbf-149340360df7:creationInfo",
+      "creationInfo" : "urn:uuid:48822fc9-91d0-4719-99b5-84708b5fd8a0:creationInfo",
       "name" : "swift-package-manager",
-      "spdxId" : "urn:uuid:3f03a49d-d841-4d32-abbf-149340360df7",
+      "spdxId" : "urn:uuid:48822fc9-91d0-4719-99b5-84708b5fd8a0",
       "type" : "Agent"
     },
     {
       "@id" : "_:creationInfo",
-      "created" : "2026-10-09T11:37:51Z",
+      "created" : "2026-10-13T08:17:39Z",
       "createdBy" : [
-        "urn:uuid:3f03a49d-d841-4d32-abbf-149340360df7"
+        "urn:uuid:48822fc9-91d0-4719-99b5-84708b5fd8a0"
       ],
       "specVersion" : "3.0.1",
       "type" : "CreationInfo"
@@ -50,14 +50,14 @@
       "rootElement" : [
         "urn:spdx:hummingbird"
       ],
-      "spdxId" : "urn:uuid:d5aed1a9-8a9b-42ea-876d-7134f7184c6f",
+      "spdxId" : "urn:uuid:3b1d10b7-49bd-4e9f-ac9f-265475e9df5b",
       "type" : "software_Sbom"
     },
     {
       "creationInfo" : "_:creationInfo",
-      "from" : "urn:uuid:d5aed1a9-8a9b-42ea-876d-7134f7184c6f",
+      "from" : "urn:uuid:3b1d10b7-49bd-4e9f-ac9f-265475e9df5b",
       "relationshipType" : "describes",
-      "spdxId" : "urn:uuid:d5aed1a9-8a9b-42ea-876d-7134f7184c6f-describes-urn:spdx:hummingbird",
+      "spdxId" : "urn:uuid:3b1d10b7-49bd-4e9f-ac9f-265475e9df5b-describes-urn:spdx:hummingbird",
       "to" : [
         "urn:spdx:hummingbird"
       ],
@@ -70,9 +70,9 @@
         "software"
       ],
       "rootElement" : [
-        "urn:uuid:d5aed1a9-8a9b-42ea-876d-7134f7184c6f"
+        "urn:uuid:3b1d10b7-49bd-4e9f-ac9f-265475e9df5b"
       ],
-      "spdxId" : "urn:uuid:a185692f-3d50-4915-958a-ce0157ddb324",
+      "spdxId" : "urn:uuid:cdcac8ef-acb3-49f4-a00a-f241956b2410",
       "type" : "SpdxDocument"
     },
     {
@@ -283,9 +283,9 @@
     {
       "creationInfo" : "_:creationInfo",
       "description" : "<ResolvedPackage: swift-collections>",
-      "externalUrl" : "pkg:swift/github.com/apple/swift-collections@1.7.2",
+      "externalUrl" : "pkg:swift/github.com/apple/swift-collections@1.7.3",
       "name" : "swift-collections",
-      "software_internalVersion" : "1.7.2",
+      "software_internalVersion" : "1.7.3",
       "software_primaryPurpose" : "library",
       "spdxId" : "urn:spdx:swift-collections",
       "summary" : "swift-package",
@@ -293,9 +293,9 @@
     },
     {
       "creationInfo" : "_:creationInfo",
-      "externalUrl" : "pkg:swift/github.com/apple/swift-collections:DequeModule@1.7.2",
+      "externalUrl" : "pkg:swift/github.com/apple/swift-collections:DequeModule@1.7.3",
       "name" : "DequeModule",
-      "software_internalVersion" : "1.7.2",
+      "software_internalVersion" : "1.7.3",
       "software_primaryPurpose" : "library",
       "spdxId" : "urn:spdx:swift-collections:DequeModule",
       "summary" : "swift-product",
@@ -303,9 +303,9 @@
     },
     {
       "creationInfo" : "_:creationInfo",
-      "externalUrl" : "pkg:swift/github.com/apple/swift-collections:OrderedCollections@1.7.2",
+      "externalUrl" : "pkg:swift/github.com/apple/swift-collections:OrderedCollections@1.7.3",
       "name" : "OrderedCollections",
-      "software_internalVersion" : "1.7.2",
+      "software_internalVersion" : "1.7.3",
       "software_primaryPurpose" : "library",
       "spdxId" : "urn:spdx:swift-collections:OrderedCollections",
       "summary" : "swift-product",
@@ -335,9 +335,9 @@
     {
       "creationInfo" : "_:creationInfo",
       "description" : "<ResolvedPackage: swift-distributed-tracing>",
-      "externalUrl" : "pkg:swift/github.com/apple/swift-distributed-tracing@1.5.0",
+      "externalUrl" : "pkg:swift/github.com/apple/swift-distributed-tracing@1.6.0",
       "name" : "swift-distributed-tracing",
-      "software_internalVersion" : "1.5.0",
+      "software_internalVersion" : "1.6.0",
       "software_primaryPurpose" : "library",
       "spdxId" : "urn:spdx:swift-distributed-tracing",
       "summary" : "swift-package",
@@ -345,9 +345,19 @@
     },
     {
       "creationInfo" : "_:creationInfo",
-      "externalUrl" : "pkg:swift/github.com/apple/swift-distributed-tracing:Tracing@1.5.0",
+      "externalUrl" : "pkg:swift/github.com/apple/swift-distributed-tracing:Instrumentation@1.6.0",
+      "name" : "Instrumentation",
+      "software_internalVersion" : "1.6.0",
+      "software_primaryPurpose" : "library",
+      "spdxId" : "urn:spdx:swift-distributed-tracing:Instrumentation",
+      "summary" : "swift-product",
+      "type" : "software_Package"
+    },
+    {
+      "creationInfo" : "_:creationInfo",
+      "externalUrl" : "pkg:swift/github.com/apple/swift-distributed-tracing:Tracing@1.6.0",
       "name" : "Tracing",
-      "software_internalVersion" : "1.5.0",
+      "software_internalVersion" : "1.6.0",
       "software_primaryPurpose" : "library",
       "spdxId" : "urn:spdx:swift-distributed-tracing:Tracing",
       "summary" : "swift-product",
@@ -654,9 +664,9 @@
     {
       "creationInfo" : "_:creationInfo",
       "description" : "<ResolvedPackage: swift-service-context>",
-      "externalUrl" : "pkg:swift/github.com/apple/swift-service-context@1.3.0",
+      "externalUrl" : "pkg:swift/github.com/apple/swift-service-context@1.4.0",
       "name" : "swift-service-context",
-      "software_internalVersion" : "1.3.0",
+      "software_internalVersion" : "1.4.0",
       "software_primaryPurpose" : "library",
       "spdxId" : "urn:spdx:swift-service-context",
       "summary" : "swift-package",
@@ -664,9 +674,9 @@
     },
     {
       "creationInfo" : "_:creationInfo",
-      "externalUrl" : "pkg:swift/github.com/apple/swift-service-context:ServiceContextModule@1.3.0",
+      "externalUrl" : "pkg:swift/github.com/apple/swift-service-context:ServiceContextModule@1.4.0",
       "name" : "ServiceContextModule",
-      "software_internalVersion" : "1.3.0",
+      "software_internalVersion" : "1.4.0",
       "software_primaryPurpose" : "library",
       "spdxId" : "urn:spdx:swift-service-context:ServiceContextModule",
       "summary" : "swift-product",
@@ -790,6 +800,7 @@
         "urn:spdx:swift-nio-extras",
         "urn:spdx:swift-nio-http2",
         "urn:spdx:swift-nio-ssl",
+        "urn:spdx:swift-service-context",
         "urn:spdx:swift-service-lifecycle"
       ],
       "type" : "Relationship"
@@ -817,6 +828,7 @@
         "urn:spdx:swift-atomics:Atomics",
         "urn:spdx:swift-collections:DequeModule",
         "urn:spdx:swift-configuration:Configuration",
+        "urn:spdx:swift-distributed-tracing:Instrumentation",
         "urn:spdx:swift-distributed-tracing:Tracing",
         "urn:spdx:swift-http-types:HTTPTypes",
         "urn:spdx:swift-log:Logging",
@@ -888,6 +900,7 @@
         "urn:spdx:swift-atomics:Atomics",
         "urn:spdx:swift-collections:DequeModule",
         "urn:spdx:swift-configuration:Configuration",
+        "urn:spdx:swift-distributed-tracing:Instrumentation",
         "urn:spdx:swift-distributed-tracing:Tracing",
         "urn:spdx:swift-http-types:HTTPTypes",
         "urn:spdx:swift-log:Logging",
@@ -937,6 +950,7 @@
         "urn:spdx:swift-atomics:Atomics",
         "urn:spdx:swift-collections:DequeModule",
         "urn:spdx:swift-configuration:Configuration",
+        "urn:spdx:swift-distributed-tracing:Instrumentation",
         "urn:spdx:swift-distributed-tracing:Tracing",
         "urn:spdx:swift-http-types:HTTPTypes",
         "urn:spdx:swift-log:Logging",
@@ -965,6 +979,7 @@
         "urn:spdx:swift-atomics:Atomics",
         "urn:spdx:swift-collections:DequeModule",
         "urn:spdx:swift-configuration:Configuration",
+        "urn:spdx:swift-distributed-tracing:Instrumentation",
         "urn:spdx:swift-distributed-tracing:Tracing",
         "urn:spdx:swift-http-types:HTTPTypes",
         "urn:spdx:swift-log:Logging",
@@ -1074,18 +1089,8 @@
       "relationshipType" : "dependsOn",
       "spdxId" : "urn:spdx:swift-distributed-tracing-dependsOn",
       "to" : [
-        "urn:spdx:swift-distributed-tracing:Tracing",
-        "urn:spdx:swift-service-context"
-      ],
-      "type" : "Relationship"
-    },
-    {
-      "creationInfo" : "_:creationInfo",
-      "from" : "urn:spdx:swift-distributed-tracing:Tracing",
-      "relationshipType" : "dependsOn",
-      "spdxId" : "urn:spdx:swift-distributed-tracing:Tracing-dependsOn",
-      "to" : [
-        "urn:spdx:swift-service-context:ServiceContextModule"
+        "urn:spdx:swift-distributed-tracing:Instrumentation",
+        "urn:spdx:swift-distributed-tracing:Tracing"
       ],
       "type" : "Relationship"
     },
@@ -1384,7 +1389,18 @@
       "relationshipType" : "dependsOn",
       "spdxId" : "urn:spdx:swift-service-context-dependsOn",
       "to" : [
+        "urn:spdx:swift-distributed-tracing",
         "urn:spdx:swift-service-context:ServiceContextModule"
+      ],
+      "type" : "Relationship"
+    },
+    {
+      "creationInfo" : "_:creationInfo",
+      "from" : "urn:spdx:swift-service-context:ServiceContextModule",
+      "relationshipType" : "dependsOn",
+      "spdxId" : "urn:spdx:swift-service-context:ServiceContextModule-dependsOn",
+      "to" : [
+        "urn:spdx:swift-distributed-tracing:Instrumentation"
       ],
       "type" : "Relationship"
     },
@@ -1447,6 +1463,14 @@
     },
     {
       "externalIdentifierType" : "gitoid",
+      "identifier" : "urn:spdx:117c46edcc9e7a9a26a539d30044b2275d9c9ab7",
+      "identifierLocator" : [
+        "https://github.com/apple/swift-distributed-tracing.git"
+      ],
+      "type" : "ExternalIdentifier"
+    },
+    {
+      "externalIdentifierType" : "gitoid",
       "identifier" : "urn:spdx:13713a4ffdee8abd929f92568ee9462a46ae26e0",
       "identifierLocator" : [
         "https://github.com/apple/swift-async-algorithms.git"
@@ -1463,7 +1487,7 @@
     },
     {
       "externalIdentifierType" : "gitoid",
-      "identifier" : "urn:spdx:3b69cedbaa49957e97c092ae400bb57602ef941f",
+      "identifier" : "urn:spdx:35a1edcb8ebd2bfe251d587f0b69e62af28f508c",
       "identifierLocator" : [
         "https://github.com/apple/swift-collections.git"
       ],
@@ -1551,15 +1575,7 @@
     },
     {
       "externalIdentifierType" : "gitoid",
-      "identifier" : "urn:spdx:cc504a45f6ce73ce6067837d7ac19fa67b229a56",
-      "identifierLocator" : [
-        "https://github.com/apple/swift-distributed-tracing.git"
-      ],
-      "type" : "ExternalIdentifier"
-    },
-    {
-      "externalIdentifierType" : "gitoid",
-      "identifier" : "urn:spdx:d0997351b0c7779017f88e7a93bc30a1878d7f29",
+      "identifier" : "urn:spdx:d93beaa2b2c585cb9be08b070e46dda9e2d203be",
       "identifierLocator" : [
         "https://github.com/apple/swift-service-context.git"
       ],
@@ -1600,6 +1616,18 @@
     },
     {
       "creationInfo" : "_:creationInfo",
+      "from" : "urn:spdx:117c46edcc9e7a9a26a539d30044b2275d9c9ab7",
+      "relationshipType" : "generates",
+      "spdxId" : "urn:spdx:117c46edcc9e7a9a26a539d30044b2275d9c9ab7-generates",
+      "to" : [
+        "urn:spdx:swift-distributed-tracing",
+        "urn:spdx:swift-distributed-tracing:Instrumentation",
+        "urn:spdx:swift-distributed-tracing:Tracing"
+      ],
+      "type" : "Relationship"
+    },
+    {
+      "creationInfo" : "_:creationInfo",
       "from" : "urn:spdx:13713a4ffdee8abd929f92568ee9462a46ae26e0",
       "relationshipType" : "generates",
       "spdxId" : "urn:spdx:13713a4ffdee8abd929f92568ee9462a46ae26e0-generates",
@@ -1622,9 +1650,9 @@
     },
     {
       "creationInfo" : "_:creationInfo",
-      "from" : "urn:spdx:3b69cedbaa49957e97c092ae400bb57602ef941f",
+      "from" : "urn:spdx:35a1edcb8ebd2bfe251d587f0b69e62af28f508c",
       "relationshipType" : "generates",
-      "spdxId" : "urn:spdx:3b69cedbaa49957e97c092ae400bb57602ef941f-generates",
+      "spdxId" : "urn:spdx:35a1edcb8ebd2bfe251d587f0b69e62af28f508c-generates",
       "to" : [
         "urn:spdx:swift-collections",
         "urn:spdx:swift-collections:DequeModule",
@@ -1757,20 +1785,9 @@
     },
     {
       "creationInfo" : "_:creationInfo",
-      "from" : "urn:spdx:cc504a45f6ce73ce6067837d7ac19fa67b229a56",
+      "from" : "urn:spdx:d93beaa2b2c585cb9be08b070e46dda9e2d203be",
       "relationshipType" : "generates",
-      "spdxId" : "urn:spdx:cc504a45f6ce73ce6067837d7ac19fa67b229a56-generates",
-      "to" : [
-        "urn:spdx:swift-distributed-tracing",
-        "urn:spdx:swift-distributed-tracing:Tracing"
-      ],
-      "type" : "Relationship"
-    },
-    {
-      "creationInfo" : "_:creationInfo",
-      "from" : "urn:spdx:d0997351b0c7779017f88e7a93bc30a1878d7f29",
-      "relationshipType" : "generates",
-      "spdxId" : "urn:spdx:d0997351b0c7779017f88e7a93bc30a1878d7f29-generates",
+      "spdxId" : "urn:spdx:d93beaa2b2c585cb9be08b070e46dda9e2d203be-generates",
       "to" : [
         "urn:spdx:swift-service-context",
         "urn:spdx:swift-service-context:ServiceContextModule"
