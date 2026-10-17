@@ -3,6 +3,11 @@ name: Update from project template
 on:
   schedule:
     - cron: "15 0 * * 0"
+  push:
+    branches:
+    - main
+    paths:
+    - '.hummingbird-project-template.yml'
   workflow_dispatch:
 
 permissions:

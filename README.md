@@ -17,6 +17,9 @@
 <a href="https://discord.gg/4twfgYqdat">
   <img src="https://img.shields.io/badge/chat-discord-7289da.svg?logo=discord&logoColor=white"/>
 </a>
+<a href="https://insights.linuxfoundation.org/project/hummingbird">
+  <img src="https://insights.linuxfoundation.org/api/badge/health-score?project=hummingbird"/>
+</a>
 </p>
 
 Lightweight, flexible, modern server framework written in Swift.

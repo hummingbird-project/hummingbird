@@ -451,7 +451,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "3b69cedbaa49957e97c092ae400bb57602ef941f",
+            "uid" : "35a1edcb8ebd2bfe251d587f0b69e62af28f508c",
             "url" : "https://github.com/apple/swift-collections.git"
           }
         ]
@@ -462,10 +462,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-collections@1.7.2",
+      "purl" : "pkg:swift/github.com/apple/swift-collections@1.7.3",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.7.2"
+      "version" : "1.7.3"
     },
     {
       "bom-ref" : "swift-collections:DequeModule",
@@ -476,7 +476,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "3b69cedbaa49957e97c092ae400bb57602ef941f",
+            "uid" : "35a1edcb8ebd2bfe251d587f0b69e62af28f508c",
             "url" : "https://github.com/apple/swift-collections.git"
           }
         ]
@@ -487,10 +487,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-collections:DequeModule@1.7.2",
+      "purl" : "pkg:swift/github.com/apple/swift-collections:DequeModule@1.7.3",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.7.2"
+      "version" : "1.7.3"
     },
     {
       "bom-ref" : "swift-collections:OrderedCollections",
@@ -501,7 +501,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "3b69cedbaa49957e97c092ae400bb57602ef941f",
+            "uid" : "35a1edcb8ebd2bfe251d587f0b69e62af28f508c",
             "url" : "https://github.com/apple/swift-collections.git"
           }
         ]
@@ -512,10 +512,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-collections:OrderedCollections@1.7.2",
+      "purl" : "pkg:swift/github.com/apple/swift-collections:OrderedCollections@1.7.3",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.7.2"
+      "version" : "1.7.3"
     },
     {
       "bom-ref" : "swift-configuration",
@@ -576,7 +576,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "cc504a45f6ce73ce6067837d7ac19fa67b229a56",
+            "uid" : "117c46edcc9e7a9a26a539d30044b2275d9c9ab7",
             "url" : "https://github.com/apple/swift-distributed-tracing.git"
           }
         ]
@@ -587,21 +587,21 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-distributed-tracing@1.5.0",
+      "purl" : "pkg:swift/github.com/apple/swift-distributed-tracing@1.6.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.5.0"
+      "version" : "1.6.0"
     },
     {
-      "bom-ref" : "swift-distributed-tracing:Tracing",
+      "bom-ref" : "swift-distributed-tracing:Instrumentation",
       "externalReferences" : [
 
       ],
-      "name" : "Tracing",
+      "name" : "Instrumentation",
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "cc504a45f6ce73ce6067837d7ac19fa67b229a56",
+            "uid" : "117c46edcc9e7a9a26a539d30044b2275d9c9ab7",
             "url" : "https://github.com/apple/swift-distributed-tracing.git"
           }
         ]
@@ -612,10 +612,35 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-distributed-tracing:Tracing@1.5.0",
+      "purl" : "pkg:swift/github.com/apple/swift-distributed-tracing:Instrumentation@1.6.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.5.0"
+      "version" : "1.6.0"
+    },
+    {
+      "bom-ref" : "swift-distributed-tracing:Tracing",
+      "externalReferences" : [
+
+      ],
+      "name" : "Tracing",
+      "pedigree" : {
+        "commits" : [
+          {
+            "uid" : "117c46edcc9e7a9a26a539d30044b2275d9c9ab7",
+            "url" : "https://github.com/apple/swift-distributed-tracing.git"
+          }
+        ]
+      },
+      "properties" : [
+        {
+          "name" : "swift-entity",
+          "value" : "swift-product"
+        }
+      ],
+      "purl" : "pkg:swift/github.com/apple/swift-distributed-tracing:Tracing@1.6.0",
+      "scope" : "required",
+      "type" : "library",
+      "version" : "1.6.0"
     },
     {
       "bom-ref" : "swift-http-types",
@@ -1351,7 +1376,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "d0997351b0c7779017f88e7a93bc30a1878d7f29",
+            "uid" : "d93beaa2b2c585cb9be08b070e46dda9e2d203be",
             "url" : "https://github.com/apple/swift-service-context.git"
           }
         ]
@@ -1362,10 +1387,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-service-context@1.3.0",
+      "purl" : "pkg:swift/github.com/apple/swift-service-context@1.4.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.3.0"
+      "version" : "1.4.0"
     },
     {
       "bom-ref" : "swift-service-context:ServiceContextModule",
@@ -1376,7 +1401,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "d0997351b0c7779017f88e7a93bc30a1878d7f29",
+            "uid" : "d93beaa2b2c585cb9be08b070e46dda9e2d203be",
             "url" : "https://github.com/apple/swift-service-context.git"
           }
         ]
@@ -1387,10 +1412,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-service-context:ServiceContextModule@1.3.0",
+      "purl" : "pkg:swift/github.com/apple/swift-service-context:ServiceContextModule@1.4.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.3.0"
+      "version" : "1.4.0"
     },
     {
       "bom-ref" : "swift-service-lifecycle",
@@ -1558,6 +1583,7 @@
         "swift-nio-extras",
         "swift-nio-http2",
         "swift-nio-ssl",
+        "swift-service-context",
         "swift-service-lifecycle"
       ],
       "ref" : "hummingbird"
@@ -1568,6 +1594,7 @@
         "swift-atomics:Atomics",
         "swift-collections:DequeModule",
         "swift-configuration:Configuration",
+        "swift-distributed-tracing:Instrumentation",
         "swift-distributed-tracing:Tracing",
         "swift-http-types:HTTPTypes",
         "swift-log:Logging",
@@ -1627,6 +1654,7 @@
         "swift-atomics:Atomics",
         "swift-collections:DequeModule",
         "swift-configuration:Configuration",
+        "swift-distributed-tracing:Instrumentation",
         "swift-distributed-tracing:Tracing",
         "swift-http-types:HTTPTypes",
         "swift-log:Logging",
@@ -1668,6 +1696,7 @@
         "swift-atomics:Atomics",
         "swift-collections:DequeModule",
         "swift-configuration:Configuration",
+        "swift-distributed-tracing:Instrumentation",
         "swift-distributed-tracing:Tracing",
         "swift-http-types:HTTPTypes",
         "swift-log:Logging",
@@ -1692,6 +1721,7 @@
         "swift-atomics:Atomics",
         "swift-collections:DequeModule",
         "swift-configuration:Configuration",
+        "swift-distributed-tracing:Instrumentation",
         "swift-distributed-tracing:Tracing",
         "swift-http-types:HTTPTypes",
         "swift-log:Logging",
@@ -1765,16 +1795,10 @@
     },
     {
       "dependsOn" : [
-        "swift-distributed-tracing:Tracing",
-        "swift-service-context"
+        "swift-distributed-tracing:Instrumentation",
+        "swift-distributed-tracing:Tracing"
       ],
       "ref" : "swift-distributed-tracing"
-    },
-    {
-      "dependsOn" : [
-        "swift-service-context:ServiceContextModule"
-      ],
-      "ref" : "swift-distributed-tracing:Tracing"
     },
     {
       "dependsOn" : [
@@ -1971,9 +1995,16 @@
     },
     {
       "dependsOn" : [
+        "swift-distributed-tracing",
         "swift-service-context:ServiceContextModule"
       ],
       "ref" : "swift-service-context"
+    },
+    {
+      "dependsOn" : [
+        "swift-distributed-tracing:Instrumentation"
+      ],
+      "ref" : "swift-service-context:ServiceContextModule"
     },
     {
       "dependsOn" : [
@@ -2018,11 +2049,11 @@
       "type" : "application",
       "version" : "unknown"
     },
-    "timestamp" : "2026-10-09T11:37:45Z",
+    "timestamp" : "2026-10-13T08:17:33Z",
     "tools" : {
       "components" : [
         {
-          "bom-ref" : "urn:uuid:c632af4a-4643-42a2-a5ca-d3ff909c84fa",
+          "bom-ref" : "urn:uuid:2578a1c7-49df-43ca-834c-b7916dbeaeb4",
           "licenses" : [
             {
               "license" : {
@@ -2040,7 +2071,7 @@
       ]
     }
   },
-  "serialNumber" : "urn:uuid:9cccf0dc-e3f1-41be-8e2c-a74834241215",
+  "serialNumber" : "urn:uuid:85c3dea6-7a51-4aeb-9570-fcbf5fa216bc",
   "specVersion" : "1.7",
   "version" : 1
 }
