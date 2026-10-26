@@ -994,6 +994,44 @@ struct ApplicationTests {
         }
     }
 
+    /// Test consumeWithCancellationOnInboundClose after having collected the Request body cancels
+    /// the operation when the client closes the connection, instead of spinning on the ended stream
+    @Test(.timeLimit(.minutes(1))) func testConsumeWithCancellationOnInboundCloseAfterCollect() async throws {
+        let handlerStarted = ManagedAtomic(false)
+        let cancelled = ManagedAtomic(false)
+        let router = Router()
+        router.post("streaming") { request, context -> Response in
+            var request = request
+            _ = try await request.collectBody(upTo: .max)
+            try await request.body.consumeWithCancellationOnInboundClose { _ in
+                handlerStarted.store(true, ordering: .relaxed)
+                do {
+                    try await Task.sleep(for: .seconds(30))
+                } catch {
+                    cancelled.store(true, ordering: .relaxed)
+                    throw error
+                }
+            }
+            return Response(status: .ok)
+        }
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.live) { client in
+            let port = try #require(client.port)
+            let client = TestClient(host: "localhost", port: port)
+            client.connect()
+            try await client.executeAndDontWaitForResponse(.init("/streaming", method: .post, body: ByteBuffer(string: "Hello")))
+            while !handlerStarted.load(ordering: .relaxed) {
+                try await Task.sleep(for: .milliseconds(10))
+            }
+            try await client.close()
+            while !cancelled.load(ordering: .relaxed) {
+                try await Task.sleep(for: .milliseconds(10))
+            }
+            try await client.shutdown()
+        }
+    }
+
     /// Test consumeWithInboundHandler after having replaced Request.body with a new streamed RequestBody
     @Test func testConsumeWithInboundHandlerAfterReplacingBody() async throws {
         let router = Router()
