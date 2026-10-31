@@ -499,7 +499,7 @@ struct FileMiddlewareTests {
             func getAttributes(id path: String) async throws -> FileAttributes? {
                 .init(
                     isFolder: path.last == "/",
-                    size: path.utf8.count
+                    size: path.utf8.count + self.prefix.utf8.count
                 )
             }
 
@@ -587,13 +587,13 @@ struct FileMiddlewareTests {
         }
 
         var fileProvider = MemoryFileProvider()
-        fileProvider.files["test"] = ByteBuffer(string: "Test this")
+        fileProvider.files["/test"] = ByteBuffer(string: "Test this")
 
         let router = Router()
         router.middlewares.add(FileMiddleware(fileProvider: fileProvider))
         let app = Application(router: router)
         try await app.test(.router) { client in
-            try await client.execute(uri: "test", method: .get) { response in
+            try await client.execute(uri: "/test", method: .get) { response in
                 #expect(response.status == .ok)
                 #expect(String(buffer: response.body) == "Test this")
             }

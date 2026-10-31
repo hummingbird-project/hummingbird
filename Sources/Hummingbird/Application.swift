@@ -102,8 +102,24 @@ extension ApplicationProtocol {
         let server = try self.server.buildServer(
             configuration: self.configuration.httpServer,
             eventLoopGroup: self.eventLoopGroup,
-            logger: self.logger
-        ) { (request, responseWriter: consuming ResponseWriter, channel) in
+            logger: self.logger,
+            responder: applicationResponder(responder, dateCache: dateCache),
+            onServerRunning: { await self.onServerRunning($0) }
+        )
+        let serverService = server.withPrelude {
+            for process in self.processesRunBeforeServerStart {
+                try await process()
+            }
+        }
+        let services: [any Service] = self.services + [dateCache, serverService]
+        let serviceGroup = ServiceGroup(
+            configuration: .init(services: services, logger: self.logger)
+        )
+        try await serviceGroup.run()
+    }
+
+    package func applicationResponder(_ responder: Self.Responder, dateCache: DateCache) -> HTTPChannelHandler.Responder {
+        { (request, responseWriter: consuming ResponseWriter, channel) in
             let logger = self.logger.with(metadataKey: "hb.request.id", value: .stringConvertible(RequestID()))
             let response = try await withLogger(logger) { logger in
                 let context = Self.Responder.Context(
@@ -141,19 +157,7 @@ extension ApplicationProtocol {
                 throw HTTPChannelError.parseErrorWhileWritingResponse
             }
 
-        } onServerRunning: {
-            await self.onServerRunning($0)
         }
-        let serverService = server.withPrelude {
-            for process in self.processesRunBeforeServerStart {
-                try await process()
-            }
-        }
-        let services: [any Service] = self.services + [dateCache, serverService]
-        let serviceGroup = ServiceGroup(
-            configuration: .init(services: services, logger: self.logger)
-        )
-        try await serviceGroup.run()
     }
 
     /// Helper function that runs application inside a ServiceGroup which will gracefully
