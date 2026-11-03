@@ -43,7 +43,7 @@ jobs:
       ENABLE_HB_BENCHMARKS: true
     steps:
     - name: Install curl
-      run: apt-get update -yq && apt-get install -y curl
+      run: apt-get update -yq && apt-get install -y curl findutils
     - name: Checkout
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
     - name: Install libjemalloc-dev
