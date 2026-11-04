@@ -13,7 +13,7 @@ public import HummingbirdCore
 ///
 /// This is used by `Router` to convert handler return values into a `Response`.
 @preconcurrency
-public protocol ResponseGenerator: _HB_SendableMetatype {
+public protocol ResponseGenerator: SendableMetatype {
     /// Generate response based on the request this object came from
     func response(from request: Request, context: some RequestContext) throws -> Response
 }
