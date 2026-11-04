@@ -195,11 +195,6 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
             throw HTTPError(.badRequest, message: "Invalid percent encoding in URL")
         }
 
-        // file paths that contain ".." are considered illegal
-        guard !path.contains("..") else {
-            throw HTTPError(.badRequest)
-        }
-
         // Do we have a prefix to remove from the path
         if let urlBasePath {
             // If path doesn't have prefix then return fallbackResult

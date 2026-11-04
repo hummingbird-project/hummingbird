@@ -8,6 +8,7 @@
 
 public import Logging
 public import NIOPosix
+public import SystemPackage
 import _NIOFileSystem
 
 #if canImport(FoundationEssentials)
@@ -35,49 +36,54 @@ public struct LocalFileSystem: FileProvider {
             self.modificationDate = modificationDate
         }
     }
+    // Local file system options
+    public struct Options: OptionSet, Sendable {
+        public var rawValue: Int
+
+        public init(rawValue: Int) {
+            self.rawValue = rawValue
+        }
+
+        /// Allow file provider to follow symbolic links
+        public static var allowSymbolicLinks: Self { .init(rawValue: 1 << 0) }
+    }
 
     /// File Identifier (Fully qualified path)
     public typealias FileIdentifier = String
 
-    let rootFolder: String
+    let rootFolder: FilePath
     let fileIO: FileIO
+    let options: Options
 
     /// Initialize LocalFileSystem FileProvider
     /// - Parameters:
     ///   - rootFolder: Root folder to serve files from
     ///   - threadPool: Thread pool used when loading files
     ///   - logger: Logger to output root folder information
-    public init(rootFolder: String, threadPool: NIOThreadPool, logger: Logger) {
-        if rootFolder.last != "/" {
-            self.rootFolder = "\(rootFolder)/"
-        } else {
-            self.rootFolder = rootFolder
-        }
+    public init(rootFolder: String, options: Options = [], threadPool: NIOThreadPool = .singleton, logger: Logger) {
+        self.rootFolder = .init(rootFolder)
         self.fileIO = .init(threadPool: threadPool)
+        self.options = options
 
-        let workingFolder: String
-        if rootFolder.first == "/" {
-            workingFolder = ""
+        let absoluteRootFolder: FilePath
+        if self.rootFolder.isAbsolute {
+            absoluteRootFolder = self.rootFolder
         } else {
             let cwd = FileManager.default.currentDirectoryPath
             if !cwd.isEmpty {
-                workingFolder = cwd + "/"
+                absoluteRootFolder = FilePath(cwd).appending(self.rootFolder.components)
             } else {
-                workingFolder = "./"
+                absoluteRootFolder = self.rootFolder
             }
         }
-        logger.info("Serving files from \(workingFolder)\(rootFolder)")
+        logger.info("Serving files from \(absoluteRootFolder)")
     }
 
     /// Get full path name with local file system root prefixed
     /// - Parameter path: path from URI
     /// - Returns: Full path
     public func getFileIdentifier(_ path: String) -> FileIdentifier? {
-        if path.first == "/" {
-            return "\(self.rootFolder)\(path.dropFirst())"
-        } else {
-            return "\(self.rootFolder)\(path)"
-        }
+        self.rootFolder.lexicallyResolving(FilePath(path))?.string
     }
 
     /// Get file attributes
@@ -85,7 +91,14 @@ public struct LocalFileSystem: FileProvider {
     /// - Returns: File attributes
     public func getAttributes(id path: FileIdentifier) async throws -> FileAttributes? {
         do {
-            guard let info = try await self.fileIO.fileSystem.info(forFileAt: .init(path)) else { throw FileIO.FileError.fileDoesNotExist }
+            guard
+                let info = try await self.fileIO.fileSystem.info(
+                    forFileAt: .init(path),
+                    infoAboutSymbolicLink: !self.options.contains(.allowSymbolicLinks)
+                )
+            else { throw FileIO.FileError.fileDoesNotExist }
+            // only allow symbolic links if options allow for them
+            guard info.type != .symlink else { return nil }
             let isFolder = info.type == .directory
             let modificationDate = Double(info.lastDataModificationTime.seconds)
             return .init(
