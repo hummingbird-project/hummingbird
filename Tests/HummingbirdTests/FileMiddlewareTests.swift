@@ -550,6 +550,51 @@ struct FileMiddlewareTests {
         }
     }
 
+    @Test func testETagString() async throws {
+        // use memory file provider so we have a constant modification date.
+        // Returns file name as contents of file
+        struct MemoryFileProvider: FileProvider {
+            let prefix: String
+            struct FileAttributes: FileMiddlewareFileAttributes {
+                var isFolder: Bool
+                var modificationDate: Date { .distantPast }
+                let size: Int
+            }
+
+            func getFileIdentifier(_ path: String) -> String? {
+                path
+            }
+
+            func getAttributes(id path: String) async throws -> FileAttributes? {
+                .init(
+                    isFolder: path.last == "/",
+                    size: path.utf8.count
+                )
+            }
+
+            func loadFile(id path: String, context: some RequestContext) async throws -> ResponseBody {
+                let buffer = ByteBuffer(string: self.prefix + path)
+                return .init(byteBuffer: buffer)
+            }
+
+            func loadFile(id path: String, range: ClosedRange<Int>, context: some RequestContext) async throws -> ResponseBody {
+                let buffer = ByteBuffer(string: self.prefix + path)
+                guard let slice = buffer.getSlice(at: range.lowerBound, length: range.count) else { throw HTTPError(.rangeNotSatisfiable) }
+                return .init(byteBuffer: slice)
+            }
+        }
+        let router = Router()
+        router.add(middleware: FileMiddleware(fileProvider: MemoryFileProvider(prefix: "memory:/"), searchForIndexHtml: true))
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/test/hello", method: .get) { response in
+                #expect(String(buffer: response.body) == "memory://test/hello")
+                #expect(response.headers[.eTag] == "W/\"1c36323133353736393630302e302d31\"")
+            }
+        }
+    }
+
     @Test func testCustomFileProvider() async throws {
         // basic file provider
         struct MemoryFileProvider: FileProvider {
@@ -596,6 +641,7 @@ struct FileMiddlewareTests {
             try await client.execute(uri: "test", method: .get) { response in
                 #expect(response.status == .ok)
                 #expect(String(buffer: response.body) == "Test this")
+                print(response.headers[.eTag])
             }
         }
     }

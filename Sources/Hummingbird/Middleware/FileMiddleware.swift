@@ -403,7 +403,7 @@ extension FileMiddleware {
     }
 
     private func createETag(_ strings: [String]) -> String {
-        let buffer = [UInt8](capacity: 16) { bytes in
+        withTemporaryAllocation(of: UInt8.self, capacity: 16) { bytes in
             bytes.append(repeating: 0, count: 16)
             var index = 0
             if let firstString = strings.first {
@@ -423,9 +423,10 @@ extension FileMiddleware {
                     index &= 0xf
                 }
             }
+            return unsafe bytes.withUnsafeBytes { bytes in
+                unsafe "W/\"\(bytes.hexDigest())\""
+            }
         }
-
-        return "W/\"\(buffer.hexDigest())\""
     }
 
     private func appendingPathComponent(_ root: String, _ component: String) -> String {
