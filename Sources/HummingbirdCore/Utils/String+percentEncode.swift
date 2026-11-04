@@ -84,7 +84,25 @@ extension StringProtocol {
     fileprivate static func addingPercentEncoding(utf8Buffer: Span<UInt8>, component: URLComponentSet) -> String {
         let maxLength = utf8Buffer.count * 3
         let percent = UInt8(ascii: "%")
-        let result = withTemporaryAllocation(of: UInt8.self, capacity: maxLength) { buffer in
+        #if compiler(<6.4)
+        return withUnsafeTemporaryAllocation(of: UInt8.self, capacity: maxLength) { buffer in
+            var destIndex = 0
+            for srcIndex in utf8Buffer.indices {
+                let byte = utf8Buffer[srcIndex]
+                if byte.isAllowedIn(component) {
+                    unsafe buffer[destIndex] = byte
+                    destIndex += 1
+                } else {
+                    unsafe buffer[destIndex] = percent
+                    unsafe buffer[destIndex + 1] = hexToAscii(byte >> 4)
+                    unsafe buffer[destIndex + 2] = hexToAscii(byte & 0xF)
+                    destIndex += 3
+                }
+            }
+            return unsafe String(decoding: buffer[..<destIndex], as: UTF8.self)
+        }
+        #else
+        return withTemporaryAllocation(of: UInt8.self, capacity: maxLength) { buffer in
             for index in utf8Buffer.indices {
                 let byte = utf8Buffer[index]
                 if byte.isAllowedIn(component) {
@@ -99,7 +117,7 @@ extension StringProtocol {
                 unsafe String(decoding: bytes, as: UTF8.self)
             }
         }
-        return result
+        #endif
     }
 
     fileprivate static func asciiToHex(_ ascii: UInt8) -> UInt8? {
@@ -156,7 +174,47 @@ extension StringProtocol {
     }
 
     package static func removingURLPercentEncoding(utf8Buffer: Span<UInt8>) -> String? {
-        let result: String? = withTemporaryAllocation(of: UInt8.self, capacity: utf8Buffer.count) { buffer -> String? in
+        #if compiler(<6.4)
+        return withUnsafeTemporaryAllocation(of: UInt8.self, capacity: utf8Buffer.count) { buffer -> String? in
+            let percent = UInt8(ascii: "%")
+            var srcIndex = utf8Buffer.indices.startIndex
+            let srcEndIndex = utf8Buffer.indices.endIndex
+            var destIndex = 0
+            while srcIndex < srcEndIndex {
+                let v = utf8Buffer[srcIndex]
+                srcIndex += 1
+                if v == percent {
+                    var hexDigitsRequired = 2
+                    var byte: UInt8 = 0
+                    while srcIndex < srcEndIndex {
+                        let v = utf8Buffer[srcIndex]
+                        srcIndex += 1
+                        guard let hex = asciiToHex(v) else {
+                            return nil
+                        }
+                        if hexDigitsRequired == 2 {
+                            byte = hex << 4
+                            hexDigitsRequired -= 1
+                        } else if hexDigitsRequired == 1 {
+                            byte += hex
+                            unsafe buffer[destIndex] = byte
+                            destIndex += 1
+                            hexDigitsRequired -= 1
+                            break
+                        }
+                    }
+                    guard hexDigitsRequired == 0 else {
+                        return nil
+                    }
+                } else {
+                    unsafe buffer[destIndex] = v
+                    destIndex += 1
+                }
+            }
+            return unsafe String(decoding: buffer[..<destIndex], as: UTF8.self)
+        }
+        #else
+        return withTemporaryAllocation(of: UInt8.self, capacity: utf8Buffer.count) { buffer -> String? in
             let percent = UInt8(ascii: "%")
             var index = utf8Buffer.indices.startIndex
             let endIndex = utf8Buffer.indices.endIndex
@@ -193,7 +251,7 @@ extension StringProtocol {
                 unsafe String(decoding: bytes, as: UTF8.self)
             }
         }
-        return result
+        #endif
     }
 }
 

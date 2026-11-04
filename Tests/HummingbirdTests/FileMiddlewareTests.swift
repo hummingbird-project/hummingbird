@@ -641,7 +641,6 @@ struct FileMiddlewareTests {
             try await client.execute(uri: "test", method: .get) { response in
                 #expect(response.status == .ok)
                 #expect(String(buffer: response.body) == "Test this")
-                print(response.headers[.eTag])
             }
         }
     }

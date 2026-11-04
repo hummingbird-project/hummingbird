@@ -403,6 +403,30 @@ extension FileMiddleware {
     }
 
     private func createETag(_ strings: [String]) -> String {
+        #if compiler(<6.4)
+        withUnsafeTemporaryAllocation(of: UInt8.self, capacity: 16) { bytes in
+            unsafe bytes.update(repeating: 0)
+            var index = 0
+            if let firstString = strings.first {
+                for c in firstString.utf8 {
+                    unsafe bytes[index] ^= c
+                    index += 1
+                    index &= 0xf
+                }
+            }
+            for string in strings.dropFirst() {
+                unsafe bytes[index] ^= UInt8(ascii: "-")
+                index += 1
+                index &= 0xf
+                for c in string.utf8 {
+                    unsafe bytes[index] ^= c
+                    index += 1
+                    index &= 0xf
+                }
+            }
+            return unsafe "W/\"\(bytes.hexDigest())\""
+        }
+        #else
         withTemporaryAllocation(of: UInt8.self, capacity: 16) { bytes in
             bytes.append(repeating: 0, count: 16)
             var index = 0
@@ -427,6 +451,7 @@ extension FileMiddleware {
                 unsafe "W/\"\(bytes.hexDigest())\""
             }
         }
+        #endif
     }
 
     private func appendingPathComponent(_ root: String, _ component: String) -> String {
