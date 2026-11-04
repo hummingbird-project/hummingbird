@@ -12,6 +12,8 @@ var swiftSettings: [SwiftSetting] = [
 
     // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0409-access-level-on-imports.md
     .enableUpcomingFeature("InternalImportsByDefault"),
+
+    .strictMemorySafety(),
 ]
 
 #if compiler(>=6.3)
@@ -23,9 +25,6 @@ swiftSettings.append(contentsOf: [
     .enableExperimentalFeature("AvailabilityMacro=hummingbird 2.0:macOS 14.0, iOS 17.0, tvOS 17.0, visionOS 1.0")
 ])
 #endif
-
-swiftSettings.append(.unsafeFlags(["-strict-memory-safety"]))
-
 
 let package = Package(
     name: "hummingbird",

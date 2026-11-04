@@ -237,7 +237,7 @@ extension Parser {
             var foundIndex = self.index
             var untilIndex = 0
             while !self.reachedEnd() {
-                if self.buffer[self.index] == utf8[untilIndex] {
+                if unsafe self.buffer[self.index] == utf8[untilIndex] {
                     if untilIndex == 0 {
                         foundIndex = self.index
                     }

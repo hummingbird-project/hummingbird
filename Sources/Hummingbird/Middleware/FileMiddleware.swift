@@ -404,13 +404,13 @@ extension FileMiddleware {
 
     private func createETag(_ strings: [String]) -> String {
         let string = strings.joined(separator: "-")
-        let buffer = [UInt8](unsafeUninitializedCapacity: 16) { bytes, size in
+        let buffer = unsafe [UInt8](unsafeUninitializedCapacity: 16) { bytes, size in
             var index = 0
             for i in 0..<16 {
-                bytes[i] = 0
+                unsafe bytes[i] = 0
             }
             for c in string.utf8 {
-                bytes[index] ^= c
+                unsafe bytes[index] ^= c
                 index += 1
                 if index == 16 {
                     index = 0
