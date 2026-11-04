@@ -171,7 +171,7 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
     }
 }
 
-private struct FinishContinuationService: Service {
+struct FinishContinuationService: Service {
     let cont: AsyncStream<Void>.Continuation
     func run() async throws {
         cont.finish()

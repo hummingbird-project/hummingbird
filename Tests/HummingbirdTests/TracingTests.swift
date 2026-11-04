@@ -530,7 +530,10 @@ struct TracingTests {
                 router.get("users/:id") { _, _ -> Response in
                     Response(
                         status: .ok,
-                        body: .init { _ in try await Task.sleep(for: .milliseconds(100)) }
+                        body: .init { writer in
+                            try await Task.sleep(for: .milliseconds(100))
+                            try await writer.finish(nil)
+                        }
                     )
                 }
                 let app = Application(responder: router.buildResponder())

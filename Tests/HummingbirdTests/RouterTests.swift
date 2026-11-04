@@ -704,7 +704,7 @@ struct RouterTests {
             Response(status: .ok, headers: [.contentLength: "45", .contentLanguage: "en"])
         }
         let app = Application(responder: router.buildResponder())
-        try await app.test(.live) { client in
+        try await app.test(.router) { client in
             try await client.execute(uri: "/test", method: .head) { response in
                 #expect(response.status == .ok)
                 #expect(response.headers[.contentLength] == "45")
