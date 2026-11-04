@@ -8,6 +8,7 @@
 
 public import HTTPTypes
 public import HummingbirdCore
+import Instrumentation
 public import NIOCore
 public import Tracing
 
@@ -68,13 +69,13 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
     }
 
     public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-        var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
-        InstrumentationSystem.instrument.extract(request.headers, into: &serviceContext, using: HTTPHeadersExtractor())
+        var instrumentationContext = InstrumentationContext.current ?? InstrumentationContext.topLevel
+        InstrumentationSystem.instrument.extract(request.headers, into: &instrumentationContext, using: HTTPHeadersExtractor())
 
         // span name is updated after route has run
         let operationName = "HTTP \(request.method.rawValue) route not found"
 
-        let span = startSpan(operationName, context: serviceContext, ofKind: .server)
+        let span = startSpan(operationName, context: instrumentationContext, ofKind: .server)
         span.updateAttributes { attributes in
             if let staticAttributes = self.attributes {
                 attributes.merge(staticAttributes)
@@ -117,7 +118,7 @@ public struct TracingMiddleware<Context: RequestContext>: RouterMiddleware {
         }
 
         do {
-            return try await ServiceContext.$current.withValue(span.context) {
+            return try await InstrumentationContext.$current.withValue(span.context) {
                 var response = try await next(request, context)
                 if let endpointPath = context.endpointPath {
                     span.operationName = endpointPath

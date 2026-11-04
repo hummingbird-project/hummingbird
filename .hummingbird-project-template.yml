@@ -1,0 +1,23 @@
+# Update CI files for project. Set to false to not update CI
+ci:
+  # Add env tag to add environment to CI
+  # env:
+  #   VARIABLE: VALUE
+  # Add nightly build CI with crontab. If this is set to false then the nightly build
+  # workflow is still generated but doesn't include the schedule
+  nightly: false
+  # Run tests in CI
+  enable_tests: true
+  # Enable Linux CI
+  linux:
+    env: 
+      ENABLE_HB_BENCHMARKS: true
+    additional_steps: |
+      - name: Install libjemalloc-dev
+            run: |
+              apt-get -q update
+              apt-get install -y libjemalloc-dev
+    # You can also add a services section here to add 
+  # Enable Mac CI
+  mac:
+    enable_tests: false

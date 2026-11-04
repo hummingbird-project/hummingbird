@@ -11,7 +11,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "9544287b9416c0bc71e58b9f3aead8dd14b16103",
+            "uid" : "4c005f955e83f888d5616e579717a36d2dfc6301",
             "url" : "https://github.com/swift-server/async-http-client.git"
           }
         ]
@@ -22,10 +22,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/swift-server/async-http-client@1.36.0",
+      "purl" : "pkg:swift/github.com/swift-server/async-http-client@1.36.2",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.36.0"
+      "version" : "1.36.2"
     },
     {
       "bom-ref" : "async-http-client:AsyncHTTPClient",
@@ -36,7 +36,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "9544287b9416c0bc71e58b9f3aead8dd14b16103",
+            "uid" : "4c005f955e83f888d5616e579717a36d2dfc6301",
             "url" : "https://github.com/swift-server/async-http-client.git"
           }
         ]
@@ -47,10 +47,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/swift-server/async-http-client:AsyncHTTPClient@1.36.0",
+      "purl" : "pkg:swift/github.com/swift-server/async-http-client:AsyncHTTPClient@1.36.2",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.36.0"
+      "version" : "1.36.2"
     },
     {
       "bom-ref" : "hummingbird",
@@ -351,7 +351,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "3da39bbc4e687d4192af7c9cf4eab805745a0b9c",
+            "uid" : "13713a4ffdee8abd929f92568ee9462a46ae26e0",
             "url" : "https://github.com/apple/swift-async-algorithms.git"
           }
         ]
@@ -362,10 +362,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-async-algorithms@1.1.5",
+      "purl" : "pkg:swift/github.com/apple/swift-async-algorithms@1.1.7",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.1.5"
+      "version" : "1.1.7"
     },
     {
       "bom-ref" : "swift-async-algorithms:AsyncAlgorithms",
@@ -376,7 +376,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "3da39bbc4e687d4192af7c9cf4eab805745a0b9c",
+            "uid" : "13713a4ffdee8abd929f92568ee9462a46ae26e0",
             "url" : "https://github.com/apple/swift-async-algorithms.git"
           }
         ]
@@ -387,10 +387,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-async-algorithms:AsyncAlgorithms@1.1.5",
+      "purl" : "pkg:swift/github.com/apple/swift-async-algorithms:AsyncAlgorithms@1.1.7",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.1.5"
+      "version" : "1.1.7"
     },
     {
       "bom-ref" : "swift-atomics",
@@ -451,7 +451,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "a0cb0954ecb21e4e31b0070e6ed5674e8556685a",
+            "uid" : "f96b909e1a9e469620bc5037c1e24e00153f376f",
             "url" : "https://github.com/apple/swift-collections.git"
           }
         ]
@@ -462,10 +462,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-collections@1.6.0",
+      "purl" : "pkg:swift/github.com/apple/swift-collections@1.7.5",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.6.0"
+      "version" : "1.7.5"
     },
     {
       "bom-ref" : "swift-collections:DequeModule",
@@ -476,7 +476,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "a0cb0954ecb21e4e31b0070e6ed5674e8556685a",
+            "uid" : "f96b909e1a9e469620bc5037c1e24e00153f376f",
             "url" : "https://github.com/apple/swift-collections.git"
           }
         ]
@@ -487,10 +487,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-collections:DequeModule@1.6.0",
+      "purl" : "pkg:swift/github.com/apple/swift-collections:DequeModule@1.7.5",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.6.0"
+      "version" : "1.7.5"
     },
     {
       "bom-ref" : "swift-collections:OrderedCollections",
@@ -501,7 +501,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "a0cb0954ecb21e4e31b0070e6ed5674e8556685a",
+            "uid" : "f96b909e1a9e469620bc5037c1e24e00153f376f",
             "url" : "https://github.com/apple/swift-collections.git"
           }
         ]
@@ -512,10 +512,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-collections:OrderedCollections@1.6.0",
+      "purl" : "pkg:swift/github.com/apple/swift-collections:OrderedCollections@1.7.5",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.6.0"
+      "version" : "1.7.5"
     },
     {
       "bom-ref" : "swift-configuration",
@@ -526,7 +526,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "be76c4ad929eb6c4bcaf3351799f2adf9e6848a9",
+            "uid" : "4e916072eb34f3c136ae64bd2859d6072cdb1b6e",
             "url" : "https://github.com/apple/swift-configuration.git"
           }
         ]
@@ -537,10 +537,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-configuration@1.2.0",
+      "purl" : "pkg:swift/github.com/apple/swift-configuration@1.3.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.2.0"
+      "version" : "1.3.0"
     },
     {
       "bom-ref" : "swift-configuration:Configuration",
@@ -551,7 +551,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "be76c4ad929eb6c4bcaf3351799f2adf9e6848a9",
+            "uid" : "4e916072eb34f3c136ae64bd2859d6072cdb1b6e",
             "url" : "https://github.com/apple/swift-configuration.git"
           }
         ]
@@ -562,10 +562,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-configuration:Configuration@1.2.0",
+      "purl" : "pkg:swift/github.com/apple/swift-configuration:Configuration@1.3.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.2.0"
+      "version" : "1.3.0"
     },
     {
       "bom-ref" : "swift-distributed-tracing",
@@ -576,7 +576,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "dc4030184203ffafbb2ec614352487235d747fe0",
+            "uid" : "297b5b9c82a5631e3199ce3ec0993a3cfb0fbb84",
             "url" : "https://github.com/apple/swift-distributed-tracing.git"
           }
         ]
@@ -587,10 +587,35 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-distributed-tracing@1.4.1",
+      "purl" : "pkg:swift/github.com/apple/swift-distributed-tracing@1.7.2",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.4.1"
+      "version" : "1.7.2"
+    },
+    {
+      "bom-ref" : "swift-distributed-tracing:Instrumentation",
+      "externalReferences" : [
+
+      ],
+      "name" : "Instrumentation",
+      "pedigree" : {
+        "commits" : [
+          {
+            "uid" : "297b5b9c82a5631e3199ce3ec0993a3cfb0fbb84",
+            "url" : "https://github.com/apple/swift-distributed-tracing.git"
+          }
+        ]
+      },
+      "properties" : [
+        {
+          "name" : "swift-entity",
+          "value" : "swift-product"
+        }
+      ],
+      "purl" : "pkg:swift/github.com/apple/swift-distributed-tracing:Instrumentation@1.7.2",
+      "scope" : "required",
+      "type" : "library",
+      "version" : "1.7.2"
     },
     {
       "bom-ref" : "swift-distributed-tracing:Tracing",
@@ -601,7 +626,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "dc4030184203ffafbb2ec614352487235d747fe0",
+            "uid" : "297b5b9c82a5631e3199ce3ec0993a3cfb0fbb84",
             "url" : "https://github.com/apple/swift-distributed-tracing.git"
           }
         ]
@@ -612,10 +637,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-distributed-tracing:Tracing@1.4.1",
+      "purl" : "pkg:swift/github.com/apple/swift-distributed-tracing:Tracing@1.7.2",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.4.1"
+      "version" : "1.7.2"
     },
     {
       "bom-ref" : "swift-http-types",
@@ -626,7 +651,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "db774a277f60063a32d854f2980299caf06da041",
+            "uid" : "bff4b6903cdc99dda49649dd52f46c11cfd3ed50",
             "url" : "https://github.com/apple/swift-http-types.git"
           }
         ]
@@ -637,10 +662,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-http-types@1.6.0",
+      "purl" : "pkg:swift/github.com/apple/swift-http-types@1.8.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.6.0"
+      "version" : "1.8.0"
     },
     {
       "bom-ref" : "swift-http-types:HTTPTypes",
@@ -651,7 +676,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "db774a277f60063a32d854f2980299caf06da041",
+            "uid" : "bff4b6903cdc99dda49649dd52f46c11cfd3ed50",
             "url" : "https://github.com/apple/swift-http-types.git"
           }
         ]
@@ -662,10 +687,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-http-types:HTTPTypes@1.6.0",
+      "purl" : "pkg:swift/github.com/apple/swift-http-types:HTTPTypes@1.8.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.6.0"
+      "version" : "1.8.0"
     },
     {
       "bom-ref" : "swift-log",
@@ -676,7 +701,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "a878e7f8f46cfc0e1125e565b5c08e7d5272dc9a",
+            "uid" : "c9c6bb9d275ec0d95c3ad16391f3f045dc623104",
             "url" : "https://github.com/apple/swift-log.git"
           }
         ]
@@ -687,10 +712,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-log@1.14.0",
+      "purl" : "pkg:swift/github.com/apple/swift-log@1.16.2",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.14.0"
+      "version" : "1.16.2"
     },
     {
       "bom-ref" : "swift-log:Logging",
@@ -701,7 +726,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "a878e7f8f46cfc0e1125e565b5c08e7d5272dc9a",
+            "uid" : "c9c6bb9d275ec0d95c3ad16391f3f045dc623104",
             "url" : "https://github.com/apple/swift-log.git"
           }
         ]
@@ -712,10 +737,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-log:Logging@1.14.0",
+      "purl" : "pkg:swift/github.com/apple/swift-log:Logging@1.16.2",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.14.0"
+      "version" : "1.16.2"
     },
     {
       "bom-ref" : "swift-metrics",
@@ -726,7 +751,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "087e8074afa97040c3b870c8664fe5482fb87cc4",
+            "uid" : "9467f9cc3c32b4386fad1ecc4618328887ef5758",
             "url" : "https://github.com/apple/swift-metrics.git"
           }
         ]
@@ -737,10 +762,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-metrics@2.11.0",
+      "purl" : "pkg:swift/github.com/apple/swift-metrics@2.12.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "2.11.0"
+      "version" : "2.12.0"
     },
     {
       "bom-ref" : "swift-metrics:Metrics",
@@ -751,7 +776,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "087e8074afa97040c3b870c8664fe5482fb87cc4",
+            "uid" : "9467f9cc3c32b4386fad1ecc4618328887ef5758",
             "url" : "https://github.com/apple/swift-metrics.git"
           }
         ]
@@ -762,10 +787,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-metrics:Metrics@2.11.0",
+      "purl" : "pkg:swift/github.com/apple/swift-metrics:Metrics@2.12.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "2.11.0"
+      "version" : "2.12.0"
     },
     {
       "bom-ref" : "swift-nio",
@@ -776,7 +801,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "0b18836bd8b0162e7e17a995a3fbee20ed8f3b2b",
+            "uid" : "6db9d9abd92ad7399b8a564cafbb87d3507245fa",
             "url" : "https://github.com/apple/swift-nio.git"
           }
         ]
@@ -787,10 +812,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio@2.101.3",
+      "purl" : "pkg:swift/github.com/apple/swift-nio@2.104.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "2.101.3"
+      "version" : "2.104.0"
     },
     {
       "bom-ref" : "swift-nio-extras",
@@ -801,7 +826,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "88a51340f59cf181ebde888bd1b749296b3ec029",
+            "uid" : "8e1249b29f92574e05e0d91637f239e378a9a95b",
             "url" : "https://github.com/apple/swift-nio-extras.git"
           }
         ]
@@ -812,10 +837,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio-extras@1.34.3",
+      "purl" : "pkg:swift/github.com/apple/swift-nio-extras@1.35.2",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.34.3"
+      "version" : "1.35.2"
     },
     {
       "bom-ref" : "swift-nio-extras:NIOExtras",
@@ -826,7 +851,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "88a51340f59cf181ebde888bd1b749296b3ec029",
+            "uid" : "8e1249b29f92574e05e0d91637f239e378a9a95b",
             "url" : "https://github.com/apple/swift-nio-extras.git"
           }
         ]
@@ -837,10 +862,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio-extras:NIOExtras@1.34.3",
+      "purl" : "pkg:swift/github.com/apple/swift-nio-extras:NIOExtras@1.35.2",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.34.3"
+      "version" : "1.35.2"
     },
     {
       "bom-ref" : "swift-nio-extras:NIOHTTPCompression",
@@ -851,7 +876,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "88a51340f59cf181ebde888bd1b749296b3ec029",
+            "uid" : "8e1249b29f92574e05e0d91637f239e378a9a95b",
             "url" : "https://github.com/apple/swift-nio-extras.git"
           }
         ]
@@ -862,10 +887,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio-extras:NIOHTTPCompression@1.34.3",
+      "purl" : "pkg:swift/github.com/apple/swift-nio-extras:NIOHTTPCompression@1.35.2",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.34.3"
+      "version" : "1.35.2"
     },
     {
       "bom-ref" : "swift-nio-extras:NIOHTTPTypes",
@@ -876,7 +901,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "88a51340f59cf181ebde888bd1b749296b3ec029",
+            "uid" : "8e1249b29f92574e05e0d91637f239e378a9a95b",
             "url" : "https://github.com/apple/swift-nio-extras.git"
           }
         ]
@@ -887,10 +912,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio-extras:NIOHTTPTypes@1.34.3",
+      "purl" : "pkg:swift/github.com/apple/swift-nio-extras:NIOHTTPTypes@1.35.2",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.34.3"
+      "version" : "1.35.2"
     },
     {
       "bom-ref" : "swift-nio-extras:NIOHTTPTypesHTTP1",
@@ -901,7 +926,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "88a51340f59cf181ebde888bd1b749296b3ec029",
+            "uid" : "8e1249b29f92574e05e0d91637f239e378a9a95b",
             "url" : "https://github.com/apple/swift-nio-extras.git"
           }
         ]
@@ -912,10 +937,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio-extras:NIOHTTPTypesHTTP1@1.34.3",
+      "purl" : "pkg:swift/github.com/apple/swift-nio-extras:NIOHTTPTypesHTTP1@1.35.2",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.34.3"
+      "version" : "1.35.2"
     },
     {
       "bom-ref" : "swift-nio-extras:NIOHTTPTypesHTTP2",
@@ -926,7 +951,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "88a51340f59cf181ebde888bd1b749296b3ec029",
+            "uid" : "8e1249b29f92574e05e0d91637f239e378a9a95b",
             "url" : "https://github.com/apple/swift-nio-extras.git"
           }
         ]
@@ -937,10 +962,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio-extras:NIOHTTPTypesHTTP2@1.34.3",
+      "purl" : "pkg:swift/github.com/apple/swift-nio-extras:NIOHTTPTypesHTTP2@1.35.2",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.34.3"
+      "version" : "1.35.2"
     },
     {
       "bom-ref" : "swift-nio-extras:NIOSOCKS",
@@ -951,7 +976,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "88a51340f59cf181ebde888bd1b749296b3ec029",
+            "uid" : "8e1249b29f92574e05e0d91637f239e378a9a95b",
             "url" : "https://github.com/apple/swift-nio-extras.git"
           }
         ]
@@ -962,10 +987,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio-extras:NIOSOCKS@1.34.3",
+      "purl" : "pkg:swift/github.com/apple/swift-nio-extras:NIOSOCKS@1.35.2",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.34.3"
+      "version" : "1.35.2"
     },
     {
       "bom-ref" : "swift-nio-http2",
@@ -976,7 +1001,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "45bdf670248be5f16ec0340e125dca285536f0fb",
+            "uid" : "0f3e54e29c944c2e835ad52159da7d9e1c94ac69",
             "url" : "https://github.com/apple/swift-nio-http2.git"
           }
         ]
@@ -987,10 +1012,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio-http2@1.45.0",
+      "purl" : "pkg:swift/github.com/apple/swift-nio-http2@1.46.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.45.0"
+      "version" : "1.46.0"
     },
     {
       "bom-ref" : "swift-nio-http2:NIOHTTP2",
@@ -1001,7 +1026,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "45bdf670248be5f16ec0340e125dca285536f0fb",
+            "uid" : "0f3e54e29c944c2e835ad52159da7d9e1c94ac69",
             "url" : "https://github.com/apple/swift-nio-http2.git"
           }
         ]
@@ -1012,10 +1037,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio-http2:NIOHTTP2@1.45.0",
+      "purl" : "pkg:swift/github.com/apple/swift-nio-http2:NIOHTTP2@1.46.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.45.0"
+      "version" : "1.46.0"
     },
     {
       "bom-ref" : "swift-nio-ssl",
@@ -1026,7 +1051,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "d930168b86f46ca51a4bc09c5ca45c1833db8067",
+            "uid" : "322f3c2a4a21df31c84ca416bf65ee5e9059e440",
             "url" : "https://github.com/apple/swift-nio-ssl.git"
           }
         ]
@@ -1037,10 +1062,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio-ssl@2.37.2",
+      "purl" : "pkg:swift/github.com/apple/swift-nio-ssl@2.37.5",
       "scope" : "required",
       "type" : "application",
-      "version" : "2.37.2"
+      "version" : "2.37.5"
     },
     {
       "bom-ref" : "swift-nio-ssl:NIOSSL",
@@ -1051,7 +1076,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "d930168b86f46ca51a4bc09c5ca45c1833db8067",
+            "uid" : "322f3c2a4a21df31c84ca416bf65ee5e9059e440",
             "url" : "https://github.com/apple/swift-nio-ssl.git"
           }
         ]
@@ -1062,10 +1087,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio-ssl:NIOSSL@2.37.2",
+      "purl" : "pkg:swift/github.com/apple/swift-nio-ssl:NIOSSL@2.37.5",
       "scope" : "required",
       "type" : "library",
-      "version" : "2.37.2"
+      "version" : "2.37.5"
     },
     {
       "bom-ref" : "swift-nio:NIO",
@@ -1076,7 +1101,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "0b18836bd8b0162e7e17a995a3fbee20ed8f3b2b",
+            "uid" : "6db9d9abd92ad7399b8a564cafbb87d3507245fa",
             "url" : "https://github.com/apple/swift-nio.git"
           }
         ]
@@ -1087,10 +1112,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio:NIO@2.101.3",
+      "purl" : "pkg:swift/github.com/apple/swift-nio:NIO@2.104.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "2.101.3"
+      "version" : "2.104.0"
     },
     {
       "bom-ref" : "swift-nio:NIOConcurrencyHelpers",
@@ -1101,7 +1126,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "0b18836bd8b0162e7e17a995a3fbee20ed8f3b2b",
+            "uid" : "6db9d9abd92ad7399b8a564cafbb87d3507245fa",
             "url" : "https://github.com/apple/swift-nio.git"
           }
         ]
@@ -1112,10 +1137,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio:NIOConcurrencyHelpers@2.101.3",
+      "purl" : "pkg:swift/github.com/apple/swift-nio:NIOConcurrencyHelpers@2.104.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "2.101.3"
+      "version" : "2.104.0"
     },
     {
       "bom-ref" : "swift-nio:NIOCore",
@@ -1126,7 +1151,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "0b18836bd8b0162e7e17a995a3fbee20ed8f3b2b",
+            "uid" : "6db9d9abd92ad7399b8a564cafbb87d3507245fa",
             "url" : "https://github.com/apple/swift-nio.git"
           }
         ]
@@ -1137,10 +1162,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio:NIOCore@2.101.3",
+      "purl" : "pkg:swift/github.com/apple/swift-nio:NIOCore@2.104.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "2.101.3"
+      "version" : "2.104.0"
     },
     {
       "bom-ref" : "swift-nio:NIOEmbedded",
@@ -1151,7 +1176,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "0b18836bd8b0162e7e17a995a3fbee20ed8f3b2b",
+            "uid" : "6db9d9abd92ad7399b8a564cafbb87d3507245fa",
             "url" : "https://github.com/apple/swift-nio.git"
           }
         ]
@@ -1162,10 +1187,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio:NIOEmbedded@2.101.3",
+      "purl" : "pkg:swift/github.com/apple/swift-nio:NIOEmbedded@2.104.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "2.101.3"
+      "version" : "2.104.0"
     },
     {
       "bom-ref" : "swift-nio:NIOFoundationEssentialsCompat",
@@ -1176,7 +1201,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "0b18836bd8b0162e7e17a995a3fbee20ed8f3b2b",
+            "uid" : "6db9d9abd92ad7399b8a564cafbb87d3507245fa",
             "url" : "https://github.com/apple/swift-nio.git"
           }
         ]
@@ -1187,10 +1212,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio:NIOFoundationEssentialsCompat@2.101.3",
+      "purl" : "pkg:swift/github.com/apple/swift-nio:NIOFoundationEssentialsCompat@2.104.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "2.101.3"
+      "version" : "2.104.0"
     },
     {
       "bom-ref" : "swift-nio:NIOHTTP1",
@@ -1201,7 +1226,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "0b18836bd8b0162e7e17a995a3fbee20ed8f3b2b",
+            "uid" : "6db9d9abd92ad7399b8a564cafbb87d3507245fa",
             "url" : "https://github.com/apple/swift-nio.git"
           }
         ]
@@ -1212,10 +1237,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio:NIOHTTP1@2.101.3",
+      "purl" : "pkg:swift/github.com/apple/swift-nio:NIOHTTP1@2.104.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "2.101.3"
+      "version" : "2.104.0"
     },
     {
       "bom-ref" : "swift-nio:NIOPosix",
@@ -1226,7 +1251,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "0b18836bd8b0162e7e17a995a3fbee20ed8f3b2b",
+            "uid" : "6db9d9abd92ad7399b8a564cafbb87d3507245fa",
             "url" : "https://github.com/apple/swift-nio.git"
           }
         ]
@@ -1237,10 +1262,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio:NIOPosix@2.101.3",
+      "purl" : "pkg:swift/github.com/apple/swift-nio:NIOPosix@2.104.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "2.101.3"
+      "version" : "2.104.0"
     },
     {
       "bom-ref" : "swift-nio:NIOTLS",
@@ -1251,7 +1276,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "0b18836bd8b0162e7e17a995a3fbee20ed8f3b2b",
+            "uid" : "6db9d9abd92ad7399b8a564cafbb87d3507245fa",
             "url" : "https://github.com/apple/swift-nio.git"
           }
         ]
@@ -1262,10 +1287,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio:NIOTLS@2.101.3",
+      "purl" : "pkg:swift/github.com/apple/swift-nio:NIOTLS@2.104.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "2.101.3"
+      "version" : "2.104.0"
     },
     {
       "bom-ref" : "swift-nio:_NIOFileSystem",
@@ -1276,7 +1301,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "0b18836bd8b0162e7e17a995a3fbee20ed8f3b2b",
+            "uid" : "6db9d9abd92ad7399b8a564cafbb87d3507245fa",
             "url" : "https://github.com/apple/swift-nio.git"
           }
         ]
@@ -1287,10 +1312,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-nio:_NIOFileSystem@2.101.3",
+      "purl" : "pkg:swift/github.com/apple/swift-nio:_NIOFileSystem@2.104.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "2.101.3"
+      "version" : "2.104.0"
     },
     {
       "bom-ref" : "swift-numerics",
@@ -1351,7 +1376,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "d0997351b0c7779017f88e7a93bc30a1878d7f29",
+            "uid" : "853ba3d9ce78851b9cc20108e8bd4f13f7fa546c",
             "url" : "https://github.com/apple/swift-service-context.git"
           }
         ]
@@ -1362,10 +1387,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-service-context@1.3.0",
+      "purl" : "pkg:swift/github.com/apple/swift-service-context@1.5.1",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.3.0"
+      "version" : "1.5.1"
     },
     {
       "bom-ref" : "swift-service-context:ServiceContextModule",
@@ -1376,7 +1401,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "d0997351b0c7779017f88e7a93bc30a1878d7f29",
+            "uid" : "853ba3d9ce78851b9cc20108e8bd4f13f7fa546c",
             "url" : "https://github.com/apple/swift-service-context.git"
           }
         ]
@@ -1387,10 +1412,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-service-context:ServiceContextModule@1.3.0",
+      "purl" : "pkg:swift/github.com/apple/swift-service-context:ServiceContextModule@1.5.1",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.3.0"
+      "version" : "1.5.1"
     },
     {
       "bom-ref" : "swift-service-lifecycle",
@@ -1401,7 +1426,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "9829955b385e5bb88128b73f1b8389e9b9c3191a",
+            "uid" : "a18ee16b8039866fd919bdb4e8e906882d4ecc75",
             "url" : "https://github.com/swift-server/swift-service-lifecycle.git"
           }
         ]
@@ -1412,10 +1437,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/swift-server/swift-service-lifecycle@2.11.0",
+      "purl" : "pkg:swift/github.com/swift-server/swift-service-lifecycle@2.13.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "2.11.0"
+      "version" : "2.13.0"
     },
     {
       "bom-ref" : "swift-service-lifecycle:ServiceLifecycle",
@@ -1426,7 +1451,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "9829955b385e5bb88128b73f1b8389e9b9c3191a",
+            "uid" : "a18ee16b8039866fd919bdb4e8e906882d4ecc75",
             "url" : "https://github.com/swift-server/swift-service-lifecycle.git"
           }
         ]
@@ -1437,10 +1462,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/swift-server/swift-service-lifecycle:ServiceLifecycle@2.11.0",
+      "purl" : "pkg:swift/github.com/swift-server/swift-service-lifecycle:ServiceLifecycle@2.13.0",
       "scope" : "required",
       "type" : "library",
-      "version" : "2.11.0"
+      "version" : "2.13.0"
     },
     {
       "bom-ref" : "swift-system",
@@ -1451,7 +1476,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "50688cacbd41d547e9eb9f7a213542340b7c442b",
+            "uid" : "869129b7bf4ecc57b97d0193ad29690ca2134750",
             "url" : "https://github.com/apple/swift-system"
           }
         ]
@@ -1462,10 +1487,10 @@
           "value" : "swift-package"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-system@1.7.5",
+      "purl" : "pkg:swift/github.com/apple/swift-system@1.8.1",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.7.5"
+      "version" : "1.8.1"
     },
     {
       "bom-ref" : "swift-system:SystemPackage",
@@ -1476,7 +1501,7 @@
       "pedigree" : {
         "commits" : [
           {
-            "uid" : "50688cacbd41d547e9eb9f7a213542340b7c442b",
+            "uid" : "869129b7bf4ecc57b97d0193ad29690ca2134750",
             "url" : "https://github.com/apple/swift-system"
           }
         ]
@@ -1487,10 +1512,10 @@
           "value" : "swift-product"
         }
       ],
-      "purl" : "pkg:swift/github.com/apple/swift-system:SystemPackage@1.7.5",
+      "purl" : "pkg:swift/github.com/apple/swift-system:SystemPackage@1.8.1",
       "scope" : "required",
       "type" : "library",
-      "version" : "1.7.5"
+      "version" : "1.8.1"
     }
   ],
   "dependencies" : [
@@ -1558,6 +1583,7 @@
         "swift-nio-extras",
         "swift-nio-http2",
         "swift-nio-ssl",
+        "swift-service-context",
         "swift-service-lifecycle"
       ],
       "ref" : "hummingbird"
@@ -1568,6 +1594,7 @@
         "swift-atomics:Atomics",
         "swift-collections:DequeModule",
         "swift-configuration:Configuration",
+        "swift-distributed-tracing:Instrumentation",
         "swift-distributed-tracing:Tracing",
         "swift-http-types:HTTPTypes",
         "swift-log:Logging",
@@ -1627,6 +1654,7 @@
         "swift-atomics:Atomics",
         "swift-collections:DequeModule",
         "swift-configuration:Configuration",
+        "swift-distributed-tracing:Instrumentation",
         "swift-distributed-tracing:Tracing",
         "swift-http-types:HTTPTypes",
         "swift-log:Logging",
@@ -1668,6 +1696,7 @@
         "swift-atomics:Atomics",
         "swift-collections:DequeModule",
         "swift-configuration:Configuration",
+        "swift-distributed-tracing:Instrumentation",
         "swift-distributed-tracing:Tracing",
         "swift-http-types:HTTPTypes",
         "swift-log:Logging",
@@ -1692,6 +1721,7 @@
         "swift-atomics:Atomics",
         "swift-collections:DequeModule",
         "swift-configuration:Configuration",
+        "swift-distributed-tracing:Instrumentation",
         "swift-distributed-tracing:Tracing",
         "swift-http-types:HTTPTypes",
         "swift-log:Logging",
@@ -1765,16 +1795,10 @@
     },
     {
       "dependsOn" : [
-        "swift-distributed-tracing:Tracing",
-        "swift-service-context"
+        "swift-distributed-tracing:Instrumentation",
+        "swift-distributed-tracing:Tracing"
       ],
       "ref" : "swift-distributed-tracing"
-    },
-    {
-      "dependsOn" : [
-        "swift-service-context:ServiceContextModule"
-      ],
-      "ref" : "swift-distributed-tracing:Tracing"
     },
     {
       "dependsOn" : [
@@ -1971,9 +1995,16 @@
     },
     {
       "dependsOn" : [
+        "swift-distributed-tracing",
         "swift-service-context:ServiceContextModule"
       ],
       "ref" : "swift-service-context"
+    },
+    {
+      "dependsOn" : [
+        "swift-distributed-tracing:Instrumentation"
+      ],
+      "ref" : "swift-service-context:ServiceContextModule"
     },
     {
       "dependsOn" : [
@@ -2018,11 +2049,11 @@
       "type" : "application",
       "version" : "unknown"
     },
-    "timestamp" : "2026-07-29T08:00:15Z",
+    "timestamp" : "2026-10-28T10:14:23Z",
     "tools" : {
       "components" : [
         {
-          "bom-ref" : "urn:uuid:3b833585-c536-4eb3-b1b4-8727ff4453be",
+          "bom-ref" : "urn:uuid:0f63109a-b275-4f9a-a2ff-d4bc15c01c90",
           "licenses" : [
             {
               "license" : {
@@ -2032,15 +2063,15 @@
             }
           ],
           "name" : "swift-package-manager",
-          "purl" : "pkg:swift/github.com/swiftlang/swift-package-manager@6.4.0-dev",
+          "purl" : "pkg:swift/github.com/swiftlang/swift-package-manager@6.4.1",
           "scope" : "excluded",
           "type" : "application",
-          "version" : "6.4.0-dev"
+          "version" : "6.4.1"
         }
       ]
     }
   },
-  "serialNumber" : "urn:uuid:7909de67-2577-402e-877c-39e6304ceeaf",
+  "serialNumber" : "urn:uuid:f79dca82-bdad-4dcd-9777-21613929432e",
   "specVersion" : "1.7",
   "version" : 1
 }

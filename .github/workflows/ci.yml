@@ -55,6 +55,6 @@ jobs:
       run: |
         swift test --enable-code-coverage
     - name: Upload coverage data
-      uses: vapor/swift-codecov-action@855faf6b50974544c7ab3da724f49e602e43edc6  # v0.3.6
+      uses: vapor/swift-codecov-action@c93caea6600dbe3af0266a8ef6ee195c00181f04  # v0.3.7
       with:
         codecov_token: ${{ secrets.CODECOV_TOKEN }}

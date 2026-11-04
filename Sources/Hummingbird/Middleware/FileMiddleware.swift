@@ -315,6 +315,8 @@ extension FileMiddleware {
         headers[.lastModified] = modificationDateString
         // eTag (constructed from modification date and content size)
         headers[.eTag] = eTag
+        // Advertise we accept byte ranges
+        headers[.acceptRanges] = "bytes"
 
         // content-type
         if let ext = self.fileExtension(for: path) {

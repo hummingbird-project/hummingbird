@@ -684,6 +684,37 @@ struct HummingbirdCoreTests {
             try await client.close()
         }
     }
+
+    /// Test running cancel on inbound close after the request body has been collected cancels on
+    /// inbound closure, instead of spinning on the finished request part stream
+    @Test(.timeLimit(.minutes(1))) func testCancelOnCloseInboundAfterCollect() async throws {
+        let (handlerStarted, handlerStartedCont) = AsyncStream.makeStream(of: Void.self)
+        let (cancelled, cancelledCont) = AsyncStream.makeStream(of: Void.self)
+        try await testServer(
+            responder: { (request, responseWriter: consuming ResponseWriter, _) in
+                var request = request
+                _ = try await request.collectBody(upTo: .max)
+                await #expect(throws: CancellationError.self) {
+                    try await request.body.consumeWithCancellationOnInboundClose { _ in
+                        handlerStartedCont.yield()
+                        try await Task.sleep(for: .seconds(60))
+                    }
+                }
+                cancelledCont.yield()
+            },
+            httpChannelSetup: .http1(),
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
+            logger: Logger(label: #function)
+        ) { client in
+            try await client.executeAndDontWaitForResponse(.init("/", method: .post, body: ByteBuffer(string: "Hello")))
+            var handlerStartedIterator = handlerStarted.makeAsyncIterator()
+            await handlerStartedIterator.next()
+            try await client.close()
+            var cancelledIterator = cancelled.makeAsyncIterator()
+            await cancelledIterator.next()
+        }
+    }
 }
 
 struct DelayAsyncSequence<CoreSequence: AsyncSequence>: AsyncSequence {

@@ -7,7 +7,6 @@
 //
 
 import NIOCore
-import ServiceContextModule
 
 /// Protocol for object that produces a response given a request
 ///

@@ -17,6 +17,9 @@
 <a href="https://discord.gg/4twfgYqdat">
   <img src="https://img.shields.io/badge/chat-discord-7289da.svg?logo=discord&logoColor=white"/>
 </a>
+<a href="https://insights.linuxfoundation.org/project/hummingbird">
+  <img src="https://insights.linuxfoundation.org/api/badge/health-score?project=hummingbird"/>
+</a>
 </p>
 
 Lightweight, flexible, modern server framework written in Swift.
@@ -112,4 +115,4 @@ Support development of Hummingbird by becoming a [sponsor](https://github.com/sp
 
 Support development of Hummingbird by becoming a [backer](https://github.com/sponsors/hummingbird-project).
 
-<!-- backers --><a href="https://github.com/thoven87"><img src="https:&#x2F;&#x2F;github.com&#x2F;thoven87.png" width="60px" alt="User avatar: Stevenson Michel" /></a><a href="https://github.com/mattmassicotte"><img src="https:&#x2F;&#x2F;github.com&#x2F;mattmassicotte.png" width="60px" alt="User avatar: Matt Massicotte" /></a><a href="https://github.com/slashmo"><img src="https:&#x2F;&#x2F;github.com&#x2F;slashmo.png" width="60px" alt="User avatar: Moritz Lang" /></a><a href="https://github.com/zaneenders"><img src="https:&#x2F;&#x2F;github.com&#x2F;zaneenders.png" width="60px" alt="User avatar: Zane Enders" /></a><a href="https://github.com/czechboy0"><img src="https:&#x2F;&#x2F;github.com&#x2F;czechboy0.png" width="60px" alt="User avatar: Honza Dvorsky" /></a><!-- backers -->
+<!-- backers --><a href="https://github.com/thoven87"><img src="https:&#x2F;&#x2F;github.com&#x2F;thoven87.png" width="60px" alt="User avatar: Stevenson Michel" /></a><a href="https://github.com/mattmassicotte"><img src="https:&#x2F;&#x2F;github.com&#x2F;mattmassicotte.png" width="60px" alt="User avatar: Matt Massicotte" /></a><a href="https://github.com/slashmo"><img src="https:&#x2F;&#x2F;github.com&#x2F;slashmo.png" width="60px" alt="User avatar: Moritz Lang" /></a><a href="https://github.com/zaneenders"><img src="https:&#x2F;&#x2F;github.com&#x2F;zaneenders.png" width="60px" alt="User avatar: Zane Enders" /></a><a href="https://github.com/czechboy0"><img src="https:&#x2F;&#x2F;github.com&#x2F;czechboy0.png" width="60px" alt="User avatar: Honza Dvorsky" /></a><a href="https://github.com/s4cha"><img src="https:&#x2F;&#x2F;github.com&#x2F;s4cha.png" width="60px" alt="User avatar: Sacha DSO" /></a><!-- backers -->
