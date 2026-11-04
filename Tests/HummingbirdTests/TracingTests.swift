@@ -549,8 +549,8 @@ struct TracingTests {
         }
     }
 
-    /// Test tracing serviceContext is attached to request when route handler is called
-    @Test func testServiceContextPropagation() async throws {
+    /// Verify the tracing instrumentation context is available in route handlers.
+    @Test func testInstrumentationContextPropagation() async throws {
         try await Self.testTracer.withUnique {
             try await confirmation(expectedCount: 2) { endSpan in
                 Self.testTracer.onEndSpan = { _ in endSpan() }
@@ -558,9 +558,9 @@ struct TracingTests {
                 let router = Router()
                 router.middlewares.add(TracingMiddleware())
                 router.get("/") { _, _ -> HTTPResponse.Status in
-                    var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
-                    serviceContext.testID = "test"
-                    let span = InstrumentationSystem.tracer.startSpan("testing", context: serviceContext, ofKind: .server)
+                    var instrumentationContext = InstrumentationContext.current ?? InstrumentationContext.topLevel
+                    instrumentationContext.testID = "test"
+                    let span = InstrumentationSystem.tracer.startSpan("testing", context: instrumentationContext, ofKind: .server)
                     span.end()
                     return .ok
                 }
@@ -580,8 +580,8 @@ struct TracingTests {
         }
     }
 
-    /// Verify serviceContext set in trace middleware propagates to routes
-    @Test func testServiceContextPropagationWithSpan() async throws {
+    /// Verify the instrumentation context propagates to child spans in route handlers.
+    @Test func testInstrumentationContextPropagationWithSpan() async throws {
         try await Self.testTracer.withUnique {
             try await confirmation(expectedCount: 2) { endSpan in
                 Self.testTracer.onEndSpan = { _ in endSpan() }
@@ -589,9 +589,9 @@ struct TracingTests {
                 let router = Router()
                 router.middlewares.add(TracingMiddleware())
                 router.get("/") { _, _ -> HTTPResponse.Status in
-                    var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
-                    serviceContext.testID = "test"
-                    return InstrumentationSystem.tracer.withSpan("TestSpan", context: serviceContext, ofKind: .client) { span in
+                    var instrumentationContext = InstrumentationContext.current ?? InstrumentationContext.topLevel
+                    instrumentationContext.testID = "test"
+                    return InstrumentationSystem.tracer.withSpan("TestSpan", context: instrumentationContext, ofKind: .client) { span in
                         span.attributes["test-attribute"] = 42
                         return .ok
                     }
@@ -613,19 +613,18 @@ struct TracingTests {
         }
     }
 
-    /// And SpanMiddleware in front of tracing middleware and set serviceContext value and use
-    /// EventLoopFuture version of `request.withSpan` to call next.respond
-    @Test func testServiceContextPropagationInMiddleware() async throws {
+    /// Verify an instrumentation context set by preceding middleware propagates to the request span.
+    @Test func testInstrumentationContextPropagationInMiddleware() async throws {
         struct SpanMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(
                 _ request: Request,
                 context: Context,
                 next: (Request, Context) async throws -> Response
             ) async throws -> Response {
-                var serviceContext = ServiceContext.current ?? ServiceContext.topLevel
-                serviceContext.testID = "testMiddleware"
+                var instrumentationContext = InstrumentationContext.current ?? InstrumentationContext.topLevel
+                instrumentationContext.testID = "testMiddleware"
 
-                return try await InstrumentationSystem.tracer.withSpan("TestSpan", context: serviceContext, ofKind: .server) { _ in
+                return try await InstrumentationSystem.tracer.withSpan("TestSpan", context: instrumentationContext, ofKind: .server) { _ in
                     try await next(request, context)
                 }
             }
@@ -640,6 +639,7 @@ struct TracingTests {
                 router.middlewares.add(TracingMiddleware())
                 router.get("/") { _, _ -> HTTPResponse.Status in
                     try await Task.sleep(for: .milliseconds(2))
+                    #expect(InstrumentationContext.current?.testID == "testMiddleware")
                     return .ok
                 }
                 let app = Application(responder: router.buildResponder())
@@ -656,8 +656,8 @@ struct TracingTests {
         }
     }
 
-    /// Test tracing middleware serviceContext is propagated to async route handlers
-    @Test func testServiceContextPropagationAsync() async throws {
+    /// Verify the instrumentation context propagates across suspension in route handlers.
+    @Test func testInstrumentationContextPropagationAsync() async throws {
         try await Self.testTracer.withUnique {
             try await confirmation(expectedCount: 2) { endSpan in
                 Self.testTracer.onEndSpan = { _ in endSpan() }
@@ -687,13 +687,13 @@ struct TracingTests {
 }
 
 /// TestID Key used in tests
-internal enum TestIDKey: ServiceContextKey {
+internal enum TestIDKey: InstrumentationContextKey {
     typealias Value = String
     static var nameOverride: String? { "test-id" }
 }
 
-extension ServiceContext {
-    /// extend ServiceContext to easily access test id
+extension InstrumentationContext {
+    /// extend InstrumentationContext to easily access test id
     var testID: String? {
         get {
             self[TestIDKey.self]

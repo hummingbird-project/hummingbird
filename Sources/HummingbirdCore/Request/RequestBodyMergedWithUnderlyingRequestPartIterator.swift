@@ -43,14 +43,14 @@ struct RequestBodyMergedWithUnderlyingRequestPartIterator<Base: AsyncSequence>: 
                 }
 
             case .underlying(var underlying):
-                while true {
-                    let part = try await underlying.next()
+                while let part = try await underlying.next() {
                     if case .head = part {
                         self.current = .done
                         return part
                     }
                 }
-                self.current = .underlying(underlying)
+                // The inbound stream has closed: report that rather than polling it forever
+                self.current = .done
                 return nil
 
             case .done:
