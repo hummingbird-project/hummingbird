@@ -63,7 +63,7 @@ extension StringProtocol {
 
     package func addingPercentEncoding(forURLComponent component: URLComponentSet) -> String {
         let fastResult = utf8.withContiguousStorageIfAvailable {
-            Self.addingPercentEncoding(utf8Buffer: $0, component: component)
+            unsafe Self.addingPercentEncoding(utf8Buffer: $0, component: component)
         }
         if let fastResult {
             return fastResult
@@ -79,16 +79,16 @@ extension StringProtocol {
             var i = 0
             for byte in utf8Buffer {
                 if byte.isAllowedIn(component) {
-                    buffer[i] = byte
+                    unsafe buffer[i] = byte
                     i += 1
                 } else {
-                    buffer[i] = percent
-                    buffer[i + 1] = hexToAscii(byte >> 4)
-                    buffer[i + 2] = hexToAscii(byte & 0xF)
+                    unsafe buffer[i] = percent
+                    unsafe buffer[i + 1] = hexToAscii(byte >> 4)
+                    unsafe buffer[i + 2] = hexToAscii(byte & 0xF)
                     i += 3
                 }
             }
-            return String(decoding: buffer[..<i], as: UTF8.self)
+            return unsafe String(decoding: buffer[..<i], as: UTF8.self)
         }
         return result
     }
@@ -134,7 +134,7 @@ extension StringProtocol {
 
     package func removingURLPercentEncoding(excluding: Set<UInt8> = []) -> String? {
         let fastResult = utf8.withContiguousStorageIfAvailable {
-            Self.removingURLPercentEncoding(utf8Buffer: $0, excluding: excluding)
+            unsafe Self.removingURLPercentEncoding(utf8Buffer: $0, excluding: excluding)
         }
         if let fastResult {
             return fastResult
@@ -164,23 +164,23 @@ extension StringProtocol {
                         byte += hex
                         if excluding.contains(byte) {
                             // Keep the original percent-encoding for this byte
-                            i = buffer[i...i + 2].initialize(fromContentsOf: [UInt8(ascii: "%"), hexToAscii(byte >> 4), v])
+                            i = unsafe buffer[i...i + 2].initialize(fromContentsOf: [UInt8(ascii: "%"), hexToAscii(byte >> 4), v])
                         } else {
-                            buffer[i] = byte
+                            unsafe buffer[i] = byte
                             i += 1
                             byte = 0
                         }
                     }
                     hexDigitsRequired -= 1
                 } else {
-                    buffer[i] = v
+                    unsafe buffer[i] = v
                     i += 1
                 }
             }
             guard hexDigitsRequired == 0 else {
                 return nil
             }
-            return String(decoding: buffer[..<i], as: UTF8.self)
+            return unsafe String(decoding: buffer[..<i], as: UTF8.self)
         }
         return result
     }

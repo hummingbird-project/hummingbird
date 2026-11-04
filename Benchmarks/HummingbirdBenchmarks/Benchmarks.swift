@@ -11,7 +11,7 @@ import Foundation
 import Hummingbird
 
 let benchmarks: @Sendable () -> Void = {
-    Benchmark.defaultConfiguration = .init(
+    unsafe Benchmark.defaultConfiguration = .init(
         metrics: ProcessInfo.processInfo.environment["CI"] != nil
             ? [
                 .instructions,

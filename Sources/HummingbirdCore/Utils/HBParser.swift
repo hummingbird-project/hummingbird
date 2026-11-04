@@ -237,7 +237,7 @@ extension Parser {
             var foundIndex = self.index
             var untilIndex = 0
             while !self.reachedEnd() {
-                if self.buffer[self.index] == utf8[untilIndex] {
+                if unsafe self.buffer[self.index] == utf8[untilIndex] {
                     if untilIndex == 0 {
                         foundIndex = self.index
                     }
@@ -462,7 +462,7 @@ extension Parser {
     }
 
     fileprivate func makeString<Bytes: Collection>(_ bytes: Bytes) -> String where Bytes.Element == UInt8, Bytes.Index == Int {
-        if let string = bytes.withContiguousStorageIfAvailable({ String(decoding: $0, as: Unicode.UTF8.self) }) {
+        if let string = bytes.withContiguousStorageIfAvailable({ unsafe String(decoding: $0, as: Unicode.UTF8.self) }) {
             return string
         } else {
             return String(decoding: bytes, as: Unicode.UTF8.self)

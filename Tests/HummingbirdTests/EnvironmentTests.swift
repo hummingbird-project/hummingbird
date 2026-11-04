@@ -15,7 +15,7 @@ import Testing
 @Suite("EnvironmentTests", .serialized)
 struct EnvironmentTests {
     @Test func testInitFromEnvironment() {
-        #expect(setenv("testInitFromEnvironment", "testSetFromEnvironment", 1) == 0)
+        unsafe setenv("testInitFromEnvironment", "testSetFromEnvironment", 1)
         let env = Environment()
         #expect(env.get("testInitFromEnvironment") == "testSetFromEnvironment")
     }
@@ -71,7 +71,7 @@ struct EnvironmentTests {
     }
 
     @Test func testCaseInsensitive() {
-        #expect(setenv("testCaseInsensitive", "testSetFromEnvironment", 1) == 0)
+        unsafe setenv("testCaseInsensitive", "testSetFromEnvironment", 1)
         let env = Environment()
         #expect(env.get("TESTCaseInsensitive") == "testSetFromEnvironment")
         #expect(env.get("testcaseinsensitive") == "testSetFromEnvironment")
@@ -168,8 +168,8 @@ struct EnvironmentTests {
         defer {
             try? FileManager.default.removeItem(at: envURL)
         }
-        #expect(setenv("testDotEnvOverridingEnvironment", "testSetFromEnvironment", 1) == 0)
-        #expect(setenv("testDotEnvOverridingEnvironment2", "testSetFromEnvironment2", 1) == 0)
+        unsafe setenv("testDotEnvOverridingEnvironment", "testSetFromEnvironment", 1)
+        unsafe setenv("testDotEnvOverridingEnvironment2", "testSetFromEnvironment2", 1)
         let env = try await Environment().merging(with: .dotEnv(".override.env"))
         #expect(env.get("testDotEnvOverridingEnvironment") == "testDotEnvOverridingEnvironment")
         #expect(env.get("testDotEnvOverridingEnvironment2") == "testSetFromEnvironment2")
