@@ -63,7 +63,7 @@ extension StringProtocol {
 
     package func addingPercentEncoding(forURLComponent component: URLComponentSet) -> String {
         let fastResult = utf8.withContiguousStorageIfAvailable {
-            Self.addingPercentEncoding(utf8Buffer: $0, component: component)
+            unsafe Self.addingPercentEncoding(utf8Buffer: $0, component: component)
         }
         if let fastResult {
             return fastResult
@@ -74,20 +74,21 @@ extension StringProtocol {
 
     fileprivate static func addingPercentEncoding(utf8Buffer: some Collection<UInt8>, component: URLComponentSet) -> String {
         let maxLength = utf8Buffer.count * 3
-        let result = unsafe withUnsafeTemporaryAllocation(of: UInt8.self, capacity: maxLength + 1) { _buffer in
-            var buffer = unsafe OutputBuffer(initializing: _buffer.baseAddress!, capacity: _buffer.count)
-            for v in utf8Buffer {
-                if v.isAllowedIn(component) {
-                    buffer.appendElement(v)
+        let percent = UInt8(ascii: "%")
+        let result = withUnsafeTemporaryAllocation(of: UInt8.self, capacity: maxLength) { buffer in
+            var i = 0
+            for byte in utf8Buffer {
+                if byte.isAllowedIn(component) {
+                    unsafe buffer[i] = byte
+                    i += 1
                 } else {
-                    buffer.appendElement(UInt8(ascii: "%"))
-                    buffer.appendElement(hexToAscii(v >> 4))
-                    buffer.appendElement(hexToAscii(v & 0xF))
+                    unsafe buffer[i] = percent
+                    unsafe buffer[i + 1] = hexToAscii(byte >> 4)
+                    unsafe buffer[i + 2] = hexToAscii(byte & 0xF)
+                    i += 3
                 }
             }
-            buffer.appendElement(0)  // NULL-terminated
-            let initialized = unsafe buffer.relinquishBorrowedMemory()
-            return unsafe String(cString: initialized.baseAddress!)
+            return unsafe String(decoding: buffer[..<i], as: UTF8.self)
         }
         return result
     }
@@ -143,7 +144,7 @@ extension StringProtocol {
     }
 
     package static func removingURLPercentEncoding(utf8Buffer: some Collection<UInt8>, excluding: Set<UInt8> = []) -> String? {
-        let result: String? = unsafe withUnsafeTemporaryAllocation(of: UInt8.self, capacity: utf8Buffer.count) { buffer -> String? in
+        let result: String? = withUnsafeTemporaryAllocation(of: UInt8.self, capacity: utf8Buffer.count) { buffer -> String? in
             var i = 0
             var byte: UInt8 = 0
             var hexDigitsRequired = 0
@@ -165,14 +166,14 @@ extension StringProtocol {
                             // Keep the original percent-encoding for this byte
                             i = unsafe buffer[i...i + 2].initialize(fromContentsOf: [UInt8(ascii: "%"), hexToAscii(byte >> 4), v])
                         } else {
-                            buffer[i] = byte
+                            unsafe buffer[i] = byte
                             i += 1
                             byte = 0
                         }
                     }
                     hexDigitsRequired -= 1
                 } else {
-                    buffer[i] = v
+                    unsafe buffer[i] = v
                     i += 1
                 }
             }
