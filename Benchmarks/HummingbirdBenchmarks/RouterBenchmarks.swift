@@ -58,7 +58,7 @@ extension Benchmark {
     @discardableResult
     convenience init?<ResponderBuilder: HTTPResponderBuilder>(
         _ name: String,
-        configuration: Benchmark.Configuration = Benchmark.defaultConfiguration,
+        configuration: Benchmark.Configuration = unsafe Benchmark.defaultConfiguration,
         request: HTTPRequest,
         writeBody: (@Sendable (ByteBufferWriter) async throws -> Void)? = nil,
         createRouter: @escaping @Sendable () -> ResponderBuilder
