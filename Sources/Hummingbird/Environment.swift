@@ -8,7 +8,10 @@
 
 import HummingbirdCore
 import NIOCore
+
+#if FileSystemSupport
 import _NIOFileSystem
+#endif
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials
@@ -24,6 +27,9 @@ import Musl
 import Darwin.C
 #elseif canImport(Android)
 import Android
+#elseif canImport(ucrt)
+import ucrt
+import WinSDK
 #else
 #error("Unsupported platform")
 #endif
@@ -134,9 +140,17 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
     public mutating func set(_ s: String, value: String?) {
         self.values[s.lowercased()] = value
         if let value {
+            #if os(Windows)
+            _putenv("\(s)=\(value)")
+            #else
             setenv(s, value, 1)
+            #endif
         } else {
+            #if os(Windows)
+            _putenv("\(s)=")
+            #else
             unsetenv(s)
+            #endif
         }
     }
 
@@ -166,6 +180,7 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
 
     /// Load `.env` file into string
     internal static func loadDotEnv(_ dotEnvPath: String = ".env") async -> String? {
+        #if FileSystemSupport
         do {
             return try await FileSystem.shared.withFileHandle(forReadingAt: .init(dotEnvPath)) { fileHandle in
                 let buffer = try await fileHandle.readToEnd(maximumSizeAllowed: .unlimited)
@@ -174,6 +189,9 @@ public struct Environment: Sendable, Decodable, ExpressibleByDictionaryLiteral {
         } catch {
             return nil
         }
+        #else
+        return nil
+        #endif
     }
 
     /// Parse a `.env` file

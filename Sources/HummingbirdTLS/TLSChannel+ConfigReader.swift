@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#if ConfigurationSupport
+#if ConfigurationSupport && TLSSupport
 
 public import Configuration
 
