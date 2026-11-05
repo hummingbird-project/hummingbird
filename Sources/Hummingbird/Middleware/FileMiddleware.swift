@@ -11,6 +11,7 @@ public import HummingbirdCore
 public import Logging
 import NIOCore
 public import NIOPosix
+import SystemPackage
 
 #if canImport(FoundationEssentials)
 public import FoundationEssentials

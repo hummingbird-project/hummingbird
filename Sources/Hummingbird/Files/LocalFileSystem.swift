@@ -8,7 +8,7 @@
 
 public import Logging
 public import NIOPosix
-public import SystemPackage
+import SystemPackage
 import _NIOFileSystem
 
 #if canImport(FoundationEssentials)
@@ -48,6 +48,7 @@ public struct LocalFileSystem: FileProvider {
         public static var allowSymbolicLinks: Self { .init(rawValue: 1 << 0) }
     }
 
+    // TODO: Change this to FilePath when we can afford the breaking change
     /// File Identifier (Fully qualified path)
     public typealias FileIdentifier = String
 
