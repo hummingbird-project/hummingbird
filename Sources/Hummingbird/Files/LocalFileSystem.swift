@@ -59,9 +59,10 @@ public struct LocalFileSystem: FileProvider {
     /// Initialize LocalFileSystem FileProvider
     /// - Parameters:
     ///   - rootFolder: Root folder to serve files from
+    ///   - options: Options for local file system file provider
     ///   - threadPool: Thread pool used when loading files
     ///   - logger: Logger to output root folder information
-    public init(rootFolder: String, options: Options = [], threadPool: NIOThreadPool = .singleton, logger: Logger) {
+    public init(rootFolder: String, options: Options, threadPool: NIOThreadPool = .singleton, logger: Logger) {
         self.rootFolder = .init(rootFolder)
         self.fileIO = .init(threadPool: threadPool)
         self.options = options
@@ -78,6 +79,15 @@ public struct LocalFileSystem: FileProvider {
             }
         }
         logger.info("Serving files from \(absoluteRootFolder)")
+    }
+
+    /// Initialize LocalFileSystem FileProvider
+    /// - Parameters:
+    ///   - rootFolder: Root folder to serve files from
+    ///   - threadPool: Thread pool used when loading files
+    ///   - logger: Logger to output root folder information
+    public init(rootFolder: String, threadPool: NIOThreadPool = .singleton, logger: Logger) {
+        self.init(rootFolder: rootFolder, options: [], threadPool: threadPool, logger: logger)
     }
 
     /// Get full path name with local file system root prefixed
