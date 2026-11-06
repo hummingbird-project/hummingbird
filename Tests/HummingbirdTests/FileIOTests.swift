@@ -13,6 +13,7 @@ import NIOPosix
 import Testing
 import _NIOFileSystem
 
+@Suite(.tempFolder("public/FileIOTests"))
 struct FileIOTests {
     static func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
@@ -39,45 +40,39 @@ struct FileIOTests {
         }
     }
 
-    @Test func testReadFileIO() async throws {
+    @Test(.tempFile(contentSize: 320_003))
+    func testReadFileIO() async throws {
         let router = Router()
         router.get("test.jpg") { _, context -> Response in
             let fileIO = FileIO(threadPool: .singleton)
-            let body = try await fileIO.loadFile(path: "testReadFileIO.jpg", context: context)
+            let body = try await fileIO.loadFile(path: TempFileTrait.file.fullPath, context: context)
             return .init(status: .ok, headers: [:], body: body)
         }
         let app = Application(responder: router.buildResponder())
 
-        let buffer = Self.randomBuffer(size: 320_003)
-
-        try await FileIOTests.withFile("testReadFileIO.jpg", contents: buffer.readableBytesView) {
-            try await app.test(.router) { client in
-                try await client.execute(uri: "/test.jpg", method: .get) { response in
-                    #expect(response.body == buffer)
-                }
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/test.jpg", method: .get) { response in
+                #expect(response.body == TempFileTrait.file.contents)
             }
         }
     }
 
-    @Test func testReadMultipleFilesOnSameConnection() async throws {
+    @Test(.tempFile(contentSize: 54003))
+    func testReadMultipleFilesOnSameConnection() async throws {
         let router = Router()
         router.get("test.jpg") { _, context -> Response in
             let fileIO = FileIO(threadPool: .singleton)
-            let body = try await fileIO.loadFile(path: "testReadMultipleFilesOnSameConnection.jpg", context: context)
+            let body = try await fileIO.loadFile(path: TempFileTrait.file.fullPath, context: context)
             return .init(status: .ok, headers: [:], body: body)
         }
-        let buffer = Self.randomBuffer(size: 54003)
-
         let app = Application(responder: router.buildResponder())
 
-        try await FileIOTests.withFile("testReadMultipleFilesOnSameConnection.jpg", contents: buffer.readableBytesView) {
-            try await app.test(.live) { client in
-                try await client.execute(uri: "/test.jpg", method: .get) { response in
-                    #expect(response.body == buffer)
-                }
-                try await client.execute(uri: "/test.jpg", method: .get) { response in
-                    #expect(response.body == buffer)
-                }
+        try await app.test(.live) { client in
+            try await client.execute(uri: "/test.jpg", method: .get) { response in
+                #expect(response.body == TempFileTrait.file.contents)
+            }
+            try await client.execute(uri: "/test.jpg", method: .get) { response in
+                #expect(response.body == TempFileTrait.file.contents)
             }
         }
     }
@@ -93,7 +88,7 @@ struct FileIOTests {
         let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
-            let buffer = ByteBufferAllocator().buffer(string: "This is a test")
+            let buffer = ByteBuffer(string: "This is a test")
             try await client.execute(uri: "/store", method: .put, body: buffer) { response in
                 #expect(response.status == .ok)
             }
@@ -130,43 +125,37 @@ struct FileIOTests {
         }
     }
 
-    @Test func testReadEmptyFile() async throws {
+    @Test(.tempFile(contents: ByteBuffer()))
+    func testReadEmptyFile() async throws {
         let router = Router()
         router.get("empty.txt") { _, context -> Response in
             let fileIO = FileIO(threadPool: .singleton)
-            let body = try await fileIO.loadFile(path: "testReadEmptyFile.txt", context: context)
+            let body = try await fileIO.loadFile(path: TempFileTrait.file.fullPath, context: context)
             return .init(status: .ok, headers: [:], body: body)
         }
         let app = Application(responder: router.buildResponder())
 
-        let buffer = ByteBuffer()
-
-        try await FileIOTests.withFile("testReadEmptyFile.txt", contents: buffer.readableBytesView) {
-            try await app.test(.router) { client in
-                try await client.execute(uri: "/empty.txt", method: .get) { response in
-                    #expect(response.status == .ok)
-                }
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/empty.txt", method: .get) { response in
+                #expect(response.status == .ok)
             }
         }
     }
 
-    @Test func testReadEmptyFilePart() async throws {
+    @Test(.tempFile(contents: ByteBuffer()))
+    func testReadEmptyFilePart() async throws {
         let router = Router()
         router.get("empty.txt") { _, context -> Response in
             let fileIO = FileIO(threadPool: .singleton)
-            let body = try await fileIO.loadFile(path: "testReadEmptyFilePart.txt", range: 0...10, context: context)
+            let body = try await fileIO.loadFile(path: TempFileTrait.file.fullPath, range: 0...10, context: context)
             return .init(status: .ok, headers: [:], body: body)
         }
 
         let app = Application(responder: router.buildResponder())
 
-        let buffer = ByteBuffer()
-
-        try await FileIOTests.withFile("testReadEmptyFilePart.txt", contents: buffer.readableBytesView) {
-            try await app.test(.router) { client in
-                try await client.execute(uri: "/empty.txt", method: .get) { response in
-                    #expect(response.status == .ok)
-                }
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/empty.txt", method: .get) { response in
+                #expect(response.status == .ok)
             }
         }
     }
