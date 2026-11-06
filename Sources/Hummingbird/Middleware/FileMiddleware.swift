@@ -11,6 +11,7 @@ public import HummingbirdCore
 public import Logging
 import NIOCore
 public import NIOPosix
+import SystemPackage
 
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
@@ -193,11 +194,6 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
         // Remove percent encoding from URI path
         guard var path = request.uri.path.removingURLPercentEncoding() else {
             throw HTTPError(.badRequest, message: "Invalid percent encoding in URL")
-        }
-
-        // file paths that contain ".." are considered illegal
-        guard !path.contains("..") else {
-            throw HTTPError(.badRequest)
         }
 
         // Do we have a prefix to remove from the path
