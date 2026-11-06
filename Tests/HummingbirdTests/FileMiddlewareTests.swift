@@ -10,6 +10,7 @@ import Foundation
 import HTTPTypes
 import Hummingbird
 import HummingbirdTesting
+import Logging
 import NIOFoundationEssentialsCompat
 import NIOPosix
 import Testing
@@ -341,32 +342,56 @@ struct FileMiddlewareTests {
     }
 
     @Test func testSymlink() async throws {
-        let router = Router()
-        router.middlewares.add(FileMiddleware(".", searchForIndexHtml: true))
-        let app = Application(responder: router.buildResponder())
         let text = "Test file contents"
 
         try await Self.withFile("testSymlink.html", contents: text.utf8) {
-            try await app.test(.router) { client in
-                try await client.execute(uri: "/testSymlink.html", method: .get) { response in
-                    #expect(String(buffer: response.body) == text)
-                }
+            try await FileSystem.shared.createSymbolicLink(at: "testSymlink2.html", withDestination: "testSymlink.html")
+            do {
+                let router = Router()
+                router.middlewares.add(
+                    FileMiddleware(
+                        fileProvider: LocalFileSystem(
+                            rootFolder: ".",
+                            options: .allowSymbolicLinks,
+                            logger: Logger(label: "LocalFileSystem")
+                        ),
+                        searchForIndexHtml: true
+                    )
+                )
+                let app = Application(responder: router.buildResponder())
 
-                try await client.execute(uri: "/testSymlink2.html", method: .get) { response in
-                    #expect(String(buffer: response.body) == "")
-                }
+                try await app.test(.router) { client in
+                    try await client.execute(uri: "/testSymlink.html", method: .get) { response in
+                        #expect(String(buffer: response.body) == text)
+                    }
 
-                try await FileSystem.shared.createSymbolicLink(at: "testSymlink2.html", withDestination: "testSymlink.html")
-
-                do {
                     try await client.execute(uri: "/testSymlink2.html", method: .get) { response in
                         #expect(String(buffer: response.body) == text)
                     }
-                    try await FileSystem.shared.removeItem(at: "testSymlink2.html")
-                } catch {
-                    try await FileSystem.shared.removeItem(at: "testSymlink2.html")
-                    throw error
                 }
+
+                let router2 = Router()
+                router2.middlewares.add(
+                    FileMiddleware(
+                        fileProvider: LocalFileSystem(
+                            rootFolder: ".",
+                            options: [],
+                            logger: Logger(label: "LocalFileSystem")
+                        ),
+                        searchForIndexHtml: true
+                    )
+                )
+                let app2 = Application(responder: router2.buildResponder())
+                try await app2.test(.router) { client in
+                    try await client.execute(uri: "/testSymlink2.html", method: .get) { response in
+                        #expect(response.status == .notFound)
+                    }
+                }
+
+                try await FileSystem.shared.removeItem(at: "testSymlink2.html")
+            } catch {
+                try await FileSystem.shared.removeItem(at: "testSymlink2.html")
+                throw error
             }
         }
     }
