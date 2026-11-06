@@ -28,6 +28,8 @@ final class LiveTestFramework<App: ApplicationProtocol>: ApplicationTestFramewor
             headers: HTTPFields = [:],
             body: ByteBuffer? = nil
         ) async throws -> TestResponse {
+            // add forward slash to uri if it doesnt exist
+            let uri = uri.first == "/" ? uri : "/\(uri)"
             var headers = headers
             headers[.connection] = "keep-alive"
             let request = TestClient.Request(uri, method: method, authority: "localhost", headers: headers, body: body)
