@@ -102,7 +102,7 @@ extension RequestBody {
         }
     }
 
-    fileprivate func withInboundCloseHandler<Value: Sendable, AsyncIterator: AsyncIteratorProtocol & _HB_SendableMetatype>(
+    fileprivate func withInboundCloseHandler<Value: Sendable, AsyncIterator: AsyncIteratorProtocol & SendableMetatype>(
         isolation: isolated (any Actor)? = #isolation,
         iterator: AsyncIterator,
         source: RequestBody.Source,
