@@ -10,11 +10,14 @@ import Foundation
 import HTTPTypes
 import Hummingbird
 import HummingbirdTesting
+import Logging
 import NIOFoundationEssentialsCompat
 import NIOPosix
+import SystemPackage
 import Testing
 import _NIOFileSystem
 
+@Suite(.tempFolder("public/FileMiddlewareTests"))
 struct FileMiddlewareTests {
     static func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
@@ -30,7 +33,7 @@ struct FileMiddlewareTests {
         return formatter
     }
 
-    static func withFile<Buffer: Sequence & Sendable, ReturnValue>(
+    func withFile<Buffer: Sequence & Sendable, ReturnValue>(
         _ path: FilePath,
         contents: Buffer,
         process: () async throws -> ReturnValue
@@ -49,27 +52,36 @@ struct FileMiddlewareTests {
         }
     }
 
-    @Test func testRead() async throws {
+    @Test(.tempFile("testRead.jpg"))
+    func testRead() async throws {
         let router = Router()
-        router.middlewares.add(FileMiddleware("."))
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder))
         let app = Application(responder: router.buildResponder())
 
-        let filename = "\(#function).jpg"
-        let text = "Test file contents"
+        try await app.test(.router) { client in
+            try await client.execute(uri: TempFileTrait.file.path, method: .get) { response in
+                #expect(response.body == TempFileTrait.file.contents)
+                #expect(response.headers[.contentType] == "image/jpeg")
+            }
+        }
+    }
 
-        try await FileIOTests.withFile(filename, contents: text.utf8) {
-            try await app.test(.router) { client in
-                try await client.execute(uri: filename, method: .get) { response in
-                    #expect(String(buffer: response.body) == text)
-                    #expect(response.headers[.contentType] == "image/jpeg")
-                }
+    @Test(.tempFile("../testReadOutsidePublicFolder.jpg"))
+    func testReadOutsidePublicFolder() async throws {
+        let router = Router()
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder))
+        let app = Application(responder: router.buildResponder())
+
+        try await app.test(.router) { client in
+            try await client.execute(uri: TempFileTrait.file.path, method: .get) { response in
+                #expect(response.status == .notFound)
             }
         }
     }
 
     @Test func testNotAFile() async throws {
         let router = Router()
-        router.middlewares.add(FileMiddleware("."))
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder))
         let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
@@ -79,258 +91,225 @@ struct FileMiddlewareTests {
         }
     }
 
-    @Test func testReadLargeFile() async throws {
+    @Test(.tempFile(contentSize: 380_000))
+    func testReadLargeFile() async throws {
         let router = Router()
-        router.middlewares.add(FileMiddleware("."))
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder))
         let app = Application(responder: router.buildResponder())
 
-        let filename = "\(#function).txt"
-        let buffer = Self.randomBuffer(size: 380_000)
-
-        try await FileIOTests.withFile(filename, contents: buffer.readableBytesView) {
-            try await app.test(.router) { client in
-                try await client.execute(uri: filename, method: .get) { response in
-                    #expect(response.body == buffer)
-                }
+        try await app.test(.router) { client in
+            try await client.execute(uri: TempFileTrait.file.path, method: .get) { response in
+                #expect(response.body == TempFileTrait.file.contents)
             }
         }
     }
 
-    @Test func testReadRange() async throws {
+    @Test(.tempFile("testReadRange.txt", contentSize: 326_000))
+    func testReadRange() async throws {
         let router = Router()
-        router.middlewares.add(FileMiddleware("."))
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder))
         let app = Application(responder: router.buildResponder())
 
-        let filename = "\(#function).txt"
-        let buffer = Self.randomBuffer(size: 326_000)
+        try await app.test(.router) { client in
+            try await client.execute(uri: TempFileTrait.file.path, method: .get, headers: [.range: "bytes=100-3999"]) { response in
+                let slice = TempFileTrait.file.contents.getSlice(at: 100, length: 3900)
+                #expect(response.body == slice)
+                #expect(response.headers[.contentRange] == "bytes 100-3999/326000")
+                #expect(response.headers[.contentLength] == "3900")
+                #expect(response.headers[.contentType] == "text/plain")
+            }
 
-        try await FileIOTests.withFile(filename, contents: buffer.readableBytesView) {
-            try await app.test(.router) { client in
-                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=100-3999"]) { response in
-                    let slice = buffer.getSlice(at: 100, length: 3900)
-                    #expect(response.body == slice)
-                    #expect(response.headers[.contentRange] == "bytes 100-3999/326000")
-                    #expect(response.headers[.contentLength] == "3900")
-                    #expect(response.headers[.contentType] == "text/plain")
-                }
+            try await client.execute(uri: TempFileTrait.file.path, method: .get, headers: [.range: "bytes=0-0"]) { response in
+                let slice = TempFileTrait.file.contents.getSlice(at: 0, length: 1)
+                #expect(response.body == slice)
+                #expect(response.headers[.contentRange] == "bytes 0-0/326000")
+                #expect(response.headers[.contentLength] == "1")
+                #expect(response.headers[.contentType] == "text/plain")
+            }
 
-                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=0-0"]) { response in
-                    let slice = buffer.getSlice(at: 0, length: 1)
-                    #expect(response.body == slice)
-                    #expect(response.headers[.contentRange] == "bytes 0-0/326000")
-                    #expect(response.headers[.contentLength] == "1")
-                    #expect(response.headers[.contentType] == "text/plain")
-                }
+            try await client.execute(uri: TempFileTrait.file.path, method: .get, headers: [.range: "bytes=-3999"]) { response in
+                let slice = TempFileTrait.file.contents.getSlice(at: 0, length: 4000)
+                #expect(response.body == slice)
+                #expect(response.headers[.contentLength] == "4000")
+                #expect(response.headers[.contentRange] == "bytes 0-3999/326000")
+            }
 
-                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=-3999"]) { response in
-                    let slice = buffer.getSlice(at: 0, length: 4000)
-                    #expect(response.body == slice)
-                    #expect(response.headers[.contentLength] == "4000")
-                    #expect(response.headers[.contentRange] == "bytes 0-3999/326000")
-                }
+            try await client.execute(uri: TempFileTrait.file.path, method: .get, headers: [.range: "bytes=6000-"]) { response in
+                let slice = TempFileTrait.file.contents.getSlice(at: 6000, length: 320_000)
+                #expect(response.body == slice)
+                #expect(response.headers[.contentLength] == "320000")
+                #expect(response.headers[.contentRange] == "bytes 6000-325999/326000")
+            }
 
-                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=6000-"]) { response in
-                    let slice = buffer.getSlice(at: 6000, length: 320_000)
-                    #expect(response.body == slice)
-                    #expect(response.headers[.contentLength] == "320000")
-                    #expect(response.headers[.contentRange] == "bytes 6000-325999/326000")
-                }
-
-                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=500-100"]) { response in
-                    #expect(response.status == .rangeNotSatisfiable)
-                }
+            try await client.execute(uri: TempFileTrait.file.path, method: .get, headers: [.range: "bytes=500-100"]) { response in
+                #expect(response.status == .rangeNotSatisfiable)
             }
         }
     }
 
-    @Test func testIfRangeRead() async throws {
+    @Test(.tempFile(.randomNameWithExtension("txt"), contentSize: 10000))
+    func testIfRangeRead() async throws {
         let router = Router()
-        router.middlewares.add(FileMiddleware("."))
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder))
         let app = Application(responder: router.buildResponder())
 
-        let filename = "\(#function).txt"
-        let buffer = Self.randomBuffer(size: 10000)
+        try await app.test(.router) { client in
+            let (eTag, modificationDate) = try await client.execute(
+                uri: TempFileTrait.file.path,
+                method: .get,
+                headers: [.range: "bytes=-3999"]
+            ) {
+                response -> (String, String) in
+                let eTag = try #require(response.headers[.eTag])
+                let modificationDate = try #require(response.headers[.lastModified])
+                let slice = TempFileTrait.file.contents.getSlice(at: 0, length: 4000)
+                #expect(response.body == slice)
+                #expect(response.headers[.contentRange] == "bytes 0-3999/10000")
+                return (eTag, modificationDate)
+            }
 
-        try await FileIOTests.withFile(filename, contents: buffer.readableBytesView) {
-            try await app.test(.router) { client in
-                let (eTag, modificationDate) = try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=-3999"]) {
-                    response -> (String, String) in
-                    let eTag = try #require(response.headers[.eTag])
-                    let modificationDate = try #require(response.headers[.lastModified])
-                    let slice = buffer.getSlice(at: 0, length: 4000)
-                    #expect(response.body == slice)
-                    #expect(response.headers[.contentRange] == "bytes 0-3999/10000")
-                    return (eTag, modificationDate)
-                }
+            try await client.execute(uri: TempFileTrait.file.path, method: .get, headers: [.range: "bytes=4000-", .ifRange: eTag]) {
+                response in
+                #expect(response.headers[.contentRange] == "bytes 4000-9999/10000")
+            }
 
-                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=4000-", .ifRange: eTag]) { response in
-                    #expect(response.headers[.contentRange] == "bytes 4000-9999/10000")
-                }
+            try await client.execute(uri: TempFileTrait.file.path, method: .get, headers: [.range: "bytes=4000-", .ifRange: modificationDate]) {
+                response in
+                #expect(response.headers[.contentRange] == "bytes 4000-9999/10000")
+            }
 
-                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=4000-", .ifRange: modificationDate]) { response in
-                    #expect(response.headers[.contentRange] == "bytes 4000-9999/10000")
-                }
-
-                try await client.execute(uri: filename, method: .get, headers: [.range: "bytes=4000-", .ifRange: "not valid"]) { response in
-                    #expect(response.headers[.contentRange] == nil)
-                }
+            try await client.execute(uri: TempFileTrait.file.path, method: .get, headers: [.range: "bytes=4000-", .ifRange: "not valid"]) {
+                response in
+                #expect(response.headers[.contentRange] == nil)
             }
         }
     }
 
-    @Test func testHead() async throws {
+    @Test(.tempFile("testHead.txt", contents: "Test file contents"))
+    func testHead() async throws {
         let router = Router()
-        router.middlewares.add(FileMiddleware("."))
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder))
         let app = Application(responder: router.buildResponder())
 
-        let filename = "testHead.txt"
         let date = Date()
-        let text = "Test file contents"
 
-        try await FileIOTests.withFile(filename, contents: text.utf8) {
-            try await app.test(.router) { client in
-                let filename = "testHead.txt"
-                try await client.execute(uri: "/\(filename)", method: .head) { response in
-                    #expect(response.body.readableBytes == 0)
-                    #expect(response.headers[.contentLength] == text.utf8.count.description)
-                    #expect(response.headers[.contentType] == "text/plain")
-                    let responseDateString = try #require(response.headers[.lastModified])
-                    let responseDate = try #require(Self.rfc9110Formatter.date(from: responseDateString))
-                    #expect(date < responseDate + 10 && date > responseDate - 10)
-                }
+        try await app.test(.router) { client in
+            try await client.execute(uri: TempFileTrait.file.path, method: .head) { response in
+                #expect(response.body.readableBytes == 0)
+                #expect(response.headers[.contentLength] == TempFileTrait.file.contents.readableBytes.description)
+                #expect(response.headers[.contentType] == "text/plain")
+                let responseDateString = try #require(response.headers[.lastModified])
+                let responseDate = try #require(Self.rfc9110Formatter.date(from: responseDateString))
+                #expect(date < responseDate + 10 && date > responseDate - 10)
             }
         }
     }
 
-    @Test func testETag() async throws {
+    @Test(.tempFile())
+    func testETag() async throws {
         let router = Router()
-        router.middlewares.add(FileMiddleware("."))
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder))
         let app = Application(responder: router.buildResponder())
 
-        let filename = "\(#function).txt"
-        let buffer = Self.randomBuffer(size: 16200)
-
-        try await FileIOTests.withFile(filename, contents: buffer.readableBytesView) {
-            try await app.test(.router) { client in
-                let eTag = try await client.execute(uri: filename, method: .head) { response in
-                    response.headers[.eTag]
-                }
-                try await client.execute(uri: filename, method: .head) { response in
-                    #expect(response.headers[.eTag] == eTag)
-                }
+        try await app.test(.router) { client in
+            let eTag = try await client.execute(uri: TempFileTrait.file.path, method: .head) { response in
+                try #require(response.headers[.eTag])
+            }
+            try await client.execute(uri: TempFileTrait.file.path, method: .head) { response in
+                #expect(response.headers[.eTag] == eTag)
             }
         }
     }
 
-    @Test func testIfNoneMatch() async throws {
+    @Test(.tempFile())
+    func testIfNoneMatch() async throws {
         let router = Router()
-        router.middlewares.add(FileMiddleware("."))
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder))
         let app = Application(responder: router.buildResponder())
 
-        let filename = "\(#function).txt"
-        let buffer = Self.randomBuffer(size: 16200)
-
-        try await Self.withFile(.init(filename), contents: buffer.readableBytesView) {
-            try await app.test(.router) { client in
-                let eTag = try await client.execute(uri: filename, method: .head) { response in
-                    try #require(response.headers[.eTag])
-                }
-                try await client.execute(uri: filename, method: .get, headers: [.ifNoneMatch: eTag]) { response in
-                    #expect(response.status == .notModified)
-                }
-                var headers: HTTPFields = .init()
-                headers[values: .ifNoneMatch] = ["test", "\(eTag)"]
-                try await client.execute(uri: filename, method: .get, headers: headers) { response in
-                    #expect(response.status == .notModified)
-                }
-                try await client.execute(uri: filename, method: .get, headers: [.ifNoneMatch: "dummyETag"]) { response in
-                    #expect(response.status == .ok)
-                }
+        try await app.test(.router) { client in
+            let eTag = try await client.execute(uri: TempFileTrait.file.path, method: .head) { response in
+                try #require(response.headers[.eTag])
+            }
+            try await client.execute(uri: TempFileTrait.file.path, method: .get, headers: [.ifNoneMatch: eTag]) { response in
+                #expect(response.status == .notModified)
+            }
+            var headers: HTTPFields = .init()
+            headers[values: .ifNoneMatch] = ["test", "\(eTag)"]
+            try await client.execute(uri: TempFileTrait.file.path, method: .get, headers: headers) { response in
+                #expect(response.status == .notModified)
+            }
+            try await client.execute(uri: TempFileTrait.file.path, method: .get, headers: [.ifNoneMatch: "dummyETag"]) { response in
+                #expect(response.status == .ok)
             }
         }
     }
 
-    @Test func testIfModifiedSince() async throws {
+    @Test(.tempFile())
+    func testIfModifiedSince() async throws {
         let router = Router()
-        router.middlewares.add(FileMiddleware("."))
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder))
         let app = Application(responder: router.buildResponder())
 
-        let filename = "\(#function).txt"
-        let buffer = Self.randomBuffer(size: 16200)
-
-        try await FileIOTests.withFile(filename, contents: buffer.readableBytesView) {
-            try await app.test(.router) { client in
-                let modifiedDate = try await client.execute(uri: filename, method: .head) { response in
-                    try #require(response.headers[.lastModified])
-                }
-                try await client.execute(uri: filename, method: .get, headers: [.ifModifiedSince: modifiedDate]) { response in
-                    #expect(response.status == .notModified)
-                }
-                // one minute before current date
-                let date = Self.rfc9110Formatter.string(from: Date(timeIntervalSinceNow: -60))
-                try await client.execute(uri: filename, method: .get, headers: [.ifModifiedSince: date]) { response in
-                    #expect(response.status == .ok)
-                }
+        try await app.test(.router) { client in
+            let modifiedDate = try await client.execute(uri: TempFileTrait.file.path, method: .head) { response in
+                try #require(response.headers[.lastModified])
+            }
+            try await client.execute(uri: TempFileTrait.file.path, method: .get, headers: [.ifModifiedSince: modifiedDate]) { response in
+                #expect(response.status == .notModified)
+            }
+            // one minute before current date
+            let date = Self.rfc9110Formatter.string(from: Date(timeIntervalSinceNow: -60))
+            try await client.execute(uri: TempFileTrait.file.path, method: .get, headers: [.ifModifiedSince: date]) { response in
+                #expect(response.status == .ok)
             }
         }
     }
 
-    @Test func testCacheControl() async throws {
+    @Test(
+        .tempFile(.randomNameWithExtension("txt")),
+        arguments: [
+            ([CacheControl.Value.maxAge(60 * 60 * 24 * 30)], "max-age=2592000"),
+            ([.maxAge(60 * 60 * 24 * 15), .private], "max-age=1296000, private"),
+            ([.noStore], "no-store"),
+            ([.noCache, .public], "no-cache, public"),
+        ]
+    )
+    func testCacheControl(cacheControlValues: [CacheControl.Value], header: String) async throws {
         let router = Router()
         let cacheControl: CacheControl = .init([
-            (.text, [.maxAge(60 * 60 * 24 * 30)]),
+            (.text, cacheControlValues),
             (.imageJpeg, [.maxAge(60 * 60 * 24 * 30), .private]),
         ])
-        router.middlewares.add(FileMiddleware(".", cacheControl: cacheControl))
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder, cacheControl: cacheControl))
         let app = Application(responder: router.buildResponder())
 
-        let filename = "\(#function).txt"
-        let text = "Test file contents"
-        let filename2 = "\(#function).jpg"
-
-        try await FileIOTests.withFile(filename, contents: text.utf8) {
-            try await FileIOTests.withFile(filename2, contents: text.utf8) {
-                try await app.test(.router) { client in
-                    try await client.execute(uri: filename, method: .get) { response in
-                        #expect(response.headers[.cacheControl] == "max-age=2592000")
-                    }
-                    try await client.execute(uri: filename2, method: .get) { response in
-                        #expect(response.headers[.cacheControl] == "max-age=2592000, private")
-                    }
-                }
+        try await app.test(.router) { client in
+            try await client.execute(uri: TempFileTrait.file.path, method: .get) { response in
+                #expect(response.headers[.cacheControl] == header)
             }
         }
     }
 
-    @Test func testIndexHtml() async throws {
+    @Test(.tempFile("index.html"))
+    func testIndexHtml() async throws {
         let router = Router()
-        router.middlewares.add(FileMiddleware(".", searchForIndexHtml: true))
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder, searchForIndexHtml: true))
         let app = Application(responder: router.buildResponder())
-        let text = "Test file contents"
 
-        try await FileIOTests.withFile("index.html", contents: text.utf8) {
-            try await app.test(.router) { client in
-                try await client.execute(uri: "/", method: .get) { response in
-                    #expect(String(buffer: response.body) == text)
-                }
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/", method: .get) { response in
+                #expect(response.body == TempFileTrait.file.contents)
             }
         }
     }
 
-    @Test func testFolderRedirect() async throws {
+    /// Test folder redirects to folder with "/" at the end of the name
+    @Test(.tempFile("testFolderRedirect/index.html"))
+    func testFolderRedirect() async throws {
         let router = Router()
-        router.middlewares.add(FileMiddleware(".", searchForIndexHtml: true))
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder, searchForIndexHtml: true))
         let app = Application(responder: router.buildResponder())
-
-        try FileManager.default.createDirectory(atPath: "testFolderRedirect", withIntermediateDirectories: false)
-        let text = "Test file contents"
-        let data = Data(text.utf8)
-        let fileURL = URL(fileURLWithPath: "testFolderRedirect/index.html")
-        #expect(throws: Never.self) { try data.write(to: fileURL) }
-        defer {
-            #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) }
-            #expect(throws: Never.self) { try FileManager.default.removeItem(atPath: "testFolderRedirect") }
-        }
 
         try await app.test(.router) { client in
             try await client.execute(uri: "/testFolderRedirect", method: .get) { response in
@@ -340,40 +319,63 @@ struct FileMiddlewareTests {
         }
     }
 
-    @Test func testSymlink() async throws {
-        let router = Router()
-        router.middlewares.add(FileMiddleware(".", searchForIndexHtml: true))
-        let app = Application(responder: router.buildResponder())
-        let text = "Test file contents"
+    @Test(.tempFile())
+    func testSymlink() async throws {
+        let symLink = FilePath(TempFolderTrait.folder).appending("testSymlink.html")
+        try await FileSystem.shared.createSymbolicLink(at: symLink, withDestination: .init(TempFileTrait.file.path))
+        do {
+            let router = Router()
+            router.middlewares.add(
+                FileMiddleware(
+                    fileProvider: LocalFileSystem(
+                        rootFolder: TempFolderTrait.folder,
+                        options: .allowSymbolicLinks,
+                        logger: Logger(label: "LocalFileSystem")
+                    ),
+                    searchForIndexHtml: true
+                )
+            )
+            let app = Application(responder: router.buildResponder())
 
-        try await Self.withFile("testSymlink.html", contents: text.utf8) {
             try await app.test(.router) { client in
+                try await client.execute(uri: TempFileTrait.file.path, method: .get) { response in
+                    #expect(response.body == TempFileTrait.file.contents)
+                }
+
                 try await client.execute(uri: "/testSymlink.html", method: .get) { response in
-                    #expect(String(buffer: response.body) == text)
-                }
-
-                try await client.execute(uri: "/testSymlink2.html", method: .get) { response in
-                    #expect(String(buffer: response.body) == "")
-                }
-
-                try await FileSystem.shared.createSymbolicLink(at: "testSymlink2.html", withDestination: "testSymlink.html")
-
-                do {
-                    try await client.execute(uri: "/testSymlink2.html", method: .get) { response in
-                        #expect(String(buffer: response.body) == text)
-                    }
-                    try await FileSystem.shared.removeItem(at: "testSymlink2.html")
-                } catch {
-                    try await FileSystem.shared.removeItem(at: "testSymlink2.html")
-                    throw error
+                    #expect(response.body == TempFileTrait.file.contents)
                 }
             }
+
+            let router2 = Router()
+            router2.middlewares.add(
+                FileMiddleware(
+                    fileProvider: LocalFileSystem(
+                        rootFolder: TempFolderTrait.folder,
+                        options: [],
+                        logger: Logger(label: "LocalFileSystem")
+                    ),
+                    searchForIndexHtml: true
+                )
+            )
+            let app2 = Application(responder: router2.buildResponder())
+            try await app2.test(.router) { client in
+                try await client.execute(uri: "/testSymlink.html", method: .get) { response in
+                    #expect(response.status == .notFound)
+                }
+            }
+
+            try await FileSystem.shared.removeItem(at: symLink)
+        } catch {
+            try await FileSystem.shared.removeItem(at: symLink)
+            throw error
         }
     }
 
-    @Test func testOnThrowCustom404() async throws {
+    @Test(.tempFile("ThrowCustom404.html"))
+    func testOnThrowCustom404() async throws {
         let router = Router()
-        router.middlewares.add(FileMiddleware(".", searchForIndexHtml: true))
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder, searchForIndexHtml: true))
         struct Custom404Error: HTTPResponseError {
             var status: HTTPResponse.Status { .notFound }
 
@@ -385,39 +387,32 @@ struct FileMiddlewareTests {
             throw Custom404Error()
         }
         let app = Application(responder: router.buildResponder())
-        let text = "Test file contents"
-
-        try await FileIOTests.withFile("ThrowCustom404.html", contents: text.utf8) {
-            try await app.test(.router) { client in
-                try await client.execute(uri: "/ThrowCustom404.html", method: .get) { response in
-                    #expect(String(buffer: response.body) == text)
-                }
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/ThrowCustom404.html", method: .get) { response in
+                #expect(response.body == TempFileTrait.file.contents)
             }
         }
     }
 
-    @Test func testOnReturnNotFoundResponse() async throws {
+    @Test(.tempFile())
+    func testOnReturnNotFoundResponse() async throws {
         let router = Router()
-        router.middlewares.add(FileMiddleware(".").withServeOnNotFoundResponse())
-        router.get("testOnReturnNotFoundResponse.html") { _, _ in
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder).withServeOnNotFoundResponse())
+        router.get(.init(TempFileTrait.file.path)) { _, _ in
             Response(status: .notFound)
         }
         let app = Application(responder: router.buildResponder())
-        let text = "Test file contents"
-
-        try await FileIOTests.withFile("testOnReturnNotFoundResponse.html", contents: text.utf8) {
-            try await app.test(.router) { client in
-                try await client.execute(uri: "/testOnReturnNotFoundResponse.html", method: .get) { response in
-                    #expect(response.status == .ok)
-                    #expect(String(buffer: response.body) == text)
-                }
+        try await app.test(.router) { client in
+            try await client.execute(uri: TempFileTrait.file.path, method: .get) { response in
+                #expect(response.status == .ok)
+                #expect(response.body == TempFileTrait.file.contents)
             }
         }
     }
 
     @Test func testOnReturnNotFoundResponseFallsBackWhenFileMissing() async throws {
         let router = Router()
-        router.middlewares.add(FileMiddleware(".").withServeOnNotFoundResponse())
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder).withServeOnNotFoundResponse())
         router.get("testOnReturnNotFoundResponseFallsBack.html") { _, _ in
             Response(status: .notFound, body: .init(byteBuffer: .init(string: "custom not found")))
         }
@@ -431,48 +426,42 @@ struct FileMiddlewareTests {
         }
     }
 
-    @Test func testOnReturnNotFoundResponseDisabledByDefault() async throws {
+    @Test(.tempFile())
+    func testOnReturnNotFoundResponseDisabledByDefault() async throws {
         let router = Router()
-        router.middlewares.add(FileMiddleware("."))
-        router.get("testOnReturnNotFoundResponseDisabledByDefault.html") { _, _ in
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder))
+        router.get(.init(TempFileTrait.file.path)) { _, _ in
             Response(status: .notFound)
         }
         let app = Application(responder: router.buildResponder())
-        let text = "Test file contents"
-
-        try await FileIOTests.withFile("testOnReturnNotFoundResponseDisabledByDefault.html", contents: text.utf8) {
-            try await app.test(.router) { client in
-                try await client.execute(uri: "/testOnReturnNotFoundResponseDisabledByDefault.html", method: .get) { response in
-                    #expect(response.status == .notFound)
-                    #expect(response.body.readableBytes == 0)
-                }
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/\(TempFileTrait.file.path)", method: .get) { response in
+                #expect(response.status == .notFound)
+                #expect(response.body.readableBytes == 0)
             }
         }
     }
 
-    @Test func testOnReturnNotFoundResponseHead() async throws {
+    @Test(.tempFile())
+    func testOnReturnNotFoundResponseHead() async throws {
         let router = Router()
-        router.middlewares.add(FileMiddleware(".").withServeOnNotFoundResponse())
-        router.get("testOnReturnNotFoundResponseHead.txt") { _, _ in
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder).withServeOnNotFoundResponse())
+        router.get(.init(TempFileTrait.file.path)) { _, _ in
             Response(status: .notFound)
         }
         let app = Application(responder: router.buildResponder())
-        let text = "Test file contents"
-
-        try await FileIOTests.withFile("testOnReturnNotFoundResponseHead.txt", contents: text.utf8) {
-            try await app.test(.router) { client in
-                try await client.execute(uri: "/testOnReturnNotFoundResponseHead.txt", method: .head) { response in
-                    #expect(response.status == .ok)
-                    #expect(response.body.readableBytes == 0)
-                    #expect(response.headers[.contentLength] == text.utf8.count.description)
-                }
+        try await app.test(.router) { client in
+            try await client.execute(uri: TempFileTrait.file.path, method: .head) { response in
+                #expect(response.status == .ok)
+                #expect(response.body.readableBytes == 0)
+                #expect(response.headers[.contentLength] == String(describing: TempFileTrait.file.contents.readableBytes))
             }
         }
     }
 
     @Test func testFolder() async throws {
         let router = Router()
-        router.middlewares.add(FileMiddleware(".", searchForIndexHtml: false))
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder, searchForIndexHtml: false))
         let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
@@ -601,51 +590,48 @@ struct FileMiddlewareTests {
     }
 
     @Test(arguments: ["1.jpg", "2.JPG", "3.JpG", "4.JPeG", "5.JPEG"])
-    func testFilesWithNonLowercaseFileExtensions(fileSuffix: String) async throws {
+    func testFilesWithNonLowercaseFileExtensions(filename: String) async throws {
         let router = Router()
-        router.middlewares.add(FileMiddleware("."))
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder))
         let app = Application(responder: router.buildResponder())
 
         try await app.test(.router) { client in
-            let fileURL = URL(fileURLWithPath: "\(#function)\(fileSuffix)")
-            let filename = fileURL.lastPathComponent
-            let data = Data()
-            #expect(throws: Never.self) { try data.write(to: fileURL) }
-            defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
-
-            try await client.execute(uri: filename, method: .get) { response in
-                #expect(response.headers[.contentType] == "image/jpeg")
+            let localFilename = FilePath(TempFolderTrait.folder).appending(filename)
+            try await self.withFile(localFilename, contents: [UInt8]([65, 66, 67, 68])) {
+                try await client.execute(uri: filename, method: .get) { response in
+                    #expect(response.status == .ok)
+                    #expect(response.headers[.contentType] == "image/jpeg")
+                }
             }
         }
     }
 
-    @Test func testCustomMIMEType() async throws {
+    @Test(
+        .tempFile(
+            .randomNameWithExtension("m3u8"),
+            contents: """
+                #EXTM3U
+                #EXT-X-VERSION:7
+                #EXT-X-ALLOW-CACHE:YES
+                #EXT-X-TARGETDURATION:0
+                #EXT-X-MEDIA-SEQUENCE:10
+                #EXT-X-PLAYLIST-TYPE:EVENT
+                #EXT-X-MAP:URI="init.mp4"
+                #EXT-X-DISCONTINUITY
+                #EXTINF:0.000000,
+                live000010.m4s
+                """
+        )
+    )
+    func testCustomMIMEType() async throws {
         let hlsStream = try #require(MediaType(from: "application/x-mpegURL"))
         let router = Router()
-        router.middlewares.add(FileMiddleware(".").withAdditionalMediaType(hlsStream, mappedToFileExtension: "m3u8"))
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder).withAdditionalMediaType(hlsStream, mappedToFileExtension: "m3u8"))
         let app = Application(responder: router.buildResponder())
 
-        let filename = "\(#function).m3u8"
-        let content = """
-            #EXTM3U
-            #EXT-X-VERSION:7
-            #EXT-X-ALLOW-CACHE:YES
-            #EXT-X-TARGETDURATION:0
-            #EXT-X-MEDIA-SEQUENCE:10
-            #EXT-X-PLAYLIST-TYPE:EVENT
-            #EXT-X-MAP:URI="init.mp4"
-            #EXT-X-DISCONTINUITY
-            #EXTINF:0.000000,
-            live000010.m4s
-            """
-        let data = Data(content.utf8)
-        let fileURL = URL(fileURLWithPath: filename)
-        #expect(throws: Never.self) { try data.write(to: fileURL) }
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
-
         try await app.test(.router) { client in
-            try await client.execute(uri: filename, method: .get) { response in
-                #expect(String(buffer: response.body) == content)
+            try await client.execute(uri: TempFileTrait.file.path, method: .get) { response in
+                #expect(response.body == TempFileTrait.file.contents)
                 let contentType = try #require(response.headers[.contentType])
                 let validTypes = Set(["application/vnd.apple.mpegurl", "application/x-mpegurl"])
                 #expect(validTypes.contains(contentType))
@@ -653,31 +639,44 @@ struct FileMiddlewareTests {
         }
     }
 
-    @Test func testCustomMIMETypeCaseInsensitivity() async throws {
+    @Test(.tempFile(.randomNameWithExtension("m3U8")))
+    func testCustomMIMETypeCaseInsensitivity() async throws {
         let hlsStream = try #require(MediaType(from: "application/x-mpegURL"))
         let router = Router()
-        router.middlewares.add(FileMiddleware(".").withAdditionalMediaType(hlsStream, mappedToFileExtension: "m3u8"))
+        router.middlewares.add(FileMiddleware(TempFolderTrait.folder).withAdditionalMediaType(hlsStream, mappedToFileExtension: "m3u8"))
         let app = Application(responder: router.buildResponder())
 
-        let filename = "\(#function).m3U8"
-        let data = Data("".utf8)
-        let fileURL = URL(fileURLWithPath: filename)
-        #expect(throws: Never.self) { try data.write(to: fileURL) }
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
-
         try await app.test(.router) { client in
-            try await client.execute(uri: filename, method: .get) { response in
+            try await client.execute(uri: TempFileTrait.file.path, method: .get) { response in
                 let contentType = try #require(response.headers[.contentType])
                 let validTypes = Set(["application/vnd.apple.mpegurl", "application/x-mpegurl"])
+                #expect(response.body == TempFileTrait.file.contents)
                 #expect(validTypes.contains(contentType))
             }
         }
     }
 
-    @Test func testCustomMIMETypes() async throws {
+    @Test(
+        .tempFile(
+            .randomNameWithExtension("m3u8"),
+            contents: """
+                #EXTM3U
+                #EXT-X-VERSION:7
+                #EXT-X-ALLOW-CACHE:YES
+                #EXT-X-TARGETDURATION:0
+                #EXT-X-MEDIA-SEQUENCE:10
+                #EXT-X-PLAYLIST-TYPE:EVENT
+                #EXT-X-MAP:URI="init.mp4"
+                #EXT-X-DISCONTINUITY
+                #EXTINF:0.000000,
+                live000010.m4s
+                """
+        )
+    )
+    func testCustomMIMETypes() async throws {
         let hlsStream = try #require(MediaType(from: "application/x-mpegURL"))
         let router = Router()
-        let fileMiddleware = FileMiddleware<BasicRequestContext, LocalFileSystem>(".")
+        let fileMiddleware = FileMiddleware<BasicRequestContext, LocalFileSystem>(TempFolderTrait.folder)
             .withAdditionalMediaType(hlsStream, mappedToFileExtension: "m3u8")
             .withAdditionalMediaTypes(forFileExtensions: [
                 "foo": MediaType(type: .any, subType: "x-foo"),
@@ -686,27 +685,9 @@ struct FileMiddlewareTests {
         router.middlewares.add(fileMiddleware)
         let app = Application(responder: router.buildResponder())
 
-        let filename = "\(#function).m3u8"
-        let content = """
-            #EXTM3U
-            #EXT-X-VERSION:7
-            #EXT-X-ALLOW-CACHE:YES
-            #EXT-X-TARGETDURATION:0
-            #EXT-X-MEDIA-SEQUENCE:10
-            #EXT-X-PLAYLIST-TYPE:EVENT
-            #EXT-X-MAP:URI="init.mp4"
-            #EXT-X-DISCONTINUITY
-            #EXTINF:0.000000,
-            live000010.m4s
-            """
-        let data = Data(content.utf8)
-        let fileURL = URL(fileURLWithPath: filename)
-        #expect(throws: Never.self) { try data.write(to: fileURL) }
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: fileURL) } }
-
         try await app.test(.router) { client in
-            try await client.execute(uri: filename, method: .get) { response in
-                #expect(String(buffer: response.body) == content)
+            try await client.execute(uri: TempFileTrait.file.path, method: .get) { response in
+                #expect(response.body == TempFileTrait.file.contents)
                 let contentType = try #require(response.headers[.contentType])
                 let validTypes = Set(["application/vnd.apple.mpegurl", "application/vnd.apple.mpegURL"])
                 #expect(validTypes.contains(contentType))
