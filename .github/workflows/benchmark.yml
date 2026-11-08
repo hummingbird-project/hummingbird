@@ -13,11 +13,13 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-benchmark
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 env:
   ENABLE_HB_BENCHMARKS: true
 jobs:
   benchmark-delta:
-
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     continue-on-error: true
