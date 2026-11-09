@@ -6,10 +6,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#if compiler(>=6.2)
 @_documentation(visibility: internal)
+@available(*, deprecated, message: "This typealias is no longer needed as we don't support swift versions earlier than 6.2")
 public typealias _HB_SendableMetatype = SendableMetatype
-#else
-@_documentation(visibility: internal)
-public typealias _HB_SendableMetatype = Any
-#endif

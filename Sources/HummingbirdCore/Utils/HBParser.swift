@@ -598,7 +598,7 @@ extension Parser {
 
     /// percent decode UTF8
     public func percentDecode() -> String? {
-        String.removingURLPercentEncoding(utf8Buffer: self.buffer[self.index..<self.range.endIndex])
+        String.removingURLPercentEncoding(utf8Buffer: self.buffer[self.index..<self.range.endIndex].span)
     }
 }
 
