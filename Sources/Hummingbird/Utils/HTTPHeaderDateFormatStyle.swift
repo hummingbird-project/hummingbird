@@ -66,8 +66,8 @@ extension HTTPHeaderDateFormatStyle: ParseStrategy {
 
         return s.withUTF8 { buffer -> DateComponents? in
             func parseDay(_ it: inout UnsafeBufferPointer<UInt8>.Iterator) -> Int? {
-                let first = it.next()
-                let second = it.next()
+                let first = unsafe it.next()
+                let second = unsafe it.next()
                 guard let first = first, let second = second else { return nil }
 
                 guard asciiDigits.contains(first) else { return nil }
@@ -85,9 +85,9 @@ extension HTTPHeaderDateFormatStyle: ParseStrategy {
             }
 
             func parseMonth(_ it: inout UnsafeBufferPointer<UInt8>.Iterator) -> Int? {
-                let first = it.nextAsciiLetter(skippingWhitespace: true)
-                let second = it.nextAsciiLetter()
-                let third = it.nextAsciiLetter()
+                let first = unsafe it.nextAsciiLetter(skippingWhitespace: true)
+                let second = unsafe it.nextAsciiLetter()
+                let third = unsafe it.nextAsciiLetter()
                 guard let first = first, let second = second, let third = third else { return nil }
                 guard first.isAsciiLetter else { return nil }
                 guard let month = monthMap[[first, second, third]] else { return nil }
@@ -96,10 +96,10 @@ extension HTTPHeaderDateFormatStyle: ParseStrategy {
             }
 
             func parseYear(_ it: inout UnsafeBufferPointer<UInt8>.Iterator) -> Int? {
-                let first = it.nextAsciiDigit(skippingWhitespace: true)
-                let second = it.nextAsciiDigit()
-                let third = it.nextAsciiDigit()
-                let fourth = it.nextAsciiDigit()
+                let first = unsafe it.nextAsciiDigit(skippingWhitespace: true)
+                let second = unsafe it.nextAsciiDigit()
+                let third = unsafe it.nextAsciiDigit()
+                let fourth = unsafe it.nextAsciiDigit()
                 guard let first = first,
                     let second = second,
                     let third = third,
@@ -112,8 +112,8 @@ extension HTTPHeaderDateFormatStyle: ParseStrategy {
             }
 
             func parseHour(_ it: inout UnsafeBufferPointer<UInt8>.Iterator) -> Int? {
-                let first = it.nextAsciiDigit(skippingWhitespace: true)
-                let second = it.nextAsciiDigit()
+                let first = unsafe it.nextAsciiDigit(skippingWhitespace: true)
+                let second = unsafe it.nextAsciiDigit()
                 guard let first = first, let second = second else { return nil }
                 let hour = Int(first - UInt8(ascii: "0")) * 10 + Int(second - UInt8(ascii: "0"))
                 guard self.calendar.maximumRange(of: .hour)!.contains(hour) else { return nil }
@@ -121,8 +121,8 @@ extension HTTPHeaderDateFormatStyle: ParseStrategy {
             }
 
             func parseMinute(_ it: inout UnsafeBufferPointer<UInt8>.Iterator) -> Int? {
-                let first = it.nextAsciiDigit(skippingWhitespace: true)
-                let second = it.nextAsciiDigit()
+                let first = unsafe it.nextAsciiDigit(skippingWhitespace: true)
+                let second = unsafe it.nextAsciiDigit()
                 guard let first = first, let second = second else { return nil }
                 let minute = Int(first - UInt8(ascii: "0")) * 10 + Int(second - UInt8(ascii: "0"))
                 guard self.calendar.maximumRange(of: .minute)!.contains(minute) else { return nil }
@@ -130,8 +130,8 @@ extension HTTPHeaderDateFormatStyle: ParseStrategy {
             }
 
             func parseSecond(_ it: inout UnsafeBufferPointer<UInt8>.Iterator) -> Int? {
-                let first = it.nextAsciiDigit(skippingWhitespace: true)
-                let second = it.nextAsciiDigit()
+                let first = unsafe it.nextAsciiDigit(skippingWhitespace: true)
+                let second = unsafe it.nextAsciiDigit()
                 guard let first = first, let second = second else { return nil }
                 let value = Int(first - UInt8(ascii: "0")) * 10 + Int(second - UInt8(ascii: "0"))
                 guard self.calendar.maximumRange(of: .second)!.contains(value) else { return nil }
@@ -139,15 +139,15 @@ extension HTTPHeaderDateFormatStyle: ParseStrategy {
             }
 
             func parseTimezone(_ it: inout UnsafeBufferPointer<UInt8>.Iterator) -> Int? {
-                let plusMinus = it.nextSkippingWhitespace()
+                let plusMinus = unsafe it.nextSkippingWhitespace()
                 if let plusMinus, plusMinus == UInt8(ascii: "+") || plusMinus == UInt8(ascii: "-") {
-                    let hour = parseHour(&it)
-                    let minute = parseMinute(&it)
+                    let hour = unsafe parseHour(&it)
+                    let minute = unsafe parseMinute(&it)
                     guard let hour = hour, let minute = minute else { return nil }
                     return (hour * 60 + minute) * (plusMinus == UInt8(ascii: "+") ? 1 : -1)
                 } else if let first = plusMinus {
-                    let second = it.nextAsciiLetter()
-                    let third = it.nextAsciiLetter()
+                    let second = unsafe it.nextAsciiLetter()
+                    let third = unsafe it.nextAsciiLetter()
 
                     guard let second = second, let third = third else { return nil }
                     let abbr = [first, second, third]
@@ -157,28 +157,28 @@ extension HTTPHeaderDateFormatStyle: ParseStrategy {
                 return nil
             }
 
-            var it = buffer.makeIterator()
+            var it = unsafe buffer.makeIterator()
 
             // if the 4th character is a comma, then we have a day of the week
             guard buffer.count > 5 else { return nil }
 
-            if buffer[3] == UInt8(ascii: ",") {
+            if unsafe buffer[3] == UInt8(ascii: ",") {
                 for _ in 0..<5 {
-                    _ = it.next()
+                    _ = unsafe it.next()
                 }
             }
 
-            guard let day = parseDay(&it) else { return nil }
-            guard let month = parseMonth(&it) else { return nil }
-            guard let year = parseYear(&it) else { return nil }
+            guard let day = unsafe parseDay(&it) else { return nil }
+            guard let month = unsafe parseMonth(&it) else { return nil }
+            guard let year = unsafe parseYear(&it) else { return nil }
 
-            guard let hour = parseHour(&it) else { return nil }
-            guard it.expect(UInt8(ascii: ":")) else { return nil }
-            guard let minute = parseMinute(&it) else { return nil }
-            guard it.expect(UInt8(ascii: ":")) else { return nil }
-            guard let second = parseSecond(&it) else { return nil }
+            guard let hour = unsafe parseHour(&it) else { return nil }
+            guard unsafe it.expect(UInt8(ascii: ":")) else { return nil }
+            guard let minute = unsafe parseMinute(&it) else { return nil }
+            guard unsafe it.expect(UInt8(ascii: ":")) else { return nil }
+            guard let second = unsafe parseSecond(&it) else { return nil }
 
-            guard let timezoneOffsetMinutes = parseTimezone(&it) else { return nil }
+            guard let timezoneOffsetMinutes = unsafe parseTimezone(&it) else { return nil }
 
             return DateComponents(
                 calendar: self.calendar,

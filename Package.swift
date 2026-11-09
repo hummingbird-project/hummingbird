@@ -12,6 +12,8 @@ var swiftSettings: [SwiftSetting] = [
 
     // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0409-access-level-on-imports.md
     .enableUpcomingFeature("InternalImportsByDefault"),
+
+    .strictMemorySafety(),
 ]
 
 #if compiler(>=6.3)

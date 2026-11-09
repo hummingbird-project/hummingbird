@@ -11,7 +11,7 @@ public import HummingbirdCore
 
 /// Conform to `RouterMethods` to add standard router verb (get, post ...) methods
 @preconcurrency
-public protocol RouterMethods<Context>: _HB_SendableMetatype {
+public protocol RouterMethods<Context>: SendableMetatype {
     associatedtype Context: RequestContext
 
     /// Add responder to call when path and method are matched

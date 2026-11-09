@@ -11,6 +11,7 @@ public import HummingbirdCore
 public import Logging
 import NIOCore
 public import NIOPosix
+import SystemPackage
 
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
@@ -193,11 +194,6 @@ where Provider.FileAttributes: FileMiddlewareFileAttributes {
         // Remove percent encoding from URI path
         guard var path = request.uri.path.removingURLPercentEncoding() else {
             throw HTTPError(.badRequest, message: "Invalid percent encoding in URL")
-        }
-
-        // file paths that contain ".." are considered illegal
-        guard !path.contains("..") else {
-            throw HTTPError(.badRequest)
         }
 
         // Do we have a prefix to remove from the path
@@ -403,23 +399,55 @@ extension FileMiddleware {
     }
 
     private func createETag(_ strings: [String]) -> String {
-        let string = strings.joined(separator: "-")
-        let buffer = [UInt8](unsafeUninitializedCapacity: 16) { bytes, size in
+        #if compiler(<6.4)
+        withUnsafeTemporaryAllocation(of: UInt8.self, capacity: 16) { bytes in
+            unsafe bytes.update(repeating: 0)
             var index = 0
-            for i in 0..<16 {
-                bytes[i] = 0
-            }
-            for c in string.utf8 {
-                bytes[index] ^= c
-                index += 1
-                if index == 16 {
-                    index = 0
+            if let firstString = strings.first {
+                for c in firstString.utf8 {
+                    unsafe bytes[index] ^= c
+                    index += 1
+                    index &= 0xf
                 }
             }
-            size = 16
+            for string in strings.dropFirst() {
+                unsafe bytes[index] ^= UInt8(ascii: "-")
+                index += 1
+                index &= 0xf
+                for c in string.utf8 {
+                    unsafe bytes[index] ^= c
+                    index += 1
+                    index &= 0xf
+                }
+            }
+            return unsafe "W/\"\(bytes.hexDigest())\""
         }
-
-        return "W/\"\(buffer.hexDigest())\""
+        #else
+        withTemporaryAllocation(of: UInt8.self, capacity: 16) { bytes in
+            bytes.append(repeating: 0, count: 16)
+            var index = 0
+            if let firstString = strings.first {
+                for c in firstString.utf8 {
+                    bytes[index] ^= c
+                    index += 1
+                    index &= 0xf
+                }
+            }
+            for string in strings.dropFirst() {
+                bytes[index] ^= UInt8(ascii: "-")
+                index += 1
+                index &= 0xf
+                for c in string.utf8 {
+                    bytes[index] ^= c
+                    index += 1
+                    index &= 0xf
+                }
+            }
+            return unsafe bytes.withUnsafeBytes { bytes in
+                unsafe "W/\"\(bytes.hexDigest())\""
+            }
+        }
+        #endif
     }
 
     private func appendingPathComponent(_ root: String, _ component: String) -> String {
