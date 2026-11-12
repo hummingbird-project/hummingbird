@@ -6,7 +6,7 @@
 </p>  
 <p align="center">
 <a href="https://swift.org">
-  <img src="https://img.shields.io/badge/swift-6.1+-f05138.svg"/>
+  <img src="https://img.shields.io/badge/swift-6.2+-f05138.svg"/>
 </a>
 <a href="https://github.com/hummingbird-project/hummingbird/actions?query=workflow%3ACI">
   <img src="https://github.com/hummingbird-project/hummingbird/actions/workflows/ci.yml/badge.svg?branch=main"/>
@@ -19,6 +19,9 @@
 </a>
 <a href="https://insights.linuxfoundation.org/project/hummingbird">
   <img src="https://insights.linuxfoundation.org/api/badge/health-score?project=hummingbird"/>
+</a>
+<a href="https://scorecard.dev/viewer/?uri=github.com/hummingbird-project/hummingbird">
+  <img src="https://api.scorecard.dev/projects/github.com/hummingbird-project/hummingbird/badge"/>
 </a>
 </p>
 
