@@ -2,6 +2,9 @@ name: Verify that Foundation is not used
 
 on:
   pull_request:
+    paths:
+    - '**.swift'
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-foundation
   cancel-in-progress: true
