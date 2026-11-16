@@ -14,6 +14,7 @@ public import ServiceLifecycle
 ///
 /// Used when building an ``Hummingbird/Application``. It delays the building
 /// of the ``ServerChildChannel`` and ``Server`` until the HTTP responder has been built.
+@available(hummingbird 3.0, *)
 public struct HTTPServerBuilder: Sendable {
     /// build child channel from HTTP responder
     package let buildChildChannel: @Sendable (@escaping HTTPChannelHandler.Responder) throws -> any ServerChildChannel
@@ -32,7 +33,6 @@ public struct HTTPServerBuilder: Sendable {
     ///   - responder: HTTP responder
     ///   - onServerRunning: Closure to run once server is up and running
     /// - Returns: Server Service
-    @available(hummingbird 2.0, *)
     public func buildServer(
         configuration: ServerConfiguration,
         eventLoopGroup: any EventLoopGroup,
@@ -45,7 +45,7 @@ public struct HTTPServerBuilder: Sendable {
     }
 }
 
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 extension HTTPServerBuilder {
     ///  Return a `HTTPServerBuilder` that will build a HTTP1 server
     ///

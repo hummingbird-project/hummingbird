@@ -9,6 +9,7 @@
 import NIOPosix
 
 /// Protocol for file provider type used by ``FileMiddleware``
+@available(hummingbird 3.0, *)
 public protocol FileProvider: Sendable {
     /// File attributes type
     associatedtype FileAttributes

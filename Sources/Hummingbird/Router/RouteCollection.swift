@@ -7,9 +7,10 @@
 //
 
 public import HTTPTypes
+public import HummingbirdCore
 
 /// Collection of routes
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 public final class RouteCollection<Context: RequestContext>: RouterMethods {
     /// Initialize RouteCollection
     public init(context: Context.Type = BasicRequestContext.self) {
@@ -38,7 +39,7 @@ public final class RouteCollection<Context: RequestContext>: RouterMethods {
     ///
     /// This middleware will only be applied to endpoints added after this call.
     /// - Parameter middleware: Middleware we are adding
-    @discardableResult public func add(middleware: any MiddlewareProtocol<Request, Response, Context>) -> Self {
+    @discardableResult public func add(middleware: any MiddlewareProtocol<Request, AnyResponseWriter, Context>) -> Self {
         self.middlewares.add(middleware)
         return self
     }
@@ -53,7 +54,7 @@ public final class RouteCollection<Context: RequestContext>: RouterMethods {
     let middlewares: MiddlewareGroup<Context>
 }
 
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 extension RouterMethods {
     /// Add route collection to router
     /// - Parameters

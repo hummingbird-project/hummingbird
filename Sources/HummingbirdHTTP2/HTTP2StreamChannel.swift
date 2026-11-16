@@ -15,7 +15,7 @@ import NIOHTTPTypesHTTP2
 import Synchronization
 
 /// HTTP2 Child channel for processing an HTTP2 stream
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 struct HTTP2StreamChannel: ServerChildChannel {
     typealias Value = NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>
     typealias Configuration = HTTP1Channel.Configuration
@@ -72,10 +72,10 @@ struct HTTP2StreamChannel: ServerChildChannel {
                         head: head,
                         body: .init(.asyncReader(reader))
                     )
-                    let writerState = ResponseSender.WriterState()
+                    let writerState = NIOResponseWriter.WriterState()
                     try await self.handleRequest(
                         request,
-                        responseSender: ResponseSender(writer: outbound, writerState: writerState),
+                        responseWriter: NIOResponseWriter(writer: outbound, writerState: writerState),
                         channel: asyncChannel.channel
                     )
                     if !writerState.wrapped.withLock({ $0.finishedWriting }) {
@@ -98,10 +98,10 @@ struct HTTP2StreamChannel: ServerChildChannel {
 
     func handleRequest(
         _ request: Request,
-        responseSender: consuming ResponseSender,
+        responseWriter: consuming NIOResponseWriter,
         channel: any Channel
     ) async throws {
-        try await self.responder(request, responseSender, channel)
+        try await self.responder(request, responseWriter, channel)
         try await request.body.drain()
     }
 

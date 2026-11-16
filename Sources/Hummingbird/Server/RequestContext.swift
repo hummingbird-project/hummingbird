@@ -66,6 +66,7 @@ public struct CoreRequestContextStorage: Sendable {
 /// It's used to store values between middleware and routes such as the user's identity.
 ///
 /// The lifetime of a RequestContext should not exceed that of the request.
+@available(hummingbird 3.0, *)
 public protocol RequestContext: InitializableFromSource, RequestContextSource {
     associatedtype Source: RequestContextSource = ApplicationRequestContextSource
     associatedtype Decoder: RequestDecoder = JSONDecoder
@@ -83,6 +84,7 @@ public protocol RequestContext: InitializableFromSource, RequestContextSource {
     var responseEncoder: Encoder { get }
 }
 
+@available(hummingbird 3.0, *)
 extension RequestContext {
     /// Logger to use with Request
     @inlinable
@@ -105,6 +107,7 @@ extension RequestContext {
     public var id: String { self.logger[metadataKey: "hb.request.id"]!.description }
 }
 
+@available(hummingbird 3.0, *)
 extension RequestContext where Decoder == JSONDecoder {
     public var requestDecoder: Decoder {
         let decoder = JSONDecoder()
@@ -113,6 +116,7 @@ extension RequestContext where Decoder == JSONDecoder {
     }
 }
 
+@available(hummingbird 3.0, *)
 extension RequestContext where Encoder == JSONEncoder {
     public var responseEncoder: Encoder {
         let encoder = JSONEncoder()
@@ -122,6 +126,7 @@ extension RequestContext where Encoder == JSONEncoder {
 }
 
 /// Implementation of a basic request context that supports everything the Hummingbird library needs
+@available(hummingbird 3.0, *)
 public struct BasicRequestContext: RequestContext {
     /// core context
     public var coreContext: CoreRequestContextStorage

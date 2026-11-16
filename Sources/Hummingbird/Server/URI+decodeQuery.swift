@@ -9,7 +9,7 @@
 public import HummingbirdCore
 import Logging
 
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 extension URI {
     /// Decode request query using ``Hummingbird/URLEncodedFormDecoder``.
     /// - Parameters

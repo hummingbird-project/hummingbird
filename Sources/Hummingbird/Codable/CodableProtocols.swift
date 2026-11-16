@@ -7,8 +7,10 @@
 //
 
 import HTTPTypes
+import HummingbirdCore
 
 /// protocol for encoders generating a Response
+@available(hummingbird 3.0, *)
 public protocol ResponseEncoder {
     /// Encode value returned by handler to ``HummingbirdCore/Response`
     ///
@@ -16,10 +18,16 @@ public protocol ResponseEncoder {
     ///   - value: value to encode
     ///   - request: request that generated this value
     ///   - context: Request context
-    func encode(_ value: some Encodable, from request: Request, context: some RequestContext) throws -> Response
+    func sendEncoded(
+        _ value: some Encodable,
+        from request: Request,
+        writer: consuming some (ResponseWriter & ~Copyable),
+        context: some RequestContext
+    ) async throws
 }
 
 /// protocol for decoder deserializing from a Request body
+@available(hummingbird 3.0, *)
 public protocol RequestDecoder {
     /// Decode Swift object from ``HummingbirdCore/Request``
     /// - Parameters:

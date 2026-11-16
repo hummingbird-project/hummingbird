@@ -14,7 +14,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 extension Router {
     /// Route description
     public struct RouteDescription: CustomStringConvertible {

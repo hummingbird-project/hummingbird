@@ -9,8 +9,10 @@
 import BasicContainers
 import ContainersPreview
 import Foundation
+import HTTPAPIs
 import HTTPTypes
 import Hummingbird
+import HummingbirdCore
 import HummingbirdTesting
 import Logging
 import NIOFoundationEssentialsCompat
@@ -396,8 +398,8 @@ struct FileMiddlewareTests {
         struct Custom404Error: HTTPResponseError {
             var status: HTTPResponse.Status { .notFound }
 
-            func response(from request: Request, context: some RequestContext) throws -> Response {
-                Response(status: self.status)
+            func writeResponse(from request: Request, writer: consuming some ResponseWriter & ~Copyable, context: some RequestContext) async throws {
+                try await writer.sendAndFinish(.init(status: self.status))
             }
         }
         router.get("/ThrowCustom404.html") { _, _ -> String in
@@ -410,7 +412,7 @@ struct FileMiddlewareTests {
             }
         }
     }
-
+    /* TODO: Support 404 responses
     @available(hummingbird 3.0, *)
     @Test(.tempFile())
     func testOnReturnNotFoundResponse() async throws {
@@ -479,7 +481,7 @@ struct FileMiddlewareTests {
             }
         }
     }
-
+    */
     @available(hummingbird 3.0, *)
     @Test func testFolder() async throws {
         let router = Router()

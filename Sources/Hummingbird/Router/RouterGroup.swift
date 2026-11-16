@@ -23,7 +23,7 @@ public import HummingbirdCore
 /// .put(":id", use: todoController.update)
 /// .delete(":id", use: todoController.delete)
 /// ```
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 public struct RouterGroup<Context: RequestContext>: RouterMethods {
     let path: RouterPath
     let parent: any RouterMethods<Context>
@@ -39,7 +39,7 @@ public struct RouterGroup<Context: RequestContext>: RouterMethods {
     ///
     /// This middleware will only be applied to endpoints added after this call.
     /// - Parameter middleware: Middleware we are adding
-    @discardableResult public func add(middleware: any MiddlewareProtocol<Request, Response, Context>) -> RouterGroup<Context> {
+    @discardableResult public func add(middleware: any MiddlewareProtocol<Request, AnyResponseWriter, Context>) -> RouterGroup<Context> {
         self.middlewares.add(middleware)
         return self
     }

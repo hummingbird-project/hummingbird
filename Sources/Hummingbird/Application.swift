@@ -6,6 +6,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import ContainersPreview
+import HTTPAPIs
 public import HummingbirdCore
 public import Logging
 public import NIOCore
@@ -42,7 +44,8 @@ public enum EventLoopGroupProvider {
 
 /// Protocol for an Application. Brings all the components of Hummingbird together
 @available(hummingbird 3.0, *)
-public protocol ApplicationProtocol: Service where Context: InitializableFromSource<ApplicationRequestContextSource> {
+public protocol ApplicationProtocol: Service
+where Context: InitializableFromSource<ApplicationRequestContextSource> {
     /// Responder that generates a response from a requests and context
     associatedtype Responder: HTTPResponder
     /// Context passed with Request to responder
@@ -93,6 +96,7 @@ extension ApplicationProtocol {
 /// Conform to `Service` from `ServiceLifecycle`.
 @available(hummingbird 3.0, *)
 extension ApplicationProtocol {
+
     /// Construct application and run it
     public func run() async throws {
         let dateCache = DateCache()
@@ -103,9 +107,10 @@ extension ApplicationProtocol {
             configuration: self.configuration.httpServer,
             eventLoopGroup: self.eventLoopGroup,
             logger: self.logger
-        ) { (request, responseSender: consuming ResponseSender, channel) in
+        ) { (request, responseWriter: consuming NIOResponseWriter, channel) in
             let logger = self.logger.with(metadataKey: "hb.request.id", value: .stringConvertible(RequestID()))
-            let response = try await withLogger(logger) { logger in
+            var responseWriter: NIOResponseWriter? = responseWriter
+            try await withLogger(logger) { logger in
                 let context = Self.Responder.Context(
                     source: .init(
                         channel: channel,
@@ -113,34 +118,19 @@ extension ApplicationProtocol {
                     )
                 )
                 // respond to request
-                var response: Response
-                do {
-                    response = try await responder.respond(to: request, context: context)
-                } catch let error as HTTPParserError {
-                    throw error
-                } catch {
-                    logger.debug("Unrecognised Error", metadata: ["error.type": "\(error)"])
-                    response = Response(
-                        status: .internalServerError,
-                        body: .init()
-                    )
-                }
-                response.headers[.date] = dateCache.date
-                // server name header
-                if let serverName = self.configuration.serverName {
-                    response.headers[.server] = serverName
-                }
-                return response
+                try await responder.respond(
+                    to: request,
+                    writer:
+                        responseWriter.take()!.editHead { response in
+                            response.headerFields[.date] = dateCache.date
+                            // server name header
+                            if let serverName = self.configuration.serverName {
+                                response.headerFields[.server] = serverName
+                            }
+                        },
+                    context: context
+                )
             }
-            do {
-                // Write response — fast path for ByteBuffer/empty bodies (1 write instead of 3)
-                try await responseSender.write(response: response.head, body: response.body)
-            } catch is HTTPParserError {
-                // cannot throw the parser error, as that will cause another response
-                // to be written
-                throw HTTPChannelError.parseErrorWhileWritingResponse
-            }
-
         } onServerRunning: {
             await self.onServerRunning($0)
         }

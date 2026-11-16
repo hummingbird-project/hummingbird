@@ -346,12 +346,13 @@ struct ApplicationTests {
         struct CollateMiddleware<Context: RequestContext>: RouterMiddleware {
             public func handle(
                 _ request: Request,
+                writer: consuming AnyResponseWriter,
                 context: Context,
-                next: (Request, Context) async throws -> Response
-            ) async throws -> Response {
+                next: (Input, consuming Writer, Context) async throws -> Void
+            ) async throws {
                 var request = request
                 try await request.collectBody(upTo: context.maxUploadSize) { _ in }
-                return try await next(request, context)
+                try await next(request, writer, context)
             }
         }
         let router = Router()
@@ -637,8 +638,8 @@ struct ApplicationTests {
             init(source: Source) {}
         }
         let app = Application(
-            responder: CallbackResponder { (_: Request, _: EmptyRequestContext) in
-                Response(status: .ok)
+            responder: CallbackResponder { (_, writer, _: EmptyRequestContext) in
+                try await writer.sendAndFinish(.init(status: .ok))
             }
         )
         try await app.test(.live) { client in
@@ -826,24 +827,34 @@ struct ApplicationTests {
             let error: ErrorFormat
         }
 
-        final class CollatedResponseWriter: ResponseBodyAsyncWriter {
-            var collated: ByteBuffer
+        final class CollatedResponseWriter: ResponseWriter {
+            final class Writer: ResponseBodyAsyncWriter {
+                var collated: ByteBuffer
 
-            init() {
-                self.collated = .init(.init())
+                init() {
+                    self.collated = .init(.init())
+                }
+
+                func write<Buffer>(buffer: inout Buffer) async throws(any Error)
+                where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
+                    collated.writeBytes(draining: &buffer)
+
+                }
+
+                func finish<Buffer>(buffer: inout Buffer, finalElement: consuming HTTPTypes.HTTPFields?) async throws(any Error)
+                where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
+                    collated.writeBytes(draining: &buffer)
+                }
             }
 
-            func write<Buffer>(buffer: inout Buffer) async throws(any Error)
-            where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
-                collated.writeBytes(draining: &buffer)
-
+            func sendInformational(_ response: HTTPTypes.HTTPResponse) async throws {
+                // do nothing
             }
 
-            func finish<Buffer>(buffer: inout Buffer, finalElement: consuming HTTPTypes.HTTPFields?) async throws(any Error)
-            where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
-                collated.writeBytes(draining: &buffer)
+            func send(_ response: HTTPTypes.HTTPResponse) async throws -> Writer {
+                writer
             }
-
+            let writer = Writer()
         }
 
         let messages = [
@@ -865,10 +876,9 @@ struct ApplicationTests {
 
         for message in messages {
             let error = HTTPError(.internalServerError, message: message)
-            let response = try error.response(from: request, context: context)
             let writer = CollatedResponseWriter()
-            _ = try await response.body.write(writer)
-            let format = try JSONDecoder().decode(HTTPErrorFormat.self, from: writer.collated)
+            try await error.writeResponse(from: request, writer: writer, context: context)
+            let format = try JSONDecoder().decode(HTTPErrorFormat.self, from: writer.writer.collated)
             #expect(format.error.message == message)
         }
     }
@@ -1113,7 +1123,7 @@ struct ApplicationTests {
     @available(hummingbird 3.0, *)
     @Test func testIfMatchEtagHeaders() async throws {
         let router = Router()
-        router.get("ifMatch") { request, context -> Response in
+        router.get("ifMatch") { request, context in
             try await request.ifMatch(eTag: "5678", context: context) {
                 Response(status: .ok)
             }
@@ -1136,12 +1146,12 @@ struct ApplicationTests {
     @available(hummingbird 3.0, *)
     @Test func testIfNoneMatchEtagHeaders() async throws {
         let router = Router()
-        router.get("ifNoneMatch") { request, context -> Response in
+        router.get("ifNoneMatch") { request, context in
             try await request.ifNoneMatch(eTag: "1234", context: context) {
                 "Hello"
             }
         }
-        router.post("ifNoneMatch") { request, context -> Response in
+        router.post("ifNoneMatch") { request, context in
             try await request.ifNoneMatch(eTag: "1234", context: context) {
                 Response(status: .ok)
             }

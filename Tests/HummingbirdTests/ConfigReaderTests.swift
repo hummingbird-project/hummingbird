@@ -79,7 +79,7 @@ struct ConfigReaderTests {
     }
 
     @Test
-    @available(macOS 15, iOS 18, macCatalyst 18, tvOS 18, visionOS 2, *)
+    @available(hummingbird 3.0, *)
     func testHTTP1ConfigReader() throws {
         let configReader = ConfigReader(
             providers: [

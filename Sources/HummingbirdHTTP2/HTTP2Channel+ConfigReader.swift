@@ -11,7 +11,7 @@
 public import Configuration
 import HummingbirdCore
 
-@available(macOS 15, iOS 18, macCatalyst 18, tvOS 18, visionOS 2, *)
+@available(hummingbird 3.0, *)
 extension HTTP2Channel.Configuration {
     /// Initialize a HTTP2Channel.Configuration from a ConfigReader
     ///

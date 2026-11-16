@@ -17,7 +17,7 @@ import NIOSSL
 public import NIOTLS
 
 /// Child channel for processing HTTP1 with the option of upgrading to HTTP2 via ALPN
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 public struct HTTP2UpgradeChannel: HTTPChannelHandler {
     public typealias Configuration = HTTP2ChannelConfiguration
     typealias HTTP1Connection = HTTP1Channel.Value

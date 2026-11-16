@@ -6,29 +6,39 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 import BasicContainers
+import HTTPAPIs
+import HummingbirdCore
 
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 extension URLEncodedFormEncoder: ResponseEncoder {
-    /// Extend URLEncodedFormEncoder to support generating a ``HummingbirdCore/Response``. Sets body and header values
+    /// Extend URLEncodedFormEncoder to support writing a HTTP response using a ResponseWriter
     /// - Parameters:
     ///   - value: Value to encode
     ///   - request: Request used to generate response
+    ///   - writer: Response writer to write responses to underlying transport
     ///   - context: Request context
-    public func encode(_ value: some Encodable, from request: Request, context: some RequestContext) throws -> Response {
+    public func sendEncoded(
+        _ value: some Encodable,
+        from request: Request,
+        writer: consuming some (ResponseWriter & ~Copyable),
+        context: some RequestContext
+    ) async throws {
         let string = try self.encode(value)
-        let buffer = UniqueArray(copying: string.utf8)
-        return Response(
-            status: .ok,
-            headers: .defaultHummingbirdHeaders(
-                contentType: "application/x-www-form-urlencoded",
-                contentLength: buffer.count
+        var buffer = UniqueArray(copying: string.utf8)
+        try await writer.sendAndFinish(
+            .init(
+                status: .ok,
+                headerFields: .defaultHummingbirdHeaders(
+                    contentType: "application/x-www-form-urlencoded",
+                    contentLength: buffer.count
+                )
             ),
-            body: .init(buffer)
+            buffer: &buffer
         )
     }
 }
 
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 extension URLEncodedFormDecoder: RequestDecoder {
     /// Extend URLEncodedFormDecoder to decode from ``HummingbirdCore/Request``.
     /// - Parameters:

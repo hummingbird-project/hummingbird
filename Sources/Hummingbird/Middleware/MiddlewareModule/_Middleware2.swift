@@ -18,11 +18,14 @@
 ///    MiddlewareTwo()
 /// }
 /// ```
+
+public import HummingbirdCore
+
 @_documentation(visibility: internal)
 public struct _Middleware2<M0: MiddlewareProtocol, M1: MiddlewareProtocol>: MiddlewareProtocol
-where M0.Input == M1.Input, M0.Context == M1.Context, M0.Output == M1.Output {
+where M0.Input == M1.Input, M0.Context == M1.Context, M0.Writer == M1.Writer, M0.Writer: ~Copyable {
     public typealias Input = M0.Input
-    public typealias Output = M0.Output
+    public typealias Writer = M0.Writer
     public typealias Context = M0.Context
 
     @usableFromInline let m0: M0
@@ -35,11 +38,17 @@ where M0.Input == M1.Input, M0.Context == M1.Context, M0.Output == M1.Output {
     }
 
     @inlinable
-    public func handle(_ input: M0.Input, context: M0.Context, next: (M0.Input, M0.Context) async throws -> M0.Output) async throws -> M0.Output {
-        try await self.m0.handle(input, context: context) { input, context in
-            try await self.m1.handle(input, context: context, next: next)
+    public func handle(
+        _ input: M0.Input,
+        writer: consuming M0.Writer,
+        context: M0.Context,
+        next: (M0.Input, consuming M0.Writer, M0.Context) async throws -> Void
+    ) async throws {
+        try await self.m0.handle(input, writer: writer, context: context) { input, writer, context in
+            try await self.m1.handle(input, writer: writer, context: context, next: next)
         }
     }
 }
 
-extension _Middleware2: RouterMiddleware where M0.Input == Request, M0.Output == Response {}
+@available(hummingbird 3.0, *)
+extension _Middleware2: RouterMiddleware where M0.Input == Request, M0.Writer == AnyResponseWriter {}

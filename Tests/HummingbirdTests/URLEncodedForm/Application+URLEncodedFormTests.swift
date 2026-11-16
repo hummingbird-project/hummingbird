@@ -21,6 +21,7 @@ struct URLEncodedFormTests {
         let age: Int
     }
 
+    @available(hummingbird 3.0, *)
     struct URLEncodedCodingRequestContext: RequestContext {
         var coreContext: CoreRequestContextStorage
 

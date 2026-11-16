@@ -10,7 +10,7 @@ public import HummingbirdCore
 public import NIOCore
 public import NIOSSL
 
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 extension HTTPServerBuilder {
     /// Build HTTP channel with HTTP2 upgrade
     ///

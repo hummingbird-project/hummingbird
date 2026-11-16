@@ -14,7 +14,7 @@ public import NIOHTTPTypes
 import NIOHTTPTypesHTTP1
 
 /// Child channel for processing HTTP1
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
     public typealias Value = NIOAsyncChannel<HTTPRequestPart, HTTPResponsePart>
 

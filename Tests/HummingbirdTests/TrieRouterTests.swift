@@ -11,6 +11,7 @@ import Testing
 @testable @_spi(Internal) import Hummingbird
 
 struct TrieRouterTests {
+    @available(hummingbird 3.0, *)
     @Test func testPathComponentsTrie() {
         let trieBuilder = RouterPathTrieBuilder<String>()
         trieBuilder.addEntry("/usr/local/bin", value: "test1")
@@ -24,6 +25,7 @@ struct TrieRouterTests {
         #expect(trie.resolve("/Users/jane/bin")?.value == "test3")
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testPathParsing() {
         let trieBuilder = RouterPathTrieBuilder<String>()
         func getFirstChildElement(_ path: String) -> RouterPath.Element? {
@@ -48,6 +50,7 @@ struct TrieRouterTests {
         #expect(getFirstChildElement("test8") == .suffixCapture(prefix: "test.", parameter: "ext"))
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testRootNode() {
         let trieBuilder = RouterPathTrieBuilder<String>()
         trieBuilder.addEntry("", value: "test1")
@@ -56,6 +59,7 @@ struct TrieRouterTests {
         #expect(trie.resolve("")?.value == "test1")
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testWildcard() {
         let trieBuilder = RouterPathTrieBuilder<String>()
         trieBuilder.addEntry("users/*", value: "test1")
@@ -68,6 +72,7 @@ struct TrieRouterTests {
         #expect(trie.resolve("/users/adam/1")?.value == "test3")
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testGetParameters() {
         let trieBuilder = RouterPathTrieBuilder<String>()
         trieBuilder.addEntry("users/:user", value: "test1")
@@ -83,6 +88,7 @@ struct TrieRouterTests {
         #expect(trie.resolve("/users/1234/name/90")?.parameters.get("id") == "90")
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testRecursiveWildcard() {
         let trieBuilder = RouterPathTrieBuilder<String>()
         trieBuilder.addEntry("**", value: "**")
@@ -93,6 +99,7 @@ struct TrieRouterTests {
         #expect(trie.resolve("/one/two/three")?.parameters.getCatchAll() == ["one", "two", "three"])
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testRecursiveWildcardWithPrefix() {
         let trieBuilder = RouterPathTrieBuilder<String>()
         trieBuilder.addEntry("Test/**", value: "true")
@@ -109,6 +116,7 @@ struct TrieRouterTests {
         #expect(Parameters().getCatchAll() == [])
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testPrefixWildcard() {
         let trieBuilder = RouterPathTrieBuilder<String>()
         trieBuilder.addEntry("*.jpg", value: "jpg")
@@ -121,6 +129,7 @@ struct TrieRouterTests {
         #expect(trie.resolve("/hello.app/config.json")?.value == "app")
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testSuffixWildcard() {
         let trieBuilder = RouterPathTrieBuilder<String>()
         trieBuilder.addEntry("file.*", value: "file")
@@ -133,6 +142,7 @@ struct TrieRouterTests {
         #expect(trie.resolve("/file.png/test")?.value == "filetest")
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testPrefixCapture() {
         let trieBuilder = RouterPathTrieBuilder<String>()
         trieBuilder.addEntry("{file}.jpg", value: "jpg")
@@ -145,6 +155,7 @@ struct TrieRouterTests {
         #expect(trie.resolve("/hello.app/config.json")?.parameters.get("app") == "hello")
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testSuffixCapture() {
         let trieBuilder = RouterPathTrieBuilder<String>()
         trieBuilder.addEntry("file.{ext}", value: "file")
@@ -157,6 +168,7 @@ struct TrieRouterTests {
         #expect(trie.resolve("/file.png/test")?.parameters.get("ext") == "png")
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testPrefixFullComponentCapture() {
         let trieBuilder = RouterPathTrieBuilder<String>()
         trieBuilder.addEntry("{text}", value: "test")
@@ -164,6 +176,7 @@ struct TrieRouterTests {
         #expect(trie.resolve("/file.jpg")?.parameters.get("text") == "file.jpg")
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testIncompletSuffixCapture() {
         let trieBuilder = RouterPathTrieBuilder<String>()
         trieBuilder.addEntry("text}", value: "test")
@@ -172,6 +185,7 @@ struct TrieRouterTests {
         #expect(trie.resolve("/text") == nil)
     }
 
+    @available(hummingbird 3.0, *)
     @Test func testRoutePrecedence() {
         let trieBuilder = RouterPathTrieBuilder<String>()
         trieBuilder.addEntry("path.jpg", value: "path")

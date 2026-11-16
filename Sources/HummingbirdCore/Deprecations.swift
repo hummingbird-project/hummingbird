@@ -16,8 +16,6 @@
 public typealias HBRequest = Request
 @_documentation(visibility: internal) @available(*, unavailable, renamed: "RequestBody")
 public typealias HBRequestBody = RequestBody
-@_documentation(visibility: internal) @available(*, unavailable, renamed: "Response")
-public typealias HBResponse = Response
 @_documentation(visibility: internal) @available(*, unavailable, renamed: "ResponseBody")
 public typealias HBResponseBody = ResponseBody
 @_documentation(visibility: internal) @available(*, unavailable, renamed: "Server")

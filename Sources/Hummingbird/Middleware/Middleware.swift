@@ -6,15 +6,20 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-import NIOCore
+public import HummingbirdCore
 
 /// Middleware protocol with generic input, context and output types
-public protocol MiddlewareProtocol<Input, Output, Context>: Sendable {
+public protocol MiddlewareProtocol<Input, Writer, Context>: Sendable {
     associatedtype Input
-    associatedtype Output
+    associatedtype Writer: ~Copyable
     associatedtype Context
 
-    func handle(_ input: Input, context: Context, next: (Input, Context) async throws -> Output) async throws -> Output
+    func handle(
+        _ input: Input,
+        writer: consuming Writer,
+        context: Context,
+        next: (Input, consuming Writer, Context) async throws -> Void
+    ) async throws
 }
 
 /// Applied to `Request` before it is dealt with by the router. Middleware passes the processed request onto the next responder
@@ -44,15 +49,17 @@ public protocol MiddlewareProtocol<Input, Output, Context>: Sendable {
 /// ```
 
 /// Middleware protocol with Request as input and Response as output
-public protocol RouterMiddleware<Context>: MiddlewareProtocol where Input == Request, Output == Response {}
+@available(hummingbird 3.0, *)
+public protocol RouterMiddleware<Context>: MiddlewareProtocol where Input == Request, Writer == AnyResponseWriter {}
 
+@available(hummingbird 3.0, *)
 struct MiddlewareResponder<Context>: HTTPResponder {
-    let middleware: any MiddlewareProtocol<Request, Response, Context>
-    let next: @Sendable (Request, Context) async throws -> Response
+    let middleware: any MiddlewareProtocol<Request, AnyResponseWriter, Context>
+    let next: @Sendable (Request, consuming AnyResponseWriter, Context) async throws -> Void
 
-    func respond(to request: Request, context: Context) async throws -> Response {
-        try await self.middleware.handle(request, context: context) { request, context in
-            try await self.next(request, context)
+    func respond(to request: Request, writer: consuming some (ResponseWriter & ~Copyable), context: Context) async throws {
+        try await self.middleware.handle(request, writer: writer.consumeAsAny(), context: context) { request, writer, context in
+            try await self.next(request, writer, context)
         }
     }
 }

@@ -13,6 +13,7 @@ public import HummingbirdCore
 /// from URIs
 public typealias Parameters = FlatDictionary<Substring, Substring>
 
+@available(hummingbird 3.0, *)
 extension Parameters {
     /// Return parameter with specified id
     /// - Parameter s: parameter id

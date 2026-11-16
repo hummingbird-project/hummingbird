@@ -11,6 +11,7 @@ import HummingbirdCore
 import NIOCore
 
 /// Internally used to transform RequestContext
+@available(hummingbird 3.0, *)
 struct TransformingRouterGroup<Context: RequestContext, Parent: RouterMethods<Context.Source>>: RouterMethods {
     typealias TransformContext = Context
     typealias InputContext = Context.Source
@@ -20,9 +21,9 @@ struct TransformingRouterGroup<Context: RequestContext, Parent: RouterMethods<Co
         typealias Context = InputContext
         let responder: any HTTPResponder<TransformContext>
 
-        func respond(to request: Request, context: InputContext) async throws -> Response {
+        func respond(to request: Request, writer: consuming some (ResponseWriter & ~Copyable), context: InputContext) async throws {
             let newContext = TransformContext(source: context)
-            return try await self.responder.respond(to: request, context: newContext)
+            try await self.responder.respond(to: request, writer: writer, context: newContext)
         }
     }
 
@@ -31,7 +32,7 @@ struct TransformingRouterGroup<Context: RequestContext, Parent: RouterMethods<Co
     }
 
     /// Add middleware (Stub function as it isn't used)
-    @discardableResult func add(middleware: any MiddlewareProtocol<Request, Response, Context>) -> Self {
+    @discardableResult func add(middleware: any MiddlewareProtocol<Request, AnyResponseWriter, Context>) -> Self {
         preconditionFailure("Cannot add middleware to TransformingRouterGroup")
     }
 
@@ -54,6 +55,7 @@ struct TransformingRouterGroup<Context: RequestContext, Parent: RouterMethods<Co
 }
 
 /// Internally used to transform RequestContext
+@available(hummingbird 3.0, *)
 struct ThrowingTransformingRouterGroup<Context: ChildRequestContext, Parent: RouterMethods<Context.ParentContext>>: RouterMethods {
     typealias TransformContext = Context
     typealias InputContext = Context.ParentContext
@@ -63,9 +65,9 @@ struct ThrowingTransformingRouterGroup<Context: ChildRequestContext, Parent: Rou
         typealias Context = InputContext
         let responder: any HTTPResponder<TransformContext>
 
-        func respond(to request: Request, context: InputContext) async throws -> Response {
+        func respond(to request: Request, writer: consuming some (ResponseWriter & ~Copyable), context: InputContext) async throws {
             let newContext = try TransformContext(context: context)
-            return try await self.responder.respond(to: request, context: newContext)
+            return try await self.responder.respond(to: request, writer: writer, context: newContext)
         }
     }
 
@@ -74,7 +76,7 @@ struct ThrowingTransformingRouterGroup<Context: ChildRequestContext, Parent: Rou
     }
 
     /// Add middleware (Stub function as it isn't used)
-    @discardableResult func add(middleware: any MiddlewareProtocol<Request, Response, Context>) -> Self {
+    @discardableResult func add(middleware: any MiddlewareProtocol<Request, AnyResponseWriter, Context>) -> Self {
         preconditionFailure("Cannot add middleware to ThrowingTransformingRouterGroup")
     }
 

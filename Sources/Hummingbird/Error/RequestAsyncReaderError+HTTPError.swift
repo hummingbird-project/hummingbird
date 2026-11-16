@@ -6,9 +6,11 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import HTTPAPIs
 import HummingbirdCore
 
 // If we catch a too many bytes error report that as payload too large
+@available(hummingbird 3.0, *)
 extension RequestAsyncReaderError: HTTPResponseError {
     package var status: HTTPTypes.HTTPResponse.Status {
         switch self {
@@ -17,7 +19,11 @@ extension RequestAsyncReaderError: HTTPResponseError {
         }
     }
 
-    public func response(from request: Request, context: some RequestContext) throws -> Response {
-        Response(status: self.status)
+    package func writeResponse(
+        from request: Request,
+        writer: consuming some ResponseWriter & ~Copyable,
+        context: some RequestContext
+    ) async throws {
+        try await writer.sendAndFinish(.init(status: self.status))
     }
 }

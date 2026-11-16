@@ -6,20 +6,22 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+public import HummingbirdCore
+
 /// Group of middleware that can be used to create a responder chain. Each middleware calls the next one
-@available(hummingbird 2.0, *)
+@available(hummingbird 3.0, *)
 public final class MiddlewareGroup<Context> {
-    var middlewares: [any MiddlewareProtocol<Request, Response, Context>]
+    var middlewares: [any MiddlewareProtocol<Request, AnyResponseWriter, Context>]
 
     /// Initialize `MiddlewareGroup`
-    init(middlewares: [any MiddlewareProtocol<Request, Response, Context>] = []) {
+    init(middlewares: [any MiddlewareProtocol<Request, AnyResponseWriter, Context>] = []) {
         self.middlewares = middlewares
     }
 
     /// Add middleware to group
     ///
     /// This middleware will only be applied to endpoints added after this call.
-    @discardableResult public func add(_ middleware: any MiddlewareProtocol<Request, Response, Context>) -> Self {
+    @discardableResult public func add(_ middleware: any MiddlewareProtocol<Request, AnyResponseWriter, Context>) -> Self {
         self.middlewares.append(middleware)
         return self
     }
@@ -30,7 +32,7 @@ public final class MiddlewareGroup<Context> {
     public func constructResponder(finalResponder: any HTTPResponder<Context>) -> any HTTPResponder<Context> {
         var currentResponser = finalResponder
         for i in (0..<self.middlewares.count).reversed() {
-            let responder = MiddlewareResponder(middleware: middlewares[i], next: currentResponser.respond(to:context:))
+            let responder = MiddlewareResponder(middleware: middlewares[i], next: currentResponser.respond(to:writer:context:))
             currentResponser = responder
         }
         return currentResponser

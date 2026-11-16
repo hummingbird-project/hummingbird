@@ -14,7 +14,6 @@
 // Temporary exports of unavailable typealiases
 @_exported @_documentation(visibility: internal) import struct HummingbirdCore.Request
 @_exported @_documentation(visibility: internal) import class HummingbirdCore.RequestBody
-@_exported @_documentation(visibility: internal) import struct HummingbirdCore.Response
 @_exported @_documentation(visibility: internal) import struct HummingbirdCore.ResponseBody
 @_exported @_documentation(visibility: internal) import protocol HummingbirdCore.ResponseBodyAsyncWriter
 @_exported @_documentation(visibility: internal) import struct NIOCore.ByteBuffer
