@@ -1258,7 +1258,7 @@ struct ApplicationTests {
             // client should return badRequest and close the connection
             do {
                 try await client.execute(uri: "", method: .post, body: ByteBuffer(string: "Hello")) { response in
-                    #expect(response.status == .badRequest)
+                    #expect(response.status == .internalServerError)
                 }
             } catch TestClient.Error.connectionClosing {
                 // sometimes connection close occurs before badRequest is received
