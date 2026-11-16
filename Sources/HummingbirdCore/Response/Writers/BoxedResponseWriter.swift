@@ -27,6 +27,7 @@ public import HTTPTypes
 /// ```
 @available(hummingbird 3.0, *)
 public final class BoxedResponseWriter<Writer: ResponseWriter & ~Copyable>: ResponseWriter {
+    @usableFromInline
     init(writer: consuming Writer) {
         self.writer = consume writer
     }
