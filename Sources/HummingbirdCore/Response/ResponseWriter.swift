@@ -57,6 +57,7 @@ public struct AnyResponseWriter: ~Copyable, ResponseWriter {
 }
 
 /// HTTPResponseSender that sends an HTTP response using a NIOAsyncChannelOutboundWriter
+@available(hummingbird 3.0, *)
 public struct NIOResponseWriter: ResponseWriter, ~Copyable {
     @usableFromInline
     package final class WriterState: Sendable {
