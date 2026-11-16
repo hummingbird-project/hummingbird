@@ -53,12 +53,11 @@ public struct RouterResponder<Context: RequestContext>: HTTPResponder {
             if let writer = writer.take() {
                 try await error.writeResponse(from: request, writer: writer, context: context)
             }
-        } catch let error as HTTPParserError {
-            throw error
         } catch {
             if let writer = writer.take() {
-                try await writer.sendAndFinish(.init(status: .internalServerError))
+                try await writer.sendAndFinish(.init(status: .internalServerError, headerFields: [.connection: "close", .contentLength: "0"]))
             }
+            throw error
         }
     }
 }

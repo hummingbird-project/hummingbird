@@ -87,12 +87,6 @@ extension HTTPChannelHandler {
 
                             iterator = recoveredIterator
                         }
-                    } catch is HTTPParserError {
-                        // if we receive an HTTPParserError write badRequest and close connection
-                        // by throwing the error
-                        logger.debug("HTTP parse error, closing connection")
-                        try await outbound.write(.head(.init(status: .badRequest, headerFields: [.connection: "close", .contentLength: "0"])))
-                        try await outbound.write(.end(nil))
                     } catch {
                         logger.error("\(error)")
                         throw error
