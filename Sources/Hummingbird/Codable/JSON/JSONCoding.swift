@@ -57,7 +57,7 @@ extension JSONDecoder: RequestDecoder {
         var buffer = try await request.body.collect(upTo: context.maxUploadSize)
         var mutableSpan = buffer.mutableSpan
         return try mutableSpan.withUnsafeMutableBytes { bytes in
-            let data = Data(bytesNoCopy: bytes.baseAddress!, count: bytes.count, deallocator: .none)
+            let data = unsafe Data(bytesNoCopy: bytes.baseAddress!, count: bytes.count, deallocator: .none)
             return try self.decode(T.self, from: data)
         }
     }

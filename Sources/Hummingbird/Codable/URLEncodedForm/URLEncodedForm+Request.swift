@@ -48,7 +48,7 @@ extension URLEncodedFormDecoder: RequestDecoder {
     public func decode<T: Decodable>(_ type: T.Type, from request: Request, context: some RequestContext) async throws -> T {
         let buffer = try await request.body.collect(upTo: context.maxUploadSize)
         return try buffer.span.withUnsafeBytes { bytes in
-            let string = String(decoding: bytes, as: UTF8.self)
+            let string = unsafe String(decoding: bytes, as: UTF8.self)
             return try self.decode(T.self, from: string)
         }
     }

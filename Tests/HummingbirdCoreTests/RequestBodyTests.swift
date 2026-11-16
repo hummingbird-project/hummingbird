@@ -29,7 +29,8 @@ struct RequestBodyTests {
             }
             group.addTask {
                 let buffer = try await requestBody.collect(upTo: .max)
-                #expect(String(copying: UTF8Span(unchecked: buffer.span)) == "hello world")
+                let string = unsafe String(copying: UTF8Span(unchecked: buffer.span))
+                #expect(string == "hello world")
             }
             try await group.waitForAll()
         }
@@ -52,7 +53,8 @@ struct RequestBodyTests {
             }
             group.addTask {
                 let buffer = try await requestBody.collect(upTo: .max)
-                #expect(String(copying: UTF8Span(unchecked: buffer.span)) == "hello world")
+                let string = unsafe String(copying: UTF8Span(unchecked: buffer.span))
+                #expect(string == "hello world")
             }
             try await group.waitForAll()
         }
