@@ -201,6 +201,7 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
             self.storage.response = response
             self.storage.body = ByteBuffer(draining: &buffer)
             self.storage.trailer = trailer
+            self.storage.finishedWriting = true
         }
 
         var storage: Storage
