@@ -125,7 +125,7 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
                     let responseWriter = RouterResponseWriter(storage: storage)
                     do {
                         try await self.responder.respond(to: request, writer: responseWriter, context: context)
-                        if let response = storage.response {
+                        if let response = storage.response, storage.finishedWriting {
                             return TestResponse(head: response, body: storage.body, trailerHeaders: storage.trailer)
                         } else {
                             return TestResponse(head: .init(status: .internalServerError), body: .init(), trailerHeaders: nil)
@@ -160,10 +160,12 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
                 self.response = nil
                 self.body = .init()
                 self.trailer = nil
+                self.finishedWriting = false
             }
             var response: HTTPResponse?
             var body: ByteBuffer
             var trailer: HTTPFields?
+            var finishedWriting: Bool
         }
         struct Writer: ResponseBodyAsyncWriter, ~Copyable {
             mutating func write<Buffer>(buffer: inout Buffer) async throws(any Error)
@@ -175,6 +177,7 @@ struct RouterTestFramework<Responder: HTTPResponder>: ApplicationTestFramework w
             where Buffer: RangeReplaceableContainer, UInt8 == Buffer.Element, Buffer: ~Copyable, Buffer.Element: ~Copyable {
                 self.storage.body.writeBytes(draining: &buffer)
                 self.storage.trailer = finalElement
+                self.storage.finishedWriting = true
             }
 
             let storage: Storage
