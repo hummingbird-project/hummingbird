@@ -49,8 +49,10 @@ struct EndpointResponders<Context>: Sendable {
 
 @available(hummingbird 3.0, *)
 private struct HeadResponseWriter<Parent: ResponseWriter & ~Copyable>: ResponseWriter, ~Copyable {
-    mutating func sendInformational(_ response: HTTPTypes.HTTPResponse) async throws {
-        // do nothing
+    var parentWriter: Parent
+
+    mutating func sendInformational(_ response: HTTPResponse) async throws {
+        try await parentWriter.sendInformational(response)
     }
 
     consuming func send(_ response: HTTPTypes.HTTPResponse) async throws -> HeadResponseBodyAsyncWriter {
@@ -58,12 +60,11 @@ private struct HeadResponseWriter<Parent: ResponseWriter & ~Copyable>: ResponseW
         return HeadResponseBodyAsyncWriter(parentWriter: writer)
     }
 
-    consuming func sendAndFinish<Buffer>(_ response: HTTPTypes.HTTPResponse, buffer: inout Buffer, trailer: HTTPTypes.HTTPFields?) async throws
+    consuming func sendAndFinish<Buffer>(_ response: HTTPResponse, buffer: inout Buffer, trailer: HTTPTypes.HTTPFields?) async throws
     where Buffer: ContainersPreview.RangeReplaceableContainer, Buffer.Element == UInt8, Buffer: ~Copyable {
         try await parentWriter.sendAndFinish(response)
     }
 
-    let parentWriter: Parent
     struct HeadResponseBodyAsyncWriter: ResponseBodyAsyncWriter, ~Copyable {
         let parentWriter: Parent.Writer
 
