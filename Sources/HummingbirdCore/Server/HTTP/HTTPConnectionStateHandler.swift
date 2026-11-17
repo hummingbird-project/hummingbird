@@ -226,7 +226,7 @@ extension HTTPConnectionStateHandler {
                     guard duration >= requestBodyMinimumReadRate.minimumDuration else {
                         break
                     }
-                    let rate = Double(self.bodyRead) / (duration / Duration.seconds(1))
+                    let rate = Double(self.bodyRead) / duration.timeInterval
                     if rate < requestBodyMinimumReadRate.minimumBytesPerSecond {
                         return .closeConnection
                     }
@@ -312,3 +312,11 @@ extension HTTPConnectionStateHandler {
 
 @available(*, unavailable)
 extension HTTPConnectionStateHandler: Sendable {}
+
+extension Duration {
+    // Duration in seconds as a double
+    var timeInterval: Double {
+        let v = components
+        return Double(v.seconds) + Double(v.attoseconds) * 1e-18
+    }
+}

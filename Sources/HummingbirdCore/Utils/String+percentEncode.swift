@@ -85,7 +85,7 @@ extension StringProtocol {
         let maxLength = utf8Buffer.count * 3
         let percent = UInt8(ascii: "%")
         #if compiler(<6.4)
-        return withUnsafeTemporaryAllocation(of: UInt8.self, capacity: maxLength) { buffer in
+        return unsafe withUnsafeTemporaryAllocation(of: UInt8.self, capacity: maxLength) { buffer in
             var destIndex = 0
             for srcIndex in utf8Buffer.indices {
                 let byte = utf8Buffer[srcIndex]
@@ -175,7 +175,7 @@ extension StringProtocol {
 
     package static func removingURLPercentEncoding(utf8Buffer: Span<UInt8>) -> String? {
         #if compiler(<6.4)
-        return withUnsafeTemporaryAllocation(of: UInt8.self, capacity: utf8Buffer.count) { buffer -> String? in
+        return unsafe withUnsafeTemporaryAllocation(of: UInt8.self, capacity: utf8Buffer.count) { buffer -> String? in
             let percent = UInt8(ascii: "%")
             var srcIndex = utf8Buffer.indices.startIndex
             let srcEndIndex = utf8Buffer.indices.endIndex
