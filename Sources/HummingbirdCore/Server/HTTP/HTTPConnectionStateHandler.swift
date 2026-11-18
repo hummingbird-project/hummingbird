@@ -25,6 +25,7 @@ public import NIOHTTPTypes
 ///
 /// Note: Because back pressure is applied when you don't read the request body fast enough this
 /// will also kick in if you don't read the request body.
+@available(hummingbird 2.0, *)
 public struct RequestBodyMinimumReadRateConfiguration: Sendable {
     /// minimum bytes read per second
     public var minimumBytesPerSecond: Double
@@ -313,6 +314,7 @@ extension HTTPConnectionStateHandler {
 @available(*, unavailable)
 extension HTTPConnectionStateHandler: Sendable {}
 
+@available(hummingbird 2.0, *)
 extension Duration {
     // Duration in seconds as a double
     var timeInterval: Double {
