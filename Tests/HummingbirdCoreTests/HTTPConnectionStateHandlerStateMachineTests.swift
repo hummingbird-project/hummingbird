@@ -36,7 +36,7 @@ struct HTTPConnectionStateHandlerStateMachineTests {
         let activeAction = stateMachine.setActive()
         #expect(activeAction == .scheduleTimeout(deadline: MockClock.Instant(.seconds(30))))
         clock.advance(to: .init(.seconds(2)))
-        stateMachine.readHTTPPart(.head(.init(method: .get, scheme: "http", authority: "127.0.0.1", path: "/")))
+        _ = stateMachine.readHTTPPart(.head(.init(method: .get, scheme: "http", authority: "127.0.0.1", path: "/")))
         clock.advance(to: .init(.seconds(30)))
         var timeoutAction = stateMachine.timeoutTriggered()
         #expect(timeoutAction == .rescheduleTimeout(deadline: .init(.seconds(32))))
@@ -54,8 +54,8 @@ struct HTTPConnectionStateHandlerStateMachineTests {
         let activeAction = stateMachine.setActive()
         #expect(activeAction == .scheduleTimeout(deadline: MockClock.Instant(.seconds(30))))
         clock.advance(to: .init(.seconds(2)))
-        stateMachine.readHTTPPart(.head(.init(method: .get, scheme: "http", authority: "127.0.0.1", path: "/")))
-        stateMachine.readHTTPPart(.body(.init()))
+        _ = stateMachine.readHTTPPart(.head(.init(method: .get, scheme: "http", authority: "127.0.0.1", path: "/")))
+        _ = stateMachine.readHTTPPart(.body(.init()))
         clock.advance(to: .init(.seconds(30)))
         var timeoutAction = stateMachine.timeoutTriggered()
         #expect(timeoutAction == .rescheduleTimeout(deadline: .init(.seconds(32))))
@@ -72,9 +72,9 @@ struct HTTPConnectionStateHandlerStateMachineTests {
         var stateMachine = HTTPConnectionStateHandler.StateMachine(idleTimeout: .seconds(30), clock: clock)
         let activeAction = stateMachine.setActive()
         #expect(activeAction == .scheduleTimeout(deadline: MockClock.Instant(.seconds(30))))
-        stateMachine.readHTTPPart(.head(.init(method: .get, scheme: "http", authority: "127.0.0.1", path: "/")))
-        stateMachine.readHTTPPart(.body(.init()))
-        stateMachine.readHTTPPart(.end(nil))
+        _ = stateMachine.readHTTPPart(.head(.init(method: .get, scheme: "http", authority: "127.0.0.1", path: "/")))
+        _ = stateMachine.readHTTPPart(.body(.init()))
+        _ = stateMachine.readHTTPPart(.end(nil))
         clock.advance(to: .init(.seconds(30)))
         let timeoutAction = stateMachine.timeoutTriggered()
         #expect(timeoutAction == .doNothing)
@@ -88,9 +88,9 @@ struct HTTPConnectionStateHandlerStateMachineTests {
         var stateMachine = HTTPConnectionStateHandler.StateMachine(idleTimeout: .seconds(30), clock: clock)
         let activeAction = stateMachine.setActive()
         #expect(activeAction == .scheduleTimeout(deadline: MockClock.Instant(.seconds(30))))
-        stateMachine.readHTTPPart(.head(.init(method: .get, scheme: "http", authority: "127.0.0.1", path: "/")))
-        stateMachine.readHTTPPart(.body(.init()))
-        stateMachine.readHTTPPart(.end(nil))
+        _ = stateMachine.readHTTPPart(.head(.init(method: .get, scheme: "http", authority: "127.0.0.1", path: "/")))
+        _ = stateMachine.readHTTPPart(.body(.init()))
+        _ = stateMachine.readHTTPPart(.end(nil))
         let writePartAction = stateMachine.writeHTTPPart(.head(.init(status: .ok)))
         #expect(writePartAction == .doNothing)
         clock.advance(to: .init(.seconds(30)))
@@ -108,8 +108,8 @@ struct HTTPConnectionStateHandlerStateMachineTests {
         let activeAction = stateMachine.setActive()
         #expect(activeAction == .scheduleTimeout(deadline: MockClock.Instant(.seconds(30))))
         clock.advance(to: .init(.seconds(2)))
-        stateMachine.readHTTPPart(.head(.init(method: .get, scheme: "http", authority: "127.0.0.1", path: "/")))
-        stateMachine.readHTTPPart(.body(.init()))
+        _ = stateMachine.readHTTPPart(.head(.init(method: .get, scheme: "http", authority: "127.0.0.1", path: "/")))
+        _ = stateMachine.readHTTPPart(.body(.init()))
         let writePartAction = stateMachine.writeHTTPPart(.head(.init(status: .ok)))
         #expect(writePartAction == .doNothing)
         clock.advance(to: .init(.seconds(30)))
@@ -128,9 +128,9 @@ struct HTTPConnectionStateHandlerStateMachineTests {
         var stateMachine = HTTPConnectionStateHandler.StateMachine(idleTimeout: .seconds(30), clock: clock)
         let activeAction = stateMachine.setActive()
         #expect(activeAction == .scheduleTimeout(deadline: MockClock.Instant(.seconds(30))))
-        stateMachine.readHTTPPart(.head(.init(method: .get, scheme: "http", authority: "127.0.0.1", path: "/")))
-        stateMachine.readHTTPPart(.body(.init()))
-        stateMachine.readHTTPPart(.end(nil))
+        _ = stateMachine.readHTTPPart(.head(.init(method: .get, scheme: "http", authority: "127.0.0.1", path: "/")))
+        _ = stateMachine.readHTTPPart(.body(.init()))
+        _ = stateMachine.readHTTPPart(.end(nil))
         clock.advance(to: .init(.seconds(2)))
         var writePartAction = stateMachine.writeHTTPPart(.head(.init(status: .ok)))
         #expect(writePartAction == .doNothing)
@@ -148,8 +148,8 @@ struct HTTPConnectionStateHandlerStateMachineTests {
         var stateMachine = HTTPConnectionStateHandler.StateMachine(idleTimeout: .seconds(30), clock: clock)
         let activeAction = stateMachine.setActive()
         #expect(activeAction == .scheduleTimeout(deadline: MockClock.Instant(.seconds(30))))
-        stateMachine.readHTTPPart(.head(.init(method: .get, scheme: "http", authority: "127.0.0.1", path: "/")))
-        stateMachine.readHTTPPart(.body(.init()))
+        _ = stateMachine.readHTTPPart(.head(.init(method: .get, scheme: "http", authority: "127.0.0.1", path: "/")))
+        _ = stateMachine.readHTTPPart(.body(.init()))
         clock.advance(to: .init(.seconds(2)))
         var writePartAction = stateMachine.writeHTTPPart(.head(.init(status: .ok)))
         #expect(writePartAction == .doNothing)
@@ -158,5 +158,56 @@ struct HTTPConnectionStateHandlerStateMachineTests {
         clock.advance(to: .init(.seconds(32)))
         let timeoutAction = stateMachine.timeoutTriggered()
         #expect(timeoutAction == .closeConnection)
+    }
+
+    @available(macOS 15.0, iOS 18.0, tvOS 18.0, watchOS 11.0, *)
+    @Test
+    func requestReadRateTooSlow() async throws {
+        let clock = MockClock()
+        var stateMachine = HTTPConnectionStateHandler.StateMachine(
+            idleTimeout: .seconds(30),
+            requestBodyMinimumReadRate: .init(minimumBytesPerSecond: 1000, minimumDuration: .seconds(5), resetDuration: .seconds(30)),
+            clock: clock
+        )
+        let activeAction = stateMachine.setActive()
+        #expect(activeAction == .scheduleTimeout(deadline: MockClock.Instant(.seconds(30))))
+        _ = stateMachine.readHTTPPart(.head(.init(method: .get, scheme: "http", authority: "127.0.0.1", path: "/")))
+        clock.advance(to: .init(.seconds(2)))
+        // even though request rate is below what is required, we do nothing as we havent reached the minimum time yet
+        #expect(stateMachine.readHTTPPart(.body(.init(repeating: 0, count: 500))) == .doNothing)
+        clock.advance(to: .init(.seconds(10)))
+        // request rate is above what is required 10000 bytes in 10 seconds
+        #expect(stateMachine.readHTTPPart(.body(.init(repeating: 0, count: 11500))) == .doNothing)
+        clock.advance(to: .init(.seconds(15)))
+        // request rate has dropped below what is required close the connection 12500 bytes in 15 seconds
+        #expect(stateMachine.readHTTPPart(.body(.init(repeating: 0, count: 500))) == .closeConnection)
+    }
+
+    @available(macOS 15.0, iOS 18.0, tvOS 18.0, watchOS 11.0, *)
+    @Test
+    func requestReadRateTooSlowAfterReset() async throws {
+        let clock = MockClock()
+        var stateMachine = HTTPConnectionStateHandler.StateMachine(
+            idleTimeout: .seconds(30),
+            requestBodyMinimumReadRate: .init(minimumBytesPerSecond: 1000, minimumDuration: .seconds(5), resetDuration: .seconds(30)),
+            clock: clock
+        )
+        let activeAction = stateMachine.setActive()
+        #expect(activeAction == .scheduleTimeout(deadline: MockClock.Instant(.seconds(30))))
+        _ = stateMachine.readHTTPPart(.head(.init(method: .get, scheme: "http", authority: "127.0.0.1", path: "/")))
+        // body read time is fast enough
+        for time in 1..<31 {
+            clock.advance(to: .init(.seconds(time)))
+            #expect(stateMachine.readHTTPPart(.body(.init(repeating: 0, count: 2000))) == .doNothing)
+        }
+        // body read time is not fast enough but timer reset and we are inside the minimum time again
+        for time in 31..<35 {
+            clock.advance(to: .init(.seconds(time)))
+            // even though request rate is below what is required, we do nothing as we havent reached the minimum time yet
+            #expect(stateMachine.readHTTPPart(.body(.init(repeating: 0, count: 500))) == .doNothing)
+        }
+        // body read time since reset is not fast enough
+        clock.advance(to: .init(.seconds(45)))
+        #expect(stateMachine.readHTTPPart(.body(.init(repeating: 0, count: 500))) == .closeConnection)
     }
 }

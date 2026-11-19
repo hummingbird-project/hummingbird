@@ -400,7 +400,7 @@ extension FileMiddleware {
 
     private func createETag(_ strings: [String]) -> String {
         #if compiler(<6.4)
-        withUnsafeTemporaryAllocation(of: UInt8.self, capacity: 16) { bytes in
+        unsafe withUnsafeTemporaryAllocation(of: UInt8.self, capacity: 16) { bytes in
             unsafe bytes.update(repeating: 0)
             var index = 0
             if let firstString = strings.first {

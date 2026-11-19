@@ -11,6 +11,39 @@ public import Logging
 public import NIOCore
 public import NIOHTTPTypes
 
+/// Configuration for minimum request body read rate calculation
+///
+/// This defines how the ``HTTPConnectionStateHandler`` calculates whether the request body
+/// is being read from the connection fast enough. If it considers the request body is coming in
+/// too slow then it will close the connection.
+///
+/// Slowloris is a type of denial of service attack which uses minimal bandwidth. An attacker
+/// will open as many connections to the server as possible and try to hold them open for as
+/// long as possible. The idle connection timeout will close idle connections but it cannot catch
+/// the situation where the attacker drip feeds bytes to the connection every so often. The
+/// ``RequestBodyMinimumRateConfiguration`` is used to avoid these kind of attacks.
+///
+/// Note: Because back pressure is applied when you don't read the request body fast enough this
+/// will also kick in if you don't read the request body.
+@available(hummingbird 2.0, *)
+public struct RequestBodyMinimumReadRateConfiguration: Sendable {
+    /// minimum bytes read per second
+    public var minimumBytesPerSecond: Double
+    /// minimum time period before calculating rate
+    public var minimumDuration: Duration
+    /// How long before reseting calculation
+    public var resetDuration: Duration
+
+    public init(minimumBytesPerSecond: Double = 1024, minimumDuration: Duration = .seconds(5), resetDuration: Duration = .seconds(30)) {
+        guard minimumDuration < resetDuration else {
+            fatalError("Minimum duration needs to be lower than reset duration otherwise calculation is never performed")
+        }
+        self.minimumBytesPerSecond = minimumBytesPerSecond
+        self.minimumDuration = minimumDuration
+        self.resetDuration = resetDuration
+    }
+}
+
 /// Triggers an IdleStateEvent when a Channel has not performed read, write, or both operation for a while.
 @available(hummingbird 2.0, *)
 public final class HTTPConnectionStateHandler: ChannelDuplexHandler, RemovableChannelHandler {
@@ -23,9 +56,9 @@ public final class HTTPConnectionStateHandler: ChannelDuplexHandler, RemovableCh
     var state: StateMachine<ContinuousClock>
     private var scheduledReaderTask: Optional<Scheduled<Void>>
 
-    public init(idleTimeout: Duration? = nil, logger: Logger) {
+    public init(idleTimeout: Duration? = nil, requestBodyMinimumReadRate: RequestBodyMinimumReadRateConfiguration? = nil, logger: Logger) {
         self.logger = logger
-        self.state = .init(idleTimeout: idleTimeout, clock: .init())
+        self.state = .init(idleTimeout: idleTimeout, requestBodyMinimumReadRate: requestBodyMinimumReadRate, clock: .init())
         self.scheduledReaderTask = nil
     }
 
@@ -59,7 +92,13 @@ public final class HTTPConnectionStateHandler: ChannelDuplexHandler, RemovableCh
     }
     public func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let part = unwrapInboundIn(data)
-        self.state.readHTTPPart(part)
+        switch self.state.readHTTPPart(part) {
+        case .closeConnection:
+            context.close(promise: nil)
+            return
+        case .doNothing:
+            break
+        }
         context.fireChannelRead(data)
     }
 
@@ -126,21 +165,27 @@ public final class HTTPConnectionStateHandler: ChannelDuplexHandler, RemovableCh
 
 @available(hummingbird 2.0, *)
 extension HTTPConnectionStateHandler {
-    struct StateMachine<C: Clock> {
-        let idleTimeout: C.Duration?
+    struct StateMachine<C: Clock> where C.Duration == Duration {
+        let idleTimeout: Duration?
+        let requestBodyMinimumReadRate: RequestBodyMinimumReadRateConfiguration?
         let clock: C
 
         var requestsInProgress: Int = 0
         var isRequestBeingRead: Bool = false
         var lastActiveTime: C.Instant
+        var bodyRateBaseTime: C.Instant
         var isActive: Bool = false
         var closeAfterResponseWritten: Bool = false
+        var bodyRead: Int
 
         @inlinable
-        init(idleTimeout: C.Duration?, clock: C) {
+        init(idleTimeout: Duration?, requestBodyMinimumReadRate: RequestBodyMinimumReadRateConfiguration? = nil, clock: C) {
             self.clock = clock
             self.idleTimeout = idleTimeout
             self.lastActiveTime = clock.now
+            self.bodyRateBaseTime = self.lastActiveTime
+            self.requestBodyMinimumReadRate = requestBodyMinimumReadRate
+            self.bodyRead = 0
         }
 
         enum SetActiveAction: Equatable {
@@ -163,18 +208,39 @@ extension HTTPConnectionStateHandler {
             self.isActive = false
         }
 
+        enum ReadHTTPPartAction {
+            case closeConnection
+            case doNothing
+        }
+
         @inlinable
-        mutating func readHTTPPart(_ part: HTTPRequestPart) {
-            self.lastActiveTime = clock.now
+        mutating func readHTTPPart(_ part: HTTPRequestPart) -> ReadHTTPPartAction {
             switch part {
             case .head:
                 self.isRequestBeingRead = true
                 self.requestsInProgress += 1
-            case .body(_):
-                break
+                self.bodyRateBaseTime = clock.now
+            case .body(let buffer):
+                if let requestBodyMinimumReadRate {
+                    self.bodyRead += buffer.readableBytes
+                    let duration = self.bodyRateBaseTime.duration(to: clock.now)
+                    guard duration >= requestBodyMinimumReadRate.minimumDuration else {
+                        break
+                    }
+                    let rate = Double(self.bodyRead) / duration.timeInterval
+                    if rate < requestBodyMinimumReadRate.minimumBytesPerSecond {
+                        return .closeConnection
+                    }
+                    if duration > requestBodyMinimumReadRate.resetDuration {
+                        self.self.bodyRateBaseTime = clock.now
+                        self.bodyRead = 0
+                    }
+                }
             case .end:
                 self.isRequestBeingRead = false
             }
+            self.lastActiveTime = clock.now
+            return .doNothing
         }
 
         enum WritePartAction: Equatable {
@@ -247,3 +313,12 @@ extension HTTPConnectionStateHandler {
 
 @available(*, unavailable)
 extension HTTPConnectionStateHandler: Sendable {}
+
+@available(hummingbird 2.0, *)
+extension Duration {
+    // Duration in seconds as a double
+    var timeInterval: Double {
+        let v = components
+        return Double(v.seconds) + Double(v.attoseconds) * 1e-18
+    }
+}
