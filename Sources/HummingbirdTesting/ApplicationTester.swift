@@ -45,7 +45,7 @@ struct TestError: Error, Equatable {
 }
 
 /// Protocol for client used by HummingbirdTesting
-public protocol TestClientProtocol: Sendable {
+public protocol TestClientProtocol {
     /// Execute URL request and provide response
     func executeRequest(
         uri: String,

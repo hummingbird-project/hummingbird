@@ -362,7 +362,7 @@ struct MiddlewareTests {
             responder: router.buildResponder(),
             logger: Logger(label: "TestLogging") { _ in logHandler }
         )
-        try await app.test(.live) { client in
+        try await app.test(.asyncTesting) { client in
             try await client.execute(
                 uri: "/some",
                 method: .get,
@@ -413,7 +413,7 @@ struct MiddlewareTests {
             responder: router.buildResponder(),
             logger: Logger(label: "TestLogging") { _ in logHandler }
         )
-        try await app.test(.live) { client in
+        try await app.test(.router) { client in
             try await client.execute(
                 uri: "/some",
                 method: .get,
