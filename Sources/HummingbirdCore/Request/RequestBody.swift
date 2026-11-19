@@ -135,8 +135,8 @@ extension RequestBody {
     struct Delegate: NIOAsyncSequenceProducerDelegate, Sendable {
         enum State {
             case produceMore
-            case waitingForProduceMore(CheckedContinuation<Int, Never>?)
-            case multipleWaitingForProduceMore(Deque<CheckedContinuation<Int, Never>>)
+            case waitingForProduceMore(CheckedContinuation<Int, any Error>?)
+            case multipleWaitingForProduceMore(Deque<CheckedContinuation<Int, any Error>>)
             case terminated
         }
         struct LockedState {
@@ -203,34 +203,38 @@ extension RequestBody {
         }
 
         @usableFromInline
-        func waitForProduceMore() async -> Int {
+        func waitForProduceMore() async throws -> Int {
             let state = self.lockedState.withLockedValue({ $0 })
             switch state.state {
             case .produceMore, .terminated:
                 return state.produceMoreID
             case .waitingForProduceMore, .multipleWaitingForProduceMore:
-                return await withCheckedContinuation { (newContinuation: CheckedContinuation<Int, Never>) in
-                    self.lockedState.withLockedValue { lockedState in
-                        switch lockedState.state {
-                        case .produceMore:
-                            newContinuation.resume(returning: lockedState.produceMoreID)
-                        case .waitingForProduceMore(let firstContinuation):
-                            if let firstContinuation {
-                                var continuations = Deque<CheckedContinuation<Int, Never>>()
-                                continuations.reserveCapacity(2)
-                                continuations.append(firstContinuation)
+                return try await withTaskCancellationHandler {
+                    try await withCheckedThrowingContinuation { (newContinuation: CheckedContinuation<Int, any Error>) in
+                        self.lockedState.withLockedValue { lockedState in
+                            switch lockedState.state {
+                            case .produceMore:
+                                newContinuation.resume(returning: lockedState.produceMoreID)
+                            case .waitingForProduceMore(let firstContinuation):
+                                if let firstContinuation {
+                                    var continuations = Deque<CheckedContinuation<Int, any Error>>()
+                                    continuations.reserveCapacity(2)
+                                    continuations.append(firstContinuation)
+                                    continuations.append(newContinuation)
+                                    lockedState.state = .multipleWaitingForProduceMore(continuations)
+                                } else {
+                                    lockedState.state = .waitingForProduceMore(newContinuation)
+                                }
+                            case .multipleWaitingForProduceMore(var continuations):
                                 continuations.append(newContinuation)
                                 lockedState.state = .multipleWaitingForProduceMore(continuations)
-                            } else {
-                                lockedState.state = .waitingForProduceMore(newContinuation)
+                            case .terminated:
+                                newContinuation.resume(returning: state.produceMoreID)
                             }
-                        case .multipleWaitingForProduceMore(var continuations):
-                            continuations.append(newContinuation)
-                            lockedState.state = .multipleWaitingForProduceMore(continuations)
-                        case .terminated:
-                            newContinuation.resume(returning: state.produceMoreID)
                         }
                     }
+                } onCancel: {
+                    self.cancel()
                 }
             }
         }
@@ -253,6 +257,28 @@ extension RequestBody {
                     break
                 case .terminated:
                     break
+                }
+            }
+        }
+
+        @usableFromInline
+        func cancel() {
+            self.lockedState.withLockedValue { lockedState in
+                switch lockedState.state {
+                case .produceMore:
+                    break
+                case .waitingForProduceMore(let continuation):
+                    if let continuation {
+                        continuation.resume(throwing: CancellationError())
+                    }
+                    lockedState.state = .produceMore
+                case .multipleWaitingForProduceMore(var continuations):
+                    while let cont = continuations.popFirst() {
+                        cont.resume(throwing: CancellationError())
+                    }
+                    lockedState.state = .produceMore
+                case .terminated:
+                    preconditionFailure("Unexpected state")
                 }
             }
         }
@@ -279,12 +305,15 @@ extension RequestBody {
         /// - Parameter element: The element to yield to the inbound stream.
         @inlinable
         public func yield(_ element: ByteBuffer) async {
-            // if previous call indicated we should stop producing wait until the delegate
-            // says we can start producing again
-            let produceMoreID = await self.delegate.waitForProduceMore()
-            let result = self.source.yield(element)
-            if result == .stopProducing {
-                self.delegate.stopProducing(produceMoreID: produceMoreID)
+            // if waitForProduceMore is cancelled we should just exit
+            do {
+                let produceMoreID = try await self.delegate.waitForProduceMore()
+                let result = self.source.yield(element)
+                if result == .stopProducing {
+                    self.delegate.stopProducing(produceMoreID: produceMoreID)
+                }
+            } catch {
+                return
             }
         }
 
@@ -294,9 +323,7 @@ extension RequestBody {
             self.source.finish()
         }
 
-        /// Finished the inbound stream.
-        ///
-        /// - Parameter error: The error to throw
+        /// Finished the inbound stream with an error.
         @inlinable
         public func finish(_ error: any Error) {
             self.source.finish(error)
