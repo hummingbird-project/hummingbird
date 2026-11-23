@@ -18,6 +18,7 @@ public enum TestHTTPScheme: String, Sendable {
 public struct TestingSetup: Sendable {
     enum Internal: Sendable {
         case router
+        case asyncTesting
         case live
         case ahc(TestHTTPScheme)
     }
@@ -26,6 +27,9 @@ public struct TestingSetup: Sendable {
 
     /// Test writing requests directly to router.
     public static var router: TestingSetup { .init(value: .router) }
+    /// Test writing requests to Channel pipeline. This gives a more complete test than `.router`
+    /// that allows you to test ChannelHandlers without requiring a live server.
+    public static var asyncTesting: TestingSetup { .init(value: .asyncTesting) }
     /// Sets up a live server and execute tests using a HTTP client with a single connection to the
     /// server. Only supports HTTP1. The client only supports single threaded execution. If you want
     /// multi-threaded request execution then use `.ahc(_:)`.
@@ -74,6 +78,7 @@ extension ApplicationProtocol {
         let app: any ApplicationTestFramework =
             switch testingSetup.value {
             case .router: try await RouterTestFramework(app: self)
+            case .asyncTesting: try await AsyncTestingFramework(app: self)
             case .live: LiveTestFramework(app: self)
             case .ahc(let scheme): AsyncHTTPClientTestFramework(app: self, scheme: scheme)
             }
