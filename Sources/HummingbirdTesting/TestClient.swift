@@ -198,7 +198,6 @@ public struct TestClient: Sendable {
     }
 
     public func close(mode: CloseMode = .output) async throws {
-        self.channelPromise.completeWith(.failure(TestClient.Error.connectionNotOpen))
         let channel = try await getChannel()
         try await channel.close(mode: mode)
         try await channel.closeFuture.get()
