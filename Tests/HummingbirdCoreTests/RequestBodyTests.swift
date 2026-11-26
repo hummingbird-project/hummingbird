@@ -62,7 +62,7 @@ struct RequestBodyTests {
             try await withThrowingTaskGroup(of: Void.self) { group in
                 group.addTask {
                     for _ in 0..<64 {
-                        await source.yield(ByteBuffer(repeating: 0, count: 16))
+                        try await source.yield(ByteBuffer(repeating: 0, count: 16))
                     }
                     source.finish()
                 }

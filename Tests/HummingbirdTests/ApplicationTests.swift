@@ -843,7 +843,7 @@ struct ApplicationTests {
                 let (requestBody, source) = RequestBody.makeStream()
                 group.addTask {
                     for try await buffer in request.body {
-                        await source.yield(buffer)
+                        try await source.yield(buffer)
                     }
                     source.finish()
                 }
@@ -879,17 +879,17 @@ struct ApplicationTests {
                     await withThrowingTaskGroup(of: Void.self) { group in
                         group.addTask {
                             for value in 0..<100 {
-                                await source.yield(ByteBuffer(string: String(describing: value)))
+                                try await source.yield(ByteBuffer(string: String(describing: value)))
                             }
                         }
                         group.addTask {
                             for value in 0..<100 {
-                                await source.yield(ByteBuffer(string: String(describing: value)))
+                                try await source.yield(ByteBuffer(string: String(describing: value)))
                             }
                         }
                         group.addTask {
                             for value in 0..<100 {
-                                await source.yield(ByteBuffer(string: String(describing: value)))
+                                try await source.yield(ByteBuffer(string: String(describing: value)))
                             }
                         }
                     }

@@ -567,8 +567,115 @@ struct HummingbirdCoreTests {
         }
     }
 
+    /// Test running withInboundCloseHandler
+    @Test func testWithCloseInboundHandler() async throws {
+        let handlerPromise = Promise<Void>()
+        try await testServer(
+            responder: { (request, responseWriter: consuming ResponseWriter, _) in
+                await handlerPromise.complete(())
+                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                let finished = ManagedAtomic(false)
+                try await request.body.withInboundCloseHandler {
+                    while true {
+                        do {
+                            if finished.load(ordering: .relaxed) {
+                                break
+                            }
+                            try await Task.sleep(for: .milliseconds(300))
+                            try await bodyWriter.write(ByteBuffer(string: "Hello"))
+                        } catch {
+                            throw error
+                        }
+                    }
+                } onInboundClosed: {
+                    finished.store(true, ordering: .relaxed)
+                }
+                try await bodyWriter.finish(nil)
+            },
+            httpChannelSetup: .http1(),
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
+            logger: Logger(label: #function)
+        ) { client in
+            try await client.executeAndDontWaitForResponse(.init("/", method: .post, body: ByteBuffer(repeating: 1, count: 150_000)))
+            await handlerPromise.wait()
+            try await client.close()
+        }
+    }
+
+    /// Test running cancel on inbound close actually cancels on inbound closure
+    @Test func testWithCancelOnCloseInbound() async throws {
+        let handlerPromise = Promise<Void>()
+        try await testServer(
+            responder: { (request, responseWriter: consuming ResponseWriter, _) in
+                await handlerPromise.complete(())
+                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                try await request.body.withCancellationOnInboundClose {
+                    _ = await #expect(throws: CancellationError.self) {
+                        for _ in 0..<50 {
+                            do {
+                                try Task.checkCancellation()
+                                try await Task.sleep(for: .seconds(1))
+                                try await bodyWriter.write(ByteBuffer(string: "Hello"))
+                            } catch {
+                                throw error
+                            }
+                        }
+                    }
+                }
+                try await bodyWriter.finish(nil)
+            },
+            httpChannelSetup: .http1(),
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
+            logger: Logger(label: #function)
+        ) { client in
+            try await client.executeAndDontWaitForResponse(.init("/", method: .post, body: ByteBuffer(repeating: 1, count: 150_000)))
+            await handlerPromise.wait()
+            try await client.close()
+        }
+    }
+
+    /// Test running withInboundCloseHandler
+    @Test func testWithCloseInboundHandlerAfterCollect() async throws {
+        let handlerPromise = Promise<Void>()
+        try await testServer(
+            responder: { (request, responseWriter: consuming ResponseWriter, _) in
+                await handlerPromise.complete(())
+                var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
+                var request = request
+                _ = try await request.collectBody(upTo: .max)
+                let finished = ManagedAtomic(false)
+                try await request.body.withInboundCloseHandler {
+                    while true {
+                        do {
+                            if finished.load(ordering: .relaxed) {
+                                break
+                            }
+                            try await Task.sleep(for: .milliseconds(300))
+                            try await bodyWriter.write(ByteBuffer(string: "Hello"))
+                        } catch {
+                            throw error
+                        }
+                    }
+                } onInboundClosed: {
+                    finished.store(true, ordering: .relaxed)
+                }
+                try await bodyWriter.finish(nil)
+            },
+            httpChannelSetup: .http1(),
+            configuration: .init(address: .hostname(port: 0)),
+            eventLoopGroup: Self.eventLoopGroup,
+            logger: Logger(label: #function)
+        ) { client in
+            try await client.executeAndDontWaitForResponse(.init("/", method: .post, body: ByteBuffer(repeating: 1, count: 150_000)))
+            await handlerPromise.wait()
+            try await client.close()
+        }
+    }
+
     /// Test running withInboundCloseHandler with closing input
-    @Test func testWithCloseInboundHandlerWithoutClose() async throws {
+    @Test func testConsumeWithCloseInboundHandlerWithoutClose() async throws {
         try await testServer(
             responder: { (request, responseWriter: consuming ResponseWriter, _) in
                 var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
@@ -593,8 +700,9 @@ struct HummingbirdCoreTests {
         }
     }
 
-    /// Test running withInboundCloseHandler
-    @Test func testWithCloseInboundHandler() async throws {
+    /// Test running withInboundCloseHandler where client closes connection completely
+    @Test(.timeLimit(.minutes(1)))
+    func testConsumeWithCloseInboundHandlerWriteFail() async throws {
         let handlerPromise = Promise<Void>()
         try await testServer(
             responder: { (request, responseWriter: consuming ResponseWriter, _) in
@@ -602,14 +710,13 @@ struct HummingbirdCoreTests {
                 var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
                 let finished = ManagedAtomic(false)
                 try await request.body.consumeWithInboundCloseHandler { body in
-                    let body = try await body.collect(upTo: .max)
-                    for _ in 0..<200 {
+                    while true {
                         do {
                             if finished.load(ordering: .relaxed) {
                                 break
                             }
                             try await Task.sleep(for: .milliseconds(300))
-                            try await bodyWriter.write(body)
+                            try await bodyWriter.write(ByteBuffer(string: "hello"))
                         } catch {
                             throw error
                         }
@@ -624,14 +731,14 @@ struct HummingbirdCoreTests {
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: #function)
         ) { client in
-            try await client.executeAndDontWaitForResponse(.init("/", method: .get))
+            try await client.executeAndDontWaitForResponse(.init("/", method: .post, body: ByteBuffer(repeating: 0, count: 150_000)))
             await handlerPromise.wait()
-            try await client.close()
+            try await client.close(mode: .all)
         }
     }
 
     /// Test running cancel on inbound close without an inbound close
-    @Test func testCancelOnCloseInboundWithoutClose() async throws {
+    @Test func testConsumeWithCancelOnCloseInboundWithoutClose() async throws {
         try await testServer(
             responder: { (request, responseWriter: consuming ResponseWriter, _) in
                 var bodyWriter = try await responseWriter.writeHead(.init(status: .ok))
@@ -652,7 +759,7 @@ struct HummingbirdCoreTests {
     }
 
     /// Test running cancel on inbound close actually cancels on inbound closure
-    @Test func testCancelOnCloseInbound() async throws {
+    @Test func testConsumeWithCancelOnCloseInbound() async throws {
         let handlerPromise = Promise<Void>()
         try await testServer(
             responder: { (request, responseWriter: consuming ResponseWriter, _) in
@@ -679,7 +786,7 @@ struct HummingbirdCoreTests {
             eventLoopGroup: Self.eventLoopGroup,
             logger: Logger(label: #function)
         ) { client in
-            try await client.executeAndDontWaitForResponse(.init("/", method: .get))
+            try await client.executeAndDontWaitForResponse(.init("/", method: .post, body: ByteBuffer(repeating: 1, count: 150_000)))
             await handlerPromise.wait()
             try await client.close()
         }
@@ -687,9 +794,9 @@ struct HummingbirdCoreTests {
 
     /// Test running cancel on inbound close after the request body has been collected cancels on
     /// inbound closure, instead of spinning on the finished request part stream
-    @Test(.timeLimit(.minutes(1))) func testCancelOnCloseInboundAfterCollect() async throws {
+    @Test(.timeLimit(.minutes(1)))
+    func testConsumeWithCancelOnCloseInboundAfterCollect() async throws {
         let (handlerStarted, handlerStartedCont) = AsyncStream.makeStream(of: Void.self)
-        let (cancelled, cancelledCont) = AsyncStream.makeStream(of: Void.self)
         try await testServer(
             responder: { (request, responseWriter: consuming ResponseWriter, _) in
                 var request = request
@@ -700,7 +807,6 @@ struct HummingbirdCoreTests {
                         try await Task.sleep(for: .seconds(60))
                     }
                 }
-                cancelledCont.yield()
             },
             httpChannelSetup: .http1(),
             configuration: .init(address: .hostname(port: 0)),
@@ -711,8 +817,6 @@ struct HummingbirdCoreTests {
             var handlerStartedIterator = handlerStarted.makeAsyncIterator()
             await handlerStartedIterator.next()
             try await client.close()
-            var cancelledIterator = cancelled.makeAsyncIterator()
-            await cancelledIterator.next()
         }
     }
 }
