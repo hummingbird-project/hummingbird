@@ -11,12 +11,4 @@ permissions:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-    - name: Checkout
-      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-      with:
-        fetch-depth: 1
-    - name: run script
-      run: ./scripts/validate.sh
+    uses: hummingbird-project/hummingbird-project-template/.github/workflows/validate.yml@4f3de818e52fd7a2f447b55b62ea0bf5dbec3df9 # v0.0.1
