@@ -21,7 +21,7 @@ public import NIOHTTPTypes
 /// will open as many connections to the server as possible and try to hold them open for as
 /// long as possible. The idle connection timeout will close idle connections but it cannot catch
 /// the situation where the attacker drip feeds bytes to the connection every so often. The
-/// ``RequestBodyMinimumRateConfiguration`` is used to avoid these kind of attacks.
+/// ``RequestBodyMinimumReadRateConfiguration`` is used to avoid these kind of attacks.
 ///
 /// Note: Because back pressure is applied when you don't read the request body fast enough this
 /// will also kick in if you don't read the request body.
@@ -44,7 +44,17 @@ public struct RequestBodyMinimumReadRateConfiguration: Sendable {
     }
 }
 
-/// Triggers an IdleStateEvent when a Channel has not performed read, write, or both operation for a while.
+/// Manage HTTP connection
+///
+/// Checks for idle HTTP connections, slow connections and quiesce events from the server.
+///
+/// - A connection is considered idle if we receive no incoming HTTP parts for a defined
+/// time out period when the connection is either in the middle of reading a request or not
+/// writing a response.
+/// - A connection is consider slow during reading the request body if the rate of bytes read
+/// goes below a certain amount.
+///
+/// Idle and slow connections are closed
 @available(hummingbird 2.0, *)
 public final class HTTPConnectionStateHandler: ChannelDuplexHandler, RemovableChannelHandler {
     public typealias InboundIn = HTTPRequestPart
