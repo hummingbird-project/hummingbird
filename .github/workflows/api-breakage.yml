@@ -15,19 +15,5 @@ permissions:
   contents: read
 
 jobs:
-  linux:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    container:
-      image: swift:latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-      with:
-        fetch-depth: 0
-    # https://github.com/actions/checkout/issues/766
-    - name: Mark the workspace as safe
-      run: git config --global --add safe.directory ${GITHUB_WORKSPACE}
-    - name: API breaking changes
-      run: |
-        swift package diagnose-api-breaking-changes origin/${GITHUB_BASE_REF}
+  api-breakage:
+    uses: hummingbird-project/hummingbird-project-template/.github/workflows/api-breakage.yml@4f3de818e52fd7a2f447b55b62ea0bf5dbec3df9 # v0.0.1
