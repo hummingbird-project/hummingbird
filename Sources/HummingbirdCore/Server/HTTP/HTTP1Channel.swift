@@ -44,6 +44,8 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
         public var additionalChannelHandlers: @Sendable () -> [any RemovableChannelHandler]
         /// Time before closing an idle channel.
         public var idleTimeout: TimeAmount?
+        /// Configuration for minimum request body read rate.
+        public var requestBodyMinimumReadRate: RequestBodyMinimumReadRateConfiguration?
         /// Internal flag for enabling/disabling pipeline assistance
         package var pipliningAssistance: Bool = false
         /// HTTP Decoder configuration
@@ -127,7 +129,11 @@ public struct HTTP1Channel: ServerChildChannel, HTTPChannelHandler {
             try channel.pipeline.syncOperations.addHandler(HTTP1ToHTTPServerCodec(secure: false))
             try channel.pipeline.syncOperations.addHandlers(self.configuration.additionalChannelHandlers())
             try channel.pipeline.syncOperations.addHandler(
-                HTTPConnectionStateHandler(idleTimeout: self.configuration.idleTimeout.map { .init($0) }, logger: logger)
+                HTTPConnectionStateHandler(
+                    idleTimeout: self.configuration.idleTimeout.map { .init($0) },
+                    requestBodyMinimumReadRate: self.configuration.requestBodyMinimumReadRate,
+                    logger: logger
+                )
             )
             return try NIOAsyncChannel(
                 wrappingChannelSynchronously: channel,

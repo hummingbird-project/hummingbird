@@ -25,7 +25,7 @@ public final class MockClock: Clock {
         }
 
         public func duration(to other: Self) -> Self.Duration {
-            self.base - other.base
+            other.base - self.base
         }
 
         private var base: Swift.Duration
